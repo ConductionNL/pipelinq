@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Integriq\Event\OptOutChangeRequestedEvent;
 use OCA\Integriq\Event\OutboundSendDecisionRequestedEvent;
 use OCA\Pipelinq\Controller\MessagingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -69,6 +70,7 @@ if (class_exists('OCA\\Integriq\\Event\\ConsentDecisionGoldenNotAnEvent') === fa
  * @uses   \OCA\Pipelinq\Support\FleetAppId
  *
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md
+ * @uses \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
  */
 class ConsentDecisionGoldenTest extends TestCase {
 	private const GOLDEN = __DIR__ . '/ConsentDecisionGolden.json';
@@ -339,8 +341,7 @@ class ConsentDecisionGoldenTest extends TestCase {
 			$messaging,
 			$this->createMock(ChannelProviderRepository::class),
 			$service,
-			$session,
-			$policy,
+			new CrmPrivilegeCheck($session, $policy),
 		);
 		$response = $controller->consent(...$scenario['args']);
 

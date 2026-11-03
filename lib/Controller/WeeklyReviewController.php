@@ -25,14 +25,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\Marketing\WeeklyReviewService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * WeeklyReviewController: read the review, or compose one.
@@ -47,8 +46,7 @@ class WeeklyReviewController extends Controller {
 	 * @param string $appName App id.
 	 * @param IRequest $request The request.
 	 * @param WeeklyReviewService $reviews The review composer.
-	 * @param IUserSession $userSession The session.
-	 * @param ObjectOwnerAccessPolicy $policy CRM privilege check.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
@@ -56,8 +54,7 @@ class WeeklyReviewController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly WeeklyReviewService $reviews,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -71,7 +68,7 @@ class WeeklyReviewController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -98,7 +95,7 @@ class WeeklyReviewController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function generate(string $weekStarting = ''): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -110,22 +107,4 @@ class WeeklyReviewController extends Controller {
 
 		return new JSONResponse($review);
 	}//end generate()
-
-	/**
-	 * Refuse a caller without a session or without the CRM privilege.
-	 *
-	 * @return JSONResponse|null The refusal, or null when the caller may proceed.
-	 */
-	private function guard(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		return null;
-	}//end guard()
 }//end class

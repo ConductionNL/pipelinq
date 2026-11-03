@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Tests\Unit\Support\Autowire;
 use OCA\Pipelinq\Tests\Unit\Support\ComparesGolden;
@@ -293,7 +294,7 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 
 	/**
 	 * Add a recording double for every constructor collaborator not yet present,
-	 * walking through final classes, which cannot be doubled.
+	 * walking through the privilege check and final classes, which cannot be doubled.
 	 *
 	 * @param string               $class   The class to walk.
 	 * @param array<string, mixed> $doubles The doubles so far.
@@ -314,7 +315,7 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 
 			$typeName = $type->getName();
 			$reflection = new ReflectionClass($typeName);
-			if ($reflection->isFinal() === true || $reflection->isReadOnly() === true) {
+			if ($typeName === CrmPrivilegeCheck::class || $reflection->isFinal() === true || $reflection->isReadOnly() === true) {
 				$this->addLeafDoubles(class: $typeName, doubles: $doubles);
 				continue;
 			}

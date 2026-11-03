@@ -30,14 +30,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\RapportageService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Pipeline analytics endpoint controller.
@@ -50,14 +49,12 @@ class RapportageController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param RapportageService $rapportageService Analytics aggregation service.
-	 * @param IUserSession $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
 		private RapportageService $rapportageService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $accessPolicy,
+		private CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -77,15 +74,11 @@ class RapportageController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function getPipelineStats(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(data: ['message' => 'Authentication required'], statusCode: Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Pipeline statistics aggregate the whole sales pipeline — a CRM
 		// capability, not an any-authenticated-user one.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(data: ['message' => 'Forbidden'], statusCode: Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$pipelineId = (string)$this->request->getParam('pipelineId', '');

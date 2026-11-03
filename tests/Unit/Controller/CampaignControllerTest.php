@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\CampaignController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\CampaignReportService;
 use OCA\Pipelinq\Service\CampaignService;
@@ -116,8 +117,7 @@ class CampaignControllerTest extends TestCase {
 			$reportService,
 			$campaigns,
 			$provisioning,
-			$session,
-			$policy
+			new CrmPrivilegeCheck($session, $policy)
 		);
 	}//end build()
 

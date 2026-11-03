@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCP\AppFramework\Controller;
@@ -36,7 +37,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -52,15 +52,13 @@ class AnalyticsController extends Controller {
 	 *
 	 * @param IRequest $request The HTTP request.
 	 * @param AnalyticsService $analyticsService Analytics summary service.
-	 * @param IUserSession $userSession Active user session.
-	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private AnalyticsService $analyticsService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $policy,
+		private CrmPrivilegeCheck $privilege,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -79,19 +77,15 @@ class AnalyticsController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function overview(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// These endpoints take NO object selector — they aggregate across the
 		// whole instance and never pass a user to the service, so there is no
 		// object to own and nothing to scope. The question is therefore not
 		// "may this caller see THIS record" but "may this caller see
 		// company-wide CRM analytics at all", which is exactly what
 		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['message' => 'Unauthorized'], ['message' => 'Forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
@@ -123,19 +117,15 @@ class AnalyticsController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function commercial(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// These endpoints take NO object selector — they aggregate across the
 		// whole instance and never pass a user to the service, so there is no
 		// object to own and nothing to scope. The question is therefore not
 		// "may this caller see THIS record" but "may this caller see
 		// company-wide CRM analytics at all", which is exactly what
 		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['message' => 'Unauthorized'], ['message' => 'Forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
@@ -171,19 +161,15 @@ class AnalyticsController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function trends(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// These endpoints take NO object selector — they aggregate across the
 		// whole instance and never pass a user to the service, so there is no
 		// object to own and nothing to scope. The question is therefore not
 		// "may this caller see THIS record" but "may this caller see
 		// company-wide CRM analytics at all", which is exactly what
 		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['message' => 'Unauthorized'], ['message' => 'Forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$metric = (string)$this->request->getParam('metric', '');
@@ -222,19 +208,15 @@ class AnalyticsController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function funnels(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// These endpoints take NO object selector — they aggregate across the
 		// whole instance and never pass a user to the service, so there is no
 		// object to own and nothing to scope. The question is therefore not
 		// "may this caller see THIS record" but "may this caller see
 		// company-wide CRM analytics at all", which is exactly what
 		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['message' => 'Unauthorized'], ['message' => 'Forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
