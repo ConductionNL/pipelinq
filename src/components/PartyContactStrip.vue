@@ -41,7 +41,7 @@ import LogVisitAction from './LogVisitAction.vue'
 import PartyIndicatorPanel from './PartyIndicatorPanel.vue'
 
 /**
- * @spec openspec/changes/client-page-as-the-relation-boards/specs/client-detail/spec.md#requirement-the-warnings-and-the-ways-to-reach-the-client-are-one-card
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
  */
 export default {
 	name: 'PartyContactStrip',

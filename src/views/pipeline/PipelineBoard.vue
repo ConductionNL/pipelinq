@@ -1037,55 +1037,22 @@ export default {
 		 */
 		sortedListItems() {
 			const items = [...this.filteredItems]
-			const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 }
-			items.sort((a, b) => {
-				let valA, valB
-				switch (this.sortBy) {
-					case 'title':
-						valA = (a.title || '').toLowerCase()
-						valB = (b.title || '').toLowerCase()
-						break
-					case 'schemaSlug':
-						valA = a._schemaSlug
-						valB = b._schemaSlug
-						break
-					case 'stage':
-						valA = (this.getItemColumnValue(a) || '').toLowerCase()
-						valB = (this.getItemColumnValue(b) || '').toLowerCase()
-						break
-					case 'assignee':
-						valA = (a.assignee || '').toLowerCase()
-						valB = (b.assignee || '').toLowerCase()
-						break
-					case 'value':
-						valA = Number(a.value) || 0
-						valB = Number(b.value) || 0
-						break
-					case 'dueDate':
-						valA = a.expectedCloseDate || a.occurredAt || ''
-						valB = b.expectedCloseDate || b.occurredAt || ''
-						break
-					case 'priority':
-						valA = priorityOrder[a.priority] ?? 2
-						valB = priorityOrder[b.priority] ?? 2
-						break
-					case 'age':
-						valA = getDaysAge(a)
-						valB = getDaysAge(b)
-						break
-					case 'score':
-						// Highest first on the first click; no score always last.
-						return this.sortDir === 'asc'
-							? compareCallFirst(a, b)
-							: -compareCallFirst(a, b)
-					default:
-						return 0
-				}
-				if (valA < valB) return this.sortDir === 'asc' ? -1 : 1
-				if (valA > valB) return this.sortDir === 'asc' ? 1 : -1
+			const dir = this.sortDir === 'asc' ? 1 : -1
+			if (this.sortBy === 'score') {
+				// Highest first on the first click; no score always last.
+				return items.sort((a, b) => dir * compareCallFirst(a, b))
+			}
+			const keyOf = this.listSortKey(this.sortBy)
+			if (!keyOf) {
+				return items
+			}
+			return items.sort((a, b) => {
+				const valA = keyOf(a)
+				const valB = keyOf(b)
+				if (valA < valB) return -dir
+				if (valA > valB) return dir
 				return 0
 			})
-			return items
 		},
 	},
 
@@ -1144,6 +1111,29 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The value a list column sorts on, or null for a column that does not sort.
+		 *
+		 * @param {string} sortBy The list column key.
+		 * @return {Function|null} Item to sort value.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
+		 */
+		listSortKey(sortBy) {
+			const lower = (value) => (value || '').toLowerCase()
+			const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 }
+			const keys = {
+				title: (item) => lower(item.title),
+				schemaSlug: (item) => item._schemaSlug,
+				stage: (item) => lower(this.getItemColumnValue(item)),
+				assignee: (item) => lower(item.assignee),
+				value: (item) => Number(item.value) || 0,
+				dueDate: (item) => item.expectedCloseDate || item.occurredAt || '',
+				priority: (item) => priorityOrder[item.priority] ?? 2,
+				age: (item) => getDaysAge(item),
+			}
+			return keys[sortBy] || null
+		},
+
 		getPriorityLabel,
 		getPriorityColor,
 

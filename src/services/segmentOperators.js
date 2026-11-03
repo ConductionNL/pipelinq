@@ -8,33 +8,28 @@
 //
 // @spec openspec/changes/segment-groups-its-rules/specs/marketing-ui/spec.md#requirement-a-segment-groups-its-rules
 
+const EQUALITY = [
+	{ value: 'equals', label: 'Equals' },
+	{ value: 'notEquals', label: 'Not equals' },
+]
+
+const NUMERIC = [
+	...EQUALITY,
+	{ value: 'greaterThan', label: 'Greater than' },
+	{ value: 'greaterThanOrEqual', label: 'Greater than or equal' },
+	{ value: 'lessThan', label: 'Less than' },
+	{ value: 'lessThanOrEqual', label: 'Less than or equal' },
+]
+
 /**
  * Operators per field type.
  *
  * @type {Object<string, Array<{value: string, label: string}>>}
  */
 export const OPERATORS_BY_TYPE = {
-	string: [
-		{ value: 'equals', label: 'Equals' },
-		{ value: 'notEquals', label: 'Not equals' },
-		{ value: 'contains', label: 'Contains' },
-	],
-	integer: [
-		{ value: 'equals', label: 'Equals' },
-		{ value: 'notEquals', label: 'Not equals' },
-		{ value: 'greaterThan', label: 'Greater than' },
-		{ value: 'greaterThanOrEqual', label: 'Greater than or equal' },
-		{ value: 'lessThan', label: 'Less than' },
-		{ value: 'lessThanOrEqual', label: 'Less than or equal' },
-	],
-	number: [
-		{ value: 'equals', label: 'Equals' },
-		{ value: 'notEquals', label: 'Not equals' },
-		{ value: 'greaterThan', label: 'Greater than' },
-		{ value: 'greaterThanOrEqual', label: 'Greater than or equal' },
-		{ value: 'lessThan', label: 'Less than' },
-		{ value: 'lessThanOrEqual', label: 'Less than or equal' },
-	],
+	string: [...EQUALITY, { value: 'contains', label: 'Contains' }],
+	integer: NUMERIC,
+	number: NUMERIC,
 	boolean: [
 		{ value: 'equals', label: 'Is' },
 		{ value: 'notEquals', label: 'Is not' },

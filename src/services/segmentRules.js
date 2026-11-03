@@ -6,6 +6,8 @@
 
 /**
  * @return {{type: string, children: Array}} An empty AND group.
+ *
+ * @spec openspec/changes/segment-groups-its-rules/specs/marketing-ui/spec.md#scenario-a-segment-stored-as-a-bare-condition-opens-as-a-group
  */
 export function emptyTree() {
 	return { type: 'AND', children: [] }
