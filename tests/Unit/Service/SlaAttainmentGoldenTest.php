@@ -45,6 +45,13 @@ use Psr\Log\LoggerInterface;
 class SlaAttainmentGoldenTest extends TestCase {
 	private const GOLDEN = __DIR__ . '/SlaAttainmentGolden.json';
 
+	/**
+	 * The findAll() configurations of the current run, in order.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	public static array $queries = [];
+
 	private const IN = '2026-10-01T09:00:00+00:00';
 
 	private const OUT = '2026-09-30T23:59:59+00:00';
@@ -65,6 +72,9 @@ class SlaAttainmentGoldenTest extends TestCase {
 		}
 
 		$actual['month'] = $service->compute(params: ['bucket' => 'month', 'month' => '2026-09', 'groupBy' => 'team']);
+		self::$queries = [];
+		$service->compute(params: ['bucket' => 'day', 'date' => '2026-10-01', 'groupBy' => 'customer']);
+		$actual['queries'] = self::$queries;
 
 		$flags = (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
 		if (getenv('SLA_ATTAINMENT_GOLDEN_RECORD') !== false) {
@@ -141,6 +151,8 @@ class SlaAttainmentGoldenTest extends TestCase {
 			],
 			'events' => [
 				['policyId' => 'p2', 'targetKind' => 'acknowledgement', 'targetObjectId' => 't3', 'breachedAt' => self::IN],
+				['policyId' => 'p2', 'targetKind' => 'resolution', 'targetObjectId' => 't3', 'breachedAt' => '2026-10-02T00:00:00+00:00'],
+				['policyId' => 'p1', 'targetKind' => 'resolution', 'targetObjectId' => 't8', 'breachedAt' => '2026-10-01T00:00:00+00:00'],
 				['policyId' => 'p1', 'targetKind' => 'resolution', 'targetObjectId' => 't1',
 					'breachedAt' => self::IN, 'resolvedAt' => self::IN, 'team' => 'west', 'organisationId' => 'c8',
 				],
@@ -191,6 +203,7 @@ class SlaAttainmentGoldenTest extends TestCase {
 			 * @return array<int, array<string, mixed>>
 			 */
 			public function findAll(array $config): array {
+				SlaAttainmentGoldenTest::$queries[] = $config;
 				return ($this->objects[(string)($config['filters']['schema'] ?? '')] ?? []);
 			}
 		};

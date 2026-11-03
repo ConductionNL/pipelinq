@@ -1,11 +1,11 @@
 {
     "policy / ": {
-        "attainment": 0.6,
-        "attainmentPercent": 60.0,
-        "total": 10,
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
         "met": 6,
-        "breached": 4,
-        "inFlightBreached": 3,
+        "breached": 5,
+        "inFlightBreached": 4,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -19,8 +19,8 @@
                     "met": 3
                 },
                 "resolution": {
-                    "attainment": 0.6,
-                    "breached": 2,
+                    "attainment": 0.5,
+                    "breached": 3,
                     "met": 3
                 },
                 "response": {
@@ -46,10 +46,10 @@
                 {
                     "groupKey": "p1",
                     "groupName": "Standaard",
-                    "attainment": 0.5,
-                    "total": 4,
+                    "attainment": 0.4,
+                    "total": 5,
                     "met": 2,
-                    "breached": 2
+                    "breached": 3
                 },
                 {
                     "groupKey": "unspecified",
@@ -71,12 +71,12 @@
         }
     },
     "policy / p1": {
-        "attainment": 0.5,
-        "attainmentPercent": 50.0,
-        "total": 4,
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
         "met": 2,
-        "breached": 2,
-        "inFlightBreached": 1,
+        "breached": 3,
+        "inFlightBreached": 2,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -85,8 +85,8 @@
         "details": {
             "byTarget": {
                 "resolution": {
-                    "attainment": 0.5,
-                    "breached": 2,
+                    "attainment": 0.4,
+                    "breached": 3,
                     "met": 2
                 },
                 "acknowledgement": {
@@ -99,10 +99,10 @@
                 {
                     "groupKey": "p1",
                     "groupName": "Standaard",
-                    "attainment": 0.5,
-                    "total": 4,
+                    "attainment": 0.4,
+                    "total": 5,
                     "met": 2,
-                    "breached": 2
+                    "breached": 3
                 }
             ]
         }
@@ -162,12 +162,12 @@
         }
     },
     "customer / ": {
-        "attainment": 0.6,
-        "attainmentPercent": 60.0,
-        "total": 10,
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
         "met": 6,
-        "breached": 4,
-        "inFlightBreached": 3,
+        "breached": 5,
+        "inFlightBreached": 4,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -181,8 +181,8 @@
                     "met": 3
                 },
                 "resolution": {
-                    "attainment": 0.6,
-                    "breached": 2,
+                    "attainment": 0.5,
+                    "breached": 3,
                     "met": 3
                 },
                 "response": {
@@ -206,6 +206,14 @@
                     "breached": 2
                 },
                 {
+                    "groupKey": "c1",
+                    "groupName": "Bakkerij De Jong",
+                    "attainment": 0.5,
+                    "total": 2,
+                    "met": 1,
+                    "breached": 1
+                },
+                {
                     "groupKey": "c8",
                     "groupName": "c8",
                     "attainment": 0.0,
@@ -220,14 +228,6 @@
                     "total": 1,
                     "met": 0,
                     "breached": 1
-                },
-                {
-                    "groupKey": "c1",
-                    "groupName": "Bakkerij De Jong",
-                    "attainment": 1.0,
-                    "total": 1,
-                    "met": 1,
-                    "breached": 0
                 },
                 {
                     "groupKey": "c3",
@@ -249,12 +249,12 @@
         }
     },
     "customer / p1": {
-        "attainment": 0.5,
-        "attainmentPercent": 50.0,
-        "total": 4,
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
         "met": 2,
-        "breached": 2,
-        "inFlightBreached": 1,
+        "breached": 3,
+        "inFlightBreached": 2,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -263,8 +263,8 @@
         "details": {
             "byTarget": {
                 "resolution": {
-                    "attainment": 0.5,
-                    "breached": 2,
+                    "attainment": 0.4,
+                    "breached": 3,
                     "met": 2
                 },
                 "acknowledgement": {
@@ -274,6 +274,14 @@
                 }
             },
             "byGroup": [
+                {
+                    "groupKey": "c1",
+                    "groupName": "Bakkerij De Jong",
+                    "attainment": 0.5,
+                    "total": 2,
+                    "met": 1,
+                    "breached": 1
+                },
                 {
                     "groupKey": "c8",
                     "groupName": "c8",
@@ -289,14 +297,6 @@
                     "total": 1,
                     "met": 0,
                     "breached": 1
-                },
-                {
-                    "groupKey": "c1",
-                    "groupName": "Bakkerij De Jong",
-                    "attainment": 1.0,
-                    "total": 1,
-                    "met": 1,
-                    "breached": 0
                 },
                 {
                     "groupKey": "c3",
@@ -372,12 +372,12 @@
         }
     },
     "tier / ": {
-        "attainment": 0.6,
-        "attainmentPercent": 60.0,
-        "total": 10,
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
         "met": 6,
-        "breached": 4,
-        "inFlightBreached": 3,
+        "breached": 5,
+        "inFlightBreached": 4,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -391,8 +391,8 @@
                     "met": 3
                 },
                 "resolution": {
-                    "attainment": 0.6,
-                    "breached": 2,
+                    "attainment": 0.5,
+                    "breached": 3,
                     "met": 3
                 },
                 "response": {
@@ -418,10 +418,10 @@
                 {
                     "groupKey": "unspecified",
                     "groupName": "unspecified",
-                    "attainment": 0.6667,
-                    "total": 3,
+                    "attainment": 0.5,
+                    "total": 4,
                     "met": 2,
-                    "breached": 1
+                    "breached": 2
                 },
                 {
                     "groupKey": "platinum",
@@ -451,12 +451,12 @@
         }
     },
     "tier / p1": {
-        "attainment": 0.5,
-        "attainmentPercent": 50.0,
-        "total": 4,
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
         "met": 2,
-        "breached": 2,
-        "inFlightBreached": 1,
+        "breached": 3,
+        "inFlightBreached": 2,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -465,8 +465,8 @@
         "details": {
             "byTarget": {
                 "resolution": {
-                    "attainment": 0.5,
-                    "breached": 2,
+                    "attainment": 0.4,
+                    "breached": 3,
                     "met": 2
                 },
                 "acknowledgement": {
@@ -479,10 +479,10 @@
                 {
                     "groupKey": "unspecified",
                     "groupName": "unspecified",
-                    "attainment": 0.6667,
-                    "total": 3,
+                    "attainment": 0.5,
+                    "total": 4,
                     "met": 2,
-                    "breached": 1
+                    "breached": 2
                 },
                 {
                     "groupKey": "platinum",
@@ -566,12 +566,12 @@
         }
     },
     "team / ": {
-        "attainment": 0.6,
-        "attainmentPercent": 60.0,
-        "total": 10,
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
         "met": 6,
-        "breached": 4,
-        "inFlightBreached": 3,
+        "breached": 5,
+        "inFlightBreached": 4,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -585,8 +585,8 @@
                     "met": 3
                 },
                 "resolution": {
-                    "attainment": 0.6,
-                    "breached": 2,
+                    "attainment": 0.5,
+                    "breached": 3,
                     "met": 3
                 },
                 "response": {
@@ -604,10 +604,10 @@
                 {
                     "groupKey": "unspecified",
                     "groupName": "unspecified",
-                    "attainment": 0.3333,
-                    "total": 3,
+                    "attainment": 0.25,
+                    "total": 4,
                     "met": 1,
-                    "breached": 2
+                    "breached": 3
                 },
                 {
                     "groupKey": "west",
@@ -645,12 +645,12 @@
         }
     },
     "team / p1": {
-        "attainment": 0.5,
-        "attainmentPercent": 50.0,
-        "total": 4,
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
         "met": 2,
-        "breached": 2,
-        "inFlightBreached": 1,
+        "breached": 3,
+        "inFlightBreached": 2,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -659,8 +659,8 @@
         "details": {
             "byTarget": {
                 "resolution": {
-                    "attainment": 0.5,
-                    "breached": 2,
+                    "attainment": 0.4,
+                    "breached": 3,
                     "met": 2
                 },
                 "acknowledgement": {
@@ -671,16 +671,16 @@
             },
             "byGroup": [
                 {
-                    "groupKey": "west",
-                    "groupName": "west",
-                    "attainment": 0.0,
-                    "total": 1,
-                    "met": 0,
-                    "breached": 1
-                },
-                {
                     "groupKey": "unspecified",
                     "groupName": "unspecified",
+                    "attainment": 0.0,
+                    "total": 2,
+                    "met": 0,
+                    "breached": 2
+                },
+                {
+                    "groupKey": "west",
+                    "groupName": "west",
                     "attainment": 0.0,
                     "total": 1,
                     "met": 0,
@@ -760,12 +760,12 @@
         }
     },
     "target / ": {
-        "attainment": 0.6,
-        "attainmentPercent": 60.0,
-        "total": 10,
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
         "met": 6,
-        "breached": 4,
-        "inFlightBreached": 3,
+        "breached": 5,
+        "inFlightBreached": 4,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -779,8 +779,8 @@
                     "met": 3
                 },
                 "resolution": {
-                    "attainment": 0.6,
-                    "breached": 2,
+                    "attainment": 0.5,
+                    "breached": 3,
                     "met": 3
                 },
                 "response": {
@@ -806,10 +806,10 @@
                 {
                     "groupKey": "resolution",
                     "groupName": "resolution",
-                    "attainment": 0.6,
-                    "total": 5,
+                    "attainment": 0.5,
+                    "total": 6,
                     "met": 3,
-                    "breached": 2
+                    "breached": 3
                 },
                 {
                     "groupKey": "response",
@@ -831,12 +831,12 @@
         }
     },
     "target / p1": {
-        "attainment": 0.5,
-        "attainmentPercent": 50.0,
-        "total": 4,
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
         "met": 2,
-        "breached": 2,
-        "inFlightBreached": 1,
+        "breached": 3,
+        "inFlightBreached": 2,
         "closedBreached": 1,
         "range": {
             "start": "2026-10-01T00:00:00+00:00",
@@ -845,8 +845,8 @@
         "details": {
             "byTarget": {
                 "resolution": {
-                    "attainment": 0.5,
-                    "breached": 2,
+                    "attainment": 0.4,
+                    "breached": 3,
                     "met": 2
                 },
                 "acknowledgement": {
@@ -859,10 +859,10 @@
                 {
                     "groupKey": "resolution",
                     "groupName": "resolution",
-                    "attainment": 0.5,
-                    "total": 4,
+                    "attainment": 0.4,
+                    "total": 5,
                     "met": 2,
-                    "breached": 2
+                    "breached": 3
                 },
                 {
                     "groupKey": "acknowledgement",
@@ -989,5 +989,28 @@
                 }
             ]
         }
-    }
+    },
+    "queries": [
+        {
+            "filters": {
+                "register": "sla",
+                "schema": "events"
+            },
+            "limit": 5000
+        },
+        {
+            "filters": {
+                "register": "crm",
+                "schema": "callbacks"
+            },
+            "limit": 5000
+        },
+        {
+            "filters": {
+                "register": "crm",
+                "schema": "clients"
+            },
+            "limit": 5000
+        }
+    ]
 }
