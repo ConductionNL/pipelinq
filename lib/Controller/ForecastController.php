@@ -27,9 +27,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ForecastAccessPolicy;
+use OCA\Pipelinq\Lifecycle\ForecastAccess;
 use OCA\Pipelinq\Service\ForecastExportService;
-use OCA\Pipelinq\Service\ForecastOverrideService;
+use OCA\Pipelinq\Service\ForecastOverrideDesk;
+use OCA\Pipelinq\Service\ForecastSnapshotQuery;
+use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -37,45 +39,34 @@ use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 
 /**
  * Forecast REST API controller.
  *
  * Thin: validates auth posture and delegates to the export and override
  * services. Every action requires an authenticated user; per-action scope is
- * enforced through {@see ForecastAccessPolicy} and denied requests are logged
+ * enforced through {@see ForecastAccess} and denied requests are logged
  * and answered with 403 (no stack traces leak to the client).
  *
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
 class ForecastController extends Controller {
-	/**
-	 * The allowed hierarchy levels for a snapshot query.
-	 *
-	 * @var array<int, string>
-	 */
-	private const READ_LEVELS = ['rep', 'team', 'division', 'company'];
+	use ReadsTypedRequestParameters;
 
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param IUserSession $userSession The user session.
-	 * @param ForecastAccessPolicy $accessPolicy The forecast access policy.
+	 * @param ForecastAccess $access The acting user and their forecast scope.
 	 * @param ForecastExportService $exportService The snapshot export service.
-	 * @param ForecastOverrideService $overrideService The override management service.
-	 * @param LoggerInterface $logger The logger.
+	 * @param ForecastOverrideDesk $overrides The override requests.
 	 */
 	public function __construct(
 		IRequest $request,
-		private IUserSession $userSession,
-		private ForecastAccessPolicy $accessPolicy,
+		private ForecastAccess $access,
 		private ForecastExportService $exportService,
-		private ForecastOverrideService $overrideService,
-		private LoggerInterface $logger,
+		private ForecastOverrideDesk $overrides,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -83,61 +74,36 @@ class ForecastController extends Controller {
 	/**
 	 * Export forecast snapshots (JSON or CSV) for a period and level.
 	 *
-	 * @param string $periodId The fiscal period id.
-	 * @param string $level The hierarchy level.
-	 * @param string|null $ownerId Optional owner filter.
-	 * @param string $format The export format (json|csv).
-	 * @param int $limit The page size (max 200).
-	 * @param int $offset The page offset.
+	 * Reads periodId, level, ownerId (optional), format (json|csv), limit
+	 * (max 200) and offset from the request. A parameter of the wrong type is
+	 * a bare 400, as the dispatcher answers it for a typed action argument.
 	 *
 	 * @return Response The snapshot export.
 	 *
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-010-01, REQ-FRC-010-02
 	 */
 	#[NoAdminRequired]
-	public function snapshots(
-		string $periodId = '',
-		string $level = '',
-		?string $ownerId = null,
-		string $format = 'json',
-		int $limit = 50,
-		int $offset = 0,
-	): Response {
-		$uid = $this->currentUserId();
+	public function snapshots(): Response {
+		$values = $this->typedRequestParameters(spec: ForecastSnapshotQuery::PARAMETERS);
+		if ($values === null) {
+			return new Response(Http::STATUS_BAD_REQUEST);
+		}
+
+		$query = new ForecastSnapshotQuery(values: $values);
+		$uid = $this->access->actingUserId();
 		if ($uid === '') {
 			return new JSONResponse(['error' => 'Unauthenticated.'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		if ($periodId === '' || in_array($level, self::READ_LEVELS, true) === false) {
+		if ($query->isComplete() === false) {
 			return new JSONResponse(['error' => 'A valid period and level are required.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		if ($this->accessPolicy->canRead(userId: $uid, level: $level, ownerId: $ownerId) === false) {
-			$this->logger->warning('Pipelinq: forecast read denied', ['uid' => $uid, 'level' => $level, 'ownerId' => $ownerId]);
+		if ($this->access->mayRead(uid: $uid, query: $query) === false) {
 			return new JSONResponse(['error' => 'You may not read forecasts at this scope.'], Http::STATUS_FORBIDDEN);
 		}
 
-		$limit = max(1, min($limit, 200));
-		$offset = max(0, $offset);
-
-		$page = $this->exportService->exportSnapshots(
-			periodId: $periodId,
-			level: $level,
-			ownerId: $ownerId,
-			limit: $limit,
-			offset: $offset
-		);
-
-		if (strtolower($format) === 'csv') {
-			$csv = $this->exportService->toCsv($page['snapshots']);
-			return new DataDownloadResponse(
-				data: $csv,
-				filename: sprintf('forecast-%s-%s.csv', $periodId, $level),
-				contentType: 'text/csv; charset=UTF-8'
-			);
-		}
-
-		return new JSONResponse($page);
+		return $this->exportResponse(query: $query);
 	}//end snapshots()
 
 	/**
@@ -149,35 +115,24 @@ class ForecastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function createOverride(): JSONResponse {
-		$uid = $this->currentUserId();
+		$uid = $this->access->actingUserId();
 		if ($uid === '') {
 			return new JSONResponse(['error' => 'Unauthenticated.'], Http::STATUS_UNAUTHORIZED);
 		}
 
 		$level = (string)$this->request->getParam('level', '');
-		if ($this->accessPolicy->canOverride(userId: $uid, level: $level) === false) {
-			$this->logger->warning('Pipelinq: forecast override denied', ['uid' => $uid, 'level' => $level]);
+		if ($this->access->mayOverride(uid: $uid, level: $level) === false) {
 			return new JSONResponse(['error' => 'You may not override forecasts at this scope.'], Http::STATUS_FORBIDDEN);
 		}
 
-		$payload = [
-			'period_id' => (string)$this->request->getParam('period_id', ''),
-			'override_owner_id' => (string)$this->request->getParam('override_owner_id', ''),
-			'level' => $level,
-			'category' => (string)$this->request->getParam('category', 'commit'),
-			'override_amount' => $this->request->getParam('override_amount'),
-			'reason' => (string)$this->request->getParam('reason', ''),
-		];
-
-		$error = $this->overrideService->validatePayload($payload);
+		$payload = $this->overrides->payloadOf(request: $this->request);
+		$error = $this->overrides->invalidity(payload: $payload);
 		if ($error !== null) {
 			return new JSONResponse(['error' => $error], Http::STATUS_BAD_REQUEST);
 		}
 
-		try {
-			$override = $this->overrideService->createOverride(payload: $payload, managerId: $uid);
-		} catch (\Throwable $e) {
-			$this->logger->error('Pipelinq: failed to create forecast override', ['exception' => $e->getMessage()]);
+		$override = $this->overrides->create(payload: $payload, managerId: $uid);
+		if ($override === null) {
 			return new JSONResponse(['error' => 'Could not create the override.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
@@ -195,24 +150,21 @@ class ForecastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function deleteOverride(string $id): JSONResponse {
-		$uid = $this->currentUserId();
+		$uid = $this->access->actingUserId();
 		if ($uid === '') {
 			return new JSONResponse(['error' => 'Unauthenticated.'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$existing = $this->overrideService->getOverride($id);
+		$existing = $this->overrides->find(id: $id);
 		if ($existing === null) {
 			return new JSONResponse(['error' => 'Override not found.'], Http::STATUS_NOT_FOUND);
 		}
 
-		$level = (string)($existing['level'] ?? '');
-		if ($this->accessPolicy->canOverride(userId: $uid, level: $level) === false) {
-			$this->logger->warning('Pipelinq: forecast override delete denied', ['uid' => $uid, 'id' => $id]);
+		if ($this->access->mayDeleteOverride(uid: $uid, override: ['requestedId' => $id] + $existing) === false) {
 			return new JSONResponse(['error' => 'You may not delete this override.'], Http::STATUS_FORBIDDEN);
 		}
 
-		$deleted = $this->overrideService->deleteOverride($id);
-		if ($deleted === false) {
+		if ($this->overrides->delete(id: $id) === false) {
 			return new JSONResponse(['error' => 'Could not delete the override.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
@@ -220,16 +172,29 @@ class ForecastController extends Controller {
 	}//end deleteOverride()
 
 	/**
-	 * Resolve the current authenticated user id.
+	 * The snapshot page a permitted query asks for, as JSON or a CSV download.
 	 *
-	 * @return string The user UID, or empty string when unauthenticated.
+	 * @param ForecastSnapshotQuery $query The permitted query.
+	 *
+	 * @return Response
 	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
+	private function exportResponse(ForecastSnapshotQuery $query): Response {
+		$page = $this->exportService->exportSnapshots(
+			periodId: $query->periodId(),
+			level: $query->level(),
+			ownerId: $query->ownerId(),
+			limit: $query->limit(),
+			offset: $query->offset()
+		);
+
+		if ($query->wantsCsv() === true) {
+			return new DataDownloadResponse(
+				data: $this->exportService->toCsv($page['snapshots']),
+				filename: $query->csvFilename(),
+				contentType: 'text/csv; charset=UTF-8'
+			);
 		}
 
-		return $user->getUID();
-	}//end currentUserId()
+		return new JSONResponse($page);
+	}//end exportResponse()
 }//end class

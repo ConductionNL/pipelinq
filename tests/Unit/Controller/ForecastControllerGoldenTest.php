@@ -48,6 +48,10 @@ use Throwable;
  * it, then run once more without it.
  *
  * @covers \OCA\Pipelinq\Controller\ForecastController
+ * @covers \OCA\Pipelinq\Lifecycle\ForecastAccess
+ * @covers \OCA\Pipelinq\Service\ForecastOverrideDesk
+ * @covers \OCA\Pipelinq\Service\ForecastSnapshotQuery
+ * @covers \OCA\Pipelinq\Util\ReadsTypedRequestParameters
  */
 class ForecastControllerGoldenTest extends TestCase {
 	use ComparesGolden;
