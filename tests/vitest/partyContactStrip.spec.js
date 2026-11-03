@@ -12,6 +12,8 @@
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@conduction/nextcloud-vue', () => ({ CnDetailCard: { props: ['title'], template: '<div class="stub-card"><slot /></div>' } }))
@@ -80,5 +82,17 @@ describe('PartyContactStrip', () => {
 		expect(button.text()).toBe('Send a message')
 		await button.trigger('click')
 		expect(emit).toHaveBeenCalledWith('pipelinq:messaging:compose', { entityId: 'c-1' })
+	})
+})
+
+describe('the contact strip card as PqKlant and PqOrganisatie draw it', () => {
+	const style = readFileSync(resolve(__dirname, '../../src/components/PartyContactStrip.vue'), 'utf8').split('<style')[1]
+
+	it('pads the card 12px 16px', () => {
+		expect(style).toMatch(/\.party-contact-strip \{[^}]*padding: 12px 16px;/)
+	})
+
+	it('sets the warnings line on the card inset at 1.2, without state padding or the link margin', () => {
+		expect(style).toMatch(/:deep\(\.party-indicators__none\),\s*\.party-contact-strip :deep\(\.party-indicators__add-link\) \{[^}]*margin: 0;[^}]*padding: 0;[^}]*line-height: 1\.2;/)
 	})
 })
