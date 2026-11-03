@@ -145,6 +145,7 @@ class ForecastControllerGoldenTest extends TestCase {
 			'delete ok'                       => ['action' => 'deleteOverride', 'params' => ['id' => 'ov-1']],
 			'delete fails'                    => ['action' => 'deleteOverride', 'params' => ['id' => 'ov-1'], 'deleteFails' => true],
 			'delete array id'                 => ['action' => 'deleteOverride', 'params' => ['id' => ['ov-1']]],
+			'delete alias denied'             => ['action' => 'deleteOverride', 'params' => ['id' => 'ov-alias'], 'user' => 'rep-bob'],
 		];
 	}//end cases()
 
@@ -263,7 +264,7 @@ class ForecastControllerGoldenTest extends TestCase {
 	 * @return ForecastOverrideService
 	 */
 	private function overrideService(array $case): ForecastOverrideService {
-		$stored = ['ov-1' => ['id' => 'ov-1', 'level' => 'team'], 'ov-company' => ['id' => 'ov-company', 'level' => 'company'], 'ov-nolevel' => ['id' => 'ov-nolevel']];
+		$stored = ['ov-1' => ['id' => 'ov-1', 'level' => 'team'], 'ov-company' => ['id' => 'ov-company', 'level' => 'company'], 'ov-nolevel' => ['id' => 'ov-nolevel'], 'ov-alias' => ['id' => 'ov-real', 'level' => 'team']];
 		$service = $this->createMock(ForecastOverrideService::class);
 		$service->method('validatePayload')->willReturnCallback(
 			function (array $payload) use ($case): ?string {

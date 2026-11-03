@@ -1038,5 +1038,33 @@
         "class": "OCP\\AppFramework\\Http\\Response",
         "status": 400,
         "trace": []
+    },
+    "delete alias denied": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "You may not delete this override."
+        },
+        "trace": [
+            {
+                "getOverride": "ov-alias"
+            },
+            {
+                "canOverride": [
+                    "rep-bob",
+                    "team"
+                ]
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: forecast override delete denied",
+                    {
+                        "uid": "rep-bob",
+                        "id": "ov-alias"
+                    }
+                ]
+            }
+        ]
     }
 }
