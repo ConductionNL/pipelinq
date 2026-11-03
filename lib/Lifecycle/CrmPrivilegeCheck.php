@@ -33,7 +33,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 
 /**
- * A caller without a session is answered 401, a caller without the CRM
+ * A caller without a session (no user, or one without a UID) is answered 401, a caller without the CRM
  * privilege ({@see ObjectOwnerAccessPolicy::isPrivileged()}) 403.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
@@ -59,12 +59,12 @@ class CrmPrivilegeCheck {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function refusal(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user instanceof IUser === false) {
+		$uid = $this->actingUserId();
+		if ($uid === '') {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
 			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
