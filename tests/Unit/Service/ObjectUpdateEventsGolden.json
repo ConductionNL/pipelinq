@@ -1,0 +1,189 @@
+{
+    "lead unchanged": [],
+    "lead reassigned": [
+        {
+            "dispatchAssigneeChange": {
+                "entityType": "lead",
+                "title": "Deal",
+                "objectId": "42",
+                "assignee": "bob"
+            }
+        }
+    ],
+    "lead unassigned": [],
+    "lead stage moved": [
+        {
+            "dispatchStageChange": {
+                "title": "Deal",
+                "objectId": "42",
+                "newStage": "proposal",
+                "assignee": "ann"
+            }
+        }
+    ],
+    "lead won": [
+        {
+            "dispatchDealWon": {
+                "title": "Deal",
+                "value": "1250.5",
+                "objectId": "42",
+                "assignee": "ann"
+            }
+        }
+    ],
+    "lead lost": [
+        {
+            "dispatchDealLost": {
+                "title": "Deal",
+                "objectId": "42",
+                "assignee": "ann"
+            }
+        }
+    ],
+    "lead status moved": [],
+    "lead everything moved": [
+        {
+            "dispatchAssigneeChange": {
+                "entityType": "lead",
+                "title": "Deal",
+                "objectId": "42",
+                "assignee": "bob"
+            }
+        },
+        {
+            "dispatchDealWon": {
+                "title": "Deal",
+                "value": "10",
+                "objectId": "42",
+                "assignee": "bob"
+            }
+        }
+    ],
+    "request unchanged": [],
+    "request reassigned": [
+        {
+            "dispatchAssigneeChange": {
+                "entityType": "request",
+                "title": "Deal",
+                "objectId": "42",
+                "assignee": "bob"
+            }
+        }
+    ],
+    "request unassigned": [],
+    "request stage moved": [],
+    "request won": [],
+    "request lost": [],
+    "request status moved": [
+        {
+            "dispatchStatusChange": {
+                "title": "Deal",
+                "objectId": "42",
+                "newStatus": "done",
+                "assignee": "ann"
+            }
+        }
+    ],
+    "request everything moved": [
+        {
+            "dispatchAssigneeChange": {
+                "entityType": "request",
+                "title": "Deal",
+                "objectId": "42",
+                "assignee": "bob"
+            }
+        },
+        {
+            "dispatchStatusChange": {
+                "title": "Deal",
+                "objectId": "42",
+                "newStatus": "done",
+                "assignee": "bob"
+            }
+        }
+    ],
+    "contact unchanged": [],
+    "contact reassigned": [
+        {
+            "dispatchAssigneeChange": {
+                "entityType": "contact",
+                "title": "Deal",
+                "objectId": "42",
+                "assignee": "bob"
+            }
+        }
+    ],
+    "contact unassigned": [],
+    "contact stage moved": [],
+    "contact won": [],
+    "contact lost": [],
+    "contact status moved": [],
+    "contact everything moved": [
+        {
+            "dispatchAssigneeChange": {
+                "entityType": "contact",
+                "title": "Deal",
+                "objectId": "42",
+                "assignee": "bob"
+            }
+        }
+    ],
+    "product unchanged": [],
+    "product reassigned": [],
+    "product unassigned": [],
+    "product stage moved": [],
+    "product won": [],
+    "product lost": [],
+    "product status moved": [],
+    "product everything moved": [],
+    "lead created stage": [
+        {
+            "dispatchAssigneeChange": {
+                "entityType": "lead",
+                "title": "Deal",
+                "objectId": "42",
+                "assignee": "ann"
+            }
+        },
+        {
+            "dispatchStageChange": {
+                "title": "Deal",
+                "objectId": "42",
+                "newStage": "new",
+                "assignee": "ann"
+            }
+        }
+    ],
+    "lead stage cleared": [],
+    "request status cleared": [],
+    "lead translated title": [
+        {
+            "dispatchDealWon": {
+                "title": "Buy",
+                "value": "0",
+                "objectId": "42",
+                "assignee": "ann"
+            }
+        }
+    ],
+    "lead won without value": [
+        {
+            "dispatchDealWon": {
+                "title": "Deal",
+                "value": "0",
+                "objectId": "42",
+                "assignee": "ann"
+            }
+        }
+    ],
+    "lead assignee not scalar": [
+        {
+            "dispatchDealLost": {
+                "title": "Deal",
+                "objectId": "42",
+                "assignee": ""
+            }
+        }
+    ],
+    "unmapped schema": []
+}

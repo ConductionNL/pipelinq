@@ -1,0 +1,250 @@
+{
+    "child under other": {
+        "result": {
+            "status": 200,
+            "moved": 3,
+            "path": "/other/child"
+        },
+        "writes": [
+            {
+                "id": "child",
+                "parentOrganisation": "other",
+                "organisationPath": "/other/child"
+            },
+            {
+                "id": "grandchild",
+                "parentOrganisation": "child",
+                "organisationPath": "/other/child/grandchild"
+            },
+            {
+                "uuid": "nameless",
+                "organisationPath": "/other/child/nameless"
+            }
+        ]
+    },
+    "grandchild to root": {
+        "result": {
+            "status": 200,
+            "moved": 1,
+            "path": "/grandchild"
+        },
+        "writes": [
+            {
+                "id": "grandchild",
+                "parentOrganisation": null,
+                "organisationPath": "/grandchild"
+            }
+        ]
+    },
+    "grandchild to empty root": {
+        "result": {
+            "status": 200,
+            "moved": 1,
+            "path": "/grandchild"
+        },
+        "writes": [
+            {
+                "id": "grandchild",
+                "parentOrganisation": null,
+                "organisationPath": "/grandchild"
+            }
+        ]
+    },
+    "root under other": {
+        "result": {
+            "status": 200,
+            "moved": 4,
+            "path": "/other/root"
+        },
+        "writes": [
+            {
+                "id": "root",
+                "organisationPath": "/other/root",
+                "parentOrganisation": "other"
+            },
+            {
+                "id": "child",
+                "parentOrganisation": "root",
+                "organisationPath": "/other/root/child"
+            },
+            {
+                "id": "grandchild",
+                "parentOrganisation": "child",
+                "organisationPath": "/other/root/child/grandchild"
+            },
+            {
+                "uuid": "nameless",
+                "organisationPath": "/other/root/child/nameless"
+            }
+        ]
+    },
+    "root under its grandchild": {
+        "result": {
+            "status": 409,
+            "error": "That parent already sits under this organisation, so the move would close a cycle."
+        },
+        "writes": []
+    },
+    "onto itself": {
+        "result": {
+            "status": 409,
+            "error": "An organisation cannot be its own parent."
+        },
+        "writes": []
+    },
+    "padded ids": {
+        "result": {
+            "status": 200,
+            "moved": 3,
+            "path": "/other/child"
+        },
+        "writes": [
+            {
+                "id": "child",
+                "parentOrganisation": "other",
+                "organisationPath": "/other/child"
+            },
+            {
+                "id": "grandchild",
+                "parentOrganisation": "child",
+                "organisationPath": "/other/child/grandchild"
+            },
+            {
+                "uuid": "nameless",
+                "organisationPath": "/other/child/nameless"
+            }
+        ]
+    },
+    "no node": {
+        "result": {
+            "status": 400,
+            "error": "An organisation is required."
+        },
+        "writes": []
+    },
+    "unknown node": {
+        "result": {
+            "status": 404,
+            "error": "That organisation could not be read."
+        },
+        "writes": []
+    },
+    "unknown parent": {
+        "result": {
+            "status": 404,
+            "error": "That parent organisation could not be read."
+        },
+        "writes": []
+    },
+    "past the cap": {
+        "result": {
+            "status": 409,
+            "error": "That move would nest the organisation 7 levels deep, past the cap of 6."
+        },
+        "writes": []
+    },
+    "at the cap": {
+        "result": {
+            "status": 200,
+            "moved": 3,
+            "path": "/a/b/deep3/child"
+        },
+        "writes": [
+            {
+                "id": "child",
+                "parentOrganisation": "deep3",
+                "organisationPath": "/a/b/deep3/child"
+            },
+            {
+                "id": "grandchild",
+                "parentOrganisation": "child",
+                "organisationPath": "/a/b/deep3/child/grandchild"
+            },
+            {
+                "uuid": "nameless",
+                "organisationPath": "/a/b/deep3/child/nameless"
+            }
+        ]
+    },
+    "cap not configured": {
+        "result": {
+            "status": 409,
+            "error": "That move would nest the organisation 7 levels deep, past the cap of 6."
+        },
+        "writes": []
+    },
+    "pathless node": {
+        "result": {
+            "status": 200,
+            "moved": 1,
+            "path": "/other/loose"
+        },
+        "writes": [
+            {
+                "id": "loose",
+                "parentOrganisation": "other",
+                "organisationPath": "/other/loose"
+            }
+        ]
+    },
+    "pathless parent": {
+        "result": {
+            "status": 200,
+            "moved": 3,
+            "path": "/loose/child"
+        },
+        "writes": [
+            {
+                "id": "child",
+                "parentOrganisation": "loose",
+                "organisationPath": "/loose/child"
+            },
+            {
+                "id": "grandchild",
+                "parentOrganisation": "child",
+                "organisationPath": "/loose/child/grandchild"
+            },
+            {
+                "uuid": "nameless",
+                "organisationPath": "/loose/child/nameless"
+            }
+        ]
+    },
+    "write fails": {
+        "result": {
+            "status": 500,
+            "error": "The move could not be saved in full."
+        },
+        "writes": [
+            {
+                "id": "root",
+                "organisationPath": "/other/root",
+                "parentOrganisation": "other"
+            },
+            {
+                "id": "child",
+                "parentOrganisation": "root",
+                "organisationPath": "/other/root/child"
+            },
+            {
+                "id": "grandchild",
+                "parentOrganisation": "child",
+                "organisationPath": "/other/root/child/grandchild"
+            }
+        ]
+    },
+    "no register": {
+        "result": {
+            "status": 200,
+            "moved": 1,
+            "path": "/other/child"
+        },
+        "writes": [
+            {
+                "id": "child",
+                "parentOrganisation": "other",
+                "organisationPath": "/other/child"
+            }
+        ]
+    }
+}
