@@ -38,7 +38,7 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 8. Layout (REQ-MW-160)
 
-- [ ] 8.1 `src/components/myWork/LayoutPanel.vue`: hide and reorder sections, stored in `/api/settings/user` under `myWorkLayout`; "Reset to default"; the work list cannot be hidden.
+- [ ] 8.1 `src/components/myWork/LayoutPanel.vue`: hide and reorder sections, stored in `/api/settings/user` under `myWorkLayout`; "Terug naar de standaardindeling"; the work list cannot be hidden.
 
 ## 9. Phone (REQ-MW-170)
 
