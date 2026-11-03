@@ -94,10 +94,7 @@ class ForecastExportService {
 		$total = $this->countObjects(schemaKey: 'forecastSnapshot_schema', filters: $filters);
 		$page = $this->findObjects(
 			schemaKey: 'forecastSnapshot_schema',
-			filters: $filters,
-			sort: ['as_of_date' => 'ASC'],
-			limit: $limit,
-			offset: $offset
+			query: ['filters' => $filters, 'sort' => ['as_of_date' => 'ASC'], 'limit' => $limit, 'offset' => $offset]
 		);
 
 		$snapshots = [];
@@ -175,7 +172,7 @@ class ForecastExportService {
 			'currency' => (string)($row['currency'] ?? 'EUR'),
 			'partial' => (bool)($row['partial'] ?? false),
 			'exchange_rates' => $this->exchangeRates(row: $row),
-			'calculation_audit' => $this->buildAudit(row: $row, periodId: $periodId, level: $level),
+			'calculation_audit' => $this->buildAudit(periodId: $periodId, level: $level),
 		];
 	}//end presentSnapshot()
 
@@ -203,20 +200,19 @@ class ForecastExportService {
 	 * Only meaningful above rep level; a rep snapshot returns an empty audit
 	 * (its contribution is the deal-level commit, traced via deal_snapshot_ids).
 	 *
-	 * @param array<string, mixed> $row The raw snapshot.
 	 * @param string $periodId The period id.
 	 * @param string $level The snapshot level.
 	 *
 	 * @return array<int, array<string, mixed>> The audit rows.
 	 */
-	private function buildAudit(array $row, string $periodId, string $level): array {
+	private function buildAudit(string $periodId, string $level): array {
 		$childLevel = $this->childLevel(level: $level);
 		if ($childLevel === null) {
 			return [];
 		}
 
 		$audit = [];
-		$children = $this->childOwners(row: $row, level: $level, periodId: $periodId, childLevel: $childLevel);
+		$children = $this->childOwners(periodId: $periodId, childLevel: $childLevel);
 		foreach ($children as $childId) {
 			$rollUp = $this->forecastService->computeRollUp(ownerId: $childId, periodId: $periodId, level: $childLevel);
 			$overrideAmount = null;
@@ -257,20 +253,15 @@ class ForecastExportService {
 	 * The child owners are read from sibling snapshots at the child level for
 	 * the same period (the snapshot job already materialized them).
 	 *
-	 * @param array<string, mixed> $row The parent snapshot.
-	 * @param string $level The parent level.
 	 * @param string $periodId The period id.
 	 * @param string $childLevel The child level.
 	 *
 	 * @return array<int, string> The child owner ids.
 	 */
-	private function childOwners(array $row, string $level, string $periodId, string $childLevel): array {
+	private function childOwners(string $periodId, string $childLevel): array {
 		$childRows = $this->findObjects(
 			schemaKey: 'forecastSnapshot_schema',
-			filters: [
-				'period_id' => $periodId,
-				'level' => $childLevel,
-			]
+			query: ['filters' => ['period_id' => $periodId, 'level' => $childLevel]]
 		);
 
 		$owners = [];
@@ -281,7 +272,6 @@ class ForecastExportService {
 			}
 		}
 
-		unset($row, $level);
 		return array_keys($owners);
 	}//end childOwners()
 
@@ -289,34 +279,24 @@ class ForecastExportService {
 	 * Query objects of a configured schema with equality filters.
 	 *
 	 * @param string $schemaKey The app-config schema key.
-	 * @param array<string, mixed> $filters Additional equality filters.
-	 * @param array<string, string> $sort Optional sort map (field => ASC|DESC) pushed to OR.
-	 * @param int|null $limit Optional page size pushed to OR.
-	 * @param int|null $offset Optional offset pushed to OR.
+	 * @param array<string, mixed> $query Additional equality `filters`, and an optional `sort` map
+	 *                                    (field => ASC|DESC), `limit` and `offset`, all pushed to OR.
 	 *
 	 * @return array<int, array<string, mixed>> The matching objects as arrays.
 	 */
-	private function findObjects(string $schemaKey, array $filters, array $sort = [], ?int $limit = null, ?int $offset = null): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-		if ($register === '' || $schema === '') {
+	private function findObjects(string $schemaKey, array $query): array {
+		$allFilters = $this->scopedFilters(schemaKey: $schemaKey, filters: $query['filters']);
+		if ($allFilters === null) {
 			return [];
 		}
 
-		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
-
 		$config = ['filters' => $allFilters];
-		if ($sort !== []) {
-			$config['sort'] = $sort;
+		if (($query['sort'] ?? []) !== []) {
+			$config['sort'] = $query['sort'];
 		}
 
-		if ($limit !== null) {
-			$config['limit'] = $limit;
-		}
-
-		if ($offset !== null) {
-			$config['offset'] = $offset;
-		}
+		$window = ['limit' => ($query['limit'] ?? null), 'offset' => ($query['offset'] ?? null)];
+		$config += array_filter($window, static fn (?int $value): bool => $value !== null);
 
 		try {
 			$results = $this->getObjectService()->findAll(config: $config);
@@ -344,13 +324,10 @@ class ForecastExportService {
 	 * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-8
 	 */
 	private function countObjects(string $schemaKey, array $filters): int {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-		if ($register === '' || $schema === '') {
+		$allFilters = $this->scopedFilters(schemaKey: $schemaKey, filters: $filters);
+		if ($allFilters === null) {
 			return 0;
 		}
-
-		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
 
 		try {
 			return $this->getObjectService()->count(config: ['filters' => $allFilters]);
@@ -359,6 +336,25 @@ class ForecastExportService {
 			return 0;
 		}
 	}//end countObjects()
+
+	/**
+	 * The configured register and schema followed by the equality filters, or
+	 * null when the register or the schema is not configured.
+	 *
+	 * @param string $schemaKey The app-config schema key.
+	 * @param array<string, mixed> $filters Additional equality filters.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function scopedFilters(string $schemaKey, array $filters): ?array {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		return array_merge(['register' => $register, 'schema' => $schema], $filters);
+	}//end scopedFilters()
 
 	/**
 	 * Get the OpenRegister ObjectService.
