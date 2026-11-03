@@ -21,7 +21,7 @@
 
 ## 4. BI export page
 
-- [ ] 4.1 In ExportJobsView show "Not scheduled" as next run for a disabled job and the `pausedReason` under the Failed status in the Last run cell, as on board `PqBiExport` [V1]
+- [ ] 4.1 In ExportJobsView show "Niet ingepland" as next run for a disabled job and the `pausedReason` under the Failed status in the Last run cell, as on board `PqBiExport` [V1]
   - Verify: Playwright `tests/e2e/export-switch-off.spec.ts` seeds a switched-off job and reads both texts
 - [ ] 4.2 Make sure the "Last run failed" view lists a job whose last run failed, whether it is enabled or not [V1]
   - Verify: the same Playwright spec selects the view and finds the job
