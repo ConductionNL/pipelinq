@@ -1,8 +1,9 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <!--
-  - The segment rule editor: an AND/OR tree of conditions (SegmentRuleNode),
-  - validated and sized by a debounced POST /api/segments/preview.
+  - The segment rule editor: an AND/OR tree of conditions in nc-vue's
+  - CnConditionGroupEditor, validated and sized by a debounced
+  - POST /api/segments/preview.
   -
   - Unfinished conditions are caught here before anything is sent, so a row
   - the user has only just added is not reported as an error. Once every
@@ -17,12 +18,14 @@
 			</h3>
 		</div>
 
-		<SegmentRuleNode
-			:node="tree"
-			:depth="0"
-			:fieldOptions="fieldOptions"
+		<CnConditionGroupEditor
+			:modelValue="tree"
+			:fields="translatedFields"
+			:operators="operatorsFor"
+			:maxDepth="1"
 			:errors="errors"
-			@update:node="onTreeUpdate" />
+			:emptyText="t('pipelinq', 'No conditions yet. Add a condition to decide who belongs to this segment.')"
+			@update:modelValue="onTreeUpdate" />
 
 		<div class="segment-builder__estimate" role="status" aria-live="polite">
 			<template v-if="status === 'checking'">
@@ -54,11 +57,13 @@
 </template>
 
 <script>
+import { CnConditionGroupEditor } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
-import SegmentRuleNode from './SegmentRuleNode.vue'
+import { segmentOperatorsFor } from '../services/segmentOperators.js'
+import { cloneTree, emptyTree, tally } from '../services/segmentRules.js'
 
 const PREVIEW_DEBOUNCE_MS = 400
 
@@ -66,62 +71,13 @@ const PREVIEW_DEBOUNCE_MS = 400
 // `$.children[1].children[0]: field "x" is not declared on the entity schema.`
 const ERROR_PATH = /^(\$(?:\.children\[\d+\])*):\s*(.*)$/s
 
-/**
- * @return {object} An empty AND group.
- */
-function emptyTree() {
-	return { type: 'AND', children: [] }
-}
-
-/**
- * @param {object} node A rule tree node.
- * @return {object} A deep copy, or an empty tree for anything unusable.
- */
-function cloneTree(node) {
-	if (!node || typeof node !== 'object') {
-		return emptyTree()
-	}
-	try {
-		return JSON.parse(JSON.stringify(node))
-	} catch {
-		return emptyTree()
-	}
-}
-
-/**
- * @param {object} node A rule tree node.
- * @return {{leaves: number, unfinished: number}} Its condition count, and how
- *   many conditions or groups are not filled in yet.
- */
-function tally(node) {
-	if (Array.isArray(node?.children)) {
-		if (node.children.length === 0) {
-			return { leaves: 0, unfinished: 1 }
-		}
-		return node.children.reduce(
-			(sum, child) => {
-				const sub = tally(child)
-				return {
-					leaves: sum.leaves + sub.leaves,
-					unfinished: sum.unfinished + sub.unfinished,
-				}
-			},
-			{ leaves: 0, unfinished: 0 },
-		)
-	}
-	const noValue =
-		node?.value === '' || node?.value === null || node?.value === undefined
-	const unfinished = !node?.field || !node?.operator || noValue
-	return { leaves: 1, unfinished: unfinished ? 1 : 0 }
-}
-
 export default {
 	name: 'SegmentBuilder',
 	components: {
 		AccountGroup,
+		CnConditionGroupEditor,
 		NcLoadingIcon,
 		NcNoteCard,
-		SegmentRuleNode,
 	},
 
 	props: {
@@ -159,6 +115,22 @@ export default {
 		}
 	},
 
+	computed: {
+		/**
+		 * The field options with translated labels.
+		 *
+		 * @return {Array<object>} The options.
+		 *
+		 * @spec openspec/changes/segment-groups-its-rules/specs/marketing-ui/spec.md#requirement-a-segment-groups-its-rules
+		 */
+		translatedFields() {
+			return this.fieldOptions.map((o) => ({
+				...o,
+				label: this.t('pipelinq', o.label),
+			}))
+		},
+	},
+
 	watch: {
 		/**
 		 * Take a tree the parent replaced, and re-check it.
@@ -168,11 +140,9 @@ export default {
 		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		modelValue(next) {
-			if (
-				next !== this.tree
-				&& JSON.stringify(next) !== JSON.stringify(this.tree)
-			) {
-				this.tree = cloneTree(next)
+			const tree = cloneTree(next)
+			if (JSON.stringify(tree) !== JSON.stringify(this.tree)) {
+				this.tree = tree
 				this.evaluate()
 			}
 		},
@@ -206,14 +176,29 @@ export default {
 
 	methods: {
 		/**
-		 * Take an edited tree from the rule nodes, pass it up and re-check it.
+		 * The operators of a field, labels translated.
+		 *
+		 * @param {object|undefined} field The field option.
+		 * @return {Array<{value: string, label: string}>} The operators.
+		 *
+		 * @spec openspec/changes/segment-groups-its-rules/specs/marketing-ui/spec.md#requirement-a-segment-groups-its-rules
+		 */
+		operatorsFor(field) {
+			return segmentOperatorsFor(field).map((o) => ({
+				value: o.value,
+				label: this.t('pipelinq', o.label),
+			}))
+		},
+
+		/**
+		 * Take an edited tree from the group editor, pass it up and re-check it.
 		 *
 		 * @param {object} updated The edited rule tree.
 		 *
 		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		onTreeUpdate(updated) {
-			this.tree = updated
+			this.tree = cloneTree(updated)
 			this.$emit('update:modelValue', cloneTree(updated))
 			this.evaluate()
 		},
