@@ -1,0 +1,2031 @@
+{
+    "mixed rows": {
+        "exit": 1,
+        "output": [
+            "  dangling  s-dangling -> o-gone",
+            "  ambiguous s-ambiguous contractNumber=C-3 matches 2 owners",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 0 written",
+            "Re-run with the write option to fill in the 5 unambiguous match(es).",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "mixed rows (write)": {
+        "exit": 1,
+        "output": [
+            "  dangling  s-dangling -> o-gone",
+            "  ambiguous s-ambiguous contractNumber=C-3 matches 2 owners",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 5 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "patchObject": [
+                    "s-spaces",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-backfill",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-trim",
+                    {
+                        "contract": "o-2"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-noid-owner",
+                    {
+                        "contract": ""
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            }
+        ]
+    },
+    "entity rows": {
+        "exit": 1,
+        "output": [
+            "  dangling  s-dangling -> o-gone",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 2 backfillable, 0 ambiguous, 3 unmatched, 0 written",
+            "Re-run with the write option to fill in the 2 unambiguous match(es).",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "entity rows (write)": {
+        "exit": 1,
+        "output": [
+            "  dangling  s-dangling -> o-gone",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 2 backfillable, 0 ambiguous, 3 unmatched, 2 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "patchObject": [
+                    "s-backfill",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-trim",
+                    {
+                        "contract": "o-2"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            }
+        ]
+    },
+    "no satellites": {
+        "exit": 0,
+        "output": [
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 0 set, 0 dangling, 0 backfillable, 0 ambiguous, 0 unmatched, 0 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "no satellites (write)": {
+        "exit": 0,
+        "output": [
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 0 set, 0 dangling, 0 backfillable, 0 ambiguous, 0 unmatched, 0 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "no owners": {
+        "exit": 0,
+        "output": [
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 2 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "no owners (write)": {
+        "exit": 0,
+        "output": [
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 2 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "owner register unreadable": {
+        "exit": 0,
+        "output": [
+            "shillinq is not readable (shillinq is not installed). Nothing can be resolved or backfilled; reporting presence only.",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 2 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "owner register unreadable (write)": {
+        "exit": 0,
+        "output": [
+            "shillinq is not readable (shillinq is not installed). Nothing can be resolved or backfilled; reporting presence only.",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 2 set, 0 dangling, 0 backfillable, 0 ambiguous, 8 unmatched, 0 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "satellites unreadable": {
+        "exit": 1,
+        "output": [
+            "could not read salesContract: no salesContract schema",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "satellites unreadable (write)": {
+        "exit": 1,
+        "output": [
+            "could not read salesContract: no salesContract schema",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "object service unavailable": {
+        "exit": 1,
+        "output": [
+            "could not read salesContract: OpenRegister is not installed",
+            ""
+        ],
+        "calls": []
+    },
+    "object service unavailable (write)": {
+        "exit": 1,
+        "output": [
+            "could not read salesContract: OpenRegister is not installed",
+            ""
+        ],
+        "calls": []
+    },
+    "writes fail": {
+        "exit": 1,
+        "output": [
+            "  dangling  s-dangling -> o-gone",
+            "  ambiguous s-ambiguous contractNumber=C-3 matches 2 owners",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 0 written",
+            "Re-run with the write option to fill in the 5 unambiguous match(es).",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "writes fail (write)": {
+        "exit": 1,
+        "output": [
+            "  dangling  s-dangling -> o-gone",
+            "  write failed s-spaces: locked: s-spaces",
+            "  write failed s-backfill: locked: s-backfill",
+            "  write failed s-trim: locked: s-trim",
+            "  ambiguous s-ambiguous contractNumber=C-3 matches 2 owners",
+            "  write failed : locked: ",
+            "  write failed s-noid-owner: locked: s-noid-owner",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 1 set, 1 dangling, 5 backfillable, 1 ambiguous, 2 unmatched, 0 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "patchObject": [
+                    "s-spaces",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-backfill",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-trim",
+                    {
+                        "contract": "o-2"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-noid-owner",
+                    {
+                        "contract": ""
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            }
+        ]
+    },
+    "two pages": {
+        "exit": 0,
+        "output": [
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 0 set, 0 dangling, 103 backfillable, 0 ambiguous, 102 unmatched, 0 written",
+            "Re-run with the write option to fill in the 103 unambiguous match(es).",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 200
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "two pages (write)": {
+        "exit": 0,
+        "output": [
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 0 set, 0 dangling, 103 backfillable, 0 ambiguous, 102 unmatched, 103 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 200
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "patchObject": [
+                    "s-0",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-2",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-4",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-6",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-8",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-10",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-12",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-14",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-16",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-18",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-20",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-22",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-24",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-26",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-28",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-30",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-32",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-34",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-36",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-38",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-40",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-42",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-44",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-46",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-48",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-50",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-52",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-54",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-56",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-58",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-60",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-62",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-64",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-66",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-68",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-70",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-72",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-74",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-76",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-78",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-80",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-82",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-84",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-86",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-88",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-90",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-92",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-94",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-96",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-98",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-100",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-102",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-104",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-106",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-108",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-110",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-112",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-114",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-116",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-118",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-120",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-122",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-124",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-126",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-128",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-130",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-132",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-134",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-136",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-138",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-140",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-142",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-144",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-146",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-148",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-150",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-152",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-154",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-156",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-158",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-160",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-162",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-164",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-166",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-168",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-170",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-172",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-174",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-176",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-178",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-180",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-182",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-184",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-186",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-188",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-190",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-192",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-194",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-196",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-198",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-200",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-202",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            },
+            {
+                "patchObject": [
+                    "s-204",
+                    {
+                        "contract": "o-1"
+                    },
+                    "pipelinq",
+                    "salesContract",
+                    false,
+                    false
+                ]
+            }
+        ]
+    },
+    "only dangling": {
+        "exit": 1,
+        "output": [
+            "  dangling  s-x -> o-x",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 0 set, 1 dangling, 0 backfillable, 0 ambiguous, 0 unmatched, 0 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "only dangling (write)": {
+        "exit": 1,
+        "output": [
+            "  dangling  s-x -> o-x",
+            "",
+            "salesContract.contract -> shillinq.Contract via contractNumber: 0 set, 1 dangling, 0 backfillable, 0 ambiguous, 0 unmatched, 0 written",
+            ""
+        ],
+        "calls": [
+            {
+                "setRegister": "pipelinq"
+            },
+            {
+                "setSchema": "salesContract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            },
+            {
+                "setRegister": "shillinq"
+            },
+            {
+                "setSchema": "Contract"
+            },
+            {
+                "findAll": {
+                    "limit": 200,
+                    "offset": 0
+                }
+            }
+        ]
+    }
+}
