@@ -2,22 +2,22 @@
 
 ## 1. nc-vue: the group editor (ConductionNL/nextcloud-vue)
 
-- [ ] 1.1 `CnConditionGroupEditor`: `v-model` group tree, `fields`, `operators` by field type, `maxDepth` (default 1), `errors` by node path; rows reuse `CnConditionListEditor`'s field, operator and value row
+- [x] 1.1 `CnConditionGroupEditor`: `v-model` group tree, `fields`, `operators` by field type, `maxDepth` (default 1), `errors` by node path; rows reuse `CnConditionListEditor`'s field, operator and value row
   - Files: src/components/CnConditionGroupEditor/ (new), src/components/CnConditionListEditor/ (extract the row)
   - Test: vitest for add and remove condition and group, the AND/OR radio, the caption, Add group only above `maxDepth`, a deeper tree rendering, a NOT node as a locked row
-- [ ] 1.2 The board look: legend and radios as PqSegmentBouwer draws them, connector column, indented inner card, written Remove group, icon pill for Remove condition (PL5-C items 9 to 11 ride on this)
-- [ ] 1.3 Strings in nc-vue's l10n: How the conditions combine, Match all conditions, Match any condition, Where, and, or, all of these, one of these, Add condition, Add group, Remove group, Remove condition, These conditions are kept as written
-- [ ] 1.4 Export it, document it in the nc-vue docs beside `CnConditionListEditor`
+- [x] 1.2 The board look: legend and radios as PqSegmentBouwer draws them, connector column, indented inner card, written Remove group, icon pill for Remove condition (PL5-C items 9 to 11 ride on this)
+- [x] 1.3 Strings in nc-vue's l10n: How the conditions combine, Match all conditions, Match any condition, Where, and, or, all of these, one of these, Add condition, Add group, Remove group, Remove condition, These conditions are kept as written
+- [x] 1.4 Export it, document it in the nc-vue docs beside `CnConditionListEditor`
 - [ ] 1.5 Follow-up, not this change: a `conditionGroup` field in nc-vue's form dialog plus posting to a named endpoint, so `SegmentFormDialog` can become manifest config
 
 ## 2. pipelinq: the editor
 
-- [ ] 2.1 `SegmentBuilder` mounts `CnConditionGroupEditor` with `fieldOptionsFor()` and an operator map built from today's `OPERATORS_BY_TYPE` and `DATE_OPERATORS`; delete `SegmentRuleNode.vue`
+- [x] 2.1 `SegmentBuilder` mounts `CnConditionGroupEditor` with `fieldOptionsFor()` and an operator map built from today's `OPERATORS_BY_TYPE` and `DATE_OPERATORS`; delete `SegmentRuleNode.vue`
   - Files: src/components/SegmentBuilder.vue, src/components/SegmentRuleNode.vue (removed), src/services/segmentOperators.js (new, moved out of SegmentRuleNode)
   - Test: tests/vitest/SegmentBuilder.spec.js (tree in, tree out, no preview while a group is empty)
-- [ ] 2.2 `cloneTree()` normalises per design D3
+- [x] 2.2 `cloneTree()` normalises per design D3
   - Test: tests/vitest/SegmentBuilder.spec.js (bare leaf, leaf list, missing type, empty)
-- [ ] 2.3 e2e for the marketing-ui scenarios: build a group, mix AND/OR, remove, preview count, save and reopen, flat segment, bare condition, deeper tree
+- [x] 2.3 e2e for the marketing-ui scenarios: build a group, mix AND/OR, remove, preview count, save and reopen, flat segment, bare condition, deeper tree
   - Files: tests/e2e/spec-coverage/marketing.spec.ts
 
 ## 3. pipelinq: the engine

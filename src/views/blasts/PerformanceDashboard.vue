@@ -1363,6 +1363,12 @@ export default {
 	line-height: 1.2;
 }
 
+/* A section title (the A/B card's blast name, "Attribution to deals") is an
+   h2, whose core line-height outranks the pane's 1.2. */
+.cn-look-board .performance-dashboard__section-title {
+	line-height: 1.2;
+}
+
 .performance-dashboard__error {
 	color: var(--color-error);
 	font-weight: 600;
