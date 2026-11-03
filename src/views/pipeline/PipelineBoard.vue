@@ -1115,7 +1115,7 @@ export default {
 		 * The value a list column sorts on, or null for a column that does not sort.
 		 *
 		 * @param {string} sortBy The list column key.
-		 * @return {Function|null} Item to sort value.
+		 * @return {((item: object) => (string|number))|null} Item to sort value.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
 		 */
 		listSortKey(sortBy) {
