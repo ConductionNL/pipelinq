@@ -43,7 +43,7 @@ class XWikiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testSearchReturnsServicePayload(): void {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnMap([
 			['q', null, 'paspoort'],
 			['space', null, 'Kennisbank'],
@@ -52,19 +52,19 @@ class XWikiControllerTest extends TestCase {
 			['offset', null, '0'],
 		]);
 
-		$service = $this->createMock(XWikiService::class);
+		$service = $this->createMock(originalClassName: XWikiService::class);
 		$service->expects($this->once())
 			->method('search')
 			->with('paspoort', ['space' => 'Kennisbank', 'tags' => ['a', 'b'], 'limit' => 5, 'offset' => 0])
 			->willReturn(['results' => [['id' => '1', 'title' => 'Paspoort']], 'total' => 1, 'limit' => 5, 'offset' => 0]);
 
-		$controller = new XWikiController($request, $service, $this->createMock(LoggerInterface::class));
+		$controller = new XWikiController(request: $request, xwiki: $service, logger: $this->createMock(originalClassName: LoggerInterface::class));
 		$response = $controller->search();
 
-		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
 		$data = $response->getData();
-		$this->assertSame(1, $data['total']);
-		$this->assertSame('Paspoort', $data['results'][0]['title']);
+		$this->assertSame(expected: 1, actual: $data['total']);
+		$this->assertSame(expected: 'Paspoort', actual: $data['results'][0]['title']);
 	}//end testSearchReturnsServicePayload()
 
 	/**
@@ -73,16 +73,16 @@ class XWikiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testSearchHandlesServiceFailure(): void {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturn(null);
-		$service = $this->createMock(XWikiService::class);
+		$service = $this->createMock(originalClassName: XWikiService::class);
 		$service->method('search')->willThrowException(new RuntimeException('boom'));
 
-		$controller = new XWikiController($request, $service, $this->createMock(LoggerInterface::class));
+		$controller = new XWikiController(request: $request, xwiki: $service, logger: $this->createMock(originalClassName: LoggerInterface::class));
 		$data = $controller->search()->getData();
 
-		$this->assertSame('unavailable', $data['error']);
-		$this->assertSame([], $data['results']);
+		$this->assertSame(expected: 'unavailable', actual: $data['error']);
+		$this->assertSame(expected: [], actual: $data['results']);
 	}//end testSearchHandlesServiceFailure()
 
 	/**
@@ -91,24 +91,24 @@ class XWikiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testPagesReturnsServicePayload(): void {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnMap([
 			['space', null, 'Kennisbank'],
 			['limit', null, '10'],
 			['offset', null, '0'],
 		]);
 
-		$service = $this->createMock(XWikiService::class);
+		$service = $this->createMock(originalClassName: XWikiService::class);
 		$service->expects($this->once())
 			->method('getPages')
 			->with('Kennisbank', 10, 0)
 			->willReturn(['results' => [], 'total' => 0, 'limit' => 10, 'offset' => 0]);
 
-		$controller = new XWikiController($request, $service, $this->createMock(LoggerInterface::class));
+		$controller = new XWikiController(request: $request, xwiki: $service, logger: $this->createMock(originalClassName: LoggerInterface::class));
 		$response = $controller->pages();
 
-		$this->assertInstanceOf(JSONResponse::class, $response);
-		$this->assertSame(0, $response->getData()['total']);
+		$this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
+		$this->assertSame(expected: 0, actual: $response->getData()['total']);
 	}//end testPagesReturnsServicePayload()
 
 	/**
@@ -117,20 +117,29 @@ class XWikiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testPageResanitises(): void {
-		$request = $this->createMock(IRequest::class);
-		$service = $this->createMock(XWikiService::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$service = $this->createMock(originalClassName: XWikiService::class);
 		$service->method('getPageContent')
 			->with('xwiki', 'Kennisbank.Paspoort')
-			->willReturn(['title' => 'Paspoort', 'content' => '<p>ok</p><script>alert(1)</script>', 'url' => 'http://x', 'modified' => '', 'space' => 'Kennisbank', 'id' => '1']);
+			->willReturn(
+				[
+					'title' => 'Paspoort',
+					'content' => '<p>ok</p><script>alert(1)</script>',
+					'url' => 'http://x',
+					'modified' => '',
+					'space' => 'Kennisbank',
+					'id' => '1',
+				]
+			);
 		$service->expects($this->once())
 			->method('sanitiseHtml')
 			->willReturn('<p>ok</p>');
 
-		$controller = new XWikiController($request, $service, $this->createMock(LoggerInterface::class));
+		$controller = new XWikiController(request: $request, xwiki: $service, logger: $this->createMock(originalClassName: LoggerInterface::class));
 		$data = $controller->page('xwiki', 'Kennisbank.Paspoort')->getData();
 
-		$this->assertSame('<p>ok</p>', $data['content']);
-		$this->assertSame('Paspoort', $data['title']);
+		$this->assertSame(expected: '<p>ok</p>', actual: $data['content']);
+		$this->assertSame(expected: 'Paspoort', actual: $data['title']);
 	}//end testPageResanitises()
 
 	/**
@@ -139,15 +148,15 @@ class XWikiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testStatus(): void {
-		$request = $this->createMock(IRequest::class);
-		$service = $this->createMock(XWikiService::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$service = $this->createMock(originalClassName: XWikiService::class);
 		$service->method('getStatus')->willReturn(['available' => true, 'version' => '15.10', 'baseUrl' => 'http://xwiki', 'source' => 'direct-url']);
 
-		$controller = new XWikiController($request, $service, $this->createMock(LoggerInterface::class));
+		$controller = new XWikiController(request: $request, xwiki: $service, logger: $this->createMock(originalClassName: LoggerInterface::class));
 		$data = $controller->status()->getData();
 
-		$this->assertTrue($data['available']);
-		$this->assertSame('15.10', $data['version']);
+		$this->assertTrue(condition: $data['available']);
+		$this->assertSame(expected: '15.10', actual: $data['version']);
 	}//end testStatus()
 
 	/**
@@ -156,14 +165,14 @@ class XWikiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testStatusHandlesFailure(): void {
-		$request = $this->createMock(IRequest::class);
-		$service = $this->createMock(XWikiService::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$service = $this->createMock(originalClassName: XWikiService::class);
 		$service->method('getStatus')->willThrowException(new RuntimeException('boom'));
 
-		$controller = new XWikiController($request, $service, $this->createMock(LoggerInterface::class));
+		$controller = new XWikiController(request: $request, xwiki: $service, logger: $this->createMock(originalClassName: LoggerInterface::class));
 		$data = $controller->status()->getData();
 
-		$this->assertFalse($data['available']);
-		$this->assertSame('error', $data['source']);
+		$this->assertFalse(condition: $data['available']);
+		$this->assertSame(expected: 'error', actual: $data['source']);
 	}//end testStatusHandlesFailure()
 }//end class
