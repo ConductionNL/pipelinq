@@ -155,7 +155,7 @@ class ForecastController extends Controller {
 			return new JSONResponse(['error' => 'Unauthenticated.'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$existing = $this->overrides->find(id: $id);
+		$existing = $this->overrides->stored(id: $id);
 		if ($existing === null) {
 			return new JSONResponse(['error' => 'Override not found.'], Http::STATUS_NOT_FOUND);
 		}

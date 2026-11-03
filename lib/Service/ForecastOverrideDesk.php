@@ -112,9 +112,9 @@ class ForecastOverrideDesk {
 	 *
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-06
 	 */
-	public function find(string $id): ?array {
+	public function stored(string $id): ?array {
 		return $this->overrideService->getOverride($id);
-	}//end find()
+	}//end stored()
 
 	/**
 	 * Delete a stored override.
