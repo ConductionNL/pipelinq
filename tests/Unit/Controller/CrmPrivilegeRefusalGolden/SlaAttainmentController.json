@@ -1,0 +1,49 @@
+{
+    "attainment no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "notAuthenticated"
+        },
+        "trace": []
+    },
+    "attainment unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "attainment privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "SlaAttainmentService::compute": [
+                    {
+                        "bucket": "month",
+                        "date": "",
+                        "week": "",
+                        "month": "",
+                        "quarter": "",
+                        "groupBy": "policy",
+                        "policy": ""
+                    }
+                ]
+            }
+        ]
+    }
+}
