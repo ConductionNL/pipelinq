@@ -477,7 +477,7 @@ class PointsLedgerService {
 			return null;
 		}
 
-		$first = $this->toArray(object: reset($rows));
+		$first = $this->toArray(value: reset($rows));
 		if (($first['type'] ?? null) !== $movement->type || (int)($first['count'] ?? 0) !== $movement->signedCount) {
 			throw new RuntimeException('Operation '.$this->operationId.' was already used for another movement.');
 		}
