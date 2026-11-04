@@ -274,7 +274,7 @@
 					},
 					{
 						"id": "Store",
-						"label": "Store",
+						"label": "Marketplace",
 						"description": "Add apps and connections that work with Pipelinq.",
 						"icon": "StoreOutline",
 						"category": "more",

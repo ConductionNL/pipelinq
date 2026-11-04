@@ -2630,7 +2630,7 @@ OC.L10N.register(
         "No stages yet. Add at least one stage.": "Nog geen fasen. Voeg ten minste één fase toe.",
         "No status changes recorded.": "Geen statuswijzigingen geregistreerd.",
         "No status changes yet": "Nog geen statuswijzigingen",
-        "No store registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "Er is geen store-registry ingesteld, dus er is niets van het netwerk opgehaald. Een beheerder kan er een koppelen bij Beheerinstellingen. De sjablonen hieronder worden met Pipelinq meegeleverd.",
+        "No marketplace registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "Er is geen marktplaats-registry ingesteld, dus er is niets van het netwerk opgehaald. Een beheerder kan er een koppelen bij Beheerinstellingen. De sjablonen hieronder worden met Pipelinq meegeleverd.",
         "No submissions yet": "Nog geen inzendingen",
         "No surcharge": "Geen toeslag",
         "No surveys yet. Create your first KTO survey.": "Nog geen enquêtes. Maak uw eerste KTO-enquête aan.",
@@ -3508,7 +3508,7 @@ OC.L10N.register(
         "Search products…": "Producten zoeken…",
         "Search product…": "Product zoeken…",
         "Search queries": "Zoekopdrachten",
-        "Search the store": "Zoek in de store",
+        "Search the marketplace": "Zoek in de marktplaats",
         "Search users or groups...": "Gebruikers of groepen zoeken...",
         "Search volume": "Zoekvolume",
         "Searching...": "Zoeken...",
@@ -3764,6 +3764,7 @@ OC.L10N.register(
         "Step": "Stap",
         "Step duration": "Stapduur",
         "Stop": "Stoppen",
+        "Marketplace": "Marktplaats",
         "Store": "Store",
         "Strength": "Sterkte",
         "Strong": "Sterk",
@@ -4072,7 +4073,7 @@ OC.L10N.register(
         "The sitemap to diff for new and changed pages. A sitemap index is followed.": "De sitemap die vergeleken wordt op nieuwe en gewijzigde pagina's. Een sitemap-index wordt gevolgd.",
         "The social network this profile belongs to.": "Het sociale netwerk waartoe dit profiel behoort.",
         "The social posts that belong to this campaign. Plain ids until phase 3 ships the socialPost schema.": "De social posts die bij deze campagne horen. Losse ids totdat fase 3 het socialPost-schema oplevert.",
-        "The store registry did not answer. The templates below ship with Pipelinq.": "De store-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd.",
+        "The marketplace registry did not answer. The templates below ship with Pipelinq.": "De marktplaats-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd.",
         "The stored key was removed": "De opgeslagen sleutel is verwijderd",
         "The subject of the task a createTask action writes.": "Het onderwerp van de taak die een createTask-actie schrijft.",
         "The subscription, contract or import run this capture came from.": "Het abonnement, contract of de importronde waar deze vastlegging vandaan komt.",
@@ -9469,7 +9470,10 @@ OC.L10N.register(
         "What the item installs: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector.": "Wat het item installeert: een pijplijn, wachtrijroutering, catalogus, kassa-inrichting, loyaliteitsprogramma of connector.",
         "What the item sets up, shown on its card in the store.": "Wat het item inricht, getoond op de kaart in de winkel.",
         "What the tariff is called, such as the rate of a fee regulation.": "Hoe het tarief heet, zoals het tarief uit een legesverordening.",
-        "Who published the item.": "Wie het item heeft gepubliceerd."
+        "Who published the item.": "Wie het item heeft gepubliceerd.",
+        "Search the store": "Zoek in de marktplaats",
+        "No store registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "Er is geen marktplaats-registry ingesteld, dus er is niets van het netwerk opgehaald. Een beheerder kan er een koppelen bij Beheerinstellingen. De sjablonen hieronder worden met Pipelinq meegeleverd.",
+        "The store registry did not answer. The templates below ship with Pipelinq.": "De marktplaats-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd."
     },
     "nplurals=2; plural=(n != 1);"
 )

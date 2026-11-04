@@ -622,7 +622,7 @@
 		},
 		{
 			"id": "StoreMenu",
-			"label": "Store",
+			"label": "Marketplace",
 			"icon": "StoreOutline",
 			"route": "Store",
 			"section": "footer",
@@ -11127,7 +11127,7 @@
 			"id": "Store",
 			"route": "/store",
 			"type": "store",
-			"title": "Store",
+			"title": "Marketplace",
 			"config": {
 				"app": "pipelinq",
 				"storeRegistry": true,
