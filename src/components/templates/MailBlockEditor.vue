@@ -193,7 +193,7 @@ export default {
 		/**
 		 * The palette: one entry per addable type, each made with empty content.
 		 *
-		 * @return {Array<{type: string, label: string, create: Function}>} The types.
+		 * @return {Array<{type: string, label: string, create: () => object}>} The types.
 		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		types() {
