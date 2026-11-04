@@ -28,12 +28,12 @@ the marketer cannot type away. The HTML is rendered on the server
 				<NcTextField
 					:modelValue="block.props.text || ''"
 					:label="t('pipelinq', 'Heading text')"
-					@update:modelValue="update(withProp(block, 'text', $event))" />
+					@update:modelValue="update(withProps(block, { text: $event }))" />
 				<label class="mail-block-editor__field">
 					<span>{{ t('pipelinq', 'Size') }}</span>
 					<select
 						:value="String(block.props.level || 2)"
-						@change="update(withProp(block, 'level', Number($event.target.value)))">
+						@change="update(withProps(block, { level: Number($event.target.value) }))">
 						<option value="1">{{ t('pipelinq', 'Large') }}</option>
 						<option value="2">{{ t('pipelinq', 'Medium') }}</option>
 					</select>
@@ -44,7 +44,7 @@ the marketer cannot type away. The HTML is rendered on the server
 					:modelValue="block.props.markdown || ''"
 					:aria-label="t('pipelinq', 'Text')"
 					:rows="8"
-					@update:modelValue="update(withProp(block, 'markdown', $event))" />
+					@update:modelValue="update(withProps(block, { markdown: $event }))" />
 				<p class="mail-block-editor__hint">
 					{{ t('pipelinq', 'Bold, italic, links and lists are kept. Anything else is sent as plain text.') }}
 				</p>
@@ -53,33 +53,33 @@ the marketer cannot type away. The HTML is rendered on the server
 				<NcTextField
 					:modelValue="block.props.src || ''"
 					:label="t('pipelinq', 'Image address (https://)')"
-					@update:modelValue="update(withProp(block, 'src', $event))" />
+					@update:modelValue="update(withProps(block, { src: $event }))" />
 				<NcTextField
 					:modelValue="block.props.alt || ''"
 					:label="t('pipelinq', 'Alternative text')"
 					:error="!block.props.alt"
 					:helperText="block.props.alt ? '' : t('pipelinq', 'Describe the image for people who cannot see it.')"
-					@update:modelValue="update(withProp(block, 'alt', $event))" />
+					@update:modelValue="update(withProps(block, { alt: $event }))" />
 				<NcTextField
 					:modelValue="block.props.href || ''"
 					:label="t('pipelinq', 'Link (optional)')"
-					@update:modelValue="update(withProp(block, 'href', $event))" />
+					@update:modelValue="update(withProps(block, { href: $event }))" />
 			</template>
 			<template #block-button="{ block, update }">
 				<NcTextField
 					:modelValue="block.props.label || ''"
 					:label="t('pipelinq', 'Button text')"
-					@update:modelValue="update(withProp(block, 'label', $event))" />
+					@update:modelValue="update(withProps(block, { label: $event }))" />
 				<NcTextField
 					:modelValue="block.props.href || ''"
 					:label="t('pipelinq', 'Link (https://)')"
-					@update:modelValue="update(withProp(block, 'href', $event))" />
+					@update:modelValue="update(withProps(block, { href: $event }))" />
 				<label class="mail-block-editor__field">
 					<span>{{ t('pipelinq', 'Colour') }}</span>
 					<input
 						type="color"
 						:value="block.props.color || defaultColor"
-						@input="update(withProp(block, 'color', $event.target.value))">
+						@input="update(withProps(block, { color: $event.target.value }))">
 				</label>
 			</template>
 			<template #block-spacer="{ block, update }">
@@ -90,7 +90,7 @@ the marketer cannot type away. The HTML is rendered on the server
 						min="8"
 						max="96"
 						:value="block.props.height || 24"
-						@input="update(withProp(block, 'height', Number($event.target.value)))">
+						@input="update(withProps(block, { height: Number($event.target.value) }))">
 				</label>
 			</template>
 			<template #block="{ block }">
@@ -238,16 +238,15 @@ export default {
 		},
 
 		/**
-		 * The change that sets one property of a block, for the list's `update`.
+		 * The change that sets properties of a block, for the list's `update`.
 		 *
 		 * @param {object} block The block.
-		 * @param {string} key The property.
-		 * @param {string|number} value The value.
+		 * @param {object} changed The properties and their new values.
 		 * @return {{props: object}} The changed fields.
 		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
-		withProp(block, key, value) {
-			return { props: { ...block.props, [key]: value } }
+		withProps(block, changed) {
+			return { props: { ...block.props, ...changed } }
 		},
 
 		/**
@@ -258,7 +257,7 @@ export default {
 		 */
 		setFooterText(text) {
 			const joined = [withoutTokens(text), ...FOOTER_TOKENS].filter(Boolean).join('\n')
-			this.emitBlocks(this.body, { ...this.footer, ...this.withProp(this.footer, 'text', joined) })
+			this.emitBlocks(this.body, { ...this.footer, ...this.withProps(this.footer, { text: joined }) })
 		},
 
 		/**
