@@ -1,7 +1,8 @@
 # activity-stream-publishing Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-activityservice-gate27. Update Purpose after archive.
+Pipelinq publishes the lifecycle events of leads and requests (created, assigned, stage or status changed, note added, won, lost) to the Nextcloud Activity stream. It does so through the first-party Nextcloud Activity API, so the stream works without a sibling app or cross-app call.
+
 ## Requirements
 ### Requirement: Activity Stream Publishing Uses the Nextcloud First-Party Activity API
 

@@ -96,7 +96,7 @@ The system MUST display a single, consolidated profile page for each client that
 
 - GIVEN a client "Jan de Vries" with `contactsUid` set (synced with Nextcloud Contacts)
 - WHEN the agent opens the customer 360
-- THEN the system MUST display the "Synced with Contacts" badge (existing pattern from `ClientDetail.vue`)
+- THEN the system MUST display the "Gesynchroniseerd met Contacten" (Synced with Contacts) badge (existing pattern from `ClientDetail.vue`)
 - AND the agent MUST be able to navigate to the linked Nextcloud Contact
 - AND changes to the Nextcloud Contact MUST be reflected in Pipelinq via `ContactSyncService`
 
@@ -513,7 +513,7 @@ The customer 360 client view MUST include a satisfaction panel showing the clien
 **Partially implemented.** The client detail view provides a basic customer profile, but the full 360-degree view with interaction history, cases, documents, and BRP/KVK enrichment is NOT implemented.
 
 Implemented (partial, via existing client detail view):
-- **Client profile**: `src/views/clients/ClientDetail.vue` displays: name, type, email, phone, website, address, notes. Shows "Synced with Contacts" badge when linked to Nextcloud Contacts.
+- **Client profile**: `src/views/clients/ClientDetail.vue` displays: name, type, email, phone, website, address, notes. Shows "Gesynchroniseerd met Contacten" (Synced with Contacts) badge when linked to Nextcloud Contacts.
 - **Linked contacts**: Contact persons list with name, role, email on client detail.
 - **Linked leads**: Leads list with title, stage, value on client detail.
 - **Linked requests**: Requests list with title, status on client detail.
