@@ -287,8 +287,7 @@ export default {
 		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		summary(block) {
-			const p = block.props || {}
-			const text = p.text || p.markdown || p.label || p.alt || ''
+			const text = ['text', 'markdown', 'label', 'alt'].map((key) => block.props?.[key]).find(Boolean) || ''
 			return String(text).split('{{')[0].slice(0, 60)
 		},
 	},
