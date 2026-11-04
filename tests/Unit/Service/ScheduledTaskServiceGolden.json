@@ -592,8 +592,190 @@
         "returned": null,
         "trace": [
             {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-1",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
                 "deleteObject": [
-                    "t-1"
+                    "t-1",
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "delete by found uuid": {
+        "returned": null,
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-slug",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "deleteObject": [
+                    "found-uuid",
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "delete missing": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-missing",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "delete read fails": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-1",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: find failed",
+                    {
+                        "exception": "RuntimeException: find down",
+                        "id": "t-1"
+                    }
+                ]
+            }
+        ]
+    },
+    "delete unconfigured": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped",
+                    []
+                ]
+            }
+        ]
+    },
+    "delete no uuid": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-no-uuid",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "delete refused": {
+        "threw": "RuntimeException",
+        "message": "Task could not be deleted",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-1",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "deleteObject": [
+                    "t-1",
+                    "reg-1",
+                    "task-schema"
                 ]
             }
         ]

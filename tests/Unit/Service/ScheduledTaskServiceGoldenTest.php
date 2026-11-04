@@ -120,6 +120,12 @@ class ScheduledTaskServiceGoldenTest extends TestCase {
 			'update ok'                  => ['call' => ['updateScheduledTask', ['t-1', ['subject' => 'New', 'createdBy' => 'mallory', 'uuid' => 'x', 'status' => 'done', 'attempts' => []]]]],
 			'update missing'             => ['call' => ['updateScheduledTask', ['t-missing', ['subject' => 'New']]]],
 			'delete'                     => ['call' => ['deleteScheduledTask', ['t-1']]],
+			'delete by found uuid'       => ['call' => ['deleteScheduledTask', ['t-slug']]],
+			'delete missing'             => ['call' => ['deleteScheduledTask', ['t-missing']]],
+			'delete read fails'          => ['call' => ['deleteScheduledTask', ['t-1']], 'fail' => 'find'],
+			'delete unconfigured'        => ['call' => ['deleteScheduledTask', ['t-1']], 'config' => ['task_schema' => '']],
+			'delete no uuid'             => ['call' => ['deleteScheduledTask', ['t-no-uuid']]],
+			'delete refused'             => ['call' => ['deleteScheduledTask', ['t-1']], 'fail' => 'delete'],
 			'overdue'                    => ['call' => ['getOverdueTasks', []]],
 			'overdue unconfigured'       => ['call' => ['getOverdueTasks', []], 'config' => ['register' => '']],
 			'overdue fails'              => ['call' => ['getOverdueTasks', []], 'fail' => 'findAll'],
@@ -365,6 +371,14 @@ class ScheduledTaskServiceGoldenTest extends TestCase {
 					return $this->entity(payload: ['id' => 't-entity', 'subject' => 'From entity']);
 				}
 
+				if ($args[0] === 't-slug') {
+					return $this->entity(payload: ['id' => 'found-uuid', 'subject' => 'By slug']);
+				}
+
+				if ($args[0] === 't-no-uuid') {
+					return $this->entity(payload: ['subject' => 'No id']);
+				}
+
 				return $this->entity(payload: ['id' => $args[0], 'subject' => 'Old', 'createdBy' => 'agent', 'status' => 'open']);
 			}
 		);
@@ -379,9 +393,9 @@ class ScheduledTaskServiceGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('deleteObject')->willReturnCallback(
-			function (...$args): bool {
-				$this->trace[] = ['deleteObject' => array_slice($args, 0, 1)];
-				return true;
+			function (...$args) use ($fail): bool {
+				$this->trace[] = ['deleteObject' => array_slice($args, 0, 3)];
+				return $fail !== 'delete';
 			}
 		);
 		return $objects;

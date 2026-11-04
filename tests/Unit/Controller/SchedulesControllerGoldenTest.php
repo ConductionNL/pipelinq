@@ -117,6 +117,8 @@ class SchedulesControllerGoldenTest extends TestCase {
 			'create full agent'           => ['action' => 'create', 'params' => $full],
 			'create full self'            => ['action' => 'create', 'params' => ['assigneeUserId' => 'agent'] + $full],
 			'create full admin'           => ['action' => 'create', 'params' => $full, 'user' => 'admin'],
+			'create agent group only'     => ['action' => 'create', 'params' => $create + ['assigneeGroupId' => 'kcc']],
+			'create admin group only'     => ['action' => 'create', 'params' => $create + ['assigneeGroupId' => 'kcc'], 'user' => 'admin'],
 			'create invalid'              => ['action' => 'create', 'params' => $create, 'fail' => 'invalid'],
 			'create fails'                => ['action' => 'create', 'params' => $create, 'fail' => 'create'],
 			'pending no session'          => ['action' => 'pending', 'user' => null],
