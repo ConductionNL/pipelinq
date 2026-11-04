@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSNotFoundException;

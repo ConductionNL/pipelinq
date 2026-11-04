@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;

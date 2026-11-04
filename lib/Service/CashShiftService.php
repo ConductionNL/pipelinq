@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;

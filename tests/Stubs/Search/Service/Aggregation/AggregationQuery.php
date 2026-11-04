@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Aggregation\AggregationQuery.
+ * Test stub for OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery.
  *
  * Provides a minimal, behaviourally-faithful value object so unit tests running
  * in a bare environment (no Nextcloud server, no openregister installed) can
@@ -26,7 +26,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Aggregation;
+namespace OCA\OpenRegister\Search\Service\Aggregation;
 
 use InvalidArgumentException;
 
