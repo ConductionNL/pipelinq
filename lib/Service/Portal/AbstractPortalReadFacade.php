@@ -204,6 +204,8 @@ abstract class AbstractPortalReadFacade {
 	 * @param array<string, mixed> $object The raw object.
 	 *
 	 * @return string|null The id, or null.
+	 *
+	 * @spec exclude result-shape plumbing shared by register reads, no behavioural spec surface.
 	 */
 	protected function objectId(array $object): ?string {
 		return $this->rowIdentity(row: $object);
