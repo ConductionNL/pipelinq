@@ -93,6 +93,21 @@ class KeywordIntelligenceControllerGoldenTest extends TestCase {
 	}//end testForgedIdentityParametersChangeNothing()
 
 	/**
+	 * A session user without a UID is answered as no session, before any privilege check.
+	 *
+	 * @return void
+	 */
+	public function testSessionUserWithoutUidIsUnauthenticated(): void {
+		foreach (['proposals', 'targets', 'confirm'] as $action) {
+			$result = $this->runCase(case: ['action' => $action, 'user' => '']);
+
+			$this->assertSame(401, $result['status'], $action);
+			$this->assertSame(['error' => 'Authentication required'], $result['data'], $action);
+			$this->assertSame([], $result['trace'], $action);
+		}
+	}//end testSessionUserWithoutUidIsUnauthenticated()
+
+	/**
 	 * The cases: action, caller, request parameters and how the doubles answer.
 	 *
 	 * @return array<string, array<string, mixed>>

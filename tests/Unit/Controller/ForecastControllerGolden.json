@@ -1,4 +1,5 @@
 {
+    "_note limit range": "snapshots reads limit from the request: outside 1..200 it is clamped and answered 200. This replaces the 400 that Nextcloud 34 and 35 gave a typed int $limit outside 1..500 (accepted behaviour change).",
     "read no session": {
         "class": "OCP\\AppFramework\\Http\\JSONResponse",
         "status": 401,
@@ -391,6 +392,105 @@
                     "team",
                     null,
                     200,
+                    0
+                ]
+            }
+        ]
+    },
+    "read limit 500": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 200,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    200,
+                    0
+                ]
+            }
+        ]
+    },
+    "read limit 501": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 200,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    200,
+                    0
+                ]
+            }
+        ]
+    },
+    "read negative limit": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "snapshots": [
+                {
+                    "owner_id": "rep-bob",
+                    "commit": 1000.5
+                }
+            ],
+            "total": 7,
+            "limit": 1,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "canRead": [
+                    "manager",
+                    "team",
+                    null
+                ]
+            },
+            {
+                "exportSnapshots": [
+                    "FY26-Q1",
+                    "team",
+                    null,
+                    1,
                     0
                 ]
             }
