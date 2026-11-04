@@ -1215,11 +1215,8 @@ The system MUST calculate and display weighted pipeline values to provide a real
 
 - GIVEN leads with expected close dates in the current quarter
 - WHEN the admin views the sales forecast
-- THEN the system MUST display a monthly breakdown:
-  - April 2026: EUR 80,000 weighted (5 deals)
-  - May 2026: EUR 120,000 weighted (3 deals)
-  - June 2026: EUR 50,000 weighted (7 deals)
-- AND leads without an expected close date MUST be grouped separately as "Unscheduled"
+- THEN the forecast page shows the quarter per owner, split into committed, best case and pipeline, as on board `PqForecast` (`specs/forecast-roll-up-and-categories`)
+- AND it shows no monthly breakdown and no "Unscheduled" group
 
 ---
 

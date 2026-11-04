@@ -491,7 +491,8 @@ notification there and not to its generic object view.
 
 ### Requirement: A task is named after its subject
 A task's object name MUST be its subject, so the activity stream and the task
-page heading name the task and not its uuid or its type.
+page heading name the task and not its uuid or its type. The activity line shows
+in the Nextcloud Activity app; board `PqTaak` draws the heading.
 
 #### Scenario: Task activity and heading
 @e2e exclude Asserted in tests/vitest/round5ContactCreateAndTaskLinks.spec.js and live on :8099.

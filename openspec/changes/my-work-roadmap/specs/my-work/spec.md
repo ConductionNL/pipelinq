@@ -27,7 +27,7 @@ My work SHALL show a row of four tiles headed "Your week so far", taken from boa
 
 **Feature tier**: V1
 
-My work SHALL offer "New ticket", "New lead" and "New contact" in its header. Each MUST open the existing create dialog of that entity as a modal over My work, with the assignee set to the current user where the entity has one. After a ticket or lead is saved, the list MUST refresh and include it. No board draws these buttons yet; their placement follows the header actions of `PqTickets`.
+My work SHALL offer "New ticket" and "New contact" in its header, as on board `PqMijnWerk`, and no "New lead". Each MUST open the existing create dialog of that entity as a modal over My work, with the assignee set to the current user where the entity has one. After a ticket is saved, the list MUST refresh and include it.
 
 #### Scenario: A ticket created from My work lands on My work
 - **GIVEN** the agent is on My work
@@ -41,10 +41,10 @@ My work SHALL offer "New ticket", "New lead" and "New contact" in its header. Ea
 - **THEN** the contact's detail page opens
 - **AND** the My work list is unchanged, because a contact is not work
 
-#### Scenario: No lead access, no lead button
-- **GIVEN** the user cannot create leads under their OpenRegister permissions
+#### Scenario: My work has no lead button
+- **GIVEN** a user who may create leads
 - **WHEN** the user opens My work
-- **THEN** "New lead" is not shown
+- **THEN** "New lead" is not shown in the header
 
 ### Requirement: Recent activity on my items (REQ-MW-110)
 
@@ -188,7 +188,7 @@ The user SHALL be able to hide and reorder the sections of My work ("Your week s
 
 **Feature tier**: MVP
 
-On top of REQ-MOB-002 (one column, today first, no horizontal scroll, already built), My work at a width below 768 px SHALL show the type filters as a row of chips with their counts, as on board `PqMobiel` ("All 9", "Tickets 7", "Leads 1", "Follow-ups 1"). Group headers MUST stay at the top of the scroll area while their group scrolls, with their count visible. Every control MUST keep a touch target of at least 44 by 44 px (WCAG 2.5.5). When quick actions (REQ-MW-100) are present they MUST collapse into one button in the bottom right corner.
+On top of REQ-MOB-002 (one column, today first, no horizontal scroll, already built), My work at a width below 768 px SHALL show the type filters as a row of chips with their counts, as on board `PqMobiel` ("All 9", "Tickets 7", "Leads 1", "Follow-ups 1"). Group headers MUST stay at the top of the scroll area while their group scrolls, with their count visible. Every control MUST keep a touch target of at least 44 by 44 px (WCAG 2.5.5). When quick actions (REQ-MW-100) are present they MUST fold into one "Actions" button in the header, as on board `PqMobiel`.
 
 #### Scenario: Chips with counts
 - **GIVEN** the agent has 7 tickets, 1 lead and 1 follow-up
@@ -203,7 +203,7 @@ On top of REQ-MOB-002 (one column, today first, no horizontal scroll, already bu
 #### Scenario: Quick actions fold away
 - **GIVEN** quick actions are built
 - **WHEN** the agent opens My work on a phone
-- **THEN** one button in the bottom right corner opens "New ticket", "New lead" and "New contact"
+- **THEN** one "Actions" button in the header opens "New ticket" and "New contact"
 
 ### Requirement: Role-based content (REQ-MW-180)
 

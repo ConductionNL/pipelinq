@@ -23,8 +23,8 @@ their deadline out of all open unassigned tickets, captioned "take the red ones 
 
 #### Scenario: Board PqWachtrij
 
-- **WHEN** 12 tickets wait and 3 are past their deadline
-- **THEN** the tiles read Niet toegewezen 12, Langst wachtend, Binnen de termijn "9 van 12" with "pak de rode eerst"
+- **WHEN** 14 tickets wait and 3 are past their deadline
+- **THEN** the tiles read Niet toegewezen 14, Langst wachtend, Binnen de termijn "11 van 14" with "pak de rode eerst"
 
 ### Requirement: The queue list picks rows up in the row
 

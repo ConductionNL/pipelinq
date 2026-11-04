@@ -3449,7 +3449,7 @@
 				"evidence": "lib/Service/ArticleService.php:185",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/kennisbank",
-				"requirement": "Search and Discovery"
+				"requirement": "Agents search xWiki from the knowledge widget"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/use-the-updated-reply-editor-in-help-desk \"To add a document, snippet, meeting link, knowledge base article, quote, or video in your response, click Insert\" inside the ticket reply. Service Hub Professional, Enterprise (the knowledge base itself: https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles).",
