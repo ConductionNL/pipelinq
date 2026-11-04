@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Labels;
 
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
 use OCP\IGroupManager;
@@ -45,6 +46,8 @@ use Throwable;
  * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
  */
 class LabelRenameService {
+	use SerialisedToArray;
+
 
 	/**
 	 * The register the label fragment declares the schema in.
@@ -367,26 +370,4 @@ class LabelRenameService {
 
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
-
-	/**
-	 * An object as a plain array.
-	 *
-	 * @param mixed $value An ObjectEntity, an array or null.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

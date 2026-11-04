@@ -45,6 +45,7 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\PosBookkeepingService;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -59,6 +60,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-005
  */
 class MigratePosBookkeepingToShillinq implements IRepairStep {
+	use CastingPayloadToArray;
 	use \OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
 
 	/**
@@ -358,33 +360,4 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 			return null;
 		}
 	}//end resolveObjectService()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 }//end class

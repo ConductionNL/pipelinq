@@ -30,6 +30,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\AnyPayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
@@ -68,6 +70,9 @@ use Throwable;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentCalendarLeafProvider {
+	use AnyPayloadToArray;
+	use RowIdOf;
+
 
 	/**
 	 * App-config key for the Booking schema id/slug.
@@ -711,82 +716,6 @@ class AppointmentCalendarLeafProvider {
 
 		return $this->toArray(object: $found);
 	}//end loadServiceQuiet()
-
-	/**
-	 * Pull the canonical id out of a normalised OpenRegister object.
-	 *
-	 * @param array<string, mixed> $object Object data.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $object): string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential type-narrowing guards; extraction adds no clarity.
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'getObject') === true) {
-				$payload = $object->getObject();
-				if (is_array($payload) === true) {
-					return $payload;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}//end if
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Resolve the pipelinq register slug from app config.

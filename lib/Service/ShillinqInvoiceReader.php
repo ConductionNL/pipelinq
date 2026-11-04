@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Service\Marketing\ShillinqInvoiceProjection;
+use OCA\Pipelinq\Util\PayloadToArray;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -50,6 +51,8 @@ use Throwable;
  * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
  */
 class ShillinqInvoiceReader {
+	use PayloadToArray;
+
 
 	/**
 	 * Shillinq's register slug.
@@ -415,33 +418,4 @@ class ShillinqInvoiceReader {
 
 		return ($to === '' || $date <= $to);
 	}//end inWindow()
-
-	/**
-	 * Normalise an OpenRegister entity, or an array, to a plain array.
-	 *
-	 * @param mixed $value Entity object or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

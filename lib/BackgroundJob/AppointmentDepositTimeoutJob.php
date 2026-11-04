@@ -35,6 +35,8 @@ namespace OCA\Pipelinq\BackgroundJob;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -54,6 +56,9 @@ use Throwable;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentDepositTimeoutJob extends TimedJob {
+	use NullablePayloadToArray;
+	use RowIdOf;
+
 	/**
 	 * Interval in seconds (5 minutes).
 	 *
@@ -187,7 +192,7 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 			return 0;
 		}
 
-		$bookingId = $this->idOf(data: $data);
+		$bookingId = $this->idOf(object: $data);
 		$createdAt = $this->createdAt(data: $data);
 		if ($bookingId === '' || $createdAt === '') {
 			return 0;
@@ -208,35 +213,6 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 			return 0;
 		}
 	}//end releaseIfExpired()
-
-	/**
-	 * Pull the booking id out of an OR object (supporting @self + flat shapes).
-	 *
-	 * @param array<string, mixed> $data The booking row.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $data): string {
-		if (isset($data['@self']) === true && is_array($data['@self']) === true) {
-			if (isset($data['@self']['id']) === true) {
-				return (string)$data['@self']['id'];
-			}
-
-			if (isset($data['@self']['uuid']) === true) {
-				return (string)$data['@self']['uuid'];
-			}
-		}
-
-		if (isset($data['id']) === true) {
-			return (string)$data['id'];
-		}
-
-		if (isset($data['uuid']) === true) {
-			return (string)$data['uuid'];
-		}
-
-		return '';
-	}//end idOf()
 
 	/**
 	 * Pull the creation timestamp out of an OR object.
@@ -266,41 +242,4 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 
 		return '';
 	}//end createdAt()
-
-	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 }//end class

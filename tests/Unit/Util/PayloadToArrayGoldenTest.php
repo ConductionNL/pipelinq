@@ -38,7 +38,12 @@ use Throwable;
  * @covers \OCA\Pipelinq\Util\PayloadToArray
  * @covers \OCA\Pipelinq\Util\SerialisedToArray
  * @covers \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
  * @covers \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\EntityPayload
  */
 class PayloadToArrayGoldenTest extends TestCase {
 

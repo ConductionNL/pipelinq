@@ -34,6 +34,8 @@ use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Util\EntityIdOf;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -68,6 +70,9 @@ use RuntimeException;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class PortalController extends Controller {
+	use EntityIdOf;
+	use NullablePayloadToArray;
+
 	/**
 	 * Signing-key app-config key (per-instance HMAC secret, ADR-005).
 	 *
@@ -956,78 +961,6 @@ class PortalController extends Controller {
 	private function schemaId(string $key): string {
 		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
 	}//end schemaId()
-
-	/**
-	 * Pull the canonical id out of a normalised OpenRegister object.
-	 *
-	 * @param array<string, mixed>|object $object The object.
-	 *
-	 * @return string
-	 */
-	private function idOf(array|object $object): string {
-		$arr = $this->toArray(object: $object);
-		if ($arr === null) {
-			return '';
-		}
-
-		if (isset($arr['@self']) === true && is_array($arr['@self']) === true) {
-			$self = $arr['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($arr['id']) === true) {
-			return (string)$arr['id'];
-		}
-
-		if (isset($arr['uuid']) === true) {
-			return (string)$arr['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

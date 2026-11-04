@@ -30,6 +30,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Forecast\SnapshotLevel;
 use OCA\Pipelinq\Service\Forecast\SnapshotNode;
 use OCA\Pipelinq\Service\Forecast\SnapshotRun;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use Psr\Log\LoggerInterface;
@@ -54,6 +55,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec exclude forecast snapshot generation; see the forecast gap above
  */
 class SnapshotGenerationService {
+	use PayloadToArray;
+
 	/**
 	 * App-config key for the comma-separated list of forecast team group ids.
 	 *
@@ -435,7 +438,7 @@ class SnapshotGenerationService {
 
 		$byRep = [];
 		foreach (($results ?? []) as $result) {
-			$data = $this->toArray(object: $result);
+			$data = $this->toArray(value: $result);
 			$rep = (string)($data['assignee'] ?? '');
 			if ($rep === '') {
 				continue;
@@ -504,35 +507,6 @@ class SnapshotGenerationService {
 			);
 		}//end try
 	}//end notifyAdmin()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed> The object data.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

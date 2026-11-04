@@ -32,6 +32,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -61,6 +62,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AvailabilityService {
+	use RowIdOf;
 	use NullablePayloadToArray;
 
 	/**
@@ -1111,36 +1113,6 @@ class AvailabilityService {
 	private function schemaId(string $key): string {
 		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
 	}//end schemaId()
-
-	/**
-	 * Pull the canonical id out of a normalised object.
-	 *
-	 * @param array<string, mixed> $object Object data.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $object): string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return '';
-	}//end idOf()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

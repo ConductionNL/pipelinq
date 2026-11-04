@@ -42,6 +42,7 @@ use OCA\Pipelinq\Service\Payment\CcvAdapter;
 use OCA\Pipelinq\Service\Payment\MollieAdapter;
 use OCA\Pipelinq\Service\Payment\PaymentProviderInterface;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -84,6 +85,8 @@ use Throwable;
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
  */
 class PosPaymentService {
+	use NullablePayloadToArray;
+
 	/**
 	 * IAppConfig key prefix for stored credentials.
 	 *
@@ -1473,43 +1476,6 @@ class PosPaymentService {
 
 		return [];
 	}//end resultToArray()
-
-	/**
-	 * Normalise an OpenRegister entity to a plain array.
-	 *
-	 * @param mixed $object The entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 
 	// ---------------------------------------------------------------------
 	// Internals — CloudEvent payload builders.

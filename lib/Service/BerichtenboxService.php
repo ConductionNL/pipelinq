@@ -40,6 +40,7 @@ use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
 use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
+use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -62,6 +63,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
 class BerichtenboxService {
+	use OptionalPayloadToArray;
+
 	/**
 	 * Maximum dispatch retry attempts (REQ-RETRY-012).
 	 *
@@ -480,7 +483,7 @@ class BerichtenboxService {
 			}
 
 			foreach ($rows as $row) {
-				$data = $this->toArray(row: $row);
+				$data = $this->toArray(object: $row);
 				if ($data === null) {
 					continue;
 				}
@@ -712,7 +715,7 @@ class BerichtenboxService {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$result = [];
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(object: $row);
 			if ($data === null) {
 				continue;
 			}
@@ -761,7 +764,7 @@ class BerichtenboxService {
 
 		$unread = [];
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(object: $row);
 			if ($data === null) {
 				continue;
 			}
@@ -801,7 +804,7 @@ class BerichtenboxService {
 		}
 
 		foreach ($rows as $row) {
-			return $this->toArray(row: $row);
+			return $this->toArray(object: $row);
 		}
 
 		return null;
@@ -822,7 +825,7 @@ class BerichtenboxService {
 			return null;
 		}
 
-		return $this->toArray(row: $row);
+		return $this->toArray(object: $row);
 	}//end findMessageByUuid()
 
 	/**
@@ -863,7 +866,7 @@ class BerichtenboxService {
 		}
 
 		foreach ($rows as $row) {
-			return $this->toArray(row: $row);
+			return $this->toArray(object: $row);
 		}
 
 		return null;
@@ -947,7 +950,7 @@ class BerichtenboxService {
 			payload: $payload,
 			uuid: null
 		);
-		$savedArray = $this->toArray(row: $saved);
+		$savedArray = $this->toArray(object: $saved);
 		$uuid = (string)($savedArray['uuid'] ?? $savedArray['id'] ?? '');
 
 		// Routing — best-effort; the skill-routing service is optional in dev.
@@ -984,7 +987,7 @@ class BerichtenboxService {
 			schema: $schema,
 			uuid: ($payload['uuid'] ?? null)
 		);
-		return ($this->toArray(row: $saved) ?? $payload);
+		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveMessage()
 
 	/**
@@ -1012,7 +1015,7 @@ class BerichtenboxService {
 			schema: $schema,
 			uuid: ($payload['uuid'] ?? null)
 		);
-		return ($this->toArray(row: $saved) ?? $payload);
+		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveReply()
 
 	/**
@@ -1058,35 +1061,4 @@ class BerichtenboxService {
 		// catch was unreachable — phpstan reports it as a dead catch.
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Normalise OR result to array.
-	 *
-	 * @param mixed $row Row.
-	 *
-	 * @return array|null
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true) {
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$serialized = $row->jsonSerialize();
-				if (is_array($serialized) === true) {
-					return $serialized;
-				}
-			}
-
-			if (method_exists($row, 'getObject') === true) {
-				$inner = $row->getObject();
-				if (is_array($inner) === true) {
-					return $inner;
-				}
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

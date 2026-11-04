@@ -33,6 +33,7 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -59,6 +60,7 @@ use RuntimeException;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class WalkInQueueService {
+	use EntityIdOf;
 	use NullablePayloadToArray;
 
 	/**
@@ -910,41 +912,6 @@ class WalkInQueueService {
 	private function schemaId(string $key): string {
 		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
 	}//end schemaId()
-
-	/**
-	 * Pull the canonical id out of a normalised OpenRegister object.
-	 *
-	 * @param array<string, mixed>|object $object Normalised object or entity.
-	 *
-	 * @return string
-	 */
-	private function idOf(array|object $object): string {
-		$arr = $this->toArray(object: $object);
-		if ($arr === null) {
-			return '';
-		}
-
-		if (isset($arr['@self']) === true && is_array($arr['@self']) === true) {
-			$self = $arr['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($arr['id']) === true) {
-			return (string)$arr['id'];
-		}
-
-		if (isset($arr['uuid']) === true) {
-			return (string)$arr['uuid'];
-		}
-
-		return '';
-	}//end idOf()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

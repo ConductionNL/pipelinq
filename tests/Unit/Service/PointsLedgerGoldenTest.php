@@ -43,6 +43,15 @@ use Throwable;
  * @uses   \OCA\Pipelinq\Service\Loyalty\LedgerMovement
  * @uses   \OCA\Pipelinq\Service\Loyalty\LedgerOrigin
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */

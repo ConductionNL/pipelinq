@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,6 +45,8 @@ use Throwable;
  * @spec openspec/specs/client-management/spec.md
  */
 class OpenDealsController extends Controller {
+	use SerialisedToArray;
+
 
 	/**
 	 * The lead field per party kind, and the app-config key of its schema.
@@ -136,7 +139,7 @@ class OpenDealsController extends Controller {
 		$count = 0;
 		$value = 0.0;
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(value: $row);
 			if (($data['status'] ?? '') !== 'open' || (string)($data[$field] ?? '') !== $partyId) {
 				continue;
 			}
@@ -189,26 +192,4 @@ class OpenDealsController extends Controller {
 			return false;
 		}
 	}//end canRead()
-
-	/**
-	 * Normalise an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed> The data, [] when unusable.
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

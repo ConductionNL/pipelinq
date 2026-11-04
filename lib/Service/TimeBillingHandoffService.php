@@ -60,6 +60,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -77,6 +78,8 @@ use Throwable;
  * @spec openspec/specs/time-approval-workflow/spec.md
  */
 class TimeBillingHandoffService {
+	use CastingPayloadToArray;
+
 	/**
 	 * Fixed namespace UUID (RFC 4122 URL namespace) seeding the deterministic
 	 * UUIDv5 batch id. Any fixed constant works — it only needs to be stable
@@ -201,7 +204,7 @@ class TimeBillingHandoffService {
 
 		$selected = [];
 		foreach (($rows ?? []) as $row) {
-			$data = $this->toArray(value: $row);
+			$data = $this->toArray(object: $row);
 			if ((string)($data['status'] ?? '') !== 'approved') {
 				continue;
 			}
@@ -307,7 +310,7 @@ class TimeBillingHandoffService {
 
 		$byBatch = [];
 		foreach (($rows ?? []) as $row) {
-			$data = $this->toArray(value: $row);
+			$data = $this->toArray(object: $row);
 			if ((string)($data['billingSyncStatus'] ?? '') !== 'failed') {
 				continue;
 			}
@@ -636,7 +639,7 @@ class TimeBillingHandoffService {
 			return null;
 		}
 
-		return $this->toArray(value: $entity);
+		return $this->toArray(object: $entity);
 	}//end fetchClient()
 
 	/**
@@ -719,33 +722,4 @@ class TimeBillingHandoffService {
 
 		return $user->getUID();
 	}//end actingUserId()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $value The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$data = $value->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$value;
-	}//end toArray()
 }//end class

@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Util\NullableRowIdOf;
+
 /**
  * Pseudonymises contacts of closed portal accounts when retention allows.
  *
@@ -40,6 +42,8 @@ namespace OCA\Pipelinq\Service\Portal;
  *   audit are all unspecified
  */
 class PortalCleanupService {
+	use NullableRowIdOf;
+
 	/**
 	 * Schema slug for accounts.
 	 *
@@ -156,28 +160,4 @@ class PortalCleanupService {
 
 		return false;
 	}//end hasRetentionObligation()
-
-	/**
-	 * Extract the stable id from a main-register object array.
-	 *
-	 * @param array<string, mixed> $object The object.
-	 *
-	 * @return string|null The id.
-	 */
-	private function idOf(array $object): ?string {
-		$self = ($object['@self'] ?? null);
-		if (is_array($self) === true) {
-			$id = ($self['id'] ?? $self['uuid'] ?? null);
-			if ($id !== null) {
-				return (string)$id;
-			}
-		}
-
-		$id = ($object['id'] ?? $object['uuid'] ?? null);
-		if ($id === null) {
-			return null;
-		}
-
-		return (string)$id;
-	}//end idOf()
 }//end class

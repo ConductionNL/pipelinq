@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -38,6 +39,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/contacts-sync/spec.md
  */
 class LinkedContactRecords {
+	use SerialisedToArray;
+
 
 	/**
 	 * The most linked records one run writes back.
@@ -93,7 +96,7 @@ class LinkedContactRecords {
 			}
 
 			foreach ($objects as $object) {
-				$data = $this->toArray(object: $object);
+				$data = $this->toArray(value: $object);
 				if (empty($data['contactsUid']) === true) {
 					continue;
 				}
@@ -108,26 +111,4 @@ class LinkedContactRecords {
 
 		return $records;
 	}//end all()
-
-	/**
-	 * An OpenRegister result as an array.
-	 *
-	 * @param mixed $object The result.
-	 *
-	 * @return array<string, mixed> The data.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$data = $object->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

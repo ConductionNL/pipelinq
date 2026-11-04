@@ -32,6 +32,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\AvailabilityService;
+use OCA\Pipelinq\Util\AnyPayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -52,6 +54,9 @@ use Throwable;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AvailabilityCacheRefreshJob extends TimedJob {
+	use AnyPayloadToArray;
+	use RowIdOf;
+
 
 	/**
 	 * Run interval in seconds (1 hour).
@@ -244,91 +249,6 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	private function schemaSlug(string $key): string {
 		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
 	}//end schemaSlug()
-
-	/**
-	 * Pull the canonical id out of a normalised OpenRegister object.
-	 *
-	 * @param array<string, mixed> $object Object data.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $object): string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			return $this->objectToArray(object: $object);
-		}
-
-		return null;
-	}//end toArray()
-
-	/**
-	 * Coerce an object to a plain array via its best-available accessor.
-	 *
-	 * @param object $object Entity to coerce.
-	 *
-	 * @return array<string, mixed> Array representation.
-	 */
-	private function objectToArray(object $object): array {
-		if (method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (method_exists($object, 'getObject') === true) {
-			$payload = $object->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		if (method_exists($object, 'toArray') === true) {
-			$arr = $object->toArray();
-			if (is_array($arr) === true) {
-				return $arr;
-			}
-		}
-
-		return (array)$object;
-	}//end objectToArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

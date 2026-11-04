@@ -33,6 +33,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\PointsLedgerService;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -50,6 +51,8 @@ use Throwable;
  *   and nothing inherited it
  */
 class PointsExpiryBatchJob extends TimedJob {
+	use PayloadToArray;
+
 	private const DEFAULT_INTERVAL = 86400;
 
 	/**
@@ -244,7 +247,7 @@ class PointsExpiryBatchJob extends TimedJob {
 		}
 
 		foreach ($list as $row) {
-			$result[] = $this->toArray(object: $row);
+			$result[] = $this->toArray(value: $row);
 		}
 
 		return $result;
@@ -265,33 +268,4 @@ class PointsExpiryBatchJob extends TimedJob {
 
 		return $object['programmeId'] ?? $object['accountId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Normalise OR entity to array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$payload = $object->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

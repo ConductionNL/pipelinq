@@ -53,6 +53,7 @@ use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -72,6 +73,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/unify-client-contact/spec.md
  */
 class UnifyClientContactIdentity implements IRepairStep {
+	use CastingPayloadToArray;
+
 	/**
 	 * Source-system tag written on every MDM sourceRecord this repair creates.
 	 *
@@ -743,33 +746,4 @@ class UnifyClientContactIdentity implements IRepairStep {
 			return null;
 		}
 	}//end resolveObjectService()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string,mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 }//end class

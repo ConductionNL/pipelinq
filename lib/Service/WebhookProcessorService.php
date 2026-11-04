@@ -45,6 +45,7 @@ namespace OCA\Pipelinq\Service;
 
 use Closure;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -70,6 +71,8 @@ use Throwable;
  * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  */
 class WebhookProcessorService {
+	use PayloadToArray;
+
 	/**
 	 * Default register slug — matches the chain root schemas.
 	 */
@@ -887,33 +890,4 @@ class WebhookProcessorService {
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OpenRegister entity or array into a plain array.
-	 *
-	 * @param mixed $value Entity object or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

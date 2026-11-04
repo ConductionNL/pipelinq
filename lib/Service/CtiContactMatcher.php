@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -43,6 +44,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.3
  */
 class CtiContactMatcher {
+	use PayloadToArray;
+
 	/**
 	 * Maximum matches surfaced to the chooser modal.
 	 *
@@ -191,7 +194,7 @@ class CtiContactMatcher {
 
 		$matches = [];
 		foreach ($objects as $object) {
-			$data = $this->toArray(object: $object);
+			$data = $this->toArray(value: $object);
 			if ($this->matchesAnyNeedle(record: $data, needles: $needles) === true) {
 				$data['_matchType'] = $type;
 				$matches[] = $data;
@@ -200,35 +203,6 @@ class CtiContactMatcher {
 
 		return $matches;
 	}//end searchSchema()
-
-	/**
-	 * Normalise an OR object (entity or array) to a plain array.
-	 *
-	 * @param mixed $object The OR object (entity, array or jsonSerialize-capable).
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$inner = $object->getObject();
-			if (is_array($inner) === true) {
-				return $inner;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Whether the record's phone-bearing fields contain any of the needles.
@@ -327,7 +301,7 @@ class CtiContactMatcher {
 			}
 
 			foreach ($objects as $object) {
-				$data = $this->toArray(object: $object);
+				$data = $this->toArray(value: $object);
 				$raw = (string)($data['phone'] ?? ($data['phoneNumber'] ?? ($data['mobile'] ?? '')));
 				if ($raw === '') {
 					$skipped++;

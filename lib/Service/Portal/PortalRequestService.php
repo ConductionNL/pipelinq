@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\Event\PortalRequestSubmittedEvent;
+use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -53,6 +54,8 @@ use Psr\Log\LoggerInterface;
  *   audit are all unspecified
  */
 class PortalRequestService {
+	use NullableRowIdOf;
+
 	/**
 	 * Main-register schema a portal request lives in. The `request` schema was
 	 * folded into the unified `ticket` on 12 July 2026; a request is a ticket
@@ -640,28 +643,4 @@ class PortalRequestService {
 
 		return $this->readId(value: $value);
 	}//end firstId()
-
-	/**
-	 * Extract the stable id from a portal/main object array.
-	 *
-	 * @param array<string, mixed> $object The object.
-	 *
-	 * @return string|null The id.
-	 */
-	private function idOf(array $object): ?string {
-		$self = ($object['@self'] ?? null);
-		if (is_array($self) === true) {
-			$id = ($self['id'] ?? $self['uuid'] ?? null);
-			if ($id !== null) {
-				return (string)$id;
-			}
-		}
-
-		$id = ($object['id'] ?? $object['uuid'] ?? null);
-		if ($id === null) {
-			return null;
-		}
-
-		return (string)$id;
-	}//end idOf()
 }//end class

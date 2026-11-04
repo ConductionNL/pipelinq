@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -71,6 +72,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
  */
 class PosCustomerLinkService {
+	use CastingPayloadToArray;
+
 	/**
 	 * Default search-result limit when the caller does not specify one.
 	 *
@@ -789,35 +792,6 @@ class PosCustomerLinkService {
 
 		return [$register, $schema];
 	}//end configTransaction()
-
-	/**
-	 * Normalise an OR entity into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The plain array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 
 	/**
 	 * Resolve the OR ObjectService from the container.

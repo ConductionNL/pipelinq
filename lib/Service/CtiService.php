@@ -29,6 +29,7 @@ use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
 use InvalidArgumentException;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -60,6 +61,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class CtiService {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -547,7 +550,7 @@ class CtiService {
 			);
 			if (is_array($existing) === true && count($existing) > 0) {
 				$first = $existing[0];
-				return $this->toArray(object: $first);
+				return $this->toArray(value: $first);
 			}
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -592,7 +595,7 @@ class CtiService {
 			}
 
 			$saved = $objectService->saveObject($config, [], $register, $schema, $uuid);
-			return $this->toArray(object: $saved);
+			return $this->toArray(value: $saved);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI saveConfig failed',
@@ -674,7 +677,7 @@ class CtiService {
 
 			return array_values(
 				array_map(
-					fn ($obj) => $this->toArray(object: $obj),
+					fn ($obj) => $this->toArray(value: $obj),
 					$result
 				)
 			);
@@ -723,7 +726,7 @@ class CtiService {
 
 			$deleted = 0;
 			foreach ($oldEntries as $entry) {
-				$data = $this->toArray(object: $entry);
+				$data = $this->toArray(value: $entry);
 				$receivedAt = (string)($data['received_at'] ?? '');
 				if ($receivedAt === '' || $receivedAt >= $cutoff) {
 					continue;
@@ -1091,33 +1094,4 @@ class CtiService {
 
 		return null;
 	}//end extractId()
-
-	/**
-	 * Coerce an OR object to a plain associative array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$value = $object->jsonSerialize();
-			if (is_array($value) === true) {
-				return $value;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$value = $object->getObject();
-			if (is_array($value) === true) {
-				return $value;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class
