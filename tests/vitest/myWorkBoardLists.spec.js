@@ -43,6 +43,21 @@ describe('Mijn werk lists as the board draws them', () => {
 		})
 	})
 
+	it('hides a group without items: each bucket list shows only when its bucket holds one', () => {
+		BUCKETS.forEach((id) => {
+			const bucket = id.replace(/^my-/, '')
+			expect(widget(id).visibleWhen).toEqual({ endpoint: `/apps/pipelinq/api/worklist/items?bucket=${bucket}`, field: 'items', op: 'notEmpty' })
+		})
+	})
+
+	it('names the three groups and their hints in the board order', () => {
+		expect(BUCKETS.map((id) => [widget(id).title, widget(id).content.headerNote])).toEqual([
+			['Answer today', 'deadline is today or has passed'],
+			['Waiting on me', 'the customer has replied'],
+			['Waiting on the customer', 'nothing to do until they reply'],
+		])
+	})
+
 	it('draws Show completed as a checkbox', () => {
 		const toggle = widget('my-lens').content.controls.find((control) => control.style === 'toggle')
 		expect(toggle.control).toBe('checkbox')

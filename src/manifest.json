@@ -10090,6 +10090,8 @@
 					},
 					{
 						"id": "my-answer-today",
+						"_visibleWhenNote": "Empty groups are hidden (specs/my-work, Grouping by what to do): the group shows only when the bucket holds an open item of yours. The page reads it once on load, so a group you empty while working keeps its empty line until the next visit.",
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=answer-today", "field": "items", "op": "notEmpty" },
 						"type": "record-list",
 						"title": "Answer today",
 						"viewport": "wide",
@@ -10176,6 +10178,8 @@
 					},
 					{
 						"id": "my-waiting-on-me",
+						"_visibleWhenNote": "Empty groups are hidden (specs/my-work, Grouping by what to do): the group shows only when the bucket holds an open item of yours. The page reads it once on load, so a group you empty while working keeps its empty line until the next visit.",
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me", "field": "items", "op": "notEmpty" },
 						"type": "record-list",
 						"title": "Waiting on me",
 						"viewport": "wide",
@@ -10262,6 +10266,8 @@
 					},
 					{
 						"id": "my-waiting-on-customer",
+						"_visibleWhenNote": "Empty groups are hidden (specs/my-work, Grouping by what to do): the group shows only when the bucket holds an open item of yours. The page reads it once on load, so a group you empty while working keeps its empty line until the next visit.",
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer", "field": "items", "op": "notEmpty" },
 						"type": "record-list",
 						"title": "Waiting on the customer",
 						"viewport": "wide",
