@@ -546,7 +546,7 @@ The system MUST detect leads with no activity for a configurable number of days 
 - WHEN the system evaluates staleness
 - THEN the lead MUST be flagged as stale
 - AND the lead list and kanban card MUST display a stale indicator (e.g., "41 days since last activity")
-- AND a filter option "Stale leads" SHOULD be available in the lead list
+- AND a view "Verouderd" SHOULD be available in the lead list
 
 #### Scenario 49: Lead becomes active again
 

@@ -304,9 +304,9 @@ The system MUST provide dedicated list and detail views for managing quotes, acc
 ### Requirement: Quote-to-order conversion [Enterprise]
 The system MUST support converting accepted quotes into actionable records for order fulfillment or case creation.
 
-#### Scenario: Convert accepted quote to case
+#### Scenario: Convert accepted quote to a request
 - GIVEN a quote in status "geaccepteerd"
-- WHEN the user clicks "Omzetten naar zaak"
+- WHEN the user clicks "Omzetten naar verzoek"
 - THEN the system MUST create a new request (verzoek) in Pipelinq
 - AND the request MUST contain: client reference, contact reference, quote reference, and description composed from the quote title and line items
 - AND the request MUST be linked to the original lead

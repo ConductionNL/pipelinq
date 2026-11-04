@@ -343,7 +343,7 @@ query performance caching (which is refreshed daily).
 
 - GIVEN a programme with 30+ days of transaction history
 - WHEN an administrator opens the reporting dashboard for that programme
-- THEN the dashboard MUST display:
+- THEN the dashboard MUST display stat tiles for:
   - **Active Accounts**: count of accounts with status "actief"
   - **Points Issued (Period)**: sum of credit ledger entries for the selected period
   - **Points Redeemed (Period)**: sum of debit ledger entries for the selected period
@@ -378,11 +378,11 @@ query performance caching (which is refreshed daily).
 - GIVEN a programme with tiers "Zilver" (0 points), "Goud" (500 points), "Platina" (2000 points)
 - AND 1000 "Zilver", 200 "Goud", 50 "Platina" active accounts
 - WHEN the tier distribution widget renders
-- THEN a stacked bar or donut chart MUST show:
+- THEN one bar per tier MUST show:
   - 1000 in "Zilver" (64%)
   - 200 in "Goud" (13%)
   - 50 in "Platina" (3%)
-- AND clicking a segment MUST show the top accounts in that tier
+- AND a table under the bars MUST list the number of accounts per tier
 
 ### Requirement: IFRS 15 / RJ 270 Compliance (REQ-LOY-009)
 
