@@ -4142,7 +4142,7 @@
 				"createModal": "RequestCreateDialog",
 				"schema": "ticket",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_sortNote": "Newest contact first. Without a default the list came in creation order, oldest first, so a new ticket sat on the last page (Woo round 3).",
+				"_sortNote": "Newest contact first. Without a default the list came in creation order, oldest first, so a new ticket sat on the last page (Woo round 3). The Unassigned lens sorts longest wait first, as PqTickets draws it (decision 321); the other lenses keep newest first.",
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"showViewAction": false,
@@ -4187,7 +4187,7 @@
 				"quickFilters": [
 					{ "label": "All open", "filter": { "status": ["new", "in_progress", "awaiting_customer"] }, "default": true },
 					{ "label": "Mine", "filter": { "assignee": "@me", "status": ["new", "in_progress", "awaiting_customer"] } },
-					{ "label": "Unassigned", "filter": { "assignee": "IS NULL", "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "Unassigned", "filter": { "assignee": "IS NULL", "status": ["new", "in_progress", "awaiting_customer"] }, "sort": { "key": "occurredAt", "order": "asc" } },
 					{ "label": "Waiting for customer", "filter": { "status": "awaiting_customer" } },
 					{ "label": "Past the deadline", "filter": { "slaDeadline": { "lt": "@now" }, "status": ["new", "in_progress", "awaiting_customer"] } },
 					{ "label": "All", "filter": {} },
