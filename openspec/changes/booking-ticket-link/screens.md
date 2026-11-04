@@ -1,3 +1,3 @@
 # Screens
 
-- PqAfspraak https://identity.conduction.nl/screens/board?id=pipelinq/PqAfspraak
+- pipelinq/PqAfspraak afspraak https://identity.conduction.nl/screens/board?id=pipelinq/PqAfspraak

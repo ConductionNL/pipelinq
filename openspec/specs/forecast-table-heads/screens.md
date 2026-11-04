@@ -1,3 +1,3 @@
 # Screens
 
-- PqForecast https://identity.conduction.nl/screens/board?id=pipelinq/PqForecast
+- pipelinq/PqForecast prognose https://identity.conduction.nl/screens/board?id=pipelinq/PqForecast

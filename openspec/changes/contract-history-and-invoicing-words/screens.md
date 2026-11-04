@@ -1,3 +1,3 @@
 # Screens
 
-- PqContract https://identity.conduction.nl/screens/board?id=pipelinq/PqContract
+- pipelinq/PqContract contract https://identity.conduction.nl/screens/board?id=pipelinq/PqContract

@@ -59,7 +59,7 @@ failed runs and the last error message.
 ### Requirement: The BI export page shows a switched-off job and lets an administrator switch it back on (REQ-EFS-003)
 
 The BI export page SHALL show a switched-off job with its Enabled switch off,
-its next run as "Not scheduled" and its reason in the Last run cell. The view
+its next run as "Niet ingepland" and its reason in the Last run cell. The view
 "Last run failed" SHALL list it. Switching the job on SHALL clear the reason
 and reset the count.
 
@@ -68,7 +68,7 @@ and reset the count.
 - GIVEN a job switched off after 3 failed runs
 - WHEN an administrator opens the BI export page
 - THEN the job's Last run cell shows "Failed" with "Switched off after 3 failed runs in a row"
-- AND its Next run cell shows "Not scheduled"
+- AND its Next run cell shows "Niet ingepland"
 
 #### Scenario: Switching the job back on starts over
 
