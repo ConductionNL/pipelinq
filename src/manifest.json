@@ -2103,6 +2103,7 @@
 				"headerActions": [
 					{
 						"id": "log-contact",
+						"visibleWhen": { "field": "mergedInto", "op": "empty" },
 						"label": "Log contact",
 						"icon": "PhoneLogOutline",
 						"type": "open-form",
@@ -2123,6 +2124,7 @@
 					},
 					{
 						"id": "new-request",
+						"visibleWhen": { "field": "mergedInto", "op": "empty" },
 						"label": "New request",
 						"icon": "TicketOutline",
 						"type": "open-modal",
@@ -2149,6 +2151,21 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects) with the Related card beside it, as on the contact page (round5-client-related-and-service-list), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
 				"widgets": [
+					{
+						"id": "client-merged-away",
+						"type": "banner",
+						"title": "Merged",
+						"showTitle": false,
+						"_note": "PqKlant merged-into notice (decision 288, REQ-MDM-013, REQ-CRM-001): one line on a client OpenRegister merged into another record, with a link to the surviving record. MergedAwayRecordListener writes mergedInto, mergedIntoLabel and mergedAt on the merge; MergedAwayRecordGuard refuses every other change while they are set.",
+						"visibleWhen": { "field": "mergedInto", "op": "notEmpty" },
+						"content": {
+							"variant": "warning",
+							"icon": "SourceMerge",
+							"text": "Merged into {subject.mergedIntoLabel} on {subject.mergedAt|date}. This record can no longer be changed.",
+							"visibleWhen": { "field": "mergedInto", "op": "notEmpty" },
+							"actions": [{ "label": "Open the merged record", "route": { "name": "ClientDetail", "params": { "id": "@subject.mergedInto" } } }]
+						}
+					},
 					{
 						"id": "client-summary-open-tickets",
 						"type": "stat",
@@ -3516,6 +3533,7 @@
 				"bandDensity": "compact",
 				"band": [
 					{ "widgetId": "client-contact-strip", "span": 12, "chrome": "bare" },
+					{ "widgetId": "client-merged-away", "span": 12, "chrome": "bare" },
 					{ "widgetId": "client-summary-open-tickets", "span": 2 },
 					{ "widgetId": "client-summary-new-requests", "span": 2 },
 					{ "widgetId": "client-summary-sla-breached", "span": 2 },
@@ -4536,6 +4554,21 @@
 				"_note": "Contact person page on the shared relation frame (nextcloud-vue screens-relation-pages, PqContactpersoon, Ruben 11 Oct 2026: at most seven tabs, Kanalen and Relaties as side cards). Header: the type pill, the breadcrumb back to Contacts, the meta line 'role at client' (the page extends client), and Call and Mail as tel:/mailto: links. One tab strip fills the body: Overview (the contact data card and the deals table, as the board draws them), Deals, Requests, Contact moments, Bookings, Files, History. Mail, Messages, Meetings, Subscriptions and BSN and BRP moved to the side column with Channels and Relationships, before History. Children of the tabs widget stay out of layout, or the tabs widget and the grid would each render them once.",
 				"widgets": [
 					{
+						"id": "contact-merged-away",
+						"type": "banner",
+						"title": "Merged",
+						"showTitle": false,
+						"_note": "PqKlant merged-into notice (decision 288, REQ-MDM-013, REQ-CRM-001): one line on a contact OpenRegister merged into another record, with a link to the surviving record. MergedAwayRecordListener writes mergedInto, mergedIntoLabel and mergedAt on the merge; MergedAwayRecordGuard refuses every other change while they are set.",
+						"visibleWhen": { "field": "mergedInto", "op": "notEmpty" },
+						"content": {
+							"variant": "warning",
+							"icon": "SourceMerge",
+							"text": "Merged into {subject.mergedIntoLabel} on {subject.mergedAt|date}. This record can no longer be changed.",
+							"visibleWhen": { "field": "mergedInto", "op": "notEmpty" },
+							"actions": [{ "label": "Open the merged record", "route": { "name": "ContactDetail", "params": { "id": "@subject.mergedInto" } } }]
+						}
+					},
+					{
 						"id": "contact-panels",
 						"type": "tabs",
 						"title": "Contact",
@@ -5070,6 +5103,9 @@
 				"quickActions": [
 					"call",
 					"mail"
+				],
+				"band": [
+					{ "widgetId": "contact-merged-away", "span": 12, "chrome": "bare" }
 				],
 				"sideColumn": [
 					"contact-kpis-deals",
