@@ -404,7 +404,7 @@ export default {
 		 * Stop the running duration clock, so the saved duration is the time it shows, then save.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/adopt-library-duration-timer/specs/contact-moments/spec.md#requirement-the-contact-moment-duration-runs-as-a-clock
+		 * @spec openspec/changes/adopt-library-duration-timer/specs/contactmomenten/spec.md#requirement-the-contact-moment-duration-runs-as-a-clock
 		 */
 		stopClockAndSave() {
 			this.$refs.durationClock?.stop()
