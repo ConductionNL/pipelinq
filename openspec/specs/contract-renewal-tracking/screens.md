@@ -1,6 +1,6 @@
 # Screens
 
-- PqContract https://identity.conduction.nl/screens/board?id=pipelinq/PqContract
-- PqContracten https://identity.conduction.nl/screens/board?id=pipelinq/PqContracten
-- PqOrganisatie https://identity.conduction.nl/screens/board?id=pipelinq/PqOrganisatie
-- PqVerkoopoverzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqVerkoopoverzicht
+- pipelinq/PqContract contract https://identity.conduction.nl/screens/board?id=pipelinq/PqContract
+- pipelinq/PqContracten contracten https://identity.conduction.nl/screens/board?id=pipelinq/PqContracten
+- pipelinq/PqOrganisatie organisatie https://identity.conduction.nl/screens/board?id=pipelinq/PqOrganisatie
+- pipelinq/PqVerkoopoverzicht verkoopoverzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqVerkoopoverzicht
