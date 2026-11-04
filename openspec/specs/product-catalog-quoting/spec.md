@@ -419,7 +419,7 @@ The system MUST provide admin-configurable settings for the quoting module.
 The system MUST support searching and cross-referencing quotes across the CRM.
 
 #### Scenario: Search by quote number
-- GIVEN the global search or quote list search
+- GIVEN Nextcloud's unified search; pipelinq has no quote list of its own, and a lead lists its quotes on its Offertes tab (board `PqLead`)
 - WHEN the user searches for "OFF-2026-004"
 - THEN all quotes matching the partial number MUST be returned
 

@@ -197,6 +197,7 @@ The adapter MUST periodically sync template approval state from Meta (and equiva
 - GIVEN a previously approved template is `disabled` by Meta (e.g. for category violation)
 - WHEN the sync detects the change
 - THEN the template MUST be marked `disabled`, an admin notification MUST fire, and the template MUST disappear from new-send pickers (in-flight sends complete).
+- AND the alert is a Nextcloud notification; the Templates table on board `PqBeheerKoppelingen` shows the status with the provider's reason.
 
 #### Scenario: Template approval lifecycle sync, case 3
 

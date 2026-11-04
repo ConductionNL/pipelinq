@@ -19,7 +19,7 @@ What follows the board:
 | REQ-MW-170 phone | Chips with counts on `PqMobiel`. The old dropdown filter bar is dropped. |
 | REQ-MW-180 scope | The saved view "Permits, whole team" on `PqMijnWerk` carries a team scope. |
 
-Not drawn on any board: quick actions (REQ-MW-100), recent activity (REQ-MW-110), meetings (REQ-MW-130), the notification badge (REQ-MW-140), the layout panel (REQ-MW-160), the refresh button (REQ-MW-190) and the priority and pipeline filters (REQ-MW-200). For those the recovered behaviour stands, placed in the header next to the existing filter buttons.
+Not drawn on any board: recent activity (REQ-MW-110), meetings (REQ-MW-130), the notification badge (REQ-MW-140), the layout panel (REQ-MW-160), the refresh button (REQ-MW-190) and the priority and pipeline filters (REQ-MW-200). For those the recovered behaviour stands, placed in the header next to the existing filter buttons.
 
 ## Decisions
 

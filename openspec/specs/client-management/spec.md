@@ -205,7 +205,8 @@ The system MUST validate client data according to schema rules and field format 
 - GIVEN a user creating or editing a client
 - WHEN they enter invalid data in any field
 - THEN validation errors MUST appear inline next to the relevant field
-- AND the save button MUST be disabled while required fields are empty or validation errors exist
+- AND no error shows before the first save; saving with an empty required field shows the error at that field and saves nothing, as on board `PqKlantNieuw`
+- AND that board draws the e-mail error ("Ongeldig e-mailadres"); the website and name length errors use the same inline pattern
 
 ---
 
@@ -1047,11 +1048,10 @@ The system SHALL provide analytics about the client lifecycle, including acquisi
 @e2e exclude analytics; V1 feature
 
 - GIVEN clients with the following patterns:
-  - "Active Client A": has leads or requests in the last 90 days
-  - "Dormant Client B": last activity was 180 days ago, no open leads or requests
-  - "Churned Client C": last activity was 365+ days ago
+  - "Active Client A": had contact in the last 12 months
+  - "Inactive Client B": last contact was 13 months ago
 - WHEN the user views the client analytics dashboard
-- THEN the system MUST categorize clients as: Active (activity in last 90 days), Dormant (90-365 days), Churned (365+ days)
+- THEN the system MUST categorize clients as Active or Inactive (no contact in the last 12 months), as on board `PqReports`
 - AND display counts and percentages for each category
 - AND the user MUST be able to filter the client list by lifecycle status
 
