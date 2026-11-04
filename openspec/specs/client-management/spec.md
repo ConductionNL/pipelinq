@@ -290,7 +290,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - GIVEN a person client "Jan de Vries" with email "jan@devries.nl"
 - WHEN the user navigates to the client detail view
 - THEN the system MUST display all client properties
-- AND the type MUST be displayed as "Person"
+- AND the type MUST be displayed as "Persoon" (Person)
 - AND the taxID field SHOULD NOT be prominently displayed for person clients
 
 #### Scenario: Display summary statistics
@@ -809,7 +809,7 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 - THEN the BSN field MUST NOT be visible at all (not masked, fully hidden)
 - AND when a user with "bsn_access" permission views the client detail
 - THEN the BSN MUST be displayed masked as "*****4001" (last 4 digits visible), with "Tonen" to show it
-- AND an explicit "Show BSN" action MUST be required to reveal the full number
+- AND an explicit "BSN tonen" (Show BSN) action MUST be required to reveal the full number
 
 #### Scenario: BSN validation (elfproef)
 @e2e exclude server validation algorithm; covered by PHPUnit
@@ -971,7 +971,7 @@ The system MUST support tagging and categorizing clients for segmentation purpos
 
 ### Requirement: Client Health Scoring
 
-The system SHOULD calculate and display a client health score based on relationship activity metrics. The health score helps sales teams prioritize follow-ups and identify at-risk client relationships.
+The system SHALL calculate and display a client health score based on relationship activity metrics. The health score helps sales teams prioritize follow-ups and identify at-risk client relationships.
 
 **Feature tier**: Enterprise
 
@@ -1012,14 +1012,14 @@ The system SHOULD calculate and display a client health score based on relations
 
 - GIVEN a client "NewCo B.V." created 3 days ago with 1 lead created
 - WHEN the system calculates the health score
-- THEN the system SHOULD display "New" instead of a numeric score for clients less than 30 days old
+- THEN the system SHOULD display "Nieuw" (New) instead of a numeric score for clients less than 30 days old
 - AND the system MUST NOT penalize new clients for lack of historical activity
 
 ---
 
 ### Requirement: Client Lifecycle Analytics
 
-The system SHOULD provide analytics about the client lifecycle, including acquisition rates, retention metrics, and revenue trends per client.
+The system SHALL provide analytics about the client lifecycle, including acquisition rates, retention metrics, and revenue trends per client.
 
 **Feature tier**: Enterprise
 
@@ -1301,7 +1301,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 @e2e exclude Enterprise custom fields; not yet implemented
 
 - GIVEN an administrator in the Pipelinq settings
-- WHEN they add a custom field with label "Contract Number", type "text", and maxLength 50
+- WHEN they add a custom field with label "Contractnummer" (Contract Number), type "text", and maxLength 50
 - THEN the system MUST add the field to the client schema in OpenRegister
 - AND the field MUST appear in the client create/edit form
 - AND the field MUST appear in the client detail view
@@ -1320,7 +1320,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 @e2e exclude Enterprise custom fields; not yet implemented
 
 - GIVEN an administrator in the Pipelinq settings
-- WHEN they add a custom field with label "Contract Expiry", type "date"
+- WHEN they add a custom field with label "Contract verloopt" (Contract Expiry), type "date"
 - THEN the system MUST render the field with a date picker in the client form
 - AND the system SHOULD support creating notifications/reminders based on this date (e.g., 30 days before expiry)
 
@@ -1329,7 +1329,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 
 - GIVEN a custom field "Contract Number" exists on the client schema
 - WHEN the user imports clients from CSV
-- THEN the column mapping step MUST include "Contract Number" as an available target field
+- THEN the column mapping step MUST include "Contractnummer" (Contract Number) as an available target field
 - AND imported values MUST be validated against the custom field's constraints
 
 #### Scenario: Delete a custom field
@@ -1451,10 +1451,10 @@ The forms SHALL show `correspondenceLanguage` and hide `language`. The repair st
 
 ### Requirement: The contact page shows the person and their deals above the fold (REQ-DPG-001)
 
-ContactDetail SHALL show one "Open deals" KPI: the total value of the person's
+ContactDetail SHALL show one "Openstaande deals" (Open deals) KPI: the total value of the person's
 open deals in the reporting currency, with the number of open deals beside
 it. The relationships, subscriptions and BSN lookup SHALL sit in a "Profile"
-tab strip, and the contact channels and messages in the "Communication" tab
+tab strip, and the contact channels and messages in the "Communicatie" (Communication) tab
 strip, inside the page grid. No section SHALL render below the grid.
 
 #### Scenario: An account manager opens a contact
@@ -1473,7 +1473,7 @@ strip, inside the page grid. No section SHALL render below the grid.
 ### Requirement: Every data block carries its own title (REQ-DPG-002)
 
 Data widgets on the contact, client, lead and ticket pages SHALL declare their
-title in `content.title`, so a block reads "Contact details", "Deal" or
+title in `content.title`, so a block reads "Contactgegevens" (Contact details), "Deal" or
 "Ticket details" instead of "Data".
 
 #### Scenario: A user reads a ticket
@@ -1510,7 +1510,7 @@ reaches CnAppRoot.
 @e2e exclude Asserted in tests/vitest/readableValues.spec.js on the manifest and the library's CnObjectListWidget.
 - **GIVEN** a user with an English interface opens a client
 - **WHEN** they look at the contact person list
-- **THEN** the button MUST read "Add contact person"
+- **THEN** the button MUST read "Contactpersoon toevoegen" (Add contact person)
 - **AND** a user with a Dutch interface MUST read "Contactpersoon toevoegen"
 
 ### Requirement: Cards on the client page follow a contact added on that page
@@ -1608,7 +1608,7 @@ page layout that overlaps no other widget.
 - **AND** the card MUST list the related records
 
 ### Requirement: A contact person added on a client page is created
-"Add contact person" on the Contacts tab of a client page MUST create the
+"Contactpersoon toevoegen" (Add contact person) on the Contacts tab of a client page MUST create the
 contact through the contact-first path (`POST /api/contacts-sync/create`), so
 the required `contactsUid` is provisioned, and the new contact MUST be linked
 to that client. A failed create MUST show the reason and MUST NOT report the
@@ -1645,7 +1645,7 @@ Implemented:
 - **Data model**: `lib/Settings/pipelinq_register.json` defines the `client` schema with properties: `name` (required), `type` (required, enum: person/organization), `email`, `phone`, `address`, `website`, `industry`, `notes`, `contactsUid`. Also defines the `contact` schema with: `name` (required), `email`, `phone`, `role`, `client` (UUID reference), `contactsUid`.
 - **Client CRUD**: `src/store/modules/object.js` provides generic `saveObject()`, `deleteObject()`, `fetchObject()`, `fetchCollection()` via OpenRegister API. No dedicated client controller -- all CRUD goes through OpenRegister's object API directly.
 - **Client List View**: `src/views/clients/ClientList.vue` -- displays client list with search, sort, and filter using OpenRegister's built-in query capabilities. Uses the `CnIndexPage` component.
-- **Client Detail View**: `src/views/clients/ClientDetail.vue` -- displays client info (type, email, phone, website, address, notes), linked contacts table, linked leads table, linked requests table. Shows a "Synced with Contacts" badge when `contactsUid` is set. Uses `CnDetailPage` with sidebar (audit log). Has edit/delete actions with delete confirmation dialog that warns about linked entities.
+- **Client Detail View**: `src/views/clients/ClientDetail.vue` -- displays client info (type, email, phone, website, address, notes), linked contacts table, linked leads table, linked requests table. Shows a "Gesynchroniseerd met Contacten" (Synced with Contacts) badge when `contactsUid` is set. Uses `CnDetailPage` with sidebar (audit log). Has edit/delete actions with delete confirmation dialog that warns about linked entities.
 - **Client Form**: `src/views/clients/ClientForm.vue` -- create/edit form for clients with inline validation (name required, type required, email/phone/website format validation via regex).
 - **Client Create Dialog**: `src/views/clients/ClientCreateDialog.vue` -- quick-create dialog used from the dashboard.
 - **Contact Person CRUD**: `src/views/contacts/ContactDetail.vue`, `ContactForm.vue`, `ContactList.vue` -- full CRUD for contact persons with client linking.

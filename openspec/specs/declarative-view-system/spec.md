@@ -1,7 +1,8 @@
 # declarative-view-system Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-views-to-declarative-r1. Update Purpose after archive.
+Pipelinq renders its list, detail and reporting pages from declarative manifest pages (`type:"index"`, `type:"detail"`, `type:"dashboard"`) instead of custom Vue views. A page that needs a primitive the manifest does not offer yet stays custom, with the reason recorded in the manifest.
+
 
 ## Requirements
 

@@ -135,3 +135,11 @@ PqInkomendGesprek draws a card the agent acts on.
 - THEN the system normalises the number to E.164: `+31612345678`
 - AND the lookup matches against normalised stored numbers
 - AND the original raw number `0612345678` is preserved in `contactmoment.channelMetadata.raw_inbound_number` for forensics
+
+#### Scenario: Single contact match navigates to customer 360 view
+
+- GIVEN the incoming-call card names the one contact that matches `+31612345678`
+- WHEN the agent clicks the button that opens that contact
+- THEN the agent's browser navigates to `/customer-360/contact/{contactId}` for that contact's customer-360 view
+- AND the browser does not navigate before the agent clicks
+- AND the contactmoment is linked to the contact (see REQ-CTI-003)

@@ -161,7 +161,7 @@ The system MUST enforce validation rules on lead properties to maintain data int
 
 - GIVEN a user creating a new lead
 - WHEN they submit the form without a title (empty string or missing)
-- THEN the system MUST reject the request with validation error "Title is required"
+- THEN the system MUST reject the request with validation error "Titel is verplicht" (Title is required)
 - AND the lead MUST NOT be created
 - AND the form MUST highlight the title field as invalid
 
@@ -285,7 +285,7 @@ The system MUST provide a detail view for each lead that displays all properties
 - AND the current stage (Qualified) MUST be highlighted as "current"
 - AND future stages (Proposal, Negotiation, Won, Lost) MUST be shown with an empty indicator
 - AND a "Move to Proposal" action button MUST be displayed to advance to the next stage
-- AND the pipeline name ("Sales Pipeline") MUST be displayed below the progress indicator
+- AND the pipeline name ("Verkooppijplijn" (Sales Pipeline)) MUST be displayed below the progress indicator
 
 #### Scenario 23: View lead detail -- client and contact links
 
@@ -301,8 +301,8 @@ The system MUST provide a detail view for each lead that displays all properties
 - GIVEN a lead assigned to Nextcloud user "jan" (display name "Jan de Vries")
 - WHEN the user views the lead detail
 - THEN the system MUST display the assignee's display name and avatar
-- AND a "Reassign" button MUST be present to change the assignee
-- AND if no assignee is set, the system MUST show "Unassigned" with an "Assign" action
+- AND a "Hertoewijzen" (Reassign) button MUST be present to change the assignee
+- AND if no assignee is set, the system MUST show "Unassigned" with an "Toewijzen" (Assign) action
 
 #### Scenario 25: View lead detail -- activity timeline
 
@@ -314,7 +314,7 @@ The system MUST provide a detail view for each lead that displays all properties
 - WHEN the user views the lead detail
 - THEN the activity timeline MUST display events in reverse chronological order (newest first)
 - AND each event MUST show: date, event description, and actor
-- AND an "Add note" button MUST be present at the top of the timeline
+- AND an "Notitie toevoegen" (Add note) button MUST be present at the top of the timeline
 - AND the timeline MUST support pagination for leads with extensive history
 
 ---
@@ -328,7 +328,7 @@ The system MUST support tracking where leads originate from. Source values are m
 - GIVEN a user creating a new lead
 - WHEN they select source "referral" from the source dropdown
 - THEN the lead MUST store `source: "referral"`
-- AND the source MUST be displayed in the lead list as a human-readable label ("Referral")
+- AND the source MUST be displayed in the lead list as a human-readable label ("Doorverwijzing" (Referral))
 - AND the source MUST be displayed in the lead detail view
 
 #### Scenario 27: Source dropdown shows all options
@@ -511,7 +511,7 @@ The system MUST support quick actions on lead cards (in kanban and list views) t
 
 #### Scenario 45: Quick move stage from kanban card
 
-- GIVEN a lead card "Gemeente ABC deal" in the "New" column
+- GIVEN a lead card "Gemeente ABC deal" in the "Nieuw" (New) column
 - WHEN the user right-clicks or opens the card action menu and selects "Move to stage"
 - THEN a dropdown MUST appear listing all stages in the pipeline
 - AND selecting "Qualified" MUST move the lead to the Qualified stage
@@ -520,7 +520,7 @@ The system MUST support quick actions on lead cards (in kanban and list views) t
 #### Scenario 46: Quick assign from kanban card
 
 - GIVEN an unassigned lead card on the kanban board
-- WHEN the user opens the card action menu and selects "Assign"
+- WHEN the user opens the card action menu and selects "Toewijzen" (Assign)
 - THEN a user picker MUST appear
 - AND selecting a user MUST immediately update the assignment
 - AND the card MUST update to show the new assignee's avatar
@@ -570,7 +570,7 @@ The system MUST display how long a lead has been in its current stage to help id
 
 #### Scenario 51: Aging resets on stage change
 
-- GIVEN a lead showing "12d in stage" for the "Proposal" stage
+- GIVEN a lead showing "12d in stage" for the "Voorstel" (Proposal) stage
 - WHEN the lead is moved to the "Negotiation" stage
 - THEN the aging counter MUST reset to "0d in stage"
 - AND the previous stage duration SHOULD be preserved in the activity timeline
@@ -685,13 +685,13 @@ Operations for lead editing and lead-product linking screens MUST tolerate missi
 
 ### Requirement: Lead Capture from External Sources [V1]
 
-The system SHOULD support creating leads from external channels beyond manual entry. This includes web form submissions, email parsing, and integration with the prospect discovery module. External lead capture reduces data entry and ensures no potential opportunity is missed.
+The system SHALL support creating leads from external channels beyond manual entry. This includes web form submissions, email parsing, and integration with the prospect discovery module. External lead capture reduces data entry and ensures no potential opportunity is missed.
 
 #### Scenario: Create lead from prospect discovery widget
 @e2e exclude V1 prospect feature; not yet implemented
 
 - GIVEN the prospect discovery widget displays a prospect "TechBedrijf BV" (KVK: 12345678, SBI: 62 - IT-dienstverlening, fitScore: 82%, city: Amsterdam)
-- WHEN the user clicks "Create Lead" on the prospect card
+- WHEN the user clicks "Lead aanmaken" (Create Lead) on the prospect card
 - THEN the system MUST call the `/api/prospects/create-lead` endpoint with the prospect data
 - AND a new lead MUST be created with `title` set to the prospect's trade name ("TechBedrijf BV")
 - AND the lead's `source` MUST be set to "prospect_discovery"
@@ -733,7 +733,7 @@ The system SHOULD support creating leads from external channels beyond manual en
 
 ### Requirement: Lead Qualification Scoring [V1]
 
-The system SHOULD support scoring leads based on configurable qualification criteria to help sales teams prioritize effort. Scoring provides an objective measure complementing the subjective pipeline stage progression.
+The system SHALL support scoring leads based on configurable qualification criteria to help sales teams prioritize effort. Scoring provides an objective measure complementing the subjective pipeline stage progression.
 
 #### Scenario: Configure scoring criteria in admin settings
 @e2e exclude V1 scoring; not yet implemented
@@ -784,7 +784,7 @@ The system SHOULD support scoring leads based on configurable qualification crit
 
 ### Requirement: Lead-to-Client Conversion [V1]
 
-The system SHOULD support converting a lead into a client record when the lead reaches a sufficient qualification stage. Unlike EspoCRM's atomic conversion that creates separate Account + Contact + Opportunity, Pipelinq's unified model keeps the lead as the deal record and promotes the associated entity to a full client.
+The system SHALL support converting a lead into a client record when the lead reaches a sufficient qualification stage. Unlike EspoCRM's atomic conversion that creates separate Account + Contact + Opportunity, Pipelinq's unified model keeps the lead as the deal record and promotes the associated entity to a full client.
 
 #### Scenario: Convert lead with no existing client
 @e2e exclude requires existing lead record
@@ -821,7 +821,7 @@ The system SHOULD support converting a lead into a client record when the lead r
 
 ### Requirement: Lead Assignment Rules [V1]
 
-The system SHOULD support automated lead assignment based on configurable rules to distribute incoming leads fairly across the sales team.
+The system SHALL support automated lead assignment based on configurable rules to distribute incoming leads fairly across the sales team.
 
 #### Scenario: Configure round-robin assignment
 @e2e exclude Enterprise assignment feature; not yet implemented
@@ -864,7 +864,7 @@ The system SHOULD support automated lead assignment based on configurable rules 
 
 ### Requirement: Lead Deduplication [V1]
 
-The system SHOULD detect and help resolve duplicate leads to maintain data quality. Deduplication checks during creation and provides a merge interface for existing duplicates.
+The system SHALL detect and help resolve duplicate leads to maintain data quality. Deduplication checks during creation and provides a merge interface for existing duplicates.
 
 #### Scenario: Warn on potential duplicate during creation
 @e2e exclude requires existing leads
@@ -902,7 +902,7 @@ The system SHOULD detect and help resolve duplicate leads to maintain data quali
 
 ### Requirement: Lead Tagging and Categorization [V1]
 
-The system SHOULD support tagging leads with user-defined labels beyond the single `category` field to enable flexible grouping and filtering. Tags use the same TagManager pattern as lead sources.
+The system SHALL support tagging leads with user-defined labels beyond the single `category` field to enable flexible grouping and filtering. Tags use the same TagManager pattern as lead sources.
 
 #### Scenario: Add tags to a lead
 
@@ -962,7 +962,7 @@ The system MUST support automated nurturing workflows that trigger actions based
 - GIVEN an n8n workflow configured with a stale lead trigger (threshold: 14 days)
 - WHEN a lead has had no activity for 14 days and is in a non-closed stage
 - THEN the workflow MUST send a notification to the assigned user: "Lead '{title}' has been inactive for 14 days"
-- AND the workflow SHOULD offer quick actions in the notification: "Add Note", "View Lead", "Mark as Lost"
+- AND the workflow SHOULD offer quick actions in the notification: "Add Note", "View Lead", "Markeer als verloren" (Mark as Lost)
 
 #### Scenario: Escalate high-value stale leads
 @e2e exclude Enterprise automation; not yet implemented
@@ -977,7 +977,7 @@ The system MUST support automated nurturing workflows that trigger actions based
 
 ### Requirement: Lead Reporting and Analytics [V1]
 
-The system SHOULD provide reporting and analytics for lead management performance, pipeline health, and conversion metrics. Reports complement the existing dashboard KPIs with deeper drill-down capabilities.
+The system SHALL provide reporting and analytics for lead management performance, pipeline health, and conversion metrics. Reports complement the existing dashboard KPIs with deeper drill-down capabilities.
 
 #### Scenario: Pipeline value summary by stage
 
@@ -1068,7 +1068,7 @@ The system MUST support attaching products as line items to leads to detail the 
 
 ### Requirement: The lead list shows and sorts by score (REQ-LSCORE-001)
 
-The Leads list MUST have a sortable "Score" column showing the stored qualification score with a text band label, and a "Call first" quick filter that orders open leads by score descending.
+The Leads list MUST have a sortable "Score" column showing the stored qualification score with a text band label, and a "Eerst bellen" (Call first) quick filter that orders open leads by score descending.
 
 #### Scenario: Call first
 
@@ -1092,7 +1092,7 @@ A lead card on the pipeline board MUST show the score as a number with an access
 
 - **GIVEN** a lead has a score of 92
 - **WHEN** Pieter views the board
-- **THEN** its card shows "92" and a screen reader announces "Score 92, high"
+- **THEN** its card shows "92" and a screen reader announces "Score 92, hoog" (Score 92, high)
 
 ### Requirement: A person can see why a lead has its score (REQ-LSCORE-003)
 

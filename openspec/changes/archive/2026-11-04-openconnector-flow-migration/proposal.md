@@ -1,5 +1,7 @@
 # Proposal: OpenConnector Flow Migration — Scoping & Staging
 
+> Archived on 4 Nov 2026 without a spec delta: this was an audit with no requirement change. The open follow-up, the send path through a connector source, now belongs to `changes/marketing-mail-transports`.
+
 ## Why
 
 The fleet is retiring the classic OpenConnector ingestion dialect (`Source` /

@@ -1,7 +1,8 @@
 # pipelinq-navigation Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-dashboard-icons-reports-tour. Update Purpose after archive.
+This spec fixes how Pipelinq's navigation reads: the three dashboards share one dashboard icon, the reports sit on one reports page, and settings offers an action to restart the tutorial.
+
 ## Requirements
 ### Requirement: REQ-NAV-PQ-001 — The Three Dashboards Share One Icon
 
