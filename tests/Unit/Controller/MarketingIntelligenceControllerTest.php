@@ -41,6 +41,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\Pipelinq\Controller\CompetitorWatchController;
 use OCA\Pipelinq\Controller\KeywordIntelligenceController;
 use OCA\Pipelinq\Controller\MarketingConnectorController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
 use OCA\Pipelinq\Service\Competitor\WatchEventStore;
@@ -352,8 +353,7 @@ class MarketingIntelligenceControllerTest extends TestCase {
 			watches: $watches,
 			events: $events,
 			egress: $egress,
-			userSession: $this->session(signedIn: $signedIn),
-			policy: $this->policy(privileged: $privileged)
+			privilege: new CrmPrivilegeCheck($this->session(signedIn: $signedIn), $this->policy(privileged: $privileged))
 		);
 	}//end competitors()
 
@@ -455,8 +455,7 @@ class MarketingIntelligenceControllerTest extends TestCase {
 			matomo: $matomo,
 			audit: $audit,
 			time: $time,
-			userSession: $this->session(signedIn: $signedIn),
-			policy: $this->policy(privileged: $privileged)
+			privilege: new CrmPrivilegeCheck($this->session(signedIn: $signedIn), $this->policy(privileged: $privileged))
 		);
 	}//end connectors()
 
@@ -523,8 +522,7 @@ class MarketingIntelligenceControllerTest extends TestCase {
 			matomo: $matomo,
 			audit: $this->createMock(ConnectionAuditService::class),
 			time: $time,
-			userSession: $this->session(signedIn: true),
-			policy: $this->policy(privileged: true)
+			privilege: new CrmPrivilegeCheck($this->session(signedIn: true), $this->policy(privileged: true))
 		);
 
 		$controller->matomo(from: '2026-08-01', to: '2026-08-31');

@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
 use OCA\Pipelinq\Service\SettingsService;
@@ -36,7 +36,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -88,14 +87,13 @@ class NotesController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param NotesService $notesService The notes service.
 	 * @param NoteEventService $noteEventService The note event service.
-	 * @param IUserSession $userSession The user session.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ContainerInterface $container The DI container.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param SettingsService $settingsService The settings service.
 	 * @param TicketService $ticketService The unified ticket resolver.
-	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Nextcloud controllers are wired
 	 *  purely by constructor DI; every parameter is a collaborator the notes endpoint
@@ -105,14 +103,13 @@ class NotesController extends Controller {
 		IRequest $request,
 		private NotesService $notesService,
 		private NoteEventService $noteEventService,
-		private IUserSession $userSession,
+		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 		private ContainerInterface $container,
 		private IGroupManager $groupManager,
 		private SettingsService $settingsService,
 		private TicketService $ticketService,
-		private ObjectOwnerAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -241,15 +238,11 @@ class NotesController extends Controller {
 	 * @spec openspec/specs/entity-notes/spec.md
 	 */
 	public function list(string $objectType, string $objectId): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Notes hang off CRM records and are read by objectType/objectId from
 		// the request — a CRM capability. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
@@ -285,15 +278,11 @@ class NotesController extends Controller {
 	 * @spec openspec/specs/entity-notes/spec.md
 	 */
 	public function create(string $objectType, string $objectId): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Notes hang off CRM records and are read by objectType/objectId from
 		// the request — a CRM capability. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
@@ -345,18 +334,16 @@ class NotesController extends Controller {
 	 * @spec openspec/specs/entity-notes/spec.md
 	 */
 	public function deleteAll(string $objectType, string $objectId): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Notes hang off CRM records and are read by objectType/objectId from
 		// the request — a CRM capability. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		if ($this->groupManager->isAdmin($user->getUID()) === false) {
+		$uid = $this->privilege->actingUserId();
+
+		if ($this->groupManager->isAdmin($uid) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Admin privileges required')], Http::STATUS_FORBIDDEN);
 		}
 
@@ -392,15 +379,11 @@ class NotesController extends Controller {
 	 * @spec openspec/specs/entity-notes/spec.md
 	 */
 	public function deleteSingle(int $noteId): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Notes hang off CRM records and are read by objectType/objectId from
 		// the request — a CRM capability. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {

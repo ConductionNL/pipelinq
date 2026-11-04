@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Lifecycle;
 
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IUser;
 use OCP\IUserSession;
 
@@ -59,17 +60,58 @@ class CrmPrivilegeCheck {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function refusal(): ?JSONResponse {
+		return $this->refusalWith(unauthenticated: ['error' => 'Authentication required'], forbidden: ['error' => 'Forbidden']);
+	}//end refusal()
+
+	/**
+	 * The refusal for the session user with translated texts, or null when they may proceed.
+	 *
+	 * @param IL10N $l10n The translator.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 */
+	public function translatedRefusal(IL10N $l10n): ?JSONResponse {
+		return $this->refusalWith(
+			unauthenticated: ['error' => $l10n->t('Authentication required')],
+			forbidden: ['error' => $l10n->t('Forbidden')]
+		);
+	}//end translatedRefusal()
+
+	/**
+	 * The refusal for the session user under a `message` key, or null when they may proceed.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 */
+	public function refusalAsMessage(): ?JSONResponse {
+		return $this->refusalWith(unauthenticated: ['message' => 'Authentication required'], forbidden: ['message' => 'Forbidden']);
+	}//end refusalAsMessage()
+
+	/**
+	 * The refusal for the session user with the given bodies, or null when they may proceed.
+	 *
+	 * @param array<string, string> $unauthenticated The 401 body.
+	 * @param array<string, string> $forbidden       The 403 body.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 */
+	public function refusalWith(array $unauthenticated, array $forbidden): ?JSONResponse {
 		$uid = $this->actingUserId();
 		if ($uid === '') {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+			return new JSONResponse($unauthenticated, Http::STATUS_UNAUTHORIZED);
 		}
 
 		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+			return new JSONResponse($forbidden, Http::STATUS_FORBIDDEN);
 		}
 
 		return null;
-	}//end refusal()
+	}//end refusalWith()
 
 	/**
 	 * The session user's id.

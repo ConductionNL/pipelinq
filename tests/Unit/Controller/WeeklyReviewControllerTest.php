@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\WeeklyReviewController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Marketing\WeeklyReviewService;
 use OCP\AppFramework\Http;
@@ -128,8 +129,7 @@ class WeeklyReviewControllerTest extends TestCase {
 			'pipelinq',
 			$this->createMock(IRequest::class),
 			$this->reviews,
-			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => false]),
+			new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => false])),
 		);
 
 		$this->assertSame(Http::STATUS_FORBIDDEN, $controller->show()->getStatus());
@@ -146,8 +146,7 @@ class WeeklyReviewControllerTest extends TestCase {
 			'pipelinq',
 			$this->createMock(IRequest::class),
 			$this->reviews,
-			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true]),
+			new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true])),
 		);
 	}//end controller()
 }//end class

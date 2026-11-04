@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\LoyaltyPaymentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -32,7 +32,6 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Throwable;
 
 /**
@@ -47,16 +46,14 @@ class LoyaltyPaymentController extends Controller {
 	 * @param string                  $appName     The app name.
 	 * @param IRequest                $request     The request.
 	 * @param LoyaltyPaymentService   $service     The payment service.
-	 * @param ObjectOwnerAccessPolicy $policy      Who may use loyalty.
-	 * @param IUserSession            $userSession The user session.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N                   $l10n        The translator.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		private LoyaltyPaymentService $service,
-		private ObjectOwnerAccessPolicy $policy,
-		private IUserSession $userSession,
+		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -73,19 +70,9 @@ class LoyaltyPaymentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function pay(string $accountId): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Forbidden')],
-				Http::STATUS_FORBIDDEN
-			);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
