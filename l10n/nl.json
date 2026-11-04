@@ -9557,6 +9557,19 @@
         "What the item installs: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector.": "Wat het item installeert: een pijplijn, wachtrijroutering, catalogus, kassa-inrichting, loyaliteitsprogramma of connector.",
         "What the item sets up, shown on its card in the store.": "Wat het item inricht, getoond op de kaart in de winkel.",
         "What the tariff is called, such as the rate of a fee regulation.": "Hoe het tarief heet, zoals het tarief uit een legesverordening.",
-        "Who published the item.": "Wie het item heeft gepubliceerd."
+        "Who published the item.": "Wie het item heeft gepubliceerd.",
+        "Merged": "Samengevoegd",
+        "Open the merged record": "Open het samengevoegde record",
+        "Merged into {subject.mergedIntoLabel} on {subject.mergedAt|date}. This record can no longer be changed.": "Samengevoegd met {subject.mergedIntoLabel} op {subject.mergedAt|date}. Dit record kan niet meer worden gewijzigd.",
+        "This record was merged into another record and can no longer be changed.": "Dit record is samengevoegd met een ander record en kan niet meer worden gewijzigd.",
+        "Merged into": "Samengevoegd met",
+        "Merged into (name)": "Samengevoegd met (naam)",
+        "Merged on": "Samengevoegd op",
+        "The name and number of the record this client was merged into, such as Sanne J. de Vries (K-2019-01184).": "De naam en het nummer van het record waarmee deze klant is samengevoegd, zoals Sanne J. de Vries (K-2019-01184).",
+        "The name and number of the record this contact was merged into.": "De naam en het nummer van het record waarmee dit contact is samengevoegd.",
+        "The record this client was merged into. Empty while the client stands on its own.": "Het record waarmee deze klant is samengevoegd. Leeg zolang de klant op zichzelf staat.",
+        "The record this contact was merged into. Empty while the contact stands on its own.": "Het record waarmee dit contact is samengevoegd. Leeg zolang het contact op zichzelf staat.",
+        "When this client was merged into another record.": "Wanneer deze klant met een ander record is samengevoegd.",
+        "When this contact was merged into another record.": "Wanneer dit contact met een ander record is samengevoegd."
     }
 }
