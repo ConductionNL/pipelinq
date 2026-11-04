@@ -88,6 +88,10 @@ class LoyaltyPaymentServiceTest extends TestCase {
 	 */
 	public function testPayWithPointsDebitsAndReturnsTheAmount(): void {
 		$this->ledger->expects($this->once())
+			->method('forOperation')
+			->with('pos-payment:tx-1')
+			->willReturnSelf();
+		$this->ledger->expects($this->once())
 			->method('debitPoints')
 			->with(
 				'acc-1',
