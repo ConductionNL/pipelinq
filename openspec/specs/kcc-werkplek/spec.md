@@ -693,13 +693,19 @@ The system MUST allow agents to set their availability status, which affects que
 
 ---
 
-### Requirement: The ticket list shows the longest-waiting ticket first
+### Requirement: The ticket list shows the newest ticket first, and "Niet toegewezen" the longest-waiting first
 
-The ticket list in the simple structure SHALL sort on waiting time by default, longest first, so the ticket that waits longest is on the first row. Its count line SHALL name that order. A click on a column head SHALL sort differently.
+The ticket list in the simple structure SHALL sort on `occurredAt` descending by default, so a ticket that just came in is on the first page. The "Niet toegewezen" view SHALL sort on waiting time instead, longest first. The count line SHALL name the order. A click on a column head SHALL sort differently.
+
+#### Scenario: A resident's question reaches the KCC agent
+- **GIVEN** 83 tickets, most of them weeks old
+- **WHEN** a resident asks a question through the portal and a KCC agent opens Vragen en meldingen
+- **THEN** the resident's ticket SHALL be the first row
+- **AND** the count line SHALL read "... · nieuwste eerst"
 
 #### Scenario: A KCC agent opens the unassigned tickets
 - **GIVEN** 46 tickets, 8 of them unassigned
-- **WHEN** a KCC agent opens Vragen en meldingen on "Niet toegewezen"
+- **WHEN** a KCC agent opens the "Niet toegewezen" view
 - **THEN** the ticket that waits longest SHALL be the first row
 - **AND** the count line SHALL read "8 van 46 · langst wachtend eerst"
 
