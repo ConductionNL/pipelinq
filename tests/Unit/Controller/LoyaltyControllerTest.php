@@ -38,6 +38,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\LoyaltyController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\GiftCardService;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
@@ -131,12 +132,12 @@ class LoyaltyControllerTest extends TestCase {
 			($redemptionService ?? $this->createMock(RedemptionService::class)),
 			($giftCardService ?? $this->createMock(GiftCardService::class)),
 			($programmeService ?? $this->createMock(LoyaltyProgrammeService::class)),
-			$this->createConfiguredMock(
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(
 				ObjectOwnerAccessPolicy::class,
 				['isPrivileged' => $privileged, 'mayAccess' => $privileged]
-			),
-			$userSession,
+			)),
 			$l10n
+		
 		);
 	}//end buildController()
 

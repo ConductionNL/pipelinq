@@ -28,14 +28,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\RoutingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -59,15 +58,13 @@ class RoutingController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param RoutingService $routingService The routing service.
-	 * @param IUserSession $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private RoutingService $routingService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $accessPolicy,
+		private CrmPrivilegeCheck $privilege,
 		private LoggerInterface $logger,
 	) {
 		// @PublicPage — DI constructor (not HTTP-routable). The class-level
@@ -91,18 +88,11 @@ class RoutingController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function getSuggestions(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['message' => 'Authentication required'],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
 		// Routing suggestions read the assignment graph across the team — a
 		// CRM capability, not an any-authenticated-user one.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$entityType = (string)$this->request->getParam('entityType', '');

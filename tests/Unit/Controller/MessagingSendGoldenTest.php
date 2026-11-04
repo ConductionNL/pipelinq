@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\MessagingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -49,6 +50,7 @@ use Throwable;
  * @uses   \OCA\Pipelinq\Service\Messaging\MessageRoute
  *
  * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004-server-side-send-endpoint
+ * @uses \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
  */
 class MessagingSendGoldenTest extends TestCase {
 	private const GOLDEN = __DIR__ . '/MessagingSendGolden.json';
@@ -187,8 +189,7 @@ class MessagingSendGoldenTest extends TestCase {
 			messagingService: $service,
 			providerRepo: $this->createMock(ChannelProviderRepository::class),
 			consentService: $this->createMock(ConsentService::class),
-			userSession: $session,
-			policy: $policy,
+			privilege: new CrmPrivilegeCheck($session, $policy),
 		);
 
 		try {

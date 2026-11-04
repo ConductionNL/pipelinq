@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ContractController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContractFiguresService;
 use OCA\Pipelinq\Service\ContractService;
@@ -386,7 +387,10 @@ class ContractControllerTest extends TestCase {
 				container: $container,
 				logger: $logger,
 			),
-			userSession: $this->userSession,
+			privilege: new CrmPrivilegeCheck($this->userSession, new ObjectOwnerAccessPolicy(
+				groupManager: $this->groupManager,
+				appConfig: $this->createMock(IAppConfig::class)
+			)),
 			accessPolicy: new ObjectOwnerAccessPolicy(
 				groupManager: $this->groupManager,
 				appConfig: $this->createMock(IAppConfig::class)

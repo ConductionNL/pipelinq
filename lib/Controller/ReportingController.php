@@ -23,14 +23,14 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
-// @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+		// @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\ReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -38,7 +38,6 @@ use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Controller for reporting endpoints and SLA configuration.
@@ -56,14 +55,12 @@ class ReportingController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ReportingService $reportingService The reporting service.
-	 * @param IUserSession $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
 		private ReportingService $reportingService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $accessPolicy,
+		private CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -78,14 +75,10 @@ class ReportingController extends Controller {
 	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getKpis(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		[$from, $to] = $this->resolvePeriodRange();
@@ -117,14 +110,10 @@ class ReportingController extends Controller {
 	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getChannels(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		[$from, $to] = $this->resolvePeriodRange();
@@ -163,14 +152,10 @@ class ReportingController extends Controller {
 	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getAgents(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		[$from, $to] = $this->resolvePeriodRange();
@@ -201,14 +186,10 @@ class ReportingController extends Controller {
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
 	 */
 	public function getSla(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -280,14 +261,10 @@ class ReportingController extends Controller {
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
 	 */
 	public function exportCsv(): DataDownloadResponse|JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		// CSV export requires OpenRegister data integration.

@@ -26,14 +26,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\TeamLoadService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -49,15 +48,13 @@ class TeamLoadController extends Controller {
 	 *
 	 * @param IRequest                $request      The request.
 	 * @param TeamLoadService         $teamLoad     The team's load.
-	 * @param IUserSession            $userSession  The signed-in user.
-	 * @param ObjectOwnerAccessPolicy $accessPolicy Who may read across the team.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface         $logger       The logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly TeamLoadService $teamLoad,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $accessPolicy,
+		private readonly CrmPrivilegeCheck $privilege,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -75,13 +72,9 @@ class TeamLoadController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {

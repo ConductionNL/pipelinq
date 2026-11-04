@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContractFiguresService;
 use OCA\Pipelinq\Service\ContractService;
@@ -42,7 +43,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -61,7 +61,7 @@ class ContractController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param ContractService $contractService Contract lifecycle service.
 	 * @param RecurringRevenueService $revenueService Recurring-revenue service.
-	 * @param IUserSession $userSession The user session.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param ContainerInterface $container The DI container.
 	 * @param LoggerInterface $logger PSR logger.
@@ -71,7 +71,7 @@ class ContractController extends Controller {
 		IRequest $request,
 		private ContractService $contractService,
 		private RecurringRevenueService $revenueService,
-		private IUserSession $userSession,
+		private CrmPrivilegeCheck $privilege,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
@@ -92,20 +92,18 @@ class ContractController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// This controller already authorises per object via
 		// $this->accessPolicy->mayAccess() — but create() has no object yet to
 		// own, so that check has nothing to test and the method was reachable
 		// by any authenticated account. Creating a contract is a CRM
 		// capability; the privileged-group half of the same policy is the
 		// question that CAN be asked before the object exists.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
+
+		$uid = $this->privilege->actingUserId();
 
 		$body = $this->request->getParams();
 		unset($body['_route']);
@@ -117,7 +115,7 @@ class ContractController extends Controller {
 		$existing = $this->contractService->loadAll();
 		$body['contractNumber'] = $this->contractService->generateContractNumber($existing);
 		if (trim((string)($body['ownerId'] ?? '')) === '') {
-			$body['ownerId'] = $user->getUID();
+			$body['ownerId'] = $uid;
 		}
 
 		if (trim((string)($body['status'] ?? '')) === '') {
@@ -147,8 +145,8 @@ class ContractController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function transition(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '') {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
@@ -160,7 +158,7 @@ class ContractController extends Controller {
 			return new JSONResponse(['message' => 'Contract not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		if ($this->isAuthorized(uid: $user->getUID(), contract: $contract) === false) {
+		if ($this->isAuthorized(uid: $uid, contract: $contract) === false) {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -201,8 +199,8 @@ class ContractController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function figures(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '') {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
@@ -211,7 +209,7 @@ class ContractController extends Controller {
 			return new JSONResponse(['message' => 'Contract not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		if ($this->isAuthorized(uid: $user->getUID(), contract: $contract) === false) {
+		if ($this->isAuthorized(uid: $uid, contract: $contract) === false) {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -232,16 +230,12 @@ class ContractController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function summary(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Revenue across the whole contract book — no object selector, so
 		// there is nothing to own and the only question is whether this caller
 		// may see company-wide figures at all.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		return new JSONResponse($this->revenueService->getSummary());
@@ -259,15 +253,11 @@ class ContractController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function renewalMetrics(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Same shape as summary(): an instance-wide aggregate with no object
 		// selector, so isPrivileged is the only question that can be asked.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$from = (string)$this->request->getParam('from', date('Y-m-d', strtotime('-3 months')));

@@ -31,6 +31,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\RoutingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\RoutingService;
@@ -280,8 +281,7 @@ class RoutingControllerTest extends TestCase {
 				logger: $logger,
 				objectService: $this->objects,
 			),
-			userSession: $this->userSession,
-			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			logger: $logger,
 		);
 	}//end buildController()
@@ -583,8 +583,7 @@ class RoutingControllerTest extends TestCase {
 				logger: $logger,
 				objectService: $failing,
 			),
-			userSession: $this->userSession,
-			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			logger: $logger,
 		);
 

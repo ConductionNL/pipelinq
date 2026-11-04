@@ -24,14 +24,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Controller for prospect discovery.
@@ -44,16 +43,14 @@ class ProspectController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ProspectDiscoveryService $discoveryService The discovery service.
-	 * @param IUserSession $userSession The user session.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N $l10n The localization service.
-	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,
 		private ProspectDiscoveryService $discoveryService,
-		private IUserSession $userSession,
+		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
-		private ObjectOwnerAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -67,14 +64,10 @@ class ProspectController extends Controller {
 	 * @spec            openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-1
 	 */
 	public function index(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Prospects and leads are customer data. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$refresh = $this->request->getParam(key: 'refresh', default: 'false') === 'true';

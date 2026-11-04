@@ -1,0 +1,61 @@
+{
+    "index no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "index unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "index privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "configured": false,
+            "properties": [],
+            "serviceAccountEmail": "",
+            "lastImportAt": ""
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "SearchQueryReportService::topQueries": [
+                    "sample-from",
+                    "sample-to",
+                    7,
+                    "sample-property"
+                ]
+            },
+            {
+                "SearchConsoleImportService::hasKey": []
+            },
+            {
+                "SearchConsoleImportService::properties": []
+            },
+            {
+                "SearchConsoleImportService::serviceAccountEmail": []
+            },
+            {
+                "SearchConsoleImportService::lastImportAt": []
+            }
+        ]
+    }
+}

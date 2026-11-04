@@ -22,6 +22,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\ContactSyncController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContactDataBuilder;
 use OCA\Pipelinq\Service\ContactImportService;
@@ -89,8 +90,7 @@ class ContactSyncControllerTest extends TestCase {
 		$this->controller = new ContactSyncController($this->request,
 			$this->syncService,
 			$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => true]),
-			$userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$logger,
 		);
@@ -227,8 +227,7 @@ class ContactSyncControllerTest extends TestCase {
 		return new ContactSyncController($this->createMock(IRequest::class),
 			$this->syncService,
 			$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => true]),
-			$session,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($session, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -462,8 +461,7 @@ class ContactSyncControllerTest extends TestCase {
 		$controller = new ContactSyncController($this->request,
 			$this->syncService,
 			$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => false]),
-			$userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$this->createMock(LoggerInterface::class),
 		);

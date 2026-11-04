@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\Controller\AnalyticsController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\AnalyticsService;
@@ -96,8 +97,7 @@ class AnalyticsControllerTest extends TestCase {
 		return new AnalyticsController(
 			request: $this->request,
 			analyticsService: $this->service,
-			userSession: $this->userSession,
-			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			logger: $this->logger,
 		);
 	}
@@ -396,8 +396,7 @@ class AnalyticsControllerTest extends TestCase {
 				),
 				objectService: $store,
 			),
-			userSession: $this->userSession,
-			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			logger: $this->logger,
 		);
 	}

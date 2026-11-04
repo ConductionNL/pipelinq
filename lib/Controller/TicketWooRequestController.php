@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCA\Pipelinq\Service\WooRequestConversionService;
 use OCP\AppFramework\Controller;
@@ -38,7 +38,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 use RuntimeException;
 
 /**
@@ -60,8 +59,7 @@ class TicketWooRequestController extends Controller {
 	 * @param IRequest                    $request      The request.
 	 * @param WooRequestConversionService $conversion   Calls dossiq's intake.
 	 * @param MainRegisterReader          $tickets      Reads the ticket under the user's RBAC.
-	 * @param IUserSession                $userSession  The signed-in employee.
-	 * @param ObjectOwnerAccessPolicy     $accessPolicy Who may act on tickets.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
 	 */
@@ -69,8 +67,7 @@ class TicketWooRequestController extends Controller {
 		IRequest $request,
 		private readonly WooRequestConversionService $conversion,
 		private readonly MainRegisterReader $tickets,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $accessPolicy,
+		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -86,13 +83,9 @@ class TicketWooRequestController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function availability(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -118,16 +111,12 @@ class TicketWooRequestController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function convert(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// The same privileged-group check the case handoff uses; the ticket
 		// itself is read under the employee's OpenRegister RBAC, so a ticket
 		// they may not read answers 404.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {

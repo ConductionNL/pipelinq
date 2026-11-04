@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\TicketWooRequestController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCA\Pipelinq\Service\WooRequestConversionService;
@@ -69,8 +70,7 @@ class TicketWooRequestControllerTest extends TestCase {
 			request: $this->createMock(IRequest::class),
 			conversion: $conversion,
 			tickets: $tickets,
-			userSession: $session,
-			accessPolicy: $policy
+			privilege: new CrmPrivilegeCheck($session, $policy)
 		);
 	}//end controller()
 
@@ -137,8 +137,7 @@ class TicketWooRequestControllerTest extends TestCase {
 			request: $this->createMock(IRequest::class),
 			conversion: $conversion,
 			tickets: $tickets,
-			userSession: $session,
-			accessPolicy: $policy
+			privilege: new CrmPrivilegeCheck($session, $policy)
 		);
 
 		$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $controller->convert(id: 't-9')->getStatus());
