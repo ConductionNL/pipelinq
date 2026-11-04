@@ -265,7 +265,6 @@
             "description": "d",
             "priority": "high",
             "assigneeUserId": "agent",
-            "assigneeGroupId": "kcc",
             "clientId": "c-1",
             "requestId": "r-1",
             "callbackPhoneNumber": "+316",
@@ -283,7 +282,6 @@
                     "description": "d",
                     "priority": "high",
                     "assigneeUserId": "agent",
-                    "assigneeGroupId": "kcc",
                     "clientId": "c-1",
                     "requestId": "r-1",
                     "callbackPhoneNumber": "+316",
@@ -303,7 +301,6 @@
             "description": "d",
             "priority": "high",
             "assigneeUserId": "agent",
-            "assigneeGroupId": "kcc",
             "clientId": "c-1",
             "requestId": "r-1",
             "callbackPhoneNumber": "+316",
@@ -321,7 +318,6 @@
                     "description": "d",
                     "priority": "high",
                     "assigneeUserId": "agent",
-                    "assigneeGroupId": "kcc",
                     "clientId": "c-1",
                     "requestId": "r-1",
                     "callbackPhoneNumber": "+316",
@@ -364,6 +360,56 @@
                     "requestId": "r-1",
                     "callbackPhoneNumber": "+316",
                     "preferredTimeSlot": "am"
+                }
+            }
+        ]
+    },
+    "create agent group only": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "t-new",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-11-04T10:00:00+00:00",
+            "priority": "normal"
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "priority": "normal"
+                }
+            }
+        ]
+    },
+    "create admin group only": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "t-new",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-11-04T10:00:00+00:00",
+            "priority": "normal",
+            "assigneeGroupId": "kcc"
+        },
+        "trace": [
+            {
+                "isAdmin": "admin"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "priority": "normal",
+                    "assigneeGroupId": "kcc"
                 }
             }
         ]

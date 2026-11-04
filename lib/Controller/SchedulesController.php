@@ -309,8 +309,8 @@ class SchedulesController extends Controller {
 	/**
 	 * Assemble the scheduled-task payload from request params.
 	 *
-	 * Scopes the assignee to self for non-admins and strips blank optional
-	 * fields so they do not clobber schema defaults.
+	 * Scopes the assignee to self and drops the assignee group for non-admins,
+	 * and strips blank optional fields so they do not clobber schema defaults.
 	 *
 	 * @param array{type: string, subject: string, deadline: string} $required The validated type, subject and deadline.
 	 * @param string $userId The current user's UID.
@@ -325,11 +325,16 @@ class SchedulesController extends Controller {
 			$requestedAssignee = $userId;
 		}
 
+		$requestedGroup = '';
+		if ($isAdmin === true) {
+			$requestedGroup = (string)$this->request->getParam('assigneeGroupId', '');
+		}
+
 		$data = $required + [
 			'description' => (string)$this->request->getParam('description', ''),
 			'priority' => (string)$this->request->getParam('priority', 'normal'),
 			'assigneeUserId' => $requestedAssignee,
-			'assigneeGroupId' => (string)$this->request->getParam('assigneeGroupId', ''),
+			'assigneeGroupId' => $requestedGroup,
 			'clientId' => (string)$this->request->getParam('clientId', ''),
 			'requestId' => (string)$this->request->getParam('requestId', ''),
 			'callbackPhoneNumber' => (string)$this->request->getParam('callbackPhoneNumber', ''),
