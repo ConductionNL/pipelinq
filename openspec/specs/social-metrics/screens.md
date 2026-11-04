@@ -1,3 +1,3 @@
 # Screens
 
-- PqSocial https://identity.conduction.nl/screens/board?id=pipelinq/PqSocial
+- pipelinq/PqSocial sociale berichten, accounts en prestaties https://identity.conduction.nl/screens/board?id=pipelinq/PqSocial

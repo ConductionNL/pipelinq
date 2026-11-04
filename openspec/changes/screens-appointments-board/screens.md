@@ -1,5 +1,5 @@
 # Screens
 
-- PqAfspraken https://identity.conduction.nl/screens/board?id=pipelinq/PqAfspraken
-- PqAfspraak https://identity.conduction.nl/screens/board?id=pipelinq/PqAfspraak
-- PqAfspraakVerplaatsen https://identity.conduction.nl/screens/board?id=pipelinq/PqAfspraakVerplaatsen
+- pipelinq/PqAfspraken afspraken https://identity.conduction.nl/screens/board?id=pipelinq/PqAfspraken
+- pipelinq/PqAfspraak afspraak https://identity.conduction.nl/screens/board?id=pipelinq/PqAfspraak
+- pipelinq/PqAfspraakVerplaatsen boeking verzetten of annuleren https://identity.conduction.nl/screens/board?id=pipelinq/PqAfspraakVerplaatsen

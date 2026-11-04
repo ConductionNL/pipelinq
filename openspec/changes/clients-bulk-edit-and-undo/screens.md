@@ -1,4 +1,4 @@
 # Screens
 
-- PqTicketsSelectie https://identity.conduction.nl/screens/board?id=pipelinq/PqTicketsSelectie
-- PqKlantenSelectie https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantenSelectie
+- pipelinq/PqTicketsSelectie lijst, selectie en acties https://identity.conduction.nl/screens/board?id=pipelinq/PqTicketsSelectie
+- pipelinq/PqKlantenSelectie klanten, selectie en bulkwijzigingen https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantenSelectie

@@ -1,3 +1,3 @@
 # Screens
 
-- PqBiExport https://identity.conduction.nl/screens/board?id=pipelinq/PqBiExport (the "Export all data" section is not drawn yet)
+- pipelinq/PqBiExport BI-export, de sectie alle gegevens downloaden https://identity.conduction.nl/screens/board?id=pipelinq/PqBiExport
