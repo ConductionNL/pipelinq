@@ -108,7 +108,7 @@ class RedemptionService {
 		// Debit AFTER the redemption record exists so the brondocument points at the redemption.
 		$redemptionUuid = $this->extractUuid(object: $saved);
 		try {
-			$this->ledgerService->debitPoints(
+			$this->ledgerService->forOperation(operationId: 'redemption:'.(string)$redemptionUuid)->debitPoints(
 				accountId: $accountId,
 				amount: $cost,
 				redemptionId: (string)$redemptionUuid,

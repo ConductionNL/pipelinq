@@ -47,6 +47,11 @@
                 }
             },
             {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
                 "creditPoints": {
                     "accountId": "acc-1",
                     "amount": 25,
@@ -137,6 +142,11 @@
                 }
             },
             {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
                 "creditPoints": {
                     "accountId": "acc-1",
                     "amount": 37,
@@ -210,6 +220,11 @@
                     "earnedInPeriod": 0,
                     "pointsToAward": 25,
                     "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
                 }
             },
             {
@@ -289,6 +304,11 @@
                 }
             },
             {
+                "forOperation": {
+                    "operationId": ""
+                }
+            },
+            {
                 "creditPoints": {
                     "accountId": "acc-1",
                     "amount": 20,
@@ -362,6 +382,11 @@
                     "earnedInPeriod": 0,
                     "pointsToAward": 3,
                     "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
                 }
             },
             {
@@ -446,6 +471,11 @@
                 }
             },
             {
+                "forOperation": {
+                    "operationId": "pos:501"
+                }
+            },
+            {
                 "creditPoints": {
                     "accountId": "acc-1",
                     "amount": 25,
@@ -519,6 +549,11 @@
                     "earnedInPeriod": 0,
                     "pointsToAward": 12,
                     "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
                 }
             },
             {
@@ -654,6 +689,11 @@
                     "earnedInPeriod": 10,
                     "pointsToAward": 25,
                     "max": 30
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
                 }
             },
             {
@@ -845,6 +885,11 @@
                 }
             },
             {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
                 "creditPoints": {
                     "accountId": "acc-1",
                     "amount": 25,
@@ -913,6 +958,11 @@
                     "earnedInPeriod": 0,
                     "pointsToAward": 25,
                     "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
                 }
             },
             {
@@ -996,6 +1046,11 @@
                     "earnedInPeriod": 0,
                     "pointsToAward": 25,
                     "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
                 }
             },
             {
@@ -1158,6 +1213,11 @@
                 }
             },
             {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
                 "creditPoints": {
                     "accountId": "acc-1",
                     "amount": 25,
@@ -1216,6 +1276,11 @@
                     "earnedInPeriod": 0,
                     "pointsToAward": 25,
                     "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
                 }
             },
             {

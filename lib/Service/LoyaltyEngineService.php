@@ -331,7 +331,7 @@ class LoyaltyEngineService {
 	 * @return array<string, mixed>
 	 */
 	private function creditAndFinalize(PointsCreditRun $run, PointsGrant $grant): array {
-		$ledgerEntry = $this->ledgerService->creditPoints(
+		$ledgerEntry = $this->ledgerService->forOperation(operationId: $run->operationId())->creditPoints(
 			accountId: $run->accountId,
 			amount: $grant->points,
 			ruleId: $this->extractUuid(object: $grant->rule),

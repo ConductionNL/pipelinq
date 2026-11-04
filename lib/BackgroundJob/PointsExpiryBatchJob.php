@@ -172,7 +172,7 @@ class PointsExpiryBatchJob extends TimedJob {
 
 		if ($lastActivity < $cutoff->format('c')) {
 			// Expire.
-			$this->ledgerService->expirePoints(
+			$this->ledgerService->forOperation(operationId: 'expiry:'.$cutoff->format('Y-m-d'))->expirePoints(
 				accountId: $accountId,
 				amount: $balance,
 				reason: 'inactivity-expiry'
