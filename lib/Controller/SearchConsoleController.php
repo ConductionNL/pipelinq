@@ -27,15 +27,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\SearchConsole\SearchConsoleImportService;
 use OCA\Pipelinq\Service\SearchConsole\SearchQueryReportService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * SearchConsoleController: `GET /api/marketing/search-queries`.
@@ -51,8 +49,7 @@ class SearchConsoleController extends Controller {
 	 * @param IRequest $request Request.
 	 * @param SearchQueryReportService $report The aggregation.
 	 * @param SearchConsoleImportService $importer Connection status.
-	 * @param IUserSession $userSession Session.
-	 * @param ObjectOwnerAccessPolicy $policy CRM privilege check.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
@@ -61,8 +58,7 @@ class SearchConsoleController extends Controller {
 		IRequest $request,
 		private readonly SearchQueryReportService $report,
 		private readonly SearchConsoleImportService $importer,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -85,13 +81,9 @@ class SearchConsoleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(?string $from = null, ?string $to = null, int $limit = 50, ?string $property = null): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$result = $this->report->topQueries(from: $from, to: $to, limit: $limit, property: $property);

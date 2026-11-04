@@ -1,11 +1,14 @@
 # Screens
 
-- PqCampagne https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagne
-- PqNieuwsbriefPrestaties https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefPrestaties
-- PqLoyaliteit https://identity.conduction.nl/screens/board?id=pipelinq/PqLoyaliteit
-- PqCampagnes https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagnes
-- PqNieuwsbrieven https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbrieven
-- PqSocial https://identity.conduction.nl/screens/board?id=pipelinq/PqSocial
-- PqZoekinzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqZoekinzicht
-- PqWeekoverzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqWeekoverzicht
-- PqBeheerMarketing https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheerMarketing
+- pipelinq/PqCampagne campagne https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagne
+- pipelinq/PqNieuwsbriefPrestaties prestaties nieuwsbrief https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefPrestaties
+- pipelinq/PqLoyaliteit loyaliteit https://identity.conduction.nl/screens/board?id=pipelinq/PqLoyaliteit
+- pipelinq/PqCampagnes campagnes https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagnes
+- pipelinq/PqNieuwsbrieven nieuwsbrieven https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbrieven
+- pipelinq/PqSocial sociale berichten, accounts en prestaties https://identity.conduction.nl/screens/board?id=pipelinq/PqSocial
+- pipelinq/PqZoekinzicht zoekinzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqZoekinzicht
+- pipelinq/PqWeekoverzicht weekoverzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqWeekoverzicht
+- pipelinq/PqBeheerMarketing instellingen, marketing en gegevens https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheerMarketing
+- pipelinq/PqNieuwsbriefToeschrijving toeschrijving: omzet per verzending https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefToeschrijving
+
+Components: CnActionButtons, CnActionsBar, CnActionsMenu, CnAdminSettingsShell, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFilterBar, CnIndexPage, CnKpiGrid, CnNoteCard, CnPagination, CnQuickFilterBar, CnRowActions, CnSettingsPage, CnSettingsSection, CnStatsBlock, CnStatusBadge, CnTabs, CnTagsCard

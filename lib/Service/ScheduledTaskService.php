@@ -32,16 +32,13 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskDeadlines;
+use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskRights;
+use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskStore;
 use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Service\LanguageService;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for the Schedules API.
@@ -113,22 +110,16 @@ class ScheduledTaskService {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig $appConfig App config (for register/schema IDs).
-	 * @param IUserSession $userSession User session (createdBy derivation).
-	 * @param IGroupManager $groupManager Group manager (admin + group checks).
-	 * @param NotificationService $notificationService Notification dispatch.
+	 * @param ScheduledTaskStore $store Where tasks are stored, and the read language.
+	 * @param ScheduledTaskDeadlines $deadlines The expiry cut and the deadline notifications.
+	 * @param ScheduledTaskRights $rights Who creates a task, and who may change one.
 	 * @param LoggerInterface $logger Logger.
-	 * @param LanguageService $languageService Resolves the caller's language.
-	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
-		private readonly IAppConfig $appConfig,
-		private readonly IUserSession $userSession,
-		private readonly IGroupManager $groupManager,
-		private readonly NotificationService $notificationService,
+		private readonly ScheduledTaskStore $store,
+		private readonly ScheduledTaskDeadlines $deadlines,
+		private readonly ScheduledTaskRights $rights,
 		private readonly LoggerInterface $logger,
-		private readonly LanguageService $languageService,
-		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -145,7 +136,7 @@ class ScheduledTaskService {
 	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
 	 */
 	public function getScheduledTasks(array $params): array {
-		[$registerId, $schemaId] = $this->getRegisterAndSchema();
+		[$registerId, $schemaId] = $this->store->location();
 		if ($registerId === '' || $schemaId === '') {
 			return [
 				'items' => [],
@@ -166,13 +157,13 @@ class ScheduledTaskService {
 		try {
 			// Fetch the total count without pagination so the envelope
 			// reflects the true result-set size, not just the page size.
-			$allItems = $this->getObjectService()->findAll(
+			$allItems = $this->store->objects()->findAll(
 				['filters' => $filters]
 			);
 			$total = count($allItems);
 
 			// Fetch the paginated page.
-			$items = $this->getObjectService()->findAll(
+			$items = $this->store->objects()->findAll(
 				[
 					'filters' => $filters,
 					'limit' => $limit,
@@ -263,13 +254,13 @@ class ScheduledTaskService {
 	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
 	 */
 	public function getScheduledTask(string $id): array {
-		[$registerId, $schemaId] = $this->getRegisterAndSchema();
+		[$registerId, $schemaId] = $this->store->location();
 		if ($registerId === '' || $schemaId === '') {
 			throw new RuntimeException('Task not found');
 		}
 
 		try {
-			$object = $this->getObjectService()->find(
+			$object = $this->store->objects()->find(
 				$id,
 				[],
 				false,
@@ -309,22 +300,18 @@ class ScheduledTaskService {
 	public function createScheduledTask(array $data): array {
 		$this->validateTaskInput(data: $data);
 
-		[$registerId, $schemaId] = $this->getRegisterAndSchema();
+		[$registerId, $schemaId] = $this->store->location();
 		if ($registerId === '' || $schemaId === '') {
 			throw new RuntimeException('Register or task schema not configured');
 		}
 
-		$user = $this->userSession->getUser();
-		$data['createdBy'] = 'system';
-		if ($user !== null) {
-			$data['createdBy'] = $user->getUID();
-		}
+		$data['createdBy'] = $this->rights->createdBy();
 
 		if (isset($data['status']) === false || $data['status'] === '') {
 			$data['status'] = 'open';
 		}
 
-		$saved = $this->getObjectService()->saveObject(
+		$saved = $this->store->objects()->saveObject(
 			$data,
 			[],
 			$registerId,
@@ -392,7 +379,7 @@ class ScheduledTaskService {
 		$merged = array_merge($existing, $data);
 		$merged['id'] = $id;
 
-		[$registerId, $schemaId] = $this->getRegisterAndSchema();
+		[$registerId, $schemaId] = $this->store->location();
 
 		// Fail closed on an unconfigured register/schema. Today this is
 		// defence in depth rather than a live hole: getScheduledTask() above
@@ -406,7 +393,7 @@ class ScheduledTaskService {
 			throw new RuntimeException('Task register or schema is not configured.');
 		}
 
-		$saved = $this->getObjectService()->saveObject(
+		$saved = $this->store->objects()->saveObject(
 			$merged,
 			[],
 			$registerId,
@@ -418,16 +405,28 @@ class ScheduledTaskService {
 	}//end updateScheduledTask()
 
 	/**
-	 * Delete a scheduled task.
+	 * Delete a scheduled task: only a task the configured register and schema
+	 * hold, by the uuid that read found.
 	 *
 	 * @param string $id The task UUID.
 	 *
 	 * @return void
 	 *
+	 * @throws RuntimeException When the task is not found or cannot be deleted.
+	 *
 	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
 	 */
 	public function deleteScheduledTask(string $id): void {
-		$this->getObjectService()->deleteObject($id);
+		$task = $this->getScheduledTask(id: $id);
+		$uuid = (string)($task['id'] ?? '');
+		if ($uuid === '') {
+			throw new RuntimeException('Task not found');
+		}
+
+		[$registerId, $schemaId] = $this->store->location();
+		if ($this->store->objects()->deleteObject($uuid, $registerId, $schemaId) === false) {
+			throw new RuntimeException('Task could not be deleted');
+		}
 	}//end deleteScheduledTask()
 
 	/**
@@ -441,7 +440,7 @@ class ScheduledTaskService {
 	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
 	 */
 	public function getOverdueTasks(): array {
-		[$registerId, $schemaId] = $this->getRegisterAndSchema();
+		[$registerId, $schemaId] = $this->store->location();
 		if ($registerId === '' || $schemaId === '') {
 			return [];
 		}
@@ -449,7 +448,7 @@ class ScheduledTaskService {
 		$now = new DateTimeImmutable('now');
 
 		try {
-			$items = $this->getObjectService()->findAll(
+			$items = $this->store->objects()->findAll(
 				[
 					'filters' => [
 						'register' => $registerId,
@@ -499,7 +498,7 @@ class ScheduledTaskService {
 			$windowMinutes = 1;
 		}
 
-		[$registerId, $schemaId] = $this->getRegisterAndSchema();
+		[$registerId, $schemaId] = $this->store->location();
 		if ($registerId === '' || $schemaId === '') {
 			return [];
 		}
@@ -508,7 +507,7 @@ class ScheduledTaskService {
 		$cutoff = $now->modify(sprintf('+%d minutes', $windowMinutes));
 
 		try {
-			$items = $this->getObjectService()->findAll(
+			$items = $this->store->objects()->findAll(
 				[
 					'filters' => [
 						'register' => $registerId,
@@ -560,22 +559,17 @@ class ScheduledTaskService {
 		$candidates = array_merge($overdue, $dueSoon);
 
 		$now = new DateTimeImmutable('now');
-		$expiryCut = $now->modify(modifier: sprintf('-%d minutes', $this->getExpiryCutMinutes()));
+		$expiryCut = $now->modify(modifier: sprintf('-%d minutes', $this->deadlines->expiryCutMinutes()));
 
-		[$registerId, $schemaId] = $this->getRegisterAndSchema();
+		[$registerId, $schemaId] = $this->store->location();
 		if ($registerId === '' || $schemaId === '') {
 			return;
 		}
 
+		$tick = ['now' => $now, 'expiryCut' => $expiryCut, 'registerId' => $registerId, 'schemaId' => $schemaId];
 		foreach ($candidates as $task) {
-			$this->processSingleTask(
-				task: $task,
-				now: $now,
-				expiryCut: $expiryCut,
-				registerId: $registerId,
-				schemaId: $schemaId
-			);
-		}//end foreach
+			$this->processSingleTask(task: $task, tick: $tick);
+		}
 	}//end processScheduledTasks()
 
 	/**
@@ -586,14 +580,11 @@ class ScheduledTaskService {
 	 * within the cut). Non-open or not-yet-due tasks are skipped.
 	 *
 	 * @param array<string,mixed> $task The candidate task.
-	 * @param DateTimeImmutable $now The reference "now".
-	 * @param DateTimeImmutable $expiryCut The expiry threshold timestamp.
-	 * @param string $registerId The configured register ID.
-	 * @param string $schemaId The task schema ID.
+	 * @param array<string,mixed> $tick The run: now, expiryCut, registerId and schemaId.
 	 *
 	 * @return void
 	 */
-	private function processSingleTask(array $task, DateTimeImmutable $now, DateTimeImmutable $expiryCut, string $registerId, string $schemaId): void {
+	private function processSingleTask(array $task, array $tick): void {
 		$status = ($task['status'] ?? '');
 		if ($status !== 'open' && $status !== 'in_progress') {
 			return;
@@ -610,24 +601,19 @@ class ScheduledTaskService {
 			return;
 		}
 
-		if ($deadline > $now) {
+		if ($deadline > $tick['now']) {
 			// Not due yet.
 			return;
 		}
 
-		if ($status === 'in_progress' && $deadline >= $expiryCut) {
+		if ($status === 'in_progress' && $deadline >= $tick['expiryCut']) {
 			// Already notified; it expires once it passes the cut.
 			return;
 		}
 
-		$task = $this->applyDeadlineTransition(
-			task: $task,
-			deadline: $deadline,
-			expiryCut: $expiryCut,
-			timestamp: $now->format(DateTimeInterface::ATOM)
-		);
+		$task = $this->applyDeadlineTransition(task: $task, due: ['deadline' => $deadline] + $tick);
 
-		$this->persistProcessedTask(task: $task, registerId: $registerId, schemaId: $schemaId);
+		$this->persistProcessedTask(task: $task, tick: $tick);
 	}//end processSingleTask()
 
 	/**
@@ -638,13 +624,14 @@ class ScheduledTaskService {
 	 * assignee notification.
 	 *
 	 * @param array<string,mixed> $task The due task.
-	 * @param DateTimeImmutable $deadline The parsed deadline.
-	 * @param DateTimeImmutable $expiryCut The expiry threshold.
-	 * @param string $timestamp The ATOM timestamp for the attempt.
+	 * @param array<string,mixed> $due The deadline, the attempt time (now) and the expiryCut.
 	 *
 	 * @return array<string,mixed> The task with updated status + attempts.
 	 */
-	private function applyDeadlineTransition(array $task, DateTimeImmutable $deadline, DateTimeImmutable $expiryCut, string $timestamp): array {
+	private function applyDeadlineTransition(array $task, array $due): array {
+		$deadline = $due['deadline'];
+		$expiryCut = $due['expiryCut'];
+		$timestamp = $due['now']->format(DateTimeInterface::ATOM);
 		$attempts = $task['attempts'] ?? [];
 		if (is_array($attempts) === false) {
 			$attempts = [];
@@ -657,7 +644,7 @@ class ScheduledTaskService {
 				'result' => 'expired',
 			];
 
-			$this->notifyTaskExpired(task: $task);
+			$this->deadlines->notifyExpired(task: $task);
 		}
 
 		if ($deadline >= $expiryCut) {
@@ -667,7 +654,7 @@ class ScheduledTaskService {
 				'result' => 'notified',
 			];
 
-			$this->notifyTaskAssignee(task: $task);
+			$this->deadlines->notifyAssignee(task: $task);
 		}
 
 		$task['attempts'] = $attempts;
@@ -679,18 +666,17 @@ class ScheduledTaskService {
 	 * Persist a processed task, logging and swallowing save failures.
 	 *
 	 * @param array<string,mixed> $task The task to save.
-	 * @param string $registerId The configured register ID.
-	 * @param string $schemaId The task schema ID.
+	 * @param array{registerId: string, schemaId: string} $tick The run's register and task schema.
 	 *
 	 * @return void
 	 */
-	private function persistProcessedTask(array $task, string $registerId, string $schemaId): void {
+	private function persistProcessedTask(array $task, array $tick): void {
 		try {
-			$this->getObjectService()->saveObject(
+			$this->store->objects()->saveObject(
 				$task,
 				[],
-				$registerId,
-				$schemaId,
+				$tick['registerId'],
+				$tick['schemaId'],
 				(string)($task['id'] ?? '')
 			);
 		} catch (Throwable $e) {
@@ -700,132 +686,6 @@ class ScheduledTaskService {
 			);
 		}
 	}//end persistProcessedTask()
-
-	/**
-	 * Notify a task's assignee that it has moved into processing.
-	 *
-	 * No-op when the task has no assignee. Notification failures are logged and
-	 * swallowed so they do not abort the batch run.
-	 *
-	 * @param array<string,mixed> $task The task being transitioned.
-	 *
-	 * @return void
-	 */
-	private function notifyTaskAssignee(array $task): void {
-		$assignee = $task['assigneeUserId'] ?? '';
-		if ($assignee === '') {
-			return;
-		}
-
-		try {
-			$this->notificationService->notifyAssignment(
-				entityType: 'task',
-				title: (string)($task['subject'] ?? 'Scheduled task'),
-				assigneeUserId: (string)$assignee,
-				objectId: (string)($task['id'] ?? ''),
-				author: 'system'
-			);
-		} catch (Throwable $e) {
-			$this->logger->error(
-				'ScheduledTaskService: notification dispatch failed',
-				['exception' => $e]
-			);
-		}
-	}//end notifyTaskAssignee()
-
-	/**
-	 * Escalate an expired task to its assignee.
-	 *
-	 * Fired when an open task passes its deadline beyond the expiry cut and is
-	 * transitioned to `verlopen`. No-op when the task has no assignee.
-	 * Notification failures are logged and swallowed so they never abort the
-	 * batch run.
-	 *
-	 * @param array<string,mixed> $task The task being expired.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
-	 */
-	private function notifyTaskExpired(array $task): void {
-		$recipients = [];
-		$assignee   = (string)($task['assigneeUserId'] ?? '');
-		if ($assignee !== '') {
-			$recipients[] = $assignee;
-		}
-
-		foreach ($this->getEscalationUserIds() as $userId) {
-			if (in_array(needle: $userId, haystack: $recipients, strict: true) === false) {
-				$recipients[] = $userId;
-			}
-		}
-
-		foreach ($recipients as $userId) {
-			try {
-				$this->notificationService->notifyTaskExpired(
-					title: (string)($task['subject'] ?? 'Scheduled task'),
-					userId: $userId,
-					objectId: (string)($task['id'] ?? ''),
-					deadline: (string)($task['deadline'] ?? '')
-				);
-			} catch (Throwable $e) {
-				$this->logger->error(
-					'ScheduledTaskService: expiry notification dispatch failed',
-					['exception' => $e]
-				);
-			}
-		}
-	}//end notifyTaskExpired()
-
-	/**
-	 * How long past its deadline an open task waits before it expires, in
-	 * minutes: the admin setting `task_expiry.escalation_threshold_seconds`
-	 * (4 hours when unset).
-	 *
-	 * @return int
-	 *
-	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-task-expiry-background-job
-	 */
-	private function getExpiryCutMinutes(): int {
-		$seconds = $this->appConfig->getValueString(
-			app: Application::APP_ID,
-			key: 'task_expiry.escalation_threshold_seconds',
-			default: ''
-		);
-		if (is_numeric(value: $seconds) === false || (int)$seconds < 0) {
-			return self::EXPIRY_THRESHOLD_MINUTES;
-		}
-
-		return intdiv(num1: (int)$seconds, num2: 60);
-	}//end getExpiryCutMinutes()
-
-	/**
-	 * The members of the escalation group (app config
-	 * `task_expiry.escalation_group`), who are told about every expired task
-	 * besides its assignee. Empty when no group is configured or it is gone.
-	 *
-	 * @return array<int,string> User ids.
-	 *
-	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
-	 */
-	private function getEscalationUserIds(): array {
-		$groupId = $this->appConfig->getValueString(app: Application::APP_ID, key: 'task_expiry.escalation_group', default: '');
-		if ($groupId === '') {
-			return [];
-		}
-
-		$group = $this->groupManager->get(gid: $groupId);
-		if ($group === null) {
-			return [];
-		}
-
-		$userIds = [];
-		foreach ($group->getUsers() as $user) {
-			$userIds[] = $user->getUID();
-		}
-
-		return $userIds;
-	}//end getEscalationUserIds()
 
 	/**
 	 * Authorise a mutation on a task.
@@ -843,27 +703,7 @@ class ScheduledTaskService {
 	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
 	 */
 	public function authorizeTaskMutation(array $task, string $userId): void {
-		if ($userId === '') {
-			throw new OCSForbiddenException('Not authorized');
-		}
-
-		$assigneeUserId = (string)($task['assigneeUserId'] ?? '');
-		if ($assigneeUserId !== '' && $assigneeUserId === $userId) {
-			return;
-		}
-
-		$assigneeGroupId = (string)($task['assigneeGroupId'] ?? '');
-		if ($assigneeGroupId !== ''
-			&& $this->groupManager->isInGroup($userId, $assigneeGroupId) === true
-		) {
-			return;
-		}
-
-		if ($this->groupManager->isAdmin($userId) === true) {
-			return;
-		}
-
-		throw new OCSForbiddenException('Not authorized');
+		$this->rights->authorizeTaskMutation(task: $task, userId: $userId);
 	}//end authorizeTaskMutation()
 
 	/**
@@ -892,31 +732,6 @@ class ScheduledTaskService {
 	}//end isValidIso8601Deadline()
 
 	/**
-	 * Read configured register and task schema IDs.
-	 *
-	 * Fails closed: '' on either id means "unconfigured", and every caller
-	 * refuses the OpenRegister call on it. An empty id must never be handed to
-	 * OpenRegister — ObjectService skips setRegister()/setSchema() for an empty
-	 * value, so the query silently inherits whatever context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return array{0: string, 1: string} [register, schema] tuple, each ''
-	 *                                     when unconfigured.
-	 */
-	private function getRegisterAndSchema(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
-		if ($registerId === '' || $schemaId === '') {
-			$this->logger->warning(
-				'Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return [$registerId, $schemaId];
-	}//end getRegisterAndSchema()
-
-	/**
 	 * Forward the Accept-Language header to OpenRegister's LanguageService.
 	 *
 	 * Parses the highest-priority BCP-47 tag from the raw header value and
@@ -933,49 +748,8 @@ class ScheduledTaskService {
 	 * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
 	 */
 	public function applyAcceptLanguage(string $acceptLanguage): void {
-		if ($acceptLanguage === '') {
-			return;
-		}
-
-		try {
-			$lang = $this->parsePreferredLanguage(headerValue: $acceptLanguage);
-			$this->languageService->setPreferredLanguage(language: $lang);
-		} catch (\Throwable $e) {
-			$this->logger->debug(
-				message: 'applyAcceptLanguage: OR LanguageService unavailable.',
-				context: ['exception' => $e->getMessage()]
-			);
-		}
+		$this->store->applyAcceptLanguage(acceptLanguage: $acceptLanguage);
 	}//end applyAcceptLanguage()
-
-	/**
-	 * Lazy ObjectService resolver to avoid a hard dependency on OpenRegister.
-	 *
-	 * @return object The OpenRegister ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
-
-	/**
-	 * Extract the highest-priority BCP-47 tag from an Accept-Language header.
-	 *
-	 * Parses "nl-NL,nl;q=0.9,en;q=0.8" → "nl-NL".
-	 *
-	 * @param string $headerValue The raw Accept-Language header value.
-	 *
-	 * @return string The preferred language tag (e.g. "nl" or "en-US").
-	 */
-	private function parsePreferredLanguage(string $headerValue): string {
-		$parts = explode(separator: ',', string: $headerValue);
-		$first = trim(string: explode(separator: ';', string: $parts[0])[0]);
-
-		if ($first !== '') {
-			return $first;
-		}
-
-		return 'nl';
-	}//end parsePreferredLanguage()
 
 	/**
 	 * Normalise an ObjectEntity-or-array to a plain array.

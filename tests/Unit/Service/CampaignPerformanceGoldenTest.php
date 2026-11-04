@@ -47,6 +47,12 @@ use stdClass;
  * @uses   \OCA\Pipelinq\Service\CampaignLinkDecorator
  * @uses   \OCA\Pipelinq\Util\PayloadToArray
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
  */
 class CampaignPerformanceGoldenTest extends TestCase {
 

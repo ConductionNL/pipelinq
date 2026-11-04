@@ -143,8 +143,7 @@
 				"schema": {
 					"type": "object",
 					"properties": {
-						"shillinq_journal_webhook_url": { "type": "string", "format": "uri", "title": "Address that takes the till's day totals (shillinq)", "order": 1 },
-						"billing_handoff_manager_group": { "type": "string", "title": "Group that may send contracts to invoicing", "order": 2 }
+						"billing_handoff_manager_group": { "type": "string", "title": "Group that may send contracts to invoicing", "order": 1 }
 					}
 				}
 			},
@@ -623,7 +622,7 @@
 		},
 		{
 			"id": "StoreMenu",
-			"label": "Store",
+			"label": "Marketplace",
 			"icon": "StoreOutline",
 			"route": "Store",
 			"section": "footer",
@@ -2104,6 +2103,7 @@
 				"headerActions": [
 					{
 						"id": "log-contact",
+						"visibleWhen": { "field": "mergedInto", "op": "empty" },
 						"label": "Log contact",
 						"icon": "PhoneLogOutline",
 						"type": "open-form",
@@ -2124,6 +2124,7 @@
 					},
 					{
 						"id": "new-request",
+						"visibleWhen": { "field": "mergedInto", "op": "empty" },
 						"label": "New request",
 						"icon": "TicketOutline",
 						"type": "open-modal",
@@ -2150,6 +2151,21 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects) with the Related card beside it, as on the contact page (round5-client-related-and-service-list), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
 				"widgets": [
+					{
+						"id": "client-merged-away",
+						"type": "banner",
+						"title": "Merged",
+						"showTitle": false,
+						"_note": "PqKlant merged-into notice (decision 288, REQ-MDM-013, REQ-CRM-001): one line on a client OpenRegister merged into another record, with a link to the surviving record. MergedAwayRecordListener writes mergedInto, mergedIntoLabel and mergedAt on the merge; MergedAwayRecordGuard refuses every other change while they are set.",
+						"visibleWhen": { "field": "mergedInto", "op": "notEmpty" },
+						"content": {
+							"variant": "warning",
+							"icon": "SourceMerge",
+							"text": "Merged into {subject.mergedIntoLabel} on {subject.mergedAt|date}. This record can no longer be changed.",
+							"visibleWhen": { "field": "mergedInto", "op": "notEmpty" },
+							"actions": [{ "label": "Open the merged record", "route": { "name": "ClientDetail", "params": { "id": "@subject.mergedInto" } } }]
+						}
+					},
 					{
 						"id": "client-summary-open-tickets",
 						"type": "stat",
@@ -3517,6 +3533,7 @@
 				"bandDensity": "compact",
 				"band": [
 					{ "widgetId": "client-contact-strip", "span": 12, "chrome": "bare" },
+					{ "widgetId": "client-merged-away", "span": 12, "chrome": "bare" },
 					{ "widgetId": "client-summary-open-tickets", "span": 2 },
 					{ "widgetId": "client-summary-new-requests", "span": 2 },
 					{ "widgetId": "client-summary-sla-breached", "span": 2 },
@@ -4142,7 +4159,7 @@
 				"createModal": "RequestCreateDialog",
 				"schema": "ticket",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_sortNote": "Newest contact first. Without a default the list came in creation order, oldest first, so a new ticket sat on the last page (Woo round 3).",
+				"_sortNote": "Newest contact first. Without a default the list came in creation order, oldest first, so a new ticket sat on the last page (Woo round 3). The Unassigned lens sorts longest wait first, as PqTickets draws it (decision 321); the other lenses keep newest first.",
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
 				"showViewAction": false,
@@ -4187,7 +4204,7 @@
 				"quickFilters": [
 					{ "label": "All open", "filter": { "status": ["new", "in_progress", "awaiting_customer"] }, "default": true },
 					{ "label": "Mine", "filter": { "assignee": "@me", "status": ["new", "in_progress", "awaiting_customer"] } },
-					{ "label": "Unassigned", "filter": { "assignee": "IS NULL", "status": ["new", "in_progress", "awaiting_customer"] } },
+					{ "label": "Unassigned", "filter": { "assignee": "IS NULL", "status": ["new", "in_progress", "awaiting_customer"] }, "sort": { "key": "occurredAt", "order": "asc" } },
 					{ "label": "Waiting for customer", "filter": { "status": "awaiting_customer" } },
 					{ "label": "Past the deadline", "filter": { "slaDeadline": { "lt": "@now" }, "status": ["new", "in_progress", "awaiting_customer"] } },
 					{ "label": "All", "filter": {} },
@@ -4536,6 +4553,21 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Contact person page on the shared relation frame (nextcloud-vue screens-relation-pages, PqContactpersoon, Ruben 11 Oct 2026: at most seven tabs, Kanalen and Relaties as side cards). Header: the type pill, the breadcrumb back to Contacts, the meta line 'role at client' (the page extends client), and Call and Mail as tel:/mailto: links. One tab strip fills the body: Overview (the contact data card and the deals table, as the board draws them), Deals, Requests, Contact moments, Bookings, Files, History. Mail, Messages, Meetings, Subscriptions and BSN and BRP moved to the side column with Channels and Relationships, before History. Children of the tabs widget stay out of layout, or the tabs widget and the grid would each render them once.",
 				"widgets": [
+					{
+						"id": "contact-merged-away",
+						"type": "banner",
+						"title": "Merged",
+						"showTitle": false,
+						"_note": "PqKlant merged-into notice (decision 288, REQ-MDM-013, REQ-CRM-001): one line on a contact OpenRegister merged into another record, with a link to the surviving record. MergedAwayRecordListener writes mergedInto, mergedIntoLabel and mergedAt on the merge; MergedAwayRecordGuard refuses every other change while they are set.",
+						"visibleWhen": { "field": "mergedInto", "op": "notEmpty" },
+						"content": {
+							"variant": "warning",
+							"icon": "SourceMerge",
+							"text": "Merged into {subject.mergedIntoLabel} on {subject.mergedAt|date}. This record can no longer be changed.",
+							"visibleWhen": { "field": "mergedInto", "op": "notEmpty" },
+							"actions": [{ "label": "Open the merged record", "route": { "name": "ContactDetail", "params": { "id": "@subject.mergedInto" } } }]
+						}
+					},
 					{
 						"id": "contact-panels",
 						"type": "tabs",
@@ -5071,6 +5103,9 @@
 				"quickActions": [
 					"call",
 					"mail"
+				],
+				"band": [
+					{ "widgetId": "contact-merged-away", "span": 12, "chrome": "bare" }
 				],
 				"sideColumn": [
 					"contact-kpis-deals",
@@ -10091,6 +10126,8 @@
 					},
 					{
 						"id": "my-answer-today",
+						"_visibleWhenNote": "Empty groups are hidden (specs/my-work, Grouping by what to do): the group shows only when the bucket holds an open item of yours. The page reads it once on load, so a group you empty while working keeps its empty line until the next visit.",
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=answer-today", "field": "items", "op": "notEmpty" },
 						"type": "record-list",
 						"title": "Answer today",
 						"viewport": "wide",
@@ -10177,6 +10214,8 @@
 					},
 					{
 						"id": "my-waiting-on-me",
+						"_visibleWhenNote": "Empty groups are hidden (specs/my-work, Grouping by what to do): the group shows only when the bucket holds an open item of yours. The page reads it once on load, so a group you empty while working keeps its empty line until the next visit.",
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me", "field": "items", "op": "notEmpty" },
 						"type": "record-list",
 						"title": "Waiting on me",
 						"viewport": "wide",
@@ -10263,6 +10302,8 @@
 					},
 					{
 						"id": "my-waiting-on-customer",
+						"_visibleWhenNote": "Empty groups are hidden (specs/my-work, Grouping by what to do): the group shows only when the bucket holds an open item of yours. The page reads it once on load, so a group you empty while working keeps its empty line until the next visit.",
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer", "field": "items", "op": "notEmpty" },
 						"type": "record-list",
 						"title": "Waiting on the customer",
 						"viewport": "wide",
@@ -11086,7 +11127,7 @@
 			"id": "Store",
 			"route": "/store",
 			"type": "store",
-			"title": "Store",
+			"title": "Marketplace",
 			"config": {
 				"app": "pipelinq",
 				"storeRegistry": true,

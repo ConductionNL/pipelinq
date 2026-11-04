@@ -1,3 +1,4 @@
 # Screens
+- pipelinq/PqRondleiding rondleiding bij het eerste bezoek https://identity.conduction.nl/screens/board?id=pipelinq/PqRondleiding
 
-- No screen: getting-started tour declaration on existing screens
+Components: CnAppNav, CnBuildiqEditButton, CnDashboardPage, CnKpiGrid, CnPageHeader, CnStatsBlock, CnStatusBadge, CnTasksCard, CnWalkthrough, CnWizardDialog

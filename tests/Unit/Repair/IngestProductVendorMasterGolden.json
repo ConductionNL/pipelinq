@@ -352,6 +352,167 @@
             }
         ]
     },
+    "barcode after a sku miss": {
+        "returned": {
+            "products": {
+                "P-1": "prod-b2"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "prod-b2",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
+            }
+        ]
+    },
+    "existing product as an entity": {
+        "returned": {
+            "products": {
+                "P-1": "prod-9"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "prod-9",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
+            }
+        ]
+    },
+    "existing product as a plain object": {
+        "returned": {
+            "products": {
+                "P-1": "obj-o"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "obj-o",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
+            }
+        ]
+    },
     "existing product without ids": {
         "returned": {
             "products": {

@@ -87,10 +87,13 @@ opens on the same ticket.
 					</span>
 					<span v-if="filledWithNow" class="contact-log__hint">{{ t('pipelinq', 'Filled in with now') }}</span>
 				</div>
-				<label class="contact-log__field">
-					<span class="contact-log__label">{{ t('pipelinq', 'Duration') }}</span>
-					<input v-model="form.duration" type="text" :placeholder="t('pipelinq', 'e.g. 4 minutes')" data-testid="contact-log-duration">
-				</label>
+				<div class="contact-log__field" data-testid="contact-log-duration">
+					<CnDurationField
+						:modelValue="form.duration || null"
+						:inputLabel="t('pipelinq', 'Duration')"
+						timer
+						@update:modelValue="(v) => (form.duration = v || '')" />
+				</div>
 			</div>
 			<label class="contact-log__field">
 				<span class="contact-log__label">{{ t('pipelinq', 'Subject') }}</span>
@@ -149,7 +152,7 @@ opens on the same ticket.
 </template>
 
 <script>
-import { CnDialog } from '@conduction/nextcloud-vue'
+import { CnDialog, CnDurationField } from '@conduction/nextcloud-vue'
 import { emit } from '@nextcloud/event-bus'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcSelect } from '@nextcloud/vue'
@@ -176,7 +179,7 @@ const pad = (n) => String(n).padStart(2, '0')
  */
 export default {
 	name: 'ContactLogDialog',
-	components: { AlertOutline, CnDialog, ContentSave, LinkVariant, NcButton, NcSelect },
+	components: { AlertOutline, CnDialog, CnDurationField, ContentSave, LinkVariant, NcButton, NcSelect },
 	mixins: [contactMomentDraftMixin],
 	emits: ['close'],
 

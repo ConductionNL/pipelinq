@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\CampaignReportService;
 use OCA\Pipelinq\Service\CampaignService;
 use OCA\Pipelinq\Service\LandingPageProvisioningService;
@@ -39,7 +39,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * CampaignController: the campaign report and the landing page action.
@@ -92,8 +91,7 @@ class CampaignController extends Controller {
 	 * @param CampaignReportService $report The aggregate report.
 	 * @param CampaignService $campaigns Mints the campaign value and checks the vocabulary.
 	 * @param LandingPageProvisioningService $landingPages The Portaliq hand-off.
-	 * @param IUserSession $userSession Session.
-	 * @param ObjectOwnerAccessPolicy $policy CRM privilege check.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
@@ -103,8 +101,7 @@ class CampaignController extends Controller {
 		private readonly CampaignReportService $report,
 		private readonly CampaignService $campaigns,
 		private readonly LandingPageProvisioningService $landingPages,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -122,7 +119,7 @@ class CampaignController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function vocabularies(): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -176,7 +173,7 @@ class CampaignController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function report(string $id, ?string $from = null, ?string $to = null): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -206,7 +203,7 @@ class CampaignController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function createLandingPage(string $id, string $portal = '', string $route = ''): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -231,7 +228,7 @@ class CampaignController extends Controller {
 	 * @return JSONResponse The saved campaign, or the refusal.
 	 */
 	private function write(?string $id): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -239,11 +236,7 @@ class CampaignController extends Controller {
 		$body = $this->request->getParams();
 		unset($body['id'], $body['_route'], $body['createdBy'], $body['utmCampaign']);
 
-		$user = $this->userSession->getUser();
-		$uid = '';
-		if ($user !== null) {
-			$uid = $user->getUID();
-		}
+		$uid = $this->privilege->actingUserId();
 
 		$result = $this->campaigns->save(payload: $body, id: $id, uid: $uid);
 
@@ -256,22 +249,4 @@ class CampaignController extends Controller {
 			(self::WRITE_STATUS[$result['error']] ?? Http::STATUS_BAD_REQUEST)
 		);
 	}//end write()
-
-	/**
-	 * Refuse a caller who is not signed in or not privileged.
-	 *
-	 * @return JSONResponse|null The refusal, or null when the caller may proceed.
-	 */
-	private function guard(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		return null;
-	}//end guard()
 }//end class

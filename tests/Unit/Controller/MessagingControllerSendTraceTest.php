@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\MessagingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -148,8 +149,7 @@ class MessagingControllerSendTraceTest extends TestCase {
 			$service,
 			$this->createMock(ChannelProviderRepository::class),
 			$this->createMock(ConsentService::class),
-			$session,
-			$policy,
+			new CrmPrivilegeCheck($session, $policy),
 			$this->createMock(LoggerInterface::class),
 		);
 		NextcloudDispatch::call(controller: $controller, method: 'send', params: $params);

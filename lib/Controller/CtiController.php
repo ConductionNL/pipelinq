@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\ConnectionReportService;
 use OCA\Pipelinq\Service\CtiService;
 use OCP\AppFramework\Controller;
@@ -36,7 +36,6 @@ use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -64,8 +63,7 @@ class CtiController extends Controller {
 	 *
 	 * @param IRequest $request The HTTP request.
 	 * @param CtiService $ctiService The CTI service.
-	 * @param IUserSession $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ConnectionReportService $connectionReports Reports the CTI check to integriq's connection registry.
@@ -73,8 +71,7 @@ class CtiController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private CtiService $ctiService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $policy,
+		private CrmPrivilegeCheck $privilege,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 		private ConnectionReportService $connectionReports,
@@ -177,16 +174,12 @@ class CtiController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function screenPop(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// CTI surfaces resolve a caller's phone number to a customer record and
 		// attach call recordings — CRM data, not an any-authenticated-user
 		// capability. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$fromNumber = (string)$this->request->getParam('fromNumber', '');
@@ -207,18 +200,16 @@ class CtiController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function clickToDial(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Placing an outbound call on the organisation's telephony account is a
 		// CRM capability. Its sibling webhook() on this controller was guarded
 		// in the first pass and clickToDial -- the one that actually DIALS --
 		// was not.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
+
+		$uid = $this->privilege->actingUserId();
 
 		$targetNumber = (string)$this->request->getParam('targetNumber', '');
 		$extension = (string)$this->request->getParam('extension', '');
@@ -255,7 +246,7 @@ class CtiController extends Controller {
 		}
 
 		$result = $this->ctiService->originateCall(
-			userId: $user->getUID(),
+			userId: $uid,
 			extension: $extension,
 			targetNumber: $targetNumber,
 		);
@@ -279,14 +270,10 @@ class CtiController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function disposition(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Same posture as screenPop()/attachRecording().
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$subject = (string)$this->request->getParam('subject', '');
@@ -337,16 +324,12 @@ class CtiController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function attachRecording(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// CTI surfaces resolve a caller's phone number to a customer record and
 		// attach call recordings — CRM data, not an any-authenticated-user
 		// capability. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$recordingUrl = (string)$this->request->getParam('recordingUrl', '');
@@ -383,8 +366,8 @@ class CtiController extends Controller {
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	public function getConfig(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '' || $this->groupManager->isAdmin($uid) === false) {
 			return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -414,8 +397,8 @@ class CtiController extends Controller {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function updateConfig(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '' || $this->groupManager->isAdmin($uid) === false) {
 			return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -443,7 +426,7 @@ class CtiController extends Controller {
 		$saved = $this->ctiService->saveConfig($payload);
 		$this->logger->info(
 			'CTI config updated',
-			['user' => $user->getUID(), 'fields' => array_keys($payload)]
+			['user' => $uid, 'fields' => array_keys($payload)]
 		);
 
 		if ($saved !== []) {
@@ -468,8 +451,8 @@ class CtiController extends Controller {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function testConnection(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '' || $this->groupManager->isAdmin($uid) === false) {
 			return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -489,8 +472,8 @@ class CtiController extends Controller {
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	public function eventLog(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '' || $this->groupManager->isAdmin($uid) === false) {
 			return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 

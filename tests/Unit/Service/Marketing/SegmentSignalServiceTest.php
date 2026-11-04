@@ -23,100 +23,11 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
 use OCA\Pipelinq\Service\Marketing\BookkeepingSignals;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
-use OCA\Pipelinq\Service\ShillinqInvoiceReader;
 use OCA\Pipelinq\Tests\Unit\Support\InMemoryListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-
-/**
- * A reader that answers from arrays instead of shillinq's register.
- *
- * It stands in for the real reader rather than being mocked, because the
- * degradation path is the behaviour under test and `isAvailable()` returning
- * false has to be reachable without shillinq being installed.
- */
-class FakeShillinqInvoiceReader extends ShillinqInvoiceReader {
-
-	/**
-	 * Whether shillinq answers at all.
-	 *
-	 * @var bool
-	 */
-	public bool $available = true;
-
-	/**
-	 * Customer reference to invoices.
-	 *
-	 * @var array<string, array<int, array<string, mixed>>>
-	 */
-	public array $invoices = [];
-
-	/**
-	 * Construct without the real collaborators.
-	 */
-	public function __construct() {
-	}//end __construct()
-
-	/**
-	 * Whether shillinq answers.
-	 *
-	 * @return bool True when it does.
-	 */
-	public function isAvailable(): bool {
-		return $this->available;
-	}//end isAvailable()
-
-	/**
-	 * Every invoice past the draft stage.
-	 *
-	 * @param string $customerRef The customer.
-	 *
-	 * @return array<int, array<string, mixed>> The invoices.
-	 */
-	public function invoicesFor(string $customerRef): array {
-		if ($this->available === false) {
-			return [];
-		}
-
-		$out = [];
-		foreach (($this->invoices[$customerRef] ?? []) as $invoice) {
-			if ((string)($invoice['lifecycleState'] ?? '') !== 'draft') {
-				$out[] = $invoice;
-			}
-		}
-
-		return $out;
-	}//end invoicesFor()
-
-	/**
-	 * The paid invoices inside a window.
-	 *
-	 * @param string $customerRef The customer.
-	 * @param string $from Window start.
-	 * @param string $to Window end.
-	 *
-	 * @return array<int, array<string, mixed>> The invoices.
-	 */
-	public function paidInvoicesFor(string $customerRef, string $from, string $to): array {
-		$out = [];
-		foreach ($this->invoicesFor(customerRef: $customerRef) as $invoice) {
-			$date = (string)($invoice['invoiceDate'] ?? '');
-			if ((string)($invoice['lifecycleState'] ?? '') !== 'paid') {
-				continue;
-			}
-
-			if ($date !== '' && ($date < $from || $date > $to)) {
-				continue;
-			}
-
-			$out[] = $invoice;
-		}
-
-		return $out;
-	}//end paidInvoicesFor()
-}//end class
 
 /**
  * Tests for SegmentSignalService: each derivation, and what happens when
@@ -153,7 +64,7 @@ class SegmentSignalServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->store = new InMemoryListObjectStore([
+		$this->store = new InMemoryListObjectStore(seed: [
 			'client' => [
 				['uuid' => 'client-1', 'name' => 'Bakkerij', 'shillinqOrganisationRef' => 'cust-1'],
 				['uuid' => 'client-2', 'name' => 'Gemeente', 'shillinqOrganisationRef' => ''],
@@ -185,7 +96,7 @@ class SegmentSignalServiceTest extends TestCase {
 
 		$signals = $this->service()->signalsFor(clientId: 'client-1');
 
-		$this->assertSame(28000.0, $signals[SegmentSignalService::FIELD_REVENUE]);
+		$this->assertSame(expected: 28000.0, actual: $signals[SegmentSignalService::FIELD_REVENUE]);
 	}//end testRecognisedRevenueSumsPaidInvoicesInTheWindow()
 
 	/**
@@ -198,17 +109,17 @@ class SegmentSignalServiceTest extends TestCase {
 		$this->reader->invoices['cust-1'] = [
 			['lifecycleState' => 'paid', 'amount' => 28000.0, 'invoiceDate' => '2026-04-01', 'lines' => []],
 		];
-		$this->assertSame('top', $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_VALUE_TIER]);
+		$this->assertSame(expected: 'top', actual: $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_VALUE_TIER]);
 
 		$this->reader->invoices['cust-1'] = [
 			['lifecycleState' => 'paid', 'amount' => 6000.0, 'invoiceDate' => '2026-04-01', 'lines' => []],
 		];
-		$this->assertSame('mid', $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_VALUE_TIER]);
+		$this->assertSame(expected: 'mid', actual: $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_VALUE_TIER]);
 
 		$this->reader->invoices['cust-1'] = [
 			['lifecycleState' => 'overdue', 'amount' => 6000.0, 'invoiceDate' => '2026-04-01', 'lines' => []],
 		];
-		$this->assertSame('none', $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_VALUE_TIER]);
+		$this->assertSame(expected: 'none', actual: $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_VALUE_TIER]);
 	}//end testValueTierFollowsTheConfiguredThresholds()
 
 	/**
@@ -224,8 +135,8 @@ class SegmentSignalServiceTest extends TestCase {
 		];
 
 		$this->assertSame(
-			14,
-			$this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_MONTHS_SINCE_INVOICE]
+			expected: 14,
+			actual: $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_MONTHS_SINCE_INVOICE]
 		);
 	}//end testDraftInvoicesAreNotContact()
 
@@ -251,8 +162,8 @@ class SegmentSignalServiceTest extends TestCase {
 
 		$signals = $this->service()->signalsFor('client-1');
 
-		$this->assertSame(['[demo] adviesuur'], $signals[SegmentSignalService::FIELD_SERVICES]);
-		$this->assertSame([], $signals[SegmentSignalService::FIELD_PRODUCTS]);
+		$this->assertSame(expected: ['[demo] adviesuur'], actual: $signals[SegmentSignalService::FIELD_SERVICES]);
+		$this->assertSame(expected: [], actual: $signals[SegmentSignalService::FIELD_PRODUCTS]);
 	}//end testOnlyCatalogueItemsAreClassified()
 
 	/**
@@ -266,7 +177,7 @@ class SegmentSignalServiceTest extends TestCase {
 			['lifecycleState' => 'overdue', 'amount' => 100.0, 'invoiceDate' => '2026-08-02', 'lines' => []],
 		];
 
-		$this->assertSame('overdue', $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_DUNNING]);
+		$this->assertSame(expected: 'overdue', actual: $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_DUNNING]);
 	}//end testDunningStateIsTheWorstAcrossInvoices()
 
 	/**
@@ -280,7 +191,7 @@ class SegmentSignalServiceTest extends TestCase {
 			['lifecycleState' => 'overdue', 'amount' => 100.0, 'invoiceDate' => '2026-08-02', 'lines' => []],
 		];
 
-		$this->assertSame('overdue', $this->service()->dunningStateForContact(contactId: 'contact-1'));
+		$this->assertSame(expected: 'overdue', actual: $this->service()->dunningStateForContact(contactId: 'contact-1'));
 	}//end testDunningStateForContactResolvesThroughTheClient()
 
 	/**
@@ -307,10 +218,10 @@ class SegmentSignalServiceTest extends TestCase {
 			SegmentSignalService::FIELD_SERVICES,
 			SegmentSignalService::FIELD_DUNNING,
 		] as $field) {
-			$this->assertNull($signals[$field], $field . ' must resolve to nothing, not to zero');
+			$this->assertNull(actual: $signals[$field], message: $field . ' must resolve to nothing, not to zero');
 		}
 
-		$this->assertFalse($this->service()->availability()['shillinq']);
+		$this->assertFalse(condition: $this->service()->availability()['shillinq']);
 	}//end testEveryBookkeepingSignalIsNullWithoutShillinq()
 
 	/**
@@ -324,7 +235,7 @@ class SegmentSignalServiceTest extends TestCase {
 			['lifecycleState' => 'paid', 'amount' => 5.0, 'invoiceDate' => '2026-08-01', 'lines' => []],
 		];
 
-		$this->assertNull($this->service()->signalsFor('client-2')[SegmentSignalService::FIELD_REVENUE]);
+		$this->assertNull(actual: $this->service()->signalsFor('client-2')[SegmentSignalService::FIELD_REVENUE]);
 	}//end testACustomerWithoutABookkeepingReferenceResolvesToNothing()
 
 	/**
@@ -333,12 +244,12 @@ class SegmentSignalServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testRenewalDaysTakesTheNearestContractEnd(): void {
-		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(245)]);
-		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(45)]);
+		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(days: 245)]);
+		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(days: 45)]);
 
 		$this->assertSame(
-			45,
-			$this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_RENEWAL_DAYS]
+			expected: 45,
+			actual: $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_RENEWAL_DAYS]
 		);
 	}//end testRenewalDaysTakesTheNearestContractEnd()
 
@@ -349,11 +260,11 @@ class SegmentSignalServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPastContractEndIsNegative(): void {
-		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(-30)]);
+		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(days: -30)]);
 
 		$this->assertSame(
-			-30,
-			$this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_RENEWAL_DAYS]
+			expected: -30,
+			actual: $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_RENEWAL_DAYS]
 		);
 	}//end testAPastContractEndIsNegative()
 
@@ -363,11 +274,11 @@ class SegmentSignalServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testStalledDaysCountsFromTheStageEntry(): void {
-		$this->store->save('lead', ['client' => 'client-1', 'status' => 'open', 'stageEnteredAt' => $this->inDays(-31)]);
+		$this->store->save('lead', ['client' => 'client-1', 'status' => 'open', 'stageEnteredAt' => $this->inDays(days: -31)]);
 
 		$this->assertSame(
-			31,
-			$this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_STALLED_DAYS]
+			expected: 31,
+			actual: $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_STALLED_DAYS]
 		);
 	}//end testStalledDaysCountsFromTheStageEntry()
 
@@ -378,9 +289,9 @@ class SegmentSignalServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testStalledDaysIsNullWithoutADatedOpenLead(): void {
-		$this->store->save('lead', ['client' => 'client-1', 'status' => 'closed-won', 'stageEnteredAt' => $this->inDays(-90)]);
+		$this->store->save('lead', ['client' => 'client-1', 'status' => 'closed-won', 'stageEnteredAt' => $this->inDays(days: -90)]);
 
-		$this->assertNull($this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_STALLED_DAYS]);
+		$this->assertNull(actual: $this->service()->signalsFor('client-1')[SegmentSignalService::FIELD_STALLED_DAYS]);
 	}//end testStalledDaysIsNullWithoutADatedOpenLead()
 
 	/**
@@ -421,12 +332,12 @@ class SegmentSignalServiceTest extends TestCase {
 	public function testTheCatalogueAndThePropertyMapAgree(): void {
 		$service = $this->service();
 
-		$this->assertSame(array_keys($service->catalogue()), array_keys($service->schemaProperties()));
+		$this->assertSame(expected: array_keys($service->catalogue()), actual: array_keys($service->schemaProperties()));
 		foreach (array_keys($service->catalogue()) as $field) {
-			$this->assertTrue($service->isSignalField(field: $field));
+			$this->assertTrue(condition: $service->isSignalField(field: $field));
 		}
 
-		$this->assertFalse($service->isSignalField(field: 'email'));
+		$this->assertFalse(condition: $service->isSignalField(field: 'email'));
 	}//end testTheCatalogueAndThePropertyMapAgree()
 
 	/**
@@ -435,7 +346,7 @@ class SegmentSignalServiceTest extends TestCase {
 	 * @return SegmentSignalService The service.
 	 */
 	private function service(): SegmentSignalService {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => $default
 		);
@@ -443,13 +354,13 @@ class SegmentSignalServiceTest extends TestCase {
 			fn (string $app, string $key, int $default = 0): int => $default
 		);
 
-		$time = $this->createMock(ITimeFactory::class);
+		$time = $this->createMock(originalClassName: ITimeFactory::class);
 		$time->method('getTime')->willReturn((int)strtotime(self::NOW));
 
 		return new SegmentSignalService(
-			$this->store,
-			new BookkeepingSignals($this->reader, $appConfig, $time),
-			$time,
+			store: $this->store,
+			bookkeeping: new BookkeepingSignals(invoices: $this->reader, appConfig: $appConfig, time: $time),
+			time: $time,
 		);
 	}//end service()
 

@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -34,6 +35,8 @@ use Throwable;
  * @spec openspec/specs/entity-notes/spec.md#requirement-notes-crud-on-all-entity-types-mvp
  */
 class NoteEventService {
+	use OptionalPayloadToArray;
+
 	private const TYPE_MAP = [
 		'pipelinq_client' => 'client',
 		'pipelinq_contact' => 'contact',
@@ -152,39 +155,8 @@ class NoteEventService {
 			return null;
 		}//end try
 
-		return $this->toArray(row: $object);
+		return $this->toArray(object: $object);
 	}//end fetchEntityData()
-
-	/**
-	 * Normalise an OpenRegister result to a plain array.
-	 *
-	 * @param mixed $row The value returned by ObjectService.
-	 *
-	 * @return ?array The object as an array, or null when it cannot be read.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true) {
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$serialized = $row->jsonSerialize();
-				if (is_array($serialized) === true) {
-					return $serialized;
-				}
-			}
-
-			if (method_exists($row, 'getObject') === true) {
-				$inner = $row->getObject();
-				if (is_array($inner) === true) {
-					return $inner;
-				}
-			}
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Publish activity and notification for a note addition.

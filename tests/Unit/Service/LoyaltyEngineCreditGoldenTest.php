@@ -46,6 +46,15 @@ use Throwable;
  * @covers \OCA\Pipelinq\Service\Loyalty\PointsCreditRun
  * @covers \OCA\Pipelinq\Service\Loyalty\PointsGrant
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
@@ -148,6 +157,9 @@ class LoyaltyEngineCreditGoldenTest extends TestCase {
 		);
 
 		$ledger = $this->createMock(PointsLedgerService::class);
+		$ledger->method('forOperation')->willReturnCallback(
+			fn (...$args): PointsLedgerService => $this->record(class: PointsLedgerService::class, method: 'forOperation', args: $args, answer: $ledger)
+		);
 		$ledger->method('getLedgerHistory')->willReturnCallback(
 			fn (...$args): array => $this->record(class: PointsLedgerService::class, method: 'getLedgerHistory', args: $args, answer: ($scenario['history'] ?? []))
 		);

@@ -102,30 +102,11 @@ The system MUST support creating, reading, updating, and deleting pipelines. Pip
 
 ### Requirement: Pipeline Entity Types [MVP]
 
-Each pipeline MUST declare which entity types it supports. This controls which entities can be placed on the pipeline and which entities appear on the kanban board.
+A pipeline SHALL hold one kind of item: leads, requests or cases, chosen as Soort when the pipeline is made. There SHALL be no mixed pipeline and no Show filter. Board: pipelinq/PqPipelines.
 
-#### Scenario 7: Lead-only pipeline
-
-- GIVEN a pipeline with entityTypes: ["lead"]
-- WHEN a user creates a lead and selects this pipeline
-- THEN the lead MUST be assignable to this pipeline
-- AND when a user attempts to place a request on this pipeline, the system MUST reject it with "This pipeline does not support requests"
-
-#### Scenario 8: Request-only pipeline
-
-- GIVEN a pipeline with entityTypes: ["request"]
-- WHEN a user creates a request and selects this pipeline
-- THEN the request MUST be assignable to this pipeline
-- AND leads MUST NOT be assignable to this pipeline
-
-#### Scenario 9: Mixed pipeline
-
-- GIVEN a pipeline with entityTypes: ["lead", "request"]
-- WHEN the kanban board is rendered
-- THEN both leads and requests MUST appear as cards in their respective stage columns
-- AND the pipeline view MUST support a "Show" filter with options: "All", "Leads only", "Requests only"
-
----
+#### Scenario: A pipeline has one kind
+- WHEN an admin makes a pipeline and chooses Soort Verzoeken
+- THEN only requests can be placed on it, and the board shows request cards only
 
 ### Requirement: Default Pipelines [MVP]
 
@@ -786,7 +767,7 @@ Organizations MUST be able to maintain multiple active pipelines simultaneously,
 
 ### Requirement: Pipeline Template Creation [Enterprise] (REQ-PIPE-020)
 
-The system SHOULD allow admins to save an existing pipeline configuration as a reusable template. Templates accelerate onboarding by providing pre-built pipeline configurations that match common workflows (sales, service, hiring, procurement). Krayin ships with a default pipeline template; EspoCRM uses installable extension packs.
+The system SHALL allow admins to save an existing pipeline configuration as a reusable template. Templates accelerate onboarding by providing pre-built pipeline configurations that match common workflows (sales, service, hiring, procurement). Krayin ships with a default pipeline template; EspoCRM uses installable extension packs.
 
 #### Scenario: Save pipeline as template
 @e2e exclude Enterprise feature; not yet implemented
@@ -822,7 +803,7 @@ The system SHOULD allow admins to save an existing pipeline configuration as a r
 
 ### Requirement: Stage Automation on Transition [Enterprise] (REQ-PIPE-021)
 
-The system SHOULD support configurable automation actions triggered when a lead or request moves to a specific stage. This reduces manual work and ensures consistency in follow-up actions. EspoCRM implements this via its BPM engine; Krayin uses a workflow automation system with event-based triggers on lead stage changes.
+The system SHALL support configurable automation actions triggered when a lead or request moves to a specific stage. This reduces manual work and ensures consistency in follow-up actions. EspoCRM implements this via its BPM engine; Krayin uses a workflow automation system with event-based triggers on lead stage changes.
 
 #### Scenario: Auto-assign on stage transition
 @e2e exclude backend automation; covered by PHPUnit
@@ -917,7 +898,7 @@ The pipeline kanban and list views MUST support filtering and searching items to
 
 ### Requirement: Pipeline Access Control [V1] (REQ-PIPE-023)
 
-The system SHOULD enforce access control on pipelines to ensure users only see and interact with pipelines relevant to their role. Access control is managed via OpenRegister's RBAC system. EspoCRM uses team-based access with role-level restrictions; Krayin has a "bouncer" system with all/group/individual permission levels.
+The system SHALL enforce access control on pipelines to ensure users only see and interact with pipelines relevant to their role. Access control is managed via OpenRegister's RBAC system. EspoCRM uses team-based access with role-level restrictions; Krayin has a "bouncer" system with all/group/individual permission levels.
 
 #### Scenario: Admin-only pipeline configuration
 @e2e exclude access-control; covered by admin-settings spec
@@ -994,7 +975,7 @@ The Pipelinq dashboard MUST include pipeline-specific widgets that provide at-a-
 
 ### Requirement: Stage SLA and Deadline Tracking [Enterprise] (REQ-PIPE-025)
 
-The system SHOULD support configuring maximum time limits (SLAs) per stage so that leads and requests that exceed the expected duration are flagged for attention. SLA tracking is a common feature in government CRM contexts where response time commitments are contractual. EspoCRM offers SLA tracking in its Cases module; Krayin does not have built-in SLA.
+The system SHALL support configuring maximum time limits (SLAs) per stage so that leads and requests that exceed the expected duration are flagged for attention. SLA tracking is a common feature in government CRM contexts where response time commitments are contractual. EspoCRM offers SLA tracking in its Cases module; Krayin does not have built-in SLA.
 
 #### Scenario: Configure stage SLA
 @e2e exclude Enterprise feature; not yet implemented
@@ -1037,7 +1018,7 @@ The system SHOULD support configuring maximum time limits (SLAs) per stage so th
 
 ### Requirement: Pipeline Reporting [V1] (REQ-PIPE-026)
 
-The system SHOULD provide exportable pipeline reports that summarize pipeline performance over a configurable time period. Reports complement real-time analytics by providing historical snapshots for management review and tender compliance.
+The system SHALL provide exportable pipeline reports that summarize pipeline performance over a configurable time period. Reports complement real-time analytics by providing historical snapshots for management review and tender compliance.
 
 #### Scenario: Generate pipeline summary report
 @e2e exclude V1 reporting; not yet implemented
@@ -1077,7 +1058,7 @@ The system SHOULD provide exportable pipeline reports that summarize pipeline pe
 
 ### Requirement: Win/Loss Tracking [Enterprise] (REQ-PIPE-027)
 
-The system SHOULD track the outcome of closed leads with structured reason data to enable analysis of why deals are won or lost. This is a standard CRM feature in EspoCRM (close reason field on opportunities), Krayin (lost reason on leads), and all enterprise CRMs.
+The system SHALL track the outcome of closed leads with structured reason data to enable analysis of why deals are won or lost. This is a standard CRM feature in EspoCRM (close reason field on opportunities), Krayin (lost reason on leads), and all enterprise CRMs.
 
 #### Scenario: Record loss reason when moving to Lost stage
 @e2e exclude requires seed data and stage transition UI
@@ -1234,11 +1215,8 @@ The system MUST calculate and display weighted pipeline values to provide a real
 
 - GIVEN leads with expected close dates in the current quarter
 - WHEN the admin views the sales forecast
-- THEN the system MUST display a monthly breakdown:
-  - April 2026: EUR 80,000 weighted (5 deals)
-  - May 2026: EUR 120,000 weighted (3 deals)
-  - June 2026: EUR 50,000 weighted (7 deals)
-- AND leads without an expected close date MUST be grouped separately as "Unscheduled"
+- THEN the forecast page shows the quarter per owner, split into committed, best case and pipeline, as on board `PqForecast` (`specs/forecast-roll-up-and-categories`)
+- AND it shows no monthly breakdown and no "Unscheduled" group
 
 ---
 

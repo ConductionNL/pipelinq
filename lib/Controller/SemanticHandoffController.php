@@ -32,9 +32,11 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SemanticHandoffService;
 use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -42,7 +44,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -77,6 +78,8 @@ use Throwable;
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class SemanticHandoffController extends Controller {
+	use PayloadToArray;
+
 	/**
 	 * Canonical semantic kind URIs.
 	 */
@@ -108,7 +111,7 @@ class SemanticHandoffController extends Controller {
 	 * @param ContainerInterface $container DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig App config (register/schema slugs).
 	 * @param TicketService $ticketService Unified ticket resolver.
-	 * @param IUserSession $userSession User session.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Writes the answer that tells the customer the case number.
@@ -119,7 +122,7 @@ class SemanticHandoffController extends Controller {
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private TicketService $ticketService,
-		private IUserSession $userSession,
+		private CrmPrivilegeCheck $privilege,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private LoggerInterface $logger,
 		private IL10N $l10n,
@@ -138,17 +141,13 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function requestAvailability(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// This controller already authorises per object further down via
 		// accessPolicy->mayAccess(); these two entry points reach the handoff
 		// surface before any object is resolved, so the privileged-group half
 		// of the same policy is the check available here.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$request = $this->loadRequestTicket(id: $id);
@@ -201,17 +200,13 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function convertRequestToCase(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// This controller already authorises per object further down via
 		// accessPolicy->mayAccess(); these two entry points reach the handoff
 		// surface before any object is resolved, so the privileged-group half
 		// of the same policy is the check available here.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$request = $this->loadRequestTicket(id: $id);
@@ -335,8 +330,8 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function contractAvailability(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '') {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
@@ -345,7 +340,7 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
-		if ($this->mayActOnContract(uid: $user->getUID(), contract: $contract) === false) {
+		if ($this->mayActOnContract(uid: $uid, contract: $contract) === false) {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -372,8 +367,8 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function sendContractToInvoicing(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '') {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
@@ -384,7 +379,7 @@ class SemanticHandoffController extends Controller {
 
 		// Authorize BEFORE the status gate: a stranger must not be able to
 		// distinguish "not yours" from "not active" on someone else's contract.
-		if ($this->mayActOnContract(uid: $user->getUID(), contract: $contract) === false) {
+		if ($this->mayActOnContract(uid: $uid, contract: $contract) === false) {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -416,7 +411,7 @@ class SemanticHandoffController extends Controller {
 		$sentAt = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 		$contract['invoiceReference'] = (string)$result['targetUuid'];
 		$contract['invoicedAt'] = $sentAt;
-		$contract['invoicedBy'] = $user->getUID();
+		$contract['invoicedBy'] = $uid;
 		// Every send is kept, so this year's invoicing can be read back.
 		$history = $contract['invoiceHistory'] ?? [];
 		if (is_array($history) === false) {
@@ -426,7 +421,7 @@ class SemanticHandoffController extends Controller {
 		$history[] = [
 			'reference' => (string)$result['targetUuid'],
 			'sentAt' => $sentAt,
-			'sentBy' => $user->getUID(),
+			'sentBy' => $uid,
 			'amount' => (float)($contract['valuePerInterval'] ?? $contract['value'] ?? 0),
 		];
 		$contract['invoiceHistory'] = array_values($history);
@@ -651,35 +646,6 @@ class SemanticHandoffController extends Controller {
 
 		return $service;
 	}//end objectService()
-
-	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * The pipelinq register slug (app-config overridable).

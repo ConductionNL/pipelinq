@@ -1,0 +1,98 @@
+{
+    "show no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "t:Authentication required"
+        },
+        "trace": []
+    },
+    "show unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "ContactSyncSettingsService::status": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "show privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "ContactSyncSettingsService::status": [
+                    "crm-user"
+                ]
+            }
+        ]
+    },
+    "update no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "t:Authentication required"
+        },
+        "trace": []
+    },
+    "update unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "t:writeBack must be true or false"
+        },
+        "trace": []
+    },
+    "update privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "t:writeBack must be true or false"
+        },
+        "trace": []
+    },
+    "run no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "t:Authentication required"
+        },
+        "trace": []
+    },
+    "run unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "t:Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "run privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "ContactSyncSettingsService::run": [
+                    "crm-user",
+                    "(time)"
+                ]
+            }
+        ]
+    }
+}

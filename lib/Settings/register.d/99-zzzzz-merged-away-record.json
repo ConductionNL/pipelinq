@@ -1,0 +1,63 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "The merge stamp on a client or contact that OpenRegister merged into another record (REQ-CRM-001, REQ-MDM-013): which record survived, its name and number, and when. MergedAwayRecordListener writes it on a merge and clears it on a reversal; MergedAwayRecordGuard keeps a stamped record read-only."
+  },
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "version": "1.6.0",
+        "properties": {
+          "mergedInto": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Merged into",
+            "description": "The record this client was merged into. Empty while the client stands on its own.",
+            "visible": false
+          },
+          "mergedIntoLabel": {
+            "type": "string",
+            "title": "Merged into (name)",
+            "description": "The name and number of the record this client was merged into, such as Sanne J. de Vries (K-2019-01184).",
+            "visible": false
+          },
+          "mergedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Merged on",
+            "description": "When this client was merged into another record.",
+            "visible": false
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "version": "1.1.0",
+        "properties": {
+          "mergedInto": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Merged into",
+            "description": "The record this contact was merged into. Empty while the contact stands on its own.",
+            "visible": false
+          },
+          "mergedIntoLabel": {
+            "type": "string",
+            "title": "Merged into (name)",
+            "description": "The name and number of the record this contact was merged into.",
+            "visible": false
+          },
+          "mergedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Merged on",
+            "description": "When this contact was merged into another record.",
+            "visible": false
+          }
+        }
+      }
+    }
+  }
+}

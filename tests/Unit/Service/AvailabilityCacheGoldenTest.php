@@ -42,6 +42,17 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Service\AvailabilityService
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\RowIdOf
+ * @uses \OCA\Pipelinq\Util\RowIdentity
+ * @uses \OCA\Pipelinq\Util\EntityIdOf
+ * @uses \OCA\Pipelinq\Util\NullableRowIdOf
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */

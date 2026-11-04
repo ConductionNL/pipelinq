@@ -65,6 +65,8 @@ use OCA\Pipelinq\Listener\StageLimitGuard;
 use OCA\Pipelinq\Listener\WebFormBindingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
+use OCA\Pipelinq\Listener\MergedAwayRecordGuard;
+use OCA\Pipelinq\Listener\MergedAwayRecordListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
@@ -72,6 +74,7 @@ use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
+use OCA\Pipelinq\Listener\QuoteNumberCreatingListener;
 use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
@@ -225,11 +228,7 @@ class Application extends App implements IBootstrap {
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
 		);
-		// Every new request and complaint gets its reference number ("PQ-2026-0402").
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: TicketReferenceCreatingListener::class
-		);
+		$this->registerNumberListeners(context: $context);
 		// A lead a form created gets its contact and client before it is stored
 		// and its submit touchpoint once it is (decision 179: the submit creates
 		// the lead itself, so nothing relays it afterwards).
@@ -363,15 +362,6 @@ class Application extends App implements IBootstrap {
 			listener: SurveyDispatchListener::class
 		);
 
-		// MDM: OpenRegister now materialises the golden record on save via its
-		// SurvivorshipRecomputeListener (x-openregister-survivorship), so the
-		// app-side recompute-on-source-change listener is retired. Instead we
-		// subscribe to OR's ObjectsMergedEvent to enqueue downstream sync after a
-		// merge / reversal (REQ-MDM-004; ADR-041 event-not-RPC propagation).
-		$context->registerEventListener(
-			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
-			listener: ObjectsMergedSyncListener::class
-		);
 		// Contact erasure keeps the opt-out in integriq (opt-out-before-send REQ-CII-005).
 		// An API delete is a soft delete, which OpenRegister reports as an update
 		// (erase-on-soft-delete REQ-CII-008); the purge is the deleted event.
@@ -440,6 +430,7 @@ class Application extends App implements IBootstrap {
 		);
 
 		$this->registerPosLifecycleGuards(context: $context);
+		$this->registerMergeListeners(context: $context);
 		$this->registerExportServices(context: $context);
 		$this->registerGdprSeamProviders(context: $context);
 	}//end register()
@@ -592,6 +583,26 @@ class Application extends App implements IBootstrap {
 	}//end registerExportServices()
 
 	/**
+	 * Register the listeners that stamp a number on a new record: a request or
+	 * complaint gets its reference ("PQ-2026-0402"), a quote its number
+	 * ("OFF-2026-0042").
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerNumberListeners(IRegistrationContext $context): void {
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: TicketReferenceCreatingListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: QuoteNumberCreatingListener::class
+		);
+	}//end registerNumberListeners()
+
+	/**
 	 * Register the POS lifecycle guards keyed by the FQCN tag the
 	 * posTransaction / posRefund schemas reference in their
 	 * x-openregister-lifecycle.transitions[*].requires.
@@ -655,6 +666,31 @@ class Application extends App implements IBootstrap {
 			}
 		);
 	}//end registerPosLifecycleGuards()
+
+	/**
+	 * Register the listeners of an OpenRegister merge: the downstream sync after a
+	 * merge or reversal (REQ-MDM-004, ADR-041 event-not-RPC propagation), the
+	 * stamp that says where a merged-away client or contact went, and the guard
+	 * that keeps it read-only.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerMergeListeners(IRegistrationContext $context): void {
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
+			listener: ObjectsMergedSyncListener::class
+		);
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
+			listener: MergedAwayRecordListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: MergedAwayRecordGuard::class
+		);
+	}//end registerMergeListeners()
 
 	/**
 	 * Boot the application and register comment display name resolvers.

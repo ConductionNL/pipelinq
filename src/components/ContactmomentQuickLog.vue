@@ -181,10 +181,14 @@
 
 		<!-- Duration -->
 		<div class="form-group">
-			<NcTextField
-				:modelValue="form.duration"
-				:label="t('pipelinq', 'Duration (e.g. PT5M, PT1H30M)')"
-				@update:modelValue="(v) => (form.duration = v)" />
+			<CnDurationField
+				ref="durationClock"
+				:modelValue="form.duration || null"
+				:inputLabel="t('pipelinq', 'Duration')"
+				timer
+				autoStart
+				data-testid="quicklog-duration"
+				@update:modelValue="(v) => (form.duration = v || '')" />
 		</div>
 
 		<!-- Notes -->
@@ -205,7 +209,7 @@
 			<NcButton
 				variant="primary"
 				:disabled="!isValid || saving"
-				@click="onSave">
+				@click="stopClockAndSave">
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</div>
@@ -217,7 +221,7 @@
 </template>
 
 <script>
-import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { CnDurationField, CnResourceSelect } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcNoteCard, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 import ClientCreateDialog from '../dialogs/ClientCreateDialog.vue'
@@ -231,6 +235,7 @@ export default {
 	name: 'ContactmomentQuickLog',
 	components: {
 		ClientCreateDialog,
+		CnDurationField,
 		CnResourceSelect,
 		ContactCreateDialog,
 		NcButton,
@@ -395,6 +400,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Stop the running duration clock, so the saved duration is the time it shows, then save.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/adopt-library-duration-timer/specs/contactmomenten/spec.md#requirement-the-contact-moment-duration-runs-as-a-clock
+		 */
+		stopClockAndSave() {
+			this.$refs.durationClock?.stop()
+			return this.onSave()
+		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
 		 */

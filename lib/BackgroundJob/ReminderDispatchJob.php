@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -52,6 +53,7 @@ use Psr\Log\LoggerInterface;
  *  edges behind an extra indirection without removing any of them.
  */
 class ReminderDispatchJob extends TimedJob {
+	use EntityIdOf;
 	use NullablePayloadToArray;
 
 	/**
@@ -250,39 +252,4 @@ class ReminderDispatchJob extends TimedJob {
 	private function getObjectService(): object {
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Pull the canonical id off an OR entity or array.
-	 *
-	 * @param array<string, mixed>|object $object Object or array.
-	 *
-	 * @return string
-	 */
-	private function idOf(array|object $object): string {
-		$arr = $this->toArray(object: $object);
-		if ($arr === null) {
-			return '';
-		}
-
-		if (isset($arr['@self']) === true && is_array($arr['@self']) === true) {
-			$self = $arr['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($arr['id']) === true) {
-			return (string)$arr['id'];
-		}
-
-		if (isset($arr['uuid']) === true) {
-			return (string)$arr['uuid'];
-		}
-
-		return '';
-	}//end idOf()
 }//end class

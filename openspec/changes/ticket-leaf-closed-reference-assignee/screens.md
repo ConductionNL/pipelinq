@@ -1,4 +1,6 @@
 # Screens
 
-- DqContact https://identity.conduction.nl/screens/board?id=dossiq/DqContact
-- DqOrganisatie https://identity.conduction.nl/screens/board?id=dossiq/DqOrganisatie
+- dossiq/DqContact contact https://identity.conduction.nl/screens/board?id=dossiq/DqContact
+- dossiq/DqOrganisatie organisatie https://identity.conduction.nl/screens/board?id=dossiq/DqOrganisatie
+
+Components: CnActionButtons, CnActionsMenu, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnDetailCard, CnDetailGrid, CnDetailPage, CnStatusBadge, CnTabs

@@ -1,0 +1,2217 @@
+{
+    "list unconfigured": {
+        "returned": {
+            "items": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped",
+                    []
+                ]
+            }
+        ]
+    },
+    "list defaults": {
+        "returned": {
+            "items": [
+                {
+                    "id": "t-1"
+                },
+                {
+                    "id": "t-2"
+                }
+            ],
+            "total": 2,
+            "page": 1,
+            "pages": 1
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema"
+                    },
+                    "limit": 20,
+                    "offset": 0,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            }
+        ]
+    },
+    "list filtered": {
+        "returned": {
+            "items": [
+                {
+                    "id": "t-soon",
+                    "status": "open",
+                    "deadline": "now+30m",
+                    "assigneeUserId": "bob"
+                }
+            ],
+            "total": 1,
+            "page": 2,
+            "pages": 1
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "assigneeUserId": "bob",
+                        "assigneeGroupId": "kcc",
+                        "deadline": {
+                            ">=": "2026-01-01",
+                            "<=": "2026-02-01"
+                        }
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "assigneeUserId": "bob",
+                        "assigneeGroupId": "kcc",
+                        "deadline": {
+                            ">=": "2026-01-01",
+                            "<=": "2026-02-01"
+                        }
+                    },
+                    "limit": 2,
+                    "offset": 2,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            }
+        ]
+    },
+    "list limits": {
+        "returned": {
+            "items": [
+                {
+                    "id": "t-1"
+                },
+                {
+                    "id": "t-2"
+                }
+            ],
+            "total": 2,
+            "page": 1,
+            "pages": 1
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema"
+                    },
+                    "limit": 100,
+                    "offset": 0,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            }
+        ]
+    },
+    "list fails": {
+        "returned": {
+            "items": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema"
+                    }
+                }
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: findAll failed",
+                    {
+                        "exception": "RuntimeException: index down"
+                    }
+                ]
+            }
+        ]
+    },
+    "get found": {
+        "returned": {
+            "id": "t-1",
+            "subject": "Old",
+            "createdBy": "agent",
+            "status": "open"
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-1",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "get entity": {
+        "returned": {
+            "id": "t-entity",
+            "subject": "From entity"
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-entity",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "get missing": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-missing",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "get fails": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-1",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: find failed",
+                    {
+                        "exception": "RuntimeException: find down",
+                        "id": "t-1"
+                    }
+                ]
+            }
+        ]
+    },
+    "get unconfigured": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped",
+                    []
+                ]
+            }
+        ]
+    },
+    "create ok": {
+        "returned": {
+            "saved": true,
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-12-31T14:00:00Z",
+            "createdBy": "agent",
+            "status": "open"
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "saveObject": [
+                    {
+                        "type": "callbackRequest",
+                        "subject": "Bel terug",
+                        "deadline": "2026-12-31T14:00:00Z",
+                        "createdBy": "agent",
+                        "status": "open"
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    null
+                ]
+            }
+        ]
+    },
+    "create no session": {
+        "returned": {
+            "saved": true,
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-12-31T14:00:00Z",
+            "createdBy": "system",
+            "status": "open"
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "saveObject": [
+                    {
+                        "type": "callbackRequest",
+                        "subject": "Bel terug",
+                        "deadline": "2026-12-31T14:00:00Z",
+                        "createdBy": "system",
+                        "status": "open"
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    null
+                ]
+            }
+        ]
+    },
+    "create keeps status": {
+        "returned": {
+            "saved": true,
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-12-31T14:00:00Z",
+            "status": "in_progress",
+            "createdBy": "agent"
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "saveObject": [
+                    {
+                        "type": "callbackRequest",
+                        "subject": "Bel terug",
+                        "deadline": "2026-12-31T14:00:00Z",
+                        "status": "in_progress",
+                        "createdBy": "agent"
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    null
+                ]
+            }
+        ]
+    },
+    "create date only": {
+        "returned": {
+            "saved": true,
+            "deadline": "2026-12-31",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "createdBy": "agent",
+            "status": "open"
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "saveObject": [
+                    {
+                        "deadline": "2026-12-31",
+                        "type": "callbackRequest",
+                        "subject": "Bel terug",
+                        "createdBy": "agent",
+                        "status": "open"
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    null
+                ]
+            }
+        ]
+    },
+    "create bad type": {
+        "threw": "InvalidArgumentException",
+        "message": "Invalid input",
+        "trace": []
+    },
+    "create blank subject": {
+        "threw": "InvalidArgumentException",
+        "message": "Invalid input",
+        "trace": []
+    },
+    "create relative deadline": {
+        "threw": "InvalidArgumentException",
+        "message": "Deadline must be a valid ISO-8601 date (e.g. 2025-12-31 or 2025-12-31T14:00:00Z)",
+        "trace": []
+    },
+    "create offset deadline": {
+        "returned": {
+            "saved": true,
+            "deadline": "2026-12-31T14:00+01:00",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "createdBy": "agent",
+            "status": "open"
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "saveObject": [
+                    {
+                        "deadline": "2026-12-31T14:00+01:00",
+                        "type": "callbackRequest",
+                        "subject": "Bel terug",
+                        "createdBy": "agent",
+                        "status": "open"
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    null
+                ]
+            }
+        ]
+    },
+    "create unconfigured": {
+        "threw": "RuntimeException",
+        "message": "Register or task schema not configured",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped",
+                    []
+                ]
+            }
+        ]
+    },
+    "update ok": {
+        "returned": {
+            "saved": true,
+            "id": "t-1",
+            "subject": "New",
+            "createdBy": "agent",
+            "status": "done",
+            "attempts": []
+        },
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-1",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-1",
+                        "subject": "New",
+                        "createdBy": "agent",
+                        "status": "done",
+                        "attempts": []
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-1"
+                ]
+            }
+        ]
+    },
+    "update missing": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-missing",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "delete": {
+        "returned": null,
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-1",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "deleteObject": [
+                    "t-1",
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "delete by found uuid": {
+        "returned": null,
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-slug",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "deleteObject": [
+                    "found-uuid",
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "delete missing": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-missing",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "delete read fails": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-1",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: find failed",
+                    {
+                        "exception": "RuntimeException: find down",
+                        "id": "t-1"
+                    }
+                ]
+            }
+        ]
+    },
+    "delete unconfigured": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped",
+                    []
+                ]
+            }
+        ]
+    },
+    "delete no uuid": {
+        "threw": "RuntimeException",
+        "message": "Task not found",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-no-uuid",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "delete refused": {
+        "threw": "RuntimeException",
+        "message": "Task could not be deleted",
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "find": [
+                    "t-1",
+                    [],
+                    false,
+                    "reg-1",
+                    "task-schema"
+                ]
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "deleteObject": [
+                    "t-1",
+                    "reg-1",
+                    "task-schema"
+                ]
+            }
+        ]
+    },
+    "overdue": {
+        "returned": [],
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": [
+                            "open",
+                            "in_progress"
+                        ],
+                        "deadline": {
+                            "<": "now+0m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            }
+        ]
+    },
+    "overdue unconfigured": {
+        "returned": [],
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped",
+                    []
+                ]
+            }
+        ]
+    },
+    "overdue fails": {
+        "returned": [],
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": [
+                            "open",
+                            "in_progress"
+                        ],
+                        "deadline": {
+                            "<": "now+0m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: getOverdueTasks failed",
+                    {
+                        "exception": "RuntimeException: index down"
+                    }
+                ]
+            }
+        ]
+    },
+    "pending default": {
+        "returned": [
+            {
+                "id": "t-soon",
+                "status": "open",
+                "deadline": "now+30m",
+                "assigneeUserId": "bob"
+            }
+        ],
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "deadline": {
+                            ">=": "now+0m",
+                            "<=": "now+60m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            }
+        ]
+    },
+    "pending capped": {
+        "returned": [
+            {
+                "id": "t-soon",
+                "status": "open",
+                "deadline": "now+30m",
+                "assigneeUserId": "bob"
+            }
+        ],
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "deadline": {
+                            ">=": "now+0m",
+                            "<=": "now+1440m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            }
+        ]
+    },
+    "pending floor": {
+        "returned": [
+            {
+                "id": "t-soon",
+                "status": "open",
+                "deadline": "now+30m",
+                "assigneeUserId": "bob"
+            }
+        ],
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "deadline": {
+                            ">=": "now+0m",
+                            "<=": "now+1m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            }
+        ]
+    },
+    "pending fails": {
+        "returned": [],
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "deadline": {
+                            ">=": "now+0m",
+                            "<=": "now+30m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: getPendingTasks failed",
+                    {
+                        "exception": "RuntimeException: index down"
+                    }
+                ]
+            }
+        ]
+    },
+    "process unconfigured": {
+        "returned": null,
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped",
+                    []
+                ]
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped",
+                    []
+                ]
+            },
+            {
+                "config": "task_expiry.escalation_threshold_seconds"
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "log": [
+                    "warning",
+                    "Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped",
+                    []
+                ]
+            }
+        ]
+    },
+    "process default cut": {
+        "returned": null,
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "deadline": {
+                            ">=": "now+0m",
+                            "<=": "now+240m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": [
+                            "open",
+                            "in_progress"
+                        ],
+                        "deadline": {
+                            "<": "now+0m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "task_expiry.escalation_threshold_seconds"
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Old",
+                    "alice",
+                    "t-expired",
+                    "now-600m"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-expired",
+                        "status": "expired",
+                        "deadline": "now-600m",
+                        "assigneeUserId": "alice",
+                        "subject": "Old",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-expired"
+                ]
+            },
+            {
+                "notifyAssignment": [
+                    "task",
+                    "Scheduled task",
+                    "bob",
+                    "t-recent",
+                    "system"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-recent",
+                        "status": "in_progress",
+                        "deadline": "now-60m",
+                        "assigneeUserId": "bob",
+                        "attempts": [
+                            {
+                                "result": "x"
+                            },
+                            {
+                                "timestamp": "now+0m",
+                                "result": "notified"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-recent"
+                ]
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-progress-old",
+                        "status": "expired",
+                        "deadline": "now-540m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-progress-old"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-noassignee",
+                        "status": "in_progress",
+                        "deadline": "now-120m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "notified"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-noassignee"
+                ]
+            }
+        ]
+    },
+    "process cut config": {
+        "returned": null,
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "deadline": {
+                            ">=": "now+0m",
+                            "<=": "now+240m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": [
+                            "open",
+                            "in_progress"
+                        ],
+                        "deadline": {
+                            "<": "now+0m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "task_expiry.escalation_threshold_seconds"
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "group": "leads"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Old",
+                    "alice",
+                    "t-expired",
+                    "now-600m"
+                ]
+            },
+            {
+                "notifyTaskExpired": [
+                    "Old",
+                    "lead",
+                    "t-expired",
+                    "now-600m"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-expired",
+                        "status": "expired",
+                        "deadline": "now-600m",
+                        "assigneeUserId": "alice",
+                        "subject": "Old",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-expired"
+                ]
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "group": "leads"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "bob",
+                    "t-recent",
+                    "now-60m"
+                ]
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "lead",
+                    "t-recent",
+                    "now-60m"
+                ]
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "alice",
+                    "t-recent",
+                    "now-60m"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-recent",
+                        "status": "expired",
+                        "deadline": "now-60m",
+                        "assigneeUserId": "bob",
+                        "attempts": [
+                            {
+                                "result": "x"
+                            },
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-recent"
+                ]
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "group": "leads"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "bob",
+                    "t-progress-cut",
+                    "now-60m"
+                ]
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "lead",
+                    "t-progress-cut",
+                    "now-60m"
+                ]
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "alice",
+                    "t-progress-cut",
+                    "now-60m"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-progress-cut",
+                        "status": "expired",
+                        "deadline": "now-60m",
+                        "assigneeUserId": "bob",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-progress-cut"
+                ]
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "group": "leads"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "lead",
+                    "t-progress-old",
+                    "now-540m"
+                ]
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "alice",
+                    "t-progress-old",
+                    "now-540m"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-progress-old",
+                        "status": "expired",
+                        "deadline": "now-540m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-progress-old"
+                ]
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "group": "leads"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "lead",
+                    "t-noassignee",
+                    "now-120m"
+                ]
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "alice",
+                    "t-noassignee",
+                    "now-120m"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-noassignee",
+                        "status": "expired",
+                        "deadline": "now-120m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-noassignee"
+                ]
+            }
+        ]
+    },
+    "process bad cut config": {
+        "returned": null,
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "deadline": {
+                            ">=": "now+0m",
+                            "<=": "now+240m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": [
+                            "open",
+                            "in_progress"
+                        ],
+                        "deadline": {
+                            "<": "now+0m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "task_expiry.escalation_threshold_seconds"
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "group": "ghosts"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Old",
+                    "alice",
+                    "t-expired",
+                    "now-600m"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-expired",
+                        "status": "expired",
+                        "deadline": "now-600m",
+                        "assigneeUserId": "alice",
+                        "subject": "Old",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-expired"
+                ]
+            },
+            {
+                "notifyAssignment": [
+                    "task",
+                    "Scheduled task",
+                    "bob",
+                    "t-recent",
+                    "system"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-recent",
+                        "status": "in_progress",
+                        "deadline": "now-60m",
+                        "assigneeUserId": "bob",
+                        "attempts": [
+                            {
+                                "result": "x"
+                            },
+                            {
+                                "timestamp": "now+0m",
+                                "result": "notified"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-recent"
+                ]
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "group": "ghosts"
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-progress-old",
+                        "status": "expired",
+                        "deadline": "now-540m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-progress-old"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-noassignee",
+                        "status": "in_progress",
+                        "deadline": "now-120m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "notified"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-noassignee"
+                ]
+            }
+        ]
+    },
+    "process notify fails": {
+        "returned": null,
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "deadline": {
+                            ">=": "now+0m",
+                            "<=": "now+240m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": [
+                            "open",
+                            "in_progress"
+                        ],
+                        "deadline": {
+                            "<": "now+0m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "task_expiry.escalation_threshold_seconds"
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "group": "leads"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Old",
+                    "alice",
+                    "t-expired",
+                    "now-600m"
+                ]
+            },
+            {
+                "notifyTaskExpired": [
+                    "Old",
+                    "lead",
+                    "t-expired",
+                    "now-600m"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: expiry notification dispatch failed",
+                    {
+                        "exception": "RuntimeException: push down"
+                    }
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-expired",
+                        "status": "expired",
+                        "deadline": "now-600m",
+                        "assigneeUserId": "alice",
+                        "subject": "Old",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-expired"
+                ]
+            },
+            {
+                "notifyAssignment": [
+                    "task",
+                    "Scheduled task",
+                    "bob",
+                    "t-recent",
+                    "system"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: notification dispatch failed",
+                    {
+                        "exception": "RuntimeException: push down"
+                    }
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-recent",
+                        "status": "in_progress",
+                        "deadline": "now-60m",
+                        "assigneeUserId": "bob",
+                        "attempts": [
+                            {
+                                "result": "x"
+                            },
+                            {
+                                "timestamp": "now+0m",
+                                "result": "notified"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-recent"
+                ]
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "group": "leads"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "lead",
+                    "t-progress-old",
+                    "now-540m"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: expiry notification dispatch failed",
+                    {
+                        "exception": "RuntimeException: push down"
+                    }
+                ]
+            },
+            {
+                "notifyTaskExpired": [
+                    "Scheduled task",
+                    "alice",
+                    "t-progress-old",
+                    "now-540m"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-progress-old",
+                        "status": "expired",
+                        "deadline": "now-540m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-progress-old"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-noassignee",
+                        "status": "in_progress",
+                        "deadline": "now-120m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "notified"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-noassignee"
+                ]
+            }
+        ]
+    },
+    "process save fails": {
+        "returned": null,
+        "trace": [
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": "open",
+                        "deadline": {
+                            ">=": "now+0m",
+                            "<=": "now+240m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "task-schema",
+                        "status": [
+                            "open",
+                            "in_progress"
+                        ],
+                        "deadline": {
+                            "<": "now+0m"
+                        }
+                    },
+                    "limit": 100,
+                    "order": {
+                        "deadline": "ASC"
+                    }
+                }
+            },
+            {
+                "config": "task_expiry.escalation_threshold_seconds"
+            },
+            {
+                "config": "register"
+            },
+            {
+                "config": "task_schema"
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "notifyTaskExpired": [
+                    "Old",
+                    "alice",
+                    "t-expired",
+                    "now-600m"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-expired",
+                        "status": "expired",
+                        "deadline": "now-600m",
+                        "assigneeUserId": "alice",
+                        "subject": "Old",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-expired"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: task update failed",
+                    {
+                        "exception": "RuntimeException: locked",
+                        "id": "t-expired"
+                    }
+                ]
+            },
+            {
+                "notifyAssignment": [
+                    "task",
+                    "Scheduled task",
+                    "bob",
+                    "t-recent",
+                    "system"
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-recent",
+                        "status": "in_progress",
+                        "deadline": "now-60m",
+                        "assigneeUserId": "bob",
+                        "attempts": [
+                            {
+                                "result": "x"
+                            },
+                            {
+                                "timestamp": "now+0m",
+                                "result": "notified"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-recent"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: task update failed",
+                    {
+                        "exception": "RuntimeException: locked",
+                        "id": "t-recent"
+                    }
+                ]
+            },
+            {
+                "config": "task_expiry.escalation_group"
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-progress-old",
+                        "status": "expired",
+                        "deadline": "now-540m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "expired"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-progress-old"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: task update failed",
+                    {
+                        "exception": "RuntimeException: locked",
+                        "id": "t-progress-old"
+                    }
+                ]
+            },
+            {
+                "saveObject": [
+                    {
+                        "id": "t-noassignee",
+                        "status": "in_progress",
+                        "deadline": "now-120m",
+                        "attempts": [
+                            {
+                                "timestamp": "now+0m",
+                                "result": "notified"
+                            }
+                        ]
+                    },
+                    [],
+                    "reg-1",
+                    "task-schema",
+                    "t-noassignee"
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "ScheduledTaskService: task update failed",
+                    {
+                        "exception": "RuntimeException: locked",
+                        "id": "t-noassignee"
+                    }
+                ]
+            }
+        ]
+    },
+    "authorize empty user": {
+        "threw": "OCP\\AppFramework\\OCS\\OCSForbiddenException",
+        "message": "Not authorized",
+        "trace": []
+    },
+    "authorize assignee": {
+        "returned": null,
+        "trace": []
+    },
+    "authorize group member": {
+        "returned": null,
+        "trace": [
+            {
+                "isInGroup": [
+                    "bob",
+                    "kcc"
+                ]
+            }
+        ]
+    },
+    "authorize other group": {
+        "threw": "OCP\\AppFramework\\OCS\\OCSForbiddenException",
+        "message": "Not authorized",
+        "trace": [
+            {
+                "isInGroup": [
+                    "bob",
+                    "sales"
+                ]
+            },
+            {
+                "isAdmin": "bob"
+            }
+        ]
+    },
+    "authorize admin": {
+        "returned": null,
+        "trace": [
+            {
+                "isAdmin": "admin"
+            }
+        ]
+    },
+    "authorize nobody": {
+        "threw": "OCP\\AppFramework\\OCS\\OCSForbiddenException",
+        "message": "Not authorized",
+        "trace": [
+            {
+                "isAdmin": "bob"
+            }
+        ]
+    },
+    "language empty": {
+        "returned": null,
+        "trace": []
+    },
+    "language list": {
+        "returned": null,
+        "trace": [
+            {
+                "setPreferredLanguage": "en-GB"
+            }
+        ]
+    },
+    "language weighted": {
+        "returned": null,
+        "trace": [
+            {
+                "setPreferredLanguage": "de"
+            }
+        ]
+    },
+    "language blank first": {
+        "returned": null,
+        "trace": [
+            {
+                "setPreferredLanguage": "nl"
+            }
+        ]
+    },
+    "language fails": {
+        "returned": null,
+        "trace": [
+            {
+                "setPreferredLanguage": "fr"
+            },
+            {
+                "log": [
+                    "debug",
+                    "applyAcceptLanguage: OR LanguageService unavailable.",
+                    {
+                        "exception": "no language service"
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\TeamLoadController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\TeamLoadService;
 use OCP\AppFramework\Http;
@@ -63,9 +64,9 @@ class TeamLoadControllerTest extends TestCase {
 		return new TeamLoadController(
 			request: $this->createMock(IRequest::class),
 			teamLoad: $service,
-			userSession: $session,
-			accessPolicy: $policy,
+			privilege: new CrmPrivilegeCheck($session, $policy),
 			logger: $this->createMock(LoggerInterface::class)
+		
 		);
 	}//end controller()
 
