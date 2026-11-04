@@ -3533,8 +3533,8 @@
 				"gridFloat": false,
 				"bandDensity": "compact",
 				"band": [
-					{ "widgetId": "client-merged-away", "span": 12, "chrome": "bare" },
 					{ "widgetId": "client-contact-strip", "span": 12, "chrome": "bare" },
+					{ "widgetId": "client-merged-away", "span": 12, "chrome": "bare" },
 					{ "widgetId": "client-summary-open-tickets", "span": 2 },
 					{ "widgetId": "client-summary-new-requests", "span": 2 },
 					{ "widgetId": "client-summary-sla-breached", "span": 2 },

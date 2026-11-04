@@ -25,11 +25,13 @@ describe.each([
 	const config = page(pageId)
 	const line = config.widgets.find((widget) => widget.id === widgetId)
 
-	it('shows the merged-into line only on a merged-away record, first in the band', () => {
+	it('shows the merged-into line only on a merged-away record, at the top of the band after the party strip', () => {
 		expect(line.type).toBe('banner')
 		expect(line.visibleWhen).toEqual(MERGED)
 		expect(line.content.visibleWhen).toEqual(MERGED)
-		expect(config.band[0]).toEqual({ widgetId, span: 12, chrome: 'bare' })
+		const at = config.band.findIndex((entry) => entry.widgetId === widgetId)
+		expect(config.band[at]).toEqual({ widgetId, span: 12, chrome: 'bare' })
+		expect(config.band.slice(0, at).every((entry) => entry.widgetId.endsWith('contact-strip'))).toBe(true)
 	})
 
 	it('names the surviving record and the date, and links to it on its own page', () => {
