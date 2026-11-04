@@ -70,14 +70,14 @@ The system MUST allow a POS operator to declare a starting cash amount at the be
 #### Scenario: Open a new shift with float
 
 - GIVEN the cashier arrives at the start of a shift
-- WHEN the cashier taps "Openen shift" and enters €100.00 as the opening float
+- WHEN the cashier taps "Dienst openen", enters €100.00 as the opening float and chooses "Openen"
 - THEN the system MUST create a `cashShift` object with `status: open`, `floatAmount: 100.00`, `floatAt: <now>`, and `operator: <logged-in user>`
 - AND the shift MUST be immediately available for sales transactions
 
 #### Scenario: Float declaration is non-negotiable
 
 - GIVEN a cashier attempts to open a shift without declaring a float amount
-- WHEN they tap "Openen shift" without entering an amount
+- WHEN they tap "Dienst openen" without entering an amount
 - THEN the form MUST show a validation error: "Openingsbedrag verplicht"
 - AND the shift creation MUST be blocked
 
@@ -88,7 +88,7 @@ The system MUST allow recording cash removals during a shift (e.g., deposit with
 #### Scenario: Record a mid-shift drop
 
 - GIVEN a shift is open with €100.00 float and €500.00 in sales
-- WHEN the cashier taps "Geld verwijderen", enters €250.00, selects reason "manager-deposit", and confirms
+- WHEN the cashier taps "Afstorting toevoegen", enters €250.00, selects reason "manager-deposit", and chooses "Registreren"
 - THEN the system MUST create a `cashDrop` object linked to the shift
 - AND the drop MUST be immediately visible in the shift's drops list
 - AND future diff calculations MUST account for this drop

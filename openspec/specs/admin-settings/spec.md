@@ -310,6 +310,15 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 
 ---
 
+#### Scenario: Deleting a pipeline that holds items is refused
+- GIVEN pipeline Verkoop holds 18 leads
+- WHEN the admin deletes it
+- THEN the deletion is refused with "Verplaats ze eerst naar een andere pijplijn, daarna kun je deze verwijderen" (board pipelinq/PqPipelines)
+
+#### Scenario: Deleting the default pipeline is refused
+- WHEN the admin deletes the default pipeline
+- THEN the deletion is refused with "Stel eerst een andere pijplijn als standaard in"
+
 ### Requirement: REQ-AS-030: Stage Management within Pipelines [MVP]
 
 The admin settings MUST provide CRUD operations for stages within each pipeline via the `PipelineForm` component. Stages are stored as a JSON array on the pipeline object, each with: `name`, `order`, `probability`, `isClosed`, `isWon`, and `color`.

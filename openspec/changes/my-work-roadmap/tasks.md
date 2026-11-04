@@ -10,8 +10,8 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 2. Quick actions (REQ-MW-100)
 
-- [ ] 2.1 Header buttons "New ticket", "New lead", "New contact" in `src/views/MyWork.vue`, each opening the entity's existing create modal from `src/modals/` with the assignee preset.
-- [ ] 2.2 Hide "New lead" when the user cannot create leads; refresh the list after a ticket or lead is saved.
+- [ ] 2.1 Header buttons "New ticket" and "New contact" (no "New lead", as on `PqMijnWerk`) in `src/views/MyWork.vue`, each opening the entity's existing create modal from `src/modals/` with the assignee preset.
+- [ ] 2.2 Refresh the list after a ticket is saved.
 
 ## 3. Recent activity (REQ-MW-110)
 
@@ -38,11 +38,11 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 8. Layout (REQ-MW-160)
 
-- [ ] 8.1 `src/components/myWork/LayoutPanel.vue`: hide and reorder sections, stored in `/api/settings/user` under `myWorkLayout`; "Reset to default"; the work list cannot be hidden.
+- [ ] 8.1 `src/components/myWork/LayoutPanel.vue`: hide and reorder sections, stored in `/api/settings/user` under `myWorkLayout`; "Terug naar de standaardindeling"; the work list cannot be hidden.
 
 ## 9. Phone (REQ-MW-170)
 
-- [ ] 9.1 Below 768 px: filter chips with counts as on `PqMobiel`, sticky group headers with counts, 44 px targets kept; quick actions folded into one bottom-right button once block 2 is built.
+- [ ] 9.1 Below 768 px: filter chips with counts as on `PqMobiel`, sticky group headers with counts, 44 px targets kept; quick actions folded into one "Actions" button in the header, as on `PqMobiel`, once block 2 is built.
 
 ## 10. Scope (REQ-MW-180)
 

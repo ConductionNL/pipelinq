@@ -1,0 +1,6024 @@
+{
+    "ticket / all / none": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "ticket / all / gold": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 11
+                }
+            ]
+        ]
+    },
+    "ticket / all / bronze": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "ticket / all / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 11
+                }
+            ]
+        ]
+    },
+    "ticket / all / org o2": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "ticket / all / contract c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 11
+                }
+            ]
+        ]
+    },
+    "ticket / all / o1 c1 gold": {
+        "chosen": "scope-both",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-both",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 14
+                }
+            ]
+        ]
+    },
+    "ticket / all / o2 c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 11
+                }
+            ]
+        ]
+    },
+    "ticket / all / numeric tier": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 9
+                }
+            ]
+        ]
+    },
+    "ticket / wildcards / none": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 4
+                }
+            ]
+        ]
+    },
+    "ticket / wildcards / gold": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 4
+                }
+            ]
+        ]
+    },
+    "ticket / wildcards / bronze": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 4
+                }
+            ]
+        ]
+    },
+    "ticket / wildcards / org o1": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 4
+                }
+            ]
+        ]
+    },
+    "ticket / wildcards / org o2": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 4
+                }
+            ]
+        ]
+    },
+    "ticket / wildcards / contract c1": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 4
+                }
+            ]
+        ]
+    },
+    "ticket / wildcards / o1 c1 gold": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 4
+                }
+            ]
+        ]
+    },
+    "ticket / wildcards / o2 c1": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 4
+                }
+            ]
+        ]
+    },
+    "ticket / wildcards / numeric tier": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 4
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom order / none": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom order / gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom order / bronze": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom order / org o1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom order / org o2": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom order / contract c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom order / o1 c1 gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom order / o2 c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom order / numeric tier": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom reversed / none": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom reversed / gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom reversed / bronze": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom reversed / org o1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom reversed / org o2": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom reversed / contract c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom reversed / o1 c1 gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom reversed / o2 c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / validFrom reversed / numeric tier": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority first / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority first / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority first / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority first / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority first / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority first / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority first / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority first / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / no priority first / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / not started / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / not started / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / not started / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / not started / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / not started / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / not started / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / not started / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / not started / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / not started / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / tier vs scope / none": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / tier vs scope / gold": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tier vs scope / bronze": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / tier vs scope / org o1": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / tier vs scope / org o2": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / tier vs scope / contract c1": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / tier vs scope / o1 c1 gold": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tier vs scope / o2 c1": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / tier vs scope / numeric tier": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs contract / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / org vs contract / gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / org vs contract / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / org vs contract / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs contract / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / org vs contract / contract c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs contract / o1 c1 gold": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / org vs contract / o2 c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs contract / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / integer org / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / integer org / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / integer org / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / integer org / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / integer org / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / integer org / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / integer org / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / integer org / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / integer org / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / tiers / none": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tiers / gold": {
+        "chosen": "tier-gold",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-gold",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tiers / bronze": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tiers / org o1": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tiers / org o2": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tiers / contract c1": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tiers / o1 c1 gold": {
+        "chosen": "tier-gold",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-gold",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tiers / o2 c1": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / tiers / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / scopes / none": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / scopes / gold": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / scopes / bronze": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / scopes / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / scopes / org o2": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / scopes / contract c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / scopes / o1 c1 gold": {
+        "chosen": "scope-both",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-both",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 5
+                }
+            ]
+        ]
+    },
+    "ticket / scopes / o2 c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / scopes / numeric tier": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs empty scope / none": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs empty scope / gold": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs empty scope / bronze": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs empty scope / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / org vs empty scope / org o2": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs empty scope / contract c1": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs empty scope / o1 c1 gold": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / org vs empty scope / o2 c1": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / org vs empty scope / numeric tier": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / windows / none": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / windows / gold": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / windows / bronze": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "ticket",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / windows / org o1": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / windows / org o2": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / windows / contract c1": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / windows / o1 c1 gold": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / windows / o2 c1": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "ticket",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / windows / numeric tier": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "ticket",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "ticket / excluded only / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / excluded only / gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / excluded only / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / excluded only / org o1": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / excluded only / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / excluded only / contract c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / excluded only / o1 c1 gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / excluded only / o2 c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / excluded only / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / slug identity / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / slug identity / gold": {
+        "chosen": "slug-only",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "by-slug",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / slug identity / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / slug identity / org o1": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / slug identity / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / slug identity / contract c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / slug identity / o1 c1 gold": {
+        "chosen": "slug-only",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "by-slug",
+                    "objectType": "ticket",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "ticket / slug identity / o2 c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / slug identity / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / none / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / none / gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / none / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / none / org o1": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / none / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / none / contract c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / none / o1 c1 gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / none / o2 c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "ticket / none / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / all / none": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "lead / all / gold": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 11
+                }
+            ]
+        ]
+    },
+    "lead / all / bronze": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "lead / all / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 11
+                }
+            ]
+        ]
+    },
+    "lead / all / org o2": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "lead / all / contract c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 11
+                }
+            ]
+        ]
+    },
+    "lead / all / o1 c1 gold": {
+        "chosen": "scope-both",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-both",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 14
+                }
+            ]
+        ]
+    },
+    "lead / all / o2 c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 11
+                }
+            ]
+        ]
+    },
+    "lead / all / numeric tier": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 9
+                }
+            ]
+        ]
+    },
+    "lead / wildcards / none": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "lead / wildcards / gold": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "lead / wildcards / bronze": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "lead / wildcards / org o1": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "lead / wildcards / org o2": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "lead / wildcards / contract c1": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "lead / wildcards / o1 c1 gold": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "lead / wildcards / o2 c1": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "lead / wildcards / numeric tier": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "lead / validFrom order / none": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom order / gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom order / bronze": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom order / org o1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom order / org o2": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom order / contract c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom order / o1 c1 gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom order / o2 c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom order / numeric tier": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom reversed / none": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom reversed / gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom reversed / bronze": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom reversed / org o1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom reversed / org o2": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom reversed / contract c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom reversed / o1 c1 gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom reversed / o2 c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / validFrom reversed / numeric tier": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority first / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority first / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority first / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority first / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority first / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority first / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority first / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority first / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / no priority first / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / not started / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / not started / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / not started / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / not started / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / not started / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / not started / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / not started / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / not started / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / not started / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / tier vs scope / none": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / tier vs scope / gold": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tier vs scope / bronze": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / tier vs scope / org o1": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / tier vs scope / org o2": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / tier vs scope / contract c1": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / tier vs scope / o1 c1 gold": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tier vs scope / o2 c1": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / tier vs scope / numeric tier": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs contract / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / org vs contract / gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / org vs contract / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / org vs contract / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs contract / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / org vs contract / contract c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs contract / o1 c1 gold": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / org vs contract / o2 c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs contract / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / integer org / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / integer org / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / integer org / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / integer org / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / integer org / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / integer org / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / integer org / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / integer org / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / integer org / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / tiers / none": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tiers / gold": {
+        "chosen": "tier-gold",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-gold",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tiers / bronze": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tiers / org o1": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tiers / org o2": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tiers / contract c1": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tiers / o1 c1 gold": {
+        "chosen": "tier-gold",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-gold",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tiers / o2 c1": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / tiers / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / scopes / none": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / scopes / gold": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / scopes / bronze": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / scopes / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / scopes / org o2": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / scopes / contract c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / scopes / o1 c1 gold": {
+        "chosen": "scope-both",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-both",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 5
+                }
+            ]
+        ]
+    },
+    "lead / scopes / o2 c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / scopes / numeric tier": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs empty scope / none": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs empty scope / gold": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs empty scope / bronze": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs empty scope / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / org vs empty scope / org o2": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs empty scope / contract c1": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs empty scope / o1 c1 gold": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / org vs empty scope / o2 c1": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / org vs empty scope / numeric tier": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / windows / none": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / windows / gold": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / windows / bronze": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / windows / org o1": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / windows / org o2": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / windows / contract c1": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / windows / o1 c1 gold": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / windows / o2 c1": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / windows / numeric tier": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "lead / excluded only / none": {
+        "chosen": "lead",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "lead",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / excluded only / gold": {
+        "chosen": "lead",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "lead",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / excluded only / bronze": {
+        "chosen": "lead",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "lead",
+                    "objectType": "lead",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / excluded only / org o1": {
+        "chosen": "lead",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "lead",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / excluded only / org o2": {
+        "chosen": "lead",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "lead",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / excluded only / contract c1": {
+        "chosen": "lead",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "lead",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / excluded only / o1 c1 gold": {
+        "chosen": "lead",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "lead",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / excluded only / o2 c1": {
+        "chosen": "lead",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "lead",
+                    "objectType": "lead",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / excluded only / numeric tier": {
+        "chosen": "lead",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "lead",
+                    "objectType": "lead",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / slug identity / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / slug identity / gold": {
+        "chosen": "slug-only",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "by-slug",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / slug identity / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / slug identity / org o1": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / slug identity / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / slug identity / contract c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / slug identity / o1 c1 gold": {
+        "chosen": "slug-only",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "by-slug",
+                    "objectType": "lead",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "lead / slug identity / o2 c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / slug identity / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / none / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / none / gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / none / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / none / org o1": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / none / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / none / contract c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / none / o1 c1 gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / none / o2 c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "lead / none / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / all / none": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 9
+                }
+            ]
+        ]
+    },
+    "request / all / gold": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "request / all / bronze": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 9
+                }
+            ]
+        ]
+    },
+    "request / all / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "request / all / org o2": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 9
+                }
+            ]
+        ]
+    },
+    "request / all / contract c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "request / all / o1 c1 gold": {
+        "chosen": "scope-both",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-both",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 13
+                }
+            ]
+        ]
+    },
+    "request / all / o2 c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 10
+                }
+            ]
+        ]
+    },
+    "request / all / numeric tier": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 8
+                }
+            ]
+        ]
+    },
+    "request / wildcards / none": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "request / wildcards / gold": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "request / wildcards / bronze": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "request / wildcards / org o1": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "request / wildcards / org o2": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "request / wildcards / contract c1": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "request / wildcards / o1 c1 gold": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "request / wildcards / o2 c1": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "request / wildcards / numeric tier": {
+        "chosen": "wild-prio",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-prio",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 3
+                }
+            ]
+        ]
+    },
+    "request / validFrom order / none": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom order / gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom order / bronze": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom order / org o1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom order / org o2": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom order / contract c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom order / o1 c1 gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom order / o2 c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom order / numeric tier": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom reversed / none": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom reversed / gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom reversed / bronze": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom reversed / org o1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom reversed / org o2": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom reversed / contract c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom reversed / o1 c1 gold": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom reversed / o2 c1": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / validFrom reversed / numeric tier": {
+        "chosen": "wild-b",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-b",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority first / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority first / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority first / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority first / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority first / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority first / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority first / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority first / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / no priority first / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / not started / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / not started / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / not started / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / not started / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / not started / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / not started / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / not started / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / not started / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / not started / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / tier vs scope / none": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / tier vs scope / gold": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tier vs scope / bronze": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / tier vs scope / org o1": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / tier vs scope / org o2": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / tier vs scope / contract c1": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / tier vs scope / o1 c1 gold": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tier vs scope / o2 c1": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / tier vs scope / numeric tier": {
+        "chosen": "scope-late",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-late",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs contract / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / org vs contract / gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / org vs contract / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / org vs contract / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs contract / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / org vs contract / contract c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs contract / o1 c1 gold": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / org vs contract / o2 c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs contract / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / integer org / none": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / integer org / gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / integer org / bronze": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / integer org / org o1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / integer org / org o2": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / integer org / contract c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / integer org / o1 c1 gold": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / integer org / o2 c1": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / integer org / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / tiers / none": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tiers / gold": {
+        "chosen": "tier-gold",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-gold",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tiers / bronze": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tiers / org o1": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tiers / org o2": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tiers / contract c1": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tiers / o1 c1 gold": {
+        "chosen": "tier-gold",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-gold",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tiers / o2 c1": {
+        "chosen": "tier-bronze",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "tier-bronze",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / tiers / numeric tier": {
+        "chosen": "wild-a",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "wild-a",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / scopes / none": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / scopes / gold": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / scopes / bronze": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / scopes / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / scopes / org o2": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / scopes / contract c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / scopes / o1 c1 gold": {
+        "chosen": "scope-both",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-both",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 5
+                }
+            ]
+        ]
+    },
+    "request / scopes / o2 c1": {
+        "chosen": "scope-contract",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-contract",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / scopes / numeric tier": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs empty scope / none": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs empty scope / gold": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs empty scope / bronze": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs empty scope / org o1": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / org vs empty scope / org o2": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs empty scope / contract c1": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs empty scope / o1 c1 gold": {
+        "chosen": "scope-org",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-org",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / org vs empty scope / o2 c1": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / org vs empty scope / numeric tier": {
+        "chosen": "scope-empty",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "scope-empty",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / windows / none": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / windows / gold": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / windows / bronze": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "request",
+                    "tier": "bronze",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / windows / org o1": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / windows / org o2": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / windows / contract c1": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / windows / o1 c1 gold": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / windows / o2 c1": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "request",
+                    "tier": "",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / windows / numeric tier": {
+        "chosen": "bad-date",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "bad-date",
+                    "objectType": "request",
+                    "tier": "7",
+                    "candidates": 2
+                }
+            ]
+        ]
+    },
+    "request / excluded only / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / excluded only / gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / excluded only / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / excluded only / org o1": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / excluded only / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / excluded only / contract c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / excluded only / o1 c1 gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / excluded only / o2 c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / excluded only / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / slug identity / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / slug identity / gold": {
+        "chosen": "slug-only",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "by-slug",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / slug identity / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / slug identity / org o1": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / slug identity / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / slug identity / contract c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / slug identity / o1 c1 gold": {
+        "chosen": "slug-only",
+        "logs": [
+            [
+                "debug",
+                "SlaEngineService: policy resolved",
+                {
+                    "policyId": "by-slug",
+                    "objectType": "request",
+                    "tier": "gold",
+                    "candidates": 1
+                }
+            ]
+        ]
+    },
+    "request / slug identity / o2 c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / slug identity / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / none / none": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / none / gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / none / bronze": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / none / org o1": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / none / org o2": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / none / contract c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / none / o1 c1 gold": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / none / o2 c1": {
+        "chosen": null,
+        "logs": []
+    },
+    "request / none / numeric tier": {
+        "chosen": null,
+        "logs": []
+    },
+    "no register": {
+        "chosen": null,
+        "logs": []
+    },
+    "container fails": {
+        "chosen": null,
+        "logs": [
+            [
+                "warning",
+                "SlaEngineService: ObjectService not available",
+                {
+                    "error": "no OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            ]
+        ]
+    },
+    "findAll fails": {
+        "chosen": null,
+        "logs": [
+            [
+                "warning",
+                "SlaEngineService: ObjectService::findAll failed",
+                {
+                    "error": "findAll down"
+                }
+            ]
+        ]
+    }
+}

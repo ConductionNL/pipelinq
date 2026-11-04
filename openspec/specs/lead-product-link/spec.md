@@ -117,7 +117,7 @@ The system MUST display a product line items section in the lead detail view wit
 #### Scenario: Line items table in lead detail
 - GIVEN a lead with LeadProduct line items
 - WHEN the user views the lead detail
-- THEN a "Products" section MUST be displayed showing a table with columns: Product Name, Qty, Unit Price, Discount, Total
+- THEN a "Producten" (Products) section MUST be displayed showing a table with columns: Product Name, Qty, Unit Price, Discount, Total
 - AND below the table, a summary row MUST show the grand total of all line items
 - AND each row MUST have inline editing for quantity, unit price, and discount
 - AND each row MUST have a remove action button
@@ -132,8 +132,8 @@ The system MUST display a product line items section in the lead detail view wit
 #### Scenario: Empty line items
 - GIVEN a lead with no line items
 - WHEN the user views the lead detail
-- THEN the "Products" section MUST show an empty state: "No products added to this lead yet."
-- AND an "Add Product" button MUST be visible
+- THEN the "Producten" (Products) section MUST show an empty state: "No products added to this lead yet."
+- AND an "Product toevoegen" (Add Product) button MUST be visible
 
 #### Scenario: Notes field display
 - GIVEN a line item with a notes value (e.g., "annual license")
@@ -215,7 +215,7 @@ The system MUST support lead scoring adjustments based on product interest patte
 
 #### Scenario: Cross-sell recommendation
 - GIVEN a lead has "OpenRegister Implementatie" as a line item
-- WHEN the user views the lead's "Add Product" dialog
+- WHEN the user views the lead's "Product toevoegen" (Add Product) dialog
 - THEN the system SHOULD suggest complementary products (e.g., "Training beheerders", "Support pakket")
 - AND the recommendations SHOULD be based on products frequently purchased together across other leads
 
@@ -265,7 +265,7 @@ The system MUST validate line item data to prevent invalid entries.
 #### Scenario: Missing product validation
 - GIVEN the Add Product dialog
 - WHEN the user attempts to add a line item without selecting a product
-- THEN the "Add" button MUST remain disabled
+- THEN the "Toevoegen" (Add) button MUST remain disabled
 - AND the product field MUST be marked as required
 
 #### Scenario: Duplicate product warning
@@ -335,7 +335,7 @@ a reload.
   - Inline editing of quantity, unitPrice, and discount with live recalculation.
   - Remove line item functionality with confirmation dialog.
   - Grand total footer row.
-  - Manual override detection with "Use calculated value" button to sync lead value from products.
+  - Manual override detection with "Gebruik berekende waarde" (Use calculated value) button to sync lead value from products.
   - Currency formatting (EUR, nl-NL locale).
   - **Percentage-based discount calculation**: `calculateTotal` correctly uses `(qty * price) * (1 - discount / 100)`.
 - CRUD operations use the shared `useObjectStore` from `src/store/modules/object.js`.

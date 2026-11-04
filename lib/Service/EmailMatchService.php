@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\AnyPayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Container\ContainerInterface;
@@ -54,6 +56,9 @@ use Throwable;
  * @spec openspec/specs/email-calendar-sync/spec.md
  */
 class EmailMatchService {
+	use AnyPayloadToArray;
+	use RowIdOf;
+
 
 	/**
 	 * Public email-provider domains that should never trigger a
@@ -997,83 +1002,6 @@ class EmailMatchService {
 		}//end try
 
 	}//end listInboundMessages()
-
-	/**
-	 * Pull the canonical object id from an OR row.
-	 *
-	 * @param array<string,mixed> $object Object data.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $object): string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OR entity or array to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string,mixed>|null
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat chain of type/shape checks
-	 *  for OR entity normalisation; each branch is an independent early return.
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'getObject') === true) {
-				$payload = $object->getObject();
-				if (is_array($payload) === true) {
-					return $payload;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}//end if
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Resolve the pipelinq register slug.

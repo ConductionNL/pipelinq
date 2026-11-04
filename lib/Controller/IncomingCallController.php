@@ -24,14 +24,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\Cti\IncomingCallFinder;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * The open inbound call on the signed-in agent's own line.
@@ -46,14 +44,12 @@ class IncomingCallController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param IUserSession $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $policy Says who may see caller data.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IncomingCallFinder $incomingCalls Finds the open inbound call on an agent's line.
 	 */
 	public function __construct(
 		IRequest $request,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $policy,
+		private CrmPrivilegeCheck $privilege,
 		private IncomingCallFinder $incomingCalls,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -71,16 +67,14 @@ class IncomingCallController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Same posture as the screen pop itself: a caller's number is CRM data.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		return new JSONResponse($this->incomingCalls->forAgent(userId: $user->getUID()));
+		$uid = $this->privilege->actingUserId();
+
+		return new JSONResponse($this->incomingCalls->forAgent(userId: $uid));
 	}//end show()
 }//end class

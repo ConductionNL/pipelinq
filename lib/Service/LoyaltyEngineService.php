@@ -32,6 +32,7 @@ use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Loyalty\PointsCreditRun;
 use OCA\Pipelinq\Service\Loyalty\PointsGrant;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -49,6 +50,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrator necessarily wires account/ledger/rule/tier/event collaborators
  */
 class LoyaltyEngineService {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -328,7 +331,7 @@ class LoyaltyEngineService {
 	 * @return array<string, mixed>
 	 */
 	private function creditAndFinalize(PointsCreditRun $run, PointsGrant $grant): array {
-		$ledgerEntry = $this->ledgerService->creditPoints(
+		$ledgerEntry = $this->ledgerService->forOperation(operationId: $run->operationId())->creditPoints(
 			accountId: $run->accountId,
 			amount: $grant->points,
 			ruleId: $this->extractUuid(object: $grant->rule),
@@ -499,37 +502,6 @@ class LoyaltyEngineService {
 
 		return $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Normalise OR entity/array to array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) invoked via array_map([$this, 'toArray'], ...) callable reference, not statically detected
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the ObjectService.

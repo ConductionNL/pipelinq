@@ -7,7 +7,7 @@ The client page's side cards, channels and relationships, carry their add button
 
 ### Requirement: The side cards' add sits in the card title row
 On the client page the Contact channels and Relationships side cards SHALL put their add in the card's title row as
-the outlined card button labelled "Add", named "Add channel" and "Add relationship"; the channels add SHALL open a menu
+the outlined card button labelled "Toevoegen" (Add), named "Kanaal toevoegen" (Add channel) and "Relatie toevoegen" (Add relationship); the channels add SHALL open a menu
 of e-mail address, phone number and social profile. The Client notes card SHALL keep its composer behind its header
 button.
 

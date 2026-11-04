@@ -30,14 +30,14 @@ The admin page SHALL pass `showSetup` and the manifest's `setup.steps` to CnAdmi
 
 ### Requirement: No admin surface is an in-app route
 
-No admin settings or diagnostics component SHALL be mounted by the app's vue-router. The BRP monitor SHALL be a read-only section on the admin page that shows the last 24 hours of lookups (count, cache hits, errors, average response time, the period) and the mTLS certificate's state and expiry, or says nothing was reported yet and no certificate is configured. The page `/sync-settings` SHALL NOT exist.
+No admin settings or diagnostics component SHALL be mounted by the app's vue-router. The BRP monitor SHALL be a read-only section on the admin page that shows the last 24 hours of lookups (count, cache hits, errors, average response time, the period); the mTLS certificate and its expiry are monitored in integriq (changes/brp-monitor-moves-to-integriq). The page `/sync-settings` SHALL NOT exist.
 
-#### Scenario: The certificate expires soon
+#### Scenario: The BRP monitor reads the last day
+- GIVEN the BRP adapter reported lookups in the last 24 hours
+- WHEN an admin opens the admin page
+- THEN the BRP monitor section shows the count, cache hits, errors, average response time and the period
+- AND the certificate itself is monitored in integriq, not here
 
-- GIVEN the certificate health says `warning` with 20 days left
-- THEN the BRP monitor section shows "The mTLS certificate expires on <date>, in 20 days. Replace it soon." as a warning
-
-@e2e exclude a read-only declaration over a fixed endpoint, asserted by tests/vitest/adminSections.spec.js.
 
 ### Requirement: A delete on the admin page asks in a dialog
 

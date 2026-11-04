@@ -143,8 +143,9 @@ is not.
 
 ### Requirement: REQ-PLQ-STORE-006 The menu entry names the concept
 
-The marketplace menu entry SHALL be labelled `Marketplace` (Dutch `Marktplaats`) and render the `StoreOutline`
-icon, in the footer section between Documentation and Reports.
+The store menu entry SHALL be labelled `Marketplace`, in Dutch "Marktplaats", and
+render the `StoreOutline` icon, in the footer section between Documentation and
+Reports.
 
 The icon SHALL be registered in `src/icons.js`. An unregistered name renders NO
 icon in the navigation rather than a fallback glyph, so the entry would ship

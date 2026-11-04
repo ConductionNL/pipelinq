@@ -1,6 +1,8 @@
 # Screens
 
-- PqLead https://identity.conduction.nl/screens/board?id=pipelinq/PqLead
-- PqLeads https://identity.conduction.nl/screens/board?id=pipelinq/PqLeads
-- PqPipeline https://identity.conduction.nl/screens/board?id=pipelinq/PqPipeline
-- PqForecast https://identity.conduction.nl/screens/board?id=pipelinq/PqForecast
+- pipelinq/PqLead lead https://identity.conduction.nl/screens/board?id=pipelinq/PqLead
+- pipelinq/PqLeads leads https://identity.conduction.nl/screens/board?id=pipelinq/PqLeads
+- pipelinq/PqPipeline pijplijn, bord per fase https://identity.conduction.nl/screens/board?id=pipelinq/PqPipeline
+- pipelinq/PqForecast prognose https://identity.conduction.nl/screens/board?id=pipelinq/PqForecast
+
+Components: CnActionButtons, CnActionsBar, CnActionsMenu, CnAppNav, CnAuditTrailCard, CnBoardView, CnBreadcrumbs, CnBuildiqEditButton, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFilterBar, CnFormDialog, CnIndexPage, CnKpiGrid, CnNextStepCard, CnNoteCard, CnNoticeWidget, CnPagination, CnProgressBar, CnQuickFilterBar, CnRelatedCollections, CnRowActions, CnSettingsPage, CnSettingsSection, CnStatsBlock, CnStatusBadge, CnTabs, CnTimelineStages

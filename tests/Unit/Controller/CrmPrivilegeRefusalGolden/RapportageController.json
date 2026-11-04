@@ -1,0 +1,53 @@
+{
+    "getPipelineStats no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "getPipelineStats unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "getPipelineStats privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "stageValues": [],
+            "sourcePerformance": [],
+            "agingBuckets": [],
+            "winLoss": []
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "RapportageService::getStageValues": []
+            },
+            {
+                "RapportageService::getSourcePerformance": []
+            },
+            {
+                "RapportageService::getAgingBuckets": []
+            },
+            {
+                "RapportageService::getWinLossAnalysis": []
+            }
+        ]
+    }
+}

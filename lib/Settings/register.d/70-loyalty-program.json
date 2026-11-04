@@ -446,7 +446,7 @@
       "pointsLedgerEntry": {
         "slug": "pointsLedgerEntry",
         "title": "Points Ledger Entry",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "Immutable, append-only entry recording every points movement (credit, debit, expiry, adjustment).",
         "description": "PointsLedgerEntry is the authoritative ledger of points movements. Entries are immutable (write-once, no UPDATE/DELETE except for GDPR anonymisation of customerId). balanceAfter records the running balance after the entry was applied. sourceDocument links to the originating event (POS transaction, redemption, expiry batch, manual adjustment). See.",
         "@type": "PointsLedgerEntry",
@@ -514,6 +514,11 @@
             "type": "string",
             "description": "Who/what processed the entry (POS terminal id, system, user id).",
             "title": "Verwerkt Door"
+          },
+          "operationId": {
+            "type": "string",
+            "description": "The id the caller gave this movement. A retry with the same id returns this entry instead of writing a second one.",
+            "title": "Operation ID"
           }
         }
       },

@@ -304,9 +304,9 @@ The system MUST provide dedicated list and detail views for managing quotes, acc
 ### Requirement: Quote-to-order conversion [Enterprise]
 The system MUST support converting accepted quotes into actionable records for order fulfillment or case creation.
 
-#### Scenario: Convert accepted quote to case
+#### Scenario: Convert accepted quote to a request
 - GIVEN a quote in status "geaccepteerd"
-- WHEN the user clicks "Omzetten naar zaak"
+- WHEN the user clicks "Omzetten naar verzoek"
 - THEN the system MUST create a new request (verzoek) in Pipelinq
 - AND the request MUST contain: client reference, contact reference, quote reference, and description composed from the quote title and line items
 - AND the request MUST be linked to the original lead
@@ -419,7 +419,7 @@ The system MUST provide admin-configurable settings for the quoting module.
 The system MUST support searching and cross-referencing quotes across the CRM.
 
 #### Scenario: Search by quote number
-- GIVEN the global search or quote list search
+- GIVEN Nextcloud's unified search; pipelinq has no quote list of its own, and a lead lists its quotes on its Offertes tab (board `PqLead`)
 - WHEN the user searches for "OFF-2026-004"
 - THEN all quotes matching the partial number MUST be returned
 

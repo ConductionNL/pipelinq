@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Util;
  * properties. Any other value becomes null.
  */
 trait NullablePayloadToArray {
+	use ObjectToPlainArray;
 	use SerialisedPayload;
 
 	/**
@@ -51,13 +52,6 @@ trait NullablePayloadToArray {
 			return null;
 		}
 
-		if (method_exists($object, 'toArray') === true) {
-			$array = $object->toArray();
-			if (is_array($array) === true) {
-				return $array;
-			}
-		}
-
-		return (array) $object;
+		return $this->objectToPlainArray(object: $object);
 	}//end toArray()
 }//end trait
