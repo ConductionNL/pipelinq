@@ -61,6 +61,13 @@ describe('the work lenses', () => {
 		expect(lens('Mine').assignee).toBe('@me')
 		expect(lens('Past the deadline').slaDeadline).toEqual({ lt: '@now' })
 	})
+
+	it('sorts Unassigned longest wait first and leaves the other lenses on the page order, newest first', () => {
+		const sortOf = (label) => tickets.config.quickFilters.find((entry) => entry.label === label).sort
+		expect(sortOf('Unassigned')).toEqual({ key: 'occurredAt', order: 'asc' })
+		expect(tickets.config.quickFilters.filter((entry) => entry.sort).map((entry) => entry.label)).toEqual(['Unassigned'])
+		expect([tickets.config.sortKey, tickets.config.sortOrder]).toEqual(['occurredAt', 'desc'])
+	})
 })
 
 describe('moveTicketStatus', () => {
