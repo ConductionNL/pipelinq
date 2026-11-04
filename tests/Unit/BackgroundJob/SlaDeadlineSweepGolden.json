@@ -1,0 +1,1412 @@
+{
+    "batch cap": {
+        "interval": 300,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "loadActivePolicies",
+                "args": []
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 0
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 100
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 200
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 300
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 400
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 500
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 600
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 700
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 800
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 900
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1100
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1200
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1300
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1400
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1500
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1600
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1700
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1800
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 1900
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2100
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2200
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2300
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2400
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2500
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2600
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2700
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2800
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 2900
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3100
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3200
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3300
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3400
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3500
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3600
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3700
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3800
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 3900
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4100
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4200
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4300
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4400
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4500
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4600
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4700
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4800
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 4900
+                    }
+                }
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: completed",
+                    "context": {
+                        "processed": 5000,
+                        "escalated": 0,
+                        "elapsedSeconds": "<clock>"
+                    }
+                }
+            }
+        ]
+    },
+    "findAll returns null": {
+        "interval": 300,
+        "timeSensitive": true,
+        "outcome": "threw TypeError",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "loadActivePolicies",
+                "args": []
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 0
+                    }
+                }
+            }
+        ]
+    },
+    "full sweep": {
+        "interval": 300,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "loadActivePolicies",
+                "args": []
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ts",
+                            "ticketType": "request"
+                        },
+                        "limit": 100,
+                        "offset": 0
+                    }
+                }
+            },
+            {
+                "call": "evaluateTargets",
+                "args": {
+                    "currentTargets": [
+                        {
+                            "name": "response",
+                            "breachEventIds": [
+                                "e0"
+                            ]
+                        }
+                    ],
+                    "policy": {
+                        "id": "P1"
+                    },
+                    "now": "<now>"
+                }
+            },
+            {
+                "call": "executeEscalations",
+                "args": {
+                    "policy": {
+                        "id": "P1"
+                    },
+                    "objectType": "request",
+                    "objectId": "u1",
+                    "newTargets": [
+                        {
+                            "name": "response",
+                            "breachEventIds": [
+                                "e0"
+                            ],
+                            "evaluatedBy": "P1"
+                        }
+                    ],
+                    "priorTargets": [
+                        {
+                            "name": "response",
+                            "breachEventIds": [
+                                "e0"
+                            ],
+                            "evaluatedBy": "P1"
+                        }
+                    ],
+                    "alreadyFired": 0
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "title": "a",
+                        "slaStatus": {
+                            "policyId": "P1",
+                            "targets": [
+                                {
+                                    "name": "response",
+                                    "breachEventIds": [
+                                        "e0",
+                                        "e1"
+                                    ],
+                                    "evaluatedBy": "P1"
+                                }
+                            ],
+                            "currentEscalationLevel": 2,
+                            "lastEvaluatedAt": "<clock>"
+                        }
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "ts",
+                    "uuid": "u1"
+                }
+            },
+            {
+                "call": "evaluateTargets",
+                "args": {
+                    "currentTargets": [
+                        {
+                            "name": "t"
+                        }
+                    ],
+                    "policy": {
+                        "id": "P1"
+                    },
+                    "now": "<now>"
+                }
+            },
+            {
+                "call": "executeEscalations",
+                "args": {
+                    "policy": {
+                        "id": "P1"
+                    },
+                    "objectType": "request",
+                    "objectId": "",
+                    "newTargets": [
+                        {
+                            "name": "t",
+                            "evaluatedBy": "P1"
+                        }
+                    ],
+                    "priorTargets": [
+                        {
+                            "name": "t",
+                            "evaluatedBy": "P1"
+                        }
+                    ],
+                    "alreadyFired": 1
+                }
+            },
+            {
+                "call": "evaluateTargets",
+                "args": {
+                    "currentTargets": [],
+                    "policy": {
+                        "id": "P1"
+                    },
+                    "now": "<now>"
+                }
+            },
+            {
+                "call": "executeEscalations",
+                "args": {
+                    "policy": {
+                        "id": "P1"
+                    },
+                    "objectType": "request",
+                    "objectId": "u6",
+                    "newTargets": [],
+                    "priorTargets": [],
+                    "alreadyFired": 0
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "u6",
+                        "slaStatus": {
+                            "policyId": "P1",
+                            "targets": [],
+                            "lastEvaluatedAt": "<clock>"
+                        }
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "ts",
+                    "uuid": "u6"
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: per-object processing failed",
+                    "context": {
+                        "error": "save failed"
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "ts",
+                            "ticketType": "complaint"
+                        },
+                        "limit": 100,
+                        "offset": 0
+                    }
+                }
+            },
+            {
+                "call": "isOverdue",
+                "args": {
+                    "complaint": {
+                        "uuid": "c1",
+                        "complaintCategory": "service",
+                        "status": "open",
+                        "slaDeadline": "2026-01-01",
+                        "slaStatus": {
+                            "policyId": "P2",
+                            "targets": [
+                                {
+                                    "name": "resolve"
+                                }
+                            ],
+                            "currentEscalationLevel": 1
+                        }
+                    },
+                    "now": "<now>"
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: complaint past its SLA deadline",
+                    "context": {
+                        "uuid": "c1",
+                        "category": "service",
+                        "status": "open",
+                        "slaDeadline": "2026-01-01"
+                    }
+                }
+            },
+            {
+                "call": "evaluateTargets",
+                "args": {
+                    "currentTargets": [
+                        {
+                            "name": "resolve"
+                        }
+                    ],
+                    "policy": {
+                        "id": "P2",
+                        "x": 1
+                    },
+                    "now": "<now>"
+                }
+            },
+            {
+                "call": "executeEscalations",
+                "args": {
+                    "policy": {
+                        "id": "P2",
+                        "x": 1
+                    },
+                    "objectType": "complaint",
+                    "objectId": "c1",
+                    "newTargets": [
+                        {
+                            "name": "resolve",
+                            "evaluatedBy": "P2"
+                        }
+                    ],
+                    "priorTargets": [
+                        {
+                            "name": "resolve",
+                            "evaluatedBy": "P2"
+                        }
+                    ],
+                    "alreadyFired": 1
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "c1",
+                        "complaintCategory": "service",
+                        "status": "open",
+                        "slaDeadline": "2026-01-01",
+                        "slaStatus": {
+                            "policyId": "P2",
+                            "targets": [
+                                {
+                                    "name": "resolve",
+                                    "evaluatedBy": "P2",
+                                    "breachEventIds": [
+                                        "x1"
+                                    ]
+                                }
+                            ],
+                            "currentEscalationLevel": 3,
+                            "lastEvaluatedAt": "<clock>"
+                        }
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "ts",
+                    "uuid": "c1"
+                }
+            },
+            {
+                "call": "isOverdue",
+                "args": {
+                    "complaint": {
+                        "uuid": "c2"
+                    },
+                    "now": "<now>"
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: per-object processing failed",
+                    "context": {
+                        "error": "broken"
+                    }
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: per-object processing failed",
+                    "context": {
+                        "error": "<type error>"
+                    }
+                }
+            },
+            {
+                "call": "isOverdue",
+                "args": {
+                    "complaint": {
+                        "id": "c5",
+                        "slaStatus": {
+                            "policyId": "P2",
+                            "targets": []
+                        }
+                    },
+                    "now": "<now>"
+                }
+            },
+            {
+                "call": "evaluateTargets",
+                "args": {
+                    "currentTargets": [],
+                    "policy": {
+                        "id": "P2",
+                        "x": 1
+                    },
+                    "now": "<now>"
+                }
+            },
+            {
+                "call": "executeEscalations",
+                "args": {
+                    "policy": {
+                        "id": "P2",
+                        "x": 1
+                    },
+                    "objectType": "complaint",
+                    "objectId": "c5",
+                    "newTargets": [],
+                    "priorTargets": [],
+                    "alreadyFired": 0
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "id": "c5",
+                        "slaStatus": {
+                            "policyId": "P2",
+                            "targets": [],
+                            "lastEvaluatedAt": "<clock>"
+                        }
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "ts",
+                    "uuid": "c5"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 0
+                    }
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: findAll failed",
+                    "context": {
+                        "error": "findAll failed",
+                        "schema": "cs"
+                    }
+                }
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: completed",
+                    "context": {
+                        "processed": 13,
+                        "escalated": 2,
+                        "elapsedSeconds": "<clock>"
+                    }
+                }
+            }
+        ]
+    },
+    "interval above maximum": {
+        "interval": 1800,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "loadActivePolicies",
+                "args": []
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: completed",
+                    "context": {
+                        "processed": 0,
+                        "escalated": 0,
+                        "elapsedSeconds": "<clock>"
+                    }
+                }
+            }
+        ]
+    },
+    "interval configured": {
+        "interval": 600,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "loadActivePolicies",
+                "args": []
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: completed",
+                    "context": {
+                        "processed": 0,
+                        "escalated": 0,
+                        "elapsedSeconds": "<clock>"
+                    }
+                }
+            }
+        ]
+    },
+    "iterator rows": {
+        "interval": 300,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "loadActivePolicies",
+                "args": []
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 0
+                    }
+                }
+            },
+            {
+                "call": "evaluateTargets",
+                "args": {
+                    "currentTargets": [],
+                    "policy": {
+                        "id": "P1"
+                    },
+                    "now": "<now>"
+                }
+            },
+            {
+                "call": "executeEscalations",
+                "args": {
+                    "policy": {
+                        "id": "P1"
+                    },
+                    "objectType": "callback",
+                    "objectId": "i1",
+                    "newTargets": [],
+                    "priorTargets": [],
+                    "alreadyFired": 0
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "uuid": "i1",
+                        "slaStatus": {
+                            "policyId": "P1",
+                            "targets": [],
+                            "lastEvaluatedAt": "<clock>"
+                        }
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "cs",
+                    "uuid": "i1"
+                }
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: completed",
+                    "context": {
+                        "processed": 1,
+                        "escalated": 0,
+                        "elapsedSeconds": "<clock>"
+                    }
+                }
+            }
+        ]
+    },
+    "no surfaces": {
+        "interval": 60,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "loadActivePolicies",
+                "args": []
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: completed",
+                    "context": {
+                        "processed": 0,
+                        "escalated": 0,
+                        "elapsedSeconds": "<clock>"
+                    }
+                }
+            }
+        ]
+    },
+    "object service unavailable": {
+        "interval": 300,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: ObjectService unavailable",
+                    "context": {
+                        "error": "no ObjectService"
+                    }
+                }
+            }
+        ]
+    },
+    "policies fail": {
+        "interval": 300,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "loadActivePolicies",
+                "args": []
+            },
+            {
+                "call": "log.error",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: failed to index policies",
+                    "context": {
+                        "error": "policies failed"
+                    }
+                }
+            }
+        ]
+    },
+    "register missing": {
+        "interval": 300,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "log.debug",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: register not configured, skipping",
+                    "context": []
+                }
+            }
+        ]
+    },
+    "two batches": {
+        "interval": 300,
+        "timeSensitive": true,
+        "outcome": "returned",
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "loadActivePolicies",
+                "args": []
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 0
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "cs"
+                        },
+                        "limit": 100,
+                        "offset": 100
+                    }
+                }
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "SlaDeadlineSweepJob: completed",
+                    "context": {
+                        "processed": 103,
+                        "escalated": 0,
+                        "elapsedSeconds": "<clock>"
+                    }
+                }
+            }
+        ]
+    }
+}

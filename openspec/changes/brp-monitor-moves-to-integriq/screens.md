@@ -1,3 +1,3 @@
 # Screens
-
-- No screen: the BRP monitor moves entirely to integriq, pipelinq keeps no page
+- pipelinq/PqBeheerKoppelingen beheer, koppelingen: de zin dat integriq de BRP-verbinding beheert, nog niet getekend https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheerKoppelingen
+- pipelinq has no board of its own for the BRP monitor: it moves to integriq.

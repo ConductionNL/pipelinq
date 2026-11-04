@@ -1,7 +1,7 @@
 # Screens
 
-- PqNieuwsbriefABTest https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefABTest
-- PqZoekinzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqZoekinzicht
-- PqNieuwsbriefPrestaties https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefPrestaties
-- PqNieuwsbriefToeschrijving https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefToeschrijving
-- PqNieuwsbrieven https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbrieven
+- pipelinq/PqNieuwsbriefABTest prestaties nieuwsbrief, A/B-test https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefABTest
+- pipelinq/PqZoekinzicht zoekinzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqZoekinzicht
+- pipelinq/PqNieuwsbriefPrestaties prestaties nieuwsbrief https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefPrestaties
+- pipelinq/PqNieuwsbriefToeschrijving prestaties nieuwsbrief, toeschrijving https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefToeschrijving
+- pipelinq/PqNieuwsbrieven nieuwsbrieven https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbrieven

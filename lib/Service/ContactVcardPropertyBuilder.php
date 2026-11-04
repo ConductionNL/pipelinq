@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
@@ -33,6 +34,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactVcardPropertyBuilder {
+	use ResultToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -329,25 +332,6 @@ class ContactVcardPropertyBuilder {
 			return null;
 		}
 	}//end resolveClientName()
-
-	/**
-	 * Serialize an object or array result to an array.
-	 *
-	 * @param mixed $result The result to serialize.
-	 *
-	 * @return array The serialized result.
-	 */
-	private function serializeResult(mixed $result): array {
-		if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-			return $result->jsonSerialize();
-		}
-
-		if (is_array($result) === true) {
-			return $result;
-		}
-
-		return [];
-	}//end serializeResult()
 
 	/**
 	 * Get the OpenRegister ObjectService via the container.

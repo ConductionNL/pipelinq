@@ -213,10 +213,7 @@ class ContactDataBuilder {
 
 		$entries = [];
 		foreach ($items as $item) {
-			$raw = (string)$item;
-			if (is_array($item) === true) {
-				$raw = (string)($item['value'] ?? '');
-			}
+			$raw = self::itemValue(item: $item);
 
 			if ($raw === '') {
 				continue;
@@ -239,6 +236,22 @@ class ContactDataBuilder {
 	}//end extractTypedEntries()
 
 	/**
+	 * The text of one vCard property item: its `value` when it is a
+	 * `{type, value}` pair, the item itself otherwise.
+	 *
+	 * @param mixed $item The item.
+	 *
+	 * @return string
+	 */
+	private static function itemValue(mixed $item): string {
+		if (is_array($item) === true) {
+			return (string)($item['value'] ?? '');
+		}
+
+		return (string)$item;
+	}//end itemValue()
+
+	/**
 	 * Extract X-SOCIALPROFILE entries into the `socialProfiles[]` shape.
 	 * The vCard value is treated as a URL when it looks like one, else as
 	 * a bare handle; the TYPE parameter (when present) is matched
@@ -256,10 +269,7 @@ class ContactDataBuilder {
 
 		$profiles = [];
 		foreach ($items as $item) {
-			$raw = (string)$item;
-			if (is_array($item) === true) {
-				$raw = (string)($item['value'] ?? '');
-			}
+			$raw = self::itemValue(item: $item);
 
 			if ($raw === '') {
 				continue;

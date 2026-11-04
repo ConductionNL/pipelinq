@@ -17,7 +17,9 @@
  * `_multitenancy` off, the same shape `CampaignPerformanceService` uses
  * to read portaliq's rollups. The probe is a string constant and the
  * whole path fails soft: shillinq absent means the report closes on won
- * leads and says so, never that it errors.
+ * leads and says so, never that it errors. `withCallerRights()` gives a
+ * reader that reads with the signed-in user's rights instead, for a screen
+ * that shows a user what shillinq holds.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -92,6 +94,13 @@ class ShillinqInvoiceReader {
 	private const MAX_ROWS = 500;
 
 	/**
+	 * Whether reads apply the signed-in user's rights.
+	 *
+	 * @var bool
+	 */
+	private bool $callerRights = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container for the lazy, duck-typed object service.
@@ -106,6 +115,59 @@ class ShillinqInvoiceReader {
 		private ShillinqInvoiceProjection $projection = new ShillinqInvoiceProjection(),
 	) {
 	}//end __construct()
+
+	/**
+	 * This reader with the signed-in user's rights: every read applies
+	 * OpenRegister's RBAC and multitenancy instead of reading as the system.
+	 *
+	 * @return static The reader.
+	 *
+	 * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+	 */
+	public function withCallerRights(): static {
+		$reader = clone $this;
+		$reader->callerRights = true;
+		return $reader;
+	}//end withCallerRights()
+
+	/**
+	 * Whether the signed-in user may read shillinq's AR invoices. A right
+	 * that cannot be checked answers no.
+	 *
+	 * @return bool True only when OpenRegister grants read on the schema.
+	 *
+	 * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+	 */
+	public function callerMayRead(): bool {
+		if ($this->probe() === false) {
+			return false;
+		}
+
+		try {
+			$register = $this->container->get('OCA\OpenRegister\Db\RegisterMapper')->find(
+				id: self::SHILLINQ_REGISTER,
+				_rbac: false,
+				_multitenancy: false
+			);
+			$schema   = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->findBySlugInIds(
+				slug: self::AR_INVOICE_SCHEMA,
+				schemaIds: $register->getSchemas()
+			);
+			if ($schema === null) {
+				return false;
+			}
+
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService')
+				->getPermissionHandler()
+				->hasPermission(schema: $schema, action: 'read');
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'ShillinqInvoiceReader: the invoice read right could not be checked',
+				['exception' => $e->getMessage()]
+			);
+			return false;
+		}//end try
+	}//end callerMayRead()
 
 	/**
 	 * Whether shillinq is installed. Protected so a test can answer for it.
@@ -266,8 +328,8 @@ class ShillinqInvoiceReader {
 			try {
 				$page = $objectService->findAll(
 					config: ['filters' => $filters, 'limit' => self::PAGE, 'offset' => $offset],
-					_rbac: false,
-					_multitenancy: false
+					_rbac: $this->callerRights,
+					_multitenancy: $this->callerRights
 				);
 			} catch (Throwable $e) {
 				$this->logger->warning(

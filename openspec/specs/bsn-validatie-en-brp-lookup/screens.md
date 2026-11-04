@@ -1,4 +1,4 @@
 # Screens
 
-- PqKlant https://identity.conduction.nl/screens/board?id=pipelinq/PqKlant
-- PqNieuwVerzoek https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwVerzoek
+- pipelinq/PqKlant inwoner https://identity.conduction.nl/screens/board?id=pipelinq/PqKlant
+- pipelinq/PqNieuwVerzoek nieuw verzoek https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwVerzoek

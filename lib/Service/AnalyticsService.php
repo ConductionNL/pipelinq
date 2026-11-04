@@ -37,11 +37,12 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Cross-module analytics summary service.
@@ -59,6 +60,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Reads the stores and the forecast target of every KPI it aggregates.
  */
 class AnalyticsService {
+	use PayloadToArray;
+
 	/**
 	 * Allowed period selectors (ADR-018, REQ-KB360-021).
 	 *
@@ -164,7 +167,7 @@ class AnalyticsService {
 	private function findTickets(string $ticketType): array {
 		$objects = [];
 		foreach ($this->ticketService->findByType(ticketType: $ticketType) as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
@@ -209,40 +212,11 @@ class AnalyticsService {
 
 		$objects = [];
 		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
 	}//end findObjects()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity / array / unknown payload.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via DI container.
@@ -303,21 +277,14 @@ class AnalyticsService {
 		// exposes a query helper; see openspec/changes/migrate-forms-to-forms-leaf.
 		$responses = [];
 
+		$rows = ['leads' => $leads, 'requests' => $requests, 'cms' => $cms, 'responses' => $responses];
 		$current = $this->aggregateOverviewWindow(
-			from: $currentStart,
-			to: $now,
-			leads: $leads,
-			requests: $requests,
-			cms: $cms,
-			responses: $responses
+			window: ['from' => $currentStart->getTimestamp(), 'to' => $now->getTimestamp()],
+			rows: $rows
 		);
 		$previous = $this->aggregateOverviewWindow(
-			from: $previousStart,
-			to: $currentStart,
-			leads: $leads,
-			requests: $requests,
-			cms: $cms,
-			responses: $responses
+			window: ['from' => $previousStart->getTimestamp(), 'to' => $currentStart->getTimestamp()],
+			rows: $rows
 		);
 
 		return [
@@ -335,115 +302,143 @@ class AnalyticsService {
 	 *
 	 * Stateless helper called twice from getOverview() (current + previous).
 	 *
-	 * @param DateTimeInterface $from Inclusive lower bound.
-	 * @param DateTimeInterface $to Exclusive upper bound.
-	 * @param array<int, array<string, mixed>> $leads Lead rows.
-	 * @param array<int, array<string, mixed>> $requests Request-ticket rows.
-	 * @param array<int, array<string, mixed>> $cms Contactmoment-ticket rows.
-	 * @param array<int, array<string, mixed>> $responses Survey-response rows.
+	 * @param array{from: int, to: int} $window Inclusive lower and exclusive upper bound, as Unix timestamps.
+	 * @param array<string, array<int, array<string, mixed>>> $rows Rows under leads, requests, cms (contactmoment tickets) and responses (survey).
 	 *
 	 * @return array<string, float|int|null>
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential per-metric aggregation loops; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Independent guard clauses across four KPI loops inflate NPath without real branching depth.
 	 */
-	private function aggregateOverviewWindow(
-		DateTimeInterface $from,
-		DateTimeInterface $to,
-		array $leads,
-		array $requests,
-		array $cms,
-		array $responses,
-	): array {
-		$fromTs = $from->getTimestamp();
-		$toTs = $to->getTimestamp();
+	private function aggregateOverviewWindow(array $window, array $rows): array {
+		return [
+			'leadConversionRate' => $this->leadConversionRate(leads: $rows['leads'], window: $window),
+			'avgRequestResolutionTime' => $this->avgResolutionHours(requests: $rows['requests'], window: $window),
+			'contactMomentVolume' => $this->contactMomentVolume(cms: $rows['cms'], window: $window),
+			'customerSatisfactionScore' => $this->satisfactionScore(responses: $rows['responses'], window: $window),
+		];
+	}//end aggregateOverviewWindow()
 
-		// Lead conversion rate.
-		$totalLeads = 0;
-		$wonLeads = 0;
+	/**
+	 * Share of the leads created in the window that are won, in percent.
+	 *
+	 * @param array<int, array<string, mixed>> $leads Lead rows.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return float|null Null when no lead falls in the window.
+	 */
+	private function leadConversionRate(array $leads, array $window): ?float {
+		$statuses = [];
 		foreach ($leads as $lead) {
 			$timestamp = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
-			if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
-				continue;
-			}
-
-			$totalLeads++;
-			if (((string)($lead['status'] ?? '')) === 'won') {
-				$wonLeads++;
+			if ($this->inWindow(timestamp: $timestamp, window: $window) === true) {
+				$statuses[] = (string)($lead['status'] ?? '');
 			}
 		}
 
-		$leadConversionRate = null;
-		if ($totalLeads > 0) {
-			$leadConversionRate = round(($wonLeads * 100.0) / $totalLeads, 1);
+		if ($statuses === []) {
+			return null;
 		}
 
-		// Avg request resolution time. On the ticket schema the request's
-		// `requestedAt` is `occurredAt` and the completion timestamp is
-		// `resolvedAt` (`completedAt` kept as a fallback for legacy rows).
-		$resolutionHours = 0.0;
-		$resolvedCount = 0;
+		return round((count(array_keys($statuses, 'won', true)) * 100.0) / count($statuses), 1);
+	}//end leadConversionRate()
+
+	/**
+	 * Mean resolution time in hours of the requests completed in the window.
+	 *
+	 * On the ticket schema the request's `requestedAt` is `occurredAt` and the
+	 * completion timestamp is `resolvedAt` (`completedAt` kept as a fallback
+	 * for legacy rows).
+	 *
+	 * @param array<int, array<string, mixed>> $requests Request-ticket rows.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return float|null Null when no request was completed in the window.
+	 */
+	private function avgResolutionHours(array $requests, array $window): ?float {
+		$hours = [];
 		foreach ($requests as $request) {
 			$requestedTs = $this->extractTimestamp(row: $request, fields: ['occurredAt']);
 			$completedTs = $this->extractTimestamp(row: $request, fields: ['resolvedAt', 'completedAt']);
-			if ($requestedTs === null || $completedTs === null) {
+			if ($requestedTs === null || $this->inWindow(timestamp: $completedTs, window: $window) === false) {
 				continue;
 			}
 
-			if ($completedTs < $fromTs || $completedTs >= $toTs) {
-				continue;
-			}
-
-			$resolutionHours += max(0, ($completedTs - $requestedTs) / 3600.0);
-			$resolvedCount++;
+			$hours[] = max(0, ($completedTs - $requestedTs) / 3600.0);
 		}
 
-		$avgResolutionHours = null;
-		if ($resolvedCount > 0) {
-			$avgResolutionHours = round($resolutionHours / $resolvedCount, 2);
-		}
+		return $this->roundedMean(values: $hours, precision: 2);
+	}//end avgResolutionHours()
 
-		// Contact moment volume. The contactmoment's `contactedAt` is
-		// `occurredAt` on the ticket schema.
+	/**
+	 * Number of contact moments in the window. The contactmoment's
+	 * `contactedAt` is `occurredAt` on the ticket schema.
+	 *
+	 * @param array<int, array<string, mixed>> $cms Contactmoment-ticket rows.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return int
+	 */
+	private function contactMomentVolume(array $cms, array $window): int {
 		$cmCount = 0;
 		foreach ($cms as $cm) {
 			$timestamp = $this->extractTimestamp(row: $cm, fields: ['occurredAt', 'createdAt']);
-			if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
+			if ($this->inWindow(timestamp: $timestamp, window: $window) === true) {
+				$cmCount++;
+			}
+		}
+
+		return $cmCount;
+	}//end contactMomentVolume()
+
+	/**
+	 * Mean survey score (surveyResponse.score) of the responses in the window.
+	 *
+	 * @param array<int, array<string, mixed>> $responses Survey-response rows.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return float|null Null when no scored response falls in the window.
+	 */
+	private function satisfactionScore(array $responses, array $window): ?float {
+		$scores = [];
+		foreach ($responses as $response) {
+			$timestamp = $this->extractTimestamp(row: $response, fields: ['submittedAt', 'createdAt']);
+			if ($this->inWindow(timestamp: $timestamp, window: $window) === false
+				|| isset($response['score']) === false || is_numeric($response['score']) === false
+			) {
 				continue;
 			}
 
-			$cmCount++;
+			$scores[] = (float)$response['score'];
 		}
 
-		// Customer satisfaction score (mean of surveyResponse.score).
-		$scoreSum = 0.0;
-		$scoreN = 0;
-		foreach ($responses as $r) {
-			$timestamp = $this->extractTimestamp(row: $r, fields: ['submittedAt', 'createdAt']);
-			if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
-				continue;
-			}
+		return $this->roundedMean(values: $scores, precision: 2);
+	}//end satisfactionScore()
 
-			if (isset($r['score']) === false || is_numeric($r['score']) === false) {
-				continue;
-			}
-
-			$scoreSum += (float)$r['score'];
-			$scoreN++;
+	/**
+	 * The mean of the values, rounded, or null when there are none.
+	 *
+	 * @param array<int, float|int> $values The values.
+	 * @param int $precision Decimal digits to round to.
+	 *
+	 * @return float|null
+	 */
+	private function roundedMean(array $values, int $precision): ?float {
+		if ($values === []) {
+			return null;
 		}
 
-		$satisfactionScore = null;
-		if ($scoreN > 0) {
-			$satisfactionScore = round($scoreSum / $scoreN, 2);
-		}
+		return round(array_sum($values) / count($values), $precision);
+	}//end roundedMean()
 
-		return [
-			'leadConversionRate' => $leadConversionRate,
-			'avgRequestResolutionTime' => $avgResolutionHours,
-			'contactMomentVolume' => $cmCount,
-			'customerSatisfactionScore' => $satisfactionScore,
-		];
-	}//end aggregateOverviewWindow()
+	/**
+	 * Whether a timestamp falls in a window (lower bound inclusive, upper exclusive).
+	 *
+	 * @param int|null $timestamp The timestamp, null when the row had none.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return bool
+	 */
+	private function inWindow(?int $timestamp, array $window): bool {
+		return $timestamp !== null && $timestamp >= $window['from'] && $timestamp < $window['to'];
+	}//end inWindow()
 
 	/**
 	 * Time-series trend data for the unified analytics charts.

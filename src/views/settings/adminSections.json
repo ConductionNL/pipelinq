@@ -2,6 +2,7 @@
 	"leadManagement": {
 		"name": "Lead Management",
 		"description": "Tune lead staleness detection for kanban badges and the lead list filter.",
+		"saveLabel": "Save lead settings",
 		"valuesPath": "config",
 		"fields": [
 			{

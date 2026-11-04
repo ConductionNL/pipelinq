@@ -1,3 +1,3 @@
 # Screens
 
-- PqKassabon https://identity.conduction.nl/screens/board?id=pipelinq/PqKassabon
+- pipelinq/PqKassabon transactie en bon https://identity.conduction.nl/screens/board?id=pipelinq/PqKassabon

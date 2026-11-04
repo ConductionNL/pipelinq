@@ -30,37 +30,41 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "id": "new-1",
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
-                    "new-1"
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": "new-1"
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:sp-1",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "sp-1",
@@ -82,8 +86,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -118,23 +124,21 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:sp-1",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "sp-1",
@@ -156,8 +160,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -192,23 +198,21 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:sp-1",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "sp-1",
@@ -230,8 +234,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -255,10 +261,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:sp-1",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "sp-1",
@@ -280,8 +284,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -316,10 +322,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:sp-1",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "sp-1",
@@ -341,8 +345,171 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
+            }
+        ]
+    },
+    "barcode after a sku miss": {
+        "returned": {
+            "products": {
+                "P-1": "prod-b2"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "barcode": "871",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "prod-b2",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
+            }
+        ]
+    },
+    "existing product as an entity": {
+        "returned": {
+            "products": {
+                "P-1": "prod-9"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "prod-9",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
+            }
+        ]
+    },
+    "existing product as a plain object": {
+        "returned": {
+            "products": {
+                "P-1": "obj-o"
+            },
+            "vendors": []
+        },
+        "trace": [
+            {
+                "findAll": {
+                    "filters": {
+                        "sku": "SKU-1",
+                        "register": "reg-1",
+                        "schema": "schema-product"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "sourceRecordId": "shillinq-products:sp-1",
+                        "sourceSystem": "shillinq-products",
+                        "nativeId": "sp-1",
+                        "entityType": "product",
+                        "currentMasterEntity": "obj-o",
+                        "rawAttributes": {
+                            "id": "sp-1",
+                            "ref": "P-1",
+                            "sku": "SKU-1",
+                            "barcode": "871",
+                            "name": "Widget",
+                            "leadTimeDays": 3
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -366,10 +533,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:sp-1",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "sp-1",
@@ -391,8 +556,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -416,33 +583,37 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "sku": "S",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "id": "new-1",
                         "sku": "S",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
-                    "new-1"
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": "new-1"
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:42",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "42",
@@ -460,8 +631,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -485,33 +658,37 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "sku": "S",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "id": "new-1",
                         "sku": "S",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
-                    "new-1"
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": "new-1"
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "",
@@ -530,8 +707,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -581,31 +760,37 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "id": "new-1",
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
-                    "new-1"
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": "new-1"
+                }
             }
         ]
     },
@@ -640,37 +825,41 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "id": "new-1",
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
-                    "new-1"
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": "new-1"
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:sp-1",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "sp-1",
@@ -692,8 +881,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             },
             {
                 "log": "warning",
@@ -734,17 +925,17 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
                 "log": "error",
@@ -801,10 +992,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-supplier",
-                    {
+                "saveObject": {
+                    "object": {
                         "displayName": "Acme",
                         "category": "goods",
                         "status": "active",
@@ -813,14 +1002,14 @@
                         },
                         "contactsUid": "uid-acme"
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-vendors:sv-1",
                         "sourceSystem": "shillinq-vendors",
                         "nativeId": "sv-1",
@@ -843,8 +1032,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -892,10 +1083,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-supplier",
-                    {
+                "saveObject": {
+                    "object": {
                         "displayName": "Acme",
                         "category": "goods",
                         "status": "active",
@@ -904,14 +1093,14 @@
                         },
                         "contactsUid": "uid-mail"
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-vendors:sv-1",
                         "sourceSystem": "shillinq-vendors",
                         "nativeId": "sv-1",
@@ -934,8 +1123,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -989,10 +1180,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-supplier",
-                    {
+                "saveObject": {
+                    "object": {
                         "displayName": "Acme",
                         "category": "goods",
                         "status": "active",
@@ -1001,14 +1190,14 @@
                         },
                         "contactsUid": "uid-new"
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-vendors:sv-1",
                         "sourceSystem": "shillinq-vendors",
                         "nativeId": "sv-1",
@@ -1031,8 +1220,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -1094,10 +1285,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-supplier",
-                    {
+                "saveObject": {
+                    "object": {
                         "displayName": "Acme",
                         "category": "goods",
                         "status": "active",
@@ -1106,14 +1295,14 @@
                         },
                         "contactsUid": "pvm-02c88e70e627130ca0eddb2b5d91df85"
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-vendors:sv-1",
                         "sourceSystem": "shillinq-vendors",
                         "nativeId": "sv-1",
@@ -1136,8 +1325,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -1173,10 +1364,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-vendors:sv-1",
                         "sourceSystem": "shillinq-vendors",
                         "nativeId": "sv-1",
@@ -1199,8 +1388,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -1236,23 +1427,21 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-supplier",
-                    {
+                "saveObject": {
+                    "object": {
                         "displayName": "Seven",
                         "category": "goods",
                         "status": "active",
                         "contactsUid": "u7"
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-vendors:7",
                         "sourceSystem": "shillinq-vendors",
                         "nativeId": "7",
@@ -1271,8 +1460,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -1308,10 +1499,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-supplier",
-                    {
+                "saveObject": {
+                    "object": {
                         "displayName": "Acme",
                         "category": "goods",
                         "status": "active",
@@ -1320,8 +1509,10 @@
                         },
                         "contactsUid": "uid-acme"
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
             }
         ]
     },
@@ -1357,10 +1548,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-supplier",
-                    {
+                "saveObject": {
+                    "object": {
                         "displayName": "Acme",
                         "category": "goods",
                         "status": "active",
@@ -1369,14 +1558,14 @@
                         },
                         "contactsUid": "uid-acme"
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-vendors:sv-1",
                         "sourceSystem": "shillinq-vendors",
                         "nativeId": "sv-1",
@@ -1399,8 +1588,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             },
             {
                 "log": "warning",
@@ -1466,37 +1657,41 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "id": "new-1",
                         "name": "Widget",
                         "sku": "SKU-1",
                         "barcode": "871",
-                        "productId": "new-1"
+                        "productId": "new-1",
+                        "@self": {
+                            "id": "new-1",
+                            "name": "new-1",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
-                    "new-1"
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": "new-1"
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:sp-1",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "sp-1",
@@ -1518,8 +1713,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             },
             {
                 "findAll": {
@@ -1533,33 +1730,37 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "sku": "SKU-2",
                         "productId": ""
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-product",
-                    {
+                "saveObject": {
+                    "object": {
                         "id": "new-4",
                         "sku": "SKU-2",
-                        "productId": "new-4"
+                        "productId": "new-4",
+                        "@self": {
+                            "id": "new-4",
+                            "name": "new-4",
+                            "register": "reg-1",
+                            "schema": "schema-product"
+                        }
                     },
-                    "new-4"
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-product",
+                    "uuid": "new-4"
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-products:sp-2",
                         "sourceSystem": "shillinq-products",
                         "nativeId": "sp-2",
@@ -1577,8 +1778,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             },
             {
                 "contacts.search": [
@@ -1604,10 +1807,8 @@
                 }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-supplier",
-                    {
+                "saveObject": {
+                    "object": {
                         "displayName": "Acme",
                         "category": "goods",
                         "status": "active",
@@ -1616,14 +1817,14 @@
                         },
                         "contactsUid": "uid-acme"
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
             },
             {
-                "saveObject": [
-                    "reg-1",
-                    "schema-src",
-                    {
+                "saveObject": {
+                    "object": {
                         "sourceRecordId": "shillinq-vendors:sv-1",
                         "sourceSystem": "shillinq-vendors",
                         "nativeId": "sv-1",
@@ -1646,8 +1847,10 @@
                         "linkageConfidence": 1.0,
                         "confidence": 1.0
                     },
-                    null
-                ]
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
             }
         ]
     },

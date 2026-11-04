@@ -106,35 +106,15 @@ class ObjectEventHandlerService {
 		$objectId = (string)$newObject->getId();
 		$assignee = $this->stringifyScalar(value: ($newData['assignee'] ?? ''));
 
-		$this->diffService->dispatchAssigneeChangeIfNeeded(
-			oldData: $oldData,
-			entityType: $entityType,
-			title: $title,
-			objectId: $objectId,
-			assignee: $assignee,
-			dispatcher: $this->dispatcher
-		);
+		$change = ['new' => $newData, 'old' => $oldData, 'entityType' => $entityType, 'title' => $title, 'objectId' => $objectId, 'assignee' => $assignee];
+		$this->diffService->dispatchAssigneeChangeIfNeeded(change: $change, dispatcher: $this->dispatcher);
 
 		if ($entityType === 'lead') {
-			$this->diffService->dispatchStageChangeIfNeeded(
-				newData: $newData,
-				oldData: $oldData,
-				title: $title,
-				objectId: $objectId,
-				assignee: $assignee,
-				dispatcher: $this->dispatcher
-			);
+			$this->diffService->dispatchStageChangeIfNeeded(change: $change, dispatcher: $this->dispatcher);
 		}
 
 		if ($entityType === 'request') {
-			$this->diffService->dispatchStatusChangeIfNeeded(
-				newData: $newData,
-				oldData: $oldData,
-				title: $title,
-				objectId: $objectId,
-				assignee: $assignee,
-				dispatcher: $this->dispatcher
-			);
+			$this->diffService->dispatchStatusChangeIfNeeded(change: $change, dispatcher: $this->dispatcher);
 		}
 	}//end handleUpdated()
 

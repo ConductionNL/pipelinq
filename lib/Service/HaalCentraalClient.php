@@ -133,7 +133,11 @@ class HaalCentraalClient {
 	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Linear OR-first then legacy request/response handling.
 	 * @SuppressWarnings(PHPMD.StaticAccess)          BsnValidationService::mask is a pure stateless helper.
 	 */
-	public function lookupPersoon(string $bsn, ?string $requestIdContext = null): ?array {
+	public function lookupPersoon(
+		#[\SensitiveParameter]
+		string $bsn,
+		?string $requestIdContext = null,
+	): ?array {
 		$maskedBsn = BsnValidationService::mask($bsn);
 
 		// OR-first: try the OpenRegister BRP leaf, which relays the raw HAL+JSON
@@ -274,7 +278,11 @@ class HaalCentraalClient {
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential payload-shape guard clauses; extraction adds no clarity.
 	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential payload-shape guard clauses; extraction adds no clarity.
 	 */
-	private function lookupViaOpenRegister(string $bsn, string $maskedBsn): ?array {
+	private function lookupViaOpenRegister(
+		#[\SensitiveParameter]
+		string $bsn,
+		string $maskedBsn,
+	): ?array {
 		$params = http_build_query(['bsn' => $bsn]);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/brp/person?' . $params);
 

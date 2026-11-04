@@ -371,7 +371,7 @@ The system MUST enforce validation rules for request data integrity.
 #### Scenario: Status must follow transition rules
 @e2e exclude server validation; covered by PHPUnit
 - **WHEN** a status change violates the transition table
-- **THEN** the system MUST reject with specific error listing allowed transitions
+- **THEN** the system MUST reject with specific error listing allowed transitions, such as "Van Opgelost naar Nieuw mag niet. Toegestaan vanuit Opgelost: Heropend, Gesloten."
 
 #### Scenario: Priority must be a valid value
 @e2e exclude server validation; covered by PHPUnit
@@ -890,7 +890,7 @@ The convert-to-case dialog MUST open with "Keep this ticket open until the case 
 The Termijn card on a request MUST offer "Termijn instellen" to a user who may update the ticket. It MUST save the chosen date and time as the ticket's `slaDeadline` through OpenRegister, so OpenRegister's object rights decide, and the card MUST show the new term after saving.
 
 #### Scenario: Pieter sets the term of Sanne's request
-- GIVEN request PQ-2026-0417 with term 11 oktober 2026, 17:00
+- GIVEN request PQ-2026-0417 with term 12 oktober 2026, 12:00
 - WHEN Pieter chooses "Termijn instellen" and saves 14 oktober 2026, 17:00
 - THEN the ticket's slaDeadline is 2026-10-14T17:00
 - AND the Termijn card reads "14 oktober 2026, 17:00"
@@ -919,8 +919,8 @@ While a request has no `caseReference`, the Gekoppelde zaak card MUST offer "Bes
 The Termijn card MUST draw the term as the card's figure, the date and time written out, with Prioriteit and Behandelaar as rows under it.
 
 #### Scenario: Board PqTicket's Termijn card
-- GIVEN request PQ-2026-0417 with term 11 oktober 2026, 17:00
-- THEN the Termijn card's figure reads "11 oktober 2026, 17:00" at 26px
+- GIVEN request PQ-2026-0417 with term 12 oktober 2026, 12:00
+- THEN the Termijn card's figure reads "12 oktober 2026, 12:00" at 26px
 
 ### Requirement: The convert dialog says the case app is available in a green strip
 

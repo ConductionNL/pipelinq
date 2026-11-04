@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Repair\IngestProductVendorMaster;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
@@ -67,16 +68,16 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 		$json = json_encode($actual, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)) . "\n";
 		if (getenv('PVM_GOLDEN_RECORD') !== false) {
 			file_put_contents(self::GOLDEN, $json);
-			$this->markTestSkipped('recorded');
+			$this->markTestSkipped(message: 'recorded');
 		}
 
 		$expected = json_decode((string)file_get_contents(self::GOLDEN), true);
 		$actual = json_decode($json, true);
 		foreach ($expected as $name => $want) {
-			$this->assertSame($want, ($actual[$name] ?? null), $name);
+			$this->assertSame(expected: $want, actual: ($actual[$name] ?? null), message: $name);
 		}
 
-		$this->assertSame(array_keys($expected), array_keys($actual));
+		$this->assertSame(expected: array_keys($expected), actual: array_keys($actual));
 	}//end testGolden()
 
 	/**
@@ -86,7 +87,10 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 	 */
 	private function scenarios(): array {
 		$product = ['id' => 'sp-1', 'ref' => 'P-1', 'sku' => 'SKU-1', 'barcode' => '871', 'name' => 'Widget', 'leadTimeDays' => 3];
-		$vendor = ['id' => 'sv-1', 'ref' => 'V-1', 'name' => 'Acme', 'kvkNumber' => '123', 'email' => 'a@acme.test', 'iban' => 'NL01', 'paymentTermDays' => 30];
+		$vendor = [
+			'id' => 'sv-1', 'ref' => 'V-1', 'name' => 'Acme', 'kvkNumber' => '123', 'email' => 'a@acme.test', 'iban' => 'NL01', 'paymentTermDays' => 30,
+		];
+		$acme = ['123' => [['UID' => 'uid-acme']]];
 		$found = ['id' => 'obj-p', 'productId' => 'prod-9', 'sku' => 'SKU-1'];
 		return [
 			'new product'                         => ['export' => ['products' => [$product]]],
@@ -94,6 +98,18 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			'new product without object id'       => ['export' => ['products' => [$product]], 'createdNoId' => true],
 			'existing product by sku'             => ['export' => ['products' => [$product]], 'found' => ['sku' => $found]],
 			'existing product by barcode'         => ['export' => ['products' => [$product + ['sku' => '']]], 'found' => ['barcode' => ['id' => 'obj-b']]],
+			'barcode after a sku miss'            => [
+				'export' => ['products' => [$product]],
+				'found'  => ['barcode' => ['id' => 'obj-b2', 'productId' => 'prod-b2']],
+			],
+			'existing product as an entity'       => [
+				'export' => ['products' => [$product]],
+				'found'  => ['sku' => new ArrayRow(row: $found + ['leadTimeDays' => null])],
+			],
+			'existing product as a plain object'  => [
+				'export' => ['products' => [$product]],
+				'found'  => ['sku' => (object)['id' => 'obj-o', 'name' => 'Plain']],
+			],
 			'existing product without ids'        => ['export' => ['products' => [$product]], 'found' => ['sku' => ['sku' => 'SKU-1', 'leadTimeDays' => 9]]],
 			'product with an integer id'          => ['export' => ['products' => [['id' => 42, 'sku' => 'S']]]],
 			'product with a null id'              => ['export' => ['products' => [['id' => null, 'ref' => 'R', 'sku' => 'S']]]],
@@ -106,12 +122,22 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			'new vendor, contact by email'        => ['export' => ['vendors' => [$vendor]], 'contacts' => ['a@acme.test' => [['UID' => 'uid-mail']]]],
 			'new vendor, contact created'         => ['export' => ['vendors' => [$vendor]], 'vcardUid' => 'uid-new'],
 			'new vendor, generated uid'           => ['export' => ['vendors' => [$vendor]]],
-			'existing vendor'                     => ['export' => ['vendors' => [$vendor]], 'contacts' => ['123' => [['UID' => 'uid-acme']]], 'found' => ['contactsUid' => ['id' => 'sup-1', 'contactsUid' => 'uid-acme']]],
-			'vendor with an integer id'           => ['export' => ['vendors' => [['id' => 7, 'name' => 'Seven', 'email' => 's@x']]], 'contacts' => ['s@x' => [['UID' => 'u7']]]],
-			'vendor, no source record schema'     => ['export' => ['vendors' => [$vendor]], 'contacts' => ['123' => [['UID' => 'uid-acme']]], 'config' => ['sourceRecord_schema' => '']],
-			'vendor, source record save throws'   => ['export' => ['vendors' => [$vendor]], 'contacts' => ['123' => [['UID' => 'uid-acme']]], 'throwOn' => 'schema-src'],
+			'existing vendor'                     => [
+				'export'   => ['vendors' => [$vendor]],
+				'contacts' => $acme,
+				'found'    => ['contactsUid' => ['id' => 'sup-1', 'contactsUid' => 'uid-acme']],
+			],
+			'vendor with an integer id'           => [
+				'export'   => ['vendors' => [['id' => 7, 'name' => 'Seven', 'email' => 's@x']]],
+				'contacts' => ['s@x' => [['UID' => 'u7']]],
+			],
+			'vendor, no source record schema'     => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'config' => ['sourceRecord_schema' => '']],
+			'vendor, source record save throws'   => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'throwOn' => 'schema-src'],
 			'vendor, contacts unavailable'        => ['export' => ['vendors' => [$vendor]], 'contactsDisabled' => true],
-			'both lists'                          => ['export' => ['products' => [$product, ['id' => 'sp-2', 'sku' => 'SKU-2']], 'vendors' => [$vendor]], 'contacts' => ['123' => [['UID' => 'uid-acme']]]],
+			'both lists'                          => [
+				'export'   => ['products' => [$product, ['id' => 'sp-2', 'sku' => 'SKU-2']], 'vendors' => [$vendor]],
+				'contacts' => $acme,
+			],
 			'empty export'                        => ['export' => []],
 		];
 	}//end scenarios()
@@ -131,14 +157,14 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			'supplier_schema' => 'schema-supplier',
 			'sourceRecord_schema' => 'schema-src',
 		];
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => ($config[$key] ?? $default)
 		);
 
 		$objects = $this->objectDouble(scenario: $scenario);
 		$contacts = $this->contactsDouble(scenario: $scenario);
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static fn (string $id): object => match ($id) {
 				'OCA\OpenRegister\Service\ObjectService' => $objects,
@@ -146,7 +172,7 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			}
 		);
 
-		$vcard = $this->createMock(ContactVcardService::class);
+		$vcard = $this->createMock(originalClassName: ContactVcardService::class);
 		$vcard->method('syncToContacts')->willReturnCallback(
 			function (string $type, string $id) use ($scenario): ?string {
 				$this->trace[] = ['syncToContacts' => [$type, preg_replace('/^pvm-ingest-.+$/', 'pvm-ingest-<uniqid>', $id)]];
@@ -154,7 +180,7 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			}
 		);
 
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		foreach (['error', 'warning', 'info', 'debug'] as $level) {
 			$logger->method($level)->willReturnCallback(
 				function (string|\Stringable $message, array $context = []) use ($level): void {
@@ -164,7 +190,7 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 		}
 
 		$step = new IngestProductVendorMaster(
-			appManager: $this->createMock(IAppManager::class),
+			appManager: $this->createMock(originalClassName: IAppManager::class),
 			appConfig: $appConfig,
 			contactVcardService: $vcard,
 			container: $container,
@@ -189,6 +215,11 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 	 */
 	private function objectDouble(array $scenario): object {
 		return new class($this, $scenario) {
+			/**
+			 * Saves so far.
+			 *
+			 * @var int
+			 */
 			private int $saves = 0;
 
 			/**
@@ -215,29 +246,42 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			}
 
 			/**
-			 * @param mixed ...$args The arguments, in the order the step passes them.
+			 * Records the arguments as passed, by name when the step names them.
 			 *
-			 * @return array<string, mixed>
+			 * @param mixed ...$args The arguments the step passes.
+			 *
+			 * @return ObjectEntity The saved object, as OpenRegister returns it.
 			 */
-			public function saveObject(mixed ...$args): array {
+			public function saveObject(mixed ...$args): ObjectEntity {
 				$this->test->trace[] = ['saveObject' => $args];
-				if (($this->scenario['throwOn'] ?? null) === ($args[1] ?? null)) {
-					throw new RuntimeException('save failed for ' . $args[1]);
+				$schema = ($args['schema'] ?? $args[1] ?? null);
+				if (($this->scenario['throwOn'] ?? null) === $schema) {
+					throw new RuntimeException('save failed for ' . $schema);
 				}
 
 				$this->saves++;
-				$object = is_array($args[2] ?? null) === true ? $args[2] : [];
-				if (($this->scenario['createdNoId'] ?? false) === true) {
-					return $object;
+				$object = ($args['object'] ?? $args[2] ?? null);
+				if (is_array($object) === false) {
+					$object = [];
 				}
 
-				$id = ($args[3] ?? ('new-' . $this->saves));
+				$entity = new ObjectEntity();
+				$entity->setRegister((string)($args['register'] ?? $args[0] ?? ''));
+				$entity->setSchema((string)$schema);
+				if (($this->scenario['createdNoId'] ?? false) === true) {
+					$entity->setObject($object);
+					return $entity;
+				}
+
+				$id = ($args['uuid'] ?? $args[3] ?? ('new-' . $this->saves));
 				$saved = ['id' => $id] + $object;
 				if (($this->scenario['createdProductId'] ?? null) === 'same') {
 					$saved['productId'] = $id;
 				}
 
-				return $saved;
+				$entity->setUuid((string)$id);
+				$entity->setObject($saved);
+				return $entity;
 			}
 		};
 	}//end objectDouble()
@@ -298,3 +342,25 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 		return $value;
 	}//end normalise()
 }//end class
+
+/**
+ * A found row that serialises to an array, as an OpenRegister entity does.
+ */
+class ArrayRow implements \JsonSerializable {
+	/**
+	 * Constructor.
+	 *
+	 * @param array<string, mixed> $row The serialised row.
+	 */
+	public function __construct(private array $row) {
+	}
+
+	/**
+	 * The row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function jsonSerialize(): array {
+		return $this->row;
+	}
+}

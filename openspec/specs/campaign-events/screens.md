@@ -1,3 +1,3 @@
 # Screens
 
-- PqEvenement https://identity.conduction.nl/screens/board?id=pipelinq/PqEvenement
+- pipelinq/PqEvenement evenement https://identity.conduction.nl/screens/board?id=pipelinq/PqEvenement

@@ -1,3 +1,3 @@
 # Screens
 
-- PqKlantNieuw https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantNieuw
+- pipelinq/PqKlantNieuw nieuwe klant https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantNieuw

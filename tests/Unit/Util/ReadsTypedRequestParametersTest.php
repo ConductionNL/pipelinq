@@ -32,6 +32,7 @@ class ReadsTypedRequestParametersTest extends TestCase {
 		'note' => ['?string', null],
 		'tags' => ['array', []],
 		'id' => ['string', null],
+		'page' => ['int', 1],
 	];
 
 	/**
@@ -41,14 +42,19 @@ class ReadsTypedRequestParametersTest extends TestCase {
 	 */
 	public static function cases(): array {
 		return [
-			'all fitting'           => [['name' => 'a', 'note' => 'n', 'tags' => ['x'], 'id' => 'i'], ['name' => 'a', 'note' => 'n', 'tags' => ['x'], 'id' => 'i']],
-			'defaults'              => [['id' => 'i'], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => 'i']],
-			'null takes default'    => [['name' => null, 'tags' => null, 'id' => 'i'], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => 'i']],
+			'all fitting'           => [['name' => 'a', 'note' => 'n', 'tags' => ['x'], 'id' => 'i'], ['name' => 'a', 'note' => 'n', 'tags' => ['x'], 'id' => 'i', 'page' => 1]],
+			'defaults'              => [['id' => 'i'], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => 'i', 'page' => 1]],
+			'null takes default'    => [['name' => null, 'tags' => null, 'id' => 'i'], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => 'i', 'page' => 1]],
 			'required missing'      => [['name' => 'a'], null],
 			'integer string'        => [['name' => 1, 'id' => 'i'], null],
 			'array as string'       => [['note' => ['n'], 'id' => 'i'], null],
 			'string as array'       => [['tags' => 'x', 'id' => 'i'], null],
-			'empty array kept'      => [['tags' => [], 'id' => ''], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => '']],
+			'integer string page'   => [['id' => 'i', 'page' => '7'], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => 'i', 'page' => 7]],
+			'text page is zero'     => [['id' => 'i', 'page' => 'abc'], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => 'i', 'page' => 0]],
+			'float page truncated'  => [['id' => 'i', 'page' => 2.9], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => 'i', 'page' => 2]],
+			'array page is one'     => [['id' => 'i', 'page' => ['x']], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => 'i', 'page' => 1]],
+			'empty array page zero' => [['id' => 'i', 'page' => []], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => 'i', 'page' => 0]],
+			'empty array kept'      => [['tags' => [], 'id' => ''], ['name' => 'anon', 'note' => null, 'tags' => [], 'id' => '', 'page' => 1]],
 		];
 	}//end cases()
 

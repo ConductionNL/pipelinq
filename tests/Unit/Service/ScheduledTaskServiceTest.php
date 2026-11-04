@@ -38,6 +38,7 @@ use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
+use OCA\Pipelinq\Tests\Unit\Support\Autowire;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -137,8 +138,9 @@ class ScheduledTaskServiceTest extends TestCase {
 	}//end setUp()
 
 	/**
-	 * Wire the service under test with NAMED arguments, so a future parameter
-	 * insertion cannot silently shift the wiring.
+	 * Wire the service under test from its leaf collaborators, matched by
+	 * parameter NAME, so a future parameter insertion cannot silently shift
+	 * the wiring.
 	 *
 	 * @param ObjectServiceInterface|null $objectService The OR double; a fresh
 	 *                                                   recording stub when null.
@@ -146,14 +148,17 @@ class ScheduledTaskServiceTest extends TestCase {
 	 * @return ScheduledTaskService The service under test.
 	 */
 	private function makeService(?ObjectServiceInterface $objectService = null): ScheduledTaskService {
-		return new ScheduledTaskService(
-			appConfig: $this->appConfig,
-			userSession: $this->userSession,
-			groupManager: $this->groupManager,
-			notificationService: $this->notificationService,
-			logger: $this->logger,
-			languageService: $this->languageService,
-			objectService: ($objectService ?? $this->makeObjectServiceStub()),
+		return Autowire::build(
+			class: ScheduledTaskService::class,
+			doubles: [
+				'appConfig' => $this->appConfig,
+				'userSession' => $this->userSession,
+				'groupManager' => $this->groupManager,
+				'notificationService' => $this->notificationService,
+				'logger' => $this->logger,
+				'languageService' => $this->languageService,
+				'objectService' => ($objectService ?? $this->makeObjectServiceStub()),
+			]
 		);
 	}//end makeService()
 

@@ -118,3 +118,19 @@ describe('the admin surfaces that were in-app routes', () => {
 		expect(registry).not.toMatch(/BrpMonitorView|SyncSettingsView|PipelineManagerView/)
 	})
 })
+
+describe('the PqBeheer labels as the board draws them', () => {
+	it('saves the lead management section with "Lead-instellingen opslaan"', () => {
+		expect(sections.leadManagement.saveLabel).toBe('Save lead settings')
+		expect(nl.translations['Save lead settings']).toBe('Lead-instellingen opslaan')
+	})
+
+	it('calls an agent profile a medewerkerprofiel in Dutch, as the card title does', () => {
+		const dutch = Object.entries(nl.translations).filter(([key]) => /agent profile/i.test(key)).map(([, value]) => value)
+		expect(dutch.length).toBeGreaterThan(0)
+		for (const value of dutch) {
+			expect(value).not.toMatch(/agentprofiel/i)
+			expect(value).toMatch(/medewerkerprofiel/i)
+		}
+	})
+})
