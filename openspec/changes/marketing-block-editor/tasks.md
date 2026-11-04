@@ -31,4 +31,4 @@
 
 - [x] 4.1 `MailBlockEditor` draws its list with nextcloud-vue `CnBlockListEditor` (palette, drag, Move up and Move down, open by name) and keeps only the per-type properties and the footer; the list helpers `addBlock`, `moveBlock` and `removeBlock` are removed
   - Verify: `mailBlockEditor.spec.js`, `mailBlocks.spec.js`
-- [ ] 4.2 Bump `@conduction/nextcloud-vue` once a release contains `CnBlockListEditor` (development, merge #2088)
+- [x] 4.2 Bump `@conduction/nextcloud-vue` once a release contains `CnBlockListEditor` (development, merge #2088)
