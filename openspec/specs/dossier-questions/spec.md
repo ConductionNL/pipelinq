@@ -9,10 +9,11 @@ pipelinq's part of hydra `woo-citizen-journey` J4.2 and J4.3.
 ### Requirement: A resident reads their question, the dossier it was about and the answers (REQ-QDP-001)
 
 The Vragen page SHALL show the question the resident selects. Its detail SHALL
-show the subject, the status and when it was asked, a timeline with the
-question, every answer and every reply, each with its moment, and the
-documents of the dossier as they were when the resident asked, each with its
-public link when it had one. Every answer the employee saves SHALL be kept with
+show the subject, the status and when it was asked, a timeline under the heading
+"Uw vraag en de antwoorden" with the question, every answer and every reply, each
+with its moment, and under "Documenten bij uw dossier" the documents of the
+dossier as they were when the resident asked, each with its public link when it
+had one. Every answer the employee saves SHALL be kept with
 its moment in `portalAnswers`. Internal notes SHALL never be shown.
 
 #### Scenario: Two answers and a reply
@@ -83,7 +84,7 @@ Gesloten. On `myQuestions`, `converted` MUST read "Omgezet in een Woo-verzoek".
 
 #### Scenario: A question waits for the resident
 - **GIVEN** a question with status `awaiting_customer`
-- **WHEN** the resident opens "Mijn vragen"
+- **WHEN** the resident opens the question, or sees it in "Uw andere vragen"
 - **THEN** the status MUST read "Wacht op uw reactie"
 
 ### Requirement: The answer notice says the question was answered

@@ -57,6 +57,8 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
+use OCA\Pipelinq\Tests\Unit\Support\Autowire;
+use OCA\Pipelinq\Tests\Unit\Support\NextcloudDispatch;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
 
@@ -74,6 +76,26 @@ class MarketingIntelligenceControllerTest extends TestCase {
 	 * @var int
 	 */
 	private int $confirmCalls = 0;
+
+	/**
+	 * The request parameters the keyword controller reads.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $params = [];
+
+	/**
+	 * Call confirm() as Nextcloud dispatches it, with these request parameters.
+	 *
+	 * @param KeywordIntelligenceController $controller The controller.
+	 * @param array<string, mixed>          $params     The request parameters.
+	 *
+	 * @return mixed The response.
+	 */
+	private function confirmWith(KeywordIntelligenceController $controller, array $params): mixed {
+		$this->params = $params;
+		return NextcloudDispatch::call(controller: $controller, method: 'confirm', params: $params);
+	}//end confirmWith()
 
 	/**
 	 * A session, signed in or not, privileged or not.
@@ -156,16 +178,23 @@ class MarketingIntelligenceControllerTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('');
 
-		return new KeywordIntelligenceController(
-			appName: 'pipelinq',
-			request: $this->createMock(IRequest::class),
-			report: $report,
-			analysis: new KeywordAnalysisService(),
-			crawler: $crawler,
-			targets: $targets,
-			appConfig: $appConfig,
-			userSession: $this->session(signedIn: $signedIn),
-			policy: $this->policy(privileged: $privileged)
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			fn (string $key, mixed $default = null): mixed => (isset($this->params[$key]) === true ? $this->params[$key] : $default)
+		);
+
+		return Autowire::build(
+			class: KeywordIntelligenceController::class,
+			doubles: [
+				IRequest::class => $request,
+				SearchQueryReportService::class => $report,
+				KeywordAnalysisService::class => new KeywordAnalysisService(),
+				SiteContentCrawler::class => $crawler,
+				KeywordTargetService::class => $targets,
+				IAppConfig::class => $appConfig,
+				IUserSession::class => $this->session(signedIn: $signedIn),
+				ObjectOwnerAccessPolicy::class => $this->policy(privileged: $privileged),
+			]
 		);
 	}//end keywords()
 
@@ -181,7 +210,7 @@ class MarketingIntelligenceControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $controller->targets()->getStatus());
 		$this->assertSame(
 			Http::STATUS_UNAUTHORIZED,
-			$controller->confirm(term: 'woo', status: 'watch')->getStatus()
+			$this->confirmWith(controller: $controller, params: ['term' => 'woo', 'status' => 'watch'])->getStatus()
 		);
 		$this->assertSame(0, $this->confirmCalls);
 	}//end testAnAnonymousCallerIsRefusedOnTheKeywordEndpoints()
@@ -198,7 +227,7 @@ class MarketingIntelligenceControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $controller->proposals()->getStatus());
 		$this->assertSame(
 			Http::STATUS_FORBIDDEN,
-			$controller->confirm(term: 'woo', status: 'watch')->getStatus()
+			$this->confirmWith(controller: $controller, params: ['term' => 'woo', 'status' => 'watch'])->getStatus()
 		);
 		$this->assertSame(0, $this->confirmCalls);
 	}//end testAnUnprivilegedCallerIsForbiddenAndCreatesNothing()
@@ -262,11 +291,7 @@ class MarketingIntelligenceControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAConfirmationCreatesOneStampedTarget(): void {
-		$response = $this->keywords()->confirm(
-			term: 'woo verzoek indienen',
-			status: 'use-more',
-			proposalKind: 'striking-distance'
-		);
+		$response = $this->confirmWith(controller: $this->keywords(), params: ['term' => 'woo verzoek indienen', 'status' => 'use-more', 'proposalKind' => 'striking-distance']);
 
 		$this->assertSame(Http::STATUS_CREATED, $response->getStatus());
 		$this->assertSame('woo verzoek indienen', $response->getData()['term']);
@@ -282,7 +307,7 @@ class MarketingIntelligenceControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnknownStatusIsABadRequest(): void {
-		$response = $this->keywords()->confirm(term: 'woo', status: 'gebruik-meer');
+		$response = $this->confirmWith(controller: $this->keywords(), params: ['term' => 'woo', 'status' => 'gebruik-meer']);
 
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertStringContainsString('use-more', $response->getData()['error']);

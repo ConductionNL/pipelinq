@@ -156,7 +156,7 @@ class LabelRenameService {
 		$label['name'] = $name;
 		$objects->saveObject(object: $label, register: self::REGISTER, schema: self::LABEL_SCHEMA, uuid: $labelId);
 
-		$result['rewritten'] = $this->rewrite(objects: $objects, from: $from, to: $name, budget: self::INLINE_LIMIT);
+		$result['rewritten'] = $this->rewrite(rename: ['objects' => $objects, 'from' => $from, 'to' => $name], budget: self::INLINE_LIMIT);
 		if ($this->anyCarries(objects: $objects, name: $from) === true) {
 			$this->jobList->add(LabelRenameJob::class, ['from' => $from, 'to' => $name, 'userId' => $userId]);
 			$result['queued'] = true;
@@ -184,7 +184,7 @@ class LabelRenameService {
 			return 0;
 		}
 
-		return $this->rewrite(objects: $this->objectService(), from: $from, to: $to, budget: PHP_INT_MAX);
+		return $this->rewrite(rename: ['objects' => $this->objectService(), 'from' => $from, 'to' => $to], budget: PHP_INT_MAX);
 	}//end rewriteAll()
 
 	/**
@@ -214,19 +214,18 @@ class LabelRenameService {
 	/**
 	 * Rewrite the old name on up to `$budget` items.
 	 *
-	 * @param object  $objects The ObjectService.
-	 * @param string  $from    The old name.
-	 * @param string  $to      The new name.
-	 * @param integer $budget  How many items to rewrite at most.
+	 * @param array{objects: object, from: string, to: string} $rename The ObjectService, the old and the new name.
+	 * @param integer                                          $budget How many items to rewrite at most.
 	 *
 	 * @return integer How many items were rewritten.
 	 */
-	private function rewrite(object $objects, string $from, string $to, int $budget): int {
+	private function rewrite(array $rename, int $budget): int {
 		$done = 0;
 		foreach (self::TARGETS as $schema => $field) {
 			$seen = [];
+			$scan = ['objects' => $rename['objects'], 'schema' => $schema, 'field' => $field, 'name' => $rename['from']];
 			while ($done < $budget) {
-				$rows = $this->carriers(objects: $objects, schema: $schema, field: $field, name: $from, limit: min(self::PAGE, $budget - $done));
+				$rows = $this->carriers(scan: $scan, limit: min(self::PAGE, $budget - $done));
 				$fresh = 0;
 				foreach ($rows as $row) {
 					$id = (string)($row['id'] ?? ($row['@self']['id'] ?? ''));
@@ -236,7 +235,7 @@ class LabelRenameService {
 
 					$seen[$id] = true;
 					$fresh++;
-					if ($this->rewriteOne(objects: $objects, schema: $schema, field: $field, row: $row, from: $from, to: $to) === true) {
+					if ($this->rewriteOne(rename: $rename, item: ['schema' => $schema, 'field' => $field, 'row' => $row]) === true) {
 						$done++;
 					}
 				}
@@ -253,16 +252,14 @@ class LabelRenameService {
 	/**
 	 * Replace the old name on one item, keeping each name once.
 	 *
-	 * @param object               $objects The ObjectService.
-	 * @param string               $schema  The item's schema slug.
-	 * @param string               $field   The field holding the names.
-	 * @param array<string, mixed> $row     The item.
-	 * @param string               $from    The old name.
-	 * @param string               $to      The new name.
+	 * @param array{objects: object, from: string, to: string}                        $rename The ObjectService, the old and the new name.
+	 * @param array{schema: string, field: string, row: array<string, mixed>} $item   The item's schema slug, the field holding the names, and the item.
 	 *
 	 * @return boolean True when the item was written.
 	 */
-	private function rewriteOne(object $objects, string $schema, string $field, array $row, string $from, string $to): bool {
+	private function rewriteOne(array $rename, array $item): bool {
+		['schema' => $schema, 'field' => $field, 'row' => $row] = $item;
+		['from' => $from, 'to' => $to] = $rename;
 		$names = [];
 		foreach ((array)($row[$field] ?? []) as $value) {
 			$value = (string)$value;
@@ -278,7 +275,7 @@ class LabelRenameService {
 		$id = (string)($row['id'] ?? ($row['@self']['id'] ?? ''));
 		$row[$field] = $names;
 		try {
-			$objects->saveObject(object: $row, register: self::REGISTER, schema: $schema, uuid: $id);
+			$rename['objects']->saveObject(object: $row, register: self::REGISTER, schema: $schema, uuid: $id);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'LabelRenameService: an item kept the old label',
@@ -300,7 +297,7 @@ class LabelRenameService {
 	 */
 	private function anyCarries(object $objects, string $name): bool {
 		foreach (self::TARGETS as $schema => $field) {
-			if ($this->carriers(objects: $objects, schema: $schema, field: $field, name: $name, limit: 1) !== []) {
+			if ($this->carriers(scan: ['objects' => $objects, 'schema' => $schema, 'field' => $field, 'name' => $name], limit: 1) !== []) {
 				return true;
 			}
 		}
@@ -314,16 +311,15 @@ class LabelRenameService {
 	 * OpenRegister reads an array filter as "contains"; the rows are checked
 	 * again here, because a filter it does not apply returns every row.
 	 *
-	 * @param object  $objects The ObjectService.
-	 * @param string  $schema  The schema slug.
-	 * @param string  $field   The field holding the names.
-	 * @param string  $name    The name.
-	 * @param integer $limit   How many rows to read.
+	 * @param array{objects: object, schema: string, field: string, name: string} $scan  The ObjectService, the schema slug,
+	 *                                                                           the field holding the names and the name.
+	 * @param integer                                                            $limit How many rows to read.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function carriers(object $objects, string $schema, string $field, string $name, int $limit): array {
-		$rows = $objects->findAll(
+	private function carriers(array $scan, int $limit): array {
+		['schema' => $schema, 'field' => $field, 'name' => $name] = $scan;
+		$rows = $scan['objects']->findAll(
 			config: [
 				'limit'   => $limit,
 				'filters' => [$field => $name, 'register' => self::REGISTER, 'schema' => $schema],

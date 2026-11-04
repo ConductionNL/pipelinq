@@ -1770,7 +1770,7 @@
 			"data": {
 				"name": "Club-app, basis",
 				"type": "product",
-				"status": "inactive",
+				"status": "draft",
 				"unitPrice": 79,
 				"taxRate": 21,
 				"vatClass": "high",

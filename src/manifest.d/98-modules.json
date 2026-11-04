@@ -292,7 +292,7 @@
 						"id": "FeaturesRoadmap",
 						"label": "Features and roadmap",
 						"description": "What Pipelinq can do, and what is coming.",
-						"icon": "Timeline",
+						"icon": "MapMarkerPath",
 						"category": "more",
 						"route": "FeaturesRoadmap"
 					},

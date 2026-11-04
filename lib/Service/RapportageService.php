@@ -30,10 +30,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Pipeline analytics aggregation service.
@@ -52,6 +53,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/lead-management/spec.md
  */
 class RapportageService {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -478,7 +481,7 @@ class RapportageService {
 
 		$leads = [];
 		foreach (($results ?? []) as $result) {
-			$leads[] = $this->toArray(object: $result);
+			$leads[] = $this->toArray(value: $result);
 		}
 
 		return $leads;
@@ -495,33 +498,4 @@ class RapportageService {
 		return $this->objectService;
 
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

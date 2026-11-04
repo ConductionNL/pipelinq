@@ -274,6 +274,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentBooking",
+				"pagination": { "limit": 8 },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_boardNote": "PqAfspraken: the count line, the period chips with their counts, a selectable table that reads when, with whom, about what, where and with which handler, and a footer that says how appointments come in. The chips read the booking's own fields: the period from startAt, Mine from the handler (assignee), Unconfirmed from the awaiting-deposit status. 'This week' is the coming seven days, the window the filter tokens can name.",
 				"showAdd": false,

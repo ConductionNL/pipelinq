@@ -1,4 +1,4 @@
 # Screens
 
-- PqKlantNieuw https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantNieuw
-- PqMobiel https://identity.conduction.nl/screens/board?id=pipelinq/PqMobiel
+- pipelinq/PqKlantNieuw nieuwe klant https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantNieuw
+- pipelinq/PqMobiel op een telefoon https://identity.conduction.nl/screens/board?id=pipelinq/PqMobiel

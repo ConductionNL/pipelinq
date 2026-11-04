@@ -509,7 +509,7 @@ The system MUST calculate task deadlines respecting business hours and MUST supp
 
 #### Scenario: Bulk reassignment
 
-- **GIVEN** 5 open tasks are assigned to agent "Petra Bakker" who is unexpectedly absent
+- **GIVEN** 5 open tasks are assigned to agent "Pieter Jansen" who is unexpectedly absent
 - **WHEN** a manager selects all 5 tasks and chooses "Hertoewijzen aan" > "Mark de Groot"
 - **THEN** all 5 tasks MUST be reassigned to Mark de Groot
 - AND Mark MUST receive a single notification summarizing all reassigned tasks

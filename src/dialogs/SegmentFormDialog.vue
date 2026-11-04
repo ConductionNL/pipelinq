@@ -131,6 +131,7 @@ import {
 import Check from 'vue-material-design-icons/Check.vue'
 import SegmentBuilder from '../components/SegmentBuilder.vue'
 import { fieldOptionsFor } from '../services/segmentFieldOptions.js'
+import { cloneTree } from '../services/segmentRules.js'
 
 /**
  * @return {object} A blank segment.
@@ -398,7 +399,7 @@ export default {
 				name: this.model.name.trim(),
 				description: this.model.description,
 				entityType: this.model.entityType,
-				rules: this.model.rules,
+				rules: cloneTree(this.model.rules),
 			}
 			try {
 				if (this.isEditing) {

@@ -1,3 +1,3 @@
 # Screens
 
-- PqTicketAntwoord https://identity.conduction.nl/screens/board?id=pipelinq/PqTicketAntwoord
+- pipelinq/PqTicketAntwoord klant beantwoorden, dialoog https://identity.conduction.nl/screens/board?id=pipelinq/PqTicketAntwoord

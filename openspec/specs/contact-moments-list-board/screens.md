@@ -1,3 +1,3 @@
 # Screens
 
-- PqContactmomenten https://identity.conduction.nl/screens/board?id=pipelinq/PqContactmomenten
+- pipelinq/PqContactmomenten contactmomenten https://identity.conduction.nl/screens/board?id=pipelinq/PqContactmomenten

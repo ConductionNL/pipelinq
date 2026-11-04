@@ -20,7 +20,7 @@ import {
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// @e2e openspec/specs/notifications-activity/spec.md#features-roadmap-page
+// @e2e openspec/specs/notifications-activity/spec.md
 // @e2e openspec/specs/features-roadmap/spec.md#features-page-renders-controls
 test('Features & roadmap: navigates from sidebar and shows the features surface', async ({
 	page,
@@ -39,7 +39,7 @@ test('Features & roadmap: navigates from sidebar and shows the features surface'
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/specs/notifications-activity/spec.md#features-roadmap-actions
+// @e2e openspec/specs/notifications-activity/spec.md
 test('Features & roadmap: exposes roadmap + suggest-feature actions', async ({
 	page,
 }) => {
@@ -57,7 +57,7 @@ test('Features & roadmap: exposes roadmap + suggest-feature actions', async ({
 	).toBeVisible()
 })
 
-// @e2e openspec/specs/notifications-activity/spec.md#features-roadmap-roadmap-toggle
+// @e2e openspec/specs/notifications-activity/spec.md
 test('Features & roadmap: Show roadmap reveals roadmap content', async ({
 	page,
 }) => {

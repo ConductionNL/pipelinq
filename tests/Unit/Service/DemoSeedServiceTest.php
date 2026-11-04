@@ -36,7 +36,9 @@ use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\Demo\DemoJourneySeeder;
 use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
 use OCA\Pipelinq\Service\Demo\DemoSearchSeeder;
+use OCA\Pipelinq\Service\Demo\DemoSeedContext;
 use OCA\Pipelinq\Service\Demo\DemoSeedValues;
+use OCA\Pipelinq\Service\Demo\DemoSeedWriter;
 use OCA\Pipelinq\Service\Demo\DemoSocialSeeder;
 use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\Marketing\JourneyService;
@@ -211,10 +213,8 @@ class DemoSeedServiceTest extends TestCase {
 		$values = new DemoSeedValues();
 
 		return new DemoSeedService(
-			appConfig: $this->appConfig,
-			container: $container,
-			contactVcardService: $contactVcardService,
-			ticketService: $this->ticketService,
+			context: new DemoSeedContext(appConfig: $this->appConfig, container: $container, ticketService: $this->ticketService, logger: $logger),
+			writer: new DemoSeedWriter(ticketService: $this->ticketService, contactVcardService: $contactVcardService),
 			marketingSeeder: new DemoMarketingSeeder(
 				journeySeeder: new DemoJourneySeeder(
 					journeyService: $this->journeyService,
@@ -227,7 +227,6 @@ class DemoSeedServiceTest extends TestCase {
 				searchSeeder: new DemoSearchSeeder(store: $this->store, values: $values),
 			),
 			values: $values,
-			logger: $logger,
 		);
 	}//end buildService()
 

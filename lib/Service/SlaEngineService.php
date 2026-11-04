@@ -40,6 +40,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Sla\SlaBreachEvent;
 use OCA\Pipelinq\Service\Sla\SlaEscalation;
 use OCA\Pipelinq\Service\Sla\SlaHeat;
+use OCA\Pipelinq\Service\Sla\SlaPolicyQuery;
 use OCA\Pipelinq\Service\Sla\SlaRecipient;
 use OCA\Pipelinq\Service\Sla\SlaTrackedObject;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
@@ -142,54 +143,13 @@ class SlaEngineService {
 			return null;
 		}
 
-		$tier = (string)($metadata['tier'] ?? '');
-		$organisationId = (string)($metadata['organisationId'] ?? '');
-		$contractId = (string)($metadata['contractId'] ?? '');
-		$now = $this->now();
-
-		$candidates = [];
-		foreach ($policies as $policy) {
-			$matches = $this->policyApplies(
-				policy: $policy,
-				objectType: $objectType,
-				tier: $tier,
-				organisationId: $organisationId,
-				contractId: $contractId,
-				now: $now
-			);
-			if ($matches === false) {
-				continue;
-			}
-
-			$candidates[] = $policy;
-		}
-
+		$query = new SlaPolicyQuery(objectType: $objectType, metadata: $metadata, now: $this->now());
+		$candidates = $this->candidatePolicies(policies: $policies, query: $query);
 		if ($candidates === []) {
 			return null;
 		}
 
-		// Tie-break: prefer contract-scoped over org-scoped over tier-only over wildcard;
-		// then lower `priority`; then newer `validFrom`.
-		usort(
-			$candidates,
-			function (array $a, array $b) use ($contractId, $organisationId): int {
-				$scopeA = $this->scopeSpecificity(policy: $a, contractId: $contractId, organisationId: $organisationId);
-				$scopeB = $this->scopeSpecificity(policy: $b, contractId: $contractId, organisationId: $organisationId);
-				if ($scopeA !== $scopeB) {
-					return $scopeB <=> $scopeA;
-				}
-
-				$priorityA = (int)($a['priority'] ?? 100);
-				$priorityB = (int)($b['priority'] ?? 100);
-				if ($priorityA !== $priorityB) {
-					return $priorityA <=> $priorityB;
-				}
-
-				$vfA = (string)($a['validFrom'] ?? '');
-				$vfB = (string)($b['validFrom'] ?? '');
-				return strcmp($vfB, $vfA);
-			}
-		);
+		usort($candidates, $query->compare(...));
 
 		$chosen = $candidates[0];
 		$this->logger->debug(
@@ -197,7 +157,7 @@ class SlaEngineService {
 			[
 				'policyId' => $chosen['id'] ?? $chosen['@self']['slug'] ?? null,
 				'objectType' => $objectType,
-				'tier' => $tier,
+				'tier' => $query->tier,
 				'candidates' => count($candidates),
 			]
 		);
@@ -609,100 +569,23 @@ class SlaEngineService {
 	}//end loadActivePolicies()
 
 	/**
-	 * Test whether a policy applies to the given object's metadata.
+	 * The policies that apply to the queried object, in register order.
 	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $objectType Object type.
-	 * @param string $tier Customer tier.
-	 * @param string $organisationId Optional organisation UUID.
-	 * @param string $contractId Optional contract UUID.
-	 * @param DateTimeInterface $now Resolution instant.
+	 * @param array<int, array<string, mixed>> $policies Active policies.
+	 * @param SlaPolicyQuery                   $query    The object.
 	 *
-	 * @return bool True when this policy is a candidate.
+	 * @return array<int, array<string, mixed>>
 	 */
-	private function policyApplies(
-		array $policy,
-		string $objectType,
-		string $tier,
-		string $organisationId,
-		string $contractId,
-		DateTimeInterface $now,
-	): bool {
-		if ($this->matchesAppliesTo(policy: $policy, objectType: $objectType) === false) {
-			return false;
+	private function candidatePolicies(array $policies, SlaPolicyQuery $query): array {
+		$candidates = [];
+		foreach ($policies as $policy) {
+			if ($query->matches(policy: $policy) === true && $this->isValidAt(policy: $policy, now: $query->now) === true) {
+				$candidates[] = $policy;
+			}
 		}
 
-		if ($this->matchesTier(policy: $policy, tier: $tier) === false) {
-			return false;
-		}
-
-		if ($this->matchesScope(policy: $policy, organisationId: $organisationId, contractId: $contractId) === false) {
-			return false;
-		}
-
-		return $this->isValidAt(policy: $policy, now: $now);
-	}//end policyApplies()
-
-	/**
-	 * Whether the policy's `appliesTo` matches the object type.
-	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $objectType Object type.
-	 *
-	 * @return bool
-	 */
-	private function matchesAppliesTo(array $policy, string $objectType): bool {
-		$applies = (string)($policy['appliesTo'] ?? '*');
-		return ($applies === '*' || $applies === $objectType);
-	}//end matchesAppliesTo()
-
-	/**
-	 * Whether the policy's `customerTier` matches, defaulting the
-	 * customer's tier to "bronze" when unspecified.
-	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $tier Customer tier.
-	 *
-	 * @return bool
-	 */
-	private function matchesTier(array $policy, string $tier): bool {
-		$policyTier = (string)($policy['customerTier'] ?? '*');
-		$effectiveTier = 'bronze';
-		if ($tier !== '') {
-			$effectiveTier = $tier;
-		}
-
-		return ($policyTier === '*' || $policyTier === $effectiveTier);
-	}//end matchesTier()
-
-	/**
-	 * Whether the policy's `customerScope` (contract/organisation
-	 * allow-lists) matches, when a scope is configured at all.
-	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $organisationId Organisation UUID (or '').
-	 * @param string $contractId Contract UUID (or '').
-	 *
-	 * @return bool
-	 */
-	private function matchesScope(array $policy, string $organisationId, string $contractId): bool {
-		$scope = $policy['customerScope'] ?? null;
-		if (is_array($scope) === false) {
-			return true;
-		}
-
-		$orgs = (array)($scope['organisationIds'] ?? []);
-		$contracts = (array)($scope['contractIds'] ?? []);
-		if ($orgs !== [] && in_array($organisationId, $orgs, true) === false) {
-			return false;
-		}
-
-		if ($contracts !== [] && in_array($contractId, $contracts, true) === false) {
-			return false;
-		}
-
-		return true;
-	}//end matchesScope()
+		return $candidates;
+	}//end candidatePolicies()
 
 	/**
 	 * Whether `$now` falls within the policy's validFrom/validUntil window.
@@ -725,39 +608,6 @@ class SlaEngineService {
 
 		return true;
 	}//end isValidAt()
-
-	/**
-	 * Score the specificity of a policy's scope for sort ordering.
-	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $contractId Contract UUID (or '').
-	 * @param string $organisationId Organisation UUID (or '').
-	 *
-	 * @return int Specificity (higher = more specific).
-	 */
-	private function scopeSpecificity(array $policy, string $contractId, string $organisationId): int {
-		$scope = $policy['customerScope'] ?? null;
-		if (is_array($scope) === false) {
-			// No scope = wildcard.
-			if (($policy['customerTier'] ?? '*') === '*') {
-				return 0;
-			}
-
-			return 1;
-		}
-
-		$contracts = (array)($scope['contractIds'] ?? []);
-		$orgs = (array)($scope['organisationIds'] ?? []);
-		if ($contracts !== [] && $contractId !== '' && in_array($contractId, $contracts, true) === true) {
-			return 4;
-		}
-
-		if ($orgs !== [] && $organisationId !== '' && in_array($organisationId, $orgs, true) === true) {
-			return 3;
-		}
-
-		return 2;
-	}//end scopeSpecificity()
 
 	/**
 	 * Fire one escalation step: notification + audit-record creation.

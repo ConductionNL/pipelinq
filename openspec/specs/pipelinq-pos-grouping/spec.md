@@ -29,28 +29,25 @@ The system SHALL present a single top-level `menuItem` `PointOfSale` (label "Poi
 - **THEN** the router MUST navigate to the existing `PosTransactions` page (route `/pos`)
 - **AND** clicking "Retouren" MUST navigate to `/pos/refunds`, "Boekhoudkundige Afhandeling" to `/pos/z-reports`, and "Kassakoppeling audit" to `/kassakoppeling/audit`
 
-### Requirement: REQ-PPOS-002 — The system SHALL place product master data under a "Catalog" group, separate from the POS runtime group
+### Requirement: REQ-PPOS-002: The system SHALL keep Products in the Verkoop group and answer a barcode from its search
 
-@e2e exclude SUPERSEDED BY THE 2026-07 nav-ia-cleanup — reported, not worked around. There is no "Catalog" group: `src/menu-layout.json#relocations` moves `Products` to `Dashboard` (Sales), and no manifest declares a `Catalog` menu entry. The `ProductBarcodeSearch` page was DELETED rather than regrouped — src/manifest.json:1085 records the decision in `_searchNote`: "The dedicated 'Barcode lookup' page is gone (nav-ia-cleanup): this index's search already matches on barcode, so scanning into the search box resolves the product here — one surface instead of two for the same question." No page id `ProductBarcodeSearch` and no route `/products-barcode` exists, so neither scenario has a surface a browser could reach. The surviving half — that `/products` still resolves after the regroup — IS asserted by tests/e2e/spec-coverage/pipelinq-pos-grouping.spec.ts ("every regrouped POS and product route still resolves by deep link"), and barcode-by-search is asserted by tests/e2e/spec-coverage/barcode-lookup.spec.ts. This requirement needs rewriting against the shipped IA.
+The system SHALL show `Products` as "Producten" in the "Verkoop" menu group, next to Leads and Pijplijn, because products are what is sold, not till runtime. There SHALL be no "Catalog" group and no "Barcode lookup" page: the Products index search answers a barcode, and scanning into its search box finds the product.
 
-The system SHALL present a top-level `menuItem` `Catalog` (label "Catalog") whose `children[]`
-contain `Products` and `ProductBarcodeSearch` (Barcode lookup), and SHALL NOT nest `Products`
-under the "Point of Sale" group, because products are master data rather than till runtime.
+@e2e exclude The menu group is a declaration in `src/menu-layout.json#relocations`. The surviving behaviour is asserted elsewhere: tests/e2e/spec-coverage/pipelinq-pos-grouping.spec.ts ("every regrouped POS and product route still resolves by deep link") and tests/e2e/spec-coverage/barcode-lookup.spec.ts.
 
-#### Scenario: Catalog group holds products and barcode lookup
+#### Scenario: Products sit in the Verkoop group
 
 - **GIVEN** a user viewing the left navigation
 - **WHEN** the navigation renders
-- **THEN** a top-level "Catalog" entry MUST be present
-- **AND** expanding it MUST show "Products" and "Barcode lookup"
-- **AND** neither MUST appear under the "Point of Sale" group nor as a flat top-level entry
+- **THEN** "Producten" MUST sit in the "Verkoop" group
+- **AND** there MUST be no "Catalog" entry, and "Producten" MUST NOT appear under the kassa group
 
-#### Scenario: Catalog children reach their existing pages
+#### Scenario: A barcode is found in the Products search
 
-- **GIVEN** the "Catalog" group is expanded
-- **WHEN** the user clicks "Products"
-- **THEN** the router MUST navigate to the existing `Products` page (route `/products`)
-- **AND** clicking "Barcode lookup" MUST navigate to `/products-barcode`
+- **GIVEN** the Products page
+- **WHEN** the user scans a barcode into the search box
+- **THEN** the matching product MUST be listed
+- **AND** `/products` MUST resolve by deep link
 
 ### Requirement: REQ-PPOS-003 — The system SHALL move POS staff and role configuration into the Settings foldout
 

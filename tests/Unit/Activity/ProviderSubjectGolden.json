@@ -1,0 +1,419 @@
+{
+    "lead_created / full": [
+        {
+            "setParsedSubject": [
+                "T[Lead created: %s][\"Acme\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Lead created: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_created / empty": [
+        {
+            "setParsedSubject": [
+                "T[Lead created: %s][\"\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Lead created: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_created / numbers": [
+        {
+            "setParsedSubject": [
+                "T[Lead created: %s][\"Acme\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Lead created: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_assigned / full": [
+        {
+            "setParsedSubject": [
+                "T[Lead assigned: %s][\"Acme\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Lead assigned: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_assigned / empty": [
+        {
+            "setParsedSubject": [
+                "T[Lead assigned: %s][\"\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Lead assigned: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_assigned / numbers": [
+        {
+            "setParsedSubject": [
+                "T[Lead assigned: %s][\"Acme\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Lead assigned: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "request_created / full": [
+        {
+            "setParsedSubject": [
+                "T[Request created: %s][\"Acme\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Request created: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "request_created / empty": [
+        {
+            "setParsedSubject": [
+                "T[Request created: %s][\"\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Request created: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "request_created / numbers": [
+        {
+            "setParsedSubject": [
+                "T[Request created: %s][\"Acme\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Request created: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_lost / full": [
+        {
+            "setParsedSubject": [
+                "T[Deal lost: %s][\"Acme\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Deal lost: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_lost / empty": [
+        {
+            "setParsedSubject": [
+                "T[Deal lost: %s][\"\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Deal lost: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_lost / numbers": [
+        {
+            "setParsedSubject": [
+                "T[Deal lost: %s][\"Acme\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Deal lost: {title}][]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_stage_changed / full": [
+        {
+            "setParsedSubject": [
+                "T[Lead %1$s moved to %2$s][\"Acme\",\"Proposal\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[{title} moved to %1$s][\"Proposal\"]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_stage_changed / empty": [
+        {
+            "setParsedSubject": [
+                "T[Lead %1$s moved to %2$s][\"\",\"\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[{title} moved to %1$s][\"\"]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_stage_changed / numbers": [
+        {
+            "threw": "TypeError"
+        }
+    ],
+    "request_status_changed / full": [
+        {
+            "setParsedSubject": [
+                "T[Request %1$s: %2$s][\"Acme\",\"Closed\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[{title}: %1$s][\"Closed\"]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "request_status_changed / empty": [
+        {
+            "setParsedSubject": [
+                "T[Request %1$s: %2$s][\"\",\"\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[{title}: %1$s][\"\"]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "request_status_changed / numbers": [
+        {
+            "threw": "TypeError"
+        }
+    ],
+    "lead_won / full": [
+        {
+            "setParsedSubject": [
+                "T[Deal won: %1$s (EUR %2$s)][\"Acme\",\"1250\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Deal won: {title} (EUR %1$s)][\"1250\"]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_won / empty": [
+        {
+            "setParsedSubject": [
+                "T[Deal won: %1$s (EUR %2$s)][\"\",\"\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Deal won: {title} (EUR %1$s)][\"\"]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "lead_won / numbers": [
+        {
+            "setParsedSubject": [
+                "T[Deal won: %1$s (EUR %2$s)][\"Acme\",1250]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[Deal won: {title} (EUR %1$s)][1250]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "note_added / full": [
+        {
+            "setParsedSubject": [
+                "T[New note on %1$s: %2$s][\"lead\",\"Acme\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[New note on %1$s: {title}][\"lead\"]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": "Acme"
+                    }
+                }
+            ]
+        }
+    ],
+    "note_added / empty": [
+        {
+            "setParsedSubject": [
+                "T[New note on %1$s: %2$s][\"item\",\"\"]"
+            ]
+        },
+        {
+            "setRichSubject": [
+                "T[New note on %1$s: {title}][\"item\"]",
+                {
+                    "title": {
+                        "type": "highlight",
+                        "id": "17",
+                        "name": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "note_added / numbers": [
+        {
+            "threw": "TypeError"
+        }
+    ],
+    "something_else / full": [],
+    "something_else / empty": [],
+    "something_else / numbers": []
+}

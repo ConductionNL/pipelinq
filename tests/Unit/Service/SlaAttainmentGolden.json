@@ -1,0 +1,1016 @@
+{
+    "policy / ": {
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
+        "met": 6,
+        "breached": 5,
+        "inFlightBreached": 4,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.75,
+                    "breached": 1,
+                    "met": 3
+                },
+                "resolution": {
+                    "attainment": 0.5,
+                    "breached": 3,
+                    "met": 3
+                },
+                "response": {
+                    "attainment": 0.0,
+                    "breached": 1,
+                    "met": 0
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "p2",
+                    "groupName": "Goud",
+                    "attainment": 0.75,
+                    "total": 4,
+                    "met": 3,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "p1",
+                    "groupName": "Standaard",
+                    "attainment": 0.4,
+                    "total": 5,
+                    "met": 2,
+                    "breached": 3
+                },
+                {
+                    "groupKey": "unspecified",
+                    "groupName": "unspecified",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "p3",
+                    "groupName": "p3",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "policy / p1": {
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
+        "met": 2,
+        "breached": 3,
+        "inFlightBreached": 2,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "resolution": {
+                    "attainment": 0.4,
+                    "breached": 3,
+                    "met": 2
+                },
+                "acknowledgement": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "p1",
+                    "groupName": "Standaard",
+                    "attainment": 0.4,
+                    "total": 5,
+                    "met": 2,
+                    "breached": 3
+                }
+            ]
+        }
+    },
+    "policy / p2": {
+        "attainment": 0.75,
+        "attainmentPercent": 75.0,
+        "total": 4,
+        "met": 3,
+        "breached": 1,
+        "inFlightBreached": 1,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.6667,
+                    "breached": 1,
+                    "met": 2
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "p2",
+                    "groupName": "Goud",
+                    "attainment": 0.75,
+                    "total": 4,
+                    "met": 3,
+                    "breached": 1
+                }
+            ]
+        }
+    },
+    "policy / p9": {
+        "attainment": 0.0,
+        "attainmentPercent": 0.0,
+        "total": 0,
+        "met": 0,
+        "breached": 0,
+        "inFlightBreached": 0,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": [],
+            "byGroup": []
+        }
+    },
+    "customer / ": {
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
+        "met": 6,
+        "breached": 5,
+        "inFlightBreached": 4,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.75,
+                    "breached": 1,
+                    "met": 3
+                },
+                "resolution": {
+                    "attainment": 0.5,
+                    "breached": 3,
+                    "met": 3
+                },
+                "response": {
+                    "attainment": 0.0,
+                    "breached": 1,
+                    "met": 0
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "c2",
+                    "groupName": "Garage Smit",
+                    "attainment": 0.5,
+                    "total": 4,
+                    "met": 2,
+                    "breached": 2
+                },
+                {
+                    "groupKey": "c1",
+                    "groupName": "Bakkerij De Jong",
+                    "attainment": 0.5,
+                    "total": 2,
+                    "met": 1,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "c8",
+                    "groupName": "c8",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "c9",
+                    "groupName": "c9",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "c3",
+                    "groupName": "c3",
+                    "attainment": 1.0,
+                    "total": 2,
+                    "met": 2,
+                    "breached": 0
+                },
+                {
+                    "groupKey": "unspecified",
+                    "groupName": "unspecified",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "customer / p1": {
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
+        "met": 2,
+        "breached": 3,
+        "inFlightBreached": 2,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "resolution": {
+                    "attainment": 0.4,
+                    "breached": 3,
+                    "met": 2
+                },
+                "acknowledgement": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "c1",
+                    "groupName": "Bakkerij De Jong",
+                    "attainment": 0.5,
+                    "total": 2,
+                    "met": 1,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "c8",
+                    "groupName": "c8",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "c9",
+                    "groupName": "c9",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "c3",
+                    "groupName": "c3",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "customer / p2": {
+        "attainment": 0.75,
+        "attainmentPercent": 75.0,
+        "total": 4,
+        "met": 3,
+        "breached": 1,
+        "inFlightBreached": 1,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.6667,
+                    "breached": 1,
+                    "met": 2
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "c2",
+                    "groupName": "Garage Smit",
+                    "attainment": 0.6667,
+                    "total": 3,
+                    "met": 2,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "unspecified",
+                    "groupName": "unspecified",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "customer / p9": {
+        "attainment": 0.0,
+        "attainmentPercent": 0.0,
+        "total": 0,
+        "met": 0,
+        "breached": 0,
+        "inFlightBreached": 0,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": [],
+            "byGroup": []
+        }
+    },
+    "tier / ": {
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
+        "met": 6,
+        "breached": 5,
+        "inFlightBreached": 4,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.75,
+                    "breached": 1,
+                    "met": 3
+                },
+                "resolution": {
+                    "attainment": 0.5,
+                    "breached": 3,
+                    "met": 3
+                },
+                "response": {
+                    "attainment": 0.0,
+                    "breached": 1,
+                    "met": 0
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "bronze",
+                    "groupName": "bronze",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "unspecified",
+                    "groupName": "unspecified",
+                    "attainment": 0.5,
+                    "total": 4,
+                    "met": 2,
+                    "breached": 2
+                },
+                {
+                    "groupKey": "platinum",
+                    "groupName": "platinum",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "gold",
+                    "groupName": "gold",
+                    "attainment": 0.6667,
+                    "total": 3,
+                    "met": 2,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "silver",
+                    "groupName": "silver",
+                    "attainment": 1.0,
+                    "total": 2,
+                    "met": 2,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "tier / p1": {
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
+        "met": 2,
+        "breached": 3,
+        "inFlightBreached": 2,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "resolution": {
+                    "attainment": 0.4,
+                    "breached": 3,
+                    "met": 2
+                },
+                "acknowledgement": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "unspecified",
+                    "groupName": "unspecified",
+                    "attainment": 0.5,
+                    "total": 4,
+                    "met": 2,
+                    "breached": 2
+                },
+                {
+                    "groupKey": "platinum",
+                    "groupName": "platinum",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                }
+            ]
+        }
+    },
+    "tier / p2": {
+        "attainment": 0.75,
+        "attainmentPercent": 75.0,
+        "total": 4,
+        "met": 3,
+        "breached": 1,
+        "inFlightBreached": 1,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.6667,
+                    "breached": 1,
+                    "met": 2
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "bronze",
+                    "groupName": "bronze",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "silver",
+                    "groupName": "silver",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                },
+                {
+                    "groupKey": "gold",
+                    "groupName": "gold",
+                    "attainment": 1.0,
+                    "total": 2,
+                    "met": 2,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "tier / p9": {
+        "attainment": 0.0,
+        "attainmentPercent": 0.0,
+        "total": 0,
+        "met": 0,
+        "breached": 0,
+        "inFlightBreached": 0,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": [],
+            "byGroup": []
+        }
+    },
+    "team / ": {
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
+        "met": 6,
+        "breached": 5,
+        "inFlightBreached": 4,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.75,
+                    "breached": 1,
+                    "met": 3
+                },
+                "resolution": {
+                    "attainment": 0.5,
+                    "breached": 3,
+                    "met": 3
+                },
+                "response": {
+                    "attainment": 0.0,
+                    "breached": 1,
+                    "met": 0
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "unspecified",
+                    "groupName": "unspecified",
+                    "attainment": 0.25,
+                    "total": 4,
+                    "met": 1,
+                    "breached": 3
+                },
+                {
+                    "groupKey": "west",
+                    "groupName": "west",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "south",
+                    "groupName": "south",
+                    "attainment": 0.6667,
+                    "total": 3,
+                    "met": 2,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "north",
+                    "groupName": "north",
+                    "attainment": 1.0,
+                    "total": 2,
+                    "met": 2,
+                    "breached": 0
+                },
+                {
+                    "groupKey": "east",
+                    "groupName": "east",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "team / p1": {
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
+        "met": 2,
+        "breached": 3,
+        "inFlightBreached": 2,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "resolution": {
+                    "attainment": 0.4,
+                    "breached": 3,
+                    "met": 2
+                },
+                "acknowledgement": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "unspecified",
+                    "groupName": "unspecified",
+                    "attainment": 0.0,
+                    "total": 2,
+                    "met": 0,
+                    "breached": 2
+                },
+                {
+                    "groupKey": "west",
+                    "groupName": "west",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "north",
+                    "groupName": "north",
+                    "attainment": 1.0,
+                    "total": 2,
+                    "met": 2,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "team / p2": {
+        "attainment": 0.75,
+        "attainmentPercent": 75.0,
+        "total": 4,
+        "met": 3,
+        "breached": 1,
+        "inFlightBreached": 1,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.6667,
+                    "breached": 1,
+                    "met": 2
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "unspecified",
+                    "groupName": "unspecified",
+                    "attainment": 0.5,
+                    "total": 2,
+                    "met": 1,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "south",
+                    "groupName": "south",
+                    "attainment": 1.0,
+                    "total": 2,
+                    "met": 2,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "team / p9": {
+        "attainment": 0.0,
+        "attainmentPercent": 0.0,
+        "total": 0,
+        "met": 0,
+        "breached": 0,
+        "inFlightBreached": 0,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": [],
+            "byGroup": []
+        }
+    },
+    "target / ": {
+        "attainment": 0.5455,
+        "attainmentPercent": 54.6,
+        "total": 11,
+        "met": 6,
+        "breached": 5,
+        "inFlightBreached": 4,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.75,
+                    "breached": 1,
+                    "met": 3
+                },
+                "resolution": {
+                    "attainment": 0.5,
+                    "breached": 3,
+                    "met": 3
+                },
+                "response": {
+                    "attainment": 0.0,
+                    "breached": 1,
+                    "met": 0
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "acknowledgement",
+                    "groupName": "acknowledgement",
+                    "attainment": 0.75,
+                    "total": 4,
+                    "met": 3,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "resolution",
+                    "groupName": "resolution",
+                    "attainment": 0.5,
+                    "total": 6,
+                    "met": 3,
+                    "breached": 3
+                },
+                {
+                    "groupKey": "response",
+                    "groupName": "response",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "callback",
+                    "groupName": "callback",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "target / p1": {
+        "attainment": 0.4,
+        "attainmentPercent": 40.0,
+        "total": 5,
+        "met": 2,
+        "breached": 3,
+        "inFlightBreached": 2,
+        "closedBreached": 1,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "resolution": {
+                    "attainment": 0.4,
+                    "breached": 3,
+                    "met": 2
+                },
+                "acknowledgement": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "resolution",
+                    "groupName": "resolution",
+                    "attainment": 0.4,
+                    "total": 5,
+                    "met": 2,
+                    "breached": 3
+                },
+                {
+                    "groupKey": "acknowledgement",
+                    "groupName": "acknowledgement",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "target / p2": {
+        "attainment": 0.75,
+        "attainmentPercent": 75.0,
+        "total": 4,
+        "met": 3,
+        "breached": 1,
+        "inFlightBreached": 1,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "acknowledgement": {
+                    "attainment": 0.6667,
+                    "breached": 1,
+                    "met": 2
+                },
+                "callback": {
+                    "attainment": 1.0,
+                    "breached": 0,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "acknowledgement",
+                    "groupName": "acknowledgement",
+                    "attainment": 0.6667,
+                    "total": 3,
+                    "met": 2,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "callback",
+                    "groupName": "callback",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "target / p9": {
+        "attainment": 0.0,
+        "attainmentPercent": 0.0,
+        "total": 0,
+        "met": 0,
+        "breached": 0,
+        "inFlightBreached": 0,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-10-01T00:00:00+00:00",
+            "end": "2026-10-02T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": [],
+            "byGroup": []
+        }
+    },
+    "month": {
+        "attainment": 0.5,
+        "attainmentPercent": 50.0,
+        "total": 4,
+        "met": 2,
+        "breached": 2,
+        "inFlightBreached": 2,
+        "closedBreached": 0,
+        "range": {
+            "start": "2026-09-01T00:00:00+00:00",
+            "end": "2026-10-01T00:00:00+00:00"
+        },
+        "details": {
+            "byTarget": {
+                "response": {
+                    "attainment": 0.5,
+                    "breached": 1,
+                    "met": 1
+                },
+                "resolution": {
+                    "attainment": 0.5,
+                    "breached": 1,
+                    "met": 1
+                }
+            },
+            "byGroup": [
+                {
+                    "groupKey": "south",
+                    "groupName": "south",
+                    "attainment": 0.0,
+                    "total": 1,
+                    "met": 0,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "north",
+                    "groupName": "north",
+                    "attainment": 0.5,
+                    "total": 2,
+                    "met": 1,
+                    "breached": 1
+                },
+                {
+                    "groupKey": "unspecified",
+                    "groupName": "unspecified",
+                    "attainment": 1.0,
+                    "total": 1,
+                    "met": 1,
+                    "breached": 0
+                }
+            ]
+        }
+    },
+    "queries": [
+        {
+            "filters": {
+                "register": "sla",
+                "schema": "events"
+            },
+            "limit": 5000
+        },
+        {
+            "filters": {
+                "register": "crm",
+                "schema": "callbacks"
+            },
+            "limit": 5000
+        },
+        {
+            "filters": {
+                "register": "crm",
+                "schema": "clients"
+            },
+            "limit": 5000
+        }
+    ]
+}

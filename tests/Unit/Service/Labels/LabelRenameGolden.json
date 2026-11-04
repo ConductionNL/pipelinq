@@ -1,0 +1,160 @@
+{
+    "rename": {
+        "result": {
+            "id": "label-1",
+            "name": "Heet",
+            "rewritten": 6,
+            "queued": true
+        },
+        "calls": [
+            "{\"findAll\":{\"limit\":1000,\"filters\":{\"register\":\"pipelinq\",\"schema\":\"itemLabel\"}}}",
+            "{\"saveObject\":{\"id\":\"label-1\",\"name\":\"Heet\"},\"args\":{\"register\":\"pipelinq\",\"schema\":\"itemLabel\",\"uuid\":\"label-1\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"saveObject\":{\"id\":\"l1\",\"labels\":[\"Heet\",\"Warm\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l1\"}}",
+            "{\"saveObject\":{\"id\":\"l2\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l2\"}}",
+            "{\"saveObject\":{\"@self\":{\"id\":\"l4\"},\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l4\"}}",
+            "{\"saveObject\":{\"id\":\"fail\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"fail\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+            "{\"saveObject\":{\"id\":\"c1\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"client\",\"uuid\":\"c1\"}}",
+            "{\"saveObject\":{\"id\":\"c2\",\"labels\":[\"7\",\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"client\",\"uuid\":\"c2\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}",
+            "{\"saveObject\":{\"id\":\"a1\",\"tags\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"article\",\"uuid\":\"a1\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}",
+            "{\"findAll\":{\"limit\":1,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"jobAdd\":\"OCA\\\\Pipelinq\\\\BackgroundJob\\\\LabelRenameJob\",\"argument\":{\"from\":\"Hot\",\"to\":\"Heet\",\"userId\":\"admin\"}}"
+        ]
+    },
+    "rename, same name": {
+        "result": {
+            "id": "label-1",
+            "name": "Hot",
+            "rewritten": 0,
+            "queued": false
+        },
+        "calls": [
+            "{\"findAll\":{\"limit\":1000,\"filters\":{\"register\":\"pipelinq\",\"schema\":\"itemLabel\"}}}"
+        ]
+    },
+    "rename past inline limit": {
+        "result": {
+            "id": "label-1",
+            "name": "Heet",
+            "rewritten": 199,
+            "queued": true
+        },
+        "calls": {
+            "count": 210,
+            "first": [
+                "{\"findAll\":{\"limit\":1000,\"filters\":{\"register\":\"pipelinq\",\"schema\":\"itemLabel\"}}}",
+                "{\"saveObject\":{\"id\":\"label-1\",\"name\":\"Heet\"},\"args\":{\"register\":\"pipelinq\",\"schema\":\"itemLabel\",\"uuid\":\"label-1\"}}",
+                "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+                "{\"saveObject\":{\"id\":\"fail\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"fail\"}}",
+                "{\"saveObject\":{\"id\":\"m0\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m0\"}}",
+                "{\"saveObject\":{\"id\":\"m1\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m1\"}}"
+            ],
+            "last": [
+                "{\"saveObject\":{\"id\":\"m198\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m198\"}}",
+                "{\"findAll\":{\"limit\":1,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+                "{\"findAll\":{\"limit\":1,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+                "{\"findAll\":{\"limit\":1,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}",
+                "{\"findAll\":{\"limit\":1,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+                "{\"jobAdd\":\"OCA\\\\Pipelinq\\\\BackgroundJob\\\\LabelRenameJob\",\"argument\":{\"from\":\"Hot\",\"to\":\"Heet\",\"userId\":\"admin\"}}"
+            ],
+            "sha256": "955ecfb0a2b457504d33ef1ed77f55d6f155aa1ea85dee8fea0c4458e73fa4b2"
+        }
+    },
+    "rewrite all": {
+        "result": 230,
+        "calls": {
+            "count": 237,
+            "first": [
+                "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+                "{\"saveObject\":{\"id\":\"fail\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"fail\"}}",
+                "{\"saveObject\":{\"id\":\"m0\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m0\"}}",
+                "{\"saveObject\":{\"id\":\"m1\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m1\"}}",
+                "{\"saveObject\":{\"id\":\"m2\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m2\"}}",
+                "{\"saveObject\":{\"id\":\"m3\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m3\"}}"
+            ],
+            "last": [
+                "{\"saveObject\":{\"id\":\"m227\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m227\"}}",
+                "{\"saveObject\":{\"id\":\"m228\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m228\"}}",
+                "{\"saveObject\":{\"id\":\"m229\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"m229\"}}",
+                "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+                "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+                "{\"findAll\":{\"limit\":100,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}"
+            ],
+            "sha256": "88ac00e6734bc7ba2a761866052042a3f314d053e139bc4602f749afc0f597fa"
+        }
+    },
+    "rewrite all, small": {
+        "result": 6,
+        "calls": [
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"saveObject\":{\"id\":\"l1\",\"labels\":[\"Heet\",\"Warm\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l1\"}}",
+            "{\"saveObject\":{\"id\":\"l2\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l2\"}}",
+            "{\"saveObject\":{\"@self\":{\"id\":\"l4\"},\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l4\"}}",
+            "{\"saveObject\":{\"id\":\"fail\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"fail\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+            "{\"saveObject\":{\"id\":\"c1\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"client\",\"uuid\":\"c1\"}}",
+            "{\"saveObject\":{\"id\":\"c2\",\"labels\":[\"7\",\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"client\",\"uuid\":\"c2\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}",
+            "{\"saveObject\":{\"id\":\"a1\",\"tags\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"article\",\"uuid\":\"a1\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}"
+        ]
+    },
+    "rename, article left": {
+        "result": {
+            "id": "label-1",
+            "name": "Heet",
+            "rewritten": 1,
+            "queued": true
+        },
+        "calls": [
+            "{\"findAll\":{\"limit\":1000,\"filters\":{\"register\":\"pipelinq\",\"schema\":\"itemLabel\"}}}",
+            "{\"saveObject\":{\"id\":\"label-1\",\"name\":\"Heet\"},\"args\":{\"register\":\"pipelinq\",\"schema\":\"itemLabel\",\"uuid\":\"label-1\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"saveObject\":{\"id\":\"l1\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l1\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}",
+            "{\"saveObject\":{\"id\":\"fail\",\"tags\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"article\",\"uuid\":\"fail\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}",
+            "{\"findAll\":{\"limit\":1,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"findAll\":{\"limit\":1,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+            "{\"findAll\":{\"limit\":1,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}",
+            "{\"jobAdd\":\"OCA\\\\Pipelinq\\\\BackgroundJob\\\\LabelRenameJob\",\"argument\":{\"from\":\"Hot\",\"to\":\"Heet\",\"userId\":\"admin\"}}"
+        ]
+    },
+    "rename, filter ignored": {
+        "result": {
+            "id": "label-1",
+            "name": "Heet",
+            "rewritten": 6,
+            "queued": false
+        },
+        "calls": [
+            "{\"findAll\":{\"limit\":1000,\"filters\":{\"register\":\"pipelinq\",\"schema\":\"itemLabel\"}}}",
+            "{\"saveObject\":{\"id\":\"label-1\",\"name\":\"Heet\"},\"args\":{\"register\":\"pipelinq\",\"schema\":\"itemLabel\",\"uuid\":\"label-1\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"saveObject\":{\"id\":\"l1\",\"labels\":[\"Heet\",\"Warm\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l1\"}}",
+            "{\"saveObject\":{\"id\":\"l2\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l2\"}}",
+            "{\"saveObject\":{\"@self\":{\"id\":\"l4\"},\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"l4\"}}",
+            "{\"saveObject\":{\"id\":\"fail\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"lead\",\"uuid\":\"fail\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+            "{\"saveObject\":{\"id\":\"c1\",\"labels\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"client\",\"uuid\":\"c1\"}}",
+            "{\"saveObject\":{\"id\":\"c2\",\"labels\":[\"7\",\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"client\",\"uuid\":\"c2\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}",
+            "{\"saveObject\":{\"id\":\"a1\",\"tags\":[\"Heet\"]},\"args\":{\"register\":\"pipelinq\",\"schema\":\"article\",\"uuid\":\"a1\"}}",
+            "{\"findAll\":{\"limit\":100,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}",
+            "{\"findAll\":{\"limit\":1,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"lead\"}}}",
+            "{\"findAll\":{\"limit\":1,\"filters\":{\"labels\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"client\"}}}",
+            "{\"findAll\":{\"limit\":1,\"filters\":{\"tags\":\"Hot\",\"register\":\"pipelinq\",\"schema\":\"article\"}}}"
+        ]
+    }
+}

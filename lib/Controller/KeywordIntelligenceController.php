@@ -38,18 +38,16 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\Search\KeywordAnalysisService;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
+use OCA\Pipelinq\Service\Search\KeywordProposals;
 use OCA\Pipelinq\Service\Search\KeywordTargetService;
-use OCA\Pipelinq\Service\Search\SiteContentCrawler;
-use OCA\Pipelinq\Service\SearchConsole\SearchQueryReportService;
+use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IAppConfig;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
-use OCP\IUserSession;
 use UnexpectedValueException;
 
 /**
@@ -58,84 +56,85 @@ use UnexpectedValueException;
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 class KeywordIntelligenceController extends Controller {
+	use ReadsTypedRequestParameters;
 
 	/**
 	 * App-config key overriding the impression floor every derivation uses.
 	 *
 	 * @var string
 	 */
-	public const FLOOR_KEY = 'search.striking_min_impressions';
+	public const FLOOR_KEY = KeywordProposals::FLOOR_KEY;
+
+	/**
+	 * The request parameters of a proposals read.
+	 *
+	 * @var array<string, array{0: string, 1: mixed}>
+	 */
+	private const WINDOW_PARAMETERS = [
+		'from' => ['?string', null],
+		'to' => ['?string', null],
+		'property' => ['?string', null],
+	];
+
+	/**
+	 * The request parameters of a confirmation, in the stored payload's order.
+	 *
+	 * @var array<string, array{0: string, 1: mixed}>
+	 */
+	private const CONFIRM_PARAMETERS = [
+		'term' => ['string', ''],
+		'status' => ['string', 'watch'],
+		'proposalKind' => ['string', 'manual'],
+		'intent' => ['string', ''],
+		'targetPageRef' => ['string', ''],
+		'property' => ['string', ''],
+		'notes' => ['string', ''],
+	];
 
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName App name.
 	 * @param IRequest $request Request.
-	 * @param SearchQueryReportService $report The paged read over `searchQueryDaily`.
-	 * @param KeywordAnalysisService $analysis The four derivations.
-	 * @param SiteContentCrawler $crawler Our own pages, for the gap check.
+	 * @param KeywordProposals $proposals The derivations for a window.
 	 * @param KeywordTargetService $targets The single write path.
-	 * @param IAppConfig $appConfig Pipelinq app config.
-	 * @param IUserSession $userSession Session.
-	 * @param ObjectOwnerAccessPolicy $policy CRM privilege check.
+	 * @param CrmPrivilegeCheck $privilege The session user and their CRM privilege.
 	 *
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly SearchQueryReportService $report,
-		private readonly KeywordAnalysisService $analysis,
-		private readonly SiteContentCrawler $crawler,
+		private readonly KeywordProposals $proposals,
 		private readonly KeywordTargetService $targets,
-		private readonly IAppConfig $appConfig,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
 	 * Every derivation for a window, in one response.
 	 *
-	 * @param string|null $from Window start `YYYY-MM-DD`.
-	 * @param string|null $to Window end `YYYY-MM-DD`.
-	 * @param string|null $property Restrict to one property.
+	 * Reads `from` and `to` (`YYYY-MM-DD`) and `property` from the request; a
+	 * non-string value is a bare 400, as the dispatcher answers it.
 	 *
-	 * @return JSONResponse `{from, to, buckets[], strikingDistance[], cannibalisation[], gaps[], crawl, confirmedTerms[]}`.
+	 * @return Response `{from, to, buckets[], strikingDistance[], cannibalisation[], gaps[], crawl, confirmedTerms[]}`.
 	 *
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
 	 */
 	#[NoAdminRequired]
-	public function proposals(?string $from = null, ?string $to = null, ?string $property = null): JSONResponse {
-		$refusal = $this->refuseUnprivileged();
+	public function proposals(): Response {
+		$window = $this->typedRequestParameters(spec: self::WINDOW_PARAMETERS);
+		if ($window === null) {
+			return new Response(Http::STATUS_BAD_REQUEST);
+		}
+
+		$refusal = $this->privilege->refusal();
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		$window = $this->report->rows(from: $from, to: $to, property: $property);
-		$rows = $window['rows'];
-		$floor = $this->floor();
-		$crawl = $this->crawler->crawl(rows: $rows);
-
-		return new JSONResponse(
-			[
-				'from' => $window['from'],
-				'to' => $window['to'],
-				'minImpressions' => $floor,
-				'buckets' => $this->analysis->positionBuckets(rows: $rows),
-				'strikingDistance' => $this->analysis->strikingDistance(rows: $rows, minImpressions: $floor),
-				'cannibalisation' => $this->analysis->cannibalisation(rows: $rows, minImpressions: $floor),
-				'gaps' => $this->analysis->contentGaps(rows: $rows, pages: $crawl['pages'], minImpressions: $floor),
-				'crawl' => [
-					'crawled' => $crawl['crawled'],
-					'failure' => $crawl['failure'],
-					'reason' => $crawl['reason'],
-					'pages' => count($crawl['pages']),
-				],
-				'confirmedTerms' => $this->targets->confirmedTerms(),
-			]
-		);
+		$body = $this->proposals->forWindow(window: $window);
+		$body['confirmedTerms'] = $this->targets->confirmedTerms();
+		return new JSONResponse($body);
 	}//end proposals()
 
 	/**
@@ -147,7 +146,7 @@ class KeywordIntelligenceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function targets(): JSONResponse {
-		$refusal = $this->refuseUnprivileged();
+		$refusal = $this->privilege->refusal();
 		if ($refusal !== null) {
 			return $refusal;
 		}
@@ -158,52 +157,28 @@ class KeywordIntelligenceController extends Controller {
 	/**
 	 * Confirm a proposal into a keyword target.
 	 *
-	 * @param string $term The search term.
-	 * @param string $status What we decided: `use-more`, `use-less` or `watch`.
-	 * @param string $proposalKind Which derivation proposed it.
-	 * @param string $intent What somebody typing it is trying to do.
-	 * @param string $targetPageRef The page that should win it.
-	 * @param string $property The property the proposal came from.
-	 * @param string $notes Why it matters.
+	 * Reads `term`, `status` (`use-more`, `use-less` or `watch`), `proposalKind`,
+	 * `intent`, `targetPageRef`, `property` and `notes` from the request; a
+	 * non-string value is a bare 400, as the dispatcher answers it.
 	 *
-	 * @return JSONResponse The stored target, or the refusal.
+	 * @return Response The stored target, or the refusal.
 	 *
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	#[NoAdminRequired]
-	public function confirm(
-		string $term = '',
-		string $status = 'watch',
-		string $proposalKind = 'manual',
-		string $intent = '',
-		string $targetPageRef = '',
-		string $property = '',
-		string $notes = '',
-	): JSONResponse {
-		$refusal = $this->refuseUnprivileged();
+	public function confirm(): Response {
+		$payload = $this->typedRequestParameters(spec: self::CONFIRM_PARAMETERS);
+		if ($payload === null) {
+			return new Response(Http::STATUS_BAD_REQUEST);
+		}
+
+		$refusal = $this->privilege->refusal();
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		$user = $this->userSession->getUser();
-		$uid = '';
-		if ($user !== null) {
-			$uid = $user->getUID();
-		}
-
 		try {
-			$saved = $this->targets->confirm(
-				payload: [
-					'term' => $term,
-					'status' => $status,
-					'proposalKind' => $proposalKind,
-					'intent' => $intent,
-					'targetPageRef' => $targetPageRef,
-					'property' => $property,
-					'notes' => $notes,
-				],
-				uid: $uid
-			);
+			$saved = $this->targets->confirm(payload: $payload, uid: $this->privilege->actingUserId());
 		} catch (UnexpectedValueException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		}
@@ -214,37 +189,4 @@ class KeywordIntelligenceController extends Controller {
 
 		return new JSONResponse($saved, Http::STATUS_CREATED);
 	}//end confirm()
-
-	/**
-	 * Refuse a caller without the CRM privilege.
-	 *
-	 * @return JSONResponse|null The refusal, or null when the caller may proceed.
-	 */
-	private function refuseUnprivileged(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		return null;
-	}//end refuseUnprivileged()
-
-	/**
-	 * The impression floor: the configured value when it is a positive
-	 * number, the documented default otherwise.
-	 *
-	 * @return int
-	 */
-	private function floor(): int {
-		$configured = (int)$this->appConfig->getValueString(Application::APP_ID, self::FLOOR_KEY, '');
-		if ($configured < 1) {
-			return KeywordAnalysisService::DEFAULT_MIN_IMPRESSIONS;
-		}
-
-		return $configured;
-	}//end floor()
 }//end class
