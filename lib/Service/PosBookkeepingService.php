@@ -72,8 +72,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *      paymentMethodBreakdown and total server-side (operational — pipelinq owns).
  *   2. Journal raise — turn a ready Z-report's **business facts** into a
  *      `shillinq.JournalEntry.raise` CloudEvent dispatched through the ADR-019
- *      integration registry (OpenRegister WebhookService), resolved from the
- *      `shillinq_journal_webhook_url` toggle. shillinq builds the GL-balanced
+ *      integration registry (OpenRegister WebhookService), only when the
+ *      Shillinq app is installed (IntegrationDetector). shillinq builds the GL-balanced
  *      journal; pipelinq sends no pre-mapped ledger lines.
  *   3. Outcome projection — mirror the shillinq journal id + bookkeepingStatus
  *      (pending/raised/failed) onto the parent posZReport so operators can see
@@ -138,6 +138,7 @@ class PosBookkeepingService {
 	 * @param LoggerInterface $logger The logger.
 	 * @param WebhookService $webhookService Dispatches POS webhooks.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param IntegrationDetector $integrations Detects the Shillinq app on this server.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -146,6 +147,7 @@ class PosBookkeepingService {
 		private LoggerInterface $logger,
 		private readonly WebhookService $webhookService,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly IntegrationDetector $integrations,
 	) {
 	}//end __construct()
 
@@ -357,28 +359,16 @@ class PosBookkeepingService {
 	}//end computeIdempotencyKey()
 
 	/**
-	 * Whether journal-raise dispatch is enabled.
+	 * Whether journal-raise dispatch is enabled: only when the Shillinq app is
+	 * installed on this server. Without it the raise no-ops and leaves
+	 * bookkeepingStatus pending, as the WIP and AP hand-offs do.
 	 *
-	 * Returns true only when shillinq_journal_webhook_url is a non-empty,
-	 * well-formed HTTPS URL. An unconfigured or malformed value disables the
-	 * integration so the raise no-ops silently and leaves bookkeepingStatus
-	 * pending (matching the project-ledger / WIP / AP dispatch toggles).
+	 * @return bool True when Shillinq is installed.
 	 *
-	 * @return bool True when a valid HTTPS webhook URL is configured.
-	 *
-	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
 	 */
 	public function shouldDispatch(): bool {
-		$url = $this->journalWebhookUrl();
-		if ($url === '') {
-			return false;
-		}
-
-		if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-			return false;
-		}
-
-		return str_starts_with($url, 'https://');
+		return $this->integrations->shillinq()['installed'] === true;
 	}//end shouldDispatch()
 
 	/**
@@ -889,15 +879,6 @@ class PosBookkeepingService {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Read the configured shillinq journal-entry registry webhook URL.
-	 *
-	 * @return string The configured URL, or an empty string when unset.
-	 */
-	private function journalWebhookUrl(): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, 'shillinq_journal_webhook_url', ''));
-	}//end journalWebhookUrl()
 
 	/**
 	 * Read the configured max raise attempts (default {@see self::DEFAULT_MAX_ATTEMPTS}).

@@ -174,7 +174,7 @@ class SetupController extends Controller {
 
 		// The till and integrations steps are optional; each is done once one of its fields is set.
 		$posDone          = $this->anyConfigured(keys: ['receipt_printer_host', 'receipt_email_sender']);
-		$integrationsDone = $this->anyConfigured(keys: ['shillinq_journal_webhook_url', 'billing_handoff_manager_group']);
+		$integrationsDone = $this->anyConfigured(keys: ['billing_handoff_manager_group']);
 
 		if ($currencyDone === true) {
 			$this->appConfig->setValueString(Application::APP_ID, 'setup_completed_version', (string)self::SETUP_VERSION);

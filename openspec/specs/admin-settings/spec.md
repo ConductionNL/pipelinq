@@ -734,7 +734,7 @@ The admin settings page MUST comply with WCAG AA accessibility standards for all
 
 ### Requirement: Shillinq hand-offs follow the detected app
 
-Pipelinq SHALL hand approved hours (WIP) and approved expenses (AP) to Shillinq only when the Shillinq app is installed on the same server, and SHALL reach it internally through OpenRegister. The admin settings page SHALL NOT ask for a Shillinq webhook URL. The Shillinq options section SHALL only show when Shillinq is installed; otherwise the Detected integrations card SHALL say Shillinq is not installed.
+Pipelinq SHALL hand approved hours (WIP), approved expenses (AP) and the till's day totals (the POS-day journal raise) to Shillinq only when the Shillinq app is installed on the same server, and SHALL reach it internally through OpenRegister. The admin settings page and the setup wizard SHALL NOT ask for a Shillinq webhook URL. The Shillinq options section SHALL only show when Shillinq is installed; otherwise the Detected integrations card SHALL say Shillinq is not installed.
 
 #### Scenario: Shillinq installed, no address typed
 

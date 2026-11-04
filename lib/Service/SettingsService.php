@@ -248,14 +248,8 @@ class SettingsService {
 		'receipt_printer_host' => '',
 		'receipt_printer_port' => '9100',
 		'receipt_default_template' => '',
-		// No Shillinq WIP or AP webhook URL: both hand-offs follow the detected
+		// No Shillinq WIP, AP or journal webhook URL: the hand-offs follow the detected
 		// Shillinq app (IntegrationDetector, pipelinq-audit-admin-forms-pos).
-		// Shillinq journal-entry registry endpoint for the POS-day journal raise
-		// (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-001). The ADR-019 integration
-		// registry resolves the shillinq.JournalEntry.raise dispatch through this
-		// webhook URL; empty or non-HTTPS disables the integration. Replaces the
-		// retired hard-coded pos_eod.shillinq_endpoint POST to /api/JournalEntry.
-		'shillinq_journal_webhook_url' => '',
 		// Gates the real shillinq time-intake emit (time-billing-handoff-emit).
 		// Default off: an unconfigured install keeps the deep-link-only handoff
 		// to the detected Shillinq app (IntegrationDetector). The manager group allowed to
@@ -272,7 +266,7 @@ class SettingsService {
 		'export.failure_notification_email' => '',
 		'export.at_risk_warning_hours' => '24',
 		// POS end-of-day Z-report generation + alerting (pos-end-of-day-bookkeeping-post).
-		// The journal raise itself now delegates to shillinq via shillinq_journal_webhook_url
+		// The journal raise itself goes to the detected shillinq app
 		// (pipelinq-bookkeeping-to-shillinq); these keys only tune the operational
 		// Z-report close and the failure alert.
 		'pos_eod.z_report_time' => '23:59',
