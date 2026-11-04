@@ -234,6 +234,8 @@ class SettingsLoadService {
 		'forecastOverride',
 		'forecastSnapshot',
 		'salesQuota',
+		// Quotes: the quote number listener reads this key.
+		'salesQuote',
 		// Campaign events: the reminder and check-in read these two keys.
 		'campaignEvent',
 		'eventRegistration',

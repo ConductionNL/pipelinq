@@ -72,6 +72,7 @@ use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
+use OCA\Pipelinq\Listener\QuoteNumberCreatingListener;
 use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
@@ -225,11 +226,7 @@ class Application extends App implements IBootstrap {
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
 		);
-		// Every new request and complaint gets its reference number ("PQ-2026-0402").
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: TicketReferenceCreatingListener::class
-		);
+		$this->registerNumberListeners(context: $context);
 		// A lead a form created gets its contact and client before it is stored
 		// and its submit touchpoint once it is (decision 179: the submit creates
 		// the lead itself, so nothing relays it afterwards).
@@ -590,6 +587,26 @@ class Application extends App implements IBootstrap {
 			listener: SchemaChangeListener::class
 		);
 	}//end registerExportServices()
+
+	/**
+	 * Register the listeners that stamp a number on a new record: a request or
+	 * complaint gets its reference ("PQ-2026-0402"), a quote its number
+	 * ("OFF-2026-0042").
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerNumberListeners(IRegistrationContext $context): void {
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: TicketReferenceCreatingListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: QuoteNumberCreatingListener::class
+		);
+	}//end registerNumberListeners()
 
 	/**
 	 * Register the POS lifecycle guards keyed by the FQCN tag the
