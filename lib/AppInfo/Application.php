@@ -586,31 +586,6 @@ class Application extends App implements IBootstrap {
 	}//end registerExportServices()
 
 	/**
-	 * Register the listeners of an OpenRegister merge: the downstream sync after a
-	 * merge or reversal (REQ-MDM-004, ADR-041 event-not-RPC propagation), the
-	 * stamp that says where a merged-away client or contact went, and the guard
-	 * that keeps it read-only.
-	 *
-	 * @param IRegistrationContext $context The registration context.
-	 *
-	 * @return void
-	 */
-	private function registerMergeListeners(IRegistrationContext $context): void {
-		$context->registerEventListener(
-			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
-			listener: ObjectsMergedSyncListener::class
-		);
-		$context->registerEventListener(
-			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
-			listener: MergedAwayRecordListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatingEvent::class,
-			listener: MergedAwayRecordGuard::class
-		);
-	}//end registerMergeListeners()
-
-	/**
 	 * Register the POS lifecycle guards keyed by the FQCN tag the
 	 * posTransaction / posRefund schemas reference in their
 	 * x-openregister-lifecycle.transitions[*].requires.
@@ -674,6 +649,31 @@ class Application extends App implements IBootstrap {
 			}
 		);
 	}//end registerPosLifecycleGuards()
+
+	/**
+	 * Register the listeners of an OpenRegister merge: the downstream sync after a
+	 * merge or reversal (REQ-MDM-004, ADR-041 event-not-RPC propagation), the
+	 * stamp that says where a merged-away client or contact went, and the guard
+	 * that keeps it read-only.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerMergeListeners(IRegistrationContext $context): void {
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
+			listener: ObjectsMergedSyncListener::class
+		);
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
+			listener: MergedAwayRecordListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: MergedAwayRecordGuard::class
+		);
+	}//end registerMergeListeners()
 
 	/**
 	 * Boot the application and register comment display name resolvers.
