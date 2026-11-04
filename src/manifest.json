@@ -143,8 +143,7 @@
 				"schema": {
 					"type": "object",
 					"properties": {
-						"shillinq_journal_webhook_url": { "type": "string", "format": "uri", "title": "Address that takes the till's day totals (shillinq)", "order": 1 },
-						"billing_handoff_manager_group": { "type": "string", "title": "Group that may send contracts to invoicing", "order": 2 }
+						"billing_handoff_manager_group": { "type": "string", "title": "Group that may send contracts to invoicing", "order": 1 }
 					}
 				}
 			},
