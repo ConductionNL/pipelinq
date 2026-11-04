@@ -1,3 +1,3 @@
 # Screens
 
-- PqMobiel https://identity.conduction.nl/screens/board?id=pipelinq/PqMobiel
+- pipelinq/PqMobiel op een telefoon https://identity.conduction.nl/screens/board?id=pipelinq/PqMobiel

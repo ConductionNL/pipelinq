@@ -1,5 +1,6 @@
 # Screens
 
-- PqBeheerPortaal https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheerPortaal (the portal settings where pipelinq's public forms and their destination are managed)
-- No screen for the website and landing-page submits themselves: the visitor's form lives on an external site or a portaliq page, covered by portaliq's boards.
-- Design backlog: PqIntakeFormulier (decision 157) (the admin screen where a website form's destination and field mapping are set; draft board in design-system #194)
+- pipelinq/PqBeheerPortaal beheer, klantportaal: de openbare formulieren en waar ze heen gaan https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheerPortaal
+- pipelinq/PqIntakeFormulier intakeformulieren: Forms koppelen, bestemming en publiceren https://identity.conduction.nl/screens/board?id=pipelinq/PqIntakeFormulier
+- pipelinq/PqWachtrij wachtrij: alle kanalen in één lijst https://identity.conduction.nl/screens/board?id=pipelinq/PqWachtrij
+- pipelinq has no board of its own for the visitor's form: it lives on an external site or a portaliq page.

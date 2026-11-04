@@ -1,7 +1,7 @@
 # Screens
 
-- PqNieuwsbriefWizard https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefWizard
-- PqKassaKlantzoeken https://identity.conduction.nl/screens/board?id=pipelinq/PqKassaKlantzoeken
-- PqLoyaliteit https://identity.conduction.nl/screens/board?id=pipelinq/PqLoyaliteit
-- PqNieuwsbrieven https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbrieven
-- PqMailinglijst https://identity.conduction.nl/screens/board?id=pipelinq/PqMailinglijst
+- pipelinq/PqNieuwsbriefWizard nieuwsbrief in stappen https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbriefWizard
+- pipelinq/PqKassaKlantzoeken klant zoeken aan de kassa https://identity.conduction.nl/screens/board?id=pipelinq/PqKassaKlantzoeken
+- pipelinq/PqLoyaliteit loyaliteit https://identity.conduction.nl/screens/board?id=pipelinq/PqLoyaliteit
+- pipelinq/PqNieuwsbrieven nieuwsbrieven https://identity.conduction.nl/screens/board?id=pipelinq/PqNieuwsbrieven
+- pipelinq/PqMailinglijst mailinglijst https://identity.conduction.nl/screens/board?id=pipelinq/PqMailinglijst

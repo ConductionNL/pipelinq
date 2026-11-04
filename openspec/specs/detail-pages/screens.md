@@ -1,5 +1,5 @@
 # Screens
 
-- PqKlant https://identity.conduction.nl/screens/board?id=pipelinq/PqKlant
-- PqLead https://identity.conduction.nl/screens/board?id=pipelinq/PqLead
-- PqProduct https://identity.conduction.nl/screens/board?id=pipelinq/PqProduct
+- pipelinq/PqKlant inwoner https://identity.conduction.nl/screens/board?id=pipelinq/PqKlant
+- pipelinq/PqLead lead https://identity.conduction.nl/screens/board?id=pipelinq/PqLead
+- pipelinq/PqProduct product https://identity.conduction.nl/screens/board?id=pipelinq/PqProduct

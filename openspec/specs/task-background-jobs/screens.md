@@ -1,4 +1,4 @@
 # Screens
 
-- PqTaak https://identity.conduction.nl/screens/board?id=pipelinq/PqTaak
-- PqTaken https://identity.conduction.nl/screens/board?id=pipelinq/PqTaken
+- pipelinq/PqTaak taak https://identity.conduction.nl/screens/board?id=pipelinq/PqTaak
+- pipelinq/PqTaken taken en terugbelverzoeken https://identity.conduction.nl/screens/board?id=pipelinq/PqTaken
