@@ -808,7 +808,7 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 - WHEN a user without the "bsn_access" permission views the client detail
 - THEN the BSN field MUST NOT be visible at all (not masked, fully hidden)
 - AND when a user with "bsn_access" permission views the client detail
-- THEN the BSN MUST be displayed masked as "****-**-123" (last 3 digits visible)
+- THEN the BSN MUST be displayed masked as "*****4001" (last 4 digits visible), with "Tonen" to show it
 - AND an explicit "Show BSN" action MUST be required to reveal the full number
 
 #### Scenario: BSN validation (elfproef)
