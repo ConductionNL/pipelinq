@@ -64,7 +64,7 @@ The system MUST display a single, consolidated profile page for each client that
 
 - GIVEN a person client "Jan de Vries" with BSN linked, email "jan@devries.nl", telephone "+31 6 12345678"
 - WHEN the agent opens the customer 360 for this client
-- THEN the system MUST display: name, contact details (email, telephone, address), BSN (masked as "***456789" by default with a "Toon" toggle), and a "Verrijk met BRP" button
+- THEN the system MUST display: name, contact details (email, telephone, address), BSN (masked as "*****4001" by default with a "Tonen" action, each view logged), and a "Verrijk met BRP" button. A user without BSN rights MUST NOT see the row
 - AND the profile header MUST show the client type (Persoon) with a person avatar icon
 - AND the profile MUST extend the existing `ClientDetail.vue` layout with additional customer 360 tabs/sections
 
