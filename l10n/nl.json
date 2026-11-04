@@ -9558,6 +9558,9 @@
         "What the item installs: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector.": "Wat het item installeert: een pijplijn, wachtrijroutering, catalogus, kassa-inrichting, loyaliteitsprogramma of connector.",
         "What the item sets up, shown on its card in the store.": "Wat het item inricht, getoond op de kaart in de winkel.",
         "What the tariff is called, such as the rate of a fee regulation.": "Hoe het tarief heet, zoals het tarief uit een legesverordening.",
-        "Who published the item.": "Wie het item heeft gepubliceerd."
+        "Who published the item.": "Wie het item heeft gepubliceerd.",
+        "Search the store": "Zoek in de marktplaats",
+        "No store registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "Er is geen marktplaats-registry ingesteld, dus er is niets van het netwerk opgehaald. Een beheerder kan er een koppelen bij Beheerinstellingen. De sjablonen hieronder worden met Pipelinq meegeleverd.",
+        "The store registry did not answer. The templates below ship with Pipelinq.": "De marktplaats-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd."
     }
 }

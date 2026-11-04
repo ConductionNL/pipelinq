@@ -9529,6 +9529,9 @@
         "What the item installs: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector.": "What the item installs: a pipeline, queue routing, catalogue, POS setup, loyalty programme or connector.",
         "What the item sets up, shown on its card in the store.": "What the item sets up, shown on its card in the store.",
         "What the tariff is called, such as the rate of a fee regulation.": "What the tariff is called, such as the rate of a fee regulation.",
-        "Who published the item.": "Who published the item."
+        "Who published the item.": "Who published the item.",
+        "Search the store": "Search the marketplace",
+        "No store registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "No marketplace registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.",
+        "The store registry did not answer. The templates below ship with Pipelinq.": "The marketplace registry did not answer. The templates below ship with Pipelinq."
     }
 }
