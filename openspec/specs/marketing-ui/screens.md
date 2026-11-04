@@ -10,3 +10,5 @@
 - pipelinq/PqVerzendmonitor verzendmonitor https://identity.conduction.nl/screens/board?id=pipelinq/PqVerzendmonitor
 - pipelinq/PqJourneys journeys https://identity.conduction.nl/screens/board?id=pipelinq/PqJourneys
 - pipelinq/PqJourney journey https://identity.conduction.nl/screens/board?id=pipelinq/PqJourney
+
+Components: CnActionButtons, CnActionsBar, CnActionsMenu, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnConditionGroupEditor, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFilterBar, CnFormDialog, CnIndexPage, CnKpiGrid, CnNoteCard, CnPageHeader, CnPagination, CnProgressBar, CnQuickFilterBar, CnRowActions, CnSettingsPage, CnSettingsSection, CnStatsBlock, CnStatusBadge, CnTabs, CnTimelineStages, CnWizardDialog

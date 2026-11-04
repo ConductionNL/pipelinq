@@ -4,3 +4,5 @@
 - pipelinq/PqIntakeFormulier intakeformulieren: Forms koppelen, bestemming en publiceren https://identity.conduction.nl/screens/board?id=pipelinq/PqIntakeFormulier
 - pipelinq/PqWachtrij wachtrij: alle kanalen in één lijst https://identity.conduction.nl/screens/board?id=pipelinq/PqWachtrij
 - pipelinq has no board of its own for the visitor's form: it lives on an external site or a portaliq page.
+
+Components: CnAdminSettingsShell, CnAppNav, CnBreadcrumbs, CnBuildiqEditButton, CnDataTable, CnDetailCard, CnDetailGrid, CnKpiGrid, CnNoteCard, CnPageHeader, CnSegmentedControl, CnSettingsPage, CnSettingsSection, CnStatsBlock, CnStatusBadge, CnTabs, CnTeamWorkloadWidget, CnWorkQueue

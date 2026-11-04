@@ -849,58 +849,17 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 
 ### Requirement: Client Deduplication and Merge
 
-The system MUST support merging duplicate client records into a single consolidated record, transferring all linked entities (contact persons, leads, requests) and preserving the full audit history.
+Merging two clients SHALL happen in OpenRegister (REQ-MDM-013), with its field-by-field preview and its reversal. Pipelinq SHALL NOT offer a merge screen of its own; the client page SHALL show one line that the record was merged into another, with a link to that record, and SHALL be read-only from then on. Board: pipelinq/PqKlant (decision 288).
 
-**Feature tier**: V1
+#### Scenario: A merged client is read on its page
+- GIVEN client K-2019-01184 was merged into Sanne J. de Vries in OpenRegister
+- WHEN a user opens the merged client
+- THEN the page shows "Samengevoegd met Sanne J. de Vries (K-2019-01184) op 2 oktober 2026" with Open het samengevoegde record
+- AND editing is disabled on this record
 
-#### Scenario: Identify merge candidates
-@e2e exclude backend algorithm; covered by PHPUnit
-
-- GIVEN existing clients "Gemeente Utrecht" (ID: abc-111, with 3 leads) and "Gem. Utrecht" (ID: abc-222, with 1 lead and 2 contacts)
-- WHEN the user selects both clients in the list view and clicks "Merge"
-- THEN the system MUST display a merge preview showing:
-  - Both client records side-by-side with all fields
-  - A field-by-field selector allowing the user to choose which value to keep for each property
-  - A summary of linked entities that will be transferred: 4 leads, 2 contacts
-  - The target (surviving) client record
-
-#### Scenario: Execute client merge
-@e2e exclude backend merge service; covered by PHPUnit
-
-- GIVEN the user has configured a merge of "Gem. Utrecht" into "Gemeente Utrecht"
-- WHEN the user confirms the merge
-- THEN the system MUST update the surviving client "Gemeente Utrecht" with the selected field values
-- AND the system MUST re-link all contact persons from "Gem. Utrecht" to "Gemeente Utrecht" (update `client` UUID reference)
-- AND the system MUST re-link all leads from "Gem. Utrecht" to "Gemeente Utrecht"
-- AND the system MUST re-link all requests from "Gem. Utrecht" to "Gemeente Utrecht"
-- AND the system MUST delete the source client "Gem. Utrecht"
-- AND the audit trail MUST record the merge operation with both client IDs and the user who performed it
-
-#### Scenario: Merge preserves Nextcloud contact link
-@e2e exclude backend service; covered by PHPUnit
-
-- GIVEN client A has a `contactsUid` linking to a Nextcloud vCard and client B does not
-- WHEN client B is merged into client A
-- THEN the surviving client A MUST retain its `contactsUid` link
-- AND if both clients had `contactsUid` links, the surviving client MUST keep its own link and the system SHOULD log that the duplicate link was discarded
-
-#### Scenario: Merge from duplicate detection
-@e2e exclude requires seed data and dedup service
-
-- GIVEN the duplicate detection system has flagged "Acme B.V." and "ACME BV" as potential duplicates
-- WHEN the user clicks "Merge" on the duplicate warning
-- THEN the system MUST open the merge preview with both clients pre-selected
-- AND the user MUST be able to proceed through the standard merge flow
-
-#### Scenario: Cancel a merge
-@e2e exclude UI flow requiring seed data
-
-- GIVEN the user has opened the merge preview for two clients
-- WHEN the user clicks "Cancel"
-- THEN no changes MUST be made to either client
-- AND no linked entities MUST be modified
-
----
+#### Scenario: Merging and undoing happen in OpenRegister
+- WHEN a user wants to merge or undo a merge
+- THEN pipelinq links to OpenRegister's merge screen and offers no merge dialog of its own
 
 ### Requirement: Client Hierarchy (Parent/Child Organizations)
 

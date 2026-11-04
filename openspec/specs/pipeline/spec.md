@@ -102,30 +102,11 @@ The system MUST support creating, reading, updating, and deleting pipelines. Pip
 
 ### Requirement: Pipeline Entity Types [MVP]
 
-Each pipeline MUST declare which entity types it supports. This controls which entities can be placed on the pipeline and which entities appear on the kanban board.
+A pipeline SHALL hold one kind of item: leads, requests or cases, chosen as Soort when the pipeline is made. There SHALL be no mixed pipeline and no Show filter. Board: pipelinq/PqPipelines.
 
-#### Scenario 7: Lead-only pipeline
-
-- GIVEN a pipeline with entityTypes: ["lead"]
-- WHEN a user creates a lead and selects this pipeline
-- THEN the lead MUST be assignable to this pipeline
-- AND when a user attempts to place a request on this pipeline, the system MUST reject it with "This pipeline does not support requests"
-
-#### Scenario 8: Request-only pipeline
-
-- GIVEN a pipeline with entityTypes: ["request"]
-- WHEN a user creates a request and selects this pipeline
-- THEN the request MUST be assignable to this pipeline
-- AND leads MUST NOT be assignable to this pipeline
-
-#### Scenario 9: Mixed pipeline
-
-- GIVEN a pipeline with entityTypes: ["lead", "request"]
-- WHEN the kanban board is rendered
-- THEN both leads and requests MUST appear as cards in their respective stage columns
-- AND the pipeline view MUST support a "Show" filter with options: "All", "Leads only", "Requests only"
-
----
+#### Scenario: A pipeline has one kind
+- WHEN an admin makes a pipeline and chooses Soort Verzoeken
+- THEN only requests can be placed on it, and the board shows request cards only
 
 ### Requirement: Default Pipelines [MVP]
 

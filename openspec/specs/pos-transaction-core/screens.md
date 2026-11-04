@@ -7,3 +7,5 @@
 - pipelinq/PqKassabon transactie en bon https://identity.conduction.nl/screens/board?id=pipelinq/PqKassabon
 - pipelinq/PqKassadiensten kassalade https://identity.conduction.nl/screens/board?id=pipelinq/PqKassadiensten
 - pipelinq/PqBeheerKassa instellingen, kassa https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheerKassa
+
+Components: CnActionButtons, CnActionDialog, CnActionsBar, CnActionsMenu, CnAdminSettingsShell, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnChoiceCards, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFilterBar, CnFormDialog, CnIndexPage, CnNoteCard, CnNoticeWidget, CnPagination, CnQuickFilterBar, CnRelatedCollections, CnRowActions, CnSettingsPage, CnSettingsSection, CnStatusBadge, CnTabs

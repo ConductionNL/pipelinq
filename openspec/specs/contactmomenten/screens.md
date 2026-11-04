@@ -8,3 +8,5 @@
 - pipelinq/PqContactmomenten contactmomenten https://identity.conduction.nl/screens/board?id=pipelinq/PqContactmomenten
 - pipelinq/PqContactmoment contactmoment https://identity.conduction.nl/screens/board?id=pipelinq/PqContactmoment
 - pipelinq/PqBerichtSturen bericht sturen (sms, WhatsApp) https://identity.conduction.nl/screens/board?id=pipelinq/PqBerichtSturen
+
+Components: CnActionButtons, CnActionsBar, CnActionsMenu, CnAppNav, CnBreadcrumbs, CnBuildiqEditButton, CnDashboardPage, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFilterBar, CnFormDialog, CnIndexPage, CnMarkdownWidget, CnNextStepCard, CnPageHeader, CnPagination, CnQuickFilterBar, CnRecordListWidget, CnRelatedCollections, CnRowActions, CnSegmentedControl, CnStatusBadge, CnTabs, CnTasksCard

@@ -15,3 +15,5 @@
 - pipelinq/PqMijnWerk mijn werk https://identity.conduction.nl/screens/board?id=pipelinq/PqMijnWerk
 - pipelinq/PqOperationeel operationeel overzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqOperationeel
 - pipelinq/PqPipeline pijplijn: het bord met Pijplijn: Service en verzoekkaarten https://identity.conduction.nl/screens/board?id=pipelinq/PqPipeline
+
+Components: CnAccessPurposeDialog, CnActionButtons, CnActionsBar, CnActionsMenu, CnAiChatWidget, CnAppNav, CnAuditTrailCard, CnBoardView, CnBreadcrumbs, CnBuildiqEditButton, CnCardGrid, CnDashboardGrid, CnDashboardPage, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFilterBar, CnFormDialog, CnIndexPage, CnKpiGrid, CnMassActionBar, CnNextStepCard, CnNoteCard, CnNoticeWidget, CnObjectCard, CnPageHeader, CnPagination, CnQuickFilterBar, CnRelatedCollections, CnReportsPage, CnRowActions, CnSegmentedControl, CnSettingsPage, CnSettingsSection, CnStatsBlock, CnStatusBadge, CnTabs, CnTasksCard, CnTeamWorkloadWidget, CnTemplateSelect, CnWorkQueue

@@ -11,3 +11,5 @@
 - pipelinq/PqContactenImporteren importeren uit Nextcloud Contacten https://identity.conduction.nl/screens/board?id=pipelinq/PqContactenImporteren
 - pipelinq/PqKlantenSelectie klanten, selectie en bulkwijzigingen https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantenSelectie
 - pipelinq/PqReports rapportages: klantlevenscyclus https://identity.conduction.nl/screens/board?id=pipelinq/PqReports
+
+Components: CnActionButtons, CnActionsBar, CnActionsMenu, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnCardGrid, CnConfirmDialog, CnConversationThread, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnDuplicateWarning, CnFilterBar, CnFormDialog, CnIndexPage, CnLockedBanner, CnMassActionBar, CnMassImportDialog, CnNoteCard, CnNotesCard, CnObjectCard, CnPageHeader, CnPagination, CnQuickFilterBar, CnRelatedCollections, CnReportsPage, CnRowActions, CnSettingsPage, CnSettingsSection, CnSignatureCapture, CnSmartPasteDialog, CnStatusBadge, CnTabs, CnTreeView
