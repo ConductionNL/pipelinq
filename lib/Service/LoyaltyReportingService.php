@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -52,6 +53,8 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
  */
 class LoyaltyReportingService {
+	use OptionalPayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -476,47 +479,8 @@ class LoyaltyReportingService {
 			return null;
 		}
 
-		return $this->normalizeOptionResult(object: $object);
+		return $this->toArray(object: $object);
 	}//end getOption()
-
-	/**
-	 * Normalize a RedemptionOption lookup result to a plain array.
-	 *
-	 * Mirrors the previous inline `getOption()` tail exactly: null passes
-	 * through as null, arrays pass through, objects exposing
-	 * `jsonSerialize()` are serialized, objects exposing `getObject()` are
-	 * unwrapped, anything else yields null.
-	 *
-	 * @param mixed $object The raw ObjectService::find() result.
-	 *
-	 * @return array<string, mixed>|null The normalized option, or null when it
-	 *                                   could not be normalized to an array.
-	 */
-	private function normalizeOptionResult(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end normalizeOptionResult()
 
 	/**
 	 * Get the ObjectService.

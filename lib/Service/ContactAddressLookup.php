@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,6 +41,8 @@ use Throwable;
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
  */
 class ContactAddressLookup {
+	use SerialisedToArray;
+
 
 	/**
 	 * The phone fields, in the order the adapters read them.
@@ -184,26 +187,4 @@ class ContactAddressLookup {
 
 		return null;
 	}//end loadContact()
-
-	/**
-	 * Normalise an OpenRegister entity to an array.
-	 *
-	 * @param mixed $value The entity.
-	 *
-	 * @return array<string,mixed> The row.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

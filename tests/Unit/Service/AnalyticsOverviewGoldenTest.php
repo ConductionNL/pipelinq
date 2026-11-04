@@ -43,6 +43,13 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Pipelinq\Service\AnalyticsService
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
  *
  * @spec openspec/changes/dashboard/tasks.md#task-2.2
  */

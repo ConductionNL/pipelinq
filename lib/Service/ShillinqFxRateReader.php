@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Util\SerialisedToArray;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -39,6 +40,8 @@ use Throwable;
  * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
  */
 class ShillinqFxRateReader {
+	use SerialisedToArray;
+
 
 	/**
 	 * Shillinq's register slug.
@@ -314,26 +317,4 @@ class ShillinqFxRateReader {
 
 		return $rows;
 	}//end rows()
-
-	/**
-	 * Normalise an OpenRegister entity, or an array, to a plain array.
-	 *
-	 * @param mixed $value Entity object or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

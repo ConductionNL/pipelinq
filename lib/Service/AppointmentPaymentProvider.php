@@ -35,6 +35,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -58,6 +59,8 @@ use Throwable;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentPaymentProvider {
+	use NullablePayloadToArray;
+
 	/**
 	 * Charge kind logged on the Booking record.
 	 *
@@ -477,43 +480,6 @@ class AppointmentPaymentProvider {
 		$minor = ($absolute % 100);
 		return sprintf('%s%d.%02d', $sign, $major, $minor);
 	}//end centsToDecimal()
-
-	/**
-	 * Normalise an OpenRegister entity to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Now in ISO-8601 UTC.
