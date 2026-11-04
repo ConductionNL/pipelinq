@@ -7,3 +7,5 @@
 - pipelinq/PqBeheer beheer https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheer
 - pipelinq/PqBeheerKoppelingen beheer, koppelingen https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheerKoppelingen
 - pipelinq/PqPersoonlijk persoonlijke instellingen: meldingsvoorkeuren https://identity.conduction.nl/screens/board?id=pipelinq/PqPersoonlijk
+
+Components: CnActionButtons, CnAdminSettingsShell, CnAppNav, CnBreadcrumbs, CnBuildiqEditButton, CnDataTable, CnDeleteDialog, CnDetailGrid, CnLinkCardsPage, CnNoteCard, CnSegmentedControl, CnSettingsPage, CnSettingsSection, CnStatusBadge, CnTabs, CnTagsCard, CnTimelineStages, CnVersionInfoCard

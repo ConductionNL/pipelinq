@@ -6,3 +6,5 @@
 - pipelinq/PqContactmoment contactmoment https://identity.conduction.nl/screens/board?id=pipelinq/PqContactmoment
 - pipelinq/PqLead lead https://identity.conduction.nl/screens/board?id=pipelinq/PqLead
 - pipelinq/PqPersoonlijk persoonlijke instellingen https://identity.conduction.nl/screens/board?id=pipelinq/PqPersoonlijk
+
+Components: CnActionButtons, CnActionsMenu, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFormDialog, CnKpiGrid, CnMarkdownWidget, CnNextStepCard, CnPageHeader, CnRecordListWidget, CnRelatedCollections, CnSegmentedControl, CnSettingsPage, CnStatsBlock, CnStatusBadge, CnTabs, CnTeamWorkloadWidget, CnTimelineStages, CnWorkQueue

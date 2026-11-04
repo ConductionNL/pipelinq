@@ -4,3 +4,5 @@
 - pipelinq/PqContracten contracten https://identity.conduction.nl/screens/board?id=pipelinq/PqContracten
 - pipelinq/PqOrganisatie organisatie https://identity.conduction.nl/screens/board?id=pipelinq/PqOrganisatie
 - pipelinq/PqVerkoopoverzicht verkoopoverzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqVerkoopoverzicht
+
+Components: CnActionButtons, CnActionsBar, CnActionsMenu, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnConversationThread, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFilterBar, CnGaugeWidget, CnIndexPage, CnKpiGrid, CnNextStepCard, CnNoteCard, CnNotesCard, CnPageHeader, CnPagination, CnQuickFilterBar, CnRelatedCollections, CnRowActions, CnSegmentedControl, CnSettingsPage, CnSettingsSection, CnStatsBlock, CnStatusBadge, CnTabs, CnTreeView

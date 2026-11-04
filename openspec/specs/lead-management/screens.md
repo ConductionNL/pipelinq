@@ -9,3 +9,5 @@
 - pipelinq/PqReports algemeen: rapportages (pipelinq) https://identity.conduction.nl/screens/board?id=pipelinq/PqReports
 - pipelinq/PqAanvraagOmzetten aanvraag aan een klant koppelen https://identity.conduction.nl/screens/board?id=pipelinq/PqAanvraagOmzetten
 - pipelinq/PqMijnWerk mijn werk https://identity.conduction.nl/screens/board?id=pipelinq/PqMijnWerk
+
+Components: CnActionButtons, CnActionsBar, CnActionsMenu, CnAdminSettingsShell, CnAppNav, CnAuditTrailCard, CnBoardView, CnBreadcrumbs, CnBuildiqEditButton, CnCardGrid, CnConversationThread, CnDataTable, CnDeleteDialog, CnDetailCard, CnDetailGrid, CnDetailPage, CnFilterBar, CnFormDialog, CnIndexPage, CnLockedBanner, CnNextStepCard, CnNoteCard, CnNotesCard, CnNoticeWidget, CnObjectCard, CnPageHeader, CnPagination, CnQuickFilterBar, CnRelatedCollections, CnReportsPage, CnRowActions, CnSegmentedControl, CnSettingsPage, CnSettingsSection, CnStatusBadge, CnTabs, CnTimelineStages, CnTreeView

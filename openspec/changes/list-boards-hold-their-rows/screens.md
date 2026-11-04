@@ -8,3 +8,5 @@
 - pipelinq/PqKassadiensten kassalade https://identity.conduction.nl/screens/board?id=pipelinq/PqKassadiensten
 - pipelinq/PqSjablonen sjablonen https://identity.conduction.nl/screens/board?id=pipelinq/PqSjablonen
 - pipelinq/PqJourneys journeys https://identity.conduction.nl/screens/board?id=pipelinq/PqJourneys
+
+Components: CnActionsBar, CnAppNav, CnBuildiqEditButton, CnDataTable, CnFilterBar, CnIndexPage, CnPagination, CnQuickFilterBar, CnRowActions, CnSettingsPage, CnSettingsSection, CnStatusBadge

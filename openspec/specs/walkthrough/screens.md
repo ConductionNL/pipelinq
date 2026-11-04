@@ -2,3 +2,5 @@
 
 - pipelinq/PqPersoonlijk persoonlijke instellingen https://identity.conduction.nl/screens/board?id=pipelinq/PqPersoonlijk
 - pipelinq/PqKlantNieuw nieuwe klant https://identity.conduction.nl/screens/board?id=pipelinq/PqKlantNieuw
+
+Components: CnActionsBar, CnAppNav, CnBuildiqEditButton, CnDataTable, CnDuplicateWarning, CnFilterBar, CnFormDialog, CnIndexPage, CnPagination, CnQuickFilterBar, CnRowActions, CnSettingsPage, CnSignatureCapture, CnSmartPasteDialog

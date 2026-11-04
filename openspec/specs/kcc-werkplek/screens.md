@@ -7,3 +7,5 @@
 - pipelinq/PqInloop inloopwachtrij https://identity.conduction.nl/screens/board?id=pipelinq/PqInloop
 - pipelinq/PqWachtrij wachtrij https://identity.conduction.nl/screens/board?id=pipelinq/PqWachtrij
 - pipelinq/PqTickets tickets: sortering en importeren https://identity.conduction.nl/screens/board?id=pipelinq/PqTickets
+
+Components: CnActionButtons, CnActionsBar, CnAppNav, CnBreadcrumbs, CnBuildiqEditButton, CnCardGrid, CnConfirmDialog, CnDashboardGrid, CnDashboardPage, CnDataTable, CnDetailCard, CnDetailGrid, CnFilterBar, CnFormDialog, CnIndexPage, CnKpiGrid, CnNoteCard, CnObjectCard, CnObjectListWidget, CnPageHeader, CnPagination, CnQuickFilterBar, CnRowActions, CnSegmentedControl, CnStatsBlock, CnStatusBadge, CnTasksCard, CnTeamWorkloadWidget, CnWidgetWrapper, CnWorkQueue

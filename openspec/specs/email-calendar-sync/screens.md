@@ -6,3 +6,5 @@
 - pipelinq/PqLead lead https://identity.conduction.nl/screens/board?id=pipelinq/PqLead
 - pipelinq/PqContactpersoon contact https://identity.conduction.nl/screens/board?id=pipelinq/PqContactpersoon
 - pipelinq/PqPersoonlijk persoonlijke instellingen: e-mailsynchronisatie per gebruiker https://identity.conduction.nl/screens/board?id=pipelinq/PqPersoonlijk
+
+Components: CnActionButtons, CnActionsMenu, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnConversationThread, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFormDialog, CnLockedBanner, CnNextStepCard, CnNoteCard, CnNotesCard, CnRelatedCollections, CnSettingsPage, CnSettingsSection, CnStatusBadge, CnTabs, CnTimelineStages, CnTreeView

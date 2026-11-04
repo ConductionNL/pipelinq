@@ -9,3 +9,5 @@
 - pipelinq/PqZoekinzicht zoekinzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqZoekinzicht
 - pipelinq/PqWeekoverzicht weekoverzicht https://identity.conduction.nl/screens/board?id=pipelinq/PqWeekoverzicht
 - pipelinq/PqBeheerMarketing instellingen, marketing en gegevens https://identity.conduction.nl/screens/board?id=pipelinq/PqBeheerMarketing
+
+Components: CnActionButtons, CnActionsBar, CnActionsMenu, CnAdminSettingsShell, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnFilterBar, CnIndexPage, CnKpiGrid, CnNoteCard, CnPagination, CnQuickFilterBar, CnRowActions, CnSettingsPage, CnSettingsSection, CnStatsBlock, CnStatusBadge, CnTabs, CnTagsCard
