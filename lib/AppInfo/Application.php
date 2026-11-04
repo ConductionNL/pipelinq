@@ -72,6 +72,7 @@ use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
+use OCA\Pipelinq\Listener\TicketPhoneListener;
 use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
@@ -224,6 +225,16 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
+		);
+		// Every ticket is stored with the phone number it is about, in E.164
+		// (contact-moments-phone-lookup), so the phone search finds it.
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: TicketPhoneListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: TicketPhoneListener::class
 		);
 		// Every new request and complaint gets its reference number ("PQ-2026-0402").
 		$context->registerEventListener(

@@ -1,0 +1,18 @@
+{
+  "_note": "contact-moments-phone-lookup D2. The phone number a ticket is about, normalised to E.164, so the phone search and the screen pop for an unknown caller find it however it was typed. TicketPhoneListener fills it on every save from the CTI number (to_number on an outbound call, else from_number) or the number a resident typed on a web form (reporterPhone). Nobody types it, so no form shows it.",
+  "components": {
+    "schemas": {
+      "ticket": {
+        "slug": "ticket",
+        "properties": {
+          "phoneE164": {
+            "type": "string",
+            "title": "Phone number (E.164)",
+            "description": "The phone number this ticket is about, normalised to E.164. Filled in on save; used to find the ticket by phone number.",
+            "visible": false
+          }
+        }
+      }
+    }
+  }
+}
