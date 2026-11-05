@@ -9546,6 +9546,11 @@
         "Search the store": "Search the marketplace",
         "No store registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "No marketplace registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.",
         "The store registry did not answer. The templates below ship with Pipelinq.": "The marketplace registry did not answer. The templates below ship with Pipelinq.",
-        "longest waiting first": "longest waiting first"
+        "longest waiting first": "longest waiting first",
+        "Subtotal excl. VAT": "Subtotal excl. VAT",
+        "Total of the lines": "Total of the lines",
+        "The products and lines of your own on this quote, before VAT.": "The products and lines of your own on this quote, before VAT.",
+        "The products this deal is about. A line's total is worked out when the lead is saved.": "The products this deal is about. A line's total is worked out when the lead is saved.",
+        "The product's name as it was when the line was added.": "The product's name as it was when the line was added."
     }
 }
