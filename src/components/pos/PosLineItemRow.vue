@@ -96,7 +96,7 @@
 				@update:modelValue="onTaxRateSelect" />
 		</td>
 		<td class="pos-line-row__total">
-			{{ formatEur(computed.lineTotal) }}
+			{{ formatEur(readTotal) }}
 		</td>
 		<td class="pos-line-row__actions">
 			<NcButton
@@ -126,7 +126,7 @@ import Check from 'vue-material-design-icons/Check.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import { getUserLocale } from '../../services/localeUtils.js'
-import { formatEur, recalculateLine } from '../../services/posTotals.js'
+import { formatEur } from '../../services/posTotals.js'
 
 export default {
 	name: 'PosLineItemRow',
@@ -149,11 +149,6 @@ export default {
 		products: {
 			type: Array,
 			default: () => [],
-		},
-
-		priceMode: {
-			type: String,
-			default: 'excl',
 		},
 
 		/**
@@ -200,13 +195,13 @@ export default {
 		},
 
 		/**
-		 * The line total the read row shows.
+		 * The line total the server stored for the line.
 		 *
 		 * @return {number} The total.
-		 * @spec openspec/specs/pos-transactions/spec.md#requirement-the-sale-lines-read-as-a-table-and-stay-editable
+		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
 		 */
 		readTotal() {
-			return recalculateLine(this.line, this.priceMode).lineTotal
+			return Number(this.line.lineTotal) || 0
 		},
 
 		/**
@@ -260,14 +255,6 @@ export default {
 			)
 		},
 
-		/**
-		 * Server-mirroring computed taxAmount + lineTotal for display.
-		 *
-		 * @return {object} The computed line.
-		 */
-		computed() {
-			return recalculateLine(this.local, this.priceMode)
-		},
 	},
 
 	watch: {
@@ -345,13 +332,10 @@ export default {
 		},
 
 		/**
-		 * Emit the recomputed line to the parent.
+		 * Emit the edited line to the parent, which has the server price it.
 		 */
 		emitUpdate() {
-			this.$emit(
-				'update:line',
-				recalculateLine({ ...this.line, ...this.local }, this.priceMode),
-			)
+			this.$emit('update:line', { ...this.line, ...this.local })
 		},
 	},
 }

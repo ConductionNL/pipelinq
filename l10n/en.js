@@ -9471,7 +9471,8 @@ OC.L10N.register(
         "The value follows the product lines again.": "The value follows the product lines again.",
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
-        "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to."
+        "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
     },
     "nplurals=2; plural=(n != 1);"
 )

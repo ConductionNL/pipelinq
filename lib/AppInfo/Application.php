@@ -78,6 +78,7 @@ use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
 use OCA\Pipelinq\Listener\QuoteNumberCreatingListener;
 use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
+use OCA\Pipelinq\Listener\PosLinePricingListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
 use OCA\Pipelinq\Service\AppointmentEmailService;
@@ -604,6 +605,11 @@ class Application extends App implements IBootstrap {
 		// A quote's totals and a lead's value follow their lines (line-totals-roll-up).
 		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $lineEvent) {
 			$context->registerEventListener(event: $lineEvent, listener: LineTotalsListener::class);
+		}
+
+		// A till line gets its VAT and total from the server before it is stored (till-server-priced-lines).
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $lineEvent) {
+			$context->registerEventListener(event: $lineEvent, listener: PosLinePricingListener::class);
 		}
 	}//end registerNumberListeners()
 
