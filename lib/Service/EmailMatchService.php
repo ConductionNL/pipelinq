@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\EmailMessageRef;
+use OCA\OpenRegister\Service\LinkTarget;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\AnyPayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
@@ -350,12 +352,10 @@ class EmailMatchService {
 				);
 
 				$linkService->linkEmail(
-					objectUuid: $entity['entityId'],
-					registerId: (int)$register,
-					schemaId: (int)$schema,
-					mailAccountId: $mailAccountId,
-					messageId: (string)$mailMessageId,
-					messageUid: (string)$message['uid']
+					target: (new LinkTarget(objectUuid: $entity['entityId'], registerId: (int)$register))
+						->inSchema(schemaId: (int)$schema),
+					message: (new EmailMessageRef(mailAccountId: $mailAccountId, messageId: (string)$mailMessageId))
+						->withUid(uid: (string)$message['uid'])
 				);
 
 				if ($before === null) {
