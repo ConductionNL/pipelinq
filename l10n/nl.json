@@ -9574,6 +9574,11 @@
         "Who published the item.": "Wie het item heeft gepubliceerd.",
         "Search the store": "Zoek in de marktplaats",
         "No store registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "Er is geen marktplaats-registry ingesteld, dus er is niets van het netwerk opgehaald. Een beheerder kan er een koppelen bij Beheerinstellingen. De sjablonen hieronder worden met Pipelinq meegeleverd.",
-        "The store registry did not answer. The templates below ship with Pipelinq.": "De marktplaats-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd."
+        "The store registry did not answer. The templates below ship with Pipelinq.": "De marktplaats-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd.",
+        "Subtotal excl. VAT": "Subtotaal excl. btw",
+        "Total of the lines": "Totaal van de regels",
+        "The products and lines of your own on this quote, before VAT.": "De producten en eigen regels op deze offerte, zonder btw.",
+        "The products this deal is about. A line's total is worked out when the lead is saved.": "De producten waar deze deal over gaat. Het regeltotaal wordt berekend als de lead wordt opgeslagen.",
+        "The product's name as it was when the line was added.": "De naam van het product zoals die was toen de regel werd toegevoegd."
     }
 }
