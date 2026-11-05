@@ -68,6 +68,10 @@ describe('the work lenses', () => {
 		expect(tickets.config.quickFilters.filter((entry) => entry.sort).map((entry) => entry.label)).toEqual(['Unassigned'])
 		expect([tickets.config.sortKey, tickets.config.sortOrder]).toEqual(['occurredAt', 'desc'])
 	})
+
+	it('says on the count line that Unassigned shows the longest waiting first', () => {
+		expect(tickets.config.countSuffixByFilter).toEqual({ Unassigned: 'longest waiting first' })
+	})
 })
 
 describe('moveTicketStatus', () => {

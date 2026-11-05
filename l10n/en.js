@@ -9459,7 +9459,8 @@ OC.L10N.register(
         "Who published the item.": "Who published the item.",
         "Search the store": "Search the marketplace",
         "No store registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "No marketplace registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.",
-        "The store registry did not answer. The templates below ship with Pipelinq.": "The marketplace registry did not answer. The templates below ship with Pipelinq."
+        "The store registry did not answer. The templates below ship with Pipelinq.": "The marketplace registry did not answer. The templates below ship with Pipelinq.",
+        "longest waiting first": "longest waiting first"
     },
     "nplurals=2; plural=(n != 1);"
 )

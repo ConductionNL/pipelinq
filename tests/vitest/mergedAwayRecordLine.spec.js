@@ -49,3 +49,10 @@ describe('ClientDetail on a merged-away client', () => {
 		})
 	})
 })
+
+describe('a merged-away client or contact cannot be edited', () => {
+	it('makes ClientDetail and ContactDetail read-only while mergedInto is set', () => {
+		expect(page('ClientDetail').readOnlyWhen).toEqual(MERGED)
+		expect(page('ContactDetail').readOnlyWhen).toEqual(MERGED)
+	})
+})

@@ -9473,7 +9473,8 @@ OC.L10N.register(
         "Who published the item.": "Wie het item heeft gepubliceerd.",
         "Search the store": "Zoek in de marktplaats",
         "No store registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "Er is geen marktplaats-registry ingesteld, dus er is niets van het netwerk opgehaald. Een beheerder kan er een koppelen bij Beheerinstellingen. De sjablonen hieronder worden met Pipelinq meegeleverd.",
-        "The store registry did not answer. The templates below ship with Pipelinq.": "De marktplaats-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd."
+        "The store registry did not answer. The templates below ship with Pipelinq.": "De marktplaats-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd.",
+        "longest waiting first": "langst wachtend eerst"
     },
     "nplurals=2; plural=(n != 1);"
 )

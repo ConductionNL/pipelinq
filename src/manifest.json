@@ -2059,6 +2059,7 @@
 				"recordLastChange": true,
 				"register": "pipelinq",
 				"schema": "client",
+				"readOnlyWhen": { "field": "mergedInto", "op": "notEmpty" },
 				"fieldOverrides": {
 					"industry": {
 						"widget": "multiselect",
@@ -4200,6 +4201,7 @@
 						{ "field": "assignee", "label": "handler", "kind": "values", "emptyLabel": "Nobody" }
 					]
 				},
+				"countSuffixByFilter": { "Unassigned": "longest waiting first" },
 				"_quickFiltersNote": "The work lenses the LijstBord board draws come first; All and the ticket type lenses stay after them, so nobody loses a filter.",
 				"quickFilters": [
 					{ "label": "All open", "filter": { "status": ["new", "in_progress", "awaiting_customer"] }, "default": true },
@@ -4550,6 +4552,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"readOnlyWhen": { "field": "mergedInto", "op": "notEmpty" },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Contact person page on the shared relation frame (nextcloud-vue screens-relation-pages, PqContactpersoon, Ruben 11 Oct 2026: at most seven tabs, Kanalen and Relaties as side cards). Header: the type pill, the breadcrumb back to Contacts, the meta line 'role at client' (the page extends client), and Call and Mail as tel:/mailto: links. One tab strip fills the body: Overview (the contact data card and the deals table, as the board draws them), Deals, Requests, Contact moments, Bookings, Files, History. Mail, Messages, Meetings, Subscriptions and BSN and BRP moved to the side column with Channels and Relationships, before History. Children of the tabs widget stay out of layout, or the tabs widget and the grid would each render them once.",
 				"widgets": [
