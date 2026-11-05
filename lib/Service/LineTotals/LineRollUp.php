@@ -31,7 +31,8 @@ use OCP\IAppConfig;
 /**
  * Writes a quote's subtotal, VAT and total, or a lead's value, from every line on it.
  *
- * A lead without lines keeps the value typed by hand.
+ * A lead without lines keeps the value typed by hand, and so does a lead
+ * whose value was typed over the calculated one.
  *
  * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
  */
@@ -146,7 +147,7 @@ class LineRollUp {
 		}
 
 		if ($parent->kind === 'leadProduct') {
-			return ['value' => $this->math->leadValue(lines: $lines)];
+			return $this->math->leadPatch(lines: $lines, lead: $this->dataOf(objectId: $parent->parentId));
 		}
 
 		return $this->math->quoteTotals(lines: $lines, vatRate: $this->vatRateOf(quoteId: $parent->parentId));
@@ -192,14 +193,25 @@ class LineRollUp {
 	 * @return float The rate in percent.
 	 */
 	private function vatRateOf(string $quoteId): float {
-		$quote = $this->objects->find(id: $quoteId, _rbac: false, _multitenancy: false, _render: false, _audit: false);
-		$rate  = ($quote?->getObject()['vatRate'] ?? null);
+		$rate = ($this->dataOf(objectId: $quoteId)['vatRate'] ?? null);
 		if (is_numeric($rate) === false) {
 			return self::DEFAULT_VAT_RATE;
 		}
 
 		return (float)$rate;
 	}//end vatRateOf()
+
+	/**
+	 * A quote's or lead's data.
+	 *
+	 * @param string $objectId The quote or lead id.
+	 *
+	 * @return array<string, mixed> The data, empty when it is not found.
+	 */
+	private function dataOf(string $objectId): array {
+		$found = $this->objects->find(id: $objectId, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		return (array)($found?->getObject() ?? []);
+	}//end dataOf()
 
 	/**
 	 * The schema id stored for a schema slug.

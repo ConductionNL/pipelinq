@@ -9464,7 +9464,13 @@ OC.L10N.register(
         "Total of the lines": "Total of the lines",
         "The products and lines of your own on this quote, before VAT.": "The products and lines of your own on this quote, before VAT.",
         "The products this deal is about. A line's total is worked out when the lead is saved.": "The products this deal is about. A line's total is worked out when the lead is saved.",
-        "The product's name as it was when the line was added.": "The product's name as it was when the line was added."
+        "The product's name as it was when the line was added.": "The product's name as it was when the line was added.",
+        "Calculated from the lines": "Calculated from the lines",
+        "The value was typed over what the product lines add up to.": "The value was typed over what the product lines add up to.",
+        "The value follows the product lines again.": "The value follows the product lines again.",
+        "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
+        "Value typed by hand": "Value typed by hand",
+        "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to."
     },
     "nplurals=2; plural=(n != 1);"
 )

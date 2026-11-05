@@ -73,4 +73,43 @@ class LineTotalMath {
 	public function leadValue(array $lines): float {
 		return round(array_sum(array_map(static fn (array $line): float => (float)($line['total'] ?? 0), $lines)), 2);
 	}//end leadValue()
+
+	/**
+	 * The fields a lead line change writes on its lead: always the calculated
+	 * value, and the value itself unless it was typed over the calculated one.
+	 *
+	 * @param array<int, array<string, mixed>> $lines The lead lines.
+	 * @param array<string, mixed>             $lead  The lead as stored.
+	 *
+	 * @return array<string, float> The fields.
+	 *
+	 * @spec openspec/changes/lead-use-calculated-value/tasks.md#task-1
+	 */
+	public function leadPatch(array $lines, array $lead): array {
+		$calculated = $this->leadValue(lines: $lines);
+		$patch      = ['calculatedValue' => $calculated];
+		if ($this->followsLines(lead: $lead) === true) {
+			$patch['value'] = $calculated;
+		}
+
+		return $patch;
+	}//end leadPatch()
+
+	/**
+	 * Whether a lead's value follows its lines: it is empty or 0, no value was
+	 * calculated before, or it still equals the last calculated value.
+	 *
+	 * @param array<string, mixed> $lead The lead as stored.
+	 *
+	 * @return bool True when the value follows the lines.
+	 */
+	private function followsLines(array $lead): bool {
+		$value    = ($lead['value'] ?? null);
+		$previous = ($lead['calculatedValue'] ?? null);
+		if (is_numeric($value) === false || (float)$value === 0.0 || is_numeric($previous) === false) {
+			return true;
+		}
+
+		return round((float)$value, 2) === round((float)$previous, 2);
+	}//end followsLines()
 }//end class

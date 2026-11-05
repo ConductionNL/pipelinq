@@ -36,7 +36,7 @@ describe('the lines property', () => {
 		expect(schemas.salesQuote.version).toBe('1.2.0')
 		expect(schemas.lead.version).toBe('1.6.0')
 		expect(schemas.leadProduct.version).toBe('1.2.0')
-		expect(register.info.version).toBe('1.14.0')
+		expect(register.info['x-changelog']).toContain('1.14.0: salesQuote and lead gain lines')
 	})
 
 	it('leaves the lead line total to the server calculation', () => {

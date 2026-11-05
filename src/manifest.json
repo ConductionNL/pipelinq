@@ -5322,6 +5322,7 @@
 							"columns": 2,
 							"include": [
 								"value",
+								"calculatedValue",
 								"qualificationScore",
 								"expectedCloseDate",
 								"priority",
@@ -5351,6 +5352,13 @@
 								"value": {
 									"order": 1,
 									"label": "Value"
+								},
+								"calculatedValue": {
+									"order": 1,
+									"label": "Calculated from the lines",
+									"editable": false,
+									"hint": "The value was typed over what the product lines add up to.",
+									"visibleWhen": { "field": "valueOverridden", "op": "eq", "value": true }
 								},
 								"expectedCloseDate": {
 									"order": 3,
@@ -5903,6 +5911,23 @@
 							"field": "status",
 							"op": "eq",
 							"value": "open"
+						}
+					},
+					{
+						"id": "use-calculated-value",
+						"type": "api-call",
+						"label": "Use calculated value",
+						"icon": "Refresh",
+						"method": "PATCH",
+						"url": "/apps/openregister/api/objects/pipelinq/lead/@objectId",
+						"payload": {
+							"value": "@object.calculatedValue"
+						},
+						"successMessage": "The value follows the product lines again.",
+						"visibleWhen": {
+							"field": "valueOverridden",
+							"op": "eq",
+							"value": true
 						}
 					},
 					{
