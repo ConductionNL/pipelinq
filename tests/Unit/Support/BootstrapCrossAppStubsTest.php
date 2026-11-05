@@ -39,7 +39,7 @@ class BootstrapCrossAppStubsTest extends TestCase {
 			'OCA\\Integriq\\Event\\ConnectionStatusReportedEvent',
 			'OCA\\Integriq\\Event\\OutboundSendDecisionRequestedEvent',
 			'OCA\\Integriq\\Event\\OptOutChangeRequestedEvent',
-			'OCA\\OpenRegister\\Service\\Notification\\UnsubscribeHeaders',
+			'OCA\\OpenRegister\\Notifications\\Service\\Notification\\UnsubscribeHeaders',
 		] as $class) {
 			$this->assertTrue(condition: class_exists(class: $class), message: $class . ' is not declared');
 		}

@@ -21,7 +21,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Notification\UnsubscribeHeaders;
+use OCA\OpenRegister\Notifications\Service\Notification\UnsubscribeHeaders;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\UnsubscribeMail;
 use OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq;

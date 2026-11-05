@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Notification\UnsubscribeHeaders.
+ * Test stub for OCA\OpenRegister\Notifications\Service\Notification\UnsubscribeHeaders.
  *
  * Mirrors the public contract of OpenRegister's shared helper
  * (openregister branch feat/opt-out-before-send, REQ-ERO-005):
@@ -27,7 +27,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Notification;
+namespace OCA\OpenRegister\Notifications\Service\Notification;
 
 use OCP\Mail\IMessage;
 use Throwable;
