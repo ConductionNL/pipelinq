@@ -259,6 +259,8 @@ return [
         ['name' => 'posTransaction#refund',  'url' => '/api/pos-transactions/{id}/refund',  'verb' => 'POST'],
         ['name' => 'posTransaction#park',    'url' => '/api/pos-transactions/{id}/park',    'verb' => 'POST'],
         ['name' => 'posTransaction#resume',  'url' => '/api/pos-transactions/{id}/resume',  'verb' => 'POST'],
+        // The till asks the server to price the open sale it shows (till-server-priced-lines).
+        ['name' => 'posCart#recalculate', 'url' => '/api/pos-transactions/{id}/recalculate', 'verb' => 'POST'],
 
         // POS customer-link surface (search, attach, detach, history) — pos-customer-link.
         // Static /search route precedes the wildcard /{id} routes per Symfony ordering.

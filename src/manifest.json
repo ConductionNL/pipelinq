@@ -7219,7 +7219,7 @@
 		},
 		{
 			"id": "PosTransactionNew",
-			"_note": "PosTransactionForm.vue is a bespoke cart/checkout form (line-item rows, NcSelect tender pickers, totals math) for ringing up a sale; the standard form/detail page types cannot host the interactive line-item editing the POS register requires.",
+			"_note": "PosTransactionForm.vue is a bespoke cart/checkout form (line-item rows, NcSelect tender pickers, the totals the server prices) for ringing up a sale; the standard form/detail page types cannot host the interactive line-item editing the POS register requires.",
 			"route": "/pos/new",
 			"type": "custom",
 			"title": "Nieuwe transactie",
