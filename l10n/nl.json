@@ -9580,6 +9580,12 @@
         "Total of the lines": "Totaal van de regels",
         "The products and lines of your own on this quote, before VAT.": "De producten en eigen regels op deze offerte, zonder btw.",
         "The products this deal is about. A line's total is worked out when the lead is saved.": "De producten waar deze deal over gaat. Het regeltotaal wordt berekend als de lead wordt opgeslagen.",
-        "The product's name as it was when the line was added.": "De naam van het product zoals die was toen de regel werd toegevoegd."
+        "The product's name as it was when the line was added.": "De naam van het product zoals die was toen de regel werd toegevoegd.",
+        "Calculated from the lines": "Berekend uit de regels",
+        "The value was typed over what the product lines add up to.": "De waarde is met de hand ingevuld en wijkt af van wat de productregels optellen.",
+        "The value follows the product lines again.": "De waarde volgt de productregels weer.",
+        "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
+        "Value typed by hand": "Waarde met de hand ingevuld",
+        "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen."
     }
 }

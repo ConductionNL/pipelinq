@@ -75,7 +75,7 @@ class LineRollUpTest extends TestCase {
 
 	public function testALeadLineWritesTheLeadValue(): void {
 		$this->rollUp(lines: [self::entity(schema: '50', data: ['total' => 3000])])->apply(line: self::entity(schema: '50', data: ['lead' => 'l-1']));
-		$this->assertSame(['l-1' => ['value' => 3000.0]], $this->patched);
+		$this->assertSame(['l-1' => ['calculatedValue' => 3000.0, 'value' => 3000.0]], $this->patched);
 	}
 
 	public function testALeadWithoutLinesKeepsItsTypedValue(): void {

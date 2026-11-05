@@ -39,4 +39,16 @@ class LineTotalMathTest extends TestCase {
 	public function testLeadValueSumsTheServerLineTotals(): void {
 		$this->assertSame(3150.5, (new LineTotalMath())->leadValue(lines: [['total' => 3000], ['total' => '150.5'], []]));
 	}
+
+	public function testALeadValueFollowsTheLinesUntilItIsTypedOver(): void {
+		$math = new LineTotalMath();
+		$this->assertSame(['calculatedValue' => 3000.0, 'value' => 3000.0], $math->leadPatch(lines: [['total' => 3000]], lead: []));
+		$this->assertSame(['calculatedValue' => 3200.0, 'value' => 3200.0], $math->leadPatch(lines: [['total' => 3200]], lead: ['value' => 3000, 'calculatedValue' => 3000]));
+		$this->assertSame(['calculatedValue' => 3200.0, 'value' => 3200.0], $math->leadPatch(lines: [['total' => 3200]], lead: ['value' => 5000]));
+	}
+
+	public function testATypedOverValueStays(): void {
+		$patch = (new LineTotalMath())->leadPatch(lines: [['total' => 3200]], lead: ['value' => 6000, 'calculatedValue' => 3000]);
+		$this->assertSame(['calculatedValue' => 3200.0], $patch);
+	}
 }
