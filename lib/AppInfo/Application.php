@@ -60,6 +60,7 @@ use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\FormsSubmissionListener;
 use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Listener\LeadStageCreatingListener;
+use OCA\Pipelinq\Listener\LineTotalsListener;
 use OCA\Pipelinq\Listener\SubmittedLeadListener;
 use OCA\Pipelinq\Listener\StageLimitGuard;
 use OCA\Pipelinq\Listener\WebFormBindingListener;
@@ -600,6 +601,10 @@ class Application extends App implements IBootstrap {
 			event: ObjectCreatingEvent::class,
 			listener: QuoteNumberCreatingListener::class
 		);
+		// A quote's totals and a lead's value follow their lines (line-totals-roll-up).
+		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $lineEvent) {
+			$context->registerEventListener(event: $lineEvent, listener: LineTotalsListener::class);
+		}
 	}//end registerNumberListeners()
 
 	/**
