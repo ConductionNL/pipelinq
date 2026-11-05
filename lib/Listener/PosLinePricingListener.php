@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Pipelinq\Service\PosCart\PosLinePricer;
@@ -82,9 +82,9 @@ class PosLinePricingListener implements IEventListener {
 	 *
 	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The event.
 	 *
-	 * @return ObjectEntity The object.
+	 * @return ObjectEntityInterface The object.
 	 */
-	private function entityOf(ObjectCreatingEvent|ObjectUpdatingEvent $event): ObjectEntity {
+	private function entityOf(ObjectCreatingEvent|ObjectUpdatingEvent $event): ObjectEntityInterface {
 		if ($event instanceof ObjectCreatingEvent) {
 			return $event->getObject();
 		}

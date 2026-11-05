@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service\PosCart;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Throwable;
@@ -36,6 +37,8 @@ use Throwable;
  * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
  */
 class PosCartObjects {
+	use PayloadToArray;
+
 	/**
 	 * Most lines read per sale.
 	 */
@@ -119,7 +122,7 @@ class PosCartObjects {
 			throw new OCSNotFoundException('Transaction not found');
 		}
 
-		return (array)$found->getObject();
+		return $this->toArray(value: $found);
 	}//end transaction()
 
 	/**
@@ -138,7 +141,7 @@ class PosCartObjects {
 			'transaction' => $transactionId,
 		];
 		$rows    = $this->objects->findAll(config: ['filters' => $filters, 'limit' => self::LIMIT], _rbac: false, _multitenancy: false);
-		return array_values(array_map(static fn ($row): array => self::rowData(row: $row), $rows));
+		return array_values(array_map(fn ($row): array => $this->toArray(value: $row), $rows));
 	}//end lines()
 
 	/**
@@ -162,21 +165,6 @@ class PosCartObjects {
 			_multitenancy: false
 		);
 	}//end saveLine()
-
-	/**
-	 * A found row's data, whether OpenRegister returned an array or an object.
-	 *
-	 * @param mixed $row The found row.
-	 *
-	 * @return array<string, mixed> The data.
-	 */
-	private static function rowData(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		return (array)$row->getObject();
-	}//end rowData()
 
 	/**
 	 * The register id.
