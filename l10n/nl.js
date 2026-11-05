@@ -9474,6 +9474,7 @@ OC.L10N.register(
         "Search the store": "Zoek in de marktplaats",
         "No store registry is configured, so nothing was requested from the network. An administrator can connect one under Administration settings. The templates below ship with Pipelinq.": "Er is geen marktplaats-registry ingesteld, dus er is niets van het netwerk opgehaald. Een beheerder kan er een koppelen bij Beheerinstellingen. De sjablonen hieronder worden met Pipelinq meegeleverd.",
         "The store registry did not answer. The templates below ship with Pipelinq.": "De marktplaats-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd.",
+        "longest waiting first": "langst wachtend eerst",
         "Subtotal excl. VAT": "Subtotaal excl. btw",
         "Total of the lines": "Totaal van de regels",
         "The products and lines of your own on this quote, before VAT.": "De producten en eigen regels op deze offerte, zonder btw.",
