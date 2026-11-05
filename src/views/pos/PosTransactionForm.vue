@@ -24,7 +24,7 @@
 				variant="primary"
 				class="pos-form__header-button"
 				data-testid="checkout"
-				:disabled="saving || !checkoutAllowed"
+				:disabled="saving || syncing || !checkoutAllowed"
 				@click="openPayment">
 				<template #icon>
 					<CashRegister :size="16" />
@@ -78,7 +78,6 @@
 									:key="line._key"
 									:line="line"
 									:products="products"
-									:priceMode="priceMode"
 									:editing="editingKey === line._key"
 									@edit="editingKey = line._key"
 									@done="editingKey = null"
@@ -327,13 +326,14 @@ import PosPaymentDialog from '../../dialogs/PosPaymentDialog.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
 import { collectionRows } from '../../services/collectionRows.js'
 import { formatDate, getUserLocale } from '../../services/localeUtils.js'
+import { headerPayload, isStorable, linePayload, recalculateSale, SERVER_TOTALS, storedTotals, withServerFigures } from '../../services/posCart.js'
 import {
 	attachCustomer as apiAttachCustomer,
 	detachCustomer as apiDetachCustomer,
 	getCustomerHistory,
 } from '../../services/posCustomerApi.js'
 import { tenderTypeFor } from '../../services/posSplitPayment.js'
-import { computeTotals, formatEur, recalculateLine } from '../../services/posTotals.js'
+import { formatEur } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const TENDER_LABELS = {
@@ -419,6 +419,11 @@ export default {
 			paymentSelection: 'cash',
 			paymentProvider: 'cash',
 			paymentMethod: 'cash',
+			createdId: null,
+			headerDirty: false,
+			syncing: false,
+			syncQueue: Promise.resolve(null),
+			syncTimer: null,
 		}
 	},
 
@@ -428,7 +433,7 @@ export default {
 		},
 
 		transactionId() {
-			return this.posTransactionId || this.$route.params.id || null
+			return this.createdId || this.posTransactionId || this.$route.params.id || null
 		},
 
 		isNew() {
@@ -525,8 +530,14 @@ export default {
 			return t('pipelinq', '{terminalId} · cashier {cashierName} · shift open since {shiftSince}')
 		},
 
+		/**
+		 * The totals the server stored for the sale; the till works none out.
+		 *
+		 * @return {object} The totals.
+		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 */
 		totals() {
-			return computeTotals(this.lines, this.priceMode)
+			return storedTotals(this.transaction)
 		},
 
 		/**
@@ -616,9 +627,8 @@ export default {
 		 */
 		receiptText() {
 			const rule = '-'.repeat(32)
-			const lines = this.lines.map((raw) => {
-				const line = recalculateLine(raw, this.priceMode)
-				const qty = line.quantity !== 1 ? `${line.quantity} x ` : ''
+			const lines = this.lines.map((line) => {
+				const qty = Number(line.quantity) !== 1 ? `${line.quantity} x ` : ''
 				return `${qty}${line.description || t('pipelinq', 'Item')} ${formatEur(line.lineTotal)}`
 			})
 			return [
@@ -642,6 +652,7 @@ export default {
 			await this.loadProducts()
 			if (!this.isNew) {
 				await this.loadTransaction()
+				await this.priceOpenSale()
 			}
 		} finally {
 			this.loading = false
@@ -740,18 +751,20 @@ export default {
 			const index = this.lines.findIndex((line) => id !== '' && line.product === id)
 			if (index !== -1) {
 				const line = this.lines[index]
-				this.updateLine(index, recalculateLine({ ...line, quantity: (Number(line.quantity) || 0) + 1 }, this.priceMode))
+				this.updateLine(index, { ...line, quantity: (Number(line.quantity) || 0) + 1 })
 				return
 			}
-			this.lines.push(recalculateLine({
+			this.lines.push({
 				_key: this.nextKey(),
+				_dirty: true,
 				product: id || null,
 				description: product.name || '',
 				quantity: 1,
 				unitPrice: Number(product.unitPrice ?? product.price) || 0,
 				discount: 0,
 				taxRate: product.taxRate ?? 21,
-			}, this.priceMode))
+			})
+			this.scheduleSync(0)
 		},
 
 		/**
@@ -761,7 +774,7 @@ export default {
 		 */
 		addLine() {
 			const key = this.nextKey()
-			this.lines.push(recalculateLine({ _key: key, description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 21, product: null }))
+			this.lines.push({ _key: key, _dirty: true, description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 21, product: null })
 			this.editingKey = key
 		},
 
@@ -772,11 +785,20 @@ export default {
 		 * @param {{amount: number}} giftCard The amount loaded on the card.
 		 */
 		addGiftCardLine({ amount }) {
-			this.lines.push(recalculateLine({ _key: this.nextKey(), _giftCard: true, description: t('pipelinq', 'Gift card'), quantity: 1, unitPrice: Number(amount) || 0, discount: 0, taxRate: 0, product: null }, this.priceMode))
+			this.lines.push({ _key: this.nextKey(), _dirty: true, _giftCard: true, description: t('pipelinq', 'Gift card'), quantity: 1, unitPrice: Number(amount) || 0, discount: 0, taxRate: 0, product: null })
+			this.scheduleSync(0)
 		},
 
+		/**
+		 * Take a changed line and have the server price it.
+		 *
+		 * @param {number} index The line's position.
+		 * @param {object} line The changed line.
+		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 */
 		updateLine(index, line) {
-			this.lines.splice(index, 1, { ...line, _key: this.lines[index]._key, _giftCard: this.lines[index]._giftCard })
+			this.lines.splice(index, 1, { ...line, _key: this.lines[index]._key, _giftCard: this.lines[index]._giftCard, _dirty: true })
+			this.scheduleSync()
 		},
 
 		/**
@@ -795,6 +817,7 @@ export default {
 				this.deletedLineIds.push(line.id)
 			}
 			this.lines.splice(index, 1)
+			this.scheduleSync(0)
 		},
 
 		onPaymentSelectionChange({ providerName, paymentMethod }) {
@@ -805,13 +828,153 @@ export default {
 			this.transaction.paymentStatus = this.paymentProvider === 'cash' ? 'settled' : 'pending'
 		},
 
-		openPayment() {
+		/**
+		 * Open the payment dialog on the total the server worked out.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 */
+		async openPayment() {
 			if (!this.checkoutAllowed) {
 				showError(this.onAccountError)
 				return
 			}
+			await this.syncCart()
 			this.showPayment = true
 		},
+
+		/**
+		 * Have the server price the cart after a short pause in typing.
+		 *
+		 * @param {number} [delay] Milliseconds to wait for more changes.
+		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 */
+		scheduleSync(delay = 400) {
+			clearTimeout(this.syncTimer)
+			this.syncTimer = setTimeout(() => this.syncCart(), delay)
+		},
+
+		/**
+		 * Store what changed and show the server's prices, one sync at a time.
+		 *
+		 * @param {{header: boolean}} [options] header: also store the sale's own fields.
+		 * @return {Promise<string|null>} The sale's id, or null when nothing was stored.
+		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 */
+		syncCart({ header = false } = {}) {
+			clearTimeout(this.syncTimer)
+			this.syncQueue = this.syncQueue.then(() => this.runSync(header)).catch(() => {
+				showError(t('pipelinq', 'The sale could not be priced. Try again.'))
+				return null
+			})
+			return this.syncQueue
+		},
+
+		/**
+		 * Store the sale, the removed and changed lines, then take the server's prices.
+		 *
+		 * @param {boolean} header Whether to store the sale's own fields.
+		 * @return {Promise<string|null>} The sale's id, or null when nothing was stored.
+		 */
+		async runSync(header) {
+			if (!header && this.isNew && !this.lines.some(isStorable)) {
+				return null
+			}
+			this.syncing = true
+			try {
+				const txId = await this.ensureSale(header)
+				if (txId) {
+					await this.storeLineChanges(txId)
+					await this.applyServerPrices(txId)
+				}
+				return txId
+			} finally {
+				this.syncing = false
+			}
+		},
+
+		/**
+		 * The sale's id, storing the sale first when it is new or its fields changed.
+		 *
+		 * @param {boolean} header Whether to store the sale's own fields.
+		 * @return {Promise<string|null>} The id, or null when it could not be stored.
+		 */
+		async ensureSale(header) {
+			if (!header && !this.headerDirty && !this.isNew) {
+				return this.transactionId
+			}
+			const saved = await this.objectStore.saveObject('posTransaction', headerPayload({
+				...this.transaction,
+				status: this.transaction.status || 'draft',
+				// `cashier` is schema-required; default it to the signed-in user.
+				cashier: this.transaction.cashier || (window.OC?.getCurrentUser?.()?.uid ?? ''),
+			}))
+			if (!saved) {
+				showError(t('pipelinq', 'Failed to save transaction.'))
+				return null
+			}
+			this.headerDirty = false
+			this.createdId = saved.id || this.transactionId
+			return this.createdId
+		},
+
+		/**
+		 * Delete the removed lines and store the changed ones; the server prices each as it stores it.
+		 *
+		 * @param {string} txId The sale.
+		 * @return {Promise<void>}
+		 */
+		async storeLineChanges(txId) {
+			for (const id of this.deletedLineIds.splice(0)) {
+				await this.objectStore.deleteObject('posTransactionLine', id)
+			}
+			for (const [index, line] of this.lines.entries()) {
+				if (line._dirty && isStorable(line)) {
+					const saved = await this.objectStore.saveObject('posTransactionLine', linePayload(line, txId, index + 1))
+					this.markStored(line, saved)
+				}
+			}
+		},
+
+		/**
+		 * Give a stored line its id; it stays changed when it was edited while it was being stored.
+		 *
+		 * @param {object} line The line as it was sent.
+		 * @param {object|null} saved The stored line.
+		 */
+		markStored(line, saved) {
+			const index = this.lines.findIndex((l) => l._key === line._key)
+			if (index === -1 || !saved?.id) {
+				return
+			}
+			const current = this.lines[index]
+			this.lines.splice(index, 1, { ...current, id: saved.id, _dirty: current !== line })
+		},
+
+		/**
+		 * Ask the server to price the sale and show its figures.
+		 *
+		 * @param {string} txId The sale.
+		 * @return {Promise<void>}
+		 */
+		async applyServerPrices(txId) {
+			const { transaction, lines } = await recalculateSale(txId)
+			const totals = Object.fromEntries(SERVER_TOTALS.filter((key) => key in transaction).map((key) => [key, transaction[key]]))
+			this.transaction = { ...this.transaction, ...totals }
+			this.lines = withServerFigures(this.lines, lines)
+		},
+
+		/**
+		 * Show an opened draft or parked sale with the server's current prices.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async priceOpenSale() {
+			if (['draft', 'parked'].includes(this.transaction.status)) {
+				await this.syncCart()
+			}
+		},
+
 
 		/**
 		 * Store the sale: the header, the customer link and the lines, and
@@ -821,44 +984,11 @@ export default {
 		 * @return {Promise<string|null>} The transaction id, or null when it was not stored.
 		 */
 		async persistSale(confirm) {
-			const header = {
-				...this.transaction,
-				status: this.transaction.status || 'draft',
-				// `cashier` is schema-required; default it to the signed-in user.
-				cashier: this.transaction.cashier || (window.OC?.getCurrentUser?.()?.uid ?? ''),
-			}
-			const savedTx = await this.objectStore.saveObject('posTransaction', header)
-			if (!savedTx) {
-				showError(t('pipelinq', 'Failed to save transaction.'))
+			const txId = await this.syncCart({ header: true })
+			if (!txId) {
 				return null
 			}
-			const txId = savedTx.id || this.transactionId
 			await this.syncCustomerAttachment(txId)
-			for (const id of this.deletedLineIds) {
-				await this.objectStore.deleteObject('posTransactionLine', id)
-			}
-			this.deletedLineIds = []
-			let sortOrder = 1
-			for (const line of this.lines) {
-				const computed = recalculateLine(line, this.priceMode)
-				const payload = {
-					transaction: txId,
-					product: line.product || null,
-					description: line.description,
-					quantity: computed.quantity,
-					unitPrice: computed.unitPrice,
-					discount: computed.discount,
-					taxRate: computed.taxRate,
-					taxAmount: computed.taxAmount,
-					lineTotal: computed.lineTotal,
-					sortOrder: sortOrder++,
-					notes: line.notes || '',
-				}
-				if (line.id) {
-					payload.id = line.id
-				}
-				await this.objectStore.saveObject('posTransactionLine', payload)
-			}
 			if (confirm) {
 				// The confirm transition computes the server-authoritative totals
 				// from the stored lines and moves the sale out of draft.
@@ -992,7 +1122,7 @@ export default {
 		async issueSoldGiftCards(txId) {
 			for (const line of this.lines.filter((l) => l._giftCard)) {
 				try {
-					const { data } = await axios.post(generateUrl('/apps/pipelinq/api/loyalty/gift-card/issue'), { initialBalance: recalculateLine(line, this.priceMode).lineTotal, channel: 'purchased', issuedIn: txId })
+					const { data } = await axios.post(generateUrl('/apps/pipelinq/api/loyalty/gift-card/issue'), { initialBalance: Number(line.lineTotal) || 0, channel: 'purchased', issuedIn: txId })
 					const id = uuidOf(data?.card)
 					if (id) {
 						await axios.post(generateUrl(`/apps/pipelinq/api/loyalty/gift-card/activate/${encodeURIComponent(id)}`), { posTransactionId: txId })
@@ -1029,8 +1159,16 @@ export default {
 			this.transaction.client = value || null
 		},
 
+		/**
+		 * Switch the price display; the server prices the lines again.
+		 *
+		 * @param {object|null} option The chosen display.
+		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 */
 		onPriceModeSelect(option) {
 			this.transaction.priceMode = option ? option.id : 'excl'
+			this.headerDirty = true
+			this.scheduleSync(0)
 		},
 
 		onTenderSelect(option) {
