@@ -29,7 +29,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 
 declare(strict_types=1);
@@ -68,7 +68,7 @@ use DOMDocument;
  * { "exportMetadata": {…}, "entries": [{…}] }
  * ```
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class BelastingdienstExportService {
 	/**
@@ -103,7 +103,7 @@ class BelastingdienstExportService {
 	 *
 	 * @return string The XML body.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function exportAsXml(array $entries, ?array $manifest = null): string {
 		if ($manifest === null) {
@@ -179,7 +179,7 @@ class BelastingdienstExportService {
 	 *
 	 * @return string The JSON body.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function exportAsJson(array $entries, ?array $manifest = null): string {
 		if ($manifest === null) {
@@ -226,7 +226,7 @@ class BelastingdienstExportService {
 	 *
 	 * @return array<string, mixed> The manifest.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function buildManifest(array $entries, string $fromDate, string $toDate): array {
 		$registers = [];

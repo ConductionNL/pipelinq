@@ -335,6 +335,20 @@ export function objectTypes() {
 			label: t(APP, 'Touchpoint'),
 			description: t(APP, 'One attributable interaction with a campaign'),
 		},
+		// Events and registrations (campaign-events, PqEvenement). The event
+		// page and both lists read these through the object store.
+		{
+			slug: 'campaignEvent',
+			group: 'marketing',
+			label: t(APP, 'Campaign event'),
+			description: t(APP, 'An event a campaign holds, with its places'),
+		},
+		{
+			slug: 'eventRegistration',
+			group: 'marketing',
+			label: t(APP, 'Registration'),
+			description: t(APP, 'One sign-up for a campaign event'),
+		},
 		// Journeys and the weekly review (marketing-integrated-campaigns). The
 		// Journeys index and detail pages read these through the object store,
 		// so both slugs must be registered or fetchCollection() throws and the
@@ -384,6 +398,17 @@ export function objectTypes() {
 			description: t(
 				APP,
 				'Replies the team writes once and agents insert when they answer',
+			),
+		},
+		// The shared label list (shared-label-list): articles, leads and
+		// clients pick from it; admins keep it on Beheer, Marketing.
+		{
+			slug: 'itemLabel',
+			group: 'marketing',
+			label: t(APP, 'Label'),
+			description: t(
+				APP,
+				'The labels people can pick for articles, leads and clients.',
 			),
 		},
 		{

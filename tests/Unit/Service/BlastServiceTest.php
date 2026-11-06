@@ -237,7 +237,7 @@ class BlastServiceTest extends TestCase {
 	 * @return BlastService
 	 */
 	private function buildService(ContainerInterface $container, IAppConfig $appConfig): BlastService {
-		$mailTransportService = new MailTransportService($container, $appConfig, $this->mailer, $this->createMock(ArticleService::class), FakeSlugResolver::connectorRegister(), $this->logger, new PhysicalAddressRenderer());
+		$mailTransportService = new MailTransportService($container, $appConfig, $this->mailer, $this->createMock(ArticleService::class), FakeSlugResolver::connectorRegister(), $this->logger, new PhysicalAddressRenderer(), new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($container, $appConfig, new \Psr\Log\NullLogger()));
 		return new BlastService($container, $appConfig, $this->segmentService, $mailTransportService, $this->logger);
 	}//end buildService()
 
@@ -657,6 +657,10 @@ class BlastServiceTest extends TestCase {
 		);
 		$finalBlast = end($blastSaves);
 		$this->assertSame('sending', $finalBlast['status']);
+
+		// The left-out contact is stored on the blast, for the consent tile.
+		$this->assertSame(1, $finalBlast['skippedNoConsent']);
+		$this->assertSame(0, $finalBlast['skippedSuppressed']);
 	}//end testSendBlastQueuesCompliantSkipsNonCompliant()
 
 	/**
@@ -832,7 +836,7 @@ class BlastServiceTest extends TestCase {
 
 		// Use a throttle-counting subclass to assert the rate-limit hook
 		// is invoked between batches without sleeping the test.
-		$mailTransportService = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->createMock(ArticleService::class), FakeSlugResolver::connectorRegister(), $this->logger, new PhysicalAddressRenderer());
+		$mailTransportService = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->createMock(ArticleService::class), FakeSlugResolver::connectorRegister(), $this->logger, new PhysicalAddressRenderer(), new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($this->container, $this->appConfig, new \Psr\Log\NullLogger()));
 		$service = new class($this->container, $this->appConfig, $this->segmentService, $mailTransportService, $this->logger) extends BlastService {
 
 			/**

@@ -54,28 +54,26 @@ export function dmarcVerdictText(dmarcStatus) {
  * CSS badge class for a transport's DKIM verification state.
  *
  * @param {boolean} dkimVerified Whether DKIM was found.
- * @return {string} `deliverability-settings__badge--on` or `--off`.
+ * @return {string} `cn-status-badge--success`, or `--error` while DKIM is missing.
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
 export function dkimBadgeClass(dkimVerified) {
-	return dkimVerified
-		? 'deliverability-settings__badge--on'
-		: 'deliverability-settings__badge--off'
+	return dkimVerified ? 'cn-status-badge--success' : 'cn-status-badge--error'
 } // end dkimBadgeClass()
 
 /**
  * CSS badge class for a transport's `dmarcStatus`.
  *
  * @param {string} dmarcStatus One of `found`, `missing`, `invalid`, `unknown`.
- * @return {string} A `deliverability-settings__badge--*` class name.
+ * @return {string} A `cn-status-badge--*` tone class.
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
 export function dmarcBadgeClass(dmarcStatus) {
 	if (dmarcStatus === 'found') {
-		return 'deliverability-settings__badge--on'
+		return 'cn-status-badge--success'
 	}
 	if (dmarcStatus === 'unknown') {
-		return 'deliverability-settings__badge--sandbox'
+		return 'cn-status-badge--warning'
 	}
-	return 'deliverability-settings__badge--off'
+	return 'cn-status-badge--default'
 } // end dmarcBadgeClass()

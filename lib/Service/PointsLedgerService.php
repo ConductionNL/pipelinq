@@ -20,8 +20,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-005
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-005
  */
 
 declare(strict_types=1);
@@ -30,8 +30,11 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
+use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -41,7 +44,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 /**
  * Append-only points ledger.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) owns every ledger
  *  movement type (credit/debit/expiry/adjustment/refund) plus balance/history
@@ -53,6 +56,15 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *  the append-and-update core five times.
  */
 class PointsLedgerService {
+	use PayloadToArray;
+
+	/**
+	 * The operation id the next movement carries; '' for none.
+	 *
+	 * @var string
+	 */
+	private string $operationId = '';
+
 	/**
 	 * Constructor.
 	 *
@@ -72,6 +84,25 @@ class PointsLedgerService {
 	}//end __construct()
 
 	/**
+	 * This service for one operation: the next movement carries the
+	 * operation id, and a repeat of it returns the first entry.
+	 *
+	 * The caller picks the id and passes the same id on every retry. An
+	 * empty id is no id: the movement is appended as always.
+	 *
+	 * @param string $operationId The operation id, unique per account.
+	 *
+	 * @return static The service for that operation.
+	 *
+	 * @spec openspec/changes/loyalty-ledger-operation-id/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
+	 */
+	public function forOperation(string $operationId): static {
+		$ledger = clone $this;
+		$ledger->operationId = $operationId;
+		return $ledger;
+	}//end forOperation()
+
+	/**
 	 * Credit points to an account (atomic ledger entry + balance update).
 	 *
 	 * @param string $accountId The account UUID.
@@ -84,7 +115,7 @@ class PointsLedgerService {
 	 *
 	 * @throws RuntimeException When amount is non-positive or account missing.
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002-01
 	 */
 	public function creditPoints(
 		string $accountId,
@@ -97,14 +128,9 @@ class PointsLedgerService {
 			throw new RuntimeException('Credit amount must be positive.');
 		}
 
-		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'credit',
-			signedCount: $amount,
-			ruleId: $ruleId,
-			sourceDocument: $sourceDocument,
-			processedBy: $processedBy,
-			lifetimeDelta: $amount
+		return $this->appendOnce(
+			movement: new LedgerMovement(accountId: $accountId, type: 'credit', signedCount: $amount, lifetimeDelta: $amount),
+			origin: new LedgerOrigin(ruleId: $ruleId, sourceDocument: $sourceDocument, processedBy: $processedBy)
 		);
 	}//end creditPoints()
 
@@ -121,7 +147,7 @@ class PointsLedgerService {
 	 *
 	 * @throws RuntimeException When amount non-positive or balance insufficient.
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004-01
 	 */
 	public function debitPoints(
 		string $accountId,
@@ -132,6 +158,12 @@ class PointsLedgerService {
 	): array {
 		if ($amount <= 0) {
 			throw new RuntimeException('Debit amount must be positive.');
+		}
+
+		$movement = new LedgerMovement(accountId: $accountId, type: 'debit', signedCount: -$amount, lifetimeDelta: 0);
+		$first    = $this->firstEntryOf(movement: $movement);
+		if ($first !== null) {
+			return $first;
 		}
 
 		$account = $this->accountService->getAccount(accountId: $accountId);
@@ -146,13 +178,8 @@ class PointsLedgerService {
 		$sourceDocument['redemptionId'] = $redemptionId;
 
 		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'debit',
-			signedCount: -$amount,
-			ruleId: null,
-			sourceDocument: $sourceDocument,
-			processedBy: $processedBy,
-			lifetimeDelta: 0
+			movement: $movement,
+			origin: new LedgerOrigin(ruleId: null, sourceDocument: $sourceDocument, processedBy: $processedBy)
 		);
 	}//end debitPoints()
 
@@ -165,21 +192,16 @@ class PointsLedgerService {
 	 *
 	 * @return array<string, mixed> The ledger entry.
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-005-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-005-01
 	 */
 	public function expirePoints(string $accountId, int $amount, string $reason): array {
 		if ($amount <= 0) {
 			throw new RuntimeException('Expiry amount must be positive.');
 		}
 
-		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'expiry',
-			signedCount: -$amount,
-			ruleId: null,
-			sourceDocument: ['expiryPolicyRef' => $reason],
-			processedBy: 'system:expiry-batch',
-			lifetimeDelta: 0
+		return $this->appendOnce(
+			movement: new LedgerMovement(accountId: $accountId, type: 'expiry', signedCount: -$amount, lifetimeDelta: 0),
+			origin: new LedgerOrigin(ruleId: null, sourceDocument: ['expiryPolicyRef' => $reason], processedBy: 'system:expiry-batch')
 		);
 	}//end expirePoints()
 
@@ -192,21 +214,16 @@ class PointsLedgerService {
 	 * @param string $processedBy Who processed.
 	 *
 	 * @return array<string, mixed> The ledger entry.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function adjustPoints(string $accountId, int $delta, string $reason, string $processedBy): array {
 		if ($delta === 0) {
 			throw new RuntimeException('Adjustment delta cannot be zero.');
 		}
 
-		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'adjustment',
-			signedCount: $delta,
-			ruleId: null,
-			sourceDocument: ['reason' => $reason],
-			processedBy: $processedBy,
-			lifetimeDelta: max(0, $delta)
+		return $this->appendOnce(
+			movement: new LedgerMovement(accountId: $accountId, type: 'adjustment', signedCount: $delta, lifetimeDelta: max(0, $delta)),
+			origin: new LedgerOrigin(ruleId: null, sourceDocument: ['reason' => $reason], processedBy: $processedBy)
 		);
 	}//end adjustPoints()
 
@@ -219,7 +236,7 @@ class PointsLedgerService {
 	 * @param string $processedBy Who processed.
 	 *
 	 * @return array<string, mixed> The ledger entry.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function refundPoints(
 		string $accountId,
@@ -231,14 +248,13 @@ class PointsLedgerService {
 			throw new RuntimeException('Refund amount must be positive.');
 		}
 
-		return $this->appendAndUpdate(
-			accountId: $accountId,
-			type: 'refund',
-			signedCount: $amount,
-			ruleId: null,
-			sourceDocument: ['redemptionId' => $redemptionId, 'reason' => 'redemption cancelled'],
-			processedBy: $processedBy,
-			lifetimeDelta: 0
+		return $this->appendOnce(
+			movement: new LedgerMovement(accountId: $accountId, type: 'refund', signedCount: $amount, lifetimeDelta: 0),
+			origin: new LedgerOrigin(
+				ruleId: null,
+				sourceDocument: ['redemptionId' => $redemptionId, 'reason' => 'redemption cancelled'],
+				processedBy: $processedBy
+			)
 		);
 	}//end refundPoints()
 
@@ -250,7 +266,7 @@ class PointsLedgerService {
 	 * @return int The sum of all ledger entry amounts.
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create() is OpenRegister's documented query-builder factory, not app state
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function getAccountBalance(string $accountId): int {
 		[$register, $schema] = $this->config();
@@ -370,7 +386,7 @@ class PointsLedgerService {
 	 * @param ?string $to ISO-8601 upper bound (inclusive).
 	 *
 	 * @return array<int, array<string, mixed>>
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function getLedgerEntriesForProgramme(
 		string $programmeId,
@@ -400,6 +416,76 @@ class PointsLedgerService {
 	}//end getLedgerEntriesForProgramme()
 
 	/**
+	 * The first entry of this operation, or a new entry and balance update.
+	 *
+	 * @param LedgerMovement $movement The account, type, signed count and lifetime contribution.
+	 * @param LedgerOrigin   $origin   The rule, source document and processor.
+	 *
+	 * @return array<string, mixed> The ledger entry.
+	 */
+	private function appendOnce(LedgerMovement $movement, LedgerOrigin $origin): array {
+		$first = $this->firstEntryOf(movement: $movement);
+		if ($first !== null) {
+			return $first;
+		}
+
+		return $this->appendAndUpdate(movement: $movement, origin: $origin);
+	}//end appendOnce()
+
+	/**
+	 * The account's entry with this service's operation id, or null.
+	 *
+	 * Null without an operation id, or when the account has no entry with it.
+	 * An entry with another type or count means the id was reused for another
+	 * movement: that is refused, as is an id the ledger cannot be asked about.
+	 *
+	 * @param LedgerMovement $movement The movement about to be written.
+	 *
+	 * @return array<string, mixed>|null The stored entry.
+	 *
+	 * @throws RuntimeException When the id belongs to another movement or cannot be checked.
+	 *
+	 * @spec openspec/changes/loyalty-ledger-operation-id/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
+	 */
+	private function firstEntryOf(LedgerMovement $movement): ?array {
+		if ($this->operationId === '') {
+			return null;
+		}
+
+		[$register, $schema] = $this->config();
+		if ($register === '' || $schema === '') {
+			throw new RuntimeException('PointsLedgerEntry schema is not configured.');
+		}
+
+		try {
+			$rows = $this->getObjectService()->findAll(
+				config: [
+					'filters' => [
+						'accountId' => $movement->accountId,
+						'operationId' => $this->operationId,
+						'register' => $register,
+						'schema' => $schema,
+					],
+					'limit' => 1,
+				]
+			);
+		} catch (\Throwable $e) {
+			throw new RuntimeException('Operation '.$this->operationId.' could not be checked against the ledger.', 0, $e);
+		}
+
+		if ($rows === []) {
+			return null;
+		}
+
+		$first = $this->toArray(value: reset($rows));
+		if (($first['type'] ?? null) !== $movement->type || (int)($first['count'] ?? 0) !== $movement->signedCount) {
+			throw new RuntimeException('Operation '.$this->operationId.' was already used for another movement.');
+		}
+
+		return $first;
+	}//end firstEntryOf()
+
+	/**
 	 * Append a ledger entry and atomically update the account balance.
 	 *
 	 * Atomicity: ledger entry is created first; on success the account is
@@ -407,65 +493,62 @@ class PointsLedgerService {
 	 * roll back the ledger (ledger is the source of truth — denormalised
 	 * balance can be recomputed via getAccountBalance).
 	 *
-	 * @param string $accountId The account UUID.
-	 * @param string $type One of credit/debit/expiry/adjustment/refund.
-	 * @param int $signedCount Signed delta.
-	 * @param ?string $ruleId Optional PointsRule UUID.
-	 * @param array<string, mixed> $sourceDocument Source linkage.
-	 * @param string $processedBy Processor identifier.
-	 * @param int $lifetimeDelta Positive contribution to lifetimePoints (credits only).
+	 * @param LedgerMovement $movement The account, type, signed count and lifetime contribution.
+	 * @param LedgerOrigin   $origin   The rule, source document and processor.
 	 *
 	 * @return array<string, mixed> The ledger entry.
 	 */
-	private function appendAndUpdate(
-		string $accountId,
-		string $type,
-		int $signedCount,
-		?string $ruleId,
-		array $sourceDocument,
-		string $processedBy,
-		int $lifetimeDelta,
-	): array {
-		$account = $this->accountService->getAccount(accountId: $accountId);
+	private function appendAndUpdate(LedgerMovement $movement, LedgerOrigin $origin): array {
+		$account = $this->accountService->getAccount(accountId: $movement->accountId);
 		if ($account === null) {
 			throw new RuntimeException('Account not found.');
 		}
 
-		$currentBalance = (int)($account['currentBalance'] ?? 0);
-		$newBalance = $currentBalance + $signedCount;
-		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-
 		$entry = [
-			'accountId' => $accountId,
+			'accountId' => $movement->accountId,
 			'customerId' => $account['customerId'] ?? null,
-			'type' => $type,
-			'count' => $signedCount,
-			'balanceAfter' => $newBalance,
-			'sourceDocument' => $sourceDocument,
-			'ruleId' => $ruleId,
-			'timestamp' => $now,
-			'processedBy' => $processedBy,
+			'type' => $movement->type,
+			'count' => $movement->signedCount,
+			'balanceAfter' => (int)($account['currentBalance'] ?? 0) + $movement->signedCount,
+			'sourceDocument' => $origin->sourceDocument,
+			'ruleId' => $origin->ruleId,
+			'timestamp' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c'),
+			'processedBy' => $origin->processedBy,
 		];
+		if ($this->operationId !== '') {
+			$entry['operationId'] = $this->operationId;
+		}
 
 		$saved = $this->persist(payload: $entry);
+		$this->updateBalance(movement: $movement, entry: $entry);
 
+		return $saved;
+	}//end appendAndUpdate()
+
+	/**
+	 * Set the account's balance to the entry's balance after; a failure is logged, the entry stays.
+	 *
+	 * @param LedgerMovement       $movement The movement, for its account and lifetime contribution.
+	 * @param array<string, mixed> $entry    The saved ledger entry, for its balance after and timestamp.
+	 *
+	 * @return void
+	 */
+	private function updateBalance(LedgerMovement $movement, array $entry): void {
 		try {
 			$this->accountService->updateBalances(
-				accountId: $accountId,
-				newCurrentBalance: $newBalance,
-				lifetimeDelta: $lifetimeDelta,
-				lastActivityDate: $now
+				accountId: $movement->accountId,
+				newCurrentBalance: $entry['balanceAfter'],
+				lifetimeDelta: $movement->lifetimeDelta,
+				lastActivityDate: $entry['timestamp']
 			);
 		} catch (\Throwable $e) {
 			// Ledger is source of truth; log inconsistency for reconciliation.
 			$this->logger->error(
 				'Pipelinq: account balance denorm update failed; ledger entry retained',
-				['accountId' => $accountId, 'exception' => $e->getMessage()]
+				['accountId' => $movement->accountId, 'exception' => $e->getMessage()]
 			);
 		}
-
-		return $saved;
-	}//end appendAndUpdate()
+	}//end updateBalance()
 
 	/**
 	 * Persist a ledger entry (always create, never update — immutable).
@@ -488,7 +571,7 @@ class PointsLedgerService {
 			uuid: null
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persist()
 
 	/**
@@ -515,35 +598,6 @@ class PointsLedgerService {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Normalise OR entity/array to a plain array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

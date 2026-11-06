@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Access\RegisterAccessSync;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -47,6 +48,9 @@ class SettingsService {
 	private const CONFIG_KEYS = [
 		'register',
 		'currency',
+		// The client "See an example" opens on the contact dashboard (an
+		// example set's sample resident); unset, the link is not drawn.
+		'example_client',
 		'client_schema',
 		'contact_schema',
 		'lead_schema',
@@ -217,7 +221,7 @@ class SettingsService {
 		'task_expiry.poll_interval_seconds' => '900',
 		'task_expiry.escalation_threshold_seconds' => '14400',
 		'task_expiry.in_progress_grace_seconds' => '86400',
-		'task_escalation.threshold_hours' => '4',
+		'task_expiry.escalation_group' => '',
 		'task.business_hour_start' => '8',
 		'task.business_hour_end' => '17',
 		'prospect_discovery.cache_ttl_seconds' => '3600',
@@ -244,14 +248,8 @@ class SettingsService {
 		'receipt_printer_host' => '',
 		'receipt_printer_port' => '9100',
 		'receipt_default_template' => '',
-		// No Shillinq WIP or AP webhook URL: both hand-offs follow the detected
+		// No Shillinq WIP, AP or journal webhook URL: the hand-offs follow the detected
 		// Shillinq app (IntegrationDetector, pipelinq-audit-admin-forms-pos).
-		// Shillinq journal-entry registry endpoint for the POS-day journal raise
-		// (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-001). The ADR-019 integration
-		// registry resolves the shillinq.JournalEntry.raise dispatch through this
-		// webhook URL; empty or non-HTTPS disables the integration. Replaces the
-		// retired hard-coded pos_eod.shillinq_endpoint POST to /api/JournalEntry.
-		'shillinq_journal_webhook_url' => '',
 		// Gates the real shillinq time-intake emit (time-billing-handoff-emit).
 		// Default off: an unconfigured install keeps the deep-link-only handoff
 		// to the detected Shillinq app (IntegrationDetector). The manager group allowed to
@@ -268,7 +266,7 @@ class SettingsService {
 		'export.failure_notification_email' => '',
 		'export.at_risk_warning_hours' => '24',
 		// POS end-of-day Z-report generation + alerting (pos-end-of-day-bookkeeping-post).
-		// The journal raise itself now delegates to shillinq via shillinq_journal_webhook_url
+		// The journal raise itself goes to the detected shillinq app
 		// (pipelinq-bookkeeping-to-shillinq); these keys only tune the operational
 		// Z-report close and the failure alert.
 		'pos_eod.z_report_time' => '23:59',
@@ -307,6 +305,11 @@ class SettingsService {
 		// built-in PRIVILEGED_GROUPS = ['admin', 'sales']; empty means only
 		// those two, like every other group key here.
 		'crm_group' => '',
+		// A group that READS the parties and contact moments other apps show
+		// as the signed-in user (dossiq's party panel), without any CRM write
+		// right. RegisterAccessSync grants it read and export on exactly
+		// those schemas (close-pipelinq-register-to-staff). Empty = nobody.
+		'crm_read_group' => '',
 		// First-party marketing-email open/click tracking
 		// (marketing-email-open-click-tracking) — off by default so today's
 		// provider-webhook-only render path is unchanged until an admin
@@ -399,6 +402,7 @@ class SettingsService {
 	 * @param DefaultPipelineService $pipelineService The default pipeline service.
 	 * @param DefaultSkillService $skillService The default skill service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param RegisterAccessSync|null $registerAccess Writes the CRM group into the registers' access rules.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -407,6 +411,7 @@ class SettingsService {
 		private DefaultPipelineService $pipelineService,
 		private DefaultSkillService $skillService,
 		private LoggerInterface $logger,
+		private ?RegisterAccessSync $registerAccess=null,
 	) {
 	}//end __construct()
 
@@ -445,6 +450,8 @@ class SettingsService {
 	 * @return array The updated settings.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-a-configured-read-group-reads-the-parties-and-contact-moments-and-writes-nothing
 	 */
 	public function updateSettings(array $data): array {
 		$this->refuseAMatomoToken(data: $data);
@@ -474,6 +481,7 @@ class SettingsService {
 		}
 
 		$this->logger->info('Pipelinq settings updated', ['keys' => array_keys($data)]);
+		$this->registerAccess?->sync();
 
 		return $this->getSettings();
 	}//end updateSettings()
@@ -520,9 +528,16 @@ class SettingsService {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $force is a simple re-import toggle
 	 * @spec                                        openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-16
+	 * @spec                                        openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
 	 */
 	public function loadSettings(bool $force = false): array {
-		return $this->settingsLoadService->loadSettings(force: $force);
+		$result = $this->settingsLoadService->loadSettings(force: $force);
+
+		// The import writes the file's access rules back, which name `sales`
+		// but not the deployment's CRM group or CRM read group: grant them again.
+		$this->registerAccess?->sync(force: true);
+
+		return $result;
 	}//end loadSettings()
 
 	/**

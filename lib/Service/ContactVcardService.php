@@ -23,11 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCP\Contacts\IManager as IContactsManager;
-use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for syncing Pipelinq objects to Nextcloud Contacts as vCards.
@@ -36,34 +33,20 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class ContactVcardService {
 	/**
-	 * Allowed object types for vCard sync.
-	 *
-	 * Only these values may be used to construct an IAppConfig key, preventing
-	 * an unvalidated caller-supplied $objectType from reaching arbitrary keys.
-	 *
-	 * @var string[]
-	 */
-	private const ALLOWED_OBJECT_TYPES = ['client', 'contact'];
-
-	/**
 	 * Constructor.
 	 *
 	 * @param IContactsManager $contactsManager The contacts manager.
-	 * @param IAppConfig $appConfig The app config.
 	 * @param ContactVcardWriterService $writerService The vCard writer.
 	 * @param ContactVcardPropertyBuilder $propBuilder The property builder.
 	 * @param LoggerInterface $logger The logger.
-	 * @param RegisterResolverService $registerResolver The register resolver.
-	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param ContactObjectReader $objects Reads the client or contact to sync.
 	 */
 	public function __construct(
 		private IContactsManager $contactsManager,
-		private IAppConfig $appConfig,
 		private ContactVcardWriterService $writerService,
 		private ContactVcardPropertyBuilder $propBuilder,
 		private LoggerInterface $logger,
-		private RegisterResolverService $registerResolver,
-		private readonly ObjectServiceInterface $objectService,
+		private ContactObjectReader $objects,
 	) {
 	}//end __construct()
 
@@ -83,7 +66,7 @@ class ContactVcardService {
 			return null;
 		}
 
-		$objData = $this->fetchPipelinqObject(
+		$objData = $this->objects->fetch(
 			objectType: $objectType,
 			objectId: $objectId
 		);
@@ -130,7 +113,7 @@ class ContactVcardService {
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 */
 	public function provisionContactFromForm(array $form, string $objectType): ?array {
-		if (in_array($objectType, self::ALLOWED_OBJECT_TYPES, true) === false) {
+		if (in_array($objectType, ContactObjectReader::OBJECT_TYPES, true) === false) {
 			$this->logger->warning('ContactVcardService: invalid objectType for provisioning', ['objectType' => $objectType]);
 			return null;
 		}
@@ -214,71 +197,4 @@ class ContactVcardService {
 
 		return null;
 	}//end matchExistingContact()
-
-	/**
-	 * Fetch a Pipelinq object by type and ID.
-	 *
-	 * @param string $objectType The object type (client or contact).
-	 * @param string $objectId The object ID.
-	 *
-	 * @return ?array The serialized object data or null on failure.
-	 */
-	private function fetchPipelinqObject(string $objectType, string $objectId): ?array {
-		if (in_array($objectType, self::ALLOWED_OBJECT_TYPES, true) === false) {
-			$this->logger->warning('ContactVcardService: invalid objectType', ['objectType' => $objectType]);
-			return null;
-		}
-
-		$objectService = $this->getObjectService();
-		$registerId = $this->registerResolver->resolve('contact');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
-
-		if ($registerId === '' || $schemaId === '') {
-			$this->logger->warning('Pipelinq: Cannot sync -- register or schema not configured');
-			return null;
-		}
-
-		try {
-			$object = $objectService->find(
-				$objectId,
-				[],
-				false,
-				$registerId,
-				$schemaId
-			);
-		} catch (\Exception $e) {
-			$this->logger->error('Pipelinq: Failed to fetch object for sync', ['exception' => $e->getMessage()]);
-			return null;
-		}
-
-		return $this->serializeResult(result: $object);
-	}//end fetchPipelinqObject()
-
-	/**
-	 * Serialize an object or array result to an array.
-	 *
-	 * @param mixed $result The result to serialize.
-	 *
-	 * @return array The serialized result.
-	 */
-	private function serializeResult(mixed $result): array {
-		if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-			return $result->jsonSerialize();
-		}
-
-		if (is_array($result) === true) {
-			return $result;
-		}
-
-		return [];
-	}//end serializeResult()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

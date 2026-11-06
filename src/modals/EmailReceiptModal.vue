@@ -3,9 +3,9 @@
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Email Receipt')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="receipt-modal">
@@ -45,18 +45,21 @@
 				{{ t('pipelinq', 'Send') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcSelect } from '@nextcloud/vue'
 import ReceiptPreviewPane from '../components/pos/ReceiptPreviewPane.vue'
+import { loadActiveReceiptTemplates } from '../services/receiptTemplates.js'
 
 export default {
 	name: 'EmailReceiptModal',
 	components: {
-		NcDialog,
+		CnDialog,
 		NcButton,
 		NcSelect,
 		ReceiptPreviewPane,
@@ -77,6 +80,7 @@ export default {
 	emits: ['close', 'sent'],
 	data() {
 		return {
+			loadedTemplates: [],
 			selectedTemplate: null,
 			previewText: '',
 			previewLoading: false,
@@ -94,7 +98,8 @@ export default {
 		 * @return {Array} The options.
 		 */
 		templateOptions() {
-			return this.templates.map((tpl) => ({
+			const templates = this.templates.length > 0 ? this.templates : this.loadedTemplates
+			return templates.map((tpl) => ({
 				id: tpl.id,
 				label: tpl.name || tpl.id,
 			}))
@@ -114,6 +119,9 @@ export default {
 	},
 
 	async mounted() {
+		if (this.templates.length === 0) {
+			this.loadedTemplates = await loadActiveReceiptTemplates()
+		}
 		await this.loadPreview()
 	},
 
@@ -197,6 +205,9 @@ export default {
 				this.statusType = 'success'
 				this.statusMessage = t('pipelinq', 'Receipt sent successfully')
 				this.$emit('sent', data.receipt)
+				// Opened from a declared header action, the modal closes and the page re-reads the receipt log itself.
+				emit('cn:page:refresh', {})
+				this.$emit('close')
 			} catch (e) {
 				this.statusType = 'error'
 				this.statusMessage = t(

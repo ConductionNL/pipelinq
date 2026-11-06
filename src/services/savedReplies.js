@@ -23,7 +23,7 @@ export const PLACEHOLDERS = [
  * @param {string} channel `sms`, `whatsapp`, `email` or `portal`.
  * @param {string} [language] The party's correspondence language.
  * @return {Array<object>} The replies that fit, sorted.
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
  */
 export function repliesForChannel(replies, channel, language = '') {
 	const wanted = String(language || '').toLowerCase()
@@ -54,7 +54,7 @@ export function repliesForChannel(replies, channel, language = '') {
  * @param {string} body The reply text.
  * @param {object} values Values keyed by placeholder, e.g. `{'contact.name': 'Jan'}`.
  * @return {string} The text with every known placeholder filled.
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
  */
 export function fillPlaceholders(body, values = {}) {
 	return String(body || '').replace(
@@ -75,7 +75,7 @@ export function fillPlaceholders(body, values = {}) {
  * @param {boolean} mailEnabled Whether the Nextcloud Mail app is enabled.
  * @param {(path: string) => string} generateUrl `@nextcloud/router`'s generateUrl.
  * @return {string} The URL to open.
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
  */
 export function composeUrl(address, subject, body, mailEnabled, generateUrl) {
 	const query = []

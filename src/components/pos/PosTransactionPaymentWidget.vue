@@ -2,16 +2,15 @@
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
-  - Detail-grid widget for PosTransactionDetail: how the transaction is paid.
-  - The split tenders with their balance, and beside them the payment
-  - provider's status when a provider handled the payment.
+  - Detail-grid widget for PosTransactionDetail: the split tenders with their
+  - balance. The payment provider's status is the manifest's `pos-tx-provider`
+  - facts card.
   -
   - Tender changes do not write to the transaction, so adding or removing one
   - reloads only the tenders. A page refresh reloads them too, quietly, so the
   - table stays on screen.
   -
   - @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
-  - @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
   -->
 <template>
 	<CnWidgetWrapper
@@ -33,9 +32,7 @@
 			</NcButton>
 		</template>
 
-		<div
-			class="pos-tx-payment__body"
-			:class="{ 'pos-tx-payment__body--split': hasPaymentInfo }">
+		<div class="pos-tx-payment__body">
 			<section class="pos-tx-payment__tenders">
 				<h4 class="pos-tx-payment__heading">
 					{{ t('pipelinq', 'Tenders') }}
@@ -47,23 +44,15 @@
 					:transactionId="transactionId"
 					:transactionStatus="status" />
 			</section>
-
-			<PaymentStatusCard
-				v-if="hasPaymentInfo"
-				class="pos-tx-payment__provider"
-				:transaction="transaction"
-				:isManager="canRefundPayment"
-				@updated="refreshPage" />
 		</div>
 	</CnWidgetWrapper>
 </template>
 
 <script>
 import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
-import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
+import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
-import PaymentStatusCard from './PaymentStatusCard.vue'
 import TenderEntryPanel from './TenderEntryPanel.vue'
 
 export default {
@@ -72,7 +61,6 @@ export default {
 		CnIcon,
 		CnWidgetWrapper,
 		NcButton,
-		PaymentStatusCard,
 		Plus,
 		TenderEntryPanel,
 	},
@@ -107,7 +95,7 @@ export default {
 		 *
 		 * @return {object} The transaction.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
 		 */
 		transaction() {
 			return this.objectData || {}
@@ -118,7 +106,7 @@ export default {
 		 *
 		 * @return {string} The transaction id, or '' when unknown.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
 		 */
 		transactionId() {
 			return this.objectId || this.transaction.id || ''
@@ -129,7 +117,7 @@ export default {
 		 *
 		 * @return {string} The status, `draft` when unset.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
 		 */
 		status() {
 			return this.transaction.status || 'draft'
@@ -146,49 +134,6 @@ export default {
 			return (
 				Boolean(this.transactionId)
 				&& !['settled', 'refunded'].includes(this.status)
-			)
-		},
-
-		/**
-		 * Whether the current user is treated as a manager in the UI. The
-		 * server authorises the provider refund.
-		 *
-		 * @return {boolean} Whether to show manager-only actions.
-		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-payment-refund-req-pay-005
-		 */
-		isManager() {
-			return typeof window.OC?.isUserAdmin === 'function'
-				? window.OC.isUserAdmin()
-				: false
-		},
-
-		/**
-		 * The provider refund is offered on a confirmed or settled transaction,
-		 * to a manager: the same gate as the header's Reverse.
-		 *
-		 * @return {boolean} Whether the provider card may offer a refund.
-		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-payment-refund-req-pay-005
-		 */
-		canRefundPayment() {
-			return this.isManager && ['confirmed', 'settled'].includes(this.status)
-		},
-
-		/**
-		 * Whether a payment provider handled this transaction.
-		 *
-		 * @return {boolean} Whether to show the provider card.
-		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
-		 */
-		hasPaymentInfo() {
-			const tx = this.transaction
-			return Boolean(
-				tx.paymentProvider
-				|| tx.paymentSessionId
-				|| tx.paymentStatus
-				|| tx.paymentMethod,
 			)
 		},
 	},
@@ -217,16 +162,6 @@ export default {
 			const done = panel.loadTenders({ silent: true })
 			payload?.waitUntil?.(done)
 		},
-
-		/**
-		 * Refresh the page: a provider capture or refund changes the
-		 * transaction itself.
-		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
-		 */
-		refreshPage() {
-			emit('cn:page:refresh', {})
-		},
 	},
 }
 </script>
@@ -244,10 +179,6 @@ export default {
 	gap: 24px;
 }
 
-.pos-tx-payment__body--split {
-	grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-}
-
 .pos-tx-payment__heading {
 	margin: 0 0 6px;
 	font-size: 12px;
@@ -255,23 +186,5 @@ export default {
 	color: var(--color-text-maxcontrast);
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
-}
-
-.pos-tx-payment__provider {
-	padding-inline-start: 24px;
-	border-inline-start: 1px solid var(--color-border);
-}
-
-@media (max-width: 900px) {
-	.pos-tx-payment__body--split {
-		grid-template-columns: minmax(0, 1fr);
-	}
-
-	.pos-tx-payment__provider {
-		padding-inline-start: 0;
-		padding-top: 16px;
-		border-inline-start: none;
-		border-top: 1px solid var(--color-border);
-	}
 }
 </style>

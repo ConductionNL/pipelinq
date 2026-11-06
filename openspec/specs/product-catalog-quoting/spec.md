@@ -20,7 +20,9 @@ The existing product-catalog spec covers product entities and categories. This s
 **Competitor context:** Krayin CRM provides a full Quote module with QuoteItems, billing/shipping addresses, and person/user linkage. EspoCRM's Advanced Pack adds quote generation with PDF templates. Twenty CRM does not have native quoting. This spec positions Pipelinq as competitive with Krayin while leveraging Nextcloud's Docudesk for PDF generation and NL Design tokens for government-branded output.
 
 ---
+
 ## Requirements
+
 ### Requirement: Quote entity [Enterprise]
 The system MUST provide a Quote entity stored as an OpenRegister object in the `pipelinq` register, using the `schema:Offer` type annotation. Each Quote is linked to a lead and contains metadata for the proposal lifecycle.
 
@@ -302,9 +304,9 @@ The system MUST provide dedicated list and detail views for managing quotes, acc
 ### Requirement: Quote-to-order conversion [Enterprise]
 The system MUST support converting accepted quotes into actionable records for order fulfillment or case creation.
 
-#### Scenario: Convert accepted quote to case
+#### Scenario: Convert accepted quote to a request
 - GIVEN a quote in status "geaccepteerd"
-- WHEN the user clicks "Omzetten naar zaak"
+- WHEN the user clicks "Omzetten naar verzoek"
 - THEN the system MUST create a new request (verzoek) in Pipelinq
 - AND the request MUST contain: client reference, contact reference, quote reference, and description composed from the quote title and line items
 - AND the request MUST be linked to the original lead
@@ -417,7 +419,7 @@ The system MUST provide admin-configurable settings for the quoting module.
 The system MUST support searching and cross-referencing quotes across the CRM.
 
 #### Scenario: Search by quote number
-- GIVEN the global search or quote list search
+- GIVEN Nextcloud's unified search; pipelinq has no quote list of its own, and a lead lists its quotes on its Offertes tab (board `PqLead`)
 - WHEN the user searches for "OFF-2026-004"
 - THEN all quotes matching the partial number MUST be returned
 
@@ -461,6 +463,20 @@ When the `quote` schema is registered (per the Quote entity requirement of this 
 - THEN the "Send to invoicing" action MUST NOT be rendered
 - AND a direct endpoint call MUST be refused with a not-available error
 - `@e2e exclude` Enterprise-tier, unbuilt quote schema — no runtime surface in this change.
+
+### Requirement: The quote page shows every field of the quote card and a history in words
+
+The quote detail page MUST show all eight fields of the Offerte card without a "Show all fields" fold, and its History card MUST describe each entry in words on compact rows.
+
+#### Scenario: a draft quote
+
+@e2e exclude Asserted in tests/vitest/quotesBoardLook.spec.js; the pixel check against board PqOfferte covers the drawn cards.
+
+- GIVEN a draft quote made from a lead
+- WHEN the user opens the quote
+- THEN the Offerte card shows Lead, Klant, Contact, Titel, Verzenddatum, Vervaldatum, Toegewezen aan and Betalingstermijn
+- AND the History card lists "Aangemaakt door" with the author for the creation and "Bijgewerkt" for a change
+- AND a status change to sent, accepted, rejected or ordered reads as that status
 
 ## Dependencies
 - Product catalog spec (Product and ProductCategory entities)

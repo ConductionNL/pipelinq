@@ -22,7 +22,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {object} manifest The build-time merged manifest.
  * @return {Promise<object>} The manifest with persisted overrides applied.
  *
- * @spec openspec/changes/round6-nextcloud-vue-2-78/specs/declarative-view-system/spec.md
+ * @spec openspec/specs/declarative-view-system/spec.md
  */
 export async function loadPersistedOverrides(manifest) {
 	try {
@@ -70,7 +70,7 @@ export async function loadPersistedOverrides(manifest) {
  *
  * @return {boolean}
  *
- * @spec openspec/changes/round6-nextcloud-vue-2-78/specs/declarative-view-system/spec.md
+ * @spec openspec/specs/declarative-view-system/spec.md
  */
 function isBuildiqAvailable() {
 	return (

@@ -2,7 +2,10 @@
 	<CnSettingsSection :name="t('pipelinq', 'Product Categories')">
 		<template #actions>
 			<NcButton variant="secondary" @click="startAdding">
-				{{ t('pipelinq', '+ Add Category') }}
+				<template #icon>
+					<Plus :size="20" />
+				</template>
+				{{ t('pipelinq', 'Add category') }}
 			</NcButton>
 		</template>
 
@@ -14,12 +17,15 @@
 			<p>{{ t('pipelinq', 'No product categories configured yet.') }}</p>
 		</div>
 
-		<div v-else class="category-manager__list">
+		<div v-else class="category-manager__list cn-settings-list">
 			<div
 				v-for="cat in sortedCategories"
 				:key="cat.id"
 				class="category-item"
-				:class="{ 'category-item--editing': editingId === cat.id }">
+				:class="{
+					'category-item--editing': editingId === cat.id,
+					'cn-settings-row': editingId !== cat.id,
+				}">
 				<template v-if="editingId === cat.id">
 					<div class="category-item__edit">
 						<input
@@ -55,11 +61,11 @@
 							cat.description
 						}}</span>
 					</div>
-					<div class="category-item__buttons">
-						<NcButton variant="tertiary" @click="startEditing(cat)">
+					<div class="category-item__buttons cn-settings-row-actions">
+						<NcButton @click="startEditing(cat)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton variant="tertiary" @click="confirmRemove(cat)">
+						<NcButton variant="error" @click="confirmRemove(cat)">
 							{{ t('pipelinq', 'Remove') }}
 						</NcButton>
 					</div>
@@ -106,11 +112,13 @@
 <script>
 import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ProductCategoryManager',
 	components: {
+		Plus,
 		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,

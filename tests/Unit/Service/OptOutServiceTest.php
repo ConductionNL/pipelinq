@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#9.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006
  */
 class OptOutServiceTest extends TestCase {
 	/**

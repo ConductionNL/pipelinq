@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.6
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -27,6 +27,10 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\BrpCacheService;
+use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
+use OCA\Pipelinq\Service\BsnAudit\LookupReason;
+use OCA\Pipelinq\Service\BsnAudit\LookupResult;
+use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
 use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCP\IAppConfig;
@@ -43,7 +47,7 @@ use Throwable;
  *   3. Cache invalidation through BrpCacheService.
  *   4. Audit-record write through BsnAuditService.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-03
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-03
  */
 class BrpMutationWebhookListener {
 	/**
@@ -87,7 +91,7 @@ class BrpMutationWebhookListener {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::mask() is a
 	 *  pure static log-masking helper with no instance state.
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.6
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 	 */
 	public function handle(string $rawBody, string $signature): array {
 		$secret = $this->appConfig->getValueString(
@@ -126,13 +130,17 @@ class BrpMutationWebhookListener {
 		$count = $this->cacheService->invalidate($bsn);
 		$this->auditService->recordLookup(
 			actor: 'system:brp-webhook',
-			rawBsn: $bsn,
-			verzoekreden: 'BRP mutation webhook',
-			purposeBinding: 'Cache-consistentie (BRP mutatie)',
-			outcome: 'cache-invalidated',
-			action: 'brp-cache-invalidated',
-			responseCode: 200,
-			actorRole: 'system',
+			lookup: new LookupAudit(
+				subject: new LookupSubject(rawBsn: $bsn),
+				reason: new LookupReason(
+					verzoekreden: 'BRP mutation webhook',
+					purposeBinding: 'Cache-consistentie (BRP mutatie)',
+					linkedRequest: null,
+					vogScreening: false,
+				),
+				result: new LookupResult(outcome: 'cache-invalidated', action: 'brp-cache-invalidated', responseCode: 200),
+				actorRole: 'system',
+			),
 		);
 
 		$this->logger->info(

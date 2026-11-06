@@ -52,32 +52,26 @@ describe('dmarcVerdictText', () => {
 })
 
 describe('dkimBadgeClass', () => {
-	it('is the "on" class when DKIM was found', () => {
-		expect(dkimBadgeClass(true)).toBe('deliverability-settings__badge--on')
+	it('is the success tone when DKIM was found', () => {
+		expect(dkimBadgeClass(true)).toBe('cn-status-badge--success')
 	})
 
-	it('is the "off" class when DKIM was not found', () => {
-		expect(dkimBadgeClass(false)).toBe('deliverability-settings__badge--off')
+	it('is the error tone when DKIM was not found, as the board draws "DKIM missing"', () => {
+		expect(dkimBadgeClass(false)).toBe('cn-status-badge--error')
 	})
 })
 
 describe('dmarcBadgeClass', () => {
-	it('is the "on" class for a found record', () => {
-		expect(dmarcBadgeClass('found')).toBe('deliverability-settings__badge--on')
+	it('is the success tone for a found record', () => {
+		expect(dmarcBadgeClass('found')).toBe('cn-status-badge--success')
 	})
 
-	it('is the "sandbox" (neutral) class for an unknown/uncached status', () => {
-		expect(dmarcBadgeClass('unknown')).toBe(
-			'deliverability-settings__badge--sandbox',
-		)
+	it('is the warning tone for an unknown/uncached status', () => {
+		expect(dmarcBadgeClass('unknown')).toBe('cn-status-badge--warning')
 	})
 
-	it('is the "off" class for missing or invalid', () => {
-		expect(dmarcBadgeClass('missing')).toBe(
-			'deliverability-settings__badge--off',
-		)
-		expect(dmarcBadgeClass('invalid')).toBe(
-			'deliverability-settings__badge--off',
-		)
+	it('is the neutral tone for missing or invalid', () => {
+		expect(dmarcBadgeClass('missing')).toBe('cn-status-badge--default')
+		expect(dmarcBadgeClass('invalid')).toBe('cn-status-badge--default')
 	})
 })

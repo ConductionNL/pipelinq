@@ -38,6 +38,8 @@ use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\InstanceMailerTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\MailAccountTransport;
+use OCA\Pipelinq\Service\Marketing\Transport\MailAddressing;
+use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCA\Pipelinq\Service\Marketing\Transport\SendResult;
 use OCA\Pipelinq\Service\UnsubscribeMail;
@@ -59,7 +61,7 @@ use Throwable;
  *  enforcement + adapter dispatch + persistence live together by design, matching
  *  BlastService's own precedent for the send pipeline it replaces; splitting would
  *  only scatter one send-orchestration concern across several files.
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 15, threshold 13. Wires
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 16, threshold 13. Wires
  *  the three transport adapters plus the OpenRegister/tracking/app-config
  *  collaborators a send-orchestration service genuinely needs, and now the
  *  connector-source register too. This line read "Measured 13, threshold 13" and
@@ -109,6 +111,7 @@ class MailTransportService {
 	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger Logger.
 	 * @param PhysicalAddressRenderer $addressRenderer Puts the template's physical address into each body.
+	 * @param RecipientNameReader $recipientNames Reads the name a recipient is greeted by.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -118,6 +121,7 @@ class MailTransportService {
 		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
 		private PhysicalAddressRenderer $addressRenderer,
+		private RecipientNameReader $recipientNames,
 	) {
 	}//end __construct()
 
@@ -249,7 +253,9 @@ class MailTransportService {
 	/**
 	 * Build the transport-agnostic {@see RenderedMail} from a template + delivery.
 	 *
-	 * Substitution is intentionally minimal: `{{email}}`, `{{contactId}}`, and
+	 * Substitution is intentionally minimal: `{{email}}`, `{{contactId}}`,
+	 * `{{preferredName}}` (the recipient's preferred name, or their full name
+	 * when they have stated none; escaped in the HTML body) and
 	 * `{{unsubscribe_link}}` when the delivery carries one (a mailing-list
 	 * send always does; a segment send has no membership to unsubscribe from,
 	 * so the token resolves empty). Before those tokens are substituted, the
@@ -268,6 +274,7 @@ class MailTransportService {
 	 * @return RenderedMail
 	 *
 	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
 	 */
 	private function buildRenderedMail(array $template, array $delivery): RenderedMail {
 		$tokens = [
@@ -281,7 +288,14 @@ class MailTransportService {
 			// BlastService::resolveAudience() after the cutover
 			// (opt-out-before-send REQ-CII-004).
 			'{{unsubscribe_link}}' => (string)($delivery['unsubscribeUrl'] ?? ''),
+			// The name the person asked to be called by, or their full name.
+			'{{preferredName}}' => $this->recipientNames->greetingName(
+				recipientId: (string)($delivery['contactId'] ?? '')
+			),
 		];
+		// A name is a person's own text: it is escaped where it lands in HTML.
+		$htmlTokens = $tokens;
+		$htmlTokens['{{preferredName}}'] = htmlspecialchars($tokens['{{preferredName}}'], (ENT_QUOTES | ENT_HTML5), 'UTF-8');
 
 		// RFC 8058: the same link as List-Unsubscribe, one-click by POST. Both
 		// pipelinq's list link and integriq's link take that POST.
@@ -298,7 +312,7 @@ class MailTransportService {
 		// the end, the same way the template preview shows it.
 		$footer = (string)($template['footerOverride'] ?? '');
 		$html = $this->addressRenderer->render(
-			body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_HTML), $tokens),
+			body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_HTML), $htmlTokens),
 			footerOverride: $footer,
 			format: ArticleService::FORMAT_HTML,
 		);
@@ -308,16 +322,20 @@ class MailTransportService {
 		}
 
 		return new RenderedMail(
-			fromEmail: (string)($template['senderEmail'] ?? ''),
-			fromName: (string)($template['senderName'] ?? ''),
-			replyTo: (string)($template['replyTo'] ?? ''),
-			toEmail: (string)($delivery['email'] ?? ''),
-			subject: strtr((string)($template['subject'] ?? ''), $tokens),
-			html: $html,
-			text: $this->addressRenderer->render(
-				body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_TEXT), $tokens),
-				footerOverride: $footer,
-				format: ArticleService::FORMAT_TEXT,
+			addressing: new MailAddressing(
+				fromEmail: (string)($template['senderEmail'] ?? ''),
+				fromName: (string)($template['senderName'] ?? ''),
+				replyTo: (string)($template['replyTo'] ?? ''),
+				toEmail: (string)($delivery['email'] ?? ''),
+			),
+			content: new MailContent(
+				subject: strtr((string)($template['subject'] ?? ''), $tokens),
+				html: $html,
+				text: $this->addressRenderer->render(
+					body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_TEXT), $tokens),
+					footerOverride: $footer,
+					format: ArticleService::FORMAT_TEXT,
+				),
 			),
 			headers: $headers,
 			deliveryId: $deliveryId,

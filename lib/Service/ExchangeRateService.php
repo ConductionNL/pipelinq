@@ -16,15 +16,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTimeImmutable;
+use Exception;
 use OCA\Pipelinq\AppInfo\Application;
 use InvalidArgumentException;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 
 /**
@@ -34,6 +37,10 @@ use OCP\IAppConfig;
  * via app config. Rates express "units of reporting currency per 1 unit of the
  * source currency". An unknown source currency falls back to a 1:1 rate so a
  * roll-up never silently drops a deal's value.
+ *
+ * A rate resolves from, in order: an administrator override, shillinq's
+ * newest rate for the pair, and the hand-kept table. Every resolved rate
+ * carries its source and date, and is flagged stale past a set age.
  *
  * @spec exclude infrastructure utility with no feature requirement of its own; it is
  *   exercised through the features that call it
@@ -73,21 +80,75 @@ class ExchangeRateService {
 	public const RATES_KEY = 'forecast_exchange_rates';
 
 	/**
+	 * App-config key for administrator overrides.
+	 *
+	 * @var string
+	 */
+	public const OVERRIDES_KEY = RateOverrideStore::OVERRIDES_KEY;
+
+	/**
+	 * App-config key for the typed dates of the rate table.
+	 *
+	 * @var string
+	 */
+	public const RATE_DATES_KEY = RateOverrideStore::RATE_DATES_KEY;
+
+	/**
+	 * App-config key for the age in days past which a rate is stale.
+	 *
+	 * @var string
+	 */
+	public const MAX_RATE_AGE_KEY = 'forecast_max_rate_age_days';
+
+	/**
+	 * Default stale limit in days.
+	 *
+	 * @var int
+	 */
+	public const MAX_RATE_AGE_DEFAULT = 7;
+
+	public const SOURCE_SAME = 'same';
+	public const SOURCE_OVERRIDE = 'override';
+	public const SOURCE_SHILLINQ = 'shillinq';
+	public const SOURCE_TABLE = 'manual';
+	public const SOURCE_NONE = 'none';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
+	 * @param ShillinqFxRateReader|null $fleetRates Shillinq's rates, when available.
+	 * @param ITimeFactory|null $timeFactory The clock for the stale check.
+	 * @param RateOverrideStore|null $overrides The fixed rates and typed dates.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
+		private ?ShillinqFxRateReader $fleetRates = null,
+		private ?ITimeFactory $timeFactory = null,
+		private ?RateOverrideStore $overrides = null,
 	) {
 	}//end __construct()
+
+	/**
+	 * The fixed rates and the typed dates of the rate table.
+	 *
+	 * @return RateOverrideStore The store.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+	 */
+	public function overrideStore(): RateOverrideStore {
+		$this->overrides ??= new RateOverrideStore(appConfig: $this->appConfig, timeFactory: $this->timeFactory);
+		return $this->overrides;
+	}//end overrideStore()
 
 	/**
 	 * Resolve the org reporting currency (ISO 4217).
 	 *
 	 * @return string The reporting currency code.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function getReportingCurrency(): string {
 		foreach ([self::REPORTING_CURRENCY_KEY, self::LEGACY_REPORTING_CURRENCY_KEY] as $key) {
@@ -108,25 +169,108 @@ class ExchangeRateService {
 	 *
 	 * @return float The amount in the reporting currency, rounded to 2 decimals.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function toReportingCurrency(float $amount, ?string $currency): float {
-		$source = strtoupper(trim((string)$currency));
+		return $this->convert(amount: $amount, currency: $currency)['amount'];
+	}//end toReportingCurrency()
+
+	/**
+	 * Convert an amount and say at which rate, from where and of which day.
+	 *
+	 * @param float $amount The amount in the source currency.
+	 * @param string|null $currency The ISO 4217 source currency (null/empty = reporting currency).
+	 *
+	 * @return array{amount: float, currency: string, reportingCurrency: string, rate: float, source: string,
+	 *     origin: string|null, rateDate: string|null, reason: string|null, stale: bool}
+	 *         The converted amount (2 decimals) and the rate's metadata.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-a-stale-rate-is-shown-as-stale-req-dxr-002
+	 */
+	public function convert(float $amount, ?string $currency): array {
+		$resolved = $this->resolve(currency: $currency);
+		return ['amount' => round($amount * $resolved['rate'], 2)] + $resolved;
+	}//end convert()
+
+	/**
+	 * Resolve the rate for one currency: override, shillinq, then the table.
+	 *
+	 * A currency with no rate anywhere converts 1:1 with source `none`, so a
+	 * roll-up never drops a deal's value and the screen can say why.
+	 *
+	 * @param string|null $currency The ISO 4217 source currency (null/empty = reporting currency).
+	 *
+	 * @return array{currency: string, reportingCurrency: string, rate: float, source: string,
+	 *     origin: string|null, rateDate: string|null, reason: string|null, stale: bool}
+	 *         Units of reporting currency per 1 unit, with source and date.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-a-stale-rate-is-shown-as-stale-req-dxr-002
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+	 */
+	public function resolve(?string $currency): array {
 		$reporting = $this->getReportingCurrency();
-		if ($source === '' || $source === $reporting) {
-			return round($amount, 2);
+		$code = strtoupper(trim((string)$currency));
+		if ($code === '') {
+			$code = $reporting;
 		}
 
-		$rate = $this->rateFor(currency: $source);
-		return round($amount * $rate, 2);
-	}//end toReportingCurrency()
+		$found = $this->findRate(currency: $code, reporting: $reporting);
+		$found['stale'] = $this->isStale(rateDate: $found['rateDate']);
+
+		return ['currency' => $code, 'reportingCurrency' => $reporting] + $found;
+	}//end resolve()
+
+	/**
+	 * The resolved rate of every currency the forecast knows a rate for.
+	 *
+	 * @param array<int, string> $extra Further currencies to include (for example the deals' currencies).
+	 *
+	 * @return array<string, array<string, mixed>> Currency => resolved rate, sorted by code,
+	 *         the reporting currency left out.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-a-stale-rate-is-shown-as-stale-req-dxr-002
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+	 */
+	public function describeRates(array $extra = []): array {
+		$reporting = $this->getReportingCurrency();
+		$codes = array_merge(array_keys($this->getRates()), array_keys($this->overrideStore()->getOverrides()), $extra);
+
+		$rates = [];
+		foreach ($codes as $code) {
+			$code = strtoupper(trim((string)$code));
+			if (preg_match('/^[A-Z]{3}$/', $code) === 1 && $code !== $reporting && isset($rates[$code]) === false) {
+				$rates[$code] = $this->resolve(currency: $code);
+			}
+		}
+
+		ksort($rates);
+		return $rates;
+	}//end describeRates()
+
+	/**
+	 * The stale limit in days (default 7 when unset or not positive).
+	 *
+	 * @return int Days.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-a-stale-rate-is-shown-as-stale-req-dxr-002
+	 */
+	public function getMaxRateAgeDays(): int {
+		$days = $this->appConfig->getValueInt(Application::APP_ID, self::MAX_RATE_AGE_KEY, self::MAX_RATE_AGE_DEFAULT);
+		if ($days < 1) {
+			return self::MAX_RATE_AGE_DEFAULT;
+		}
+
+		return $days;
+	}//end getMaxRateAgeDays()
 
 	/**
 	 * The rate table: units of reporting currency per 1 unit of each currency.
 	 *
 	 * @return array<string, float> Currency code => rate, sorted by code.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function getRates(): array {
 		$raw = $this->appConfig->getValueString(Application::APP_ID, self::RATES_KEY, '');
@@ -155,7 +299,7 @@ class ExchangeRateService {
 	 *
 	 * @throws InvalidArgumentException When a code is not ISO 4217 shaped or a rate is not positive.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function normaliseRates(array $input): array {
 		$rates = [];
@@ -177,28 +321,73 @@ class ExchangeRateService {
 	}//end normaliseRates()
 
 	/**
-	 * Resolve the conversion rate for a source currency.
+	 * Find the rate of a currency other than the reporting currency.
 	 *
-	 * @param string $currency The ISO 4217 source currency code (upper-cased).
+	 * @param string $currency The upper-cased source currency.
+	 * @param string $reporting The reporting currency.
 	 *
-	 * @return float The rate in reporting currency per 1 source unit (1.0 when unknown).
+	 * @return array{rate: float, source: string, origin: string|null, rateDate: string|null, reason: string|null} The rate.
 	 */
-	private function rateFor(string $currency): float {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, self::RATES_KEY, '');
-		if ($raw === '') {
-			return 1.0;
+	private function findRate(string $currency, string $reporting): array {
+		if ($currency === $reporting) {
+			return ['rate' => 1.0, 'source' => self::SOURCE_SAME, 'origin' => null, 'rateDate' => null, 'reason' => null];
 		}
 
-		$table = json_decode($raw, true);
-		if (is_array($table) === false) {
-			return 1.0;
+		$override = ($this->overrideStore()->getOverrides()[$currency] ?? null);
+		if ($override !== null) {
+			return [
+				'rate' => $override['rate'],
+				'source' => self::SOURCE_OVERRIDE,
+				'origin' => null,
+				'rateDate' => $override['date'],
+				'reason' => $override['reason'],
+			];
 		}
 
-		$rate = $table[$currency] ?? null;
-		if (is_numeric($rate) === false || (float)$rate <= 0) {
-			return 1.0;
+		$fleet = $this->fleetRates?->rateFor(from: $currency, to: $reporting);
+		if ($fleet !== null) {
+			return [
+				'rate' => $fleet['rate'],
+				'source' => self::SOURCE_SHILLINQ,
+				'origin' => $fleet['origin'],
+				'rateDate' => $fleet['date'],
+				'reason' => null,
+			];
 		}
 
-		return (float)$rate;
-	}//end rateFor()
+		$typed = $this->getRates()[$currency] ?? null;
+		if ($typed !== null) {
+			return [
+				'rate' => $typed,
+				'source' => self::SOURCE_TABLE,
+				'origin' => null,
+				'rateDate' => ($this->overrideStore()->getRateDates()[$currency] ?? null),
+				'reason' => null,
+			];
+		}
+
+		return ['rate' => 1.0, 'source' => self::SOURCE_NONE, 'origin' => null, 'rateDate' => null, 'reason' => null];
+	}//end findRate()
+
+	/**
+	 * Whether a rate's date is older than the stale limit.
+	 *
+	 * @param string|null $rateDate The rate's date `YYYY-MM-DD`, or null when unknown.
+	 *
+	 * @return bool True when stale; a rate without a date is not flagged.
+	 */
+	private function isStale(?string $rateDate): bool {
+		if ($rateDate === null) {
+			return false;
+		}
+
+		try {
+			$date = new DateTimeImmutable($rateDate);
+		} catch (Exception) {
+			return false;
+		}
+
+		$age = (int)$date->diff($this->overrideStore()->today())->format('%r%a');
+		return $age > $this->getMaxRateAgeDays();
+	}//end isStale()
 }//end class

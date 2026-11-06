@@ -10,6 +10,8 @@
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 import manifest from '../../src/manifest.json'
@@ -24,6 +26,17 @@ vi.mock('../../src/services/contactSyncApi.js', () => ({
 	writeBack: vi.fn(),
 }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn() }))
+const store = vi.hoisted(() => ({ fetchCollection: vi.fn(async () => []) }))
+vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => store }))
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		props: ['name', 'eyebrow', 'width'],
+		render() {
+			return h('div', { 'data-name': 'CnDialog', 'data-eyebrow': this.eyebrow }, [this.$slots.default?.(), this.$slots.actions?.()])
+		},
+	},
+}))
 vi.mock('@nextcloud/axios', () => ({
 	default: { get: vi.fn(async () => ({ data: { languages: [] } })) },
 }))
@@ -48,6 +61,8 @@ vi.mock('@nextcloud/vue', () => {
 	})
 	return {
 		NcDialog: passthrough('NcDialog'),
+		NcCheckboxRadioSwitch: passthrough('NcCheckboxRadioSwitch'),
+		NcTextArea: passthrough('NcTextArea'),
 		NcButton: {
 			name: 'NcButton',
 			emits: ['click'],
@@ -88,7 +103,7 @@ function mountDialog(props) {
 	const wrapper = mount(ClientCreateDialog, {
 		props,
 		global: {
-			mocks: { t: (_app, text) => text, $router: { push } },
+			mocks: { t: (_app, text, vars = {}) => text.replace(/\{(\w+)\}/g, (_all, key) => vars[key] ?? `{${key}}`), $router: { push, resolve: ({ params }) => ({ href: `/apps/pipelinq/clients/${params.id}` }) } },
 		},
 	})
 	return { wrapper, push }
@@ -222,5 +237,43 @@ describe('identity edits reach the Nextcloud Contact', () => {
 		})
 		afterFn({ id: 'c-9' })
 		expect(write).toHaveBeenCalledWith('client', 'c-9')
+	})
+})
+
+describe('New client dialog as board PqKlantNieuw draws it', () => {
+	it('is the board dialog with the type as two choices and the rest in their board places', async () => {
+		const { wrapper } = mountDialog({})
+		await flushPromises()
+		expect(wrapper.find('[data-name="CnDialog"]').attributes('data-eyebrow')).toBe('Residents and businesses')
+		expect(wrapper.findComponent({ name: 'ClientForm' }).props('boardLayout')).toBe(true)
+		expect(wrapper.findAll('[data-name="NcCheckboxRadioSwitch"]')).toHaveLength(2)
+	})
+
+	it('warns about a client with the same e-mail address and offers to open it or save anyway', async () => {
+		vi.useFakeTimers()
+		store.fetchCollection.mockImplementation(async (_type, filter) => (filter.email ? [{ id: 'c-9', name: 'Bakkerij De Graaf', email: 'info@bakkerijdegraaf.nl' }] : []))
+		const { wrapper } = mountDialog({})
+		await flushPromises()
+		const form = wrapper.findComponent({ name: 'ClientForm' })
+		form.vm.form.email = 'INFO@bakkerijdegraaf.nl'
+		await flushPromises()
+		await vi.advanceTimersByTimeAsync(450)
+		await flushPromises()
+		vi.useRealTimers()
+		const notice = wrapper.find('[data-testid="client-duplicate"]')
+		expect(notice.exists()).toBe(true)
+		expect(notice.text()).toContain('Possible duplicate: Bakkerij De Graaf has the same email address')
+		expect(wrapper.find('[data-testid="client-duplicate-open"]').attributes('href')).toBe('/apps/pipelinq/clients/c-9')
+		expect(notice.find('[data-testid="client-duplicate-icon"]').exists()).toBe(true)
+	})
+
+	/**
+	 * @spec openspec/specs/client-management/spec.md#requirement-the-duplicate-warning-is-a-bordered-notice
+	 */
+	it('draws the duplicate warning as the board\'s bordered notice, 12px in, the notes field 89.5px tall', () => {
+		const sfc = readFileSync(resolve(__dirname, '../../src/views/clients/ClientForm.vue'), 'utf8')
+		const style = sfc.slice(sfc.indexOf('<style'))
+		expect(style).toMatch(/\.client-form__duplicate \{[^}]*padding: 12px 14px;[^}]*border: 1px solid var\(--cn-board-notice-border, #f0d9a8\);[^}]*background: var\(--cn-board-notice-bg, #fff4de\);/)
+		expect(style).toMatch(/:deep\(#client-board-notes\) \{\s*min-height: 89\.5px;/)
 	})
 })

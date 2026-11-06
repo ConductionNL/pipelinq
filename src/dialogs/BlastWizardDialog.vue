@@ -11,37 +11,21 @@
   - send, request consent, or cancel).
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
-		:name="t('pipelinq', 'New blast')"
-		:open="true"
-		size="large"
-		:closeOnClickOutside="false"
+		:name="t('pipelinq', 'New newsletter')"
+		:eyebrow="t('pipelinq', 'New newsletter, step {step} of {total}', { step: currentStep + 1, total: steps.length })"
+		:subtitle="stepSubtitle"
+		width="wizard"
+		data-testid="blast-wizard-dialog"
 		@closing="close()">
 		<div class="blast-wizard">
-			<ol class="blast-wizard__steps">
-				<li
-					v-for="(s, idx) in steps"
-					:key="s.key"
-					class="blast-wizard__step"
-					:class="{
-						'blast-wizard__step--current': idx === currentStep,
-						'blast-wizard__step--done': idx < currentStep,
-					}">
-					<button
-						type="button"
-						class="blast-wizard__step-button"
-						:disabled="idx > reachableStep"
-						:aria-current="idx === currentStep ? 'step' : null"
-						@click="goTo(idx)">
-						<span class="blast-wizard__step-number" aria-hidden="true">
-							<Check v-if="idx < currentStep" :size="16" />
-							<template v-else>{{ idx + 1 }}</template>
-						</span>
-						<span class="blast-wizard__step-label">{{ s.label }}</span>
-					</button>
-				</li>
-			</ol>
+			<CnStepper
+				:steps="stepperSteps"
+				:currentIndex="currentStep"
+				:reachableIndex="reachableStep"
+				allowJumpBack
+				@jump="(id) => goTo(stepIndex(id))" />
 
 			<div class="blast-wizard__body">
 				<!-- Basics -->
@@ -313,10 +297,13 @@
 
 				<!-- Review -->
 				<section v-if="step === 'review'" class="blast-wizard__panel">
+					<h3 class="blast-wizard__review-label">
+						{{ steps[steps.length - 1].label }}
+					</h3>
 					<dl class="blast-wizard__review">
 						<template v-for="row in reviewRows" :key="row.key">
 							<dt>{{ row.label }}</dt>
-							<dd>{{ row.value }}</dd>
+							<dd class="blast-wizard__review-value">{{ row.value }}</dd>
 							<dd class="blast-wizard__review-change">
 								<NcButton
 									variant="tertiary"
@@ -326,6 +313,45 @@
 							</dd>
 						</template>
 					</dl>
+					<div
+						v-if="reviewMissing.length > 0"
+						class="blast-wizard__consent"
+						role="status"
+						data-testid="blast-review-consent">
+						<AlertOutline :size="20" class="blast-wizard__consent-icon" />
+						<div class="blast-wizard__consent-body">
+							<strong>{{ t('pipelinq', 'Consent missing') }}</strong>
+							<p>{{ reviewConsentLine }}</p>
+							<p class="blast-wizard__consent-names">
+								{{ reviewMissingNames }}
+							</p>
+							<span class="blast-wizard__consent-actions">
+								<NcButton data-testid="blast-review-consent-request" @click="onConsentRequest">
+									<template #icon>
+										<EmailOutline :size="20" />
+									</template>
+									{{ t('pipelinq', 'Request consent') }}
+								</NcButton>
+								<NcButton
+									:pressed="consentChoice === 'skip'"
+									data-testid="blast-review-consent-skip"
+									@click="consentChoice = 'skip'">
+									<template #icon>
+										<Send :size="20" />
+									</template>
+									{{ t('pipelinq', 'Skip and send') }}
+								</NcButton>
+							</span>
+						</div>
+					</div>
+					<p
+						v-if="templateChecked"
+						class="blast-wizard__check"
+						:class="{ 'blast-wizard__check--error': templateValidationError }"
+						data-testid="blast-review-template-check">
+						<CheckCircle v-if="!templateValidationError" :size="20" />
+						{{ templateValidationError || t('pipelinq', 'Unsubscribe link found in the template') }}
+					</p>
 				</section>
 
 				<NcNoteCard
@@ -338,15 +364,12 @@
 		</div>
 
 		<template #actions>
-			<NcButton
-				variant="tertiary"
-				class="blast-wizard__cancel"
-				@click="close()">
+			<NcButton @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton v-if="currentStep > 0" variant="secondary" @click="prev">
+			<NcButton v-if="currentStep > 0" @click="prev">
 				<template #icon>
-					<ChevronLeft :size="20" />
+					<ArrowLeft :size="20" />
 				</template>
 				{{ t('pipelinq', 'Back') }}
 			</NcButton>
@@ -367,7 +390,7 @@
 				@click="submit">
 				<template #icon>
 					<NcLoadingIcon v-if="submitting" :size="20" />
-					<Send v-else :size="20" />
+					<Check v-else :size="20" />
 				</template>
 				{{ t('pipelinq', 'Create blast') }}
 			</NcButton>
@@ -380,10 +403,11 @@
 			@cancel="onConsentCancel"
 			@requestConsent="onConsentRequest"
 			@skipAndSend="onConsentSkip" />
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog, CnStepper } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showInfo } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -391,15 +415,17 @@ import {
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDateTimePickerNative,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import Check from 'vue-material-design-icons/Check.vue'
-import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
+import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Send from 'vue-material-design-icons/Send.vue'
 import MissingConsentModal from '../modals/MissingConsentModal.vue'
 import { previewTemplate } from '../services/articlesApi.js'
@@ -442,19 +468,23 @@ function toLocalInput(date) {
 export default {
 	name: 'BlastWizardDialog',
 	components: {
+		AlertOutline,
 		Check,
-		ChevronLeft,
+		CheckCircle,
+		CnStepper,
+		EmailOutline,
+		Send,
+		ArrowLeft,
 		ChevronRight,
 		MissingConsentModal,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcDateTimePickerNative,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
 		NcTextField,
-		Send,
 	},
 
 	inheritAttrs: false,
@@ -507,6 +537,10 @@ export default {
 			showConsentModal: false,
 			missingConsentContacts: [],
 			consentDecision: null,
+			/** The segment members a send would skip for lack of consent, read on the review step. */
+			reviewMissing: [],
+			/** 'skip' once the marketer chose to send without them on the review step. */
+			consentChoice: null,
 		}
 	},
 
@@ -526,12 +560,61 @@ export default {
 		},
 
 		/**
+		 * The steps as the shared stepper takes them.
+		 *
+		 * @return {Array<{id: string, label: string}>}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
+		stepperSteps() {
+			return this.steps.map((s) => ({ id: s.key, label: s.label }))
+		},
+
+		/**
 		 * @return {string} The key of the current step.
 		 *
 		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		step() {
 			return STEPS[this.currentStep].key
+		},
+
+		/**
+		 * The line under the title: which step this is and what it asks.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
+		stepSubtitle() {
+			const position = { step: this.currentStep + 1, total: this.steps.length }
+			return this.isLastStep
+				? this.t('pipelinq', 'Step {step} of {total}: check everything before the blast is created', position)
+				: this.t('pipelinq', 'Step {step} of {total}: {label}', { ...position, label: this.steps[this.currentStep].label })
+		},
+
+		/** @return {string} "7 contacten in dit segment hebben geen toestemming voor e-mail. Kies hoe je verdergaat." */
+		reviewConsentLine() {
+			const channel = this.selectedChannel === 'sms' ? this.t('pipelinq', 'SMS') : this.t('pipelinq', 'email')
+			return this.n(
+				'pipelinq',
+				'%n contact in this segment has no consent for {channel}. Choose how to continue.',
+				'%n contacts in this segment have no consent for {channel}. Choose how to continue.',
+				this.reviewMissing.length,
+				{ channel },
+			)
+		},
+
+		/** @return {string} The first three names, and how many more. */
+		reviewMissingNames() {
+			const names = this.reviewMissing.map((c) => c.name || c.email || '').filter(Boolean)
+			const shown = names.slice(0, 3).join(', ')
+			const more = names.length - 3
+			return more > 0 ? this.n('pipelinq', '{names} and %n other', '{names} and %n others', more, { names: shown }) : shown
+		},
+
+		/** @return {boolean} Whether an email template was checked, so the review can say how it went. */
+		templateChecked() {
+			return this.selectedChannel === 'email' && !!this.selectedTemplate && !this.templateValidating
 		},
 
 		isLastStep() {
@@ -713,6 +796,18 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Read the consent shortfall when the review step opens.
+		 *
+		 * @param {string} value The step key.
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
+		 */
+		step(value) {
+			if (value === 'review') {
+				this.loadReviewConsent()
+			}
+		},
+
 		show: {
 			immediate: true,
 			/**
@@ -1122,6 +1217,29 @@ export default {
 		},
 
 		/**
+		 * Read who a segment send would skip for lack of consent, so the
+		 * review step names them and offers the choice before Create.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
+		 */
+		async loadReviewConsent() {
+			this.reviewMissing = []
+			if (!this.selectedSegment) {
+				return
+			}
+			try {
+				const { data } = await axios.get(
+					generateUrl(`/apps/pipelinq/api/segments/${this.selectedSegment.id}/compliance`),
+					{ params: { channel: this.selectedChannel } },
+				)
+				this.reviewMissing = data?.missingConsent || []
+			} catch {
+				this.reviewMissing = []
+			}
+		},
+
+		/**
 		 * Check a segment's contacts for consent before sending; a shortfall
 		 * waits on the marketer's decision in MissingConsentModal.
 		 *
@@ -1129,7 +1247,7 @@ export default {
 		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
 		 */
 		async preflightCompliance() {
-			if (!this.selectedSegment) {
+			if (!this.selectedSegment || this.consentChoice === 'skip') {
 				return true
 			}
 			try {
@@ -1260,105 +1378,6 @@ export default {
 	padding-bottom: 8px;
 }
 
-.blast-wizard__steps {
-	display: flex;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	counter-reset: none;
-}
-
-.blast-wizard__step {
-	position: relative;
-	flex: 1 1 0;
-	min-width: 0;
-}
-
-/* The line joining one step to the next. */
-.blast-wizard__step:not(:last-child)::after {
-	content: '';
-	position: absolute;
-	top: 14px;
-	inset-inline-start: calc(50% + 18px);
-	inset-inline-end: calc(-50% + 18px);
-	height: 2px;
-	background: var(--color-border-dark);
-}
-
-.blast-wizard__step--done:not(:last-child)::after {
-	background: var(--color-primary-element);
-}
-
-.blast-wizard__step-button {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 6px;
-	width: 100%;
-	min-height: 0;
-	margin: 0;
-	padding: 0 4px;
-	border: 0;
-	background: none;
-	color: var(--color-text-maxcontrast);
-	font-weight: normal;
-	cursor: pointer;
-}
-
-/* Nextcloud's core button rules give every state a background, border and
-   radius, the strongest at (0,4,1); three classes plus the state outrank
-   them. The keyboard focus ring is left alone. */
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:hover,
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:focus,
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:active,
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:disabled {
-	border: 0;
-	border-radius: 0;
-	background: none;
-	color: var(--color-text-maxcontrast);
-}
-
-.blast-wizard__steps .blast-wizard__step .blast-wizard__step-button:disabled {
-	cursor: default;
-	opacity: 0.6;
-}
-
-.blast-wizard__step-number {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 30px;
-	height: 30px;
-	border: 2px solid var(--color-border-dark);
-	border-radius: 50%;
-	background: var(--color-main-background);
-	font-weight: 700;
-}
-
-.blast-wizard__step--current .blast-wizard__step-number {
-	border-color: var(--color-primary-element);
-	color: var(--color-primary-element);
-}
-
-.blast-wizard__step--done .blast-wizard__step-number {
-	border-color: var(--color-primary-element);
-	background: var(--color-primary-element);
-	color: var(--color-primary-element-text);
-}
-
-.blast-wizard__step--current .blast-wizard__step-label {
-	color: var(--color-main-text);
-	font-weight: 700;
-}
-
-.blast-wizard__step-label {
-	max-width: 100%;
-	overflow: hidden;
-	font-size: 0.9em;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
 /* Tall enough for the biggest step, so the dialog does not jump between them. */
 .blast-wizard__body {
 	display: flex;
@@ -1406,6 +1425,61 @@ export default {
 
 .blast-wizard__note {
 	margin: 0;
+}
+
+.blast-wizard__consent {
+	display: flex;
+	gap: 10px;
+	padding: 14px 16px;
+	border: 1px solid color-mix(in srgb, var(--color-warning) 45%, transparent);
+	border-radius: 10px;
+	background: var(--color-warning-light, #fdf2e5);
+	color: var(--color-warning-text, #7a4f00);
+	font-size: 14px;
+}
+
+.blast-wizard__consent-icon {
+	flex: none;
+}
+
+.blast-wizard__consent-body {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.blast-wizard__consent p {
+	margin: 0;
+}
+
+.blast-wizard__consent-names {
+	font-size: 13px;
+}
+
+.blast-wizard__consent-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 4px;
+}
+
+.blast-wizard__check {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	padding: 8px 12px;
+	border-radius: 8px;
+	background: var(--color-success-light, #e7f3ea);
+	color: var(--color-success-text, #1e6b2a);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.blast-wizard__check--error {
+	background: var(--color-error-light, #fbe9e8);
+	color: var(--color-error-text, #a30000);
 }
 
 .blast-wizard__preview {
@@ -1471,22 +1545,38 @@ export default {
 	justify-content: space-between;
 }
 
+.blast-wizard__review-label {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
 .blast-wizard__review {
 	display: grid;
-	grid-template-columns: max-content minmax(0, 1fr) auto;
+	grid-template-columns: minmax(120px, 170px) minmax(0, 1fr) auto;
 	align-items: center;
-	gap: 0 16px;
 	margin: 0;
 }
 
-/* Nextcloud's core CSS pads every dt and dd by 12px. */
+/* Nextcloud's core CSS pads every dt and dd by 12px; each answer is a row
+   with a hairline under it. */
 .blast-wizard__review dt,
 .blast-wizard__review dd {
-	padding: 0;
+	align-self: stretch;
+	display: flex;
+	align-items: center;
+	min-height: 50px;
+	padding: 0 16px 0 0;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .blast-wizard__review dt {
+	justify-content: flex-start;
 	color: var(--color-text-maxcontrast);
+	text-align: start;
 }
 
 .blast-wizard__review dd {
@@ -1494,17 +1584,12 @@ export default {
 	overflow-wrap: anywhere;
 }
 
-.blast-wizard__cancel {
-	margin-inline-end: auto;
+.blast-wizard__review-value {
+	font-weight: 600;
 }
 
-@media (max-width: 720px) {
-	.blast-wizard__step-label {
-		display: none;
-	}
-
-	.blast-wizard__step--current .blast-wizard__step-label {
-		display: block;
-	}
+.blast-wizard__review .blast-wizard__review-change {
+	justify-content: flex-end;
+	padding-inline-end: 0;
 }
 </style>

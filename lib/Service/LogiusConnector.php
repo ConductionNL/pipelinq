@@ -27,9 +27,9 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-bbk-010
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-002
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-receipt-005
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-BBK-010
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-002
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RECEIPT-005
  */
 
 declare(strict_types=1);
@@ -290,7 +290,7 @@ class LogiusConnector {
 	 * @return void
 	 *
 	 * @throws RuntimeException On any validation failure (with reason).
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-bbk-010
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-BBK-010
 	 */
 	public function validateOutboundPayload(array $message): void {
 		$subject = (string)($message['subject'] ?? '');
@@ -421,7 +421,10 @@ class LogiusConnector {
 	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
 	 *   exercised through the features that call it
 	 */
-	public function checkMailboxExists(string $bsn): bool {
+	public function checkMailboxExists(
+		#[\SensitiveParameter]
+		string $bsn,
+	): bool {
 		$baseUrl = $this->appConfig->getValueString(
 			Application::APP_ID,
 			self::CONFIG_BASE_URL,
@@ -464,7 +467,7 @@ class LogiusConnector {
 	 *                        may consume the stream when parsing).
 	 *
 	 * @return bool True iff the signature is valid.
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-bbk-010
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-BBK-010
 	 */
 	public function handleWebhookSignature(IRequest $request, string $rawBody): bool {
 		$secret = $this->appConfig->getValueString(

@@ -6,7 +6,7 @@
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<NcDialog :name="t('pipelinq', 'Delete service')" @closing="$emit('cancel')">
+	<CnDialog width="confirm" :name="t('pipelinq', 'Delete service')" @closing="$emit('cancel')">
 		<p>
 			{{
 				t(
@@ -24,15 +24,16 @@
 				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'DeleteServiceDialog',
-	components: { NcButton, NcDialog },
+	components: { NcButton, CnDialog },
 	props: {
 		name: { type: String, default: '' },
 	},

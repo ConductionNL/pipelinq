@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.1
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
  *
  * @see https://nl.wikipedia.org/wiki/Burgerservicenummer for the 11-proef definition.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001
  */
 class BsnValidationService {
 	/**
@@ -59,11 +59,14 @@ class BsnValidationService {
 	 *
 	 * @return array{isFormalValid: bool, elevenTestScore: int, errorCode: ?string, errorMessage: ?string, maskedBsn: string}
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-01
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-02
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-03
 	 */
-	public function validate(string $bsnInput): array {
+	public function validate(
+		#[\SensitiveParameter]
+		string $bsnInput,
+	): array {
 		// 1. Length / character check (REQ-BSN-001-03 — short-circuits 11-proef).
 		if (strlen($bsnInput) !== 9 || ctype_digit($bsnInput) === false) {
 			return [
@@ -113,9 +116,12 @@ class BsnValidationService {
 	 *
 	 * @return string The masked variant safe for logging / UI / audit storage.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-009-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
-	public static function mask(string $bsnInput): string {
+	public static function mask(
+		#[\SensitiveParameter]
+		string $bsnInput,
+	): string {
 		$length = strlen($bsnInput);
 		if ($length === 0) {
 			return '';
@@ -142,9 +148,12 @@ class BsnValidationService {
 	 *
 	 * @return string 64-character hex SHA-256 digest.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-009-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
-	public static function hash(string $bsnInput): string {
+	public static function hash(
+		#[\SensitiveParameter]
+		string $bsnInput,
+	): string {
 		return hash('sha256', $bsnInput);
 	}//end hash()
 }//end class

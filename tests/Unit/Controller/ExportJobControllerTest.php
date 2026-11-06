@@ -44,6 +44,7 @@ use OCA\Pipelinq\Service\Export\ExportAccessPolicy;
 use OCA\Pipelinq\Service\Export\ExportDataService;
 use OCA\Pipelinq\Service\Export\ExportDestinationService;
 use OCA\Pipelinq\Service\Export\ExportJobService;
+use OCA\Pipelinq\Service\Export\ExportRunSummary;
 use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -281,6 +282,7 @@ class ExportJobControllerTest extends TestCase {
 			data: $data,
 			cron: new CronExpressionHelper(),
 			logger: $this->createMock(LoggerInterface::class),
+			summary: new ExportRunSummary(cron: new CronExpressionHelper()),
 		);
 
 		$request = $this->createMock(IRequest::class);

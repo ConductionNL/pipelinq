@@ -106,35 +106,15 @@ class ObjectEventHandlerService {
 		$objectId = (string)$newObject->getId();
 		$assignee = $this->stringifyScalar(value: ($newData['assignee'] ?? ''));
 
-		$this->diffService->dispatchAssigneeChangeIfNeeded(
-			oldData: $oldData,
-			entityType: $entityType,
-			title: $title,
-			objectId: $objectId,
-			assignee: $assignee,
-			dispatcher: $this->dispatcher
-		);
+		$change = ['new' => $newData, 'old' => $oldData, 'entityType' => $entityType, 'title' => $title, 'objectId' => $objectId, 'assignee' => $assignee];
+		$this->diffService->dispatchAssigneeChangeIfNeeded(change: $change, dispatcher: $this->dispatcher);
 
 		if ($entityType === 'lead') {
-			$this->diffService->dispatchStageChangeIfNeeded(
-				newData: $newData,
-				oldData: $oldData,
-				title: $title,
-				objectId: $objectId,
-				assignee: $assignee,
-				dispatcher: $this->dispatcher
-			);
+			$this->diffService->dispatchStageChangeIfNeeded(change: $change, dispatcher: $this->dispatcher);
 		}
 
 		if ($entityType === 'request') {
-			$this->diffService->dispatchStatusChangeIfNeeded(
-				newData: $newData,
-				oldData: $oldData,
-				title: $title,
-				objectId: $objectId,
-				assignee: $assignee,
-				dispatcher: $this->dispatcher
-			);
+			$this->diffService->dispatchStatusChangeIfNeeded(change: $change, dispatcher: $this->dispatcher);
 		}
 	}//end handleUpdated()
 
@@ -150,7 +130,7 @@ class ObjectEventHandlerService {
 	 *
 	 * @return string The display name, or '' when the object has none.
 	 *
-	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
 	 */
 	private function displayName(string $entityType, array $data): string {
 		$field = self::NAME_FIELDS[$entityType] ?? 'title';

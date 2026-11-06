@@ -32,6 +32,7 @@
 	"sections": {},
 	"settingsSection": [
 		"Pipelines",
+		"WebsiteSubmissions",
 		"SettingsIntegrationsCaption",
 		"ExportJobs"
 	],

@@ -19,32 +19,48 @@
 		<NcLoadingIcon v-if="loading" :size="24" />
 
 		<div v-else-if="page" data-testid="campaign-landing-page">
-			<p class="campaign-landing__route">
-				<Web :size="16" />
-				<span>{{ page.route }}</span>
-				<span class="campaign-landing__portal">{{ page.portal }}</span>
+			<p class="campaign-landing__subtitle">
+				{{ t('pipelinq', 'Published by portaliq with a sign-up form') }}
 			</p>
-			<p v-if="page.publicUrl">
-				<a :href="page.publicUrl" target="_blank" rel="noopener noreferrer">
-					{{ page.publicUrl }}
-				</a>
-			</p>
-			<p v-else class="campaign-landing__hint">
-				{{
-					t(
-						'pipelinq',
-						'The portal has no domain configured yet, so the page has no public address.',
-					)
-				}}
-			</p>
-			<p class="campaign-landing__hint">
+			<dl class="campaign-landing__facts">
+				<dt>{{ t('pipelinq', 'Portal') }}</dt>
+				<dd>{{ page.portal }}</dd>
+				<dt>{{ t('pipelinq', 'Address') }}</dt>
+				<dd>
+					<a
+						v-if="page.publicUrl"
+						:href="page.publicUrl"
+						target="_blank"
+						rel="noopener noreferrer">
+						{{ page.publicUrl }}
+					</a>
+					<span v-else class="campaign-landing__hint">
+						{{
+							t(
+								'pipelinq',
+								'The portal has no domain configured yet, so the page has no public address.',
+							)
+						}}
+					</span>
+				</dd>
+				<template v-if="page.form">
+					<dt>{{ t('pipelinq', 'Form') }}</dt>
+					<dd>{{ page.form }}</dd>
+				</template>
+			</dl>
+			<NcNoteCard type="success">
 				{{
 					t(
 						'pipelinq',
 						'Everyone who submits this form becomes a lead in this campaign.',
 					)
 				}}
-			</p>
+			</NcNoteCard>
+			<NcTextField
+				:modelValue="page.route"
+				class="campaign-landing__field"
+				:label="t('pipelinq', 'Route on the portal')"
+				:readonly="true" />
 		</div>
 
 		<div v-else data-testid="campaign-landing-empty">
@@ -74,26 +90,33 @@
 			{{ failure }}
 		</p>
 
-		<p class="campaign-landing__report">
-			<a :href="reportHref">{{ t('pipelinq', 'Open the campaign report') }}</a>
-		</p>
+		<NcButton
+			class="campaign-landing__report cn-button--tonal"
+			variant="secondary"
+			:href="reportHref">
+			<template #icon>
+				<ChartBox :size="16" />
+			</template>
+			{{ t('pipelinq', 'Open campaign report') }}
+		</NcButton>
 	</section>
 </template>
 
 <script>
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
-import Web from 'vue-material-design-icons/Web.vue'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import ChartBox from 'vue-material-design-icons/ChartBox.vue'
 import { createCampaignLandingPage } from '../../services/campaignsApi.js'
 
 export default {
 	name: 'CampaignLandingPageSection',
 	components: {
+		ChartBox,
 		NcButton,
 		NcLoadingIcon,
+		NcNoteCard,
 		NcTextField,
-		Web,
 	},
 
 	props: {
@@ -265,16 +288,29 @@ export default {
 	padding: 8px 0;
 }
 
-.campaign-landing__route {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-weight: bold;
+.campaign-landing__subtitle {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+	margin: -8px 0 12px;
 }
 
-.campaign-landing__portal {
-	color: var(--color-text-maxcontrast);
-	font-weight: normal;
+.campaign-landing__facts {
+	padding: 0;
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 6px 16px;
+	margin: 0 0 12px;
+
+	dt,
+	dd {
+		margin: 0;
+		padding: 0;
+		text-align: start;
+	}
+
+	dt {
+		color: var(--color-text-maxcontrast);
+	}
 }
 
 .campaign-landing__hint {
@@ -283,7 +319,6 @@ export default {
 }
 
 .campaign-landing__field {
-	max-width: 420px;
 	margin-bottom: 12px;
 }
 

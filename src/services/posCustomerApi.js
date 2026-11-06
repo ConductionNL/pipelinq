@@ -5,7 +5,7 @@
 // All endpoints documented in lib/Controller/PosCustomerController.php +
 // lib/Controller/PosCustomerSettingsController.php.
 //
-// @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
+// @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'

@@ -25,15 +25,30 @@ const api = vi.hoisted(() => ({
 	fetchLetterTemplates: vi.fn(),
 	makeLetter: vi.fn(),
 	downloadLetter: vi.fn(),
+	previewLetter: vi.fn(),
+	letterPreviewBody: vi.fn((html) => html),
 }))
 
 vi.mock('../../src/store/modules/object.js', () => ({
 	useObjectStore: () => storeMock,
 }))
 vi.mock('../../src/services/letters.js', () => api)
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		props: ['name', 'eyebrow', 'width'],
+		render() {
+			return h('div', { class: 'nc-dialog', 'data-eyebrow': this.eyebrow, 'data-width': this.width, 'data-name': this.name }, [
+				this.$slots.default?.(),
+				this.$slots.actions?.(),
+			])
+		},
+	},
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: {
 		name: 'NcButton',
+		inheritAttrs: true,
 		props: { disabled: Boolean },
 		emits: ['click'],
 		render() {
@@ -73,9 +88,12 @@ beforeAll(async () => {
 beforeEach(() => {
 	Object.values(storeMock).forEach((fn) => fn.mockReset())
 	Object.values(api).forEach((fn) => fn.mockReset())
-	storeMock.fetchCollection.mockResolvedValue([
-		{ id: 'contact-1', name: 'Anna de Jong' },
-	])
+	api.letterPreviewBody.mockImplementation((html) => html)
+	api.previewLetter.mockResolvedValue({ html: '', fields: [], complete: true, warnings: [] })
+	storeMock.fetchCollection.mockImplementation(async (type) => (type === 'contact'
+		? [{ id: 'contact-1', name: 'Anna de Jong' }]
+		: []))
+	storeMock.fetchObject.mockResolvedValue(null)
 })
 
 const CLIENT = '6f1c1d2e-3b4a-4c5d-8e9f-0a1b2c3d4e5f'
@@ -84,7 +102,7 @@ const TICKET = '7a2b3c4d-5e6f-4a1b-9c2d-3e4f5a6b7c8d'
 function mountOn(path, id) {
 	return mount(Modal, {
 		global: {
-			mixins: [{ methods: { t: (app, text) => text } }],
+			mixins: [{ methods: { t: (app, text) => text, n: (app, one, many, count) => (count === 1 ? one : many).replace('%n', String(count)) } }],
 			mocks: { $route: { path, params: { id } } },
 		},
 	})
@@ -195,6 +213,29 @@ describe('LetterFromTemplateModal', () => {
 		expect(storeMock.fetchCollection).not.toHaveBeenCalled()
 	})
 
+	it('says there are no templates yet while the client is still loading', async () => {
+		api.fetchLetterTemplates.mockResolvedValue({ available: true, templates: [] })
+		storeMock.fetchObject.mockReturnValue(new Promise(() => {}))
+		storeMock.fetchCollection.mockReturnValue(new Promise(() => {}))
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(w.text()).not.toContain('Loading templates')
+		expect(w.text()).toContain('There are no letter templates yet')
+	})
+
+	it('on a ticket page asks for the templates before the ticket has answered', async () => {
+		api.fetchLetterTemplates.mockResolvedValue({ available: true, templates: [] })
+		storeMock.fetchObject.mockReturnValue(new Promise(() => {}))
+
+		const w = mountOn(`/tickets/${TICKET}`, TICKET)
+		await flushPromises()
+
+		expect(api.fetchLetterTemplates).toHaveBeenCalledTimes(1)
+		expect(w.text()).toContain('There are no letter templates yet')
+	})
+
 	it('keeps the dialog open with the error when the letter fails', async () => {
 		api.fetchLetterTemplates.mockResolvedValue({
 			available: true,
@@ -214,6 +255,29 @@ describe('LetterFromTemplateModal', () => {
 		expect(w.text()).toContain('filinq could not make the letter.')
 		expect(api.downloadLetter).not.toHaveBeenCalled()
 		expect(w.find('[data-testid="letter-result"]').exists()).toBe(false)
+	})
+})
+
+describe('LetterFromTemplateModal as board PqBriefOpstellen draws it', () => {
+	it('names the client over the title and offers the client\'s tickets the letter is about', async () => {
+		api.fetchLetterTemplates.mockResolvedValue({ available: true, templates: [{ id: 'tpl-1', name: 'Uitnodiging gesprek vergunning' }] })
+		api.makeLetter.mockResolvedValue({ content: 'JVBERg==', filename: 'x.pdf', warnings: [], contactMomentId: 'cm-1' })
+		storeMock.fetchObject.mockImplementation(async (type) => (type === 'client' ? { id: CLIENT, name: 'Sanne de Vries' } : null))
+		storeMock.fetchCollection.mockImplementation(async (type) => (type === 'ticket'
+			? [{ id: TICKET, reference: 'PQ-2026-0417', title: 'Evenementenvergunning straatfeest Parkstraat' }]
+			: []))
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(w.find('.nc-dialog').attributes('data-eyebrow')).toBe('Sanne de Vries · letter')
+		expect(w.find('.nc-dialog').attributes('data-width')).toBe('wizard')
+		expect(w.find('[data-testid="letter-about"]').exists()).toBe(true)
+		expect(w.find('[data-testid="letter-contact"]').exists()).toBe(false)
+		expect(w.text()).toContain('Templates come from filinq; 1 is shared with pipelinq.')
+		await w.find('[data-testid="letter-make"]').trigger('click')
+		await flushPromises()
+		expect(api.makeLetter).toHaveBeenCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: TICKET })
 	})
 })
 
@@ -256,3 +320,101 @@ describe('the Make a letter action (caller)', () => {
 		)
 	})
 })
+
+describe('LetterFromTemplateModal preview', () => {
+	const ONE_TEMPLATE = {
+		available: true,
+		templates: [{ id: 'tpl-1', name: 'Uitnodiging gesprek vergunning', description: '' }],
+	}
+
+	it('previews the chosen template and lists what filinq filled in', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		api.previewLetter.mockResolvedValue({
+			html: '<p>Geachte mevrouw De Vries,</p>',
+			fields: [
+				{ label: 'Aanhef', value: 'Geachte mevrouw De Vries,', source: 'op basis van het opgegeven geslacht', filled: true },
+				{ label: 'Adres', value: 'Lindelaan 14', source: 'uit de klantgegevens', filled: true },
+			],
+			complete: true,
+			warnings: [],
+		})
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(api.previewLetter).toHaveBeenCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: undefined })
+		expect(w.find('[data-testid="letter-preview"]').html()).toContain('Geachte mevrouw De Vries,')
+		const fields = w.find('[data-testid="letter-fields"]').text()
+		expect(fields).toContain('Aanhef')
+		expect(fields).toContain('Lindelaan 14, uit de klantgegevens')
+		expect(w.find('[data-testid="letter-check"]').text()).toContain('All 2 fields filled in, nothing missing')
+		expect(w.find('[data-testid="letter-channel"]').exists()).toBe(true)
+	})
+
+	it('names the fields that are still empty', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		api.previewLetter.mockResolvedValue({
+			html: '<p>x</p>',
+			fields: [
+				{ label: 'Aanhef', value: 'Geachte heer,', source: '', filled: true },
+				{ label: 'Afspraak', value: '', source: 'uit Afspraken', filled: false },
+			],
+			complete: false,
+			warnings: [],
+		})
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(w.find('[data-testid="letter-check"]').text()).toContain('Still empty: {fields}')
+		expect(w.find('[data-testid="letter-fields"]').text()).toContain('Not filled in, uit Afspraken')
+	})
+
+	it('passes the client\'s next appointment, so the Afspraak field can be filled', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		storeMock.fetchCollection.mockImplementation(async (type, params) => {
+			if (type === 'appointmentBooking' && params.customerId === CLIENT) {
+				return [{ id: 'appt-1', startAt: '2999-10-14T10:30:00+02:00', status: 'confirmed' }]
+			}
+			return []
+		})
+
+		mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+
+		expect(api.previewLetter).toHaveBeenLastCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: undefined, appointmentId: 'appt-1' })
+	})
+
+	it('takes the appointment on the ticket the user picks', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		storeMock.fetchCollection.mockImplementation(async (type, params) => {
+			if (type === 'ticket') return [{ id: 't-1', title: 'Een' }, { id: 't-2', title: 'Twee' }]
+			if (type === 'appointmentBooking' && params.ticket === 't-2') {
+				return [{ id: 'appt-2', startAt: '2999-10-14T10:30:00+02:00', status: 'confirmed', ticket: 't-2' }]
+			}
+			return []
+		})
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+		w.vm.aboutTicketId = 't-2'
+		await flushPromises()
+
+		expect(api.previewLetter).toHaveBeenLastCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: 't-2', appointmentId: 'appt-2' })
+	})
+
+	it('downloads the PDF without filing or logging it', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(ONE_TEMPLATE)
+		api.makeLetter.mockResolvedValue({ content: 'JVBERg==', filename: 'x.pdf', warnings: [], contactMomentId: null })
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+		await w.find('[data-testid="letter-download"]').trigger('click')
+		await flushPromises()
+
+		expect(api.makeLetter).toHaveBeenCalledWith(CLIENT, { templateId: 'tpl-1', contactId: undefined, ticketId: undefined, downloadOnly: true })
+		expect(api.downloadLetter).toHaveBeenCalledTimes(1)
+		expect(w.find('[data-testid="letter-result"]').exists()).toBe(false)
+	})
+})
+

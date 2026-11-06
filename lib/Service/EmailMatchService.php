@@ -27,7 +27,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\EmailMessageRef;
+use OCA\OpenRegister\Service\LinkTarget;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\AnyPayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Container\ContainerInterface;
@@ -54,6 +58,9 @@ use Throwable;
  * @spec openspec/specs/email-calendar-sync/spec.md
  */
 class EmailMatchService {
+	use AnyPayloadToArray;
+	use RowIdOf;
+
 
 	/**
 	 * Public email-provider domains that should never trigger a
@@ -345,12 +352,10 @@ class EmailMatchService {
 				);
 
 				$linkService->linkEmail(
-					objectUuid: $entity['entityId'],
-					registerId: (int)$register,
-					schemaId: (int)$schema,
-					mailAccountId: $mailAccountId,
-					messageId: (string)$mailMessageId,
-					messageUid: (string)$message['uid']
+					target: (new LinkTarget(objectUuid: $entity['entityId'], registerId: (int)$register))
+						->inSchema(schemaId: (int)$schema),
+					message: (new EmailMessageRef(mailAccountId: $mailAccountId, messageId: (string)$mailMessageId))
+						->withUid(uid: (string)$message['uid'])
 				);
 
 				if ($before === null) {
@@ -389,6 +394,10 @@ class EmailMatchService {
 	public function runForUser(string $userId): array {
 		$settings = $this->getSettings(userId: $userId);
 		if ($settings['enabled'] !== true || $settings['account'] <= 0) {
+			return ['linked' => 0, 'scanned' => 0];
+		}
+
+		if ($this->ownsAccount(userId: $userId, accountId: $settings['account']) === false) {
 			return ['linked' => 0, 'scanned' => 0];
 		}
 
@@ -469,6 +478,65 @@ class EmailMatchService {
 		];
 
 	}//end getSettings()
+
+	/**
+	 * The user's own Nextcloud Mail accounts, the only accounts the matcher may read.
+	 *
+	 * Empty when Nextcloud Mail is not installed or the user has no account.
+	 *
+	 * @param string $userId The user id.
+	 *
+	 * @return array<int,array{id:int,email:string,name:string}>
+	 *
+	 * @spec openspec/specs/email-calendar-sync/spec.md
+	 */
+	public function listAccounts(string $userId): array {
+		try {
+			$qb = $this->db->getQueryBuilder();
+			$qb->select('id', 'email', 'name')
+				->from('mail_accounts')
+				->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+				->orderBy('id', 'ASC');
+
+			$result   = $qb->executeQuery();
+			$accounts = [];
+			while (($row = $result->fetch()) !== false) {
+				$accounts[] = [
+					'id' => (int)($row['id'] ?? 0),
+					'email' => (string)($row['email'] ?? ''),
+					'name' => (string)($row['name'] ?? ''),
+				];
+			}
+
+			$result->closeCursor();
+			return $accounts;
+		} catch (Throwable $e) {
+			$this->logger->warning('Pipelinq: listAccounts failed');
+			return [];
+		}//end try
+
+	}//end listAccounts()
+
+	/**
+	 * Whether a Nextcloud Mail account belongs to the user.
+	 *
+	 * @param string $userId    The user id.
+	 * @param int    $accountId The Mail account id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/email-calendar-sync/spec.md
+	 */
+	public function ownsAccount(string $userId, int $accountId): bool {
+		foreach ($this->listAccounts(userId: $userId) as $account) {
+			if ($account['id'] === $accountId) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end ownsAccount()
 
 	/**
 	 * Persist the matching settings for a user.
@@ -934,83 +1002,6 @@ class EmailMatchService {
 		}//end try
 
 	}//end listInboundMessages()
-
-	/**
-	 * Pull the canonical object id from an OR row.
-	 *
-	 * @param array<string,mixed> $object Object data.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $object): string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OR entity or array to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string,mixed>|null
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat chain of type/shape checks
-	 *  for OR entity normalisation; each branch is an independent early return.
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'getObject') === true) {
-				$payload = $object->getObject();
-				if (is_array($payload) === true) {
-					return $payload;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}//end if
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Resolve the pipelinq register slug.

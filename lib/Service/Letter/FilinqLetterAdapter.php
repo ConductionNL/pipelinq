@@ -70,6 +70,13 @@ class FilinqLetterAdapter
      */
     private const DOCUMENT_SERVICE = 'Service\DocumentService';
 
+    /**
+     * filinq's template slug resolver, below its app namespace root.
+     *
+     * @var string
+     */
+    private const SLUG_RESOLVER = 'Service\TemplateSlugResolver';
+
 
     /**
      * Constructor.
@@ -165,7 +172,9 @@ class FilinqLetterAdapter
         try {
             $row = (array) $service->getTemplate($templateId);
         } catch (Throwable $e) {
-            return null;
+            // A configured template may name its stable slug ("offerte") rather
+            // than this install's id; filinq resolves it in pipelinq's namespace.
+            return $this->findTemplateBySlug(slug: $templateId);
         }
 
         if (($row['namespace'] ?? '') !== self::TEMPLATE_NAMESPACE) {
@@ -178,11 +187,14 @@ class FilinqLetterAdapter
 
 
     /**
-     * Have filinq fill a template, keep a copy in the user's Files and return the PDF.
+     * Have filinq fill a template and return the PDF; outputMode 'both' keeps a copy in the user's Files.
      *
      * @param string                                                  $templateId The filinq template id.
      * @param list<array{register: string, schema: string, id: string}> $dataRefs   The records the letter reads.
      * @param string                                                  $filename   The file name, without extension.
+     * @param string                                                  $outputMode 'both' keeps a copy in the user's Files, 'return' only returns it.
+     * @param list<array<string, mixed>>                              $listRefs   Lists the template reads beside the records
+     *                                                                            (filinq listRefs: register, schema, filter, as, order).
      *
      * @return array{content: string, fileId: int|null, path: string|null, warnings: list<string>} The letter.
      *
@@ -190,7 +202,7 @@ class FilinqLetterAdapter
      *
      * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
      */
-    public function render(string $templateId, array $dataRefs, string $filename): array
+    public function render(string $templateId, array $dataRefs, string $filename, string $outputMode='both', array $listRefs=[]): array
     {
         $service = $this->requireService(service: $this->documentService());
 
@@ -207,8 +219,8 @@ class FilinqLetterAdapter
                     'format'   => 'pdf',
                     'userId'   => $user->getUID(),
                     'filename' => $filename,
-                    'output'   => ['mode' => 'both'],
-                ]
+                    'output'   => ['mode' => $outputMode],
+                ] + $this->listOptions(listRefs: $listRefs)
             );
         } catch (Throwable $e) {
             $this->logger->error(
@@ -245,6 +257,56 @@ class FilinqLetterAdapter
 
 
     /**
+     * Have filinq preview a template for these records and name the fields it fills.
+     *
+     * @param string                                                  $templateId The filinq template id.
+     * @param list<array{register: string, schema: string, id: string}> $dataRefs   The records the letter reads.
+     *
+     * @return array{html: string, fields: list<array<string, string|bool>>, complete: bool, warnings: list<string>}
+     *
+     * @throws RuntimeException When filinq is absent, cannot preview, or the preview fails.
+     *
+     * @spec openspec/specs/client-letters/spec.md
+     */
+    public function preview(string $templateId, array $dataRefs): array
+    {
+        $service = $this->requireService(service: $this->documentService());
+        if (method_exists($service, 'generateMergePreview') === false) {
+            throw new RuntimeException('filinq_preview_unsupported: this filinq has no merge preview');
+        }
+
+        try {
+            $result = (array) $service->generateMergePreview($templateId, $dataRefs, []);
+        } catch (Throwable $e) {
+            $this->logger->error(
+                'Pipelinq: filinq refused a letter preview',
+                ['app' => Application::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
+            );
+            throw new RuntimeException('filinq_preview_failed: '.$e->getMessage(), 0, $e);
+        }
+
+        $fields = [];
+        foreach ((array) ($result['fields'] ?? []) as $field) {
+            $field    = (array) $field;
+            $fields[] = [
+                'label'  => (string) ($field['label'] ?? ($field['path'] ?? '')),
+                'value'  => (string) ($field['value'] ?? ''),
+                'source' => (string) ($field['source'] ?? ''),
+                'filled' => (bool) ($field['filled'] ?? false),
+            ];
+        }
+
+        return [
+            'html'     => (string) ($result['html'] ?? ''),
+            'fields'   => $fields,
+            'complete' => (bool) ($result['complete'] ?? false),
+            'warnings' => array_values(array_map('strval', (array) ($result['warnings'] ?? []))),
+        ];
+
+    }//end preview()
+
+
+    /**
      * Reduce a filinq template object to what the dialog shows.
      *
      * @param array<string, mixed> $row The template object.
@@ -271,6 +333,55 @@ class FilinqLetterAdapter
         ];
 
     }//end summarise()
+
+
+    /**
+     * The `listRefs` render option, or none when there are no lists.
+     *
+     * @param list<array<string, mixed>> $listRefs The lists.
+     *
+     * @return array<string, list<array<string, mixed>>> The option.
+     */
+    private function listOptions(array $listRefs): array
+    {
+        if ($listRefs === []) {
+            return [];
+        }
+
+        return ['listRefs' => $listRefs];
+
+    }//end listOptions()
+
+
+    /**
+     * One of pipelinq's templates by its slug, or null when filinq has none.
+     *
+     * @param string $slug The template's slug.
+     *
+     * @return array{id: string, name: string, description: string}|null The template.
+     *
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     */
+    private function findTemplateBySlug(string $slug): ?array
+    {
+        $resolver = FleetAppId::getService(container: $this->container, canonical: 'filinq', relative: self::SLUG_RESOLVER);
+        if ($resolver === null) {
+            return null;
+        }
+
+        try {
+            $row = (array) $resolver->resolve(self::TEMPLATE_NAMESPACE, $slug);
+        } catch (Throwable $e) {
+            return null;
+        }
+
+        if (($row['namespace'] ?? self::TEMPLATE_NAMESPACE) !== self::TEMPLATE_NAMESPACE) {
+            return null;
+        }
+
+        return $this->summarise(row: $row);
+
+    }//end findTemplateBySlug()
 
 
     /**

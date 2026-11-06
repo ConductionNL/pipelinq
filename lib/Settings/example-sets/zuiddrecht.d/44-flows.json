@@ -1,0 +1,181 @@
+{
+	"$comment": "pipelinq's flow in the Zuiddrecht set: the acknowledgement flow PqFlow draws, with the finished run PqFlowRun opens.",
+	"flows": [
+		{
+			"key": "flow-ontvangst-bevestigen",
+			"data": {
+				"name": "Ontvangst bevestigen aan de inwoner",
+				"description": "Bevestigt een nieuwe melding aan de inwoner per e-mail en op Mijn Zuiddrecht. Bij een verzoek wacht de flow twee werkdagen en herinnert de behandelaar als het dan nog niet beantwoord is.",
+				"trigger": "object.created",
+				"triggerRegister": "pipelinq",
+				"triggerSchema": "ticket",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-object",
+						"name": "Ticket aangemaakt",
+						"position": {
+							"x": 40,
+							"y": 260
+						},
+						"config": {
+							"event": "object.created",
+							"register": "pipelinq",
+							"schema": "ticket"
+						}
+					},
+					{
+						"id": "soort",
+						"type": "openregister.switch",
+						"name": "Is het een verzoek of een melding?",
+						"position": {
+							"x": 196,
+							"y": 260
+						},
+						"config": {
+							"field": "soort"
+						},
+						"exits": [
+							{
+								"id": "verzoek",
+								"condition": "soort == 'verzoek'"
+							},
+							{
+								"id": "melding",
+								"condition": "soort == 'melding'"
+							}
+						]
+					},
+					{
+						"id": "mail",
+						"type": "openregister.send-email",
+						"name": "E-mail sturen aan de inwoner",
+						"position": {
+							"x": 352,
+							"y": 40
+						},
+						"config": {
+							"template": "Ontvangstbevestiging"
+						}
+					},
+					{
+						"id": "portaal",
+						"type": "openregister.object-write",
+						"name": "Plaatsen op Mijn Zuiddrecht",
+						"position": {
+							"x": 508,
+							"y": 40
+						},
+						"config": {
+							"target": "berichtenbox"
+						}
+					},
+					{
+						"id": "wachten",
+						"type": "openregister.wait",
+						"name": "2 werkdagen",
+						"position": {
+							"x": 352,
+							"y": 480
+						},
+						"config": {
+							"for": "P2D",
+							"businessDays": true
+						}
+					},
+					{
+						"id": "beantwoord",
+						"type": "openregister.switch",
+						"name": "Beantwoord?",
+						"position": {
+							"x": 508,
+							"y": 480
+						},
+						"exits": [
+							{
+								"id": "ja",
+								"condition": "status == 'resolved'"
+							},
+							{
+								"id": "nee"
+							}
+						]
+					},
+					{
+						"id": "herinneren",
+						"type": "openregister.send-notification",
+						"name": "Behandelaar herinneren",
+						"position": {
+							"x": 664,
+							"y": 700
+						},
+						"config": {
+							"to": "assignee"
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 664,
+							"y": 260
+						}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "soort"
+					},
+					{
+						"from": "soort",
+						"to": "mail",
+						"fromExit": "melding"
+					},
+					{
+						"from": "soort",
+						"to": "wachten",
+						"fromExit": "verzoek"
+					},
+					{
+						"from": "mail",
+						"to": "portaal"
+					},
+					{
+						"from": "portaal",
+						"to": "end"
+					},
+					{
+						"from": "wachten",
+						"to": "beantwoord"
+					},
+					{
+						"from": "beantwoord",
+						"to": "end",
+						"fromExit": "ja"
+					},
+					{
+						"from": "beantwoord",
+						"to": "herinneren",
+						"fromExit": "nee"
+					},
+					{
+						"from": "herinneren",
+						"to": "end"
+					}
+				],
+				"runs": [
+					{
+						"subject": "{{object:interaction-degraaf-afvalpas.id}}",
+						"subjectRegister": "pipelinq",
+						"subjectSchema": "ticket",
+						"trigger": "object.created",
+						"status": "completed",
+						"created": "{{datetime:0 08:41}}"
+					}
+				]
+			}
+		}
+	]
+}

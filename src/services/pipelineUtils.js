@@ -77,6 +77,24 @@ export function pipelineAppliesTo(pipeline, slug) {
 }
 
 /**
+ * The default pipeline for `slug`: the one marked default among the pipelines
+ * that apply to it, else the first of those.
+ *
+ * `isDefault` is read per entity, so a request board marked default never
+ * becomes the lead default.
+ *
+ * @param {Array<object>} pipelines The stored pipelines.
+ * @param {string} slug The logical entity slug ('lead', 'request', …).
+ * @return {object|null} The pipeline, or null when none applies.
+ * @spec openspec/specs/lead-management/spec.md
+ */
+export function defaultPipelineFor(pipelines, slug) {
+	if (!Array.isArray(pipelines)) return null
+	const applicable = pipelines.filter((p) => pipelineAppliesTo(p, slug))
+	return applicable.find((p) => p.isDefault) || applicable[0] || null
+}
+
+/**
  * Days since an item was last modified (0 when it carries no timestamp).
  *
  * @param {object} item The object, carrying `_dateModified`.

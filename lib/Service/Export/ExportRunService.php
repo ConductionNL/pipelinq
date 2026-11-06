@@ -62,12 +62,18 @@ class ExportRunService extends AbstractExportService {
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
 	 */
 	public function createPendingRun(array $job, ?string $watermarkFrom = null): array {
+		$datasets = ($job['sourceSchemas'] ?? []);
+		if (is_array($datasets) === false) {
+			$datasets = [];
+		}
+
 		$run = [
 			'jobId' => (string)($job['id'] ?? $job['uuid'] ?? ''),
 			'status' => 'pending',
 			'modeUsed' => (string)($job['mode'] ?? 'full'),
 			'watermarkFrom' => $watermarkFrom,
 			'fileManifestJson' => [],
+			'fileCountExpected' => count($datasets),
 		];
 
 		return $this->saveObjectData(schemaKey: self::RUN_SCHEMA_KEY, data: $run, id: null);

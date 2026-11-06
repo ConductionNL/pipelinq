@@ -24,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+ * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
 
 declare(strict_types=1);
@@ -36,6 +36,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\IntegrationDetector;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\EventDispatcher\Event;
@@ -264,11 +265,17 @@ class PosBookkeepingServiceTest extends TestCase {
 	private array $emailsSent = [];
 
 	/**
+	 * Whether the detector reports Shillinq as installed.
+	 *
+	 * @var bool
+	 */
+	private bool $shillinqInstalled = true;
+
+	/**
 	 * @var array<string, string>
 	 */
 	private array $appConfigStore = [
 		'register' => 'reg',
-		'shillinq_journal_webhook_url' => 'https://shillinq.example.org/webhook',
 		'pos_eod.alert_email' => 'accounting@example.org',
 		'pos_eod.max_retry_attempts' => '5',
 	];
@@ -344,8 +351,22 @@ class PosBookkeepingServiceTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			webhookService: $this->webhooks,
 			objectService: $this->objects,
+			integrations: $this->detector(),
 		);
 	}//end setUp()
+
+	/**
+	 * A detector that reports Shillinq as installed while $shillinqInstalled is true.
+	 *
+	 * @return IntegrationDetector The detector.
+	 */
+	private function detector(): IntegrationDetector {
+		$detector = $this->createMock(originalClassName: IntegrationDetector::class);
+		$detector->method('shillinq')->willReturnCallback(
+			fn (): array => ['installed' => $this->shillinqInstalled, 'url' => '']
+		);
+		return $detector;
+	}//end detector()
 
 	/**
 	 * Make a UID a Nextcloud admin (so the manager predicate passes).
@@ -536,7 +557,7 @@ class PosBookkeepingServiceTest extends TestCase {
 	 */
 	public function testUnconfiguredIntegrationLeavesPending(): void {
 		$this->asAdmin();
-		$this->appConfigStore['shillinq_journal_webhook_url'] = '';
+		$this->shillinqInstalled = false;
 		$this->seedZReport();
 
 		$result = $this->service->raiseJournalEntry('zr-1', 'boss');
@@ -587,17 +608,53 @@ class PosBookkeepingServiceTest extends TestCase {
 	}//end testMaxAttemptsBecomesFailedWithAlert()
 
 	/**
-	 * shouldDispatch only enables on a valid HTTPS webhook URL.
+	 * A failed dispatch stores why and when, so the Z-report can say
+	 * "Failed: shillinq did not respond at 23:00"; a later raise clears it.
 	 *
 	 * @return void
 	 */
-	public function testShouldDispatchRequiresHttpsUrl(): void {
-		$this->assertTrue($this->service->shouldDispatch());
+	public function testFailedDispatchStoresTheReasonAndARaiseClearsIt(): void {
+		$this->asAdmin();
+		$this->webhooks->fail = true;
+		$this->seedZReport();
 
-		$this->appConfigStore['shillinq_journal_webhook_url'] = 'http://insecure.example.org';
-		$this->assertFalse($this->service->shouldDispatch());
+		$failed = $this->service->raiseJournalEntry(zReportId: 'zr-1', userId: 'boss');
 
-		$this->appConfigStore['shillinq_journal_webhook_url'] = '';
-		$this->assertFalse($this->service->shouldDispatch());
-	}//end testShouldDispatchRequiresHttpsUrl()
+		$this->assertSame(expected: 'unreachable', actual: $failed['bookkeepingFailureReason']);
+		$this->assertNotEmpty(actual: $failed['bookkeepingFailedAt']);
+
+		$this->webhooks->fail = false;
+		$raised = $this->service->raiseJournalEntry(zReportId: 'zr-1', userId: 'boss');
+
+		$this->assertSame(expected: 'raised', actual: $raised['bookkeepingStatus']);
+		$this->assertNull(actual: $raised['bookkeepingFailureReason']);
+		$this->assertNull(actual: $raised['bookkeepingFailedAt']);
+	}//end testFailedDispatchStoresTheReasonAndARaiseClearsIt()
+
+	/**
+	 * An unconfigured integration stores that as the reason.
+	 *
+	 * @return void
+	 */
+	public function testUnconfiguredIntegrationStoresTheReason(): void {
+		$this->asAdmin();
+		$this->shillinqInstalled = false;
+		$this->seedZReport();
+
+		$result = $this->service->raiseJournalEntry(zReportId: 'zr-1', userId: 'boss');
+
+		$this->assertSame(expected: 'not_configured', actual: $result['bookkeepingFailureReason']);
+	}//end testUnconfiguredIntegrationStoresTheReason()
+
+	/**
+	 * shouldDispatch follows the installed Shillinq app, with no address to type.
+	 *
+	 * @return void
+	 */
+	public function testShouldDispatchFollowsTheDetectedShillinq(): void {
+		$this->assertTrue(condition: $this->service->shouldDispatch());
+
+		$this->shillinqInstalled = false;
+		$this->assertFalse(condition: $this->service->shouldDispatch());
+	}//end testShouldDispatchFollowsTheDetectedShillinq()
 }//end class

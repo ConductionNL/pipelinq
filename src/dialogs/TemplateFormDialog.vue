@@ -12,14 +12,14 @@
   - the blocks on save and for the preview.
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
+		width="wizard"
 		:name="
 			isEditing
 				? t('pipelinq', 'Edit template')
 				: t('pipelinq', 'New template')
 		"
-		:open="true"
 		size="large"
 		:closeOnClickOutside="false"
 		@closing="close()">
@@ -274,7 +274,7 @@
 			<span v-if="saveHint" class="template-form__save-hint">
 				{{ saveHint }}
 			</span>
-			<NcButton variant="tertiary" @click="close()">
+			<NcButton @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="primary" :disabled="!canSave" @click="save">
@@ -288,16 +288,16 @@
 				}}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
@@ -380,7 +380,7 @@ export default {
 		EyeOutline,
 		MailBlockEditor,
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,

@@ -208,6 +208,10 @@ class KassakoppelingAuditControllerTest extends TestCase {
 			['action', '', 'sale'],
 			['from', '', '2026-05-01'],
 			['to', '', '2026-05-31'],
+			['verified', '', 'false'],
+			['exported', '', 'false'],
+			['search', '', 'REG'],
+			['order', '', 'desc'],
 		]);
 
 		$this->service->expects($this->once())
@@ -218,6 +222,10 @@ class KassakoppelingAuditControllerTest extends TestCase {
 				'action' => 'sale',
 				'from' => '2026-05-01',
 				'to' => '2026-05-31',
+				'verified' => 'false',
+				'exported' => 'false',
+				'search' => 'REG',
+				'order' => 'desc',
 			])
 			->willReturn([['id' => 'aud-1']]);
 

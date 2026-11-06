@@ -11,7 +11,7 @@
   - ContactRelationships.vue.
   -->
 <template>
-	<NcDialog :name="t('pipelinq', 'Remove relationship')" @closing="$emit('close')">
+	<CnDialog width="confirm" :name="t('pipelinq', 'Remove relationship')" @closing="$emit('close')">
 		<p>
 			{{
 				t('pipelinq', 'Remove the relationship between {from} and {to}?', {
@@ -28,17 +28,18 @@
 				{{ t('pipelinq', 'Remove') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'RemoveRelationshipDialog',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 	},
 
 	props: {

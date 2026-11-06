@@ -80,9 +80,10 @@ export function labelForModel(model) {
 /**
  * The channel table, one row per channel.
  *
- * A reach the report left null stays null and renders as "not recorded".
- * Turning it into 0 here would claim nobody was reached, which is a
- * different and wrong statement.
+ * A reach the report left null stays null and renders as "not recorded",
+ * and so do the opens: only a blast measures those. Turning either into 0
+ * here would claim nobody was reached, which is a different and wrong
+ * statement.
  *
  * @param {object} report The report response.
  * @return {Array<object>} The rows.
@@ -93,11 +94,12 @@ export function channelRows(report) {
 	return channels.map((row) => ({
 		channel: row.channel,
 		reach: row.reach === null || row.reach === undefined ? null : row.reach,
-		opened: row.opened || 0,
+		opened: row.reach === null || row.reach === undefined ? null : row.opened || 0,
 		clicks: row.click || 0,
 		visits: row.visit || 0,
 		submissions: row.submit || 0,
 		replies: row.reply || 0,
+		leads: row.leads || 0,
 	}))
 }
 

@@ -51,16 +51,19 @@ export async function createWithContact(objectType, form) {
  */
 export async function writeBack(objectType, objectId, notify = showError) {
 	let uid
+	let skipped = false
 	try {
 		const { data } = await axios.post(base('/api/contacts-sync/write-back'), {
 			objectType,
 			objectId,
 		})
 		uid = data?.contactsUid || null
+		skipped = data?.skipped === true
 	} catch {
 		uid = null
 	}
-	if (uid === null) {
+	// The user turned write-back off: nothing was meant to reach Contacts.
+	if (uid === null && !skipped) {
 		notify(
 			t(
 				'pipelinq',
@@ -69,4 +72,17 @@ export async function writeBack(objectType, objectId, notify = showError) {
 		)
 	}
 	return uid
+}
+
+/**
+ * A record's address book card: whether it exists, its address book and its
+ * last change.
+ *
+ * @param {string} uid The record's `contactsUid`.
+ * @return {Promise<{linked: boolean, addressBook: string, updatedAt: string|null}>} The status.
+ * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+ */
+export async function cardStatus(uid) {
+	const { data } = await axios.get(base('/api/contacts-sync/status'), { params: { uid } })
+	return data
 }

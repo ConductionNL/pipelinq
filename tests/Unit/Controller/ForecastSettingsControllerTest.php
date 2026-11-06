@@ -152,6 +152,50 @@ class ForecastSettingsControllerTest extends TestCase {
 	}//end testNegativePipelineTargetRefused()
 
 	/**
+	 * An override with a reason is stored and shown with its source; the
+	 * settings list each currency's current source.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+	 */
+	public function testOverrideWithReasonRoundTrips(): void {
+		$response = $this->controller(
+			[
+				'exchange_rates' => ['USD' => 0.9],
+				'rate_overrides' => ['usd' => ['rate' => '0.92', 'reason' => 'contract rate 2026']],
+			]
+		)->update();
+		$this->assertSame(200, $response->getStatus());
+
+		$data = $this->controller()->index()->getData();
+		$this->assertSame('contract rate 2026', $data['rate_overrides']->USD['reason']);
+		$this->assertSame('override', $data['rate_sources']->USD['source']);
+		$this->assertSame(0.92, $data['rate_sources']->USD['rate']);
+		$this->assertSame(7, $data['max_rate_age_days']);
+		$this->assertArrayHasKey('USD', json_decode($this->store[ExchangeRateService::RATE_DATES_KEY], true));
+	}//end testOverrideWithReasonRoundTrips()
+
+	/**
+	 * An override without a reason, or a stale limit under one day, is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+	 */
+	public function testOverrideWithoutReasonRefused(): void {
+		$response = $this->controller(['rate_overrides' => ['USD' => ['rate' => 0.92, 'reason' => '']]])->update();
+		$this->assertSame(400, $response->getStatus());
+		$this->assertArrayNotHasKey(ExchangeRateService::OVERRIDES_KEY, $this->store->getArrayCopy());
+
+		$response = $this->controller(['max_rate_age_days' => 0])->update();
+		$this->assertSame(400, $response->getStatus());
+
+		$this->controller(['max_rate_age_days' => 14])->update();
+		$this->assertSame(14, $this->controller()->index()->getData()['max_rate_age_days']);
+	}//end testOverrideWithoutReasonRefused()
+
+	/**
 	 * An app config double reading the shared store.
 	 *
 	 * @return IAppConfig The double.

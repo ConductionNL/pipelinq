@@ -64,29 +64,68 @@ describe('contact detail', () => {
 	const contact = page('ContactDetail')
 
 	it('shows the open deals title once', () => {
-		expect(layoutItem(contact, 'contact-kpis-deals').showTitle).toBe(false)
-		expect(widget(contact, 'contact-kpis-deals').content.label).toBe(
-			'Open deals',
-		)
+		// A side card: the card draws the title, the stat draws none.
+		expect(contact.config.sideColumn).toContain('contact-kpis-deals')
+		expect(widget(contact, 'contact-kpis-deals').content.label).toBeUndefined()
 	})
 
 	it('has no button floating below the grid', () => {
 		expect(contact.config.relationLinks).toBeUndefined()
 	})
 
-	it('gives the related widget room for its items', () => {
-		expect(
-			layoutItem(contact, 'contact-related').gridHeight,
-		).toBeGreaterThanOrEqual(5)
+	it('puts the related records in the side column, not in the grid', () => {
+		expect(contact.config.sideColumn).toContain('contact-related')
+		expect(contact.config.layout.map((item) => item.widgetId)).toEqual([
+			'contact-panels',
+		])
+	})
+
+	it('opens on Overview and ends on History (board PqContactpersoon)', () => {
+		const tabs = widget(contact, 'contact-panels').content.tabs
+		expect(tabs[0].widgetId).toBe('contact-overview')
+		expect(tabs[tabs.length - 1].widgetId).toBe('contact-history')
+	})
+
+	it('shows channels and relationships in Overview and as tabs, not as side cards', () => {
+		const sections = widget(contact, 'contact-overview').content.sections
+		expect(sections.map((s) => s.widget?.type).filter(Boolean)).toEqual(['ContactRelationshipsWidget', 'ContactChannelsWidget'])
+		const tabIds = widget(contact, 'contact-panels').content.tabs.map((t) => t.widgetId)
+		expect(tabIds).toEqual(expect.arrayContaining(['contact-channels', 'contact-relationships']))
+		expect(contact.config.sideColumn).not.toContain('contact-channels')
 	})
 })
 
 describe('lead detail', () => {
 	const lead = page('LeadDetail')
 
-	it('shows the deal value and line item titles once', () => {
-		expect(layoutItem(lead, 'lead-kpi-value').showTitle).toBe(false)
-		expect(layoutItem(lead, 'lead-kpi-lines').showTitle).toBe(false)
+	it('draws the board: one tab strip as the body and a side column of cards', () => {
+		expect(lead.config.layout.map((item) => item.widgetId)).toEqual([
+			'lead-panels',
+		])
+		expect(lead.config.sideColumn).toEqual([
+			'side-client',
+			'side-suggested',
+			'side-win-chance',
+			'side-next-step',
+			'side-related',
+		])
+		const overview = widget(lead, 'lead-panels').content.tabs[0]
+		expect(overview.widgetIds).toEqual([
+			'lead-stages',
+			'lead-deal',
+			'lead-lines',
+			'lead-exchange-rate',
+			'lead-contacts',
+			'lead-flow-runs',
+		])
+	})
+
+	it('puts logging a visit and the two close buttons in the header', () => {
+		expect(lead.config.quickActions).toEqual(['log-contact', 'close-won', 'close-lost'])
+		expect(lead.actionsComponent).toBe('LogVisitAction')
+		const won = lead.config.headerActions.find((a) => a.id === 'close-won')
+		expect(won.payload).toEqual({ action: 'win' })
+		expect(won.visibleWhen).toEqual({ field: 'status', op: 'eq', value: 'open' })
 	})
 
 	it('names the product of a line item instead of its uuid', () => {
@@ -110,7 +149,7 @@ describe('booking detail', () => {
 
 	it('gives the tab strip room for the whole timeline', () => {
 		expect(
-			layoutItem(booking, 'booking-tabs').gridHeight,
+			layoutItem(booking, 'booking-panels').gridHeight,
 		).toBeGreaterThanOrEqual(10)
 	})
 })

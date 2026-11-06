@@ -208,6 +208,7 @@ class EmailSyncControllerTest extends TestCase {
 				'cursor' => 0,
 			]
 		);
+		$this->service->method('ownsAccount')->willReturn(true);
 		$this->service->expects($this->once())->method('writeSettings');
 
 		$resp = $this->buildController()->saveSettings();
@@ -216,6 +217,71 @@ class EmailSyncControllerTest extends TestCase {
 		$this->assertSame(9, $resp->getData()['account']);
 
 	}//end testSaveSettings200()
+
+	/**
+	 * POST /api/sync/email/settings — 400 for a Mail account of another user,
+	 * and nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testSaveSettings400OnForeignAccount(): void {
+		$this->authenticateAs(uid: 'alice');
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $key, $default = null) {
+				$values = [
+					'account' => 12,
+					'enabled' => true,
+				];
+
+				return ($values[$key] ?? $default);
+			}
+		);
+
+		$this->service->expects($this->once())
+			->method('ownsAccount')
+			->with('alice', 12)
+			->willReturn(false);
+		$this->service->expects($this->never())->method('writeSettings');
+
+		$resp = $this->buildController()->saveSettings();
+
+		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $resp->getStatus());
+
+	}//end testSaveSettings400OnForeignAccount()
+
+	/**
+	 * GET /api/sync/email/accounts — 200 lists only the user's own accounts.
+	 *
+	 * @return void
+	 */
+	public function testGetAccounts200(): void {
+		$this->authenticateAs(uid: 'alice');
+		$accounts = [['id' => 3, 'email' => 'alice@example.org', 'name' => 'Alice']];
+		$this->service->expects($this->once())
+			->method('listAccounts')
+			->with('alice')
+			->willReturn($accounts);
+
+		$resp = $this->buildController()->getAccounts();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $resp->getStatus());
+		$this->assertSame(expected: ['accounts' => $accounts], actual: $resp->getData());
+
+	}//end testGetAccounts200()
+
+	/**
+	 * GET /api/sync/email/accounts — 401 when unauthenticated.
+	 *
+	 * @return void
+	 */
+	public function testGetAccounts401(): void {
+		$this->userSession->method('getUser')->willReturn(null);
+
+		$resp = $this->buildController()->getAccounts();
+
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $resp->getStatus());
+
+	}//end testGetAccounts401()
 
 	/**
 	 * POST /api/sync/email/trigger — 200 returns the run summary.

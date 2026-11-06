@@ -58,6 +58,39 @@ export function resolveGaugeTarget(widget, appConfig) {
 	return { ...widget, content: next }
 }
 
+/** The keys of the `case_target` initial state a page may read. */
+const CASE_TARGET_KEYS = ['caseRegister', 'caseSchema']
+
+/**
+ * The app config a page reads: the `config` initial state, plus where the
+ * installed case app keeps its cases (`case_target`, set by the page
+ * controller from OpenRegister at run time).
+ *
+ * The case target counts only when it is whole. Half a target would point a
+ * widget at a register without a schema, so both keys are left out and the
+ * `@config.caseRegister` / `@config.caseSchema` tokens stay unresolved, which
+ * keeps the widget off the page.
+ *
+ * @param {object} config The `config` initial state.
+ * @param {object} caseTarget The `case_target` initial state.
+ * @return {object} The merged map, a new object.
+ *
+ * @spec openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
+ */
+export function pageAppConfig(config, caseTarget) {
+	const merged = { ...(config || {}) }
+	const whole = CASE_TARGET_KEYS.every(
+		(key) => typeof caseTarget?.[key] === 'string' && caseTarget[key] !== '',
+	)
+	for (const key of CASE_TARGET_KEYS) {
+		delete merged[key]
+		if (whole) {
+			merged[key] = caseTarget[key]
+		}
+	}
+	return merged
+}
+
 /**
  * Seed the page-level app config onto every dashboard and detail page.
  *

@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
  * static-secret HMAC scheme (the `messagebird-signature` header is
  * an HMAC-SHA256 of the body using the channelProvider.webhookSecret).
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class MessageBirdSmsClient implements SmsProviderClientInterface {
 	use MessageDispatchTrait;
@@ -58,7 +58,7 @@ class MessageBirdSmsClient implements SmsProviderClientInterface {
 	 * @param string $webhookSecret Shared HMAC secret.
 	 * @param string|null $sourceId openconnector source id.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,

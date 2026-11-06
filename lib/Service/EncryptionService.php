@@ -25,8 +25,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-keyvault-015
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-KEYVAULT-015
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use RuntimeException;
 /**
  * BSN encryption + keyed-hash service for the Berichtenbox bridge.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
  */
 class EncryptionService {
 	/**
@@ -120,9 +120,13 @@ class EncryptionService {
 	 *
 	 * @throws RuntimeException If encryption fails.
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
 	 */
-	public function encrypt(string $plaintext, string $tenantId): string {
+	public function encrypt(
+		#[\SensitiveParameter]
+		string $plaintext,
+		string $tenantId,
+	): string {
 		$key = $this->getEncryptionKey(tenantId: $tenantId);
 		$initVector = random_bytes(self::IV_BYTES);
 		$tag = '';
@@ -155,7 +159,7 @@ class EncryptionService {
 	 *
 	 * @throws RuntimeException If decryption fails or the payload is malformed.
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
 	 */
 	public function decrypt(string $ciphertext, string $tenantId): string {
 		$raw = base64_decode($ciphertext, true);
@@ -198,7 +202,11 @@ class EncryptionService {
 	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
 	 *   exercised through the features that call it
 	 */
-	public function hashBsn(string $plaintext, string $tenantId): string {
+	public function hashBsn(
+		#[\SensitiveParameter]
+		string $plaintext,
+		string $tenantId,
+	): string {
 		$hmacKey = $this->getHmacKey(tenantId: $tenantId);
 		return hash_hmac('sha256', $plaintext, $hmacKey);
 	}//end hashBsn()
@@ -214,7 +222,12 @@ class EncryptionService {
 	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
 	 *   exercised through the features that call it
 	 */
-	public function bsnEquals(string $candidate, string $hash, string $tenantId): bool {
+	public function bsnEquals(
+		#[\SensitiveParameter]
+		string $candidate,
+		string $hash,
+		string $tenantId,
+	): bool {
 		return hash_equals($hash, $this->hashBsn(plaintext: $candidate, tenantId: $tenantId));
 	}//end bsnEquals()
 

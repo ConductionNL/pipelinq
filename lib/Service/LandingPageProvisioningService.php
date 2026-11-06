@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Marketing\CampaignFormDestination;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -203,6 +204,27 @@ class LandingPageProvisioningService {
 	}//end formDefinition()
 
 	/**
+	 * The form of one campaign: its fields, and the lead a submit creates.
+	 *
+	 * Decision 179: the form names its destination, so the page that hosts it
+	 * creates the lead in the visitor's own request. Without `destination`
+	 * the form is made but cannot be submitted.
+	 *
+	 * @param string               $campaignId The campaign id.
+	 * @param array<string, mixed> $campaign   The campaign row.
+	 *
+	 * @return array<string, mixed> `fields`, `submitLabel`, `consentText`, `destination`.
+	 *
+	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
+	 */
+	public function formFor(string $campaignId, array $campaign): array {
+		$form = $this->formDefinition();
+		$form['destination'] = (new CampaignFormDestination())->forCampaign(campaignId: $campaignId, campaign: $campaign);
+
+		return $form;
+	}//end formFor()
+
+	/**
 	 * The route a campaign's page gets when the caller names none.
 	 *
 	 * @param array<string, mixed> $campaign The campaign.
@@ -246,13 +268,13 @@ class LandingPageProvisioningService {
 				trim((string)($campaign['name'] ?? '')),
 				$this->l10n->getLanguageCode(),
 				$this->articleFor(campaign: $campaign),
-				$this->formDefinition(),
+				$this->formFor(campaignId: $campaignId, campaign: $campaign),
 				[
 					'campaign' => (string)($campaign['utmCampaign'] ?? ''),
 					'source' => (string)($campaign['utmSource'] ?? ''),
 					'medium' => (string)($campaign['utmMedium'] ?? ''),
 				],
-				('pipelinq:campaign:' . $campaignId),
+				(new CampaignFormDestination())->referenceFor(campaignId: $campaignId),
 				('pipelinq-campaign-' . $campaignId)
 			);
 			$this->dispatcher->dispatchTyped($event);

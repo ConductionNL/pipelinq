@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -29,7 +29,11 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
+use OCA\Pipelinq\Service\Provider\SmsMessage;
+use OCA\Pipelinq\Service\Provider\SmsProviderAttempt;
+use OCA\Pipelinq\Service\Provider\SmsSendRun;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -49,9 +53,10 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Vendor-neutral send/receive
  * surface with failover, persistence and webhook ingestion kept cohesive.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class SmsAdapter {
+	use PayloadToArray;
 	use WritesAsMessagingAccount;
 
 	/**
@@ -121,7 +126,7 @@ class SmsAdapter {
 	 * @param LoggerInterface $logger Logger.
 	 * @param PhoneNormaliser $phoneNormaliser Normalises an inbound sender to E.164.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -159,7 +164,7 @@ class SmsAdapter {
 	 *     error?: string
 	 * } Outcome envelope.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-006-outbound-sends-audited-as-contactmomenten
 	 */
 	public function send(array $contact, string $body, ?string $providerHint = null, array $context = []): array {
@@ -184,18 +189,14 @@ class SmsAdapter {
 			return ['status' => self::STATUS_NO_PROVIDER];
 		}
 
-		$allowFailover = ($providerHint === null);
+		$run = new SmsSendRun(
+			message: new SmsMessage(contactId: $contactId, toNumber: $toNumber, body: $body, context: $context),
+			tenantId: $tenantId,
+			allowFailover: ($providerHint === null),
+		);
 
 		foreach ($ordered as $row) {
-			$outcome = $this->attemptProviderSend(
-				row: $row,
-				toNumber: $toNumber,
-				body: $body,
-				contactId: $contactId,
-				tenantId: $tenantId,
-				allowFailover: $allowFailover,
-				context: $context,
-			);
+			$outcome = $this->attemptProviderSend(row: $row, run: $run);
 			if ($outcome !== null) {
 				return $outcome;
 			}
@@ -219,28 +220,15 @@ class SmsAdapter {
 	 * to the next provider in the ordered list.
 	 *
 	 * @param array<string, mixed> $row Provider row.
-	 * @param string $toNumber Recipient E.164 number.
-	 * @param string $body Message body.
-	 * @param string $contactId Contact UUID.
-	 * @param string $tenantId Tenant id.
-	 * @param bool $allowFailover Whether failover to the next provider is allowed.
-	 * @param array<string, mixed> $context Send context for the outbound audit.
+	 * @param SmsSendRun           $run The send this attempt belongs to.
 	 *
 	 * @return array<string, mixed>|null Outcome envelope, or null to continue.
 	 */
-	private function attemptProviderSend(
-		array $row,
-		string $toNumber,
-		string $body,
-		string $contactId,
-		string $tenantId,
-		bool $allowFailover,
-		array $context = [],
-	): ?array {
+	private function attemptProviderSend(array $row, SmsSendRun $run): ?array {
 		$providerId = $this->extractId(payload: $row);
 
-		if ($this->budgetService->canSend(tenantId: $tenantId, providerId: $providerId) === false) {
-			if ($allowFailover === false) {
+		if ($this->budgetService->canSend(tenantId: $run->tenantId, providerId: $providerId) === false) {
+			if ($run->allowFailover === false) {
 				return ['status' => self::STATUS_BUDGET_EXCEEDED, 'providerId' => $providerId];
 			}
 
@@ -252,77 +240,75 @@ class SmsAdapter {
 			return null;
 		}
 
+		return $this->sendThrough(attempt: new SmsProviderAttempt(run: $run, providerId: $providerId, client: $client));
+	}//end attemptProviderSend()
+
+	/**
+	 * Send through the attempt's client and settle the outcome.
+	 *
+	 * @param SmsProviderAttempt $attempt The provider being tried.
+	 *
+	 * @return array<string, mixed>|null Outcome envelope, or null to continue.
+	 */
+	private function sendThrough(SmsProviderAttempt $attempt): ?array {
 		try {
-			$result = $client->send(toNumber: $toNumber, body: $body);
-		} catch (TransientSmsProviderException $e) {
-			$this->logger->warning(
-				'SmsAdapter.send: transient — failing over',
-				['providerId' => $providerId, 'vendor' => $client->getVendor(), 'message' => $e->getMessage()]
-			);
-			if ($allowFailover === false) {
-				return $this->persistFailureAndAlert(
-					contactId: $contactId,
-					providerId: $providerId,
-					body: $body,
-					error: $e->getMessage(),
-				);
-			}
-
-			return null;
-		} catch (PermanentSmsProviderException $e) {
-			$this->logger->warning(
-				'SmsAdapter.send: permanent provider failure',
-				['providerId' => $providerId, 'vendor' => $client->getVendor(), 'message' => $e->getMessage()]
-			);
-			return $this->persistFailureAndAlert(
-				contactId: $contactId,
-				providerId: $providerId,
-				body: $body,
-				error: $e->getMessage(),
-			);
+			$result = $attempt->client->send(toNumber: $attempt->run->message->toNumber, body: $attempt->run->message->body);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.send: unexpected exception — failing over',
-				['providerId' => $providerId, 'vendor' => $client->getVendor(), 'message' => $e->getMessage()]
-			);
-			if ($allowFailover === false) {
-				return $this->persistFailureAndAlert(
-					contactId: $contactId,
-					providerId: $providerId,
-					body: $body,
-					error: $e->getMessage(),
-				);
-			}
+			return $this->failedAttempt(attempt: $attempt, error: $e);
+		}
 
+		return $this->recordSent(attempt: $attempt, result: $result);
+	}//end sendThrough()
+
+	/**
+	 * Log a provider failure; persist it and alert unless the send may fail over.
+	 *
+	 * A permanent failure always stops the send. A transient or unexpected
+	 * one moves on to the next provider when failover is allowed.
+	 *
+	 * @param SmsProviderAttempt $attempt The attempt that failed.
+	 * @param Throwable          $error   What the client threw.
+	 *
+	 * @return array<string, mixed>|null Failure envelope, or null to continue.
+	 */
+	private function failedAttempt(SmsProviderAttempt $attempt, Throwable $error): ?array {
+		$this->logger->warning(
+			$attempt->failureLog(error: $error),
+			['providerId' => $attempt->providerId, 'vendor' => $attempt->client->getVendor(), 'message' => $error->getMessage()]
+		);
+		if ($attempt->run->allowFailover === true && ($error instanceof PermanentSmsProviderException) === false) {
 			return null;
-		}//end try
+		}
 
-		$persisted = $this->persistOutbound(
-			contactId: $contactId,
-			providerId: $providerId,
-			body: $body,
-			externalMessageId: $result['externalMessageId'],
+		return $this->persistFailureAndAlert(
+			contactId: $attempt->run->message->contactId,
+			providerId: $attempt->providerId,
+			body: $attempt->run->message->body,
+			error: $error->getMessage(),
 		);
+	}//end failedAttempt()
 
-		$this->budgetService->recordSend(tenantId: $tenantId, providerId: $providerId);
-
-		$messageId = $this->extractId(payload: ($persisted ?? []));
-		$this->auditOutbound(
-			contactId: $contactId,
-			messageId: $messageId,
-			conversationId: (string)(($persisted ?? [])['conversationId'] ?? ''),
-			body: $body,
-			context: $context,
-		);
+	/**
+	 * Persist a sent message, count it against the budget and audit it.
+	 *
+	 * @param SmsProviderAttempt                                  $attempt The attempt that succeeded.
+	 * @param array{externalMessageId: string, vendor: string} $result  What the provider answered.
+	 *
+	 * @return array<string, mixed> The sent envelope.
+	 */
+	private function recordSent(SmsProviderAttempt $attempt, array $result): array {
+		$message = $attempt->run->message;
+		$persisted = $this->persistOutbound(attempt: $attempt, externalMessageId: $result['externalMessageId']);
+		$this->budgetService->recordSend(tenantId: $attempt->run->tenantId, providerId: $attempt->providerId);
 
 		return [
 			'status' => self::STATUS_SENT,
-			'messageId' => $messageId,
+			'messageId' => $this->auditOutbound(message: $message, persisted: ($persisted ?? [])),
 			'externalMessageId' => $result['externalMessageId'],
-			'providerId' => $providerId,
+			'providerId' => $attempt->providerId,
 			'vendor' => $result['vendor'],
 		];
-	}//end attemptProviderSend()
+	}//end recordSent()
 
 	/**
 	 * Best-effort outbound contactmoment audit (REQ-OM-006).
@@ -331,42 +317,36 @@ class SmsAdapter {
 	 * records the SMS send as a `channel: sms` contactmoment. Log-and-continue:
 	 * an audit failure MUST never affect the send outcome.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $messageId Persisted message UUID.
-	 * @param string $conversationId Conversation UUID.
-	 * @param string $body Message body.
-	 * @param array<string, mixed> $context Send context (`clientId`, `agent`).
+	 * @param SmsMessage           $message   The message that was sent.
+	 * @param array<string, mixed> $persisted The saved message row, or [] when saving failed.
 	 *
-	 * @return void
+	 * @return string The saved message id, or '' when saving failed.
 	 *
 	 * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
 	 */
-	private function auditOutbound(
-		string $contactId,
-		string $messageId,
-		string $conversationId,
-		string $body,
-		array $context,
-	): void {
+	private function auditOutbound(SmsMessage $message, array $persisted): string {
+		$messageId = $this->extractId(payload: $persisted);
 		$auditor = $this->contactmoments();
 		if ($auditor === null) {
-			return;
+			return $messageId;
 		}
 
 		$auditor->recordOutboundMessage(
 			channel: 'sms',
 			subject: 'Outbound SMS',
-			summary: $body,
+			summary: $message->body,
 			channelMetadata: [
 				'platform' => 'sms',
 				'direction' => 'outbound',
 				'messageId' => $messageId,
-				'conversationId' => $conversationId,
-				'contactId' => $contactId,
+				'conversationId' => (string)($persisted['conversationId'] ?? ''),
+				'contactId' => $message->contactId,
 			],
-			clientId: (string)($context['clientId'] ?? ''),
-			agent: (string)($context['agent'] ?? ''),
+			clientId: (string)($message->context['clientId'] ?? ''),
+			agent: (string)($message->context['agent'] ?? ''),
 		);
+
+		return $messageId;
 	}//end auditOutbound()
 
 	/**
@@ -413,7 +393,7 @@ class SmsAdapter {
 	 * recorded on the number itself, anything else is logged as a contact
 	 * moment for a person to pick up.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.5
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
@@ -625,22 +605,16 @@ class SmsAdapter {
 	/**
 	 * Persist an outbound message row.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID.
-	 * @param string $body Body.
-	 * @param string $externalMessageId Provider message id.
+	 * @param SmsProviderAttempt $attempt           The attempt that sent it.
+	 * @param string             $externalMessageId Provider message id.
 	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
-	private function persistOutbound(
-		string $contactId,
-		string $providerId,
-		string $body,
-		string $externalMessageId,
-	): ?array {
+	private function persistOutbound(SmsProviderAttempt $attempt, string $externalMessageId): ?array {
+		$contactId = $attempt->run->message->contactId;
 		$conversationId = $this->findOrOpenConversation(
 			contactId: $contactId,
-			providerId: $providerId,
+			providerId: $attempt->providerId,
 			channel: 'sms',
 		);
 
@@ -650,8 +624,8 @@ class SmsAdapter {
 				'conversationId' => $conversationId,
 				'channel' => 'sms',
 				'direction' => 'outbound',
-				'body' => $body,
-				'providerId' => $providerId,
+				'body' => $attempt->run->message->body,
+				'providerId' => $attempt->providerId,
 				'externalMessageId' => $externalMessageId,
 				'deliveryStatus' => 'queued',
 				'sentAt' => $this->nowIso(),
@@ -935,35 +909,6 @@ class SmsAdapter {
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OR entity to an array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Extract a UUID / id / slug from a payload.

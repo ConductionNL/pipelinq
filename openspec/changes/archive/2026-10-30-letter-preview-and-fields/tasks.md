@@ -1,0 +1,4 @@
+- [x] FilinqLetterAdapter::preview() and render(filed: false)
+- [x] LetterController::preview() and downloadOnly on create()
+- [x] LetterFromTemplateModal: preview card, filled fields with the check line, Send as, Download PDF
+- [x] Tests: adapter, controller, dialog

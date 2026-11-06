@@ -12,12 +12,12 @@
   - @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
+		width="form"
 		:name="
 			isEditing ? t('pipelinq', 'Edit journey') : t('pipelinq', 'New journey')
 		"
-		:open="true"
 		size="normal"
 		:closeOnClickOutside="false"
 		@closing="close()">
@@ -186,7 +186,7 @@
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="close()">
+			<NcButton @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -200,15 +200,15 @@
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { showWarning } from '@nextcloud/dialogs'
 import { emit } from '@nextcloud/event-bus'
 import {
 	NcButton,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
@@ -249,7 +249,7 @@ export default {
 	name: 'JourneyFormDialog',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -313,7 +313,7 @@ export default {
 		},
 
 		/**
-		 * @return {Array<object>} The four trigger kinds the schema declares.
+		 * @return {Array<object>} The trigger kinds the schema declares.
 		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		triggerOptions() {
@@ -333,6 +333,14 @@ export default {
 				{
 					value: 'shillinqSignal',
 					label: this.t('pipelinq', 'A bookkeeping signal changed'),
+				},
+				{
+					value: 'addressChanged',
+					label: this.t('pipelinq', 'A resident or business got a new address'),
+				},
+				{
+					value: 'ticketClosed',
+					label: this.t('pipelinq', 'A ticket was closed'),
 				},
 			]
 		},

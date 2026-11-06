@@ -121,6 +121,10 @@ class ContactDataBuilder {
 			$data['industry'] = [$industry];
 		}
 
+		if ($clientType === 'person') {
+			$data = $this->withPreferredName(data: $data, ncContact: $ncContact);
+		}
+
 		return $data;
 	}//end buildClientImportData()
 
@@ -162,8 +166,32 @@ class ContactDataBuilder {
 		$data = array_filter($data, fn ($v) => $v !== '');
 		$data['name'] = $name;
 
-		return $data;
+		return $this->withPreferredName(data: $data, ncContact: $ncContact);
 	}//end buildContactImportData()
+
+	/**
+	 * Read the vCard NICKNAME as the preferred name.
+	 *
+	 * Set whenever the Nextcloud contact carries the property, an empty value
+	 * included: a nickname removed in the Contacts app clears the preferred
+	 * name here. A contact without the property leaves the field alone.
+	 *
+	 * @param array $data The import data built so far.
+	 * @param array $ncContact The Nextcloud contact properties.
+	 *
+	 * @return array The import data, with `preferredName` when the contact carries a nickname.
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	private function withPreferredName(array $data, array $ncContact): array {
+		if (array_key_exists('NICKNAME', $ncContact) === false) {
+			return $data;
+		}
+
+		$data['preferredName'] = trim($this->extractFirstValue(value: ($ncContact['NICKNAME'] ?? '')));
+
+		return $data;
+	}//end withPreferredName()
 
 	/**
 	 * Extract typed channel entries (emails or phones) from a vCard
@@ -185,10 +213,7 @@ class ContactDataBuilder {
 
 		$entries = [];
 		foreach ($items as $item) {
-			$raw = (string)$item;
-			if (is_array($item) === true) {
-				$raw = (string)($item['value'] ?? '');
-			}
+			$raw = self::itemValue(item: $item);
 
 			if ($raw === '') {
 				continue;
@@ -211,6 +236,22 @@ class ContactDataBuilder {
 	}//end extractTypedEntries()
 
 	/**
+	 * The text of one vCard property item: its `value` when it is a
+	 * `{type, value}` pair, the item itself otherwise.
+	 *
+	 * @param mixed $item The item.
+	 *
+	 * @return string
+	 */
+	private static function itemValue(mixed $item): string {
+		if (is_array($item) === true) {
+			return (string)($item['value'] ?? '');
+		}
+
+		return (string)$item;
+	}//end itemValue()
+
+	/**
 	 * Extract X-SOCIALPROFILE entries into the `socialProfiles[]` shape.
 	 * The vCard value is treated as a URL when it looks like one, else as
 	 * a bare handle; the TYPE parameter (when present) is matched
@@ -228,10 +269,7 @@ class ContactDataBuilder {
 
 		$profiles = [];
 		foreach ($items as $item) {
-			$raw = (string)$item;
-			if (is_array($item) === true) {
-				$raw = (string)($item['value'] ?? '');
-			}
+			$raw = self::itemValue(item: $item);
 
 			if ($raw === '') {
 				continue;

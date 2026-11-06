@@ -22,7 +22,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 
 declare(strict_types=1);
@@ -34,8 +34,8 @@ use Throwable;
 /**
  * Mollie payment adapter.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
  */
 class MollieAdapter extends AbstractPaymentAdapter {
 	/**
@@ -50,7 +50,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
 	 */
 	public function getName(): string {
 		return 'mollie';
@@ -65,7 +65,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, redirectUrl: string|null, status: string, error?: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 	 */
 	public function initiate(array $transactionData, float $amount, string $paymentMethod): array {
 		$apiKey = $this->credential(key: 'apiKey');
@@ -142,7 +142,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, status: string, error?: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
 	 */
 	public function capture(string $sessionId): array {
 		// Mollie payments auto-settle on customer completion; capture is a
@@ -186,7 +186,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, refundId: string, status: string, error?: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
 	 */
 	public function refund(string $sessionId, string $reason): array {
 		$apiKey = $this->credential(key: 'apiKey');
@@ -239,7 +239,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function validateWebhook(string $rawPayload, string $signature): bool {
 		if ($rawPayload === '' || $signature === '') {
@@ -262,7 +262,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, status: string, eventId: string, error: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function parseWebhook(array $payload): array {
 		$sessionId = (string)($payload['id'] ?? ($payload['paymentId'] ?? ''));
@@ -282,7 +282,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{status: string, message: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function testConnection(): array {
 		$apiKey = $this->credential(key: 'apiKey');

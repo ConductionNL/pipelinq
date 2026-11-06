@@ -2,13 +2,13 @@
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
-  - PaymentMethodSelector — dropdown that appears in PosTransactionForm
-  - before the "Bevestigen" button. Shows Contant + Cadeaubon + Rekening
-  - + every configured-and-active payment provider (Mollie, CCV, Adyen,
-  - Stripe). Emits @input with { paymentMethod, providerName } for the
-  - parent to forward into PosPaymentService.initiatePayment().
+  - PaymentMethodSelector: the payment-method dropdown in PosTransactionForm
+  - before Confirm. Shows Cash, Gift voucher, Account (with a client) and the
+  - methods of every active payment provider, which any cashier may read from
+  - GET /api/pos-payments/methods. Emits the choice as { paymentMethod,
+  - providerName } for the parent to hand to initiatePayment().
   -
-  - @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+  - @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
   -->
 <template>
 	<div class="payment-method-selector">
@@ -21,31 +21,23 @@
 			:loading="loading"
 			@update:modelValue="onSelect" />
 		<p
-			v-if="selection && providerOf(selection) === 'mollie'"
-			class="payment-method-selector__hint">
-			{{
-				t(
-					'pipelinq',
-					'Customer is redirected to Mollie to complete the iDEAL/Bancontact payment.',
-				)
-			}}
-		</p>
-		<p
-			v-if="selection && providerOf(selection) === 'ccv'"
-			class="payment-method-selector__hint">
-			{{ t('pipelinq', 'Customer pays at the CCV PIN terminal.') }}
+			v-if="selectedHint"
+			class="payment-method-selector__hint"
+			data-testid="payment-method-hint">
+			{{ selectedHint }}
 		</p>
 	</div>
 </template>
 
 <script>
 import { NcSelect } from '@nextcloud/vue'
-import { listProviders } from '../../services/posPaymentApi.js'
+import { listPaymentMethods } from '../../services/posPaymentApi.js'
 
+/** The tenders the till always offers; `Account` only with a client. */
 const STATIC_OPTIONS = [
-	{ value: 'cash', label: 'Contant', provider: 'cash' },
-	{ value: 'voucher', label: 'Cadeaubon', provider: 'voucher' },
-	{ value: 'account', label: 'Rekening', provider: 'account' },
+	{ value: 'cash', label: 'Cash', provider: 'cash' },
+	{ value: 'voucher', label: 'Gift voucher', provider: 'voucher' },
+	{ value: 'account', label: 'Account', provider: 'account' },
 ]
 
 export default {
@@ -53,14 +45,6 @@ export default {
 	components: { NcSelect },
 	props: {
 		// Selected value, format: provider:method (e.g. "mollie:ideal", "cash").
-		//
-		// ⚠️ This was `value` + `$emit('input')` — the Vue 2 v-model contract.
-		// Its only consumer (PosTransactionForm) binds it with `v-model`, and in
-		// Vue 3 `v-model` means `modelValue` + `update:modelValue`, so BOTH
-		// halves went dead: the prop stayed at its `''` default (the dropdown
-		// never showed the chosen method) and the parent's `paymentSelection`
-		// never updated. Neither half errors — and the separate `change` emit
-		// still fired, so checkout would limp along looking almost right.
 		modelValue: {
 			type: String,
 			default: '',
@@ -73,110 +57,99 @@ export default {
 		},
 	},
 
-	// Declared explicitly so Vue 3 does not also fall these through onto the
-	// root element as attributes, and so the v-model contract is self-evident.
 	emits: ['update:modelValue', 'change'],
 	data() {
 		return {
-			providers: [],
+			methods: [],
 			loading: true,
 		}
 	},
 
 	computed: {
 		/**
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		selection() {
 			return this.modelValue || null
 		},
 
 		/**
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 * The static tenders, then one option per provider method.
+		 *
+		 * @return {Array<object>} The options.
+		 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 		 */
 		combinedOptions() {
 			const opts = STATIC_OPTIONS.filter(
 				(o) => o.value !== 'account' || this.clientSelected,
 			).map((o) => ({ ...o, label: t('pipelinq', o.label) }))
-			for (const p of this.activeProviders) {
-				if (p.name === 'mollie') {
-					opts.push({
-						value: 'mollie:ideal',
-						label: t('pipelinq', '{name} — iDEAL', {
-							name: p.displayName,
-						}),
-						provider: 'mollie',
-						method: 'ideal',
-					})
-					opts.push({
-						value: 'mollie:bancontact',
-						label: t('pipelinq', '{name} — Bancontact', {
-							name: p.displayName,
-						}),
-						provider: 'mollie',
-						method: 'bancontact',
-					})
-					opts.push({
-						value: 'mollie:creditcard',
-						label: t('pipelinq', '{name} — Credit card', {
-							name: p.displayName,
-						}),
-						provider: 'mollie',
-						method: 'creditcard',
-					})
-				} else if (p.name === 'ccv') {
-					opts.push({
-						value: 'ccv:card',
-						label: t('pipelinq', '{name} (PIN-terminal)', {
-							name: p.displayName,
-						}),
-						provider: 'ccv',
-						method: 'card',
-					})
-				} else if (p.name === 'adyen') {
-					opts.push({
-						value: 'adyen:card',
-						label: t('pipelinq', '{name} — Card', {
-							name: p.displayName,
-						}),
-						provider: 'adyen',
-						method: 'card',
-					})
-				} else if (p.name === 'stripe') {
-					opts.push({
-						value: 'stripe:card',
-						label: t('pipelinq', '{name} — Card / Wallet', {
-							name: p.displayName,
-						}),
-						provider: 'stripe',
-						method: 'card',
-					})
-				}
+			for (const entry of this.methods) {
+				opts.push({
+					value: `${entry.provider}:${entry.method}`,
+					label: t('pipelinq', '{provider}: {method}', {
+						provider: entry.providerLabel || entry.provider,
+						method: this.methodLabel(entry.method),
+					}),
+					provider: entry.provider,
+					providerLabel: entry.providerLabel || entry.provider,
+					type: entry.type,
+					method: entry.method,
+				})
 			}
 			return opts
 		},
 
-		activeProviders() {
-			return this.providers.filter((p) => p.isActive)
+		/**
+		 * What happens next for the chosen provider, by its type: an online
+		 * provider takes the customer to its own page, a terminal provider
+		 * takes the card at the till.
+		 *
+		 * @return {string} The hint, or '' for none.
+		 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+		 */
+		selectedHint() {
+			const option = this.combinedOptions.find((o) => o.value === this.selection)
+			if (!option || !option.type) {
+				return ''
+			}
+			if (option.type === 'terminal') {
+				return t('pipelinq', 'The customer pays at the {provider} card terminal.', { provider: option.providerLabel })
+			}
+			return t('pipelinq', 'The customer is sent to {provider} to finish the payment.', { provider: option.providerLabel })
 		},
 	},
 
 	/**
-	 * @spec exclude loads the provider list for the picker; the payment-provider adapter
-	 *   change that specified it is archived and no spec inherited it
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
 	 */
 	async mounted() {
 		try {
-			this.providers = await listProviders()
+			this.methods = await listPaymentMethods()
 		} catch {
-			// Non-admin user — endpoint returns 403; fall back to static options.
-			this.providers = []
+			this.methods = []
 		} finally {
 			this.loading = false
 		}
 	},
 
 	methods: {
+		/**
+		 * A method's name: brand names as written, the rest translated.
+		 *
+		 * @param {string} method The method id.
+		 * @return {string} The label.
+		 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+		 */
+		methodLabel(method) {
+			const labels = {
+				ideal: 'iDEAL',
+				bancontact: 'Bancontact',
+				card: t('pipelinq', 'Card'),
+				creditcard: t('pipelinq', 'Credit card'),
+			}
+			return labels[method] || method
+		},
+
 		providerOf(combined) {
 			if (!combined) return ''
 			const idx = combined.indexOf(':')
@@ -191,7 +164,7 @@ export default {
 
 		/**
 		 * @param {string} value The payment method the user picked.
-		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		onSelect(value) {
 			const combined = value && typeof value === 'object' ? value.value : value

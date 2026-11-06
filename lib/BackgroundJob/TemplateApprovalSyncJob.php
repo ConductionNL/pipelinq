@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Hourly WhatsApp template-state sync.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class TemplateApprovalSyncJob extends TimedJob {
 	/**
@@ -45,7 +45,7 @@ class TemplateApprovalSyncJob extends TimedJob {
 	 * @param TemplateApprovalSyncService $syncService Sync orchestrator.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		ITimeFactory $time,

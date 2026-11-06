@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002, REQ-FRC-003
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002, REQ-FRC-003
  */
 
 declare(strict_types=1);
@@ -107,7 +107,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002-01, REQ-FRC-003-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-01, REQ-FRC-003-01
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
 	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
@@ -165,7 +165,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002-01, REQ-FRC-003-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-01, REQ-FRC-003-01
 	 */
 	public function runDeferredWork(array $entry): void {
 		$uuid = (string)($entry['uuid'] ?? '');

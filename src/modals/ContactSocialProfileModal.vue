@@ -10,13 +10,13 @@
   - @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="
 			isEdit
 				? t('pipelinq', 'Edit social profile')
 				: t('pipelinq', 'Add social profile')
 		"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="contact-social-profile-modal">
@@ -61,14 +61,14 @@
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
-	NcDialog,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
@@ -78,7 +78,7 @@ const URL_REGEX = /^https?:\/\/.+\..+/
 export default {
 	name: 'ContactSocialProfileModal',
 	components: {
-		NcDialog,
+		CnDialog,
 		NcButton,
 		NcTextField,
 		NcSelect,

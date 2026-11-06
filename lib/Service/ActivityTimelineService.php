@@ -4,7 +4,8 @@
  * Pipelinq ActivityTimelineService.
  *
  * Service that aggregates CRM activity instances (contactmomenten, tasks,
- * emailLinks, calendarLinks) for an entity into a unified timeline, and
+ * emailLinks, calendarLinks, notes, WhatsApp/SMS messages) for an entity into
+ * a unified timeline, and
  * provides worklog read/create operations stored as contactmomenten with
  * channel='worklog'.
  *
@@ -45,7 +46,6 @@ use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Aggregates CRM activity data from multiple OpenRegister schemas.
@@ -67,13 +67,6 @@ class ActivityTimelineService {
 	private const DEFAULT_LIMIT = 20;
 
 	/**
-	 * Per-schema fetch ceiling when aggregating timelines. The service queries
-	 * each source schema, merges results, sorts by date desc and applies
-	 * pagination in PHP, so we must cap the per-schema window.
-	 */
-	private const PER_SCHEMA_CEILING = 500;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config service.
@@ -82,27 +75,18 @@ class ActivityTimelineService {
 	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype —
 	 *                                     contactmomenten (incl. worklogs) are tickets with
 	 *                                     `ticketType=contactmoment`, not their own schema.
-	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param ActivityTimelineReader $reader Reads the raw rows of every source.
+	 * @param ActivityItemNormalizer $itemNormalizer Turns a source row into an activity item.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
-		private readonly ObjectServiceInterface $objectService,
+		private readonly ActivityTimelineReader $reader,
+		private readonly ActivityItemNormalizer $itemNormalizer,
 	) {
 	}//end __construct()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The OpenRegister ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Read the configured register and schema IDs.
@@ -227,7 +211,7 @@ class ActivityTimelineService {
 				continue;
 			}
 
-			$objects = $this->querySchema(
+			$objects = $this->reader->query(
 				registerId: $registerId,
 				schemaId: $schemaId,
 				filters: $sourceFilter
@@ -245,6 +229,30 @@ class ActivityTimelineService {
 				)
 			);
 		}//end foreach
+
+		$extraSources = [
+			'note' => fn (): array => $this->reader->notes(entityId: $entityId),
+			'message' => fn (): array => $this->reader->messages(entityType: $entityType, entityId: $entityId, registerId: $registerId),
+			'booking' => fn (): array => $this->reader->bookings(entityType: $entityType, entityId: $entityId, registerId: $registerId),
+			'linkedEmail' => fn (): array => $this->reader->linkedEmails(entityId: $entityId),
+		];
+		foreach ($extraSources as $sourceType => $read) {
+			if ($typesFilter !== null && in_array($this->sourceToActivityType(sourceType: $sourceType), $typesFilter, true) === false) {
+				continue;
+			}
+
+			$merged = array_merge(
+				$merged,
+				$this->normalizeSchemaObjects(
+					objects: $read(),
+					sourceType: $sourceType,
+					entityType: $entityType,
+					entityId: $entityId,
+					from: $from,
+					to: $to
+				)
+			);
+		}
 
 		return $merged;
 	}//end collectActivities()
@@ -359,8 +367,8 @@ class ActivityTimelineService {
 		return match ($sourceType) {
 			'interaction' => 'interaction',
 			'task' => 'task',
-			'emailLink' => 'email',
-			'calendarLink' => 'calendar',
+			'emailLink', 'linkedEmail' => 'email',
+			'calendarLink', 'booking' => 'calendar',
 			default => $sourceType,
 		};
 	}//end sourceToActivityType()
@@ -384,7 +392,7 @@ class ActivityTimelineService {
 			$rawTypes = explode(',', (string)$rawTypes);
 		}
 
-		$allowed = ['interaction', 'task', 'email', 'calendar', 'worklog'];
+		$allowed = ['interaction', 'task', 'email', 'calendar', 'worklog', 'note', 'message'];
 		$result = [];
 		foreach ($rawTypes as $type) {
 			$type = strtolower(trim((string)$type));
@@ -399,107 +407,6 @@ class ActivityTimelineService {
 
 		return array_values(array_unique($result));
 	}//end normaliseTypes()
-
-	/**
-	 * Query a single OpenRegister schema using a set of equality filters.
-	 *
-	 * @param string $registerId The register ID.
-	 * @param string $schemaId The schema ID.
-	 * @param array<string,mixed> $filters Field equality filters.
-	 *
-	 * @return array<int,array<string,mixed>> The raw object arrays.
-	 *
-	 * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
-	 */
-	private function querySchema(string $registerId, string $schemaId, array $filters): array {
-		try {
-			$objectService = $this->getObjectService();
-
-			$params = [
-				'filters' => array_merge(
-					[
-						'register' => $registerId,
-						'schema' => $schemaId,
-					],
-					$filters
-				),
-				'limit' => self::PER_SCHEMA_CEILING,
-			];
-
-			$results = $objectService->findAll($params);
-
-			return $this->normaliseResultset(results: $results);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'ActivityTimelineService: failed to query schema',
-				[
-					'exception' => $e->getMessage(),
-					'schemaId' => $schemaId,
-				]
-			);
-			return [];
-		}//end try
-	}//end querySchema()
-
-	/**
-	 * Normalise an OpenRegister findAll result into an array of plain arrays.
-	 *
-	 * @param mixed $results The raw ObjectService->findAll return value.
-	 *
-	 * @return array<int,array<string,mixed>> A list of plain object arrays.
-	 *
-	 * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
-	 */
-	private function normaliseResultset(mixed $results): array {
-		if (is_array($results) === false) {
-			return [];
-		}
-
-		$output = [];
-		foreach ($results as $item) {
-			$normalised = $this->normaliseResultItem(item: $item);
-			if ($normalised !== null) {
-				$output[] = $normalised;
-			}
-		}//end foreach
-
-		return $output;
-	}//end normaliseResultset()
-
-	/**
-	 * Normalise a single result-set entry into an array payload.
-	 *
-	 * Arrays pass through unchanged; OpenRegister entities are unwrapped via
-	 * getObject() (promoting id/uuid when missing); other objects are cast to
-	 * array. Scalars yield null.
-	 *
-	 * @param mixed $item The raw result entry.
-	 *
-	 * @return array<string,mixed>|null The normalised payload, or null to skip.
-	 */
-	private function normaliseResultItem(mixed $item): ?array {
-		if (is_array($item) === true) {
-			return $item;
-		}
-
-		if (is_object($item) === false) {
-			return null;
-		}
-
-		if (method_exists($item, 'getObject') === true) {
-			$value = $item->getObject();
-			if (is_array($value) === true) {
-				// Promote id/uuid into the object payload if missing.
-				if (isset($value['id']) === false && method_exists($item, 'getUuid') === true) {
-					$value['id'] = $item->getUuid();
-				}
-
-				return $value;
-			}
-		}
-
-		return (array)$item;
-	}//end normaliseResultItem()
 
 	/**
 	 * Apply optional date range filtering to a normalised item.
@@ -622,7 +529,10 @@ class ActivityTimelineService {
 	/**
 	 * Normalise a raw object array into the unified activity item shape.
 	 *
-	 * @param string $sourceType The internal source-type key (contactmoment|task|emailLink|calendarLink).
+	 * Every item carries `userName`, its author's display name (the user id
+	 * when the user is unknown).
+	 *
+	 * @param string $sourceType The internal source-type key (interaction|task|emailLink|calendarLink|note|message).
 	 * @param array<string,mixed> $object The raw object array from OpenRegister.
 	 * @param string $entityType The originating entityType for back-reference.
 	 * @param string $entityId The originating entityId for back-reference.
@@ -630,87 +540,10 @@ class ActivityTimelineService {
 	 * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
 	 *
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
 	 */
 	public function normalizeActivity(string $sourceType, array $object, string $entityType, string $entityId): ?array {
-		$id = (string)($object['id'] ?? $object['uuid'] ?? '');
-
-		switch ($sourceType) {
-			case 'interaction':
-				// Ticket field names (unify-ticket-supertype): subject -> title,
-				// summary -> description, contactedAt -> occurredAt, agent -> assignee.
-				$channel = (string)($object['channel'] ?? '');
-				$type = 'interaction';
-				if ($channel === 'worklog') {
-					$type = 'worklog';
-				}
-				return [
-					'type' => $type,
-					'id' => $id,
-					'title' => (string)($object['title'] ?? $object['description'] ?? ''),
-					'description' => (string)($object['description'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['occurredAt'] ?? null)),
-					'user' => $this->stringOrNull(value: ($object['assignee'] ?? null)),
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'channel' => $channel,
-						'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
-						'duration' => $this->stringOrNull(value: ($object['duration'] ?? null)),
-						'outcome' => $this->stringOrNull(value: ($object['outcome'] ?? null)),
-					],
-				];
-
-			case 'task':
-				return [
-					'type' => 'task',
-					'id' => $id,
-					'title' => (string)($object['subject'] ?? $object['title'] ?? ''),
-					'description' => (string)($object['description'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['deadline'] ?? $object['createdAt'] ?? null)),
-					'user' => $this->stringOrNull(value: ($object['assigneeUserId'] ?? null)),
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'status' => $this->stringOrNull(value: ($object['status'] ?? null)),
-						'priority' => $this->stringOrNull(value: ($object['priority'] ?? null)),
-					],
-				];
-
-			case 'emailLink':
-				return [
-					'type' => 'email',
-					'id' => $id,
-					'title' => (string)($object['subject'] ?? ''),
-					'description' => (string)($object['sender'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['date'] ?? null)),
-					'user' => null,
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
-						'messageId' => $this->stringOrNull(value: ($object['messageId'] ?? null)),
-					],
-				];
-
-			case 'calendarLink':
-				return [
-					'type' => 'calendar',
-					'id' => $id,
-					'title' => (string)($object['title'] ?? $object['subject'] ?? ''),
-					'description' => (string)($object['notes'] ?? $object['description'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['startDate'] ?? null)),
-					'user' => null,
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'endDate' => $this->stringOrNull(value: ($object['endDate'] ?? null)),
-						'location' => $this->stringOrNull(value: ($object['location'] ?? null)),
-					],
-				];
-
-			default:
-				return null;
-		}//end switch
+		return $this->itemNormalizer->normalize(sourceType: $sourceType, object: $object, entityType: $entityType, entityId: $entityId);
 	}//end normalizeActivity()
 
 	/**
@@ -821,7 +654,7 @@ class ActivityTimelineService {
 			$filters['parentTicket'] = $entityId;
 		}
 
-		$rawObjects = $this->querySchema(
+		$rawObjects = $this->reader->query(
 			registerId: $config['register'],
 			schemaId: $config['interaction'],
 			filters: $filters

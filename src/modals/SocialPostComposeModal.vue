@@ -19,10 +19,8 @@
   - @spec openspec/changes/social-publishing/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
   -->
 <template>
-	<NcModal :name="modalTitle" size="large" @close="$emit('close')">
+	<CnDialog width="wizard" :name="modalTitle" @closing="$emit('close')">
 		<div class="social-compose">
-			<h2>{{ modalTitle }}</h2>
-
 			<NcNoteCard v-if="error" type="error">
 				{{ error }}
 			</NcNoteCard>
@@ -120,8 +118,8 @@
 				data-testid="social-compose-problems">
 				<p v-for="problem in problems" :key="problem">{{ problem }}</p>
 			</NcNoteCard>
-
-			<footer class="social-compose__actions">
+		</div>
+		<template #actions>
 				<NcButton
 					variant="tertiary"
 					:disabled="saving"
@@ -145,16 +143,15 @@
 					</template>
 					{{ t('pipelinq', 'Submit for approval') }}
 				</NcButton>
-			</footer>
-		</div>
-	</NcModal>
+		</template>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcLoadingIcon,
-	NcModal,
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
@@ -172,7 +169,7 @@ export default {
 	components: {
 		NcButton,
 		NcLoadingIcon,
-		NcModal,
+		CnDialog,
 		NcNoteCard,
 		NcSelect,
 	},

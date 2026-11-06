@@ -33,6 +33,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -58,6 +60,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentEmailService {
+	use NullablePayloadToArray;
+
 	/**
 	 * App-config key for the signing secret used on reschedule/cancel deep links.
 	 *
@@ -487,11 +491,11 @@ class AppointmentEmailService {
 	private function askIntegriq(array $context): array {
 		$this->lastRefusal = null;
 		$decision = $this->integriq->decideOne(
-			channel: 'email',
-			category: IntegriqConsentClient::CATEGORY_REMINDER,
-			requiresConsent: false,
-			address: (string)$context['recipientEmail'],
-			contactRef: (string)($context['booking']['customerId'] ?? ''),
+			ask: new ConsentAsk(channel: 'email', category: IntegriqConsentClient::CATEGORY_REMINDER, requiresConsent: false),
+			recipient: [
+				'address' => (string)$context['recipientEmail'],
+				'contactRef' => (string)($context['booking']['customerId'] ?? ''),
+			],
 		);
 		if ($decision['send'] === true) {
 			return $decision;
@@ -884,43 +888,6 @@ class AppointmentEmailService {
 	private function schemaId(string $key): string {
 		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
 	}//end schemaId()
-
-	/**
-	 * Normalise an OR entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

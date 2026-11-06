@@ -1,7 +1,8 @@
 # test-harness Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-test-harness-or-stub-fix. Update Purpose after archive.
+The unit suite runs the same way on a bare host and inside a Nextcloud with OpenRegister enabled. This spec fixes which OpenRegister stub the suite loads and keeps the stubs' method signatures compatible with the real classes.
+
 ## Requirements
 ### Requirement: Deterministic OpenRegister-stub precedence in the unit suite
 

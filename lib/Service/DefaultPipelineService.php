@@ -53,7 +53,10 @@ class DefaultPipelineService {
 	}//end __construct()
 
 	/**
-	 * Create default pipelines if none exist.
+	 * Create the default pipelines when the register holds no pipeline at all.
+	 *
+	 * An instance that has pipelines of its own (an example set's, or ones an
+	 * admin made) does not get the defaults back after they were removed.
 	 *
 	 * A repair step (`occ upgrade`, app install) runs with nobody signed in,
 	 * and OpenRegister refuses an Anonymous write. Then the pipelines are
@@ -63,6 +66,7 @@ class DefaultPipelineService {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
+	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
 	 */
 	public function createDefaultPipelines(): void {
 		try {
@@ -73,11 +77,12 @@ class DefaultPipelineService {
 	}//end createDefaultPipelines()
 
 	/**
-	 * Create default pipelines if none exist, as the active user.
+	 * Create the default pipelines when the register holds none, as the active user.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
+	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
 	 */
 	private function createDefaultPipelinesAsCaller(): void {
 		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -98,14 +103,13 @@ class DefaultPipelineService {
 					'filters' => [
 						'register' => $registerId,
 						'schema' => $pipelineSchemaId,
-						'title' => 'Sales Pipeline',
 					],
 					'limit' => 1,
 				]
 			);
 
 			if (empty($existing) === false) {
-				$this->logger->info('Pipelinq: Default pipelines already exist, skipping creation');
+				$this->logger->info('Pipelinq: The register has pipelines, skipping the default pipelines');
 				return;
 			}
 

@@ -14,8 +14,8 @@
   @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 -->
 <template>
-	<div class="keyword-intel">
-		<header class="keyword-intel__header">
+	<div class="keyword-intel" :class="{ 'keyword-intel--embedded': embedded }">
+		<header v-if="!embedded" class="keyword-intel__header">
 			<h2>{{ t('pipelinq', 'Keywords') }}</h2>
 			<NcSelect
 				v-model="window"
@@ -41,7 +41,7 @@
 		</NcEmptyContent>
 
 		<template v-else>
-			<p class="keyword-intel__meta" data-testid="keyword-intel-window">
+			<p v-if="!embedded" class="keyword-intel__meta" data-testid="keyword-intel-window">
 				{{
 					t(
 						'pipelinq',
@@ -56,6 +56,7 @@
 			</p>
 
 			<section
+				v-if="!embedded"
 				class="keyword-intel__section"
 				data-testid="keyword-intel-buckets">
 				<h3>{{ t('pipelinq', 'Where we rank') }}</h3>
@@ -103,61 +104,34 @@
 						)
 					}}
 				</p>
-				<div v-else class="keyword-intel__scroll">
-					<table class="keyword-intel__table">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Query') }}</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Position') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Impressions') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'CTR') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Behind by') }}
-								</th>
-								<th scope="col" />
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in strikingDistance" :key="row.query">
-								<td>{{ row.query }}</td>
-								<td class="keyword-intel__num">
-									{{ row.position }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ row.impressions }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ percent(row.ctr) }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ shortfall(row) }}
-								</td>
-								<td>
-									<NcButton
-										v-if="
-											!isConfirmed(row.query, confirmedTerms)
-										"
-										variant="tertiary"
-										:title="addTargetHint"
-										@click="
-											openConfirm(row, 'striking-distance')
-										">
-										{{ t('pipelinq', 'Add as target') }}
-									</NcButton>
-									<span v-else class="keyword-intel__taken">
-										{{ t('pipelinq', 'Already a target') }}
-									</span>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+				<CnDataTable
+					v-else
+					data-testid="keyword-intel-striking-table"
+					framed
+					filterable
+					localHeaders
+					:columns="strikingColumns"
+					:rows="strikingDistance"
+					rowKey="query">
+					<template #column-ctr="{ row }">
+						{{ percent(row.ctr) }}
+					</template>
+					<template #column-shortfall="{ row }">
+						{{ shortfall(row) }}
+					</template>
+					<template #column-target="{ row }">
+						<NcButton
+							v-if="!isConfirmed(row.query, confirmedTerms)"
+							variant="tertiary"
+							:title="addTargetHint"
+							@click="openConfirm(row, 'striking-distance')">
+							{{ t('pipelinq', 'Add as target') }}
+						</NcButton>
+						<span v-else class="keyword-intel__taken">
+							{{ t('pipelinq', 'Already a target') }}
+						</span>
+					</template>
+				</CnDataTable>
 			</section>
 
 			<section
@@ -210,7 +184,7 @@
 									)
 								}}
 							</p>
-							<div class="keyword-intel__scroll">
+							<div v-if="!embedded" class="keyword-intel__scroll">
 								<table class="keyword-intel__table">
 									<thead>
 										<tr>
@@ -300,44 +274,25 @@
 						)
 					}}
 				</p>
-				<div v-else class="keyword-intel__scroll">
-					<table class="keyword-intel__table">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Query') }}</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Impressions') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Position') }}
-								</th>
-								<th scope="col" />
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in gaps" :key="row.query">
-								<td>{{ row.query }}</td>
-								<td class="keyword-intel__num">
-									{{ row.impressions }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ row.position }}
-								</td>
-								<td>
-									<NcButton
-										v-if="
-											!isConfirmed(row.query, confirmedTerms)
-										"
-										variant="tertiary"
-										:title="addTargetHint"
-										@click="openConfirm(row, 'content-gap')">
-										{{ t('pipelinq', 'Add as target') }}
-									</NcButton>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+				<CnDataTable
+					v-else
+					data-testid="keyword-intel-gaps-table"
+					framed
+					filterable
+					localHeaders
+					:columns="gapColumns"
+					:rows="gaps"
+					rowKey="query">
+					<template #column-target="{ row }">
+						<NcButton
+							v-if="!isConfirmed(row.query, confirmedTerms)"
+							variant="tertiary"
+							:title="addTargetHint"
+							@click="openConfirm(row, 'content-gap')">
+							{{ t('pipelinq', 'Add as target') }}
+						</NcButton>
+					</template>
+				</CnDataTable>
 			</section>
 		</template>
 
@@ -355,6 +310,7 @@
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -382,6 +338,7 @@ const DAY = 24 * 60 * 60 * 1000
 export default {
 	name: 'KeywordIntelligence',
 	components: {
+		CnDataTable,
 		KeyVariant,
 		KeywordTargetConfirmModal,
 		NcButton,
@@ -389,6 +346,23 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
+	},
+
+	props: {
+		/**
+		 * Drawn as a section of the search insight page: no own header or
+		 * period picker, and no ranking buckets (board PqZoekinzicht).
+		 */
+		embedded: {
+			type: Boolean,
+			default: false,
+		},
+
+		/** The period in days when embedded; the host's period picker sets it. */
+		days: {
+			type: Number,
+			default: 0,
+		},
 	},
 
 	data() {
@@ -416,6 +390,40 @@ export default {
 		 */
 		addTargetHint() {
 			return this.t('pipelinq', 'Save this search as a keyword to work on')
+		},
+
+		/**
+		 * The "one push from page one" columns: every data column sorts and
+		 * filters the rows the section holds, as board PqZoekinzicht draws the
+		 * heads; the confirm column carries no head controls.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		strikingColumns() {
+			return [
+				{ key: 'query', label: this.t('pipelinq', 'Query'), sortable: true },
+				this.numberColumn('position', this.t('pipelinq', 'Position')),
+				this.numberColumn('impressions', this.t('pipelinq', 'Impressions')),
+				this.numberColumn('ctr', this.t('pipelinq', 'CTR')),
+				this.numberColumn('shortfall', this.t('pipelinq', 'Behind by')),
+				{ key: 'target', label: '', sortable: false, filterable: false },
+			]
+		},
+
+		/**
+		 * The "nothing of ours answers this" columns, as `strikingColumns`.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		gapColumns() {
+			return [
+				{ key: 'query', label: this.t('pipelinq', 'Query'), sortable: true },
+				this.numberColumn('impressions', this.t('pipelinq', 'Impressions')),
+				this.numberColumn('position', this.t('pipelinq', 'Position')),
+				{ key: 'target', label: '', sortable: false, filterable: false },
+			]
 		},
 
 		/**
@@ -456,6 +464,12 @@ export default {
 		},
 	},
 
+	watch: {
+		days() {
+			this.fetchProposals()
+		},
+	},
+
 	created() {
 		this.window = this.windowOptions[0]
 	},
@@ -474,6 +488,18 @@ export default {
 		crawlNotice,
 
 		/**
+		 * A right-aligned number column that sorts and filters as a number.
+		 *
+		 * @param {string} key The row field.
+		 * @param {string} label The head label.
+		 * @return {object} The column.
+		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		numberColumn(key, label) {
+			return { key, label, type: 'number', sortable: true, class: 'keyword-intel__num', cellClass: 'keyword-intel__num' }
+		},
+
+		/**
 		 * GET /api/marketing/keyword-proposals for the chosen window. One
 		 * request serves every section on this page.
 		 *
@@ -482,7 +508,7 @@ export default {
 		async fetchProposals() {
 			this.loading = true
 			this.error = ''
-			const days = this.window?.days || 28
+			const days = this.days || this.window?.days || 28
 			const today = new Date()
 			const start = new Date(today.getTime() - days * DAY)
 			try {
@@ -630,11 +656,17 @@ export default {
 	}
 
 	th {
-		font-weight: bold;
+		border-bottom: 0;
+		background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
+		color: var(--color-text-maxcontrast);
+		font-size: 14px;
+		font-weight: 600;
+		line-height: 1.2;
 	}
 }
 
-.keyword-intel__num {
+.keyword-intel__num,
+:deep(.keyword-intel__num) {
 	text-align: end;
 }
 
@@ -698,5 +730,20 @@ export default {
 .keyword-intel__error {
 	color: var(--color-error);
 	margin-top: 12px;
+}
+/* On the search insight page the sections read as board PqZoekinzicht's
+   sub-headings, flush with the card. */
+.keyword-intel--embedded {
+	padding: 0;
+
+	.keyword-intel__section {
+		margin-bottom: 20px;
+	}
+
+	h3 {
+		margin: 0 0 10px;
+		font-size: 15px;
+		font-weight: 700;
+	}
 }
 </style>

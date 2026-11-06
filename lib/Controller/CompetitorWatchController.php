@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
 use OCA\Pipelinq\Service\Competitor\WatchEventStore;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
@@ -40,7 +40,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Watch events, and a manual run.
@@ -64,8 +63,7 @@ class CompetitorWatchController extends Controller {
 	 * @param CompetitorWatchService $watches The watch service.
 	 * @param WatchEventStore $events The event store.
 	 * @param ConnectorEgress $egress Whether an egress source is configured at all.
-	 * @param IUserSession $userSession Session.
-	 * @param ObjectOwnerAccessPolicy $policy CRM privilege check.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
@@ -75,8 +73,7 @@ class CompetitorWatchController extends Controller {
 		private readonly CompetitorWatchService $watches,
 		private readonly WatchEventStore $events,
 		private readonly ConnectorEgress $egress,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -91,7 +88,7 @@ class CompetitorWatchController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		$refusal = $this->refuseUnprivileged();
+		$refusal = $this->privilege->refusal();
 		if ($refusal !== null) {
 			return $refusal;
 		}
@@ -124,7 +121,7 @@ class CompetitorWatchController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function run(string $id): JSONResponse {
-		$refusal = $this->refuseUnprivileged();
+		$refusal = $this->privilege->refusal();
 		if ($refusal !== null) {
 			return $refusal;
 		}
@@ -134,11 +131,7 @@ class CompetitorWatchController extends Controller {
 			return new JSONResponse(['error' => 'No such watch'], Http::STATUS_NOT_FOUND);
 		}
 
-		$user = $this->userSession->getUser();
-		$uid = null;
-		if ($user !== null) {
-			$uid = $user->getUID();
-		}
+		$uid = $this->privilege->actingUserId();
 
 		return new JSONResponse($this->watches->runOne(watch: $watch, actingUserId: $uid));
 	}//end run()
@@ -160,22 +153,4 @@ class CompetitorWatchController extends Controller {
 
 		return array_slice($events, 0, self::MAX_EVENTS);
 	}//end newestFirst()
-
-	/**
-	 * Refuse a caller without the CRM privilege.
-	 *
-	 * @return JSONResponse|null The refusal, or null when the caller may proceed.
-	 */
-	private function refuseUnprivileged(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		return null;
-	}//end refuseUnprivileged()
 }//end class

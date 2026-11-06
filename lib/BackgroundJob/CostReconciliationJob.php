@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Daily cost reconciliation.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class CostReconciliationJob extends TimedJob {
 	/**
@@ -46,7 +46,7 @@ class CostReconciliationJob extends TimedJob {
 	 * @param CostReconciliationService $reconciler Service.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		ITimeFactory $time,

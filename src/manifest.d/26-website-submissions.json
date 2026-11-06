@@ -1,0 +1,52 @@
+{
+	"pages": [
+		{
+			"id": "WebsiteSubmissions",
+			"_note": "website-submissions-link-to-client (PqAanvraagOmzetten). Decision 179: no intake layer, a form submits straight into a ticket. This page is a lens over those tickets (source names the form), opening on the ones nobody linked to a client yet. A ticket opens on its own page, where Link to a client links what the visitor typed to a client and a contact person.",
+			"route": "/website-submissions",
+			"type": "index",
+			"title": "Website submissions",
+			"config": {
+				"register": "pipelinq",
+				"schema": "ticket",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"filter": { "source": "IS NOT NULL" },
+				"sortKey": "occurredAt",
+				"sortOrder": "desc",
+				"showViewAction": false,
+				"showAdd": false,
+				"filterMenu": true,
+				"countText": "{shown} of {total} submissions · newest first",
+				"footerNote": "Linking connects a submission to a client, a contact person and, if you like, a lead.",
+				"quickFilters": [
+					{ "label": "Not linked yet", "filter": { "client": "IS NULL" }, "default": true, "showCount": true },
+					{ "label": "Linked", "filter": { "client": "IS NOT NULL" }, "showCount": true },
+					{ "label": "Closed", "filter": { "status": ["completed", "rejected", "closed"] }, "showCount": true },
+					{ "label": "All", "filter": {}, "showCount": true }
+				],
+				"columns": [
+					{ "key": "occurredAt", "label": "Received" },
+					{ "key": "title", "label": "Title" },
+					{ "key": "reporterName", "label": "From" },
+					{ "key": "reporterOrganisation", "label": "Organisation" },
+					{ "key": "source", "label": "Form" },
+					{ "key": "sourceUrl", "label": "Page", "hidden": true },
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "new": "primary", "in_progress": "warning", "awaiting_customer": "warning", "resolved": "success", "completed": "success", "rejected": "default", "closed": "default" } } },
+					{ "key": "assignee", "label": "Handled by", "formatter": "userDisplayName", "hidden": true }
+				],
+				"actions": [
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "TicketDetail" }
+				]
+			}
+		}
+	],
+	"menu": [
+		{
+			"id": "WebsiteSubmissions",
+			"label": "Website submissions",
+			"icon": "WebBox",
+			"route": "WebsiteSubmissions",
+			"order": 52
+		}
+	]
+}

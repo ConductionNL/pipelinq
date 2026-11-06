@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -51,7 +51,7 @@ use Throwable;
  * authenticity is enforced by HMAC signature verification inside
  * the adapter.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class MessagingWebhookController extends Controller {
 	/**
@@ -62,7 +62,7 @@ class MessagingWebhookController extends Controller {
 	 * @param SmsAdapter $smsAdapter SMS adapter.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		IRequest $request,
@@ -86,7 +86,7 @@ class MessagingWebhookController extends Controller {
 	 * Inbound message + delivery-status webhooks. The rate-limit ceiling is
 	 * generous because a conversation burst is normal traffic here, not abuse.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -119,7 +119,7 @@ class MessagingWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Outcome.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

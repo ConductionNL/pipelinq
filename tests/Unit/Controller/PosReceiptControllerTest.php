@@ -447,4 +447,33 @@ class PosReceiptControllerTest extends TestCase {
 		$this->assertSame('An unexpected error occurred', $response->getData()['error']);
 		$this->assertStringNotContainsString('SQLSTATE', (string)$response->getData()['error']);
 	}//end testPrintMaps500OnUnexpectedFailureWithoutLeakingInternals()
+
+	/**
+	 * log() answers the receipt card summary for the acting user.
+	 *
+	 * @return void
+	 */
+	public function testLogForwardsTheActingUser(): void {
+		$this->loginAs(uid: 'pieter');
+		$this->service->expects($this->once())
+			->method('receiptLog')
+			->with('tx-1', 'pieter')
+			->willReturn(['printCount' => 1, 'layout' => 'receipt']);
+
+		$response = $this->controller->log(id: 'tx-1');
+
+		$this->assertSame(expected: 1, actual: $response->getData()['log']['printCount']);
+	}//end testLogForwardsTheActingUser()
+
+	/**
+	 * log() needs a session user.
+	 *
+	 * @return void
+	 */
+	public function testLogRequiresAuthentication(): void {
+		$this->session->method('getUser')->willReturn(null);
+		$this->service->expects($this->never())->method('receiptLog');
+
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $this->controller->log(id: 'tx-1')->getStatus());
+	}//end testLogRequiresAuthentication()
 }//end class

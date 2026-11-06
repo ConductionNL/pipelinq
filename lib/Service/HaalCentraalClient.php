@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Throwable;
 /**
  * OAuth2 + mTLS REST client for HaalCentraal Personen.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) OR-first + legacy OAuth2/mTLS paths plus HAL normalisation live in one cohesive client.
@@ -126,14 +126,18 @@ class HaalCentraalClient {
 	 * @throws HaalCentraalException
 	 *
 	 * @spec openspec/specs/brp-lookup/spec.md
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-01
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-03
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)  Sequential guard clauses over the HTTP response; extraction adds no clarity.
 	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Linear OR-first then legacy request/response handling.
 	 * @SuppressWarnings(PHPMD.StaticAccess)          BsnValidationService::mask is a pure stateless helper.
 	 */
-	public function lookupPersoon(string $bsn, ?string $requestIdContext = null): ?array {
+	public function lookupPersoon(
+		#[\SensitiveParameter]
+		string $bsn,
+		?string $requestIdContext = null,
+	): ?array {
 		$maskedBsn = BsnValidationService::mask($bsn);
 
 		// OR-first: try the OpenRegister BRP leaf, which relays the raw HAL+JSON
@@ -274,7 +278,11 @@ class HaalCentraalClient {
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential payload-shape guard clauses; extraction adds no clarity.
 	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential payload-shape guard clauses; extraction adds no clarity.
 	 */
-	private function lookupViaOpenRegister(string $bsn, string $maskedBsn): ?array {
+	private function lookupViaOpenRegister(
+		#[\SensitiveParameter]
+		string $bsn,
+		string $maskedBsn,
+	): ?array {
 		$params = http_build_query(['bsn' => $bsn]);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/brp/person?' . $params);
 
@@ -317,7 +325,17 @@ class HaalCentraalClient {
 			return [self::OR_EMPTY_SENTINEL_KEY => true];
 		}
 
+		// A source in mock mode answers every person it knows to any BSN; a
+		// live source answers only the one asked. Read the one asked for, and
+		// the first person when none carries that BSN (as before).
 		$first = $results[0];
+		foreach ($results as $candidate) {
+			if (is_array($candidate) === true && (string)($candidate['burgerservicenummer'] ?? '') === $bsn) {
+				$first = $candidate;
+				break;
+			}
+		}
+
 		if (is_array($first) === false) {
 			return null;
 		}
@@ -358,7 +376,7 @@ class HaalCentraalClient {
 	 *
 	 * @return DateTimeImmutable|null
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-02
 	 *
 	 * @SuppressWarnings(PHPMD.ErrorControlOperator) The @ mutes fs/OpenSSL warnings on unreadable certs; failures handled via false checks.
 	 */
@@ -390,7 +408,7 @@ class HaalCentraalClient {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
 	 */
 	public function isConfigured(): bool {
 		return $this->appConfig->getValueString(Application::APP_ID, 'brp.client_id', '') !== ''
@@ -599,6 +617,15 @@ class HaalCentraalClient {
 		$name = [];
 		if (is_array($raw['name'] ?? null) === true) {
 			$name = $raw['name'];
+		} else if (is_array($raw['naam'] ?? null) === true) {
+			// HaalCentraal Personen v2 spells the name in Dutch (`naam`).
+			$name = [
+				'givenNames' => ($raw['naam']['voornamen'] ?? ''),
+				'initials'   => ($raw['naam']['voorletters'] ?? ''),
+				'namePrefix' => ($raw['naam']['voorvoegsel'] ?? ''),
+				'surname'    => ($raw['naam']['geslachtsnaam'] ?? ''),
+				'adellijkeTitelPredicaat' => ($raw['naam']['adellijkeTitelPredicaat'] ?? ''),
+			];
 		}
 
 		$birth = [];

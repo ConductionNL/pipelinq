@@ -3,9 +3,9 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Justification required for large commitment')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="commit-justification">
@@ -37,15 +37,16 @@
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcTextArea } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'CommitJustificationModal',
-	components: { NcButton, NcDialog, NcTextArea },
+	components: { NcButton, CnDialog, NcTextArea },
 	props: {
 		initialReason: {
 			type: String,

@@ -95,6 +95,34 @@ class WatchEventStore {
 	}//end all()
 
 	/**
+	 * The sitemap locations a watch already recorded, rebuilt from its own
+	 * events rather than from a blob on the watch, so a competitor with ten
+	 * thousand pages does not turn one object into a store of its own.
+	 *
+	 * @param array<string, mixed> $watch The watch.
+	 *
+	 * @return array<string, string> Location to stamp.
+	 *
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+	 */
+	public function seenLocations(array $watch): array {
+		$watchId = $this->store->idOf(payload: $watch);
+		if ($watchId === '') {
+			return [];
+		}
+
+		$out = [];
+		foreach ($this->all(filters: ['watchId' => $watchId]) as $event) {
+			$url = trim((string)($event['url'] ?? ''));
+			if ($url !== '') {
+				$out[$url] = trim((string)($event['sourceStamp'] ?? ''));
+			}
+		}
+
+		return $out;
+	}//end seenLocations()
+
+	/**
 	 * Create or update the event for (watch, URL).
 	 *
 	 * @param array<string, mixed> $watch The watch that saw it.

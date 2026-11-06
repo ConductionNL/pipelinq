@@ -66,18 +66,19 @@ test('an unknown client name offers to create one', async ({ page }) => {
 	).toBeVisible({ timeout: 10000 })
 })
 
-// @e2e openspec/specs/lead-management/spec.md#add-tags-to-a-lead
-test('the contact picker unlocks and scopes to the chosen client', async ({
+// @e2e openspec/specs/lead-management/spec.md#contact-is-scoped-to-the-client
+test('the contact picker is open without a client and scopes to a chosen one', async ({
 	page,
 }) => {
 	const dialog = await openNewLeadDialog(page)
 	const contactField = dialog.locator('[data-testid="lead-form-contact"]')
 
-	// Resting state: no client, so no contact to pick.
+	// Resting state: no client. A client is optional (decision 207), so the
+	// contact picker is usable from the start and not waiting on one.
 	await expect(
 		contactField.locator('.vs--disabled'),
-		'contact must be disabled until a client is chosen',
-	).toHaveCount(1, { timeout: 10000 })
+		'contact must be usable before a client is chosen',
+	).toHaveCount(0, { timeout: 10000 })
 
 	// Choose the seeded client that has contact persons.
 	//
@@ -115,13 +116,7 @@ test('the contact picker unlocks and scopes to the chosen client', async ({
 		'the client must be selected before the cascade can be judged',
 	).toContainText('Bakkerij', { timeout: 10000 })
 
-	// The cascade opens.
-	await expect(
-		contactField.locator('.vs--disabled'),
-		'choosing a client must enable the contact picker',
-	).toHaveCount(0, { timeout: 10000 })
-
-	// And it is scoped: only that client's contacts, not every contact seeded.
+	// With a client chosen the picker is scoped: only that client's contacts, not every contact seeded.
 	await pickerInput(dialog, 'lead-form-contact').click()
 	const options = page.locator('.vs__dropdown-menu li')
 	await expect(options.first()).toBeVisible({ timeout: 10000 })

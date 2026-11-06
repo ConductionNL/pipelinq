@@ -92,3 +92,20 @@ export function buildVisitPayloads(input) {
 	}
 	return { ticket, task }
 }
+
+/**
+ * The follow-up task with the contact moment it came from, once that is
+ * saved: `contactMoment` is the saved ticket's id.
+ *
+ * @param {object|null} task The crmTask payload, or null for none.
+ * @param {object} saved The saved ticket.
+ * @return {object|null} The task, linked when the ticket has an id.
+ * @spec openspec/specs/mobile-experience/spec.md
+ */
+export function linkTaskToContactMoment(task, saved) {
+	if (!task) {
+		return null
+	}
+	const id = saved?.id || saved?.['@self']?.id || ''
+	return id ? { ...task, contactMoment: id } : task
+}

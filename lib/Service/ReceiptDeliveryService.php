@@ -33,6 +33,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -60,6 +61,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/pos-receipt-engine/spec.md
  */
 class ReceiptDeliveryService {
+	use CastingPayloadToArray;
+
 	/**
 	 * Statuses a transaction must be in before a receipt may be issued.
 	 *
@@ -126,6 +129,105 @@ class ReceiptDeliveryService {
 			'customerEmail' => $this->customerEmail(transaction: $transaction),
 		];
 	}//end preview()
+
+	/**
+	 * What the receipt card on a transaction page shows: the newest print and
+	 * its printer, how often it was printed, the newest mail that was sent,
+	 * and whether the sale prints as a receipt or an invoice.
+	 *
+	 * @param string $transactionId The transaction UUID.
+	 * @param string $userId The acting user UID (must be able to access the transaction).
+	 *
+	 * @return array<string, mixed> printedAt, printerDevice, printCount, emailedAt, emailRecipient, layout, invoiceThreshold.
+	 *
+	 * @throws OCSNotFoundException If the transaction is not in this app's register.
+	 * @throws OCSForbiddenException If the caller may not access the transaction.
+	 *
+	 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
+	 */
+	public function receiptLog(string $transactionId, string $userId): array {
+		$transaction = $this->loadTransactionWithLines(id: $transactionId);
+		$this->assertCanAccess(transaction: $transaction, userId: $userId);
+
+		$prints = [];
+		$mails = [];
+		foreach ($this->loadLogs(transactionId: $transactionId) as $log) {
+			if ((string)($log['status'] ?? 'success') === 'failed') {
+				continue;
+			}
+
+			if ((string)($log['action'] ?? '') === 'email') {
+				$mails[] = $log;
+				continue;
+			}
+
+			$prints[] = $log;
+		}
+
+		$print = $this->newestLog(logs: $prints);
+		$mail = $this->newestLog(logs: $mails);
+		$layout = 'receipt';
+		if ($this->receiptService->isInvoiceTransaction(transaction: $transaction) === true) {
+			$layout = 'invoice';
+		}
+
+		return [
+			'printedAt' => (string)($print['printedAt'] ?? ''),
+			'printerDevice' => (string)($print['printerDevice'] ?? ''),
+			'printCount' => count($prints),
+			'emailedAt' => (string)($mail['printedAt'] ?? ''),
+			'emailRecipient' => (string)($mail['emailRecipient'] ?? ''),
+			'layout' => $layout,
+			'invoiceThreshold' => ReceiptService::INVOICE_THRESHOLD_EUR,
+		];
+	}//end receiptLog()
+
+	/**
+	 * The newest of some receipt log entries, by printedAt.
+	 *
+	 * @param array<int, array<string, mixed>> $logs The entries.
+	 *
+	 * @return array<string, mixed> The newest entry, or [] for none.
+	 */
+	private function newestLog(array $logs): array {
+		$newest = [];
+		foreach ($logs as $log) {
+			if (strcmp((string)($log['printedAt'] ?? ''), (string)($newest['printedAt'] ?? '')) > 0) {
+				$newest = $log;
+			}
+		}
+
+		return $newest;
+	}//end newestLog()
+
+	/**
+	 * The receipt log entries of a transaction.
+	 *
+	 * @param string $transactionId The transaction UUID.
+	 *
+	 * @return array<int, array<string, mixed>> The entries.
+	 */
+	private function loadLogs(string $transactionId): array {
+		try {
+			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptPrintLog_schema');
+			$results = $this->getObjectService()->findAll(
+				config: ['filters' => ['register' => $register, 'schema' => $schema, 'transaction' => $transactionId]]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: failed to read the receipt log', ['exception' => $e->getMessage()]);
+			return [];
+		}
+
+		$logs = [];
+		foreach (($results ?? []) as $result) {
+			$row = $this->toArray(object: $result);
+			if ((string)($row['transaction'] ?? '') === $transactionId) {
+				$logs[] = $row;
+			}
+		}
+
+		return $logs;
+	}//end loadLogs()
 
 	/**
 	 * Email a receipt to the transaction's customer.
@@ -663,33 +765,4 @@ class ReceiptDeliveryService {
 		// catch was unreachable — phpstan reports it as a dead catch.
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 }//end class

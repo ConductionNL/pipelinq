@@ -1,0 +1,16 @@
+{
+	"$comment": "pipelinq's extra for Buurtvereniging Oost in the Zuiddrecht set: the subsidy mail Fatma Yildiz linked to the organisation, as PqOrganisatie draws it in Activiteit and the E-mails card. Declared by its Message-ID (no Mail account on a demo instance). Needs OpenRegister's emailLinks part (openregister feat/example-set-email-links).",
+	"emailLinks": [
+		{
+			"key": "oost-subsidie-mail",
+			"data": {
+				"object": "{{object:client-buurtoost.id}}",
+				"messageId": "<subsidie-documenten-buurtoost@zuiddrecht.example>",
+				"subject": "Subsidieformulier en de lijst met documenten gestuurd.",
+				"sender": "{{cast:fatmayildiz.email}}",
+				"mailDate": "{{datetime:-1 16:05}}",
+				"linkedBy": "{{cast:fatmayildiz.uid}}"
+			}
+		}
+	]
+}

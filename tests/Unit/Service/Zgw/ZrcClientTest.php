@@ -19,9 +19,9 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-009
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-010
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-009
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-010
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for ZrcClient.
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
  */
 class ZrcClientTest extends TestCase {
 	/**

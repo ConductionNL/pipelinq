@@ -48,6 +48,7 @@ namespace OCA\Pipelinq\Repair;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Repair\Support\SourceRecordLink;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -294,10 +295,7 @@ class IngestProductVendorMaster implements IRepairStep {
 			// Match on sku first, then barcode.
 			$existing = $this->findProductBySku(
 				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $schemaId,
-				sku: (string)($shillinqProduct['sku'] ?? ''),
-				barcode: (string)($shillinqProduct['barcode'] ?? ''),
+				lookup: ['register' => $registerId, 'schema' => $schemaId, 'product' => $shillinqProduct]
 			);
 
 			if ($existing !== null) {
@@ -306,21 +304,17 @@ class IngestProductVendorMaster implements IRepairStep {
 				$updates = $this->buildProductFillPayload(existing: $existing, shillinqSource: $shillinqProduct);
 				if (empty($updates) === false) {
 					$objectService->saveObject(
-						$registerId,
-						$schemaId,
-						array_merge($existing, $updates),
-						$existing['id'] ?? null
+						object: array_merge($existing, $updates),
+						register: $registerId,
+						schema: $schemaId,
+						uuid: $existing['id'] ?? null
 					);
 				}
 
 				$this->writeSourceRecord(
 					objectService: $objectService,
 					registerId: $registerId,
-					nativeId: (string)($shillinqProduct['id'] ?? ''),
-					entityType: 'product',
-					sourceSystem: 'shillinq-products',
-					currentMasterEntity: (string)($productId ?? ''),
-					rawAttributes: $shillinqProduct,
+					link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $shillinqProduct),
 				);
 
 				return (string)$productId;
@@ -328,7 +322,7 @@ class IngestProductVendorMaster implements IRepairStep {
 
 			// Create: map shillinq fields onto the extended product schema.
 			$newProduct = $this->mapShillinqProductToSchema(shillinqProduct: $shillinqProduct);
-			$created = $objectService->saveObject($registerId, $schemaId, $newProduct, null);
+			$created = $objectService->saveObject(object: $newProduct, register: $registerId, schema: $schemaId, uuid: null);
 			$createdArr = (array)$created;
 			if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
 				$createdArr = $created->jsonSerialize();
@@ -339,18 +333,14 @@ class IngestProductVendorMaster implements IRepairStep {
 			// Ensure productId == object UUID (REQ-PVM-002).
 			if (isset($createdArr['id']) === true && ($createdArr['productId'] ?? null) !== $createdArr['id']) {
 				$createdArr['productId'] = $createdArr['id'];
-				$objectService->saveObject($registerId, $schemaId, $createdArr, $createdArr['id']);
+				$objectService->saveObject(object: $createdArr, register: $registerId, schema: $schemaId, uuid: $createdArr['id']);
 				$productId = $createdArr['id'];
 			}
 
 			$this->writeSourceRecord(
 				objectService: $objectService,
 				registerId: $registerId,
-				nativeId: (string)($shillinqProduct['id'] ?? ''),
-				entityType: 'product',
-				sourceSystem: 'shillinq-products',
-				currentMasterEntity: (string)($productId ?? ''),
-				rawAttributes: $shillinqProduct,
+				link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $shillinqProduct),
 			);
 
 			return (string)$productId;
@@ -431,11 +421,7 @@ class IngestProductVendorMaster implements IRepairStep {
 			$this->writeSourceRecord(
 				objectService: $objectService,
 				registerId: $registerId,
-				nativeId: (string)($shillinqVendor['id'] ?? ''),
-				entityType: 'vendor',
-				sourceSystem: 'shillinq-vendors',
-				currentMasterEntity: $contactsUid,
-				rawAttributes: $shillinqVendor,
+				link: new SourceRecordLink(entityType: 'vendor', masterEntity: $contactsUid, rawAttributes: $shillinqVendor),
 			);
 
 			return [$contactsUid, $apPayload];
@@ -479,10 +465,10 @@ class IngestProductVendorMaster implements IRepairStep {
 			$updates = $this->buildSupplierFillPayload(existing: $existingSupplier, shillinqSource: $shillinqVendor);
 			if (empty($updates) === false) {
 				$objectService->saveObject(
-					$registerId,
-					$schemaId,
-					array_merge($existingSupplier, $updates),
-					$existingSupplier['id'] ?? null
+					object: array_merge($existingSupplier, $updates),
+					register: $registerId,
+					schema: $schemaId,
+					uuid: $existingSupplier['id'] ?? null
 				);
 			}
 
@@ -492,7 +478,7 @@ class IngestProductVendorMaster implements IRepairStep {
 		// Create new supplier commercial profile.
 		$newSupplier = $this->mapShillinqVendorToSchema(shillinqVendor: $shillinqVendor);
 		$newSupplier['contactsUid'] = $contactsUid;
-		$objectService->saveObject($registerId, $schemaId, $newSupplier, null);
+		$objectService->saveObject(object: $newSupplier, register: $registerId, schema: $schemaId, uuid: null);
 	}//end upsertSupplier()
 
 	/**
@@ -672,25 +658,13 @@ class IngestProductVendorMaster implements IRepairStep {
 	/**
 	 * Write an MDM sourceRecord for provenance tracking.
 	 *
-	 * @param mixed $objectService The OpenRegister ObjectService.
-	 * @param string $registerId The register ID.
-	 * @param string $nativeId The source-system native ID.
-	 * @param string $entityType 'product' or 'vendor'.
-	 * @param string $sourceSystem 'shillinq-products' or 'shillinq-vendors'.
-	 * @param string $currentMasterEntity The pipelinq master UUID.
-	 * @param array<string,mixed> $rawAttributes The unmodified shillinq payload.
+	 * @param mixed            $objectService The OpenRegister ObjectService.
+	 * @param string           $registerId    The register ID.
+	 * @param SourceRecordLink $link          The ingested record and its master entity.
 	 *
 	 * @return void
 	 */
-	private function writeSourceRecord(
-		mixed $objectService,
-		string $registerId,
-		string $nativeId,
-		string $entityType,
-		string $sourceSystem,
-		string $currentMasterEntity,
-		array $rawAttributes,
-	): void {
+	private function writeSourceRecord(mixed $objectService, string $registerId, SourceRecordLink $link): void {
 		$sourceRecordSchemaId = $this->appConfig->getValueString(
 			Application::APP_ID,
 			'sourceRecord_schema',
@@ -706,31 +680,17 @@ class IngestProductVendorMaster implements IRepairStep {
 
 		try {
 			$objectService->saveObject(
-				$registerId,
-				$sourceRecordSchemaId,
-				[
-					'sourceRecordId' => "{$sourceSystem}:{$nativeId}",
-					'sourceSystem' => $sourceSystem,
-					'nativeId' => $nativeId,
-					'entityType' => $entityType,
-					'currentMasterEntity' => $currentMasterEntity,
-					'rawAttributes' => $rawAttributes,
-					'mappedAttributes' => [],
-					'firstSeen' => $now,
-					'lastSeen' => $now,
-					'lastChange' => $now,
-					'linkageMethod' => 'migration',
-					'linkageConfidence' => 1.0,
-					'confidence' => 1.0,
-				],
-				null
+				object: $link->toRecord(now: $now),
+				register: $registerId,
+				schema: $sourceRecordSchemaId,
+				uuid: null
 			);
 		} catch (\Throwable $e) {
 			// Provenance write failure is non-fatal.
 			$this->logger->warning(
 				'PVM ingest: sourceRecord write failed',
 				[
-					'nativeId' => $nativeId,
+					'nativeId' => $link->nativeId,
 					'exception' => $e->getMessage(),
 				]
 			);
@@ -738,48 +698,60 @@ class IngestProductVendorMaster implements IRepairStep {
 	}//end writeSourceRecord()
 
 	/**
-	 * Find an existing pipelinq product by sku or barcode.
+	 * Find an existing pipelinq product by sku, then by barcode.
 	 *
-	 * @param mixed $objectService The OR ObjectService.
-	 * @param string $registerId Register ID.
-	 * @param string $schemaId Schema ID.
-	 * @param string $sku SKU to match.
-	 * @param string $barcode Barcode to match.
+	 * @param mixed                                                              $objectService The OR ObjectService.
+	 * @param array{register: string, schema: string, product: array<string, mixed>} $lookup        Where to look, and the shillinq product to match.
 	 *
 	 * @return array<string,mixed>|null The first matching product, or null.
 	 */
-	private function findProductBySku(
-		mixed $objectService,
-		string $registerId,
-		string $schemaId,
-		string $sku,
-		string $barcode,
-	): ?array {
-		foreach (array_filter(['sku' => $sku, 'barcode' => $barcode]) as $field => $value) {
-			$results = $objectService->findAll(
-				config: [
-					'filters' => [
-						$field => $value,
-						'register' => $registerId,
-						'schema' => $schemaId,
-					],
-					'limit' => 1,
-					'offset' => 0,
-				]
+	private function findProductBySku(mixed $objectService, array $lookup): ?array {
+		$product = $lookup['product'];
+		$keys = ['sku' => (string)($product['sku'] ?? ''), 'barcode' => (string)($product['barcode'] ?? '')];
+		foreach (array_filter($keys) as $field => $value) {
+			$found = $this->firstProduct(
+				objectService: $objectService,
+				filters: [$field => $value, 'register' => $lookup['register'], 'schema' => $lookup['schema']]
 			);
-
-			if (empty($results) === false) {
-				$first = reset($results);
-				if (is_object($first) === true && method_exists($first, 'jsonSerialize') === true) {
-					return $first->jsonSerialize();
-				}
-
-				return (array)$first;
+			if ($found !== null) {
+				return $found;
 			}
-		}//end foreach
+		}
 
 		return null;
 	}//end findProductBySku()
+
+	/**
+	 * The first product a filter set finds, as an array.
+	 *
+	 * @param mixed                $objectService The OR ObjectService.
+	 * @param array<string, mixed> $filters       The findAll filters.
+	 *
+	 * @return array<string,mixed>|null The first product, or null when none matches.
+	 */
+	private function firstProduct(mixed $objectService, array $filters): ?array {
+		$results = $objectService->findAll(config: ['filters' => $filters, 'limit' => 1, 'offset' => 0]);
+		if (empty($results) === true) {
+			return null;
+		}
+
+		return self::rowArray(row: reset($results));
+	}//end firstProduct()
+
+	/**
+	 * A found row as an array: serialised when it is an entity, cast otherwise.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function rowArray(mixed $row): array {
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			return $row->jsonSerialize();
+		}
+
+		return (array)$row;
+	}//end rowArray()
 
 	/**
 	 * Find an existing pipelinq supplier by contactsUid.

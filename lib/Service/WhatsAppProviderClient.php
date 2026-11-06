@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -55,7 +55,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges multiple
  * vendors through openconnector.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WhatsAppProviderClient {
 	use MessageDispatchTrait;
@@ -82,7 +82,7 @@ class WhatsAppProviderClient {
 	 * @param ContainerInterface $container DI container.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.5
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,

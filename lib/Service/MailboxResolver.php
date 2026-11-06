@@ -22,8 +22,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-002
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-optin-011
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-002
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OPTIN-011
  */
 
 declare(strict_types=1);
@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -41,9 +42,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Mailbox lookup with TTL cache.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-002
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-002
  */
 class MailboxResolver {
+	use OptionalPayloadToArray;
+
 	/**
 	 * Default cache TTL in seconds (24h per Logius SLA).
 	 *
@@ -80,7 +83,11 @@ class MailboxResolver {
 	 * @throws RuntimeException On configuration error.
 	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
-	public function resolve(string $bsn, string $tenantId): array {
+	public function resolve(
+		#[\SensitiveParameter]
+		string $bsn,
+		string $tenantId,
+	): array {
 		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);
 		$cached = $this->lookupCache(bsnHash: $bsnHash);
 		if ($cached !== null) {
@@ -161,7 +168,7 @@ class MailboxResolver {
 
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(object: $row);
 			if ($data === null) {
 				continue;
 			}
@@ -247,35 +254,4 @@ class MailboxResolver {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Normalise an OR result entry to an associative array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array|null
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true) {
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$serialised = $row->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($row, 'getObject') === true) {
-				$inner = $row->getObject();
-				if (is_array($inner) === true) {
-					return $inner;
-				}
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

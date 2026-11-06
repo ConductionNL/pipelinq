@@ -1,0 +1,584 @@
+{
+    "decide: marketing, consent, one opted out": {
+        "result": {
+            "out@example.nl": {
+                "send": false,
+                "code": "opted-out",
+                "reason": "This address opted out (instance).",
+                "unsubscribe": null
+            },
+            "ok@example.nl": {
+                "send": false,
+                "code": "no-consent",
+                "reason": "No recorded consent permits this message.",
+                "unsubscribe": null
+            }
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "marketing",
+                "recipients": 2,
+                "first": {
+                    "address": "out@example.nl",
+                    "contactRef": "c-1"
+                },
+                "correlationId": "corr-1",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": true,
+                "probe": false,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": []
+    },
+    "decide: service, no consent needed": {
+        "result": {
+            "out@example.nl": {
+                "send": false,
+                "code": "opted-out",
+                "reason": "This address opted out (instance).",
+                "unsubscribe": null
+            },
+            "ok@example.nl": {
+                "send": true,
+                "code": "allowed",
+                "reason": "",
+                "unsubscribe": {
+                    "url": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-078ebd616fa10ef6a78c5c8827817b38",
+                    "oneClickUrl": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-078ebd616fa10ef6a78c5c8827817b38/one-click",
+                    "smsText": "Stop? Antwoord STOP",
+                    "headers": {
+                        "List-Unsubscribe": "<https://integriq.example/index.php/apps/integriq/unsubscribe/tok-078ebd616fa10ef6a78c5c8827817b38/one-click>",
+                        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+                    }
+                }
+            }
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "service",
+                "recipients": 2,
+                "first": {
+                    "address": "out@example.nl",
+                    "contactRef": "c-1"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": []
+    },
+    "decide: account is exempt": {
+        "result": {
+            "out@example.nl": {
+                "send": true,
+                "code": "exempt-override",
+                "reason": "",
+                "unsubscribe": null
+            }
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "sms",
+                "category": "account",
+                "recipients": 1,
+                "first": {
+                    "address": "out@example.nl"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": []
+    },
+    "decide: reply in a thread, probe": {
+        "result": {
+            "+31600000000": {
+                "send": true,
+                "code": "allowed",
+                "reason": "",
+                "unsubscribe": null
+            }
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "whatsapp",
+                "category": "reply",
+                "recipients": 1,
+                "first": {
+                    "address": "+31600000000"
+                },
+                "correlationId": "c",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": true,
+                "inReplyTo": "in-1"
+            }
+        ],
+        "warnings": []
+    },
+    "decide: unhandled": {
+        "result": {
+            "out@example.nl": {
+                "send": false,
+                "code": "authority-unavailable",
+                "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+                "unsubscribe": null
+            },
+            "ok@example.nl": {
+                "send": false,
+                "code": "authority-unavailable",
+                "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+                "unsubscribe": null
+            }
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "service",
+                "recipients": 2,
+                "first": {
+                    "address": "out@example.nl",
+                    "contactRef": "c-1"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            },
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
+    },
+    "decide: listener throws": {
+        "result": {
+            "out@example.nl": {
+                "send": true,
+                "code": "authority-unavailable",
+                "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+                "unsubscribe": null
+            },
+            "ok@example.nl": {
+                "send": true,
+                "code": "authority-unavailable",
+                "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+                "unsubscribe": null
+            }
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "account",
+                "recipients": 2,
+                "first": {
+                    "address": "out@example.nl",
+                    "contactRef": "c-1"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; sent, the category is exempt",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "account",
+                    "code": "authority-unavailable",
+                    "why": "the question failed: integriq listener exploded"
+                }
+            },
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; sent, the category is exempt",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "account",
+                    "code": "authority-unavailable",
+                    "why": "the question failed: integriq listener exploded"
+                }
+            }
+        ]
+    },
+    "decide: event class missing": {
+        "result": {
+            "out@example.nl": {
+                "send": false,
+                "code": "authority-unavailable",
+                "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+                "unsubscribe": null
+            },
+            "ok@example.nl": {
+                "send": false,
+                "code": "authority-unavailable",
+                "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+                "unsubscribe": null
+            }
+        },
+        "questions": [],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "marketing",
+                    "code": "authority-unavailable",
+                    "why": "integriq or its decision event is not installed"
+                }
+            },
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "marketing",
+                    "code": "authority-unavailable",
+                    "why": "integriq or its decision event is not installed"
+                }
+            }
+        ]
+    },
+    "decide: more than one chunk": {
+        "result": {
+            "count": 503,
+            "first": {
+                "send": true,
+                "code": "allowed",
+                "reason": "",
+                "unsubscribe": {
+                    "url": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-a9e607a1620fc0e4bbeb39ec8db75513",
+                    "oneClickUrl": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-a9e607a1620fc0e4bbeb39ec8db75513/one-click",
+                    "smsText": "Stop? Antwoord STOP",
+                    "headers": {
+                        "List-Unsubscribe": "<https://integriq.example/index.php/apps/integriq/unsubscribe/tok-a9e607a1620fc0e4bbeb39ec8db75513/one-click>",
+                        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+                    }
+                }
+            },
+            "last": {
+                "send": true,
+                "code": "allowed",
+                "reason": "",
+                "unsubscribe": {
+                    "url": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-ac596a594812b7b18399f3c0336416db",
+                    "oneClickUrl": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-ac596a594812b7b18399f3c0336416db/one-click",
+                    "smsText": "Stop? Antwoord STOP",
+                    "headers": {
+                        "List-Unsubscribe": "<https://integriq.example/index.php/apps/integriq/unsubscribe/tok-ac596a594812b7b18399f3c0336416db/one-click>",
+                        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+                    }
+                }
+            }
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "service",
+                "recipients": 500,
+                "first": {
+                    "address": "r1@example.nl"
+                },
+                "correlationId": "bulk",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": null
+            },
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "service",
+                "recipients": 3,
+                "first": {
+                    "address": "r501@example.nl"
+                },
+                "correlationId": "bulk",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": []
+    },
+    "decide: nobody": {
+        "result": [],
+        "questions": [],
+        "warnings": []
+    },
+    "decideOne: allowed with list ref": {
+        "result": {
+            "send": true,
+            "code": "allowed",
+            "reason": "",
+            "unsubscribe": {
+                "url": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-078ebd616fa10ef6a78c5c8827817b38",
+                "oneClickUrl": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-078ebd616fa10ef6a78c5c8827817b38/one-click",
+                "smsText": "Stop? Antwoord STOP",
+                "headers": {
+                    "List-Unsubscribe": "<https://integriq.example/index.php/apps/integriq/unsubscribe/tok-078ebd616fa10ef6a78c5c8827817b38/one-click>",
+                    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+                }
+            }
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "marketing",
+                "recipients": 1,
+                "first": {
+                    "address": "ok@example.nl",
+                    "contactRef": "c-2",
+                    "listRef": "l-1"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": []
+    },
+    "decideOne: opted out by contact": {
+        "result": {
+            "send": false,
+            "code": "opted-out",
+            "reason": "This address opted out (instance).",
+            "unsubscribe": null
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "service",
+                "recipients": 1,
+                "first": {
+                    "address": "new@example.nl",
+                    "contactRef": "c-1"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": []
+    },
+    "decideOne: reply": {
+        "result": {
+            "send": true,
+            "code": "allowed",
+            "reason": "",
+            "unsubscribe": null
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "sms",
+                "category": "reply",
+                "recipients": 1,
+                "first": {
+                    "address": "+31611111111"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": "m-1"
+            }
+        ],
+        "warnings": []
+    },
+    "decideOne: no address": {
+        "result": {
+            "send": false,
+            "code": "authority-unavailable",
+            "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+            "unsubscribe": null
+        },
+        "questions": [],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "the contact has no address on this channel"
+                }
+            }
+        ]
+    },
+    "decideOne: unhandled": {
+        "result": {
+            "send": false,
+            "code": "authority-unavailable",
+            "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+            "unsubscribe": null
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "reminder",
+                "recipients": 1,
+                "first": {
+                    "address": "ok@example.nl"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": false,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "reminder",
+                    "code": "authority-unavailable",
+                    "why": "integriq did not answer for this recipient"
+                }
+            }
+        ]
+    },
+    "probeOne: allowed": {
+        "result": {
+            "send": true,
+            "code": "allowed",
+            "reason": "",
+            "unsubscribe": {
+                "url": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-078ebd616fa10ef6a78c5c8827817b38",
+                "oneClickUrl": "https://integriq.example/index.php/apps/integriq/unsubscribe/tok-078ebd616fa10ef6a78c5c8827817b38/one-click",
+                "smsText": "Stop? Antwoord STOP",
+                "headers": {
+                    "List-Unsubscribe": "<https://integriq.example/index.php/apps/integriq/unsubscribe/tok-078ebd616fa10ef6a78c5c8827817b38/one-click>",
+                    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+                }
+            }
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "marketing",
+                "recipients": 1,
+                "first": {
+                    "address": "ok@example.nl",
+                    "contactRef": "c-3"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": true,
+                "probe": true,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": []
+    },
+    "probeOne: no address": {
+        "result": {
+            "send": true,
+            "code": "authority-unavailable",
+            "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+            "unsubscribe": null
+        },
+        "questions": [],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; sent, the category is exempt",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "sms",
+                    "category": "account",
+                    "code": "authority-unavailable",
+                    "why": "the contact has no address on this channel"
+                }
+            }
+        ]
+    },
+    "probeOne: listener throws": {
+        "result": {
+            "send": false,
+            "code": "authority-unavailable",
+            "reason": "integriq is not available, so pipelinq cannot check whether this person may be messaged.",
+            "unsubscribe": null
+        },
+        "questions": [
+            {
+                "sourceApp": "pipelinq",
+                "channel": "email",
+                "category": "service",
+                "recipients": 1,
+                "first": {
+                    "address": "ok@example.nl"
+                },
+                "correlationId": "pipelinq-<random>",
+                "baseUrl": "https://pipelinq.example",
+                "requiresConsent": false,
+                "probe": true,
+                "inReplyTo": null
+            }
+        ],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq could not say whether this person may be messaged; not sent",
+                "context": {
+                    "app": "pipelinq",
+                    "channel": "email",
+                    "category": "service",
+                    "code": "authority-unavailable",
+                    "why": "the question failed: integriq listener exploded"
+                }
+            }
+        ]
+    }
+}

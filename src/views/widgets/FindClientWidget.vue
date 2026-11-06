@@ -196,6 +196,9 @@ import { resolveObjectType } from '../../services/pipelineUtils.js'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
 
+const RESULT_LIMIT = 20
+const SEARCH_DEBOUNCE_MS = 300
+
 export default {
 	name: 'FindClientWidget',
 	components: {
@@ -234,6 +237,8 @@ export default {
 			config: null,
 			clients: [],
 			searchQuery: '',
+			searchTimer: null,
+			searchTicket: 0,
 			showNewClientForm: false,
 			newClient: { name: '', type: 'person', email: '' },
 			newClientSubmitted: false,
@@ -253,28 +258,34 @@ export default {
 
 	computed: {
 		/**
+		 * The server already searched; this only caps what the widget shows.
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
 		 */
 		filteredClients() {
-			if (!this.searchQuery) return this.clients.slice(0, 20)
-			const query = this.searchQuery.toLowerCase()
-			return this.clients
-				.filter((client) => {
-					const name = toText(client.name).toLowerCase()
-					const email = toText(client.email).toLowerCase()
-					const phone = toText(client.phone).toLowerCase()
-					return (
-						name.includes(query)
-						|| email.includes(query)
-						|| phone.includes(query)
-					)
-				})
-				.slice(0, 20)
+			return this.clients.slice(0, RESULT_LIMIT)
+		},
+	},
+
+	watch: {
+		/**
+		 * Search on the server as the user types, so every client can be
+		 * found, not only the first page.
+		 *
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
+		 */
+		searchQuery() {
+			clearTimeout(this.searchTimer)
+			this.searchTimer = setTimeout(() => this.searchClients(), SEARCH_DEBOUNCE_MS)
 		},
 	},
 
 	async mounted() {
 		await this.fetchData()
+	},
+
+	beforeUnmount() {
+		clearTimeout(this.searchTimer)
 	},
 
 	methods: {
@@ -288,13 +299,34 @@ export default {
 				const { objectStore } = await initializeStores()
 				this.config = objectStore.objectTypeRegistry
 
-				if (this.config.client) {
-					this.clients = await this.fetchRaw('client', { _limit: 200 })
-				}
+				await this.searchClients()
 			} catch (err) {
 				console.error('FindClientWidget fetch error:', err)
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * Fetch the clients matching the search box. A slower answer to an
+		 * older query never replaces a newer one.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
+		 */
+		async searchClients() {
+			if (!this.config?.client) {
+				return
+			}
+			const query = this.searchQuery.trim()
+			const ticket = ++this.searchTicket
+			try {
+				const clients = await this.fetchRaw('client', { _search: query, _limit: RESULT_LIMIT })
+				if (ticket === this.searchTicket) {
+					this.clients = clients
+				}
+			} catch (err) {
+				console.error('FindClientWidget search error:', err)
 			}
 		},
 

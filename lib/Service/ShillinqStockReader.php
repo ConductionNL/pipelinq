@@ -23,13 +23,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+ * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Util\SerialisedToArray;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -37,9 +38,10 @@ use Throwable;
 /**
  * ShillinqStockReader: the stock of one product in shillinq.
  *
- * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+ * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
 class ShillinqStockReader {
+	use SerialisedToArray;
 
 	/**
 	 * Shillinq's register slug.
@@ -95,7 +97,7 @@ class ShillinqStockReader {
 	 *     locations: array<int, array{code: string, name: string, available: float}>}
 	 *         `state` is `ok`, `no-shillinq` or `no-access`.
 	 *
-	 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+	 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 	 */
 	public function stockFor(string $productId, string $sku = ''): array {
 		if ($this->probe() === false) {
@@ -162,7 +164,7 @@ class ShillinqStockReader {
 	 *
 	 * @return bool True when shillinq is installed.
 	 *
-	 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-untracked-products-and-missing-stock-read-plainly-req-pst-002
+	 * @spec openspec/specs/product-stock/spec.md#requirement-untracked-products-and-missing-stock-read-plainly-req-pst-002
 	 */
 	protected function probe(): bool {
 		return class_exists(self::SHILLINQ_PROBE_CLASS);
@@ -236,26 +238,4 @@ class ShillinqStockReader {
 			return null;
 		}
 	}//end objectService()
-
-	/**
-	 * Normalise an OpenRegister entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain row.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

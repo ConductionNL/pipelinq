@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
  *   the row's `vendor`, or null when the vendor is not yet
  *   supported.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class SmsProviderFactory {
 	/**
@@ -49,7 +49,7 @@ class SmsProviderFactory {
 	 * @param ContainerInterface $container DI container.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -65,7 +65,7 @@ class SmsProviderFactory {
 	 * @return SmsProviderClientInterface|null Client or null when the
 	 *                                         vendor key is not supported.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function create(array $channelProvider): ?SmsProviderClientInterface {
 		$vendor = (string)($channelProvider['vendor'] ?? '');

@@ -105,6 +105,30 @@ class PosReceiptController extends Controller {
 	}//end preview()
 
 	/**
+	 * What the receipt card shows: the newest print, the print count, the
+	 * newest mail and the layout.
+	 *
+	 * @param string $id The transaction UUID.
+	 *
+	 * @return JSONResponse The receipt log summary.
+	 *
+	 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
+	 */
+	#[NoAdminRequired]
+	public function log(string $id): JSONResponse {
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		return $this->run(
+			action: fn (): array => $this->service->receiptLog(transactionId: $id, userId: $uid),
+			label: 'log',
+			key: 'log'
+		);
+	}//end log()
+
+	/**
 	 * Email a receipt to the transaction's linked customer.
 	 *
 	 * @param string $id The transaction UUID.

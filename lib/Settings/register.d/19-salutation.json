@@ -1,0 +1,29 @@
+{
+  "_note": "letter-salutation-and-appointment. The line that opens a letter to a person, as they asked for it, such as \"Geachte mevrouw De Vries\". A letter template prints it as client.salutation or contact.salutation. Nothing derives it from a name, a gender or an address: a salutation is something a person states, and unset means unset, so a preview shows the field as not filled in rather than guessing.",
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "properties": {
+          "salutation": {
+            "type": "string",
+            "title": "Salutation",
+            "description": "How this person asked to be addressed at the top of a letter, such as Geachte mevrouw De Vries.",
+            "maxLength": 255
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "properties": {
+          "salutation": {
+            "type": "string",
+            "title": "Salutation",
+            "description": "How this person asked to be addressed at the top of a letter, such as Geachte mevrouw De Vries.",
+            "maxLength": 255
+          }
+        }
+      }
+    }
+  }
+}

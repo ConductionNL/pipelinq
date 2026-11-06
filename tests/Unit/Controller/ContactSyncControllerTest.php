@@ -22,12 +22,15 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\ContactSyncController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContactDataBuilder;
 use OCA\Pipelinq\Service\ContactImportService;
 use OCA\Pipelinq\Service\ContactLinkedUidsService;
 use OCA\Pipelinq\Service\ContactSyncService;
+use OCA\Pipelinq\Service\ContactSyncSettingsService;
 use OCA\Pipelinq\Service\ContactVcardService;
+use OCA\Pipelinq\Service\VcardRevision;
 use OCP\AppFramework\Http;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
@@ -86,8 +89,8 @@ class ContactSyncControllerTest extends TestCase {
 
 		$this->controller = new ContactSyncController($this->request,
 			$this->syncService,
-			$userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => true]),
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$logger,
 		);
@@ -223,8 +226,8 @@ class ContactSyncControllerTest extends TestCase {
 
 		return new ContactSyncController($this->createMock(IRequest::class),
 			$this->syncService,
-			$session,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => true]),
+			new CrmPrivilegeCheck($session, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -442,6 +445,33 @@ class ContactSyncControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 		$this->assertSame(['error' => 'Authentication required'], $response->getData());
 	}//end testWriteBackRejectsAnonymousCaller()
+
+	/**
+	 * A user who turned write-back off gets a skip, and nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testWriteBackIsSkippedForAUserWhoTurnedItOff(): void {
+		$userSession = $this->createMock(IUserSession::class);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('test-user');
+		$userSession->method('getUser')->willReturn($user);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		$controller = new ContactSyncController($this->request,
+			$this->syncService,
+			$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => false]),
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
+			$l10n,
+			$this->createMock(LoggerInterface::class),
+		);
+		$this->syncService->expects($this->never())->method('syncToContacts');
+
+		$response = $controller->writeBack();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['success' => true, 'skipped' => true], $response->getData());
+	}//end testWriteBackIsSkippedForAUserWhoTurnedItOff()
 
 	/**
 	 * Missing objectType or objectId is a 400 and syncs nothing.
@@ -709,6 +739,7 @@ class ContactSyncControllerTest extends TestCase {
 			$this->createMock(ContactLinkedUidsService::class),
 			$appConfig,
 			objectService: $objectService,
+			revisions: new VcardRevision(),
 		);
 	}//end realSyncService()
 }//end class

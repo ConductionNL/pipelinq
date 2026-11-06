@@ -103,9 +103,12 @@ class ExportExecutionService {
 			return $this->runLocked(runId: $runId, jobId: $jobId, run: $run);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: export run failed', ['runId' => $runId, 'error' => $e->getMessage()]);
-			return $this->runs->completeRun(
-				runId: $runId,
-				outcome: ['status' => 'failed', 'errorMessage' => $e->getMessage()]
+			return $this->recordOnJob(
+				jobId: $jobId,
+				run: $this->runs->completeRun(
+					runId: $runId,
+					outcome: ['status' => 'failed', 'errorMessage' => $e->getMessage()]
+				)
 			);
 		} finally {
 			$this->releaseLock(jobId: $jobId);
@@ -171,7 +174,7 @@ class ExportExecutionService {
 		$upload = $this->uploads->uploadFiles(destination: $destination, files: $files, context: $context);
 		$status = $this->mapUploadStatus(uploadStatus: (string)$upload['status']);
 
-		return $this->runs->completeRun(
+		$completed = $this->runs->completeRun(
 			runId: $runId,
 			outcome: [
 				'status' => $status,
@@ -184,7 +187,30 @@ class ExportExecutionService {
 				'errorMessage' => $upload['error_message'],
 			]
 		);
+
+		return $this->recordOnJob(jobId: $jobId, run: $completed);
 	}//end runLocked()
+
+	/**
+	 * Keep a finished run's summary and the next run on its job. A failure
+	 * here is logged and never fails the run itself.
+	 *
+	 * @param string $jobId The job UUID.
+	 * @param array<string, mixed> $run The finished run.
+	 *
+	 * @return array<string, mixed> The run, unchanged.
+	 *
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 */
+	private function recordOnJob(string $jobId, array $run): array {
+		try {
+			$this->jobs->recordRun(jobId: $jobId, run: $run);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: could not keep the last run on its export job', ['jobId' => $jobId, 'error' => $e->getMessage()]);
+		}
+
+		return $run;
+	}//end recordOnJob()
 
 	/**
 	 * Capture the structure snapshot + drift for one schema of a run.

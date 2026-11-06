@@ -143,7 +143,7 @@ class Customer360SummaryServiceTest extends TestCase {
 	}//end stubTicketsByType()
 
 	/**
-	 * Open tickets are counted across all three ticketTypes, spanning statuses
+	 * Open tickets are counted across all four ticketTypes, spanning statuses
 	 * the equality-only declarative primitives cannot express as one filter.
 	 *
 	 * @return void
@@ -153,16 +153,17 @@ class Customer360SummaryServiceTest extends TestCase {
 			[
 				TicketService::TYPE_REQUEST => [['title' => 'R1']],
 				TicketService::TYPE_COMPLAINT => [['title' => 'C1']],
+				TicketService::TYPE_MELDING => [['title' => 'ML1']],
 				TicketService::TYPE_CONTACTMOMENT => [['title' => 'M1'], ['title' => 'M2']],
 			]
 		);
 
 		$summary = $this->service->getSummary('client-1');
 
-		$this->assertSame(4, $summary['openTicketCount']);
+		$this->assertSame(expected: 5, actual: $summary['openTicketCount']);
 		$this->assertSame(
-			['request' => 1, 'complaint' => 1, 'interaction' => 2],
-			$summary['openTicketsByType']
+			expected: ['request' => 1, 'complaint' => 1, 'melding' => 1, 'interaction' => 2],
+			actual: $summary['openTicketsByType']
 		);
 	}//end testOpenTicketCountSpansAllTicketTypes()
 

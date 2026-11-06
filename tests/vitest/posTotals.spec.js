@@ -2,120 +2,17 @@
 // Copyright (C) 2026 Conduction B.V.
 
 /**
- * Unit tests for src/services/posTotals.js — the POS total / BTW calculation
- * helpers. Exact-output assertions on the excl/incl price-mode extraction, the
- * discount clamp, the per-rate tax breakdown, refund proportions and the
- * nl-NL EUR formatter. These mirror PosTransactionService / PosRefundService.
+ * Unit tests for src/services/posTotals.js: refund proportions, the
+ * translated VAT rate names and the amount formatter.
  */
 
 import { describe, expect, it } from 'vitest'
 import {
 	computeRefundTotals,
-	computeTotals,
 	formatEur,
-	normalizePriceMode,
-	rateDescription,
 	rateLabel,
-	recalculateLine,
 	refundLineAmounts,
 } from '../../src/services/posTotals.js'
-
-describe('normalizePriceMode', () => {
-	it('accepts excl / incl case-insensitively, defaults to excl', () => {
-		expect(normalizePriceMode('incl')).toBe('incl')
-		expect(normalizePriceMode(' EXCL ')).toBe('excl')
-		expect(normalizePriceMode('nonsense')).toBe('excl')
-		expect(normalizePriceMode(null)).toBe('excl')
-	})
-})
-
-describe('rateDescription', () => {
-	it('maps the known Dutch BTW rates', () => {
-		expect(rateDescription(0)).toBe('Nultarief (0%)')
-		expect(rateDescription(9)).toBe('Verlaagd tarief (9%)')
-		expect(rateDescription(21)).toBe('Standaardtarief (21%)')
-	})
-
-	it('falls back to "<rate>% BTW" for other rates', () => {
-		expect(rateDescription(6)).toBe('6% BTW')
-	})
-})
-
-describe('recalculateLine', () => {
-	it('adds BTW on top in excl mode', () => {
-		const line = recalculateLine(
-			{ quantity: 2, unitPrice: 10, taxRate: 21 },
-			'excl',
-		)
-		expect(line.net).toBe(20)
-		expect(line.taxAmount).toBe(4.2)
-		expect(line.lineTotal).toBe(24.2)
-	})
-
-	it('extracts BTW out of the price in incl mode', () => {
-		const line = recalculateLine(
-			{ quantity: 1, unitPrice: 121, taxRate: 21 },
-			'incl',
-		)
-		expect(line.net).toBe(100)
-		expect(line.taxAmount).toBe(21)
-		expect(line.lineTotal).toBe(121)
-	})
-
-	it('applies a percentage discount to the net base', () => {
-		const line = recalculateLine(
-			{ quantity: 1, unitPrice: 100, discount: 10, taxRate: 21 },
-			'excl',
-		)
-		expect(line.net).toBe(90)
-		expect(line.taxAmount).toBe(18.9)
-	})
-
-	it('clamps negative inputs and defaults the rate to 21', () => {
-		const line = recalculateLine(
-			{ quantity: -5, unitPrice: -3, discount: 200 },
-			'excl',
-		)
-		expect(line.quantity).toBe(0)
-		expect(line.unitPrice).toBe(0)
-		expect(line.discount).toBe(100)
-		expect(line.taxRate).toBe(21)
-		expect(line.net).toBe(0)
-	})
-})
-
-describe('computeTotals', () => {
-	it('aggregates mixed-rate lines with a sorted per-rate breakdown', () => {
-		const totals = computeTotals(
-			[
-				{ quantity: 1, unitPrice: 100, taxRate: 21 },
-				{ quantity: 2, unitPrice: 50, taxRate: 9 },
-			],
-			'excl',
-		)
-		expect(totals.priceMode).toBe('excl')
-		expect(totals.subtotal).toBe(200)
-		expect(totals.totalTax).toBe(30) // 21 + 9
-		expect(totals.total).toBe(230)
-		// breakdown sorted ascending by rate
-		expect(totals.taxBreakdown.map((b) => b.rate)).toEqual([9, 21])
-		expect(totals.invoiceBreakdown[1]).toEqual({
-			rate: 21,
-			base: 100,
-			tax: 21,
-			description: 'Standaardtarief (21%)',
-		})
-	})
-
-	it('accumulates the discount total across lines', () => {
-		const totals = computeTotals(
-			[{ quantity: 1, unitPrice: 100, discount: 25, taxRate: 21 }],
-			'excl',
-		)
-		expect(totals.subtotal).toBe(75)
-		expect(totals.discountTotal).toBe(25)
-	})
-})
 
 describe('refundLineAmounts', () => {
 	it('returns a proportional share clamped to [0, 1]', () => {

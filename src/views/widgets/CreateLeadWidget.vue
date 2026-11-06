@@ -66,6 +66,7 @@
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
+import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
 
@@ -112,13 +113,13 @@ export default {
 			success: false,
 			successLink: '',
 			sourceOptions: [
-				{ id: 'website', label: t('pipelinq', 'Website') },
-				{ id: 'referral', label: t('pipelinq', 'Referral') },
-				{ id: 'cold-call', label: t('pipelinq', 'Cold call') },
-				{ id: 'advertisement', label: t('pipelinq', 'Advertisement') },
-				{ id: 'event', label: t('pipelinq', 'Event') },
-				{ id: 'other', label: t('pipelinq', 'Other') },
-			],
+				'website',
+				'referral',
+				'cold-call',
+				'advertisement',
+				'event',
+				'other',
+			].map((id) => ({ id, label: leadSourceLabel(id) })),
 		}
 	},
 

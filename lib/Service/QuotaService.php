@@ -17,17 +17,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Sales quota lookup and attainment math.
@@ -39,6 +40,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   exercised through the features that call it
  */
 class QuotaService {
+	use PayloadToArray;
+
 	/**
 	 * App-config key for the at-risk quota-attainment threshold (percent).
 	 *
@@ -97,7 +100,7 @@ class QuotaService {
 	 *
 	 * @return array<string, mixed>|null The quota data, or null when unset.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008-01
 	 */
 	public function getQuota(string $ownerId, string $periodId, string $level): ?array {
 		$rows = $this->findObjects(
@@ -145,7 +148,7 @@ class QuotaService {
 	 *
 	 * @return float The projected attainment.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008-03
 	 */
 	public function projectedAttainment(float $closedWon, float $commit, float $bestCase): float {
 		return round($closedWon + $commit + (self::BEST_CASE_WEIGHT * $bestCase), 2);
@@ -164,7 +167,7 @@ class QuotaService {
 	 *
 	 * @return bool True when the forecast is at risk.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008-04, REQ-FRC-008-05, REQ-FRC-008-06
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008-04, REQ-FRC-008-05, REQ-FRC-008-06
 	 */
 	public function isAtRisk(float $projected, float $quota, int $daysRemaining): bool {
 		if ($quota <= 0) {
@@ -190,7 +193,7 @@ class QuotaService {
 	 *
 	 * @return array<int, array<string, mixed>> The advisory variance report rows.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008
 	 */
 	public function validateQuotaHierarchy(string $periodId, array $teamMembers): array {
 		$report = [];
@@ -275,40 +278,11 @@ class QuotaService {
 
 		$objects = [];
 		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
 	}//end findObjects()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed> The object data.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

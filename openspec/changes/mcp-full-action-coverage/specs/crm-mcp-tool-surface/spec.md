@@ -57,6 +57,23 @@ verbs.
 
 ---
 
+#### Scenario: client schema declares a read-only derived surface
+- **WHEN** the `client` schema's `x-openregister-mcp` is imported
+- **THEN** it declares `enabled: true` with `search` and `get` tools scoped `read`
+- **AND** it declares `create` and `update` scoped `create`/`update`, because client writes are plain object saves with no app-side invariant
+- **AND** it declares no `delete` verb
+
+#### Scenario: lead and ticket schemas declare derived reads while writes stay curated
+- **WHEN** the `lead` and `ticket` schemas' `x-openregister-mcp` are imported
+- **THEN** each declares `enabled: true` with `search` and `get` tools scoped `read`
+- **AND** the derived `create` verb is left disabled, because the curated `createLead`/`logContactmoment` service tools remain the write path
+- **AND** the `ticket` search filters include the `ticketType` discriminator so the `request`/`contactmoment`/`complaint` subtypes stay addressable
+
+#### Scenario: derived reads carry the declarative lead calculations
+- **WHEN** a derived lead read (`pipelinq.lead.get`/`pipelinq.lead.search`) resolves a lead
+- **THEN** the returned object includes the schema's declarative `qualificationScore`, `weightedValue`, and `winProbability` calculated fields as materialised by OpenRegister
+- **AND** the provider does not recompute or alias any of them
+
 ### Requirement: Hand-written service tools take precedence over derived tools
 
 `#[McpTool]`-attributed service methods (OpenRegister's `AttributeToolProvider`, ADR-063
@@ -83,6 +100,29 @@ Pipelinq SHALL ship no `IMcpToolProvider` implementation of its own.
 - **AND** none collides with a derived `pipelinq.{schema}.{verb}` id, so the precedence rule remains a discovery-time safety net
 
 ---
+
+#### Scenario: Retained tools are attribute-scanned, not hand-dispatched
+
+`@e2e exclude` a DI-wiring + PHP-reflection invariant that runs at OpenRegister's tool-discovery time, entirely outside any HTTP request a browser makes — the observable output is an MCP tool registry, not a page. Asserted by tests/Unit/Mcp/PipelinqScannableServicesTest.php (testGetScannableServiceClassesDeclaresLeadAndTicketServices) for the `IMcpScannableServices::pipelinq` opt-in, and by the reflection assertions that the three ids exist on the scanned methods: tests/Unit/Service/LeadServiceTest.php (testCreateLeadHasMcpToolAttribute, testPipelineForecastHasMcpToolAttribute) and tests/Unit/Service/TicketServiceTest.php (testLogContactmomentHasMcpToolAttribute).
+
+- **WHEN** OpenRegister enumerates MCP tool providers
+- **THEN** it resolves `IMcpScannableServices::pipelinq` to `PipelinqScannableServices`,
+  which declares `LeadService` and `TicketService` as scannable
+- **AND** reflection finds `#[McpTool]` on `LeadService::createLead()`,
+  `LeadService::pipelineForecast()`, and `TicketService::logContactmoment()`, registering
+  `pipelinq.createLead`, `pipelinq.pipelineForecast`, and `pipelinq.logContactmoment`
+- **AND** none of these three ids collides with a derived `pipelinq.{client,lead,ticket}.
+  {search,get}` id, so the collision/precedence policy is a discovery-time safety net here,
+  not an active behaviour
+
+#### Scenario: No hand-written IMcpToolProvider remains
+
+`@e2e exclude` a code-absence + DI-registration assertion, verified by inspection rather than by a browser: no `PipelinqToolProvider` class exists under `lib/` or `src/` (the name survives only in migration comments in `lib/Service/LeadService.php` and `lib/Service/TicketService.php`), and `lib/AppInfo/Application.php` contains no `IMcpToolProvider::pipelinq` registration at all — the string appears there only inside the block comment recording the retirement. The interface itself is referenced nowhere in `lib/` except that comment and a doc comment in `lib/Mcp/PipelinqScannableServices.php`; the remaining occurrences are the standalone-unit-test stub `tests/Stubs/Mcp/IMcpToolProvider.php` and the three test bootstraps that load it. Resolving (or failing to resolve) a DI alias inside another app produces no HTTP response and no rendered surface.
+
+- **WHEN** OpenRegister looks up the `IMcpToolProvider::pipelinq` DI alias
+- **THEN** it resolves nothing (the alias is not registered) — `PipelinqToolProvider` and
+  its registration were deleted once every tool it served was either superseded by a
+  derived read or migrated to an attributed service method
 
 ### Requirement: MCP provider exposes RBAC-guarded CRM write tools
 
@@ -119,6 +159,45 @@ or empty success.
 - **WHEN** the assistant invokes `pipelinq.createTicket` with `ticketType` `request` or `complaint`, a `title`, and optional `client`, `description`, `priority`, `queue`
 - **THEN** `TicketService::createTicket()` writes the ticket via `TicketService::save()` with the discriminator forced and returns the created ticket UUID
 - **AND** `ticketType` `contactmoment` SHALL be rejected with `invalid_arguments` pointing the caller at `pipelinq.logContactmoment`
+
+#### Scenario: Create lead with required fields
+
+`@e2e exclude` MCP JSON-RPC write tool — `pipelinq.createLead` is invoked in-process by OpenRegister's `AttributeToolProvider`; no entry in `appinfo/routes.php` targets `LeadService::createLead()` (the similarly named `prospect#createLead` route is `ProspectController::createLead`, a different method on the prospect-discovery path) and no control in any view calls it, so a browser cannot reach this tool (creating a lead THROUGH THE UI is a different code path, covered by the lead-management e2e specs). Asserted by tests/Unit/Service/LeadServiceTest.php (testCreateLeadWritesLeadAndReturnsMaterialisedCalculations — the write goes through `ObjectService->saveObject` on the configured lead schema and the returned lead carries the materialised `qualificationScore` / `winProbability` unaliased).
+
+- **WHEN** the assistant invokes `pipelinq.createLead` with at least a `title` and
+  optionally `client`, `value`, `source`, `assignee`
+- **THEN** `LeadService::createLead()` writes a new `lead` object through
+  `ObjectService->saveObject` on the configured lead schema with RBAC enforced
+- **AND** returns the created lead including its server-computed `qualificationScore` and
+  the declarative `winProbability`, unmodified by any Pipelinq-side alias
+
+#### Scenario: Create lead missing required title
+
+`@e2e exclude` argument-validation invariant on an MCP tool with no browser view — the assertion is the `invalid_arguments` envelope returned to the MCP caller plus the absence of a write, and no page can submit a blank title to this method (the UI's own lead form is a separate path with its own validation). Asserted by tests/Unit/Service/LeadServiceTest.php (testCreateLeadWithoutTitleReturnsInvalidArguments).
+
+- **WHEN** `pipelinq.createLead` is invoked with a blank/missing `title`
+- **THEN** `LeadService::createLead()` returns an `invalid_arguments` error envelope and
+  writes nothing
+
+#### Scenario: Log contactmoment as a ticket
+
+`@e2e exclude` MCP JSON-RPC write tool — `pipelinq.logContactmoment` is invoked in-process by OpenRegister's `AttributeToolProvider`; no entry in `appinfo/routes.php` targets `TicketService::logContactmoment()` and no control in any view calls it. Asserted by tests/Unit/Service/TicketServiceTest.php (testLogContactmomentWritesTicketAndReturnsUuid — written through `TicketService::save()` with the `ticketType=contactmoment` discriminator forced and the created UUID returned; testLogContactmomentMissingClientReturnsInvalidArguments, testLogContactmomentMissingChannelReturnsInvalidArguments, testLogContactmomentMissingTitleReturnsInvalidArguments cover the three required arguments).
+
+- **WHEN** the assistant invokes `pipelinq.logContactmoment` with a `client`, `channel`,
+  and `title`, and optional `outcome`/`notes`
+- **THEN** `TicketService::logContactmoment()` writes a `ticket` with
+  `ticketType=contactmoment` via `TicketService::save()`, so date-time fields are
+  normalised and the discriminator is forced
+- **AND** returns the created ticket UUID
+
+#### Scenario: Write denied by RBAC
+
+`@e2e exclude` a denial path on an MCP tool with no browser view, and one that additionally needs a second Nextcloud account holding no `create` grant on the target schema — the CI instance provisions exactly one user (tests/e2e/ci-seed.sh creates none beyond the admin the workflow installs with), so the denial cannot be provoked from a session at all. Asserted by tests/Unit/Service/LeadServiceTest.php (testCreateLeadDeniedByRbacReturnsForbidden) and tests/Unit/Service/TicketServiceTest.php (testLogContactmomentDeniedByRbacReturnsForbidden).
+
+- **WHEN** `pipelinq.createLead` or `pipelinq.logContactmoment` is invoked by a caller
+  lacking `create` permission on the target schema
+- **THEN** OpenRegister raises, and the attributed method maps it to a `forbidden` error
+  envelope rather than reporting success
 
 ## ADDED Requirements
 

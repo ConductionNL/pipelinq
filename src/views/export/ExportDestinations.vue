@@ -12,6 +12,7 @@
 					'Data-warehouse and object-storage targets for BI exports',
 				)
 			"
+			:pageTabs="pageTabs"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -49,6 +50,7 @@ import { NcButton } from '@nextcloud/vue'
 import { inject } from 'vue'
 import { exportApi } from '../../services/exportApi.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { exportPageTabs } from './exportPageTabs.js'
 
 export default {
 	name: 'ExportDestinations',
@@ -71,6 +73,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The tab strip over the BI export lists (board PqBiExport).
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/bi-export-board/spec.md#requirement-the-bi-export-lists-share-one-tab-strip
+		 */
+		pageTabs() {
+			return exportPageTabs(t)
+		},
+
 		/**
 		 * Columns shown on the list, in order.
 		 *

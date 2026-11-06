@@ -17,17 +17,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-005, REQ-FRC-006, REQ-FRC-007
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-005, REQ-FRC-006, REQ-FRC-007
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Forecast computation engine.
@@ -40,6 +41,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   scenario to admin-settings, which never grew one
  */
 class ForecastService {
+	use PayloadToArray;
+
 	/**
 	 * App-config key for the open-pipeline target the dashboard gauge
 	 * measures against, in the reporting currency. 0 means no target.
@@ -103,7 +106,7 @@ class ForecastService {
 	 *
 	 * @return array<string, mixed> The override-applied roll-up.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-03
 	 */
 	public function computeRollUp(string $ownerId, string $periodId, string $level): array {
 		$snapshot = $this->latestSnapshot(ownerId: $ownerId, periodId: $periodId, level: $level);
@@ -163,7 +166,7 @@ class ForecastService {
 	 *
 	 * @return float|null The accuracy score (0.0+), or null.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-007-01, REQ-FRC-007-02
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-007-01, REQ-FRC-007-02
 	 */
 	public function computeAccuracyScore(?float $weekOneCommit, ?float $actualClosedWon, bool $periodClosed): ?float {
 		if ($periodClosed === false || $weekOneCommit === null || $actualClosedWon === null || $actualClosedWon === 0.0) {
@@ -181,7 +184,7 @@ class ForecastService {
 	 *
 	 * @return float|null The average, or null when no scores.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-007-04
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-007-04
 	 */
 	public function averageAccuracy(array $scores): ?float {
 		$values = array_values(array_filter($scores, static fn ($value): bool => is_numeric($value)));
@@ -202,7 +205,7 @@ class ForecastService {
 	 *
 	 * @return float The trailing-4Q average (0.0 when insufficient data).
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-007-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-007-05
 	 */
 	public function computeTrailingQuartersAccuracy(array $orderedScores): float {
 		$values = array_values(array_filter($orderedScores, static fn ($value): bool => is_numeric($value)));
@@ -221,7 +224,7 @@ class ForecastService {
 	 *
 	 * @return string One of green, amber, red.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-007-04
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-007-04
 	 */
 	public function accuracyBand(float $score): string {
 		$green = $this->appConfig->getValueString(Application::APP_ID, self::ACCURACY_GREEN_KEY, (string)self::ACCURACY_GREEN_DEFAULT);
@@ -348,40 +351,11 @@ class ForecastService {
 
 		$objects = [];
 		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
 	}//end findObjects()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed> The object data.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Resolve an object's identifier.

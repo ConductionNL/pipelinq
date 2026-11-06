@@ -21,17 +21,24 @@ The system MUST run a periodic background job that detects tasks past their dead
 
 #### Scenario: Auto-expire tasks overdue beyond the expiry cut
 
-- **WHEN** `ScheduledTaskJob` runs and `ScheduledTaskService::processScheduledTasks()` finds a due task whose deadline is more than 4 hours in the past (the expiry cut)
+- **GIVEN** the expiry cut is the admin setting `task_expiry.escalation_threshold_seconds`, or 4 hours (14400 seconds) when that setting is unset or not a non-negative number
+- **WHEN** `ScheduledTaskJob` runs and `ScheduledTaskService::processScheduledTasks()` finds an open or in-progress task whose deadline is further in the past than the expiry cut
 - **THEN** the task status MUST be changed to "verlopen"
 - AND an `expired` attempt MUST be appended to the task's `attempts` trail (system-generated, not user-initiated)
-- AND an escalation notification MUST be sent to the assignee via NotificationService
+- AND an escalation notification MUST be sent to the assignee and to the members of the escalation group, as described under Deadline Escalation Notifications
 
 #### Scenario: Warn on tasks due within the expiry cut
 
-- **WHEN** a due task's deadline is in the past but within the 4-hour expiry cut
+- **WHEN** an open task's deadline is in the past but within the expiry cut
 - **THEN** the task status MUST be changed to "in_behandeling"
 - AND a `notified` attempt MUST be appended
 - AND a reminder notification MUST be sent to the assignee
+
+#### Scenario: Leave an in-progress task alone until it passes the cut
+
+- **WHEN** an in-progress task's deadline is in the past but within the expiry cut
+- **THEN** the task MUST NOT be changed
+- AND the system MUST NOT append an attempt, and the assignee MUST NOT get a repeat notification
 
 #### Scenario: Background job registration
 
@@ -50,7 +57,7 @@ The system MUST send escalation notifications when task deadlines are approachin
 
 #### Scenario: Approaching deadline warning
 
-- **WHEN** `ScheduledTaskService::processScheduledTasks()` finds a due task whose deadline is within the 4-hour expiry cut
+- **WHEN** `ScheduledTaskService::processScheduledTasks()` finds an open task whose deadline is in the past but within the expiry cut
 - **THEN** the system MUST send a reminder notification to the assignee via NotificationService
 - AND the notification MUST include the task subject and deadline
 - AND the notification MUST be skipped when the task has no assignee
@@ -58,9 +65,16 @@ The system MUST send escalation notifications when task deadlines are approachin
 #### Scenario: Expired task escalation
 
 - **WHEN** a task status changes to "verlopen" via the background job
-- **THEN** the system MUST send an escalation notification to the assignee via `NotificationService::notifyTaskExpired()`
+- **THEN** the system MUST send an escalation notification via `NotificationService::notifyTaskExpired()` to the assignee and to every member of the group named in the admin setting `task_expiry.escalation_group`
+- AND each user MUST receive the notification once, also when the assignee is a member of that group
 - AND the notification MUST indicate that the task has expired and requires attention
 - AND a notification failure MUST be logged and swallowed so it never aborts the batch run
+
+#### Scenario: Expired task without an escalation group
+
+- **WHEN** a task status changes to "verlopen" via the background job and `task_expiry.escalation_group` is empty or names a group that does not exist
+- **THEN** the escalation notification MUST be sent to the assignee only
+- AND the system MUST NOT send a notification when the task also has no assignee
 
 ### Requirement: Background job execution — documented operations
 

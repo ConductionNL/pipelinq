@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004, REQ-FRC-005
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004, REQ-FRC-005
  */
 
 declare(strict_types=1);
@@ -58,32 +58,38 @@ class ForecastRollupService {
 	 * Commit/best_case/pipeline sum only their matching open category. Closed_won
 	 * deals feed closed_won_amount only. Omitted, closed_lost and any other
 	 * category contribute nothing. All values are normalized to the reporting
-	 * currency. The contributing deal ids are returned for the audit trail.
+	 * currency. The contributing deal ids are returned for the audit trail, and
+	 * the rate used for each foreign currency with its source and date.
 	 *
 	 * @param array<int, array<string, mixed>> $deals The rep's deal objects.
 	 *
-	 * @return array{totals: array<string, float>, deal_ids: array<int, string>, currency: string}
+	 * @return array{totals: array<string, float>, deal_ids: array<int, string>, currency: string, rates: array<string, array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-02, REQ-FRC-004-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-02, REQ-FRC-004-03
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
 	 */
 	public function bucketDeals(array $deals): array {
 		$totals = $this->emptyTotals();
 		$dealIds = [];
+		$rates = [];
 		$currency = $this->exchangeRate->getReportingCurrency();
 
 		foreach ($deals as $deal) {
 			$category = (string)($deal['forecast_category'] ?? '');
-			$value = $this->exchangeRate->toReportingCurrency(
-				amount: (float)($deal['value'] ?? 0),
-				currency: ($deal['currency'] ?? null)
-			);
-
 			$key = $this->categoryToAmountKey(category: $category);
 			if ($key === null) {
 				continue;
 			}
 
-			$totals[$key] += $value;
+			$converted = $this->exchangeRate->convert(
+				amount: (float)($deal['value'] ?? 0),
+				currency: ($deal['currency'] ?? null)
+			);
+			if ($converted['currency'] !== $currency) {
+				$rates[$converted['currency']] = $this->rateMetadata(converted: $converted);
+			}
+
+			$totals[$key] += $converted['amount'];
 			$dealIds[] = $this->dealId(deal: $deal);
 		}
 
@@ -95,8 +101,26 @@ class ForecastRollupService {
 			'totals' => $totals,
 			'deal_ids' => array_values(array_filter($dealIds, static fn (string $id): bool => $id !== '')),
 			'currency' => $currency,
+			'rates' => $rates,
 		];
 	}//end bucketDeals()
+
+	/**
+	 * The rate part of a conversion: rate, source, origin, date, stale flag.
+	 *
+	 * @param array<string, mixed> $converted A result of ExchangeRateService::convert().
+	 *
+	 * @return array<string, mixed> The metadata without the amount.
+	 */
+	private function rateMetadata(array $converted): array {
+		return [
+			'rate' => $converted['rate'],
+			'source' => $converted['source'],
+			'origin' => $converted['origin'],
+			'rateDate' => $converted['rateDate'],
+			'stale' => $converted['stale'],
+		];
+	}//end rateMetadata()
 
 	/**
 	 * Sum a set of child totals into a parent total.
@@ -108,7 +132,7 @@ class ForecastRollupService {
 	 *
 	 * @return array<string, float> The summed parent totals.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-005-01, REQ-FRC-005-02, REQ-FRC-005-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-005-01, REQ-FRC-005-02, REQ-FRC-005-03
 	 */
 	public function sumChildTotals(array $childTotals): array {
 		$parent = $this->emptyTotals();

@@ -3,8 +3,8 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -->
 <template>
-	<div class="forecast-trend">
-		<div class="forecast-trend__header">
+	<div class="forecast-trend" :class="{ 'forecast-trend--embedded': embedded }">
+		<div v-if="!embedded" class="forecast-trend__header">
 			<h2>{{ t('pipelinq', 'Forecast trend & accuracy') }}</h2>
 			<NcTextField
 				v-model="ownerId"
@@ -12,134 +12,268 @@
 				:placeholder="t('pipelinq', 'Rep user id')"
 				@update:modelValue="loadTrend" />
 		</div>
-
 		<NcLoadingIcon v-if="loading" :size="32" />
-
 		<template v-else>
-			<section v-if="series.length >= 1" class="forecast-trend__chart">
-				<h3>
-					{{ t('pipelinq', 'Commit / best-case / pipeline over time') }}
-				</h3>
-				<svg
-					class="forecast-trend__svg"
-					viewBox="0 0 600 200"
-					preserveAspectRatio="none"
-					role="img"
-					:aria-label="t('pipelinq', 'Forecast trend chart')">
-					<polyline class="line line--commit" :points="line('commit')" />
-					<polyline
-						class="line line--bestcase"
-						:points="line('best_case')" />
-					<polyline
-						class="line line--pipeline"
-						:points="line('pipeline')" />
-				</svg>
-				<div class="forecast-trend__legend">
-					<span class="legend legend--commit">{{
-						t('pipelinq', 'Commit')
-					}}</span>
-					<span class="legend legend--bestcase">{{
-						t('pipelinq', 'Best Case')
-					}}</span>
-					<span class="legend legend--pipeline">{{
-						t('pipelinq', 'Pipeline')
-					}}</span>
-				</div>
-			</section>
-
-			<NcEmptyContent
-				v-else
-				:name="t('pipelinq', 'Not enough snapshots')"
-				:description="
-					t(
-						'pipelinq',
-						'At least one weekly snapshot is needed to show a trend.',
-					)
-				" />
-
-			<section v-if="delta" class="forecast-trend__delta">
-				<h3>{{ t('pipelinq', 'Deal movements (week over week)') }}</h3>
-				<p>
-					{{ t('pipelinq', 'Moved into commit') }}:
-					{{ delta.intoCommit || t('pipelinq', 'none') }}
-				</p>
-				<p>
-					{{ t('pipelinq', 'Moved out of commit') }}:
-					{{ delta.outOfCommit || t('pipelinq', 'none') }}
-				</p>
-			</section>
-
-			<section class="forecast-trend__accuracy">
-				<h3>{{ t('pipelinq', 'Forecast accuracy') }}</h3>
-				<table v-if="accuracyRows.length" class="accuracy-table">
-					<thead>
-						<tr>
-							<th scope="col">{{ t('pipelinq', 'Rep') }}</th>
-							<th scope="col">{{ t('pipelinq', 'Week 1 commit') }}</th>
-							<th scope="col">
-								{{ t('pipelinq', 'Actual closed won') }}
-							</th>
-							<th scope="col">{{ t('pipelinq', 'Accuracy') }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="row in accuracyRows" :key="row.owner_id">
-							<td>{{ row.owner_id }}</td>
-							<td>{{ formatMoney(row.weekOneCommit) }}</td>
-							<td>{{ formatMoney(row.actual) }}</td>
-							<td :class="'accuracy--' + bandFor(row.score)">
-								{{ Math.round(row.score * 100) }}%
-							</td>
-						</tr>
-					</tbody>
-				</table>
+			<CnDetailCard
+				:title="t('pipelinq', 'Commit / best-case / pipeline over time')"
+				:subtitle="t('pipelinq', 'Weekly snapshots, taken every Monday')"
+				class="forecast-trend__chart">
+				<template v-if="series.length >= 1">
+					<!-- One bar per weekly snapshot: what is on track that week (won
+					     plus committed), the week under it and the amount above, as
+					     PqForecast draws it. -->
+					<ol
+						class="forecast-trend__bars"
+						:aria-label="t('pipelinq', 'Forecast trend chart')"
+						data-testid="forecast-trend-bars">
+						<li
+							v-for="bar in bars"
+							:key="bar.date"
+							class="forecast-trend__bar">
+							<span class="forecast-trend__bar-value">{{ bar.short }}</span>
+							<span
+								class="forecast-trend__bar-fill"
+								:style="{ height: bar.percent + '%' }"
+								:title="bar.full" />
+							<span class="forecast-trend__bar-week">{{ bar.week }}</span>
+						</li>
+					</ol>
+				</template>
 				<NcEmptyContent
 					v-else
-					:name="t('pipelinq', 'No closed periods yet')"
+					:name="t('pipelinq', 'Not enough snapshots')"
 					:description="
 						t(
 							'pipelinq',
-							'Accuracy is computed once a fiscal period closes.',
+							'At least one weekly snapshot is needed to show a trend.',
 						)
 					" />
-			</section>
+			</CnDetailCard>
+			<div class="forecast-trend__pair">
+				<CnDetailCard
+					:title="t('pipelinq', 'Deal movements (week over week)')"
+					class="forecast-trend__delta">
+					<CnDataTable
+						v-if="movements.length"
+						data-testid="forecast-movements"
+						:columns="movementColumns"
+						:rows="movementRows"
+						rowKey="id"
+						rowTitle="text"
+						filterable
+						localHeaders>
+						<template #column-direction="{ row }">
+							<span class="forecast-trend__move" :class="'forecast-trend__move--' + row.direction">
+								{{ row.direction === 'into' ? t('pipelinq', 'Moved into commit') : t('pipelinq', 'Moved out of commit') }}
+							</span>
+						</template>
+						<template #column-amount="{ row }">
+							{{ formatMoney(row.amount) }}
+						</template>
+					</CnDataTable>
+					<p v-else class="forecast-trend__none">
+						{{ t('pipelinq', 'No commit moved since last week.') }}
+					</p>
+				</CnDetailCard>
+				<CnDetailCard
+					:title="t('pipelinq', 'Forecast accuracy')"
+					:subtitle="accuracySubtitle"
+					class="forecast-trend__accuracy">
+					<CnDataTable
+						v-if="accuracyRows.length"
+						class="accuracy-table"
+						:columns="accuracyColumns"
+						:rows="accuracyTableRows"
+						rowKey="id"
+						rowTitle="text"
+						filterable
+						localHeaders>
+						<template #column-weekOneCommit="{ row }">
+							{{ formatMoney(row.weekOneCommit) }}
+						</template>
+						<template #column-actual="{ row }">
+							{{ formatMoney(row.actual) }}
+						</template>
+						<template #column-score="{ row }">
+							<span :class="'accuracy--' + bandFor(row.score)">{{ Math.round(row.score * 100) }}%</span>
+						</template>
+					</CnDataTable>
+					<NcEmptyContent
+						v-else
+						:name="t('pipelinq', 'No closed periods yet')"
+						:description="
+							t(
+								'pipelinq',
+								'Accuracy is computed once a fiscal period closes.',
+							)
+						" />
+				</CnDetailCard>
+			</div>
 		</template>
 	</div>
 </template>
 
 <script>
+import { CnDataTable, CnDetailCard } from '@conduction/nextcloud-vue'
 import { NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { formatEur } from '../../services/commercialFormat.js'
 import { fetchSnapshots } from '../../services/forecastApi.js'
-import { accuracyBand } from '../../services/forecastMath.js'
+import { accuracyBand, accuracyRows, commitMovements, isoWeekOf, previousPeriodId, sumSnapshotsByDate } from '../../services/forecastMath.js'
+import { fetchUserDisplayName } from '../../services/userDisplayName.js'
 
 export default {
 	name: 'ForecastTrend',
-	components: { NcEmptyContent, NcLoadingIcon, NcTextField },
+	components: { CnDataTable, CnDetailCard, NcEmptyContent, NcLoadingIcon, NcTextField },
+
+	props: {
+		/** Drawn inside the forecast page: no own heading, no owner field. */
+		embedded: { type: Boolean, default: false },
+
+		/** With `embedded`: the level whose snapshots make up the trend. */
+		level: { type: String, default: 'rep' },
+	},
+
 	data() {
 		return {
 			loading: false,
 			ownerId: '',
 			series: [],
-			delta: null,
+			movements: [],
 			accuracyRows: [],
 		}
 	},
 
 	computed: {
+		/**
+		 * The week's moves table: seller, movement and value, each sortable
+		 * and filterable from its head (PqForecast).
+		 *
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} The columns.
+		 */
+		movementColumns() {
+			return [
+				{ key: 'name', label: this.t('pipelinq', 'Seller'), sortable: true },
+				{
+					key: 'direction',
+					label: this.t('pipelinq', 'Movement'),
+					sortable: true,
+					enum: ['into', 'out'],
+					enumLabels: { into: this.t('pipelinq', 'Moved into commit'), out: this.t('pipelinq', 'Moved out of commit') },
+				},
+				{ key: 'amount', label: this.t('pipelinq', 'Value'), type: 'number', sortable: true, class: 'forecast-trend__num' },
+			]
+		},
+
+		/**
+		 * The week's moves; the table sorts and filters them from its heads.
+		 *
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} One row per seller.
+		 */
+		movementRows() {
+			return this.movements.map((move) => ({
+				id: move.owner_id,
+				name: move.name || move.owner_id,
+				direction: move.direction,
+				amount: move.amount,
+			}))
+		},
+
+		/**
+		 * The accuracy table: rep, week 1 commit, actual and accuracy, each
+		 * sortable and filterable from its head (PqForecast).
+		 *
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} The columns.
+		 */
+		accuracyColumns() {
+			return [
+				{ key: 'name', label: this.t('pipelinq', 'Rep'), sortable: true },
+				{ key: 'weekOneCommit', label: this.t('pipelinq', 'Week 1 commit'), type: 'number', sortable: true, class: 'forecast-trend__num' },
+				{ key: 'actual', label: this.t('pipelinq', 'Actual closed won'), type: 'number', sortable: true, class: 'forecast-trend__num' },
+				{ key: 'score', label: this.t('pipelinq', 'Accuracy'), type: 'number', sortable: true, class: 'forecast-trend__num' },
+			]
+		},
+
+		/**
+		 * The accuracy rows; the table sorts and filters them from its heads.
+		 *
+		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
+		 * @return {Array<object>} One row per rep.
+		 */
+		accuracyTableRows() {
+			return this.accuracyRows.map((row) => ({
+				id: row.owner_id,
+				name: row.name || row.owner_id,
+				weekOneCommit: row.weekOneCommit,
+				actual: row.actual,
+				score: row.score,
+			}))
+		},
+
+		/**
+		 * The closed quarter the accuracy covers: "Quarter 3, closed".
+		 *
+		 * @return {string} The line, or '' when the period is unknown.
+		 * @spec openspec/changes/forecast-accuracy-rows/specs/forecasting/spec.md#requirement-the-forecast-shows-last-quarters-accuracy-per-seller
+		 */
+		/**
+		 * The weekly bars: on track (won plus committed) per snapshot, its
+		 * share of the highest week, the ISO week and the amount in thousands.
+		 *
+		 * @return {Array<{date: string, percent: number, week: string, short: string, full: string}>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		bars() {
+			const totals = this.series.map((point) => Number(point.closed_won || 0) + Number(point.commit || 0))
+			const top = Math.max(1, ...totals)
+			return this.series.map((point, index) => ({
+				date: point.date,
+				percent: Math.round((totals[index] / top) * 100),
+				week: 'w' + isoWeekOf(point.date),
+				short: Math.round(totals[index] / 1000) + 'k',
+				full: this.formatMoney(totals[index]),
+			}))
+		},
+
+		accuracySubtitle() {
+			const match = /^Q([1-4])-\d{4}$/.exec(previousPeriodId(this.periodId))
+			return match ? this.t('pipelinq', 'Quarter {quarter}, closed', { quarter: match[1] }) : ''
+		},
+
 		periodId() {
 			const now = new Date()
 			const quarter = Math.floor(now.getMonth() / 3) + 1
 			return 'Q' + quarter + '-' + now.getFullYear()
 		},
 
-		maxValue() {
-			let max = 1
-			for (const point of this.series) {
-				max = Math.max(max, point.commit, point.best_case, point.pipeline)
+	},
+
+	watch: {
+		/**
+		 * Read the trend again when the page shows another level.
+		 *
+		 * @spec exclude forecast snapshots have no owning requirement, see
+		 *   ForecastSettings::load for the same gap
+		 */
+		level() {
+			if (this.embedded) {
+				this.loadTrend()
 			}
-			return max
 		},
+	},
+
+	/**
+	 * Inside the forecast page the trend loads at once for its level.
+	 *
+	 * @spec exclude forecast snapshots have no owning requirement, see
+	 *   ForecastSettings::load for the same gap
+	 */
+	mounted() {
+		if (this.embedded) {
+			this.loadTrend()
+		}
 	},
 
 	methods: {
@@ -148,7 +282,7 @@ export default {
 		 *   ForecastSettings::load for the same gap
 		 */
 		async loadTrend() {
-			if (!this.ownerId) {
+			if (!this.embedded && !this.ownerId) {
 				this.series = []
 				return
 			}
@@ -156,17 +290,13 @@ export default {
 			try {
 				const data = await fetchSnapshots({
 					periodId: this.periodId,
-					level: 'rep',
-					ownerId: this.ownerId,
+					level: this.embedded ? this.level : 'rep',
+					ownerId: this.embedded ? null : this.ownerId,
 					limit: 100,
 				})
-				this.series = (data.snapshots || []).map((s) => ({
-					date: s.as_of_date,
-					commit: Number(s.commit || 0),
-					best_case: Number(s.best_case || 0),
-					pipeline: Number(s.pipeline || 0),
-				}))
-				this.buildDelta()
+				this.series = sumSnapshotsByDate(data.snapshots || [])
+				await this.loadMovements(data.snapshots || [])
+				await this.loadAccuracy()
 			} catch {
 				this.series = []
 			} finally {
@@ -174,39 +304,49 @@ export default {
 			}
 		},
 
-		buildDelta() {
-			if (this.series.length < 2) {
-				this.delta = null
+		/**
+		 * The sellers whose commit moved since the previous snapshot, by name.
+		 *
+		 * @param {Array<object>} snapshots The period's snapshots.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		async loadMovements(snapshots) {
+			const moves = commitMovements(snapshots)
+			const names = await Promise.all(moves.map((move) => fetchUserDisplayName(move.owner_id).catch(() => move.owner_id)))
+			this.movements = moves.map((move, index) => ({ ...move, name: names[index] }))
+		},
+
+		/**
+		 * The accuracy table: the quarter before the current one is closed, so
+		 * each seller's first commit there is set against what it closed won.
+		 * A failed read leaves the table empty.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/forecast-accuracy-rows/specs/forecasting/spec.md#requirement-the-forecast-shows-last-quarters-accuracy-per-seller
+		 */
+		async loadAccuracy() {
+			const periodId = previousPeriodId(this.periodId)
+			if (periodId === '') {
+				this.accuracyRows = []
 				return
 			}
-			const prev = this.series[this.series.length - 2]
-			const curr = this.series[this.series.length - 1]
-			this.delta = {
-				intoCommit:
-					curr.commit > prev.commit
-						? this.formatMoney(curr.commit - prev.commit)
-						: '',
-
-				outOfCommit:
-					curr.commit < prev.commit
-						? this.formatMoney(prev.commit - curr.commit)
-						: '',
-			}
-		},
-
-		line(key) {
-			if (!this.series.length) {
-				return ''
-			}
-			const step = this.series.length > 1 ? 600 / (this.series.length - 1) : 0
-			return this.series
-				.map((point, index) => {
-					const x = this.series.length > 1 ? index * step : 300
-					const y = 200 - (point[key] / this.maxValue) * 190 - 5
-					return x.toFixed(1) + ',' + y.toFixed(1)
+			try {
+				const data = await fetchSnapshots({
+					periodId,
+					level: 'rep',
+					ownerId: this.embedded ? null : this.ownerId,
+					limit: 200,
 				})
-				.join(' ')
+				const rows = accuracyRows(data.snapshots || [])
+				const names = await Promise.all(rows.map((row) => fetchUserDisplayName(row.owner_id).catch(() => row.owner_id)))
+				this.accuracyRows = rows.map((row, index) => ({ ...row, name: names[index] }))
+			} catch {
+				this.accuracyRows = []
+			}
 		},
+
+
 
 		bandFor(score) {
 			return accuracyBand(score)
@@ -227,6 +367,18 @@ export default {
 </script>
 
 <style scoped>
+.forecast-trend.forecast-trend--embedded {
+	padding: 0;
+	max-width: none;
+}
+
+.forecast-trend__pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+	gap: 16px;
+	margin-top: 16px;
+}
+
 .forecast-trend {
 	padding: 20px;
 	max-width: 1000px;
@@ -241,67 +393,69 @@ export default {
 	flex-wrap: wrap;
 }
 
-.forecast-trend__svg {
-	width: 100%;
-	height: 200px;
-	background: var(--color-background-hover);
-	border-radius: 8px;
-}
-
-.line {
-	fill: none;
-	stroke-width: 2;
-}
-
-.line--commit {
-	stroke: var(--color-primary-element);
-}
-
-.line--bestcase {
-	stroke: #f59e0b;
-}
-
-.line--pipeline {
-	stroke: var(--color-text-maxcontrast);
-}
-
-.forecast-trend__legend {
+.forecast-trend__bars {
 	display: flex;
+	align-items: flex-end;
+	justify-content: space-around;
 	gap: 16px;
-	margin-top: 8px;
+	height: 200px;
+	margin: 16px 0 0;
+	padding: 0;
+	list-style: none;
 }
 
-.legend::before {
-	content: '■ ';
+.forecast-trend__bar {
+	display: flex;
+	flex: 1 1 0;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
+	height: 100%;
+	max-width: 96px;
 }
 
-.legend--commit::before {
-	color: var(--color-primary-element);
+.forecast-trend__bar-fill {
+	width: 44px;
+	min-height: 2px;
+	border-radius: 4px 4px 0 0;
+	background: var(--color-primary-element);
 }
 
-.legend--bestcase::before {
-	color: #f59e0b;
-}
-
-.legend--pipeline::before {
+.forecast-trend__bar-value,
+.forecast-trend__bar-week {
+	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 }
 
-.forecast-trend__delta,
-.forecast-trend__accuracy {
-	margin-top: 24px;
+/* A move is a pill: into commit green, out of it red (PqForecast). */
+.forecast-trend__move {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: var(--border-radius-pill, 12px);
+	font-size: 13px;
+	font-weight: 600;
+	white-space: nowrap;
 }
 
-.accuracy-table {
-	width: 100%;
-	border-collapse: collapse;
+.forecast-trend__move--into {
+	background: var(--cn-board-success-tint, #e7f3ea);
+	color: var(--cn-board-success-ink, #1e6b2a);
 }
 
-.accuracy-table th,
-.accuracy-table td {
-	text-align: start;
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border);
+.forecast-trend__move--out {
+	background: var(--cn-board-red-tag-ground, #fcedec);
+	color: var(--color-error-text, #a30000);
+}
+
+.forecast-trend__none {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.forecast-trend :deep(.forecast-trend__num) {
+	text-align: end;
+	font-variant-numeric: tabular-nums;
 }
 
 .accuracy--green {

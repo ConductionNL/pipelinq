@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\DefaultPipelineService;
+use OCA\Pipelinq\Service\DefaultSkillService;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\IAppConfig;
@@ -58,30 +59,20 @@ class SettingsServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->markTestSkipped(
-			'See https://github.com/ConductionNL/pipelinq/issues/286 — '
-			. 'SettingsService constructor expects DefaultSkillService as argument #5, '
-			. 'but the test passes a class@anonymous stub that does not satisfy the type hint. '
-			. 'Unskip once #286 is resolved (either by loosening the constructor signature '
-			. 'or by using a proper DefaultSkillService mock).'
-		);
+		$this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$this->config = $this->createMock(originalClassName: IConfig::class);
+		$settingsLoadService = $this->createMock(originalClassName: SettingsLoadService::class);
+		$pipelineService = $this->createMock(originalClassName: DefaultPipelineService::class);
+		$skillService = $this->createMock(originalClassName: DefaultSkillService::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
-		$this->appConfig = $this->createMock(IAppConfig::class);
-		$this->config = $this->createMock(IConfig::class);
-		$settingsLoadService = $this->createMock(SettingsLoadService::class);
-		$pipelineService = $this->createMock(DefaultPipelineService::class);
-		$skillService = new class {
-			public function createDefaultSkills(): void {
-			}
-		};
-		$logger = $this->createMock(LoggerInterface::class);
-
-		$this->service = new SettingsService($this->appConfig,
-			$this->config,
-			$settingsLoadService,
-			$pipelineService,
-			$skillService,
-			$logger,
+		$this->service = new SettingsService(
+			appConfig: $this->appConfig,
+			config: $this->config,
+			settingsLoadService: $settingsLoadService,
+			pipelineService: $pipelineService,
+			skillService: $skillService,
+			logger: $logger,
 		);
 	}//end setUp()
 
@@ -95,9 +86,9 @@ class SettingsServiceTest extends TestCase {
 
 		$result = $this->service->getSettings();
 
-		$this->assertArrayHasKey('register', $result);
-		$this->assertArrayHasKey('client_schema', $result);
-		$this->assertArrayHasKey('lead_schema', $result);
+		$this->assertArrayHasKey(key: 'register', array: $result);
+		$this->assertArrayHasKey(key: 'client_schema', array: $result);
+		$this->assertArrayHasKey(key: 'lead_schema', array: $result);
 	}//end testGetSettingsReturnsConfigKeys()
 
 	/**
@@ -112,7 +103,7 @@ class SettingsServiceTest extends TestCase {
 
 		$result = $this->service->updateSettings(['register' => '5', 'unknown_key' => 'x']);
 
-		$this->assertArrayHasKey('register', $result);
+		$this->assertArrayHasKey(key: 'register', array: $result);
 	}//end testUpdateSettingsOnlyUpdatesKnownKeys()
 
 	/**
@@ -125,9 +116,9 @@ class SettingsServiceTest extends TestCase {
 
 		$result = $this->service->getUserSettings('admin');
 
-		$this->assertTrue($result['notify_assignments']);
-		$this->assertTrue($result['notify_stage_status']);
-		$this->assertTrue($result['notify_notes']);
+		$this->assertTrue(condition: $result['notify_assignments']);
+		$this->assertTrue(condition: $result['notify_stage_status']);
+		$this->assertTrue(condition: $result['notify_notes']);
 	}//end testGetUserSettingsReturnsBooleans()
 
 	/**
@@ -144,7 +135,7 @@ class SettingsServiceTest extends TestCase {
 			'notify_assignments' => false,
 		]);
 
-		$this->assertFalse($result['notify_assignments']);
+		$this->assertFalse(condition: $result['notify_assignments']);
 	}//end testUpdateUserSettings()
 
 	/**
@@ -155,6 +146,6 @@ class SettingsServiceTest extends TestCase {
 	public function testGetConfigValueDelegates(): void {
 		$this->appConfig->method('getValueString')->willReturn('myval');
 
-		$this->assertSame('myval', $this->service->getConfigValue('register'));
+		$this->assertSame(expected: 'myval', actual: $this->service->getConfigValue(key: 'register'));
 	}//end testGetConfigValueDelegates()
 }//end class

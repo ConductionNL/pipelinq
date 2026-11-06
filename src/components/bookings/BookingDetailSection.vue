@@ -33,6 +33,63 @@
 	<div class="booking-section">
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
+			<section v-if="part === 'customer'" class="booking-section__block booking-person">
+				<h2 class="booking-section__title cn-side-heading">
+					{{ customerKindLabel }}
+				</h2>
+				<div class="booking-person__head">
+					<span class="booking-person__initials" aria-hidden="true">{{ customerInitials }}</span>
+					<div>
+						<strong>{{ customerLabel }}</strong>
+						<span v-if="customer && customer.address" class="booking-person__sub">{{ customerKindLabel }} · {{ customer.address }}</span>
+					</div>
+				</div>
+				<dl class="booking-facts">
+					<template v-if="customer && customer.phone">
+						<dt>{{ t('pipelinq', 'Phone') }}</dt>
+						<dd>{{ customer.phone }}</dd>
+					</template>
+					<template v-if="customer && customer.email">
+						<dt>{{ t('pipelinq', 'Email') }}</dt>
+						<dd>{{ customer.email }}</dd>
+					</template>
+				</dl>
+				<router-link v-if="customerRoute" :to="customerRoute" class="booking-section__link">
+					{{ t('pipelinq', 'Contact details and earlier tickets') }}
+				</router-link>
+			</section>
+
+			<section v-if="part === 'when'" class="booking-section__block booking-when">
+				<h2 class="booking-section__title cn-side-heading">
+					{{ t('pipelinq', 'When and where') }}
+				</h2>
+				<p class="booking-when__slot">
+					<span>{{ whenDay }}</span>
+					<span>{{ whenTime }}</span>
+				</p>
+				<p v-if="booking.location" class="booking-when__place">
+					<MapMarkerOutline :size="18" />
+					{{ booking.location }}
+				</p>
+				<dl class="booking-facts">
+					<template v-if="booking.assignee">
+						<dt>{{ t('pipelinq', 'Handler') }}</dt>
+						<dd>{{ handlerName }}</dd>
+					</template>
+					<dt>{{ t('pipelinq', 'Reminder') }}</dt>
+					<dd>{{ booking.reminderSentAt ? formatDateTime(booking.reminderSentAt) : t('pipelinq', 'Not sent yet') }}</dd>
+				</dl>
+				<NcButton
+					v-if="canSendReminder"
+					class="cn-button--tonal"
+					variant="secondary"
+					:disabled="sending"
+					data-testid="booking-action-send-reminder"
+					@click="sendReminder">
+					{{ t('pipelinq', 'Send reminder') }}
+				</NcButton>
+			</section>
+
 			<section v-if="shows('context')" class="booking-section__block">
 				<h4 v-if="part === 'all'">{{ t('pipelinq', 'Context') }}</h4>
 				<div class="info-grid">
@@ -131,18 +188,24 @@
 </template>
 
 <script>
-import { showError } from '@nextcloud/dialogs'
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
-import { NcLoadingIcon } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import CalendarRemove from 'vue-material-design-icons/CalendarRemove.vue'
 import CashCheck from 'vue-material-design-icons/CashCheck.vue'
 import CashRemove from 'vue-material-design-icons/CashRemove.vue'
 import ClockEnd from 'vue-material-design-icons/ClockEnd.vue'
 import ClockStart from 'vue-material-design-icons/ClockStart.vue'
 import EmailCheckOutline from 'vue-material-design-icons/EmailCheckOutline.vue'
+import MapMarkerOutline from 'vue-material-design-icons/MapMarkerOutline.vue'
 import ProgressCheck from 'vue-material-design-icons/ProgressCheck.vue'
 import { currencyOr } from '../../services/reportingCurrency.js'
+import { createUserDisplayNameFormatter } from '../../services/userDisplayName.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { slotLabel, timeRange } from '../../utils/bookingTime.js'
+
+const userName = createUserDisplayNameFormatter()
 
 const TIMELINE_ICONS = {
 	start: ClockStart,
@@ -155,7 +218,7 @@ const TIMELINE_ICONS = {
 }
 
 /** The parts this section can render on its own. */
-const PARTS = ['all', 'context', 'assignments', 'timeline']
+const PARTS = ['all', 'context', 'assignments', 'timeline', 'customer', 'when']
 
 const STATUS_LABELS = {
 	'pending-deposit': 'Awaiting deposit',
@@ -170,6 +233,8 @@ const STATUS_LABELS = {
 export default {
 	name: 'BookingDetailSection',
 	components: {
+		MapMarkerOutline,
+		NcButton,
 		NcLoadingIcon,
 	},
 
@@ -202,7 +267,9 @@ export default {
 			resourceLookup: {},
 			service: null,
 			customer: null,
+			customerIsContact: false,
 			loadedCustomerId: null,
+			sending: false,
 			contextLoading: false,
 		}
 	},
@@ -225,6 +292,95 @@ export default {
 
 		serviceName() {
 			return this.service?.name || this.booking.serviceId || '-'
+		},
+
+		/**
+		 * The customer's initials for the avatar of the customer card.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		customerInitials() {
+			const words = String(this.customerLabel || '').split(/\s+/).filter(Boolean)
+			if (words.length === 0) {
+				return ''
+			}
+			const first = words[0].charAt(0)
+			const last = words.length > 1 ? words[words.length - 1].charAt(0) : ''
+			return (first + last).toUpperCase()
+		},
+
+		/**
+		 * The page of the customer: the client, or the contact person.
+		 *
+		 * @return {object|null} The route, or null when the customer is unknown.
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		customerRoute() {
+			if (!this.customer || !this.booking.customerId) {
+				return null
+			}
+			return {
+				name: this.customerIsContact ? 'ContactDetail' : 'ClientDetail',
+				params: { id: this.booking.customerId },
+			}
+		},
+
+		/**
+		 * The day of the appointment ("Donderdag 22 oktober").
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		whenDay() {
+			const label = slotLabel(this.booking.startAt, this.booking.endAt)
+			return label.split(', ')[0] || ''
+		},
+
+		/**
+		 * The time of the appointment ("14:00 tot 15:00").
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		whenTime() {
+			return timeRange(this.booking.startAt, this.booking.endAt)
+		},
+
+		/**
+		 * The handler's display name.
+		 *
+		 * @return {string}
+		 */
+		handlerName() {
+			return userName(this.booking.assignee)
+		},
+
+		/**
+		 * Whether a reminder can go out: a confirmed booking more than an
+		 * hour away, the rule the reminder endpoint applies.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		canSendReminder() {
+			const start = Date.parse(this.booking.startAt || '')
+			return this.booking.status === 'confirmed'
+				&& Number.isFinite(start)
+				&& start - Date.now() > 60 * 60 * 1000
+		},
+
+		/**
+		 * What the customer is, as the side card names it: a resident or an
+		 * organisation (PqAfspraak "Inwoner").
+		 *
+		 * @return {string} The label.
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		customerKindLabel() {
+			return this.customer?.type === 'organization'
+				? t('pipelinq', 'Organisation')
+				: t('pipelinq', 'Resident')
 		},
 
 		customerLabel() {
@@ -450,6 +606,43 @@ export default {
 			}
 		},
 
+		/**
+		 * Send the reminder through the booking endpoint, then refresh the page.
+		 *
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		async sendReminder() {
+			if (!this.resolvedId) {
+				return
+			}
+			this.sending = true
+			try {
+				const response = await fetch(
+					generateUrl(`/apps/pipelinq/api/bookings/${this.resolvedId}/send-reminder`),
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+						body: '{}',
+					},
+				)
+				const data = await response.json().catch(() => ({}))
+				if (!response.ok) {
+					showError(data.error || t('pipelinq', 'Action failed.'))
+					return
+				}
+				showSuccess(t('pipelinq', 'Reminder dispatched.'))
+				emit('cn:page:refresh', {})
+			} catch {
+				showError(t('pipelinq', 'Action failed.'))
+			} finally {
+				this.sending = false
+			}
+		},
+
 		resourceName(resourceId) {
 			if (!resourceId) return '-'
 			return this.resourceLookup[resourceId] || resourceId
@@ -522,6 +715,7 @@ export default {
 						'contact',
 						booking.customerId,
 					)
+					this.customerIsContact = Boolean(contact)
 					this.customer =
 						contact
 						|| (await this.objectStore.fetchObject(
@@ -559,10 +753,78 @@ export default {
 </script>
 
 <style scoped>
+.booking-person__head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.booking-person__initials {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--color-background-dark);
+	font-weight: 700;
+	flex: none;
+}
+
+.booking-person__sub {
+	display: block;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.booking-facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 6px 16px;
+	margin: 0 0 12px;
+}
+
+.booking-facts dt {
+	color: var(--color-text-maxcontrast);
+}
+
+.booking-facts dd {
+	margin: 0;
+}
+
+.booking-when__slot {
+	display: flex;
+	flex-direction: column;
+	margin: 0 0 12px;
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.booking-when__place {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 12px;
+}
+
+.booking-section__link {
+	font-weight: 600;
+	text-decoration: underline;
+}
+
 .booking-section {
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+}
+
+.booking-section__title {
+	margin: 0 0 10px;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
 }
 
 .booking-section__block h4 {

@@ -61,6 +61,7 @@ class SubscriptionQueryService {
 	 * @param ListObjectStore $store Register-scoped, session-free object access.
 	 * @param ComplianceService $compliance The consent ledger.
 	 * @param ListTokenService $tokens Signs the per-recipient unsubscribe link.
+	 * @param RecipientNameReader $names Names a membership's contact.
 	 *
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
 	 */
@@ -68,6 +69,7 @@ class SubscriptionQueryService {
 		private ListObjectStore $store,
 		private ComplianceService $compliance,
 		private ListTokenService $tokens,
+		private RecipientNameReader $names,
 	) {
 	}//end __construct()
 
@@ -218,8 +220,13 @@ class SubscriptionQueryService {
 			$pages = (int)ceil($total / $limit);
 		}
 
+		$rows = array_map(
+			fn (array $row): array => $this->withName(subscription: $row),
+			array_slice($all, (($page - 1) * $limit), $limit)
+		);
+
 		return [
-			'data' => array_slice($all, (($page - 1) * $limit), $limit),
+			'data' => $rows,
 			'pagination' => [
 				'page' => $page,
 				'limit' => $limit,
@@ -266,6 +273,31 @@ class SubscriptionQueryService {
 			filters: ['listId' => $listId],
 		);
 	}//end rowsForList()
+
+	/**
+	 * A membership with the name of its contact, so a subscriber row reads
+	 * as the person or organisation above their address. A public signup
+	 * not yet matched to a contact keeps its address alone.
+	 *
+	 * @param array<string, mixed> $subscription The membership.
+	 *
+	 * @return array<string, mixed> The membership, with `name` when known.
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
+	 */
+	private function withName(array $subscription): array {
+		$contactId = (string)($subscription['contactId'] ?? '');
+		if ($contactId === '' || trim((string)($subscription['name'] ?? '')) !== '') {
+			return $subscription;
+		}
+
+		$name = $this->names->fullName(recipientId: $contactId);
+		if ($name !== '') {
+			$subscription['name'] = $name;
+		}
+
+		return $subscription;
+	}//end withName()
 
 	/**
 	 * The key the consent ledger is written under for a membership.

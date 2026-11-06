@@ -26,13 +26,13 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-003
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-004
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-005
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-007
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-003
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-004
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-005
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-007
  */
 
 declare(strict_types=1);
@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -68,9 +69,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  transactional concern (POS ↔ contact link) across several classes
  *  without reducing real complexity.
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
  */
 class PosCustomerLinkService {
+	use CastingPayloadToArray;
+
 	/**
 	 * Default search-result limit when the caller does not specify one.
 	 *
@@ -129,9 +132,9 @@ class PosCustomerLinkService {
 	 *
 	 * @throws OCSBadRequestException When the query is too short.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-007
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-007
 	 */
 	public function searchCustomers(string $query, int $limit = self::DEFAULT_SEARCH_LIMIT): array {
 		$needle = trim($query);
@@ -197,7 +200,7 @@ class PosCustomerLinkService {
 	 *
 	 * @throws OCSNotFoundException When the contact does not exist in the pipelinq register.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
 	 */
 	public function getCustomer(string $contactUuid): array {
 		[$register, $schema] = $this->configContact();
@@ -232,8 +235,8 @@ class PosCustomerLinkService {
 	 *  customer; splitting it into a setter would force the controller to
 	 *  make two round-trips for one logical write.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-004
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-004
 	 */
 	public function attachCustomer(
 		string $transactionId,
@@ -289,7 +292,7 @@ class PosCustomerLinkService {
 	 * @throws OCSNotFoundException When the transaction is missing.
 	 * @throws OCSBadRequestException When the transaction is not mutable.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
 	 */
 	public function detachCustomer(string $transactionId): array {
 		$transaction = $this->fetchTransaction(id: $transactionId);
@@ -319,7 +322,7 @@ class PosCustomerLinkService {
 	 *
 	 * @return array<int, array<string, mixed>> The history rows.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-003
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-003
 	 */
 	public function getCustomerHistory(string $contactUuid, int $limit = self::DEFAULT_HISTORY_LIMIT): array {
 		$effectiveLimit = $this->historyDepth();
@@ -375,8 +378,41 @@ class PosCustomerLinkService {
 			static fn (array $a, array $b): int => strcmp((string)($b['createdAt'] ?? ''), (string)($a['createdAt'] ?? ''))
 		);
 
-		return array_slice($history, 0, $cap);
+		$history = array_slice($history, 0, $cap);
+		foreach ($history as $index => $row) {
+			$history[$index]['itemCount'] = $this->countLines(transactionId: (string)$row['id'], register: $register);
+		}
+
+		return $history;
 	}//end getCustomerHistory()
+
+	/**
+	 * How many lines a sale has: the history's Items column.
+	 *
+	 * @param string $transactionId The sale.
+	 * @param string $register      The register.
+	 *
+	 * @return int The number of lines; 0 when they cannot be read.
+	 */
+	private function countLines(string $transactionId, string $register): int {
+		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransactionLine_schema', '');
+		if ($transactionId === '' || $schema === '') {
+			return 0;
+		}
+
+		try {
+			$lines = $this->getObjectService()->findAll(
+				config: [
+					'filters' => ['register' => $register, 'schema' => $schema, 'transaction' => $transactionId],
+					'limit' => 500,
+				]
+			);
+		} catch (Throwable $e) {
+			return 0;
+		}
+
+		return count((array)$lines);
+	}//end countLines()
 
 	/**
 	 * Sync the marketing-consent flag onto the linked pipelinq contact.
@@ -391,8 +427,8 @@ class PosCustomerLinkService {
 	 *
 	 * @return string One of 'success', 'skipped', 'failed'.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-004
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-007
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-004
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-007
 	 */
 	public function syncConsent(array $contact, bool $consent): string {
 		$contactUuid = (string)($contact['id'] ?? $contact['uuid'] ?? '');
@@ -478,7 +514,7 @@ class PosCustomerLinkService {
 	 *
 	 * @throws OCSBadRequestException When tenderType is 'onAccount' and no customer is set.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-005
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-005
 	 */
 	public function assertOnAccountHasCustomer(array $transaction): void {
 		$tender = (string)($transaction['tenderType'] ?? '');
@@ -576,7 +612,6 @@ class PosCustomerLinkService {
 			'totalTax' => (float)($data['totalTax'] ?? 0),
 			'tenderType' => (string)($data['tenderType'] ?? 'cash'),
 			'status' => (string)($data['status'] ?? ''),
-			'itemCount' => (int)($data['itemCount'] ?? 0),
 		];
 	}//end summariseTransaction()
 
@@ -588,7 +623,7 @@ class PosCustomerLinkService {
 	 *
 	 * @return array<int, string> The enabled fields.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
 	public function enabledSearchFields(): array {
 		$raw = $this->appConfig->getValueString(Application::APP_ID, 'customerSearchFields', 'name,email,phone');
@@ -612,7 +647,7 @@ class PosCustomerLinkService {
 	 *
 	 * @return int The history depth.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
 	public function historyDepth(): int {
 		$value = (int)$this->appConfig->getValueString(
@@ -635,7 +670,7 @@ class PosCustomerLinkService {
 	 *
 	 * @return bool Whether sync is enabled.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
 	public function isSyncEnabled(): bool {
 		$value = $this->appConfig->getValueString(Application::APP_ID, 'enablePipelinqSync', 'true');
@@ -649,7 +684,7 @@ class PosCustomerLinkService {
 	 *
 	 * @return bool Whether the invariant is enforced.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
 	public function requiresCustomerForOnAccount(): bool {
 		$value = $this->appConfig->getValueString(Application::APP_ID, 'requireCustomerForOnAccount', 'true');
@@ -757,35 +792,6 @@ class PosCustomerLinkService {
 
 		return [$register, $schema];
 	}//end configTransaction()
-
-	/**
-	 * Normalise an OR entity into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The plain array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 
 	/**
 	 * Resolve the OR ObjectService from the container.

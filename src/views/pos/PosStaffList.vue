@@ -8,14 +8,9 @@
   -->
 <template>
 	<div class="pos-staff-list">
-		<!-- No heading of its own: the host NcSettingsSection (PosStaffManager, on
-		     the admin page) already names this surface, and a second "POS staff"
-		     title would just repeat it. -->
-		<div class="pos-staff-list__header">
-			<NcButton variant="primary" @click="createNew">
-				{{ t('pipelinq', 'New staff member') }}
-			</NcButton>
-		</div>
+		<!-- No heading or add button of its own: the host section
+		     (PosStaffManager) names this surface and adds a member from its title
+		     row, as the board draws it. -->
 
 		<NcLoadingIcon v-if="loading" :size="32" />
 
@@ -23,51 +18,52 @@
 			<p v-if="errorMessage" class="pos-staff-list__error" role="alert">
 				{{ errorMessage }}
 			</p>
-			<table v-if="staff.length" class="pos-staff-list__table">
-				<thead>
-					<tr>
-						<th scope="col">{{ t('pipelinq', 'Display name') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Role') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Active') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Last login') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="row in staff" :key="row.id">
-						<td>{{ row.displayName }}</td>
-						<td>{{ roleName(row.posRole) }}</td>
-						<td>
-							{{
-								row.isActive === false
-									? t('pipelinq', 'No')
-									: t('pipelinq', 'Yes')
-							}}
-						</td>
-						<td>{{ row.lastLoginAt || '—' }}</td>
-						<td>
-							<NcButton @click="edit(row)">
-								{{ t('pipelinq', 'Edit') }}
-							</NcButton>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<!-- One row per staff member, with a sort and a filter in every head,
+			     as the board draws it. -->
+			<CnDataTable
+				v-if="staff.length"
+				class="pos-staff-list__table"
+				data-testid="pos-staff"
+				:columns="columns"
+				:schema="tableSchema"
+				:rows="tableRows"
+				:rowClass="() => 'pos-staff-list__row'"
+				filterable
+				localHeaders>
+				<template #column-isActive="{ row }">
+					{{ row.isActive ? t('pipelinq', 'Yes') : t('pipelinq', 'No') }}
+				</template>
+				<template #column-lastLoginAt="{ row }">
+					{{ loginMoment(row.lastLoginAt) }}
+				</template>
+				<template #actions-header>
+					<span class="hidden-visually">{{ t('pipelinq', 'Actions') }}</span>
+				</template>
+				<template #row-actions="{ row }">
+					<NcButton @click="edit(row)">
+						{{ t('pipelinq', 'Edit') }}
+					</NcButton>
+				</template>
+			</CnDataTable>
 			<p v-else>
 				{{ t('pipelinq', 'No staff members defined yet.') }}
+			</p>
+			<p class="pos-staff-list__note">
+				{{ t('pipelinq', 'Every staff member signs in at the till with a PIN of 4 to 6 digits.') }}
 			</p>
 		</template>
 	</div>
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 export default {
 	name: 'PosStaffList',
-	components: { NcButton, NcLoadingIcon },
+	components: { CnDataTable, NcButton, NcLoadingIcon },
 	emits: ['create', 'edit'],
 
 	data() {
@@ -77,6 +73,57 @@ export default {
 			loading: false,
 			errorMessage: '',
 		}
+	},
+
+	computed: {
+		/**
+		 * The table's columns, every one sortable and filterable from its head.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+		 */
+		columns() {
+			return [
+				{ key: 'displayName', label: t('pipelinq', 'Display name') },
+				{ key: 'role', label: t('pipelinq', 'Role') },
+				{ key: 'isActive', label: t('pipelinq', 'Active') },
+				{ key: 'lastLoginAt', label: t('pipelinq', 'Last login') },
+			]
+		},
+
+		/**
+		 * The fields the heads sort and filter on.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+		 */
+		tableSchema() {
+			return {
+				properties: {
+					displayName: { type: 'string' },
+					role: { type: 'string' },
+					isActive: { type: 'boolean' },
+					lastLoginAt: { type: 'string', format: 'date-time' },
+				},
+			}
+		},
+
+		/**
+		 * One row per staff member: the role by name and the stored login
+		 * moment, so the head sorts by time; the cell reads it as a moment.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+		 */
+		tableRows() {
+			return this.staff.map((member) => ({
+				id: member.id,
+				displayName: member.displayName,
+				role: this.roleName(member.posRole),
+				isActive: member.isActive !== false,
+				lastLoginAt: member.lastLoginAt || null,
+			}))
+		},
 	},
 
 	async mounted() {
@@ -113,6 +160,24 @@ export default {
 			}
 		},
 
+		/**
+		 * The last login as a moment in the reader's language.
+		 *
+		 * @param {string} iso The stored moment, or empty.
+		 * @return {string} Day, month and time, or a dash.
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+		 */
+		loginMoment(iso) {
+			if (!iso) {
+				return '—'
+			}
+			const date = new Date(iso)
+			if (Number.isNaN(date.getTime())) {
+				return String(iso)
+			}
+			return date.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+		},
+
 		roleName(id) {
 			const role = this.roles.find((r) => r.id === id)
 			return role?.name || id || '—'
@@ -146,29 +211,16 @@ export default {
 </script>
 
 <style scoped>
+.pos-staff-list__note {
+	margin: 12px 0 0;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+}
+
 .pos-staff-list {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	padding: 16px;
-}
-
-.pos-staff-list__header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.pos-staff-list__table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.pos-staff-list__table th,
-.pos-staff-list__table td {
-	padding: 8px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
 }
 
 .pos-staff-list__error {

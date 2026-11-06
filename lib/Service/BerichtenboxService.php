@@ -23,12 +23,12 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-003
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-receipt-005
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-inbound-006
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-retry-012
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-003
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-FALLBACK-004
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RECEIPT-005
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-INBOUND-006
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RETRY-012
  */
 
 declare(strict_types=1);
@@ -38,6 +38,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
+use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
+use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -57,9 +60,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  full outbound/inbound/fallback/retry lifecycle; splitting would just shuffle
  *  the transitions across files.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
 class BerichtenboxService {
+	use OptionalPayloadToArray;
+
 	/**
 	 * Maximum dispatch retry attempts (REQ-RETRY-012).
 	 *
@@ -97,7 +102,7 @@ class BerichtenboxService {
 	 * @param LoggerInterface $logger NC logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Orchestration root wires every
 	 *  bridge collaborator via constructor injection; a parameter object would only
@@ -122,85 +127,70 @@ class BerichtenboxService {
 	/**
 	 * Queue an outbound message for a zaak status transition.
 	 *
-	 * @param string $caseId External zaak id.
-	 * @param string|null $interactionId Linked Contactmoment id (optional).
-	 * @param string $status New zaak status.
-	 * @param string $bsn Burger's plaintext BSN (validated upstream).
-	 * @param array|null $templateOverride Optional explicit BerichtenboxTemplate
-	 *                                     payload (skips registry lookup).
-	 * @param array $extraVariables Additional template variables
-	 *                              (e.g. gemeente, deadline).
-	 * @param array $attachments Attachment array per BBK 1.7
-	 *                           (filename / mime / sizeBytes
-	 *                           / openregisterFileRef).
+	 * @param CaseStatusMessage $message The case, its contact moment, the new status and the BSN.
+	 * @param MessageOptions    $options An explicit template, extra variables and attachments.
 	 *
 	 * @return array The persisted BerichtenboxMessage object.
 	 *
 	 * @throws RuntimeException On validation / persistence failure.
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
-	public function queueOutboundMessage(
-		string $caseId,
-		?string $interactionId,
-		string $status,
-		string $bsn,
-		?array $templateOverride = null,
-		array $extraVariables = [],
-		array $attachments = [],
-	): array {
-		$tenantId = $this->resolveTenantId();
-		$template = ($templateOverride ?? $this->findTemplate(
-			caseType: (string)($extraVariables['caseType'] ?? ''),
-			status: $status,
-			language: (string)($extraVariables['language'] ?? 'nl')
-		));
-		$template = ($template ?? $this->fallbackTemplate());
-
-		$variables = array_merge(
-			[
-				'caseId' => $caseId,
-				'status' => $status,
-				'gemeente' => $this->appConfig->getValueString(
-					Application::APP_ID,
-					'tenant_display_name',
-					'Gemeente'
-				),
-				'deadline' => '',
-				'messageId' => $this->logius->newUuidV4(),
-			],
-			$extraVariables
+	public function queueOutboundMessage(CaseStatusMessage $message, MessageOptions $options = new MessageOptions()): array {
+		$tenantId  = $this->resolveTenantId();
+		$template  = $this->templateFor(message: $message, options: $options);
+		$variables = $options->variablesOver(
+			defaults: $message->variables(
+				gemeente: $this->appConfig->getValueString(Application::APP_ID, 'tenant_display_name', 'Gemeente'),
+				messageId: $this->logius->newUuidV4()
+			)
 		);
 
-		$rendered = $this->templateRenderer->render($template, $variables);
-
+		$rendered    = $this->templateRenderer->render($template, $variables);
 		$messageUuid = $variables['messageId'];
-		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);
+		$bsnHash     = $this->encryption->hashBsn($message->bsn, $tenantId);
 
-		$payload = [
-			'uuid' => $messageUuid,
-			'bsn' => $this->encryption->encrypt($bsn, $tenantId),
-			'bsnHash' => $bsnHash,
-			'interactionId' => ($interactionId ?? ''),
-			'caseId' => $caseId,
-			'subject' => $rendered['subject'],
-			'body' => $rendered['body'],
-			'templateId' => (string)($template['id'] ?? $template['uuid'] ?? 'inline'),
-			'attachments' => $attachments,
-			'deliveryStatus' => 'queued',
-			'retryCount' => 0,
-			'mailboxAvailable' => null,
-		];
-
-		$saved = $this->saveMessage(payload: $payload);
+		$saved = $this->saveMessage(
+			payload: [
+				'uuid' => $messageUuid,
+				'bsn' => $this->encryption->encrypt($message->bsn, $tenantId),
+				'bsnHash' => $bsnHash,
+				'interactionId' => ($message->interactionId ?? ''),
+				'caseId' => $message->caseId,
+				'subject' => $rendered['subject'],
+				'body' => $rendered['body'],
+				'templateId' => (string)($template['id'] ?? $template['uuid'] ?? 'inline'),
+				'attachments' => $options->attachments,
+				'deliveryStatus' => 'queued',
+				'retryCount' => 0,
+				'mailboxAvailable' => null,
+			]
+		);
 		$this->auditLogger->logQueued(
 			messageId: $messageUuid,
 			payloadHash: $this->auditLogger->hashPayload($rendered['body']),
-			retentionUntil: $this->auditLogger->calculateRetentionUntil((string)($extraVariables['caseType'] ?? ''))
+			retentionUntil: $this->auditLogger->calculateRetentionUntil($options->caseType())
 		);
 
 		return $saved;
 	}//end queueOutboundMessage()
+
+	/**
+	 * The explicit template, else the registry's template for the case type,
+	 * status and language, else the fallback template.
+	 *
+	 * @param CaseStatusMessage $message The message.
+	 * @param MessageOptions    $options Its options.
+	 *
+	 * @return array The template.
+	 */
+	private function templateFor(CaseStatusMessage $message, MessageOptions $options): array {
+		return ($options->templateOverride ?? $this->findTemplate(
+			caseType: $options->caseType(),
+			status: $message->status,
+			language: $options->language()
+		) ?? $this->fallbackTemplate());
+	}//end templateFor()
 
 	/**
 	 * Dispatch all queued messages whose nextRetryAt is past (or unset).
@@ -239,7 +229,7 @@ class BerichtenboxService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
 	public function dispatchOne(array $message): void {
 		$tenantId = $this->resolveTenantId();
@@ -379,7 +369,7 @@ class BerichtenboxService {
 	 * @return array The created BerichtenboxReply payload.
 	 *
 	 * @throws RuntimeException If the parent cannot be found.
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
 	public function handleInboundReply(
 		string $parentMessageId,
@@ -454,9 +444,13 @@ class BerichtenboxService {
 	 * @param string $tenantId Tenant id.
 	 *
 	 * @return int Number of rows shredded across all schemas.
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
-	public function cryptoShred(string $bsn, string $tenantId): int {
+	public function cryptoShred(
+		#[\SensitiveParameter]
+		string $bsn,
+		string $tenantId,
+	): int {
 		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);
 		// Shred key = 32 random bytes never persisted; we simply wipe the
 		// bsn ciphertext to a random opaque blob that cannot be decrypted.
@@ -489,7 +483,7 @@ class BerichtenboxService {
 			}
 
 			foreach ($rows as $row) {
-				$data = $this->toArray(row: $row);
+				$data = $this->toArray(object: $row);
 				if ($data === null) {
 					continue;
 				}
@@ -531,6 +525,7 @@ class BerichtenboxService {
 	private function dispatchToBerichtenbox(
 		array $message,
 		string $messageId,
+		#[\SensitiveParameter]
 		string $bsnPlain,
 		string $bodyHash,
 	): void {
@@ -720,7 +715,7 @@ class BerichtenboxService {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$result = [];
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(object: $row);
 			if ($data === null) {
 				continue;
 			}
@@ -769,7 +764,7 @@ class BerichtenboxService {
 
 		$unread = [];
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(object: $row);
 			if ($data === null) {
 				continue;
 			}
@@ -809,7 +804,7 @@ class BerichtenboxService {
 		}
 
 		foreach ($rows as $row) {
-			return $this->toArray(row: $row);
+			return $this->toArray(object: $row);
 		}
 
 		return null;
@@ -830,7 +825,7 @@ class BerichtenboxService {
 			return null;
 		}
 
-		return $this->toArray(row: $row);
+		return $this->toArray(object: $row);
 	}//end findMessageByUuid()
 
 	/**
@@ -871,7 +866,7 @@ class BerichtenboxService {
 		}
 
 		foreach ($rows as $row) {
-			return $this->toArray(row: $row);
+			return $this->toArray(object: $row);
 		}
 
 		return null;
@@ -955,7 +950,7 @@ class BerichtenboxService {
 			payload: $payload,
 			uuid: null
 		);
-		$savedArray = $this->toArray(row: $saved);
+		$savedArray = $this->toArray(object: $saved);
 		$uuid = (string)($savedArray['uuid'] ?? $savedArray['id'] ?? '');
 
 		// Routing — best-effort; the skill-routing service is optional in dev.
@@ -992,7 +987,7 @@ class BerichtenboxService {
 			schema: $schema,
 			uuid: ($payload['uuid'] ?? null)
 		);
-		return ($this->toArray(row: $saved) ?? $payload);
+		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveMessage()
 
 	/**
@@ -1020,7 +1015,7 @@ class BerichtenboxService {
 			schema: $schema,
 			uuid: ($payload['uuid'] ?? null)
 		);
-		return ($this->toArray(row: $saved) ?? $payload);
+		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveReply()
 
 	/**
@@ -1066,35 +1061,4 @@ class BerichtenboxService {
 		// catch was unreachable — phpstan reports it as a dead catch.
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Normalise OR result to array.
-	 *
-	 * @param mixed $row Row.
-	 *
-	 * @return array|null
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true) {
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$serialized = $row->jsonSerialize();
-				if (is_array($serialized) === true) {
-					return $serialized;
-				}
-			}
-
-			if (method_exists($row, 'getObject') === true) {
-				$inner = $row->getObject();
-				if (is_array($inner) === true) {
-					return $inner;
-				}
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

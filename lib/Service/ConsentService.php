@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -28,8 +28,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Consent\ConsentSubject;
+use OCA\Pipelinq\Service\Consent\ConsentWish;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,13 +52,15 @@ use Throwable;
  * - isOptOutKeyword(body) — pure, case-insensitive STOP / STOPALL /
  *   UITSCHRIJVEN detection.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Consent lifecycle (opt-in/opt-out/erasure/keyword detection) is one cohesive responsibility.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The store's reads, writes, erasure, and the migration and replay into
  *   integriq (opt-out-before-send) read the same append-only log; splitting them would duplicate its ordering rules.
  */
 class ConsentService {
+	use PayloadToArray;
+
 	/**
 	 * Default messagingConsentRecord schema slug.
 	 */
@@ -90,7 +94,7 @@ class ConsentService {
 	 * @param IntegriqConsentClient $integriq Asks and records through integriq after the cutover.
 	 * @param ContactAddressLookup $addresses The contact's phone or email for integriq.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -120,7 +124,7 @@ class ConsentService {
 	 *
 	 * @return bool True if sending is allowed.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 */
 	public function canSend(string $contactId, string $channel, string $address = '', ?string $inReplyTo = null): bool {
@@ -134,13 +138,10 @@ class ConsentService {
 				$category = IntegriqConsentClient::CATEGORY_REPLY;
 			}
 
-			return $this->ask(
-				contactId: $contactId,
-				channel: $channel,
-				category: $category,
-				requiresConsent: false,
-				address: $address,
-				inReplyTo: $inReplyTo
+			$subject = new ConsentSubject(contactId: $contactId, channel: $channel, address: $address);
+			return $this->integriq->decideOne(
+				ask: $subject->askFor(category: $category, requiresConsent: false),
+				recipient: $this->recipientFor(subject: $subject, inReplyTo: $inReplyTo)
 			)['send'];
 		}
 
@@ -181,12 +182,10 @@ class ConsentService {
 		}
 
 		if ($this->integriq->isCutover() === true) {
-			return $this->ask(
-				contactId: $contactId,
-				channel: $channel,
-				category: IntegriqConsentClient::CATEGORY_SERVICE,
-				requiresConsent: true,
-				address: $address
+			$subject = new ConsentSubject(contactId: $contactId, channel: $channel, address: $address);
+			return $this->integriq->decideOne(
+				ask: $subject->askFor(category: IntegriqConsentClient::CATEGORY_SERVICE, requiresConsent: true),
+				recipient: $this->recipientFor(subject: $subject, inReplyTo: null)
 			)['send'];
 		}
 
@@ -228,12 +227,10 @@ class ConsentService {
 		if ($this->integriq->isCutover() === true) {
 			// Showing a state is not a send: ask as a probe, so integriq's
 			// seven-year decision log only holds real sends.
+			$subject = new ConsentSubject(contactId: $contactId, channel: $channel, address: '');
 			$decision = $this->integriq->probeOne(
-				channel: $channel,
-				category: IntegriqConsentClient::CATEGORY_SERVICE,
-				requiresConsent: true,
-				address: $this->addresses->addressFor(contactId: $contactId, channel: $channel),
-				contactRef: $contactId
+				ask: $subject->askFor(category: IntegriqConsentClient::CATEGORY_SERVICE, requiresConsent: true),
+				recipient: $this->recipientFor(subject: $subject, inReplyTo: null)
 			);
 			if ($decision['code'] === IntegriqConsentClient::CODE_OPTED_OUT) {
 				return 'opted-out';
@@ -271,7 +268,7 @@ class ConsentService {
 	 *
 	 * @return array<string, mixed>|null Saved row or null on failure.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
 	 */
 	public function recordOptIn(
@@ -282,28 +279,9 @@ class ConsentService {
 		string $legalBasis = 'consent',
 		string $address = '',
 	): ?array {
-		if ($this->integriq->isCutover() === true) {
-			$recorded = $this->recordInIntegriq(
-				contactId: $contactId,
-				channel: $channel,
-				state: 'opted-in',
-				source: $source,
-				evidence: $evidence,
-				legalBasis: $legalBasis,
-				address: $address,
-			);
-			if ($recorded !== null) {
-				return $recorded;
-			}
-		}
-
-		return $this->appendRecord(
-			contactId: $contactId,
-			channel: $channel,
-			state: 'opted-in',
-			source: $source,
-			evidence: $evidence,
-			legalBasis: $legalBasis,
+		return $this->record(
+			wish: new ConsentWish(state: 'opted-in', source: $source, evidence: $evidence, legalBasis: $legalBasis),
+			subject: new ConsentSubject(contactId: $contactId, channel: $channel, address: $address)
 		);
 	}//end recordOptIn()
 
@@ -319,7 +297,7 @@ class ConsentService {
 	 *
 	 * @return array<string, mixed>|null Saved row or null on failure.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
 	 */
 	public function recordOptOut(
@@ -330,28 +308,9 @@ class ConsentService {
 		string $legalBasis = 'consent',
 		string $address = '',
 	): ?array {
-		if ($this->integriq->isCutover() === true) {
-			$recorded = $this->recordInIntegriq(
-				contactId: $contactId,
-				channel: $channel,
-				state: 'opted-out',
-				source: $source,
-				evidence: $evidence,
-				legalBasis: $legalBasis,
-				address: $address,
-			);
-			if ($recorded !== null) {
-				return $recorded;
-			}
-		}
-
-		return $this->appendRecord(
-			contactId: $contactId,
-			channel: $channel,
-			state: 'opted-out',
-			source: $source,
-			evidence: $evidence,
-			legalBasis: $legalBasis,
+		return $this->record(
+			wish: new ConsentWish(state: 'opted-out', source: $source, evidence: $evidence, legalBasis: $legalBasis),
+			subject: new ConsentSubject(contactId: $contactId, channel: $channel, address: $address)
 		);
 	}//end recordOptOut()
 
@@ -362,7 +321,7 @@ class ConsentService {
 	 *
 	 * @return bool True for STOP / STOPALL / UITSCHRIJVEN (case-insensitive).
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function isOptOutKeyword(string $body): bool {
 		$normalised = strtolower(trim($body));
@@ -376,7 +335,7 @@ class ConsentService {
 	 *
 	 * @return bool True for JA / YES / START (case-insensitive).
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function isOptInKeyword(string $body): bool {
 		$normalised = strtolower(trim($body));
@@ -393,7 +352,7 @@ class ConsentService {
 	 *
 	 * @return int Rows deleted.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function deleteForContact(string $contactId): int {
 		if ($contactId === '') {
@@ -482,24 +441,25 @@ class ConsentService {
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
 	 */
 	public function changeRequestFor(array $row, string $address): array {
-		$state = (string)($row['state'] ?? '');
-		$request = [
-			'address' => $address,
-			'state' => $state,
-			'scope' => 'channel',
-			'channel' => (string)($row['channel'] ?? ''),
-			'contactRef' => (string)($row['contactId'] ?? ''),
-			'source' => (string)($row['source'] ?? ''),
-			'evidence' => ['text' => (string)($row['evidence'] ?? ''), 'recordedAt' => (string)($row['recordedAt'] ?? '')],
-			// The record UUID alone: unique across pipelinq's schemas, and it fits
-			// integriq's 64-character legacy_uuid column.
-			'legacyRef' => $this->extractId(payload: $row),
-		];
-		if ($state === 'opted-in') {
-			$request['lawfulBasis'] = (string)($row['legalBasis'] ?? 'consent');
-		}
+		$wish = new ConsentWish(
+			state: (string)($row['state'] ?? ''),
+			source: (string)($row['source'] ?? ''),
+			evidence: (string)($row['evidence'] ?? ''),
+			legalBasis: (string)($row['legalBasis'] ?? 'consent'),
+		);
+		$request = $wish->changeRequest(
+			subject: new ConsentSubject(contactId: (string)($row['contactId'] ?? ''), channel: (string)($row['channel'] ?? ''), address: $address)
+		);
+		$request['evidence']['recordedAt'] = (string)($row['recordedAt'] ?? '');
 
-		return $request;
+		// The lawful basis stays after the legacy ref.
+		$basis = array_intersect_key($request, ['lawfulBasis' => true]);
+		unset($request['lawfulBasis']);
+		// The record UUID alone: unique across pipelinq's schemas, and it fits
+		// integriq's 64-character legacy_uuid column.
+		$request['legacyRef'] = $this->extractId(payload: $row);
+
+		return ($request + $basis);
 	}//end changeRequestFor()
 
 	/**
@@ -550,145 +510,113 @@ class ConsentService {
 	}//end replayPending()
 
 	/**
-	 * Ask integriq about one contact on one channel.
+	 * The recipient integriq is asked about: the subject's address, looked up when empty.
 	 *
-	 * @param string      $contactId       Contact UUID.
-	 * @param string      $channel         The channel.
-	 * @param string      $category        The category.
-	 * @param bool        $requiresConsent Whether consent is required.
-	 * @param string      $address         The address; looked up when empty.
-	 * @param string|null $inReplyTo       The inbound message, for a reply.
+	 * @param ConsentSubject $subject   The contact, channel and address.
+	 * @param string|null    $inReplyTo The inbound message, for a reply.
 	 *
-	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
+	 * @return array{address:string,contactRef:string,inReplyTo:string|null} The recipient.
 	 */
-	private function ask(
-		string $contactId,
-		string $channel,
-		string $category,
-		bool $requiresConsent,
-		string $address = '',
-		?string $inReplyTo = null,
-	): array {
+	private function recipientFor(ConsentSubject $subject, ?string $inReplyTo): array {
+		$address = $subject->address;
 		if ($address === '') {
-			$address = $this->addresses->addressFor(contactId: $contactId, channel: $channel);
+			$address = $this->addresses->addressFor(contactId: $subject->contactId, channel: $subject->channel);
 		}
 
-		return $this->integriq->decideOne(
-			channel: $channel,
-			category: $category,
-			requiresConsent: $requiresConsent,
-			address: $address,
-			contactRef: $contactId,
-			inReplyTo: $inReplyTo,
-		);
-	}//end ask()
+		return ['address' => $address, 'contactRef' => $subject->contactId, 'inReplyTo' => $inReplyTo];
+	}//end recipientFor()
+
+	/**
+	 * Record one wish: in integriq after the cutover, otherwise or when integriq did not store it in pipelinq.
+	 *
+	 * @param ConsentWish    $wish    The wish.
+	 * @param ConsentSubject $subject Who and which channel it is for.
+	 *
+	 * @return array<string, mixed>|null The stored row, or null on failure.
+	 */
+	private function record(ConsentWish $wish, ConsentSubject $subject): ?array {
+		if ($this->integriq->isCutover() === true) {
+			$recorded = $this->recordInIntegriq(wish: $wish, subject: $subject);
+			if ($recorded !== null) {
+				return $recorded;
+			}
+		}
+
+		return $this->appendRecord(wish: $wish, subject: $subject);
+	}//end record()
 
 	/**
 	 * Hand one wish to integriq, after any fallback rows of the same contact.
 	 *
-	 * @param string $contactId  Contact UUID.
-	 * @param string $channel    The channel.
-	 * @param string $state      `opted-in` or `opted-out`.
-	 * @param string $source     The trigger.
-	 * @param string $evidence   The evidence text.
-	 * @param string $legalBasis The basis, for an opt-in.
-	 * @param string $address    The address; looked up when empty.
+	 * @param ConsentWish    $wish    The wish.
+	 * @param ConsentSubject $subject Who and which channel it is for.
 	 *
 	 * @return array<string, mixed>|null What integriq stored, or null to keep the wish in pipelinq.
 	 */
-	private function recordInIntegriq(
-		string $contactId,
-		string $channel,
-		string $state,
-		string $source,
-		string $evidence,
-		string $legalBasis,
-		string $address,
-	): ?array {
-		// The integriq store keys an opt-out on the address, so a STOP from a number
-		// with no contact behind it is still recorded (contactRef stays empty).
-		if ($channel === '' || ($contactId === '' && $address === '')) {
+	private function recordInIntegriq(ConsentWish $wish, ConsentSubject $subject): ?array {
+		$subject = $this->integriqSubject(subject: $subject);
+		if ($subject === null) {
 			return null;
 		}
 
-		if ($address === '') {
-			$address = $this->addresses->addressFor(contactId: $contactId, channel: $channel);
+		if ($subject->contactId !== '') {
+			$this->replayPending(contactId: $subject->contactId);
 		}
 
-		if ($contactId !== '') {
-			$this->replayPending(contactId: $contactId);
-		}
-
-		$request = [
-			'address' => $address,
-			'state' => $state,
-			'scope' => 'channel',
-			'channel' => $channel,
-			'contactRef' => $contactId,
-			'source' => $source,
-			'evidence' => ['text' => $evidence],
-		];
-		if ($state === 'opted-in') {
-			$request['lawfulBasis'] = $legalBasis;
-		}
-
-		$outcome = $this->integriq->record(request: $request);
+		$outcome = $this->integriq->record(request: $wish->changeRequest(subject: $subject));
 		if ($outcome['recorded'] === false) {
 			return null;
 		}
 
 		return [
-			'contactId' => $contactId,
-			'channel' => $channel,
-			'state' => $state,
-			'source' => $source,
+			'contactId' => $subject->contactId,
+			'channel' => $subject->channel,
+			'state' => $wish->state,
+			'source' => $wish->source,
 			'store' => IntegriqConsentClient::STORE_INTEGRIQ,
 			'recordId' => $outcome['recordId'],
 		];
 	}//end recordInIntegriq()
 
 	/**
-	 * Append a new consent record (immutable history).
+	 * The subject with its address looked up, or null when integriq cannot key the wish.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $channel `whatsapp` or `sms`.
-	 * @param string $state `opted-in` / `opted-out` / `unknown`.
-	 * @param string $source Enum value.
-	 * @param string $evidence Audit evidence.
-	 * @param string $legalBasis GDPR legal basis.
+	 * @param ConsentSubject $subject Who and which channel the wish is for.
 	 *
-	 * @return array<string, mixed>|null Saved row.
+	 * @return ConsentSubject|null The subject integriq records, or null.
 	 */
-	private function appendRecord(
-		string $contactId,
-		string $channel,
-		string $state,
-		string $source,
-		string $evidence,
-		string $legalBasis = 'consent',
-	): ?array {
-		if ($contactId === '' || $channel === '' || $state === '') {
+	private function integriqSubject(ConsentSubject $subject): ?ConsentSubject {
+		// The integriq store keys an opt-out on the address, so a STOP from a number
+		// with no contact behind it is still recorded (contactRef stays empty).
+		if ($subject->channel === '' || ($subject->contactId === '' && $subject->address === '')) {
 			return null;
 		}
 
-		$basis = $legalBasis;
-		if ($basis === '') {
-			$basis = 'consent';
+		if ($subject->address !== '') {
+			return $subject;
 		}
 
-		$payload = [
-			'contactId' => $contactId,
-			'channel' => $channel,
-			'state' => $state,
-			'source' => $source,
-			'evidence' => $evidence,
-			'recordedAt' => $this->nowIso(),
-			'legalBasis' => $basis,
-		];
+		return new ConsentSubject(
+			contactId: $subject->contactId,
+			channel: $subject->channel,
+			address: $this->addresses->addressFor(contactId: $subject->contactId, channel: $subject->channel)
+		);
+	}//end integriqSubject()
 
-		return $this->saveObject(payload: $payload);
+	/**
+	 * Append a new consent record (immutable history).
+	 *
+	 * @param ConsentWish    $wish    The wish.
+	 * @param ConsentSubject $subject Who and which channel it is for.
+	 *
+	 * @return array<string, mixed>|null Saved row.
+	 */
+	private function appendRecord(ConsentWish $wish, ConsentSubject $subject): ?array {
+		if ($subject->contactId === '' || $subject->channel === '' || $wish->state === '') {
+			return null;
+		}
+
+		return $this->saveObject(payload: $wish->storedRow(subject: $subject));
 	}//end appendRecord()
 
 	/**
@@ -866,35 +794,6 @@ class ConsentService {
 	}//end getObjectService()
 
 	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * Extract a UUID / id / slug from a payload.
 	 *
 	 * @param array<string, mixed> $payload Payload.
@@ -954,29 +853,4 @@ class ConsentService {
 
 		return self::DEFAULT_SCHEMA_SLUG;
 	}//end getSchemaSlug()
-
-	/**
-	 * Current ISO 8601 UTC timestamp, to MICROSECOND resolution.
-	 *
-	 * 🔴 SECONDS ARE NOT ENOUGH TO ORDER CONSENT.
-	 *
-	 * This was gmdate('Y-m-d\TH:i:s\Z'), and loadLatestRecord() orders consent
-	 * events by this value. Two changes in the SAME SECOND therefore had no
-	 * defined order, and "the latest consent" — which is the whole question
-	 * this service answers, and a legally meaningful one — came down to which
-	 * row the store happened to return first. Opting out and back in inside one
-	 * second could leave the opt-out winning.
-	 *
-	 * ConsentServiceTest carried a sleep() to work around it, with a comment
-	 * saying so, and still failed roughly one run in five.
-	 *
-	 * Microseconds keep the value ISO 8601 and keep it string-sortable; the
-	 * comparison in loadLatestRecord() parses rather than strcmp's, so records
-	 * written at the old resolution still order correctly against new ones.
-	 *
-	 * @return string Timestamp.
-	 */
-	private function nowIso(): string {
-		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.u\Z');
-	}//end nowIso()
 }//end class

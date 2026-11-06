@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * validation, session-window enforcement, inbound signature
  * verification, placeholder contact creation.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WhatsAppAdapterTest extends TestCase {
 	private ContainerInterface $container;
@@ -316,6 +316,50 @@ class WhatsAppAdapterTest extends TestCase {
 		$this->assertSame('sent', $result['status']);
 		$this->assertSame('wamid.1', $result['externalMessageId']);
 	}//end testSendFreeFormWithinSessionWindow()
+
+	/**
+	 * The outbound contact moment names the client and agent the caller sent.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+	 */
+	public function testTheOutboundContactMomentKeepsTheCallersClientAndAgent(): void {
+		$this->objectService->inboundMessages = [
+			[
+				'uuid' => 'msg-1',
+				'channel' => 'whatsapp',
+				'direction' => 'inbound',
+				'sentAt' => gmdate('Y-m-d\TH:i:s\Z', (time() - 3600)),
+			],
+		];
+		$this->consentService->method('canSend')->willReturn(true);
+		$this->budgetService->method('canSend')->willReturn(true);
+		$this->providerRepo->method('listActive')->willReturn([
+			['uuid' => 'prov-1', 'kind' => 'whatsapp-cloud-api', 'vendor' => 'meta'],
+		]);
+		$this->providerClient->method('sendFreeForm')
+			->willReturn(['externalMessageId' => 'wamid.1', 'vendor' => 'meta']);
+
+		$recorded = [];
+		$this->contactmoments->expects($this->once())
+			->method('recordOutboundMessage')
+			->willReturnCallback(
+				static function (string $channel, string $subject, string $summary, array $channelMetadata, string $clientId = '', string $agent = '') use (&$recorded): ?string {
+					$recorded = ['clientId' => $clientId, 'agent' => $agent];
+					return null;
+				}
+			);
+
+		$result = $this->adapter->send(
+			contact: ['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'],
+			body: 'Hi there',
+			context: ['clientId' => 'cl-1', 'agent' => 'ann'],
+		);
+
+		$this->assertSame('sent', $result['status']);
+		$this->assertSame(['cl-1', 'ann'], [($recorded['clientId'] ?? null), ($recorded['agent'] ?? null)]);
+	}//end testTheOutboundContactMomentKeepsTheCallersClientAndAgent()
 
 	/**
 	 * Free-form send outside the 24h session window is refused.
@@ -702,7 +746,7 @@ class WhatsAppAdapterTest extends TestCase {
 	 * again can repeat the same template with the same values.
 	 *
 	 * @return void
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function testAFailedTemplateSendStoresItsParameters(): void {
 		$this->objectService->saveObject([

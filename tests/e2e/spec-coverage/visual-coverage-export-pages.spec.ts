@@ -123,7 +123,7 @@ test('ExportDestinationForm: /export/destinations/new mounts src/views/export/Ex
 	//
 	// Nothing else in the suite can see that flip: this was the only page
 	// whose manifest title and component literal disagreed. The
-	// `/kassakoppeling/audit/:id` case looks like a counter-example but is
+	// `/cash-register-audit/:id` case looks like a counter-example but is
 	// not — its own comment says it asserts the COMPONENT's fallback, which
 	// merely happens to equal the manifest title.
 	//

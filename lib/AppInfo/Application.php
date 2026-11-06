@@ -27,6 +27,7 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
 use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
 use OCA\Pipelinq\Adapter\BigQueryExportAdapter;
@@ -50,15 +51,23 @@ use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
+use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
+use OCA\Pipelinq\Listener\FormsSubmissionListener;
 use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Listener\LeadStageCreatingListener;
+use OCA\Pipelinq\Listener\LineTotalsListener;
+use OCA\Pipelinq\Listener\SubmittedLeadListener;
+use OCA\Pipelinq\Listener\StageLimitGuard;
+use OCA\Pipelinq\Listener\WebFormBindingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
+use OCA\Pipelinq\Listener\MergedAwayRecordGuard;
+use OCA\Pipelinq\Listener\MergedAwayRecordListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
@@ -66,7 +75,10 @@ use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
+use OCA\Pipelinq\Listener\QuoteNumberCreatingListener;
+use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
+use OCA\Pipelinq\Listener\PosLinePricingListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
 use OCA\Pipelinq\Service\AppointmentEmailService;
@@ -218,6 +230,48 @@ class Application extends App implements IBootstrap {
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
 		);
+		$this->registerNumberListeners(context: $context);
+		// A lead a form created gets its contact and client before it is stored
+		// and its submit touchpoint once it is (decision 179: the submit creates
+		// the lead itself, so nothing relays it afterwards).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: SubmittedLeadListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: SubmittedLeadListener::class
+		);
+		// A published website form is checked against its destination on every
+		// save, and refused on any finding (website-forms-submit-into-tickets,
+		// decisions 179 and 181 Q9).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: WebFormBindingListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: WebFormBindingListener::class
+		);
+		// A pipeline stage with a limit refuses one item more, from any screen
+		// (pipeline-stage-limit).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: StageLimitGuard::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: StageLimitGuard::class
+		);
+		// A Nextcloud Forms answer creates the object its binding names (Q6).
+		// Forms is optional; a `::class` string does not autoload, and the guard
+		// keeps an instance without Forms from registering anything.
+		if (class_exists(FormsSubmissionListener::EVENT) === true) {
+			$context->registerEventListener(
+				event: FormsSubmissionListener::EVENT,
+				listener: FormsSubmissionListener::class
+			);
+		}
 		// A new task records who created it (round3-review-points).
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
@@ -226,6 +280,20 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
 			listener: DealUpdatedListener::class
+		);
+		// A changed resource or service expires the cached availability it
+		// made wrong, for every writer (appointment-booking, REQ-APT-015).
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectDeletedEvent::class,
+			listener: AvailabilityCacheInvalidationListener::class
 		);
 		// Burgerportaal / MijnOverheid Berichtenbox bridge:
 		// listen for zaak status transitions and queue an outbound
@@ -296,15 +364,6 @@ class Application extends App implements IBootstrap {
 			listener: SurveyDispatchListener::class
 		);
 
-		// MDM: OpenRegister now materialises the golden record on save via its
-		// SurvivorshipRecomputeListener (x-openregister-survivorship), so the
-		// app-side recompute-on-source-change listener is retired. Instead we
-		// subscribe to OR's ObjectsMergedEvent to enqueue downstream sync after a
-		// merge / reversal (REQ-MDM-004; ADR-041 event-not-RPC propagation).
-		$context->registerEventListener(
-			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
-			listener: ObjectsMergedSyncListener::class
-		);
 		// Contact erasure keeps the opt-out in integriq (opt-out-before-send REQ-CII-005).
 		// An API delete is a soft delete, which OpenRegister reports as an update
 		// (erase-on-soft-delete REQ-CII-008); the purge is the deleted event.
@@ -373,6 +432,7 @@ class Application extends App implements IBootstrap {
 		);
 
 		$this->registerPosLifecycleGuards(context: $context);
+		$this->registerMergeListeners(context: $context);
 		$this->registerExportServices(context: $context);
 		$this->registerGdprSeamProviders(context: $context);
 	}//end register()
@@ -525,6 +585,35 @@ class Application extends App implements IBootstrap {
 	}//end registerExportServices()
 
 	/**
+	 * Register the listeners that stamp a number on a new record: a request or
+	 * complaint gets its reference ("PQ-2026-0402"), a quote its number
+	 * ("OFF-2026-0042").
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerNumberListeners(IRegistrationContext $context): void {
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: TicketReferenceCreatingListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: QuoteNumberCreatingListener::class
+		);
+		// A quote's totals and a lead's value follow their lines (line-totals-roll-up).
+		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $lineEvent) {
+			$context->registerEventListener(event: $lineEvent, listener: LineTotalsListener::class);
+		}
+
+		// A till line gets its VAT and total from the server before it is stored (till-server-priced-lines).
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $lineEvent) {
+			$context->registerEventListener(event: $lineEvent, listener: PosLinePricingListener::class);
+		}
+	}//end registerNumberListeners()
+
+	/**
 	 * Register the POS lifecycle guards keyed by the FQCN tag the
 	 * posTransaction / posRefund schemas reference in their
 	 * x-openregister-lifecycle.transitions[*].requires.
@@ -590,6 +679,31 @@ class Application extends App implements IBootstrap {
 	}//end registerPosLifecycleGuards()
 
 	/**
+	 * Register the listeners of an OpenRegister merge: the downstream sync after a
+	 * merge or reversal (REQ-MDM-004, ADR-041 event-not-RPC propagation), the
+	 * stamp that says where a merged-away client or contact went, and the guard
+	 * that keeps it read-only.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerMergeListeners(IRegistrationContext $context): void {
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
+			listener: ObjectsMergedSyncListener::class
+		);
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
+			listener: MergedAwayRecordListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: MergedAwayRecordGuard::class
+		);
+	}//end registerMergeListeners()
+
+	/**
 	 * Boot the application and register comment display name resolvers.
 	 *
 	 * @param IBootContext $context The boot context
@@ -618,10 +732,9 @@ class Application extends App implements IBootstrap {
 
 		try {
 			$initialState = $this->getContainer()->get(IInitialState::class);
-			$initialState->provideInitialState(
-				'features_roadmap_features',
-				$this->getContainer()->get(RoadmapFeatureCatalog::class)->load()
-			);
+			$roadmap = $this->getContainer()->get(RoadmapFeatureCatalog::class);
+			$initialState->provideInitialState('features_roadmap_features', $roadmap->load());
+			$initialState->provideInitialState('features_roadmap_categories', $roadmap->categories());
 
 			$dependencies = $this->readManifestDependencies();
 			$dependencyStatus = $this->resolveDependencyStatuses(context: $context, dependencies: $dependencies);

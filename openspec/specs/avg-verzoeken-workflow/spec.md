@@ -94,3 +94,23 @@ A repair step SHALL migrate every existing `avgVerzoek` object (with its termijn
 - **WHEN** the repair step runs again
 - **THEN** no duplicate cases MUST be created
 
+
+### Requirement: REQ-AVG-018 — Erasure removes the person and keeps the financial records
+
+When an erasure request (AVG art. 17) for a client is carried out, pipelinq SHALL have OpenRegister pseudonymise the person's identifying values in place (`DataSubjectRequestService::erase` in `pseudonymise` mode) and SHALL NOT delete the rows that carry them. Bookings, receipts, invoices and other records under a statutory retention duty (Boekhoudplicht, 7 years) or a legal hold SHALL keep their amounts, dates and references, lose only the identifying values, and be reported back as held when OpenRegister cannot touch them. The erasure SHALL support a dry run that reports what would be erased and held without changing anything, and SHALL NOT log the subject identifier in full.
+
+#### Scenario: A client with receipts asks to be forgotten
+- GIVEN client Anna de Boer with three POS receipts from last year
+- WHEN an erasure request for her is carried out
+- THEN her name, address, e-mail and phone read `[erased]` on the client and on the receipts
+- AND the three receipts keep their amounts, VAT, dates and receipt numbers
+
+#### Scenario: A record under legal hold
+- GIVEN one of her bookings is under a legal hold
+- WHEN the erasure runs
+- THEN that booking is left untouched and the summary reports it as held
+
+#### Scenario: A dry run
+- GIVEN an administrator previews the erasure
+- WHEN the dry run completes
+- THEN it reports the number of records it would erase and hold, and nothing has changed

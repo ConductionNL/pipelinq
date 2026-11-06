@@ -19,7 +19,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
  * where it withholds the object update event, and the scope is checked before
  * each write: no proven silence, no write. See ObjectEventSilence.
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 class TaskNameBackfillService {
 	/**
@@ -95,7 +95,7 @@ class TaskNameBackfillService {
 	 *
 	 * @return array{status: string, named: int, skipped: int, failed: int} The outcome.
 	 *
-	 * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+	 * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
 	 */
 	public function backfill(): array {
 		$counts = ['status' => 'done', 'named' => 0, 'skipped' => 0, 'failed' => 0];

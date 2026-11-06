@@ -17,7 +17,8 @@
   @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="confirm"
 		:name="t('pipelinq', 'Add as keyword target')"
 		size="normal"
 		data-testid="keyword-target-confirm"
@@ -66,7 +67,7 @@
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="$emit('close')">
+			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -77,15 +78,15 @@
 				{{ t('pipelinq', 'Add target') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
-	NcDialog,
 	NcSelect,
 	NcTextArea,
 	NcTextField,
@@ -96,7 +97,7 @@ export default {
 	name: 'KeywordTargetConfirmModal',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcSelect,
 		NcTextArea,
 		NcTextField,

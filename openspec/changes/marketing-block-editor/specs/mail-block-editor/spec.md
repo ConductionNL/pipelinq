@@ -12,9 +12,10 @@ check. From pipelinq matrix row `mkt-block-editor`.
 
 The email template form SHALL offer a Blocks mode with heading, text, image,
 button, divider, spacer, articles and footer blocks. A marketer SHALL add a
-block by dragging it from the palette or with a button, and SHALL reorder
-blocks by dragging or with Move up and Move down buttons. New email templates
-SHALL open in Blocks mode.
+block with a palette button, SHALL reorder blocks by dragging or with Move up
+and Move down buttons, and SHALL open a block's properties by pressing its
+name. The footer SHALL be edited under the list, always last. New email
+templates SHALL open in Blocks mode.
 
 #### Scenario: A marketer builds a newsletter without HTML
 

@@ -33,16 +33,14 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
 use OCA\Pipelinq\Service\Social\ConnectionAuditService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * The Matomo report and the connection audit.
@@ -66,8 +64,7 @@ class MarketingConnectorController extends Controller {
 	 * @param MatomoReportService $matomo The Matomo reader.
 	 * @param ConnectionAuditService $audit The connection audit.
 	 * @param ITimeFactory $time Time factory for the default window.
-	 * @param IUserSession $userSession Session.
-	 * @param ObjectOwnerAccessPolicy $policy CRM privilege check.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
 	 */
@@ -77,8 +74,7 @@ class MarketingConnectorController extends Controller {
 		private readonly MatomoReportService $matomo,
 		private readonly ConnectionAuditService $audit,
 		private readonly ITimeFactory $time,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -95,7 +91,7 @@ class MarketingConnectorController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function matomo(?string $from = null, ?string $to = null): JSONResponse {
-		$refusal = $this->refuseUnprivileged();
+		$refusal = $this->privilege->refusal();
 		if ($refusal !== null) {
 			return $refusal;
 		}
@@ -116,7 +112,7 @@ class MarketingConnectorController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function connectionAudit(string $refresh = 'false'): JSONResponse {
-		$refusal = $this->refuseUnprivileged();
+		$refusal = $this->privilege->refusal();
 		if ($refusal !== null) {
 			return $refusal;
 		}
@@ -166,22 +162,4 @@ class MarketingConnectorController extends Controller {
 
 		return new DateTimeImmutable((trim($value) . 'T00:00:00'), new DateTimeZone('UTC'));
 	}//end day()
-
-	/**
-	 * Refuse a caller without the CRM privilege.
-	 *
-	 * @return JSONResponse|null The refusal, or null when the caller may proceed.
-	 */
-	private function refuseUnprivileged(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		return null;
-	}//end refuseUnprivileged()
 }//end class

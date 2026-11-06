@@ -147,4 +147,63 @@ class TicketAssignControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $controller->assignToMe(id: 't-1')->getStatus());
 	}//end testNoSessionIsUnauthorized()
+
+	/**
+	 * Take the oldest skips what is assigned or closed and assigns the first open one.
+	 *
+	 * @return void
+	 */
+	public function testAssignOldestTakesTheFirstOpenUnassignedTicket(): void {
+		$controller = $this->controller();
+		$this->objects->expects($this->once())->method('findAll')->with(
+			$this->callback(static fn (array $config): bool => $config['sort'] === ['occurredAt' => 'asc']
+				&& $config['filters'] === ['register' => '20', 'schema' => '40'])
+		)->willReturn(
+			[
+				['id' => 't-1', 'title' => 'Taken', 'status' => 'new', 'assignee' => 'bob'],
+				['id' => 't-2', 'title' => 'Done', 'status' => 'resolved'],
+				['id' => 't-3', 'title' => 'Waiting', 'status' => 'in_progress', '@self' => ['id' => 't-3']],
+				['id' => 't-4', 'title' => 'Newer', 'status' => 'new'],
+			]
+		);
+		$this->objects->expects($this->once())->method('saveObject')->with(
+			$this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
+				&& $object['title'] === 'Waiting'
+				&& isset($object['@self']) === false),
+			$this->anything(),
+			'20',
+			'40',
+			't-3',
+		)->willReturn($this->ticket());
+
+		$response = $controller->assignOldest();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['id' => 't-3', 'assignee' => 'alice'], $response->getData());
+	}//end testAssignOldestTakesTheFirstOpenUnassignedTicket()
+
+	/**
+	 * An empty queue answers 404 and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testAssignOldestWithAnEmptyQueueIsNotFound(): void {
+		$controller = $this->controller();
+		$this->objects->method('findAll')->willReturn([['id' => 't-1', 'status' => 'closed']]);
+		$this->objects->expects($this->never())->method('saveObject');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $controller->assignOldest()->getStatus());
+	}//end testAssignOldestWithAnEmptyQueueIsNotFound()
+
+	/**
+	 * Without a session Take the oldest reads nothing.
+	 *
+	 * @return void
+	 */
+	public function testAssignOldestWithoutSessionIsUnauthorized(): void {
+		$controller = $this->controller(uid: null);
+		$this->objects->expects($this->never())->method('findAll');
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $controller->assignOldest()->getStatus());
+	}//end testAssignOldestWithoutSessionIsUnauthorized()
 }//end class

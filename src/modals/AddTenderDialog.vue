@@ -13,9 +13,9 @@
   - @spec openspec/changes/pos-split-tender/tasks.md#7.4
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Add tender')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="add-tender">
@@ -94,19 +94,20 @@
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Add tender') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import { formatEur } from '../services/posTotals.js'
 
 export default {
 	name: 'AddTenderDialog',
-	components: { NcButton, NcDialog, NcSelect, NcTextField },
+	components: { NcButton, CnDialog, NcSelect, NcTextField },
 	props: {
 		transactionId: {
 			type: String,

@@ -124,6 +124,10 @@ class WeeklyReviewService {
 			$search['highlights'],
 			$watch['highlights']
 		);
+		$directions = $this->directionsOf(
+			current: ['mail' => $mail, 'social' => $social, 'search' => $search, 'watch' => $watch],
+			monday: $monday
+		);
 
 		return [
 			'weekStarting' => $monday,
@@ -131,6 +135,7 @@ class WeeklyReviewService {
 			'degraded' => $this->degradedSources(),
 			'summary' => $this->summaryOf(monday: $monday, sunday: $sunday, highlights: $highlights),
 			'highlights' => $highlights,
+			'highlightDirections' => $directions,
 			'suggestions' => $this->suggestionsFor(mail: $mail, social: $social, search: $search),
 			// A competitor's headline is a better prompt than a search query,
 			// so it goes first; the queries fill the rest.
@@ -181,6 +186,52 @@ class WeeklyReviewService {
 
 		return $latest;
 	}//end latest()
+
+	/**
+	 * Whether each highlight's figure rose, fell or held against the week
+	 * before, one entry per highlight line in the same order.
+	 *
+	 * Mail is compared by clicks, social by views, search by clicks and the
+	 * watches by items seen.
+	 *
+	 * @param array<string, array<string, mixed>> $current The week's numbers per source.
+	 * @param string                              $monday  The reviewed week's Monday.
+	 *
+	 * @return array<int, string> `up`, `down` or `flat` per highlight.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 */
+	private function directionsOf(array $current, string $monday): array {
+		$from = date('Y-m-d', (strtotime($monday) - (7 * 86400)));
+		$to = date('Y-m-d', (strtotime($monday) - 86400));
+		$measures = ['mail' => 'clicks', 'social' => 'views', 'search' => 'clicks', 'watch' => 'moves'];
+
+		$directions = [];
+		foreach ($measures as $source => $measure) {
+			if ($current[$source]['highlights'] === []) {
+				continue;
+			}
+
+			$before = match ($source) {
+				'mail' => $this->numbers->mail(from: $from, to: $to),
+				'social' => $this->numbers->social(from: $from, to: $to),
+				'search' => $this->numbers->search(from: $from, to: $to),
+				default => $this->numbers->watch(from: $from, to: $to),
+			};
+			$now = (int)$current[$source][$measure];
+			$was = (int)$before[$measure];
+			$direction = 'flat';
+			if ($now > $was) {
+				$direction = 'up';
+			} else if ($now < $was) {
+				$direction = 'down';
+			}
+
+			$directions = array_merge($directions, array_fill(0, count($current[$source]['highlights']), $direction));
+		}
+
+		return $directions;
+	}//end directionsOf()
 
 	/**
 	 * What to try next week.

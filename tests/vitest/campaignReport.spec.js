@@ -104,6 +104,24 @@ describe('channelRows', () => {
 		expect(social.replies).toBe(0)
 	})
 
+	it('carries the leads per channel, zero when the server sent none', () => {
+		const rows = channelRows({
+			channels: [
+				{ channel: 'email', reach: 10, opened: 4, leads: 3 },
+				{ channel: 'mastodon', reach: null, opened: 0 },
+			],
+		})
+
+		expect(rows.map((row) => row.leads)).toEqual([3, 0])
+	})
+
+	it('leaves opened unrecorded on a channel that has no reach figure', () => {
+		const [email, social] = channelRows(REPORT)
+
+		expect(email.opened).toBe(80)
+		expect(social.opened).toBeNull()
+	})
+
 	it('answers an empty list for a report with no channels', () => {
 		expect(channelRows({})).toEqual([])
 		expect(channelRows(undefined)).toEqual([])

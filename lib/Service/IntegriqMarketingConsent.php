@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
+
 /**
  * Marketing consent questions and writes, through integriq.
  *
@@ -107,12 +109,12 @@ class IntegriqMarketingConsent {
 	 */
 	public function decide(string $contactId, string $channel, string $category, bool $requiresConsent, ?string $listId = null): array {
 		return $this->integriq->decideOne(
-			channel: $channel,
-			category: $category,
-			requiresConsent: $requiresConsent,
-			address: $this->addresses->addressFor(contactId: $contactId, channel: $channel),
-			contactRef: $this->contactRefOf(contactId: $contactId),
-			listRef: (string)$listId,
+			ask: new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent),
+			recipient: [
+				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
+				'contactRef' => $this->contactRefOf(contactId: $contactId),
+				'listRef' => (string)$listId,
+			],
 		);
 	}//end decide()
 
@@ -157,8 +159,8 @@ class IntegriqMarketingConsent {
 		}//end foreach
 
 		$out = [];
-		$decisions = $this->integriq->decide(channel: $channel, category: $category, requiresConsent: $requiresConsent, recipients: $recipients);
-		foreach ($decisions as $address => $decision) {
+		$ask = new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent);
+		foreach ($this->integriq->decide(question: $ask->question(), recipients: $recipients) as $address => $decision) {
 			foreach (($byAddress[$address] ?? []) as $contactId) {
 				$out[$contactId] = $decision;
 			}

@@ -75,6 +75,14 @@ class TicketService {
 	public const TYPE_COMPLAINT = 'complaint';
 
 	/**
+	 * Ticket subtype: a report about the public space (melding), such as loose
+	 * paving or a broken street light.
+	 *
+	 * @var string
+	 */
+	public const TYPE_MELDING = 'melding';
+
+	/**
 	 * Ticket subtype: a logged interaction (formerly the `contactmoment` schema).
 	 *
 	 * @var string
@@ -89,6 +97,7 @@ class TicketService {
 	public const TYPES = [
 		self::TYPE_REQUEST,
 		self::TYPE_COMPLAINT,
+		self::TYPE_MELDING,
 		self::TYPE_CONTACTMOMENT,
 	];
 
@@ -146,6 +155,7 @@ class TicketService {
 	 */
 	private const TYPE_VOCABULARY = [
 		self::TYPE_REQUEST => '/\b(request|requests|verzoek|verzoeken|aanvraag|aanvragen)\b/u',
+		self::TYPE_MELDING => '/\b(melding|meldingen)\b/u',
 		self::TYPE_CONTACTMOMENT => '/\b(contactmoment|contactmomenten|contact)\b/u',
 	];
 
@@ -277,12 +287,13 @@ class TicketService {
 	 * @param string $ticketType One of the TYPE_* constants.
 	 * @param array<string, mixed> $extraFilters Additional OR filters merged in.
 	 * @param int $limit Max rows.
+	 * @param array<string, string> $sort Order, as `[field => asc|desc]`. Empty keeps the store's own order.
 	 *
 	 * @return array<int, mixed> The matching ticket rows.
 	 *
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 	 */
-	public function findByType(string $ticketType, array $extraFilters = [], int $limit = 10000): array {
+	public function findByType(string $ticketType, array $extraFilters = [], int $limit = 10000, array $sort = []): array {
 		if ($this->isConfigured() === false) {
 			return [];
 		}
@@ -296,8 +307,13 @@ class TicketService {
 			$extraFilters
 		);
 
+		$query = ['filters' => $filters, 'limit' => $limit];
+		if ($sort !== []) {
+			$query['sort'] = $sort;
+		}
+
 		try {
-			return $this->getObjectService()->findAll(['filters' => $filters, 'limit' => $limit]);
+			return $this->getObjectService()->findAll($query);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'TicketService.findByType failed',

@@ -140,7 +140,12 @@ class WorklistServiceTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(
 			static function (string $text, array $parameters = []): string {
-				return $text;
+				return vsprintf($text, $parameters);
+			}
+		);
+		$l10n->method('n')->willReturnCallback(
+			static function (string $singular, string $plural, int $count): string {
+				return str_replace('%n', (string)$count, ($count === 1 ? $singular : $plural));
 			}
 		);
 
@@ -615,4 +620,72 @@ class WorklistServiceTest extends TestCase {
 		$this->expectExceptionMessage('Worklist query failed');
 		$service->getMine(userId: 'alice');
 	}
+
+	/**
+	 * My work's lists hold every kind of work: a ticket, a lead and a
+	 * follow-up task, each sorted into its list and filtered by the lens.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testItemsMixTicketsLeadsAndTasksPerList(): void {
+		$service = $this->buildService([
+			'lead_schema' => [['id' => 'l1', 'title' => 'Catering', 'expectedCloseDate' => self::iso('-1 day'), 'stage' => 'Offerte']],
+			'ticket_schema:request' => [
+				['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'in_progress', 'slaDeadline' => self::iso('-1 day')],
+				['id' => 't2', 'title' => 'Klaar', 'ticketType' => 'request', 'status' => 'resolved'],
+				['id' => 't3', 'title' => 'Geluidsoverlast', 'ticketType' => 'request', 'status' => 'awaiting_customer'],
+			],
+			'task_schema' => [['id' => 'k1', 'subject' => 'Terugbellen', 'deadline' => self::iso('+3 days'), 'status' => 'open']],
+		]);
+
+		$today = $service->items(userId: 'pieter', bucket: 'answer-today');
+		self::assertSame(['l1', 't1'], array_column($today['items'], 'id'));
+		self::assertSame(['lead', 'request'], array_column($today['items'], 'kind'));
+
+		self::assertSame(['k1'], array_column($service->items(userId: 'pieter', bucket: 'waiting-on-me')['items'], 'id'));
+		self::assertSame('Terugbellen', $service->items(userId: 'pieter', bucket: 'waiting-on-me')['items'][0]['title']);
+		self::assertSame(['t3'], array_column($service->items(userId: 'pieter', bucket: 'waiting-on-customer')['items'], 'id'));
+		self::assertSame(['t1', 't3'], array_column($service->items(userId: 'pieter', lens: 'tickets')['items'], 'id'));
+	}//end testItemsMixTicketsLeadsAndTasksPerList()
+
+	/**
+	 * The header sentence counts the work by kind and what is due today.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testSummaryCountsTheWorkByKind(): void {
+		$service = $this->buildService([
+			'lead_schema' => [['id' => 'l1', 'title' => 'Catering', 'expectedCloseDate' => self::iso('+9 days')]],
+			'ticket_schema:request' => [
+				['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'in_progress', 'slaDeadline' => self::iso('-1 day')],
+				['id' => 't2', 'title' => 'Straatfeest', 'ticketType' => 'request', 'status' => 'new', 'slaDeadline' => self::iso('+2 days')],
+			],
+		]);
+
+		self::assertSame('three items are with you: two tickets and one lead; one must be answered today', $service->summary(userId: 'pieter'));
+		self::assertSame('Nothing is with you right now', $this->buildService([])->summary(userId: 'pieter'));
+	}//end testSummaryCountsTheWorkByKind()
+
+	/**
+	 * Above twenty the count stays in digits.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testSummaryWritesCountsAboveTwentyInDigits(): void {
+		$tickets = [];
+		for ($index = 0; $index < 21; $index++) {
+			$tickets[] = ['id' => 't' . $index, 'title' => 'T' . $index, 'ticketType' => 'request', 'status' => 'new'];
+		}
+
+		self::assertSame(
+			'21 items are with you: 21 tickets',
+			$this->buildService(['ticket_schema:request' => $tickets])->summary(userId: 'pieter')
+		);
+	}//end testSummaryWritesCountsAboveTwentyInDigits()
 }

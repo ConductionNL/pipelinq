@@ -8,6 +8,11 @@
   - It holds what the old Tax breakdown card, the totals panel and the Total /
   - VAT tiles showed.
   -
+  - With `content.layout: "summary"` (board PqKassabon, the side column) it
+  - is a short list instead: the number of lines, the amount without VAT,
+  - the VAT per rate and the total, with the tax return and the invoice
+  - split folded away under it.
+  -
   - It reads the totals the server stored on the transaction, not a client
   - recomputation over the lines: those are the figures that were booked. The
   - page hands the transaction over as `objectData` and re-reads it on
@@ -21,13 +26,84 @@
 		:showActions="false"
 		:showRefresh="false"
 		:showRequestFeature="false">
-		<template #title-icon>
+		<template v-if="!summary" #title-icon>
 			<CnIcon name="Cash" :size="20" />
 		</template>
-		<template #title-meta>
+		<template v-if="!summary" #title-meta>
 			<span class="pos-tx-totals__mode">{{ priceModeLabel }}</span>
 		</template>
 
+		<template v-if="summary">
+			<dl class="pos-tx-totals__list">
+				<div v-if="lineCount !== null" class="pos-tx-totals__item" data-testid="pos-totals-row">
+					<dt>{{ t('pipelinq', 'Lines') }}</dt>
+					<dd>{{ n('pipelinq', '%n line', '%n lines', lineCount) }}</dd>
+				</div>
+				<div class="pos-tx-totals__item" data-testid="pos-totals-row">
+					<dt>{{ t('pipelinq', 'Excl. VAT') }}</dt>
+					<dd>{{ formatEur(amountExclVat) }}</dd>
+				</div>
+				<div
+					v-for="row in vatPerRate"
+					:key="`vat-${row.rate}`"
+					class="pos-tx-totals__item"
+					data-testid="pos-totals-row">
+					<dt>{{ t('pipelinq', 'VAT {rate}%', { rate: row.rate }) }}</dt>
+					<dd>{{ formatEur(row.tax) }}</dd>
+				</div>
+				<div class="pos-tx-totals__item pos-tx-totals__item--total" data-testid="pos-totals-row">
+					<dt>{{ t('pipelinq', 'Total') }}</dt>
+					<dd data-testid="pos-totals-total">
+						{{ formatEur(transaction.total) }}
+					</dd>
+				</div>
+			</dl>
+			<details class="pos-tx-totals__breakdown" data-testid="pos-totals-breakdown">
+				<summary>{{ t('pipelinq', 'Tax return and invoice split') }}</summary>
+				<table class="pos-tx-totals__table">
+					<caption class="hidden-visually">
+						{{ t('pipelinq', 'Tax return') }}
+					</caption>
+					<thead>
+						<tr>
+							<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+							<th scope="col" class="num">{{ t('pipelinq', 'Base') }}</th>
+							<th scope="col" class="num">{{ t('pipelinq', 'VAT') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="row in taxBreakdown" :key="`sum-tax-${row.rate}`">
+							<td>{{ row.rate }}%</td>
+							<td class="num">{{ formatEur(row.base) }}</td>
+							<td class="num">{{ formatEur(row.tax) }}</td>
+						</tr>
+					</tbody>
+				</table>
+				<table class="pos-tx-totals__table">
+					<caption class="hidden-visually">
+						{{ t('pipelinq', 'Invoice split') }}
+					</caption>
+					<thead>
+						<tr>
+							<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+							<th scope="col" class="num">{{ t('pipelinq', 'Base') }}</th>
+							<th scope="col" class="num">{{ t('pipelinq', 'VAT') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="row in invoiceBreakdown" :key="`sum-gl-${row.rate}`">
+							<td>{{ row.rate }}%</td>
+							<td class="num">{{ formatEur(row.base) }}</td>
+							<td class="num">{{ formatEur(row.tax) }}</td>
+							<td>{{ rateLabel(row.rate) }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</details>
+		</template>
+
+		<template v-else>
 		<h4 class="pos-tx-totals__heading">
 			{{ t('pipelinq', 'Tax return') }}
 		</h4>
@@ -102,11 +178,15 @@
 				</tbody>
 			</table>
 		</section>
+		</template>
 	</CnWidgetWrapper>
 </template>
 
 <script>
 import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { translatePlural as n } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { formatEur, rateLabel } from '../../services/posTotals.js'
 
 export default {
@@ -123,14 +203,77 @@ export default {
 			default: null,
 		},
 
+		/** The transaction id, from the detail page. */
+		objectId: {
+			type: String,
+			default: '',
+		},
+
 		/** The manifest widget title. */
 		title: {
 			type: String,
 			default: '',
 		},
+
+		/** The widget content; `layout: "summary"` draws the short list. */
+		content: {
+			type: Object,
+			default: () => ({}),
+		},
+	},
+
+	data() {
+		return {
+			/** The number of lines on the transaction, null until read. */
+			lineCount: null,
+		}
 	},
 
 	computed: {
+		/**
+		 * Whether the card draws the short summary list.
+		 *
+		 * @return {boolean} True for `content.layout: "summary"`.
+		 *
+		 * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-005-tax-breakdown-display-on-detail-view
+		 */
+		summary() {
+			return this.content?.layout === 'summary'
+		},
+
+		/**
+		 * The id of the transaction shown.
+		 *
+		 * @return {string} The id, or '' before it loads.
+		 *
+		 * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-005-tax-breakdown-display-on-detail-view
+		 */
+		transactionId() {
+			return this.objectId || this.transaction.id || ''
+		},
+
+		/**
+		 * The amount without VAT: the stored total less the stored VAT.
+		 *
+		 * @return {number} The amount.
+		 *
+		 * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-005-tax-breakdown-display-on-detail-view
+		 */
+		amountExclVat() {
+			return Math.round(((Number(this.transaction.total) || 0) - (Number(this.transaction.totalTax) || 0)) * 100) / 100
+		},
+
+		/**
+		 * The VAT per rate, highest rate first, as the board lists it.
+		 *
+		 * @return {Array<object>} The tax breakdown rows.
+		 *
+		 * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-005-tax-breakdown-display-on-detail-view
+		 */
+		vatPerRate() {
+			return [...this.taxBreakdown].sort((a, b) => b.rate - a.rate)
+		},
+
 		/**
 		 * The transaction, or an empty object before it loads.
 		 *
@@ -211,9 +354,43 @@ export default {
 		},
 	},
 
+	watch: {
+		transactionId: {
+			immediate: true,
+			handler() {
+				this.countLines()
+			},
+		},
+	},
+
 	methods: {
 		formatEur,
 		rateLabel,
+		n,
+
+		/**
+		 * Count the lines of the transaction for the summary list. A failed
+		 * read leaves the row out.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-005-tax-breakdown-display-on-detail-view
+		 */
+		async countLines() {
+			if (!this.summary || !this.transactionId) {
+				return
+			}
+			try {
+				const { data } = await axios.get(
+					generateUrl('/apps/openregister/api/objects/pipelinq/posTransactionLine'),
+					{ params: { transaction: this.transactionId, _limit: 1 } },
+				)
+				this.lineCount = Number.isFinite(Number(data?.total)) ? Number(data.total) : null
+			} catch (error) {
+				console.error('Could not count the transaction lines', error)
+				this.lineCount = null
+			}
+		},
 	},
 }
 </script>
@@ -315,6 +492,56 @@ export default {
 	margin-top: 16px;
 	padding-top: 12px;
 	border-top: 1px solid var(--color-border);
+}
+
+.pos-tx-totals__list {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 6px 16px;
+	margin: 0;
+	padding: 0;
+	font-variant-numeric: tabular-nums;
+}
+
+.pos-tx-totals__item {
+	display: contents;
+}
+
+/* Nextcloud's global dt rule (130px, right-aligned, padded) spaces the rows apart. */
+.pos-tx-totals__item dt {
+	width: auto;
+	padding: 0;
+	white-space: normal;
+	text-align: start;
+	color: var(--color-text-maxcontrast);
+}
+
+.pos-tx-totals__item dd {
+	margin: 0;
+	padding: 0;
+}
+
+.pos-tx-totals__item--total dt {
+	align-self: center;
+}
+
+.pos-tx-totals__item--total dd {
+	font-size: 20px;
+	font-weight: 700;
+}
+
+.pos-tx-totals__breakdown {
+	margin-top: 12px;
+	font-size: 13px;
+}
+
+.pos-tx-totals__breakdown summary {
+	cursor: pointer;
+	color: var(--color-text-maxcontrast);
+}
+
+.pos-tx-totals__breakdown table {
+	margin-top: 8px;
 }
 
 .pos-tx-totals__heading {

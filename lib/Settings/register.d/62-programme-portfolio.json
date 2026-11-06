@@ -46,7 +46,7 @@
         "properties": {
           "programme": { "type": "string", "title": "Programme", "format": "uuid", "facetable": true, "description": "The programme it sits under." },
           "title": { "type": "string", "title": "Title", "description": "What the task is." },
-          "status": { "type": "string", "title": "Status", "enum": ["open", "inProgress", "closed"], "facetable": true, "description": "Where the task stands. `fromTasks` progress counts closed over all." },
+          "status": { "type": "string", "title": "Status", "enum": ["open", "inProgress", "closed"], "x-enum-labels": { "open": "Not started", "inProgress": "In progress", "closed": "Done" }, "facetable": true, "description": "Where the task stands. `fromTasks` progress counts closed over all." },
           "assignee": { "type": "string", "title": "Assignee", "facetable": true, "description": "Who is doing it." },
           "dueDate": { "type": "string", "title": "Due", "format": "date", "description": "When it is due." },
           "cycle": { "type": "string", "title": "Cycle", "format": "uuid", "facetable": true, "description": "The time box it is in, when it is in one." }
@@ -135,7 +135,7 @@
           "name": { "type": "string", "title": "Name", "description": "What the cycle is called." },
           "startDate": { "type": "string", "title": "Start", "format": "date", "description": "When it opens." },
           "endDate": { "type": "string", "title": "End", "format": "date", "description": "When it closes." },
-          "status": { "type": "string", "title": "Status", "enum": ["open", "closed"], "facetable": true, "description": "Whether it is still running." },
+          "status": { "type": "string", "title": "Status", "enum": ["open", "closed"], "x-enum-labels": { "open": "Open", "closed": "Closed" }, "facetable": true, "description": "Whether it is still running." },
           "snapshots": {
             "type": "array",
             "title": "Snapshots",

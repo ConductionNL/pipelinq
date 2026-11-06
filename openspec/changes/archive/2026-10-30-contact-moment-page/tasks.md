@@ -1,0 +1,6 @@
+- [x] Contact-moment overview widgets and side cards, gated by ticketType
+- [x] Request widgets and side cards hide on a contact moment
+- [x] nextStep variant and crumb per kind
+- [x] l10n en/nl
+- [x] Vitest
+- [x] The Overview is one panel, as the board draws it: Contact details, Conversation notes and About this request as headed sections with a rule between them (a `sections` widget in its own Overview tab for contact moments; requests keep their stack).

@@ -200,6 +200,29 @@ class CampaignReportServiceTest extends TestCase {
 	}//end testAChannelWithoutABlastReportsNullReach()
 
 	/**
+	 * Each channel counts the distinct leads its touchpoints carry, so a lead
+	 * touched twice on one channel counts once there.
+	 *
+	 * @return void
+	 */
+	public function testEachChannelCountsTheLeadsItsTouchpointsCarry(): void {
+		$rows = $this->build()->channels(
+			blasts: [],
+			touchpoints: [
+				['leadId' => 'lead-1', 'kind' => 'click', 'channel' => 'email'],
+				['leadId' => 'lead-1', 'kind' => 'visit', 'channel' => 'email'],
+				['leadId' => 'lead-2', 'kind' => 'click', 'channel' => 'email'],
+				['leadId' => '', 'kind' => 'click', 'channel' => 'email'],
+				['leadId' => 'lead-1', 'kind' => 'submit', 'channel' => 'mastodon'],
+			]
+		);
+
+		$channels = array_column($rows, null, 'channel');
+		$this->assertSame(expected: 2, actual: $channels['email']['leads']);
+		$this->assertSame(expected: 1, actual: $channels['mastodon']['leads']);
+	}//end testEachChannelCountsTheLeadsItsTouchpointsCarry()
+
+	/**
 	 * @return void
 	 */
 	public function testARecordedCostIsSummedAndAnUnrecordedOneIsAbsent(): void {

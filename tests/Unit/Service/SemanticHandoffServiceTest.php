@@ -165,6 +165,86 @@ class SemanticHandoffServiceTest extends TestCase {
 	}//end testHasImplementerFalseOnResolverThrow()
 
 	/**
+	 * A resolver stub that also answers which register a schema sits in.
+	 *
+	 * @param string|null $schemaSlug The implementing schema's slug, null when nothing implements the kind.
+	 * @param string|null $registerSlug The owning register's slug, null when the schema sits in no register.
+	 * @param bool $throws Whether the register lookup throws.
+	 *
+	 * @return object The stub.
+	 */
+	private function locatingResolverStub(?string $schemaSlug, ?string $registerSlug, bool $throws = false): object {
+		$entity = static fn (?string $slug): ?object => $slug === null ? null : new class($slug) {
+			public function __construct(
+				private string $slug,
+			) {
+			}
+
+			public function getSlug(): string {
+				return $this->slug;
+			}
+		};
+
+		return new class($entity($schemaSlug), $entity($registerSlug), $throws) {
+			public function __construct(
+				private ?object $schema,
+				private ?object $register,
+				private bool $throws,
+			) {
+			}
+
+			public function resolveSchemaByImplements(string $uri, ?int $registerId = null): ?object {
+				return $this->schema;
+			}
+
+			public function findRegisterForSchema(object $schema): ?object {
+				if ($this->throws === true) {
+					throw new \RuntimeException('register lookup boom');
+				}
+
+				return $this->register;
+			}
+		};
+	}//end locatingResolverStub()
+
+	/**
+	 * The location is the slugs OpenRegister answers, whatever app they belong to.
+	 *
+	 * @return void
+	 */
+	public function testImplementerLocationReturnsTheResolvedSlugs(): void {
+		$service = $this->make([self::RESOLVER => $this->locatingResolverStub(schemaSlug: 'case-file', registerSlug: 'cases')]);
+
+		$this->assertSame(
+			['register' => 'cases', 'schema' => 'case-file'],
+			$service->implementerLocation('https://openregister.app/ns#Case')
+		);
+	}//end testImplementerLocationReturnsTheResolvedSlugs()
+
+	/**
+	 * Every way the location can be unknown answers null, never half a location.
+	 *
+	 * @return void
+	 */
+	public function testImplementerLocationIsNullWhenUnknown(): void {
+		$kind = 'https://openregister.app/ns#Case';
+		$cases = [
+			'no kind asked' => [[self::RESOLVER => $this->locatingResolverStub('case', 'cases')], ''],
+			'OpenRegister absent' => [[], $kind],
+			'a resolver that cannot name a register' => [[self::RESOLVER => $this->resolverStub(schema: (object)['slug' => 'case'])], $kind],
+			'nothing implements the kind' => [[self::RESOLVER => $this->locatingResolverStub(null, 'cases')], $kind],
+			'the schema sits in no register' => [[self::RESOLVER => $this->locatingResolverStub('case', null)], $kind],
+			'the schema has no slug' => [[self::RESOLVER => $this->locatingResolverStub('', 'cases')], $kind],
+			'the register has no slug' => [[self::RESOLVER => $this->locatingResolverStub('case', '')], $kind],
+			'the register lookup throws' => [[self::RESOLVER => $this->locatingResolverStub('case', 'cases', throws: true)], $kind],
+		];
+
+		foreach ($cases as $name => [$services, $asked]) {
+			$this->assertNull($this->make($services)->implementerLocation($asked), $name);
+		}
+	}//end testImplementerLocationIsNullWhenUnknown()
+
+	/**
 	 * An executed handoff returns ok + the target uuid.
 	 *
 	 * @return void

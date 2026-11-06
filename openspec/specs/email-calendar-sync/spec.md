@@ -75,42 +75,11 @@ Inbound and outbound emails MUST be matched to Pipelinq contacts by email addres
 
 ### Requirement: Users MUST be able to manually link emails to pipeline items
 
-Beyond automatic contact matching, users MUST be able to explicitly link emails to deals, leads, and requests.
+Mail on a client, contact, lead or request SHALL be read through the mail leaf on the detail page (requirement "Enable email + calendar leaves on CRM detail pages"); the content is read in Nextcloud Mail. Pipelinq SHALL NOT keep an EmailLink timeline of its own. Board: pipelinq/PqSynchronisatie.
 
-**Feature tier**: V1
-
-#### Scenario: Link email to lead from Pipelinq
-
-- GIVEN a user views an email in Nextcloud Mail about a quote for lead `Adviestraject Acme B.V.`
-- WHEN the user clicks "Link to Pipelinq" (via Nextcloud Mail action menu integration)
-- THEN the system MUST display a search dialog showing Pipelinq entities (leads, requests, clients)
-- AND selecting the lead MUST create an `EmailLink` object linking the email to the lead
-- AND the email MUST also remain on the contact's timeline (if a contact match exists)
-
-#### Scenario: Link email from Pipelinq entity detail
-
-- GIVEN a user is viewing lead "Adviestraject Acme B.V." in Pipelinq
-- WHEN they click "E-mail koppelen" and search for recent emails
-- THEN the system MUST display emails from the past 30 days matching contacts linked to this lead
-- AND selecting an email MUST create the `EmailLink` association
-- AND the email MUST appear in the lead's activity timeline
-
-#### Scenario: Unlink incorrectly matched email
-
-- GIVEN an email was automatically linked to contact "Jan de Vries" but the email is actually about a different topic
-- WHEN the user clicks "Ontkoppelen" on the email in Jan's timeline
-- THEN the `EmailLink` MUST be removed
-- AND the email MUST no longer appear in Jan's timeline
-- AND the system MUST NOT re-link the email on the next sync cycle (mark as excluded)
-
-#### Scenario: Send email from entity context
-
-- GIVEN a user is viewing client "Acme B.V." in Pipelinq
-- WHEN the user clicks "E-mail versturen"
-- THEN the system MUST open Nextcloud Mail's compose window with the client's email address pre-filled
-- AND after sending, the email MUST be automatically linked to the client via the next sync cycle
-
----
+#### Scenario: A user reads mail from the detail page
+- WHEN a user opens the E-mails tab of a client
+- THEN the mail leaf lists the matched mails with "De inhoud lees je in Nextcloud Mail"
 
 ### Requirement: Calendar events MUST sync with Nextcloud Calendar
 
@@ -163,42 +132,12 @@ Follow-ups and meetings created in Pipelinq MUST appear in Nextcloud Calendar an
 
 ### Requirement: Email sync MUST respect privacy and scope controls
 
-The system MUST enforce privacy and scope controls so that not all emails are synced to the CRM.
+The matching job SHALL only read the mailboxes the user enabled in their own settings (requirement "Per-user matching-job settings"); nobody else's mailbox is read. The leaf SHALL show only what the current user may read in Nextcloud Mail; there are no per-mail privacy toggles. Board: pipelinq/PqSynchronisatie.
 
-**Feature tier**: V1
-
-#### Scenario: Configure which mail accounts to sync
-
-- GIVEN a user has 3 email accounts in Nextcloud Mail (work, personal, shared)
-- WHEN configuring Pipelinq email sync in the personal settings section
-- THEN the user MUST be able to select which accounts to sync via checkboxes
-- AND personal accounts MUST NOT be synced unless explicitly enabled
-- AND the configuration MUST be stored via `IConfig` (per-user preference)
-
-#### Scenario: Configure sync scope (folders)
-
-- GIVEN a user has selected their work email account for sync
-- WHEN configuring sync scope
-- THEN the user MUST be able to select which folders to sync (e.g., Inbox, Sent) and which to exclude (e.g., Spam, Trash, Drafts)
-- AND the default MUST be: Inbox and Sent enabled, all others disabled
-
-#### Scenario: Exclude specific email threads
-
-- GIVEN an email thread is synced to a contact
-- WHEN a user marks the thread as "Niet CRM-relevant"
-- THEN all `EmailLink` objects for emails in that thread MUST be marked as excluded
-- AND future emails in that thread (matched by thread ID / References header) MUST NOT be synced
-
-#### Scenario: Visibility controls for shared emails
-
-- GIVEN user A syncs their emails to contact `Jan de Vries`
-- WHEN user B views Jan's timeline
-- THEN user A's synced emails MUST be visible to user B (CRM data is shared by default)
-- BUT the full email body MUST only be accessible to the syncing user (user A)
-- AND user B MUST see: subject, date, sender, direction -- but clicking "Bekijk volledige e-mail" MUST show "Alleen beschikbaar voor de eigenaar"
-- AND an admin MUST be able to configure whether email bodies are shared or private per organization policy
-
----
+#### Scenario: A colleague does not see another user's mail
+- GIVEN user A enabled matching for their mailbox
+- WHEN user B opens the same client
+- THEN the mail leaf lists only mail B may read in Nextcloud Mail
 
 ### Requirement: Sync MUST be near-real-time and handle conflicts
 

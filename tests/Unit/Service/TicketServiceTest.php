@@ -334,6 +334,20 @@ class TicketServiceTest extends TestCase {
 		$this->assertNull(actual: $service->detectTypeInText(text: 'How many leads are open?'));
 		$this->assertNull(actual: $service->detectTypeInText(text: ''));
 	}//end testDetectTypeInTextRecognisesSubtypeVocabulary()
+
+	/**
+	 * A melding is a ticket subtype like the others: it is in TYPES, so the
+	 * per-type summaries count it, and its words name it.
+	 *
+	 * @return void
+	 */
+	public function testMeldingIsATicketSubtype(): void {
+		$this->assertContains(needle: TicketService::TYPE_MELDING, haystack: TicketService::TYPES);
+		$this->assertSame(
+			expected: TicketService::TYPE_MELDING,
+			actual: $this->buildService()->detectTypeInText(text: 'Hoeveel meldingen staan er open?')
+		);
+	}//end testMeldingIsATicketSubtype()
 	/**
 	 * A contactmoment written without a direction is refused, naming the field.
 	 *
@@ -509,4 +523,56 @@ class TicketServiceTest extends TestCase {
 		$this->assertSame(expected: ['case-a', 'case-b'], actual: $captured['caseReferences']);
 		$this->assertSame(expected: 'case-b', actual: $captured['primaryCaseReference']);
 	}//end testAPrimaryInsideTheSetIsAccepted()
+
+	/**
+	 * An order asked for reaches the store, with the type filter still forced.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+	 */
+	public function testFindByTypeHandsAnOrderToTheStore(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$this->mockObjectService()->method('findAll')->willReturnCallback(
+			static function (array $query) use (&$captured): array {
+				$captured = $query;
+				return [];
+			}
+		);
+
+		$this->buildService()->findByType(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			extraFilters: ['assignee' => 'agent-1'],
+			limit: 5,
+			sort: ['started_at' => 'desc'],
+		);
+
+		$this->assertSame(expected: ['started_at' => 'desc'], actual: $captured['sort']);
+		$this->assertSame(expected: 5, actual: $captured['limit']);
+		$this->assertSame(expected: TicketService::TYPE_CONTACTMOMENT, actual: $captured['filters']['ticketType']);
+		$this->assertSame(expected: 'agent-1', actual: $captured['filters']['assignee']);
+	}//end testFindByTypeHandsAnOrderToTheStore()
+
+	/**
+	 * Without an order the query is the one every earlier caller sent: no sort key.
+	 *
+	 * @return void
+	 */
+	public function testFindByTypeWithoutAnOrderSendsNoSortKey(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$this->mockObjectService()->method('findAll')->willReturnCallback(
+			static function (array $query) use (&$captured): array {
+				$captured = $query;
+				return [];
+			}
+		);
+
+		$this->buildService()->findByType(ticketType: TicketService::TYPE_REQUEST);
+
+		$this->assertSame(expected: ['filters', 'limit'], actual: array_keys($captured));
+	}//end testFindByTypeWithoutAnOrderSendsNoSortKey()
 }//end class

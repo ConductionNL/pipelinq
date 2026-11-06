@@ -1,7 +1,8 @@
 # xwiki-proxy Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-xwiki-through-or. Update Purpose after archive.
+Pipelinq searches xWiki through OpenRegister's routed xWiki source, so the app holds no direct xWiki URL. When that source is not usable, the proxy falls back to the legacy direct search.
+
 ## Requirements
 ### Requirement: xWiki search prefers OpenRegister with legacy fallback
 

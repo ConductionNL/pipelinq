@@ -30,13 +30,31 @@
   - "Answer to the customer" over the employee's own message. A single
   - "Answer to the customer" frame put the resident's words under the
   - employee's heading (Woo round 5).
+  -
+  - With `inDialog` (TicketAnswerDialog, board PqTicketAntwoord) the section
+  - opens with the customer's question, shows portal replies only when there
+  - are any, and leaves the send button to the dialog footer: it emits `state`
+  - (`{ canSave, busy, waitForCustomer }`) and `saved`, and the dialog calls
+  - `save()`.
   -->
 <template>
 	<section
 		v-if="applies"
 		class="customer-reply-section"
 		:aria-label="t('pipelinq', 'Customer contact')">
-		<h4 class="customer-reply-section__heading">
+		<template v-if="inDialog && question">
+			<span class="customer-reply-section__meta">
+				{{ t('pipelinq', 'The question') }}
+			</span>
+			<blockquote
+				class="customer-reply-section__question"
+				data-testid="customer-reply-question">
+				{{ question }}
+			</blockquote>
+		</template>
+		<h4
+			v-if="!inDialog || replies.length"
+			class="customer-reply-section__heading">
 			{{ t('pipelinq', 'Replies from the customer') }}
 		</h4>
 		<ol v-if="replies.length" class="customer-reply-section__replies">
@@ -47,10 +65,10 @@
 				<span>{{ reply.message }}</span>
 			</li>
 		</ol>
-		<p v-else class="customer-reply-section__meta">
+		<p v-else-if="!inDialog" class="customer-reply-section__meta">
 			{{ t('pipelinq', 'No replies from the portal yet.') }}
 		</p>
-		<h4 class="customer-reply-section__heading">
+		<h4 v-if="!inDialog" class="customer-reply-section__heading">
 			{{ t('pipelinq', 'Answer to the customer') }}
 		</h4>
 		<SavedReplyPicker
@@ -60,20 +78,25 @@
 			@pick="message = $event" />
 		<NcTextArea
 			v-model="message"
-			:label="t('pipelinq', 'Message to the customer')"
+			:label="
+				inDialog
+					? t('pipelinq', 'Your message')
+					: t('pipelinq', 'Message to the customer')
+			"
 			:helperText="
 				t(
 					'pipelinq',
 					'The customer reads this on the portal. Everything else on the ticket stays internal.',
 				)
 			"
+			:rows="inDialog ? 10 : undefined"
 			resize="vertical" />
 		<NcCheckboxRadioSwitch
 			v-model="waitForCustomer"
 			data-testid="customer-reply-wait">
 			{{ t('pipelinq', 'Also set the ticket to waiting for the customer') }}
 		</NcCheckboxRadioSwitch>
-		<div class="customer-reply-section__actions">
+		<div v-if="!inDialog" class="customer-reply-section__actions">
 			<NcButton
 				variant="primary"
 				:disabled="busy || !canSave"
@@ -99,8 +122,8 @@ import {
 import SavedReplyPicker from './SavedReplyPicker.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
-/** The ticket kinds a customer can be answered on. */
-const ANSWERABLE = ['request', 'complaint']
+/** A contact moment is a logged interaction; every other ticket kind can be answered. */
+const NOT_ANSWERABLE = ['interaction']
 
 export default {
 	name: 'CustomerReplySection',
@@ -118,7 +141,15 @@ export default {
 			type: String,
 			required: true,
 		},
+
+		/** Drawn inside TicketAnswerDialog, whose footer holds the send button. */
+		inDialog: {
+			type: Boolean,
+			default: false,
+		},
 	},
+
+	emits: ['state', 'saved'],
 
 	data() {
 		return {
@@ -141,7 +172,7 @@ export default {
 		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-answers-from-the-ticket-req-qcd-007
 		 */
 		applies() {
-			return !!this.ticket && ANSWERABLE.includes(this.ticket.ticketType)
+			return !!this.ticket && !NOT_ANSWERABLE.includes(this.ticket.ticketType)
 		},
 
 		/**
@@ -176,10 +207,34 @@ export default {
 		},
 
 		/**
+		 * What the customer asked: the ticket's description.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 */
+		question() {
+			return (this.ticket && this.ticket.description) || ''
+		},
+
+		/**
+		 * What the dialog footer needs to draw its send button.
+		 *
+		 * @return {{canSave: boolean, busy: boolean, waitForCustomer: boolean}}
+		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 */
+		state() {
+			return {
+				canSave: this.canSave,
+				busy: this.busy,
+				waitForCustomer: this.waitForCustomer,
+			}
+		},
+
+		/**
 		 * Saved reply placeholder values for this ticket.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		placeholderValues() {
 			return {
@@ -193,7 +248,7 @@ export default {
 		 * The customer's correspondence language, contact first.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		language() {
 			const party = this.contact || this.client
@@ -202,6 +257,17 @@ export default {
 	},
 
 	watch: {
+		state: {
+			immediate: true,
+			/**
+			 * @param {object} value The send button's state.
+			 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+			 */
+			handler(value) {
+				this.$emit('state', value)
+			},
+		},
+
 		objectId: {
 			immediate: true,
 			/**
@@ -233,7 +299,7 @@ export default {
 		 * Read the ticket's client and contact for the saved reply placeholders.
 		 * A party that cannot be read leaves its placeholder as written.
 		 *
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		async loadParties() {
 			const store = useObjectStore()
@@ -285,6 +351,7 @@ export default {
 					return
 				}
 				this.ticket = saved
+				this.$emit('saved', saved)
 				this.notice = t(
 					'pipelinq',
 					'The answer is saved. The customer can read it on the portal.',
@@ -372,6 +439,15 @@ export default {
 .customer-reply-section__meta {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;
+}
+
+.customer-reply-section__question {
+	margin: 0;
+	padding: 12px 16px;
+	border-inline-start: 4px solid var(--color-border-dark);
+	border-radius: var(--border-radius);
+	background: var(--color-background-hover);
+	white-space: pre-line;
 }
 
 .customer-reply-section__actions {

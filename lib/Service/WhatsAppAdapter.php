@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -30,7 +30,11 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
-use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
+use OCA\Pipelinq\Service\Provider\WhatsAppMessage;
+use OCA\Pipelinq\Service\Provider\WhatsAppProviderAttempt;
+use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
+use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -62,14 +66,15 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods)           The 2026-07 phpmd
  *  cleanup extracted several private single-purpose helpers
  *  (resolveSendContext, resolveTemplateForSend, attemptProviderSend,
- *  bodyForSend, templateIdForSend, latestInboundTimestamp, firstScalarId)
+ *  templateIdForSend, latestInboundTimestamp, firstScalarId)
  *  specifically to bring per-method complexity under threshold; further
  *  splitting the class would scatter one channel-adapter concern without
  *  reducing real coupling.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WhatsAppAdapter {
+	use PayloadToArray;
 	use WritesAsMessagingAccount;
 
 	/**
@@ -137,7 +142,7 @@ class WhatsAppAdapter {
 	 * @param LoggerInterface $logger Logger.
 	 * @param PhoneNormaliser $phoneNormaliser Normalises an inbound sender to E.164.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -184,7 +189,7 @@ class WhatsAppAdapter {
 	 *     error?: string
 	 * } Send outcome.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function send(
@@ -215,19 +220,19 @@ class WhatsAppAdapter {
 		}
 
 		$language = (string)$this->appConfig->getValueString(Application::APP_ID, 'whatsapp.default_language', 'nl');
-		$context = $this->resolveSendContext(
+		$resolved = $this->resolveSendContext(
 			templateId: $templateId,
 			parameters: $parameters,
 			language: $language,
 			contactId: $contactId
 		);
-		if ($context['error'] !== null) {
-			return $context['error'];
+		if ($resolved['error'] !== null) {
+			return $resolved['error'];
 		}
 
-		$template = $context['template'];
-		$templateName = $context['templateName'];
-		$language = $context['language'];
+		$template = $resolved['template'];
+		$templateName = $resolved['templateName'];
+		$language = $resolved['language'];
 
 		$tenantId = $this->getTenantId();
 		$ordered = $this->orderedProvidersForSend(templateProviderId: (string)($template['providerId'] ?? ''));
@@ -236,29 +241,27 @@ class WhatsAppAdapter {
 			return ['status' => self::STATUS_NO_PROVIDER];
 		}
 
-		foreach ($ordered as $row) {
-			$outcome = $this->attemptProviderSend(
-				row: $row,
-				tenantId: $tenantId,
-				contactId: $contactId,
-				toNumber: $toNumber,
-				body: $body,
+		$run = new WhatsAppSendRun(
+			message: new WhatsAppMessage(contactId: $contactId, toNumber: $toNumber, body: $body, context: $context),
+			templateSend: new WhatsAppTemplateSend(
 				templateName: $templateName,
 				language: $language,
 				parameters: $parameters,
 				template: $template,
-				context: $context,
-			);
-
+			),
+			tenantId: $tenantId,
+		);
+		foreach ($ordered as $row) {
+			$outcome = $this->attemptProviderSend(row: $row, run: $run);
 			if ($outcome !== null) {
 				return $outcome;
 			}
-		}//end foreach
+		}
 
 		return $this->persistFailureAndAlert(
 			contactId: $contactId,
 			providerId: '',
-			body: $this->bodyForSend(templateName: $templateName, body: $body),
+			body: $run->outboundBody(),
 			templateId: $this->templateIdForSend(template: $template),
 			error: 'all WhatsApp providers returned transient errors',
 			parameters: $parameters,
@@ -490,121 +493,107 @@ class WhatsAppAdapter {
 	/**
 	 * Attempt a send through one provider row.
 	 *
-	 * Extracted from {@see send()}'s failover loop so the orchestrator stays
-	 * within the complexity budget; behaviour is unchanged: a budget denial,
-	 * a transient provider failure, or any unexpected throwable all signal
-	 * "try the next provider" (null return, mirrors the previous `continue`);
-	 * a permanent provider failure or a successful send are terminal
-	 * (mirrors the previous `return`).
+	 * A spent budget, a transient provider failure or any unexpected
+	 * throwable means "try the next provider" (null); a permanent provider
+	 * failure or a successful send is terminal.
 	 *
 	 * @param array<string, mixed> $row Provider row.
-	 * @param string $tenantId Tenant id.
-	 * @param string $contactId Contact UUID.
-	 * @param string $toNumber Recipient phone number.
-	 * @param string $body Free-form body.
-	 * @param string $templateName Resolved template external id, or empty for free-form.
-	 * @param string $language Resolved language.
-	 * @param array<int, string> $parameters Positional template parameters.
-	 * @param array<string, mixed>|null $template Resolved template row, or null for free-form.
-	 * @param array<string, mixed> $context Send context for the outbound audit.
+	 * @param WhatsAppSendRun      $run The send this attempt belongs to.
 	 *
 	 * @return array<string, mixed>|null Terminal outcome, or null to try the next provider.
-	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) The per-attempt send state
-	 *  (row + tenant + contact + recipient + body + template resolution + params
-	 *  + audit context) is threaded explicitly to keep the failover loop pure and
-	 *  free of mutable per-send instance state.
 	 */
-	private function attemptProviderSend(
-		array $row,
-		string $tenantId,
-		string $contactId,
-		string $toNumber,
-		string $body,
-		string $templateName,
-		string $language,
-		array $parameters,
-		?array $template,
-		array $context = [],
-	): ?array {
-		$providerId = $this->extractId(payload: $row);
-
-		if ($this->budgetService->canSend(tenantId: $tenantId, providerId: $providerId) === false) {
-			// Budget-failure is per-provider; the caller may still try the
-			// next priority.
+	private function attemptProviderSend(array $row, WhatsAppSendRun $run): ?array {
+		$attempt = new WhatsAppProviderAttempt(run: $run, row: $row, providerId: $this->extractId(payload: $row));
+		if ($this->budgetService->canSend(tenantId: $run->tenantId, providerId: $attempt->providerId) === false) {
 			return null;
 		}
 
 		try {
-			$result = match (true) {
-				$templateName !== '' => $this->providerClient->sendTemplate(
-					channelProvider: $row,
-					phoneNumber: $toNumber,
-					templateName: $templateName,
-					language: $language,
-					parameters: $parameters,
-				),
-				default => $this->providerClient->sendFreeForm(
-					channelProvider: $row,
-					phoneNumber: $toNumber,
-					body: $body,
-				),
-			};
-		} catch (TransientSmsProviderException $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.send: transient — failing over',
-				['providerId' => $providerId, 'message' => $e->getMessage()]
-			);
-			return null;
-		} catch (PermanentSmsProviderException $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.send: permanent provider failure',
-				['providerId' => $providerId, 'message' => $e->getMessage()]
-			);
-			return $this->persistFailureAndAlert(
-				contactId: $contactId,
-				providerId: $providerId,
-				body: $this->bodyForSend(templateName: $templateName, body: $body),
-				templateId: $this->templateIdForSend(template: $template),
-				error: $e->getMessage(),
-				parameters: $parameters,
-			);
+			$result = $this->sendThrough(attempt: $attempt);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.send: unexpected — failing over',
-				['providerId' => $providerId, 'message' => $e->getMessage()]
+			return $this->failedAttempt(attempt: $attempt, error: $e);
+		}
+
+		return $this->recordSent(attempt: $attempt, result: $result);
+	}//end attemptProviderSend()
+
+	/**
+	 * Send through the attempt's provider: a template send when a template
+	 * name is resolved, free-form otherwise.
+	 *
+	 * @param WhatsAppProviderAttempt $attempt The attempt.
+	 *
+	 * @return array{externalMessageId: string, vendor: string} The provider's answer.
+	 */
+	private function sendThrough(WhatsAppProviderAttempt $attempt): array {
+		$message = $attempt->run->message;
+		$templateSend = $attempt->run->templateSend;
+		if ($templateSend->templateName !== '') {
+			return $this->providerClient->sendTemplate(
+				channelProvider: $attempt->row,
+				phoneNumber: $message->toNumber,
+				templateName: $templateSend->templateName,
+				language: $templateSend->language,
+				parameters: $templateSend->parameters,
 			);
+		}
+
+		return $this->providerClient->sendFreeForm(
+			channelProvider: $attempt->row,
+			phoneNumber: $message->toNumber,
+			body: $message->body,
+		);
+	}//end sendThrough()
+
+	/**
+	 * Log a failed attempt; a permanent failure is stored and alerted, any
+	 * other failure hands over to the next provider.
+	 *
+	 * @param WhatsAppProviderAttempt $attempt The attempt.
+	 * @param Throwable               $error   What the client threw.
+	 *
+	 * @return array<string, mixed>|null The failure outcome, or null to try the next provider.
+	 */
+	private function failedAttempt(WhatsAppProviderAttempt $attempt, Throwable $error): ?array {
+		$this->logger->warning(
+			$attempt->failureLog(error: $error),
+			['providerId' => $attempt->providerId, 'message' => $error->getMessage()]
+		);
+		if (($error instanceof PermanentSmsProviderException) === false) {
 			return null;
-		}//end try
+		}
 
-		$persisted = $this->persistOutbound(
-			contactId: $contactId,
-			providerId: $providerId,
-			body: $this->bodyForSend(templateName: $templateName, body: $body),
-			externalMessageId: $result['externalMessageId'],
-			templateId: $this->templateIdForSend(template: $template),
-			templateParameters: $parameters,
+		return $this->persistFailureAndAlert(
+			contactId: $attempt->run->message->contactId,
+			providerId: $attempt->providerId,
+			body: $attempt->run->outboundBody(),
+			templateId: $this->templateIdForSend(template: $attempt->run->templateSend->template),
+			error: $error->getMessage(),
+			parameters: $attempt->run->templateSend->parameters,
 		);
+	}//end failedAttempt()
 
-		$this->budgetService->recordSend(tenantId: $tenantId, providerId: $providerId);
-
-		$messageId = $this->extractId(payload: ($persisted ?? []));
-		$this->auditOutbound(
-			contactId: $contactId,
-			messageId: $messageId,
-			conversationId: (string)(($persisted ?? [])['conversationId'] ?? ''),
-			body: $this->bodyForSend(templateName: $templateName, body: $body),
-			context: $context,
-		);
+	/**
+	 * Store, count and audit a send that went out.
+	 *
+	 * @param WhatsAppProviderAttempt                          $attempt The attempt.
+	 * @param array{externalMessageId: string, vendor: string} $result  The provider's answer.
+	 *
+	 * @return array<string, mixed> The sent outcome.
+	 */
+	private function recordSent(WhatsAppProviderAttempt $attempt, array $result): array {
+		$persisted = ($this->persistOutbound(attempt: $attempt, externalMessageId: $result['externalMessageId']) ?? []);
+		$this->budgetService->recordSend(tenantId: $attempt->run->tenantId, providerId: $attempt->providerId);
+		$this->auditOutbound(run: $attempt->run, persisted: $persisted);
 
 		return [
 			'status' => self::STATUS_SENT,
-			'messageId' => $messageId,
+			'messageId' => $this->extractId(payload: $persisted),
 			'externalMessageId' => $result['externalMessageId'],
-			'providerId' => $providerId,
+			'providerId' => $attempt->providerId,
 			'vendor' => $result['vendor'],
 		];
-	}//end attemptProviderSend()
+	}//end recordSent()
 
 	/**
 	 * Best-effort outbound contactmoment audit (REQ-OM-006).
@@ -614,23 +603,14 @@ class WhatsAppAdapter {
 	 * `channelMetadata.platform = whatsapp` (omnichannel convention).
 	 * Log-and-continue: an audit failure MUST never affect the send outcome.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $messageId Persisted message UUID.
-	 * @param string $conversationId Conversation UUID.
-	 * @param string $body Message body / template marker.
-	 * @param array<string, mixed> $context Send context (`clientId`, `agent`).
+	 * @param WhatsAppSendRun      $run       The send.
+	 * @param array<string, mixed> $persisted The stored message row, or empty when storing failed.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
 	 */
-	private function auditOutbound(
-		string $contactId,
-		string $messageId,
-		string $conversationId,
-		string $body,
-		array $context,
-	): void {
+	private function auditOutbound(WhatsAppSendRun $run, array $persisted): void {
 		$auditor = $this->contactmoments();
 		if ($auditor === null) {
 			return;
@@ -639,16 +619,16 @@ class WhatsAppAdapter {
 		$auditor->recordOutboundMessage(
 			channel: 'chat',
 			subject: 'Outbound WhatsApp',
-			summary: $body,
+			summary: $run->outboundBody(),
 			channelMetadata: [
 				'platform' => 'whatsapp',
 				'direction' => 'outbound',
-				'messageId' => $messageId,
-				'conversationId' => $conversationId,
-				'contactId' => $contactId,
+				'messageId' => $this->extractId(payload: $persisted),
+				'conversationId' => (string)($persisted['conversationId'] ?? ''),
+				'contactId' => $run->message->contactId,
 			],
-			clientId: (string)($context['clientId'] ?? ''),
-			agent: (string)($context['agent'] ?? ''),
+			clientId: (string)($run->message->context['clientId'] ?? ''),
+			agent: (string)($run->message->context['agent'] ?? ''),
 		);
 	}//end auditOutbound()
 
@@ -670,23 +650,6 @@ class WhatsAppAdapter {
 
 		return $service;
 	}//end contactmoments()
-
-	/**
-	 * Outbound body: a `[template:NAME]` marker for template sends, the raw
-	 * free-form body otherwise.
-	 *
-	 * @param string $templateName Resolved template external id, or empty for free-form.
-	 * @param string $body Free-form body.
-	 *
-	 * @return string
-	 */
-	private function bodyForSend(string $templateName, string $body): string {
-		if ($templateName !== '') {
-			return sprintf('[template:%s]', $templateName);
-		}
-
-		return $body;
-	}//end bodyForSend()
 
 	/**
 	 * Outbound templateId: the resolved template's id, or empty for free-form.
@@ -726,7 +689,7 @@ class WhatsAppAdapter {
 	 *     error?: string
 	 * } Outcome envelope.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.6
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
@@ -882,7 +845,7 @@ class WhatsAppAdapter {
 	 *
 	 * @return int Distinct placeholder positions.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function parseTemplatePlaceholders(string $templateBody): int {
 		$matches = [];
@@ -898,7 +861,7 @@ class WhatsAppAdapter {
 	 *
 	 * @return bool True if the most recent inbound is within 24h.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function isWithinSessionWindow(string $contactId): bool {
 		if ($contactId === '') {
@@ -1021,7 +984,7 @@ class WhatsAppAdapter {
 	 *
 	 * @return array{status: string, error: string, providerId?: string} Outcome.
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	private function persistFailureAndAlert(
 		string $contactId,
@@ -1076,42 +1039,31 @@ class WhatsAppAdapter {
 	}//end persistFailureAndAlert()
 
 	/**
-	 * Persist an outbound message row.
+	 * Persist the outbound message row of a provider attempt that went out.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID.
-	 * @param string $body Body.
-	 * @param string $externalMessageId Provider id.
-	 * @param string $templateId Template UUID or empty.
-	 * @param array<int, string> $templateParameters Positional template parameters.
+	 * @param WhatsAppProviderAttempt $attempt           The attempt.
+	 * @param string                  $externalMessageId Provider id.
 	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
-	private function persistOutbound(
-		string $contactId,
-		string $providerId,
-		string $body,
-		string $externalMessageId,
-		string $templateId,
-		array $templateParameters,
-	): ?array {
+	private function persistOutbound(WhatsAppProviderAttempt $attempt, string $externalMessageId): ?array {
 		$conversationId = $this->findOrOpenConversation(
-			contactId: $contactId,
-			providerId: $providerId,
+			contactId: $attempt->run->message->contactId,
+			providerId: $attempt->providerId,
 			channel: 'whatsapp',
 		);
 
 		return $this->persistMessage(
 			payload: [
-				'contactId' => $contactId,
+				'contactId' => $attempt->run->message->contactId,
 				'conversationId' => $conversationId,
 				'channel' => 'whatsapp',
 				'direction' => 'outbound',
-				'body' => $body,
-				'providerId' => $providerId,
+				'body' => $attempt->run->outboundBody(),
+				'providerId' => $attempt->providerId,
 				'externalMessageId' => $externalMessageId,
-				'templateId' => $templateId,
-				'templateParameters' => array_values($templateParameters),
+				'templateId' => $this->templateIdForSend(template: $attempt->run->templateSend->template),
+				'templateParameters' => array_values($attempt->run->templateSend->parameters),
 				'deliveryStatus' => 'queued',
 				'sentAt' => $this->nowIso(),
 			],
@@ -1453,35 +1405,6 @@ class WhatsAppAdapter {
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OR entity to an array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Extract a UUID / id / slug from a payload.

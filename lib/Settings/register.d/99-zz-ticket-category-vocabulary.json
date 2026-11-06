@@ -1,0 +1,55 @@
+{
+  "_note": "pl2 PqOperationeel. A ticket's category is a code (afval, websiteaanvraag); the categories a tenant uses are its own data, so they live as ticketCategory objects that name each code. Charts and lists read the name by the code (groupBy.reference.keyField). A code with no entry still shows as the code.",
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "ticketCategory"
+        ]
+      }
+    },
+    "schemas": {
+      "ticketCategory": {
+        "slug": "ticketCategory",
+        "title": "Ticket category",
+        "icon": "ShapeOutline",
+        "version": "1.0.0",
+        "summary": "A category a ticket can carry, with the name people read.",
+        "description": "The vocabulary for a ticket's category. A ticket holds the category's key; this object gives that key a name and an optional description. Each tenant keeps its own list.",
+        "@type": "DefinedTerm",
+        "required": [
+          "key",
+          "name"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The code a ticket stores in its category field, such as afval.",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The name people read, such as Waste and containers.",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "When to use this category.",
+            "maxLength": 2000
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "description": "Whether new tickets can still get this category.",
+            "default": true
+          }
+        }
+      }
+    }
+  }
+}

@@ -470,6 +470,36 @@ class PosPaymentControllerTest extends TestCase {
 	/**
 	 * @return void
 	 */
+	public function testMethodsAnswersTheCashierReadableList(): void {
+		$methods = [['provider' => 'ccv', 'providerLabel' => 'CCV', 'type' => 'terminal', 'method' => 'card']];
+		$this->service->expects($this->once())->method('listPaymentMethods')->willReturn($methods);
+
+		$response = $this->controller->methods();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['methods' => $methods], actual: $response->getData());
+	}//end testMethodsAnswersTheCashierReadableList()
+
+	/**
+	 * A cashier is not an admin: the methods list must be open to every
+	 * signed-in user, while the provider configuration stays admin-only.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+	 */
+	public function testMethodsIsOpenToCashiersAndProviderConfigIsNot(): void {
+		$open = static fn (string $method): bool => (new \ReflectionMethod(PosPaymentController::class, $method))
+			->getAttributes(\OCP\AppFramework\Http\Attribute\NoAdminRequired::class) !== [];
+
+		$this->assertTrue(condition: $open('methods'));
+		$this->assertFalse(condition: $open('index'));
+		$this->assertFalse(condition: $open('show'));
+	}//end testMethodsIsOpenToCashiersAndProviderConfigIsNot()
+
+	/**
+	 * @return void
+	 */
 	public function testCaptureReturnsSettledPayment(): void {
 		$this->loginAs();
 		$this->service->expects($this->once())

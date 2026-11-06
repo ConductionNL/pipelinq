@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/tasks.md#3.3
+ * @spec openspec/specs/berichtenbox/spec.md
  */
 
 declare(strict_types=1);
@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -45,6 +46,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/portal-contribution/spec.md
  */
 class BerichtenboxAdminController extends Controller {
+	use OptionalPayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -90,7 +93,7 @@ class BerichtenboxAdminController extends Controller {
 			return new JSONResponse(['error' => 'Message not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		$data = $this->toArray(row: $message);
+		$data = $this->toArray(object: $message);
 		if ($data === null) {
 			return new JSONResponse(['error' => 'Unreadable message'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
@@ -172,7 +175,7 @@ class BerichtenboxAdminController extends Controller {
 	private function tally(iterable $rows, array $counters): array {
 		$unread = 0;
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(object: $row);
 			if ($data === null) {
 				continue;
 			}
@@ -198,35 +201,4 @@ class BerichtenboxAdminController extends Controller {
 	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Normalise OR result to array.
-	 *
-	 * @param mixed $row Row.
-	 *
-	 * @return array|null
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true) {
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$serialized = $row->jsonSerialize();
-				if (is_array($serialized) === true) {
-					return $serialized;
-				}
-			}
-
-			if (method_exists($row, 'getObject') === true) {
-				$inner = $row->getObject();
-				if (is_array($inner) === true) {
-					return $inner;
-				}
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

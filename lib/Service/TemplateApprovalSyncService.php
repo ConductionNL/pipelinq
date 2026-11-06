@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,9 +46,11 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges provider
  * repository + provider client + notifications + OR.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class TemplateApprovalSyncService {
+	use PayloadToArray;
+
 	/**
 	 * Default register slug.
 	 */
@@ -68,7 +71,7 @@ class TemplateApprovalSyncService {
 	 * @param NotificationService $notificationService Admin notifications.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -85,7 +88,7 @@ class TemplateApprovalSyncService {
 	 *
 	 * @return array{providers: int, templatesUpdated: int, statusChanges: int} Summary.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function syncAll(): array {
 		$providers = array_merge(
@@ -115,7 +118,7 @@ class TemplateApprovalSyncService {
 	 *
 	 * @return array{templatesUpdated: int, statusChanges: int} Summary.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function syncOne(array $channelProvider): array {
 		$providerId = $this->extractId(payload: $channelProvider);
@@ -344,35 +347,6 @@ class TemplateApprovalSyncService {
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OR entity to an array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Extract a UUID / id / slug from a payload.

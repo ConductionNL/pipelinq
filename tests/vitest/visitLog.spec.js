@@ -21,7 +21,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { mailtoHref, mapHref, telHref } from '../../src/services/contactLinks.js'
-import { buildVisitPayloads, followUpDeadline } from '../../src/services/visitLog.js'
+import { buildVisitPayloads, followUpDeadline, linkTaskToContactMoment } from '../../src/services/visitLog.js'
 
 const SETTINGS = resolve(__dirname, '../../lib/Settings')
 
@@ -152,6 +152,16 @@ describe('the visit payloads', () => {
 		expect([due.getFullYear(), due.getMonth() + 1, due.getDate()]).toEqual([
 			2026, 10, 2,
 		])
+	})
+
+	it('links the follow-up task to the visit it came from', () => {
+		const { task } = buildVisitPayloads({ ...base, clientId: CLIENT, followUpDate: '2026-10-02' })
+		const linked = linkTaskToContactMoment(task, { id: 'c0ffee00-0000-4000-8000-000000000001' })
+		expect(linked.contactMoment).toBe('c0ffee00-0000-4000-8000-000000000001')
+		expect(validateTask(linked), JSON.stringify(validateTask.errors)).toBe(true)
+		expect(linkTaskToContactMoment(task, { '@self': { id: 'abc' } }).contactMoment).toBe('abc')
+		expect(linkTaskToContactMoment(task, {})).not.toHaveProperty('contactMoment')
+		expect(linkTaskToContactMoment(null, { id: 'x' })).toBeNull()
 	})
 
 	it('reads an empty or broken follow-up date as none', () => {

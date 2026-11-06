@@ -1,11 +1,8 @@
 <template>
 	<CnSettingsSection
-		:name="t('pipelinq', 'Prospect Discovery')"
+		:name="t('pipelinq', 'Find prospects')"
 		:description="
-			t(
-				'pipelinq',
-				'Configure your Ideal Customer Profile (ICP) to discover potential leads.',
-			)
+			t('pipelinq', 'Your ideal customer profile, to find possible leads.')
 		">
 		<NcLoadingIcon v-if="loading" :size="24" />
 

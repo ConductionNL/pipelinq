@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
  */
 
 declare(strict_types=1);
@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -36,13 +37,15 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Redemption lifecycle service.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) orchestrates the full
  *  redemption lifecycle (reserve/use/cancel/expire) across account + ledger
  *  services.
  */
 class RedemptionService {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -71,7 +74,7 @@ class RedemptionService {
 	 *
 	 * @throws RuntimeException On insufficient balance, expired option, per-customer limit reached.
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004-01
 	 */
 	public function initiateRedemption(string $accountId, string $optionId): array {
 		$account = $this->accountService->getAccount(accountId: $accountId);
@@ -105,7 +108,7 @@ class RedemptionService {
 		// Debit AFTER the redemption record exists so the brondocument points at the redemption.
 		$redemptionUuid = $this->extractUuid(object: $saved);
 		try {
-			$this->ledgerService->debitPoints(
+			$this->ledgerService->forOperation(operationId: 'redemption:'.(string)$redemptionUuid)->debitPoints(
 				accountId: $accountId,
 				amount: $cost,
 				redemptionId: (string)$redemptionUuid,
@@ -171,7 +174,7 @@ class RedemptionService {
 	 * @param string $code The beloningCode.
 	 *
 	 * @return array{valid: bool, redemption: ?array<string, mixed>, reason: ?string}
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
 	 */
 	public function validateCode(string $code): array {
 		$redemption = $this->findByCode(code: $code);
@@ -202,7 +205,7 @@ class RedemptionService {
 	 * @param ?string $posTransactionId Optional POS transaction id.
 	 *
 	 * @return array<string, mixed> The updated redemption.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
 	 */
 	public function markRedemptionUsed(string $redemptionId, ?string $posTransactionId = null): array {
 		$redemption = $this->getRedemption(redemptionId: $redemptionId);
@@ -325,7 +328,7 @@ class RedemptionService {
 			return null;
 		}
 
-		return $this->toArray(object: $object);
+		return $this->toArray(value: $object);
 	}//end getRedemption()
 
 	/**
@@ -367,7 +370,7 @@ class RedemptionService {
 			return null;
 		}
 
-		return $this->toArray(object: reset($rowList));
+		return $this->toArray(value: reset($rowList));
 	}//end findByCode()
 
 	/**
@@ -474,7 +477,7 @@ class RedemptionService {
 			return null;
 		}
 
-		return $this->toArray(object: $object);
+		return $this->toArray(value: $object);
 	}//end getOption()
 
 	/**
@@ -540,7 +543,7 @@ class RedemptionService {
 			uuid: $uuid
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persist()
 
 	/**
@@ -586,35 +589,6 @@ class RedemptionService {
 
 		return $object['redemptionId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Normalise OR entity/array to array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the ObjectService.

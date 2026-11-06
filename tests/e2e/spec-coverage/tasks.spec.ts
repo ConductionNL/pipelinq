@@ -14,7 +14,7 @@ import {
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// @e2e openspec/specs/task-background-jobs/spec.md#tasks-index
+// @e2e openspec/specs/task-background-jobs/spec.md
 test('Tasks: navigates from sidebar and shows index surface', async ({ page }) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
@@ -28,7 +28,7 @@ test('Tasks: navigates from sidebar and shows index surface', async ({ page }) =
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/specs/task-background-jobs/spec.md#tasks-list-table
+// @e2e openspec/specs/task-background-jobs/spec.md
 test('Tasks: list table and primary actions render', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Tasks', /\/tasks/)
@@ -42,7 +42,7 @@ test('Tasks: list table and primary actions render', async ({ page }) => {
 	).toBeVisible()
 })
 
-// @e2e openspec/specs/task-background-jobs/spec.md#tasks-create-modal
+// @e2e openspec/specs/task-background-jobs/spec.md
 test('Tasks: Add Task opens a create modal with a form', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Tasks', /\/tasks/)

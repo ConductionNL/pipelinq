@@ -11,15 +11,12 @@
   - `mailto:` link.
   -->
 <template>
-	<NcModal
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Write email')"
-		size="normal"
 		data-testid="write-email-modal"
-		@close="$emit('close')">
+		@closing="$emit('close')">
 		<div class="write-email">
-			<h2 class="write-email__title">
-				{{ t('pipelinq', 'Write email') }}
-			</h2>
 			<p class="write-email__to">
 				{{ t('pipelinq', 'To {address}', { address }) }}
 			</p>
@@ -46,7 +43,8 @@
 							)
 				}}
 			</p>
-			<div class="write-email__actions">
+		</div>
+		<template #actions>
 				<NcButton @click="$emit('close')">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
@@ -60,16 +58,16 @@
 							: t('pipelinq', 'Open in your mail program')
 					}}
 				</NcButton>
-			</div>
-		</div>
-	</NcModal>
+		</template>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcModal, NcTextArea, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcTextArea, NcTextField } from '@nextcloud/vue'
 import SavedReplyPicker from '../components/SavedReplyPicker.vue'
 import { composeUrl } from '../services/savedReplies.js'
 
@@ -77,7 +75,7 @@ export default {
 	name: 'WriteEmailModal',
 	components: {
 		NcButton,
-		NcModal,
+		CnDialog,
 		NcTextArea,
 		NcTextField,
 		SavedReplyPicker,
@@ -117,7 +115,7 @@ export default {
 		 * Whether the Nextcloud Mail app is enabled.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
 		 */
 		mailEnabled() {
 			let statuses
@@ -133,7 +131,7 @@ export default {
 		 * The URL Open in Mail opens.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
 		 */
 		url() {
 			return composeUrl(
@@ -152,7 +150,7 @@ export default {
 		/**
 		 * Open the composer (new tab) or the mail program, then close.
 		 *
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
 		 */
 		open() {
 			if (this.mailEnabled) {

@@ -1,0 +1,46 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Colleagues who follow a ticket or a lead get its updates (change notify-the-followers-of-tickets-and-leads). Adds OpenRegister's {\"watchers\": true} recipient block to ticket.ticketUpdated, lead.leadUpdated, lead.leadWon and lead.leadLost. The create rules (newTicket, newLead) get none: nobody can follow an object before it exists. Fragments replace lists rather than merge them, so each recipient list is restated in full: a later change to the assignee or group recipients of these four rules must edit this file too, or this file wins and that change is lost."
+  },
+  "components": {
+    "schemas": {
+      "ticket": {
+        "slug": "ticket",
+        "x-openregister-notifications": {
+          "ticketUpdated": {
+            "recipients": [
+              {"kind": "field", "field": "assignee"},
+              {"watchers": true}
+            ]
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "x-openregister-notifications": {
+          "leadUpdated": {
+            "recipients": [
+              {"kind": "field", "field": "assignee"},
+              {"watchers": true}
+            ]
+          },
+          "leadWon": {
+            "recipients": [
+              {"kind": "groups", "groups": ["sales"]},
+              {"kind": "field", "field": "assignee"},
+              {"watchers": true}
+            ]
+          },
+          "leadLost": {
+            "recipients": [
+              {"kind": "field", "field": "assignee"},
+              {"watchers": true}
+            ]
+          }
+        }
+      }
+    }
+  }
+}

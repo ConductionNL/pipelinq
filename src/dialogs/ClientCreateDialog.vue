@@ -1,14 +1,15 @@
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'New Client')"
-		:open="true"
-		size="normal"
+	<CnDialog
+		:name="t('pipelinq', 'New client')"
+		:eyebrow="t('pipelinq', 'Residents and businesses')"
+		width="form"
 		data-testid="client-create-dialog"
 		@closing="$emit('close')">
 		<ClientForm
 			ref="form"
 			:initialName="prefillName"
 			:showActions="false"
+			boardLayout
 			@save="onSave"
 			@update:valid="(v) => (valid = v)" />
 		<template #actions>
@@ -20,24 +21,30 @@
 				:disabled="!valid || saving"
 				data-testid="client-form-save"
 				@click="submit">
+				<template #icon>
+					<Check :size="20" />
+				</template>
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { NcButton } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import ClientForm from '../views/clients/ClientForm.vue'
 import { createWithContact } from '../services/contactSyncApi.js'
 
 export default {
 	name: 'ClientCreateDialog',
 	components: {
-		NcButton,
-		NcDialog,
+		Check,
 		ClientForm,
+		CnDialog,
+		NcButton,
 	},
 
 	props: {

@@ -30,12 +30,14 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\EntityIdOf;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * WalkInQueueService — walk-in ticket lifecycle and queue rebalance.
@@ -58,6 +60,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class WalkInQueueService {
+	use EntityIdOf;
+	use NullablePayloadToArray;
+
 	/**
 	 * App-config key for the WalkInTicket schema id/slug.
 	 *
@@ -148,10 +153,10 @@ class WalkInQueueService {
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 *
-	 * @orphaned-write-capability exclude redundant, not missing —
-	 * src/components/bookings/WalkInQueuePanel.vue reads and writes walkInTicket
-	 * objects DIRECTLY against OpenRegister (ADR-022), so this wrapper has no
-	 * caller by design rather than by omission. callNext, callTicket,
+	 * @orphaned-write-capability exclude no UI yet — the walk-in operator view is
+	 * openspec change walk-in-queue-page (a manifest page that reads and writes
+	 * walkInTicket objects directly against OpenRegister, ADR-022), so this
+	 * wrapper has no caller by design rather than by omission. callNext, callTicket,
 	 * serveTicket and abandonTicket are equally caller-less; only rebalance()
 	 * is live. Deleting the five wrappers is the agreed remedy and means
 	 * deleting their unit tests too, which is not a change to make on a gate's
@@ -907,78 +912,6 @@ class WalkInQueueService {
 	private function schemaId(string $key): string {
 		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
 	}//end schemaId()
-
-	/**
-	 * Pull the canonical id out of a normalised OpenRegister object.
-	 *
-	 * @param array<string, mixed>|object $object Normalised object or entity.
-	 *
-	 * @return string
-	 */
-	private function idOf(array|object $object): string {
-		$arr = $this->toArray(object: $object);
-		if ($arr === null) {
-			return '';
-		}
-
-		if (isset($arr['@self']) === true && is_array($arr['@self']) === true) {
-			$self = $arr['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($arr['id']) === true) {
-			return (string)$arr['id'];
-		}
-
-		if (isset($arr['uuid']) === true) {
-			return (string)$arr['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

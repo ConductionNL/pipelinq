@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 
 declare(strict_types=1);
@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -43,6 +44,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   and nothing inherited it
  */
 class PointsRuleEngine {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -65,7 +68,7 @@ class PointsRuleEngine {
 	 * @param array<string, mixed> $context The evaluation context.
 	 *
 	 * @return array<int, array<string, mixed>> Matching rules, highest prioriteit first.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function evaluateRules(string $programmeId, string $trigger, array $context): array {
 		$rules = $this->loadRules(programmeId: $programmeId, trigger: $trigger);
@@ -289,7 +292,7 @@ class PointsRuleEngine {
 	 * @param float $multiplier Tier multiplier (default 1.0).
 	 *
 	 * @return int Points awarded (floored).
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function calculatePoints(array $formula, float $amount, float $multiplier = 1.0): int {
 		$type = (string)($formula['type'] ?? '');
@@ -470,37 +473,6 @@ class PointsRuleEngine {
 			$this->appConfig->getValueString(Application::APP_ID, 'pointsRule_schema', ''),
 		];
 	}//end config()
-
-	/**
-	 * Normalise OR entity/array to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) invoked via array_map([$this, 'toArray'], ...) callable reference, not statically detected
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

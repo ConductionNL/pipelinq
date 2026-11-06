@@ -33,6 +33,9 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Messaging\MessageContent;
+use OCA\Pipelinq\Service\Messaging\MessageRoute;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -49,6 +52,8 @@ use Throwable;
  *  orchestration kept in small single-purpose methods.
  */
 class MessagingService {
+	use PayloadToArray;
+
 	/**
 	 * FQCN of the OpenRegister dispatch leaf used for connectivity tests.
 	 *
@@ -184,57 +189,33 @@ class MessagingService {
 	/**
 	 * Send a message, delegating all gating to the adapters (REQ-OM-004).
 	 *
-	 * @param array<string, mixed> $contact The pre-loaded contact object.
-	 * @param string $channel `sms` or `whatsapp`.
-	 * @param string $body Free-text body (sms / in-window whatsapp).
-	 * @param string|null $templateId Approved template UUID (whatsapp) or null.
-	 * @param array<int, string> $parameters Positional template parameters.
-	 * @param string|null $providerHint Optional pinned vendor.
-	 * @param string $actor Acting user id (audit).
-	 * @param string $clientId Linked client UUID (audit), or empty.
-	 * @param string $inReplyTo The contact's inbound message this answers; the adapter verifies it.
+	 * @param MessageRoute   $route   The contact, pinned vendor, linked client and reply target.
+	 * @param MessageContent $content The channel, text and template.
+	 * @param string         $actor   Acting user id (audit).
 	 *
 	 * @return array{status: string, messageId?: string, reason?: string} Sanitised outcome.
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004-server-side-send-endpoint
 	 */
-	public function send(
-		array $contact,
-		string $channel,
-		string $body,
-		?string $templateId,
-		array $parameters,
-		?string $providerHint,
-		string $actor,
-		string $clientId = '',
-		string $inReplyTo = '',
-	): array {
-		$client = $clientId;
-		if ($client === '') {
-			$client = (string)($contact['client'] ?? '');
-		}
+	public function send(MessageRoute $route, MessageContent $content, string $actor): array {
+		$context = $route->adapterContext(agent: $actor);
 
-		$context = ['agent' => $actor, 'clientId' => $client];
-		if ($inReplyTo !== '') {
-			$context['inReplyTo'] = $inReplyTo;
-		}
-
-		if ($channel === 'sms') {
+		if ($content->channel === 'sms') {
 			$outcome = $this->smsAdapter->send(
-				contact: $contact,
-				body: $body,
-				providerHint: $providerHint,
+				contact: $route->contact,
+				body: $content->body,
+				providerHint: $route->providerHint,
 				context: $context
 			);
 			return $this->sanitiseOutcome(outcome: $outcome);
 		}
 
-		if ($channel === 'whatsapp') {
+		if ($content->channel === 'whatsapp') {
 			$outcome = $this->whatsAppAdapter->send(
-				contact: $contact,
-				body: $body,
-				templateId: $templateId,
-				parameters: $parameters,
+				contact: $route->contact,
+				body: $content->body,
+				templateId: $content->templateId,
+				parameters: $content->parameters,
 				context: $context
 			);
 			return $this->sanitiseOutcome(outcome: $outcome);
@@ -250,7 +231,7 @@ class MessagingService {
 	 *
 	 * @return array<string, mixed>|null The row, or null when absent or not readable.
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function loadMessage(string $messageId): ?array {
 		$objectService = $this->objectService();
@@ -282,7 +263,7 @@ class MessagingService {
 	 *
 	 * @return string|null `inbound`, `not-failed`, `already-resent` or null.
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function resendRefusal(array $message): ?string {
 		if (($message['direction'] ?? '') !== 'outbound') {
@@ -315,7 +296,7 @@ class MessagingService {
 	 *
 	 * @return array{status: string, messageId?: string, reason?: string} Sanitised outcome.
 	 *
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function resend(array $message, array $contact, string $actor): array {
 		$channel = (string)($message['channel'] ?? '');
@@ -337,12 +318,8 @@ class MessagingService {
 		}
 
 		$outcome = $this->send(
-			contact: $contact,
-			channel: $channel,
-			body: $body,
-			templateId: $template,
-			parameters: $parameters,
-			providerHint: null,
+			route: new MessageRoute(contact: $contact),
+			content: new MessageContent(channel: $channel, body: $body, templateId: $template, parameters: $parameters),
 			actor: $actor
 		);
 
@@ -602,35 +579,6 @@ class MessagingService {
 			return null;
 		}
 	}//end objectService()
-
-	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * The pipelinq register slug (app-config overridable).

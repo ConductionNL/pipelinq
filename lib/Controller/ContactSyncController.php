@@ -25,14 +25,14 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\ContactSyncService;
+use OCA\Pipelinq\Service\ContactSyncSettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -46,21 +46,46 @@ class ContactSyncController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ContactSyncService $contactSyncService The contact sync service.
-	 * @param IUserSession $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param ContactSyncSettingsService $syncSettings The user's write-back switch.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private ContactSyncService $contactSyncService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $policy,
+		private ContactSyncSettingsService $syncSettings,
+		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
+
+	/**
+	 * A record's address book card: linked or not, its address book and when
+	 * it last changed. Query param `uid`, the record's `contactsUid`.
+	 *
+	 * @return JSONResponse The card's status.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+	 */
+	public function status(): JSONResponse {
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$uid = trim((string)$this->request->getParam('uid', ''));
+		try {
+			return new JSONResponse($this->contactSyncService->cardStatus(uid: $uid));
+		} catch (\Exception $e) {
+			$this->logger->error('ContactSyncController::status failed', ['exception' => $e]);
+			return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
+		}
+	}//end status()
 
 	/**
 	 * Search Nextcloud addressbooks for contacts.
@@ -72,15 +97,11 @@ class ContactSyncController extends Controller {
 	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function search(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Contact sync reaches address books and external directories — a CRM
 		// capability, not an any-authenticated-user one. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$query = $this->request->getParam('q', '');
@@ -110,15 +131,11 @@ class ContactSyncController extends Controller {
 	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function import(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Contact sync reaches address books and external directories — a CRM
 		// capability, not an any-authenticated-user one. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$uid = $this->request->getParam('uid', '');
@@ -168,15 +185,11 @@ class ContactSyncController extends Controller {
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 */
 	public function create(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Contact sync reaches address books and external directories — a CRM
 		// capability, not an any-authenticated-user one. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$objectType = $this->request->getParam('objectType', 'client');
@@ -214,15 +227,18 @@ class ContactSyncController extends Controller {
 	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function writeBack(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Contact sync reaches address books and external directories — a CRM
 		// capability, not an any-authenticated-user one. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$uid = $this->privilege->actingUserId();
+
+		// A user who turned write-back off keeps the addressbook as it is.
+		if ($this->syncSettings->writesBack(userId: $uid) === false) {
+			return new JSONResponse(['success' => true, 'skipped' => true]);
 		}
 
 		$objectType = $this->request->getParam('objectType', '');

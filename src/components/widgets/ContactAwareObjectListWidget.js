@@ -15,7 +15,7 @@
  * Clients and Contacts index pages already use. Other schemas fall through
  * to the library's own create.
  *
- * @spec openspec/changes/round5-contact-create-and-task-links/specs/client-management/spec.md#requirement-a-contact-person-added-on-a-client-page-is-created
+ * @spec openspec/specs/client-management/spec.md#requirement-a-contact-person-added-on-a-client-page-is-created
  */
 
 import { CnObjectListWidget } from '@conduction/nextcloud-vue'
@@ -33,7 +33,7 @@ export const CONTACT_BACKED_SCHEMAS = ['client', 'contact']
  * @param {object} formData The confirmed form values.
  * @param {object} filter The list's resolved filter.
  * @return {object} The payload.
- * @spec openspec/changes/round5-contact-create-and-task-links/specs/client-management/spec.md#requirement-a-contact-person-added-on-a-client-page-is-created
+ * @spec openspec/specs/client-management/spec.md#requirement-a-contact-person-added-on-a-client-page-is-created
  */
 export function createPayload(formData, filter) {
 	const payload = { ...(formData || {}) }
@@ -56,7 +56,7 @@ export function createPayload(formData, filter) {
  *
  * @param {Error} error The thrown error.
  * @return {string} The message.
- * @spec openspec/changes/round5-contact-create-and-task-links/specs/client-management/spec.md#requirement-a-contact-person-added-on-a-client-page-is-created
+ * @spec openspec/specs/client-management/spec.md#requirement-a-contact-person-added-on-a-client-page-is-created
  */
 export function createErrorMessage(error) {
 	const data = error?.response?.data
@@ -75,7 +75,7 @@ export function createErrorMessage(error) {
  * @param {object} created The created object, or the payload when the API returned none.
  * @param {Window} [target] The window to dispatch on (injectable for tests); nothing happens without one.
  * @return {void}
- * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+ * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
  */
 export function announceCreated(schema, created, target = globalThis.window) {
 	if (!target || typeof target.dispatchEvent !== 'function') {
@@ -100,8 +100,8 @@ export default {
 		 *
 		 * @param {object} formData The confirmed form values.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/round5-contact-create-and-task-links/specs/client-management/spec.md#requirement-a-contact-person-added-on-a-client-page-is-created
-		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+		 * @spec openspec/specs/client-management/spec.md#requirement-a-contact-person-added-on-a-client-page-is-created
+		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async onCreateConfirm(formData) {
 			const schema = this.content?.schema

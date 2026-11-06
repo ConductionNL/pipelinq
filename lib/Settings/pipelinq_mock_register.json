@@ -36,6 +36,33 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "itemLabel",
+          "slug": "itemlabel-nieuwsbrief"
+        },
+        "name": "nieuwsbrief",
+        "description": "Wil de nieuwsbrief ontvangen."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "itemLabel",
+          "slug": "itemlabel-vip"
+        },
+        "name": "vip",
+        "description": "Krijgt persoonlijke aandacht van het team."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "itemLabel",
+          "slug": "itemlabel-terugbellen"
+        },
+        "name": "terugbellen",
+        "description": "Wacht op een telefoontje van ons."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "savedReply",
           "slug": "savedreply-openingstijden"
         },
@@ -2783,6 +2810,96 @@
         "payloadHash": "Voorbeeld Payloadhash 3",
         "retentionUntil": "2026-03-03T09:00:00+00:00",
         "reason": "Voorbeeld Reason 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "webform-voorbeeld-klachtformulier-1"
+        },
+        "title": "Voorbeeld formulier 1",
+        "key": "voorbeeld-klachtformulier",
+        "status": "draft",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "ticket"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          ],
+          "fixed": {}
+        },
+        "requireAnyOf": [
+          "title"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "webform-voorbeeld-offerteformulier-2"
+        },
+        "title": "Voorbeeld formulier 2",
+        "key": "voorbeeld-offerteformulier",
+        "status": "draft",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "lead"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "title",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          ],
+          "fixed": {}
+        },
+        "requireAnyOf": [
+          "title"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webForm",
+          "slug": "webform-voorbeeld-nieuwsbrief-3"
+        },
+        "title": "Voorbeeld formulier 3",
+        "key": "voorbeeld-nieuwsbrief",
+        "status": "draft",
+        "audience": "public",
+        "destination": {
+          "register": "pipelinq",
+          "schema": "contact"
+        },
+        "mapping": {
+          "fields": [
+            {
+              "field": "title",
+              "property": "name",
+              "type": "text",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          ],
+          "fixed": {}
+        },
+        "requireAnyOf": [
+          "title"
+        ]
       },
       {
         "@self": {
@@ -7658,6 +7775,369 @@
         "validUntil": "2026-03-03T09:00:00+00:00",
         "justification": "Voorbeeld Justification 3",
         "status": "archived"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaignEvent",
+          "slug": "campaignevent-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "startAt": "2026-03-01T09:00:00+00:00",
+        "reference": "Voorbeeld Reference 1",
+        "campaign": "00000000-0000-4000-8000-000000000000",
+        "signupStatus": "draft",
+        "endAt": "2026-03-01T09:00:00+00:00",
+        "venue": "Voorbeeld Venue 1",
+        "room": "Voorbeeld Room 1",
+        "capacity": 0,
+        "hosts": [
+          "Voorbeeld user 0"
+        ],
+        "reminderAt": "2026-03-01T09:00:00+00:00",
+        "formTitle": "Voorbeeld Formtitle 1",
+        "pageUrl": "https://example.invalid/resource/0",
+        "signupClosesAt": "2026-03-01T09:00:00+00:00",
+        "description": "Voorbeeld Description 1",
+        "formBinding": "00000000-0000-4000-8000-000000000000",
+        "reminderSentAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaignEvent",
+          "slug": "campaignevent-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "startAt": "2026-03-02T09:00:00+00:00",
+        "reference": "Voorbeeld Reference 2",
+        "campaign": "00000000-0000-4000-8000-000000000001",
+        "signupStatus": "open",
+        "endAt": "2026-03-02T09:00:00+00:00",
+        "venue": "Voorbeeld Venue 2",
+        "room": "Voorbeeld Room 2",
+        "capacity": 1,
+        "hosts": [
+          "Voorbeeld user 1"
+        ],
+        "reminderAt": "2026-03-02T09:00:00+00:00",
+        "formTitle": "Voorbeeld Formtitle 2",
+        "pageUrl": "https://example.invalid/resource/1",
+        "signupClosesAt": "2026-03-02T09:00:00+00:00",
+        "description": "Voorbeeld Description 2",
+        "formBinding": "00000000-0000-4000-8000-000000000001",
+        "reminderSentAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaignEvent",
+          "slug": "campaignevent-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "startAt": "2026-03-03T09:00:00+00:00",
+        "reference": "Voorbeeld Reference 3",
+        "campaign": "00000000-0000-4000-8000-000000000002",
+        "signupStatus": "full",
+        "endAt": "2026-03-03T09:00:00+00:00",
+        "venue": "Voorbeeld Venue 3",
+        "room": "Voorbeeld Room 3",
+        "capacity": 2,
+        "hosts": [
+          "Voorbeeld user 2"
+        ],
+        "reminderAt": "2026-03-03T09:00:00+00:00",
+        "formTitle": "Voorbeeld Formtitle 3",
+        "pageUrl": "https://example.invalid/resource/2",
+        "signupClosesAt": "2026-03-03T09:00:00+00:00",
+        "description": "Voorbeeld Description 3",
+        "formBinding": "00000000-0000-4000-8000-000000000002",
+        "reminderSentAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "commercial-template",
+          "slug": "commercial-template-voorbeeld-title-1-1"
+        },
+        "slug": "aa",
+        "title": "Voorbeeld Title 1",
+        "kind": "pipeline",
+        "version": "Voorbeeld Version 1",
+        "description": "Voorbeeld Description 1",
+        "category": "Voorbeeld Category 1",
+        "publisher": "Voorbeeld Publisher 1",
+        "icon": "ViewDashboardOutline",
+        "components": [
+          {
+            "schema": "Voorbeeld Schema 1",
+            "object": {}
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "commercial-template",
+          "slug": "commercial-template-voorbeeld-title-2-2"
+        },
+        "slug": "bb",
+        "title": "Voorbeeld Title 2",
+        "kind": "queue-routing",
+        "version": "Voorbeeld Version 2",
+        "description": "Voorbeeld Description 2",
+        "category": "Voorbeeld Category 2",
+        "publisher": "Voorbeeld Publisher 2",
+        "icon": "BookOpenVariantOutline",
+        "components": [
+          {
+            "schema": "Voorbeeld Schema 2",
+            "object": {}
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "commercial-template",
+          "slug": "commercial-template-voorbeeld-title-3-3"
+        },
+        "slug": "cc",
+        "title": "Voorbeeld Title 3",
+        "kind": "catalogue",
+        "version": "Voorbeeld Version 3",
+        "description": "Voorbeeld Description 3",
+        "category": "Voorbeeld Category 3",
+        "publisher": "Voorbeeld Publisher 3",
+        "icon": "MapMarkerPath",
+        "components": [
+          {
+            "schema": "Voorbeeld Schema 3",
+            "object": {}
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "eventRegistration",
+          "slug": "eventregistration-voorbeeld-name-1-1"
+        },
+        "event": "00000000-0000-4000-8000-000000000000",
+        "name": "Voorbeeld Name 1",
+        "email": "voorbeeld0@example.invalid",
+        "address": "Voorbeeld Address 1",
+        "street": "Voorbeeld Street 1",
+        "partySize": 1,
+        "source": "web-form",
+        "registeredAt": "2026-03-01T09:00:00+00:00",
+        "status": "confirmed",
+        "waitlistPosition": 1,
+        "question": "Voorbeeld Question 1",
+        "contact": "00000000-0000-4000-8000-000000000000",
+        "newContact": false,
+        "checkedInAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "eventRegistration",
+          "slug": "eventregistration-voorbeeld-name-2-2"
+        },
+        "event": "00000000-0000-4000-8000-000000000001",
+        "name": "Voorbeeld Name 2",
+        "email": "voorbeeld1@example.invalid",
+        "address": "Voorbeeld Address 2",
+        "street": "Voorbeeld Street 2",
+        "partySize": 1,
+        "source": "newsletter",
+        "registeredAt": "2026-03-02T09:00:00+00:00",
+        "status": "waitlist",
+        "waitlistPosition": 2,
+        "question": "Voorbeeld Question 2",
+        "contact": "00000000-0000-4000-8000-000000000001",
+        "newContact": false,
+        "checkedInAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "eventRegistration",
+          "slug": "eventregistration-voorbeeld-name-3-3"
+        },
+        "event": "00000000-0000-4000-8000-000000000002",
+        "name": "Voorbeeld Name 3",
+        "email": "voorbeeld2@example.invalid",
+        "address": "Voorbeeld Address 3",
+        "street": "Voorbeeld Street 3",
+        "partySize": 1,
+        "source": "social",
+        "registeredAt": "2026-03-03T09:00:00+00:00",
+        "status": "cancelled",
+        "waitlistPosition": 3,
+        "question": "Voorbeeld Question 3",
+        "contact": "00000000-0000-4000-8000-000000000002",
+        "newContact": false,
+        "checkedInAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "salesQuote",
+          "slug": "salesquote-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "lead": "00000000-0000-4000-8000-000000000000",
+        "number": "Voorbeeld Number 1",
+        "client": "00000000-0000-4000-8000-000000000000",
+        "contact": "00000000-0000-4000-8000-000000000000",
+        "status": "draft",
+        "version": 1,
+        "sentAt": "2026-03-01",
+        "expiresAt": "2026-03-01",
+        "assignee": "Voorbeeld Assignee 1",
+        "paymentTerm": "Voorbeeld Paymentterm 1",
+        "currency": "EUR",
+        "subtotal": 1.0,
+        "vatAmount": 1.0,
+        "total": 1.0,
+        "notes": "Voorbeeld Notes 1",
+        "vatRate": 21
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "salesQuote",
+          "slug": "salesquote-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "lead": "00000000-0000-4000-8000-000000000001",
+        "number": "Voorbeeld Number 2",
+        "client": "00000000-0000-4000-8000-000000000001",
+        "contact": "00000000-0000-4000-8000-000000000001",
+        "status": "sent",
+        "version": 1,
+        "sentAt": "2026-03-02",
+        "expiresAt": "2026-03-02",
+        "assignee": "Voorbeeld Assignee 2",
+        "paymentTerm": "Voorbeeld Paymentterm 2",
+        "currency": "EUR",
+        "subtotal": 2.0,
+        "vatAmount": 2.0,
+        "total": 2.0,
+        "notes": "Voorbeeld Notes 2",
+        "vatRate": 21
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "salesQuote",
+          "slug": "salesquote-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "lead": "00000000-0000-4000-8000-000000000002",
+        "number": "Voorbeeld Number 3",
+        "client": "00000000-0000-4000-8000-000000000002",
+        "contact": "00000000-0000-4000-8000-000000000002",
+        "status": "accepted",
+        "version": 1,
+        "sentAt": "2026-03-03",
+        "expiresAt": "2026-03-03",
+        "assignee": "Voorbeeld Assignee 3",
+        "paymentTerm": "Voorbeeld Paymentterm 3",
+        "currency": "EUR",
+        "subtotal": 3.0,
+        "vatAmount": 3.0,
+        "total": 3.0,
+        "notes": "Voorbeeld Notes 3",
+        "vatRate": 21
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "salesQuoteLine",
+          "slug": "salesquoteline-voorbeeld-name-1-1"
+        },
+        "quote": "00000000-0000-4000-8000-000000000000",
+        "description": "Voorbeeld Description 1",
+        "product": "00000000-0000-4000-8000-000000000000",
+        "kind": "catalogue",
+        "note": "Voorbeeld Note 1",
+        "quantity": 1,
+        "unitPrice": 1.0,
+        "discount": 0,
+        "total": 1.0,
+        "sortOrder": 0,
+        "name": "Voorbeeld Name 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "salesQuoteLine",
+          "slug": "salesquoteline-voorbeeld-name-2-2"
+        },
+        "quote": "00000000-0000-4000-8000-000000000001",
+        "description": "Voorbeeld Description 2",
+        "product": "00000000-0000-4000-8000-000000000001",
+        "kind": "own",
+        "note": "Voorbeeld Note 2",
+        "quantity": 1,
+        "unitPrice": 2.0,
+        "discount": 0,
+        "total": 2.0,
+        "sortOrder": 0,
+        "name": "Voorbeeld Name 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "salesQuoteLine",
+          "slug": "salesquoteline-voorbeeld-name-3-3"
+        },
+        "quote": "00000000-0000-4000-8000-000000000002",
+        "description": "Voorbeeld Description 3",
+        "product": "00000000-0000-4000-8000-000000000002",
+        "kind": "catalogue",
+        "note": "Voorbeeld Note 3",
+        "quantity": 1,
+        "unitPrice": 3.0,
+        "discount": 0,
+        "total": 3.0,
+        "sortOrder": 0,
+        "name": "Voorbeeld Name 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticketCategory",
+          "slug": "ticketcategory-voorbeeld-name-1-1"
+        },
+        "key": "Voorbeeld Key 1",
+        "name": "Voorbeeld Name 1",
+        "description": "Voorbeeld Description 1",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticketCategory",
+          "slug": "ticketcategory-voorbeeld-name-2-2"
+        },
+        "key": "Voorbeeld Key 2",
+        "name": "Voorbeeld Name 2",
+        "description": "Voorbeeld Description 2",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticketCategory",
+          "slug": "ticketcategory-voorbeeld-name-3-3"
+        },
+        "key": "Voorbeeld Key 3",
+        "name": "Voorbeeld Name 3",
+        "description": "Voorbeeld Description 3",
+        "active": true
       }
     ]
   }

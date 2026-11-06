@@ -32,7 +32,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-006
  */
 
 declare(strict_types=1);
@@ -97,7 +97,7 @@ class AcClient {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-006
 	 */
 	public function refreshScopes(array $endpoint, array $client): void {
 		$endpointId = (string)($endpoint['id'] ?? ($endpoint['@self']['slug'] ?? ''));
@@ -307,7 +307,7 @@ class AcClient {
 	 * @return void
 	 *
 	 * @throws InsufficientScopeException When the scope is not granted.
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-006
 	 */
 	public function require(array $endpoint, string $resourceUrl, string $scope): void {
 		if ($this->hasScope(endpoint: $endpoint, resourceUrl: $resourceUrl, scope: $scope) === true) {

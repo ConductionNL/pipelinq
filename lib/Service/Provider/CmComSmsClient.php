@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use Psr\Log\LoggerInterface;
  * Vendor key: `cm-com`. CM.com's status callbacks use a shared-secret
  * HMAC over the raw body.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class CmComSmsClient implements SmsProviderClientInterface {
 	use MessageDispatchTrait;
@@ -57,7 +57,7 @@ class CmComSmsClient implements SmsProviderClientInterface {
 	 * @param string $webhookSecret Shared HMAC secret.
 	 * @param string|null $sourceId openconnector source id.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,

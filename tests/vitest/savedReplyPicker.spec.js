@@ -7,7 +7,7 @@
  * the pure helpers, the picker over the object store, the picker inside the
  * Send message dialog, and the Write email link.
  *
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -55,6 +55,14 @@ function stub(name, tag = 'div') {
 	}
 }
 
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		render() {
+			return h('div', { class: 'cn-dialog' }, [this.$slots.default?.(), this.$slots.actions?.()])
+		},
+	},
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: stub('NcButton', 'button'),
 	NcModal: stub('NcModal'),

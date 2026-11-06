@@ -1,7 +1,7 @@
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'New contact')"
-		:open="true"
 		size="normal"
 		data-testid="contact-create-dialog"
 		@closing="$emit('close')">
@@ -10,12 +10,12 @@
 			:preSelectedClient="client"
 			@save="onSave"
 			@cancel="$emit('close')" />
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
-import { NcDialog } from '@nextcloud/vue'
 import ContactForm from '../views/contacts/ContactForm.vue'
 import { createWithContact } from '../services/contactSyncApi.js'
 
@@ -40,7 +40,7 @@ export default {
 	name: 'ContactCreateDialog',
 
 	components: {
-		NcDialog,
+		CnDialog,
 		ContactForm,
 	},
 

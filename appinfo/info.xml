@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.7-unstable.20261009150000</version>
+    <version>0.5.7-unstable.20261014170000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -107,6 +107,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
     <background-jobs>
         <job>OCA\Pipelinq\BackgroundJob\ScheduledTaskJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SyncRegisterAccessJob</job>
         <job>OCA\Pipelinq\BackgroundJob\CallbackOverdueJob</job>
         <job>OCA\Pipelinq\BackgroundJob\PortalCleanupJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportSchedulerJob</job>
@@ -211,6 +212,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
             -->
             <step>OCA\Pipelinq\Repair\BackfillTaskNames</step>
             <!--
+                After InitializeSettings: a campaign form made before forms named
+                their destination gets `lead` as its destination, once. A form
+                that already names one is left alone.
+            -->
+            <step>OCA\Pipelinq\Repair\NameFormDestinations</step>
+            <!--
                 After NormaliseTicketTitle, and for the same reason it runs after
                 the import: this step rewrites rows, and the `direction` property
                 it writes only exists once the register fragment has landed.
@@ -312,6 +319,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
     <commands>
         <command>OCA\Pipelinq\Command\ConsentMigrateCommand</command>
+        <command>OCA\Pipelinq\Command\RemoveMockPipelinesCommand</command>
     </commands>
 
     <settings>

@@ -18,9 +18,9 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-010
  */
 
 declare(strict_types=1);
@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -38,9 +39,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * CustomerLoyaltyAccount lifecycle service.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 class LoyaltyAccountService {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -67,7 +70,7 @@ class LoyaltyAccountService {
 	 *
 	 * @throws RuntimeException When OR is unavailable or opt-in missing.
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-010-01
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $optIn is the REQ-LOY-010 opt-in
 	 *  acceptance flag, part of the account-creation contract; not a behaviour switch.
@@ -135,7 +138,7 @@ class LoyaltyAccountService {
 			return null;
 		}
 
-		return $this->toArray(object: $object);
+		return $this->toArray(value: $object);
 	}//end getAccount()
 
 	/**
@@ -151,7 +154,7 @@ class LoyaltyAccountService {
 	 * @return array<string, mixed> The existing or newly-created account.
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $optIn passes through the REQ-LOY-010 opt-in flag to createAccount(); not a behaviour switch.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function getOrCreateAccount(
 		string $customerId,
@@ -179,7 +182,7 @@ class LoyaltyAccountService {
 	 * @param string $programmeId The programme UUID.
 	 *
 	 * @return array<string, mixed>|null The account, or null.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function findAccountByKlantAndProgramme(string $customerId, string $programmeId): ?array {
 		[$register, $schema] = $this->config();
@@ -208,7 +211,7 @@ class LoyaltyAccountService {
 			return null;
 		}
 
-		return $this->toArray(object: reset($result));
+		return $this->toArray(value: reset($result));
 	}//end findAccountByKlantAndProgramme()
 
 	/**
@@ -218,7 +221,7 @@ class LoyaltyAccountService {
 	 * @param string $reason Free-text reason (logged).
 	 *
 	 * @return array<string, mixed>|null The updated account, or null.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function disableAccount(string $accountId, string $reason): ?array {
 		$account = $this->getAccount(accountId: $accountId);
@@ -288,7 +291,7 @@ class LoyaltyAccountService {
 	 * @param ?string $tierValidTo Scheduled downgrade date.
 	 *
 	 * @return array<string, mixed>|null The updated account.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function setTier(
 		string $accountId,
@@ -321,7 +324,7 @@ class LoyaltyAccountService {
 	 * @param int $offset Pagination offset.
 	 *
 	 * @return array<int, array<string, mixed>> The accounts.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function listAccountsForProgramme(string $programmeId, int $limit = 1000, int $offset = 0): array {
 		[$register, $schema] = $this->config();
@@ -375,7 +378,7 @@ class LoyaltyAccountService {
 			uuid: $uuid
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persist()
 
 	/**
@@ -405,35 +408,6 @@ class LoyaltyAccountService {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Normalise OR entity/array to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

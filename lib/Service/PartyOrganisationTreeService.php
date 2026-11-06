@@ -201,12 +201,17 @@ class PartyOrganisationTreeService {
 			return $resolved;
 		}
 
-		$newPath = $this->pathUnder(nodeId: $nodeId, parentPath: (string)$resolved['path']);
 		$oldPath = (string)($node['organisationPath'] ?? $this->pathUnder(nodeId: $nodeId, parentPath: ''));
+		$move = [
+			'node' => $node,
+			'nodeId' => $nodeId,
+			'parentId' => $parentId,
+			'newPath' => $this->pathUnder(nodeId: $nodeId, parentPath: (string)$resolved['path']),
+			'oldPath' => $oldPath,
+			'descendants' => $this->descendantsOf(path: $oldPath),
+		];
 
-		$descendants = $this->descendantsOf(path: $oldPath);
-
-		$deepest = $this->deepestAfter(newPath: $newPath, oldPath: $oldPath, descendants: $descendants);
+		$deepest = $this->deepestAfter(move: $move);
 		if ($deepest > $this->maxDepth()) {
 			return [
 				'status' => 409,
@@ -214,14 +219,7 @@ class PartyOrganisationTreeService {
 			];
 		}
 
-		$writes = $this->movePlan(
-			node: $node,
-			nodeId: $nodeId,
-			parentId: $parentId,
-			newPath: $newPath,
-			oldPath: $oldPath,
-			descendants: $descendants,
-		);
+		$writes = $this->movePlan(move: $move);
 
 		foreach ($writes as $uuid => $object) {
 			if ($this->write(uuid: (string)$uuid, object: $object) === false) {
@@ -229,7 +227,7 @@ class PartyOrganisationTreeService {
 			}
 		}
 
-		return ['status' => 200, 'moved' => count($writes), 'path' => $newPath];
+		return ['status' => 200, 'moved' => count($writes), 'path' => $move['newPath']];
 	}//end setParent()
 
 	/**
@@ -270,18 +268,16 @@ class PartyOrganisationTreeService {
 	/**
 	 * How deep the deepest node sits once the subtree has moved.
 	 *
-	 * @param string $newPath The node's path after the move.
-	 * @param string $oldPath The node's path before it.
-	 * @param array<int, array<string, mixed>> $descendants The subtree.
+	 * @param array<string, mixed> $move The move (see movePlan()).
 	 *
 	 * @return int The deepest level the move reaches.
 	 */
-	private function deepestAfter(string $newPath, string $oldPath, array $descendants): int {
-		$newDepth = $this->depthOf(path: $newPath);
-		$oldDepth = $this->depthOf(path: $oldPath);
+	private function deepestAfter(array $move): int {
+		$newDepth = $this->depthOf(path: $move['newPath']);
+		$oldDepth = $this->depthOf(path: $move['oldPath']);
 		$deepest = $newDepth;
 
-		foreach ($descendants as $descendant) {
+		foreach ($move['descendants'] as $descendant) {
 			$relative = ($this->depthOf(path: (string)($descendant['organisationPath'] ?? '')) - $oldDepth);
 			$deepest = max($deepest, ($newDepth + $relative));
 		}
@@ -296,36 +292,25 @@ class PartyOrganisationTreeService {
 	 * pointing at a path its parent no longer holds is invisible until
 	 * somebody reads the subtree and finds half of it.
 	 *
-	 * @param array<string, mixed> $node The organisation being moved.
-	 * @param string $nodeId Its uuid.
-	 * @param string $parentId The new parent, or an empty string for a root.
-	 * @param string $newPath The node's path after the move.
-	 * @param string $oldPath The node's path before it.
-	 * @param array<int, array<string, mixed>> $descendants The subtree.
+	 * @param array<string, mixed> $move The organisation being moved (`node`), its uuid (`nodeId`), the
+	 *                                   new parent or an empty string for a root (`parentId`), the node's
+	 *                                   path after and before the move (`newPath`, `oldPath`) and the
+	 *                                   subtree (`descendants`).
 	 *
 	 * @return array<string, array<string, mixed>> The objects to write.
 	 *
 	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
-	private function movePlan(
-		array $node,
-		string $nodeId,
-		string $parentId,
-		string $newPath,
-		string $oldPath,
-		array $descendants,
-	): array {
+	private function movePlan(array $move): array {
+		['newPath' => $newPath, 'oldPath' => $oldPath] = $move;
 		$newParent = null;
-		if ($parentId !== '') {
-			$newParent = $parentId;
+		if ($move['parentId'] !== '') {
+			$newParent = $move['parentId'];
 		}
 
-		$writes = [$nodeId => array_merge($node, [
-			'parentOrganisation' => $newParent,
-			'organisationPath' => $newPath,
-		])];
+		$writes = [$move['nodeId'] => array_merge($move['node'], ['parentOrganisation' => $newParent, 'organisationPath' => $newPath])];
 
-		foreach ($descendants as $descendant) {
+		foreach ($move['descendants'] as $descendant) {
 			$descendantId = (string)($descendant['id'] ?? $descendant['uuid'] ?? '');
 			if ($descendantId === '') {
 				continue;

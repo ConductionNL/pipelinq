@@ -56,6 +56,13 @@ use Psr\Log\LoggerInterface;
  */
 class PortalAdminController extends Controller {
 	/**
+	 * How many audit events the all-tenant overview answers by default.
+	 *
+	 * @var int
+	 */
+	private const RECENT_EVENT_LIMIT = 20;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
@@ -170,10 +177,31 @@ class PortalAdminController extends Controller {
 	public function auditEvents(): JSONResponse {
 		return $this->adminGuarded(
 			handler: function (): array {
+				if ((string)$this->request->getParam('all', '') === '1') {
+					$limit = (int)$this->request->getParam('limit', self::RECENT_EVENT_LIMIT);
+					return [$this->audit->getRecent(limit: $limit), Http::STATUS_OK];
+				}
+
 				return [['events' => $this->audit->getForTenant(tenantId: $this->tenantId())], Http::STATUS_OK];
 			}
 		);
 	}//end auditEvents()
+
+	/**
+	 * Every stored portal tenant, for the admin overview.
+	 *
+	 * @auth admin-only Lists every portal's admin config (domains, status); the body additionally enforces it through adminGuarded().
+	 *
+	 * @return JSONResponse `{tenants}`, or an error.
+		 * @spec openspec/changes/portal-tenants-on-one-admin-tab/specs/customer-portal/spec.md#requirement-the-admin-tab-lists-every-portal-tenant
+	 */
+	public function tenants(): JSONResponse {
+		return $this->adminGuarded(
+			handler: function (): array {
+				return [['tenants' => $this->tenant->listConfigs()], Http::STATUS_OK];
+			}
+		);
+	}//end tenants()
 
 	/**
 	 * The tenant id from the request (admin endpoints may target any tenant).

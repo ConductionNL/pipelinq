@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#3.3
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -41,8 +41,8 @@ use Throwable;
 /**
  * Once-per-day client-certificate health check.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-02
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-010-03
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-02
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-010-03
  */
 class BrpHealthCheckJob extends TimedJob {
 	/**

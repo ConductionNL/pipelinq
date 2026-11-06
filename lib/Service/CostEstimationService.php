@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.6
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
  * - estimate(vendor, channel, category, country) — EUR estimate
  *   or `0.0` when the table has no entry.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.6
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class CostEstimationService {
 	/**
@@ -89,7 +89,7 @@ class CostEstimationService {
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.6
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -110,7 +110,7 @@ class CostEstimationService {
 	 *
 	 * @return float Estimated EUR cost (0.0 when nothing matches).
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.6
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function estimate(
 		string $vendor,

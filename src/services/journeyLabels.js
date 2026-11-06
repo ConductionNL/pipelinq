@@ -117,6 +117,24 @@ export function degradedSources(review) {
 }
 
 /**
+ * A review's highlight lines, each with the direction its figure moved
+ * against the week before. A review stored before it carried directions
+ * gives every line none.
+ *
+ * @param {object} review The composed review.
+ * @return {Array<{text: string, direction: string}>} `up`, `down`, `flat` or ''.
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+ */
+export function highlightLines(review) {
+	const lines = Array.isArray(review?.highlights) ? review.highlights : []
+	const directions = Array.isArray(review?.highlightDirections) ? review.highlightDirections : []
+	return lines.map((text, index) => ({
+		text,
+		direction: ['up', 'down', 'flat'].includes(directions[index]) ? directions[index] : '',
+	}))
+}
+
+/**
  * Whether a review's narrative was written by an agent (ADR-088).
  *
  * @param {object} review The composed review.

@@ -29,12 +29,14 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Compute per-resource per-day availability as 15-minute-aligned free blocks.
@@ -54,11 +56,15 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive availability engine; splitting would fragment slot/cache logic.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Slot computation over many working-hour/booking/calendar dimensions is inherently complex.
+ * @SuppressWarnings(PHPMD.TooManyMethods)          The engine owns its cache, so it also expires it per day, per resource and per resource type.
  *
  * @spec openspec/specs/appointment-booking/spec.md
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AvailabilityService {
+	use RowIdOf;
+	use NullablePayloadToArray;
+
 	/**
 	 * Slot alignment in minutes.
 	 *
@@ -402,6 +408,116 @@ class AvailabilityService {
 	}//end invalidateCache()
 
 	/**
+	 * Delete every availability-cache row of a resource, whatever its date.
+	 *
+	 * Runs on the server for every writer of the resource (the UI, the API, an
+	 * import): its hours, vacations or type changed, so no cached day is still
+	 * true. A row that cannot be deleted is logged; the hourly refresh job
+	 * converges it.
+	 *
+	 * @param string $resourceId Resource UUID.
+	 *
+	 * @return int How many rows were deleted.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 */
+	public function invalidateResource(string $resourceId): int {
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: self::AVAILABILITY_CACHE_SCHEMA_KEY);
+		if ($resourceId === '' || $register === '' || $schema === '') {
+			return 0;
+		}
+
+		$deleted = 0;
+		foreach ($this->findRows(schema: $schema, filters: ['resourceId' => $resourceId]) as $row) {
+			$uuid = $this->idOf(object: $row);
+			if ($uuid === '') {
+				continue;
+			}
+
+			try {
+				$this->getObjectService()->deleteObject(uuid: $uuid, register: $register, schema: $schema);
+				$deleted++;
+			} catch (\Throwable $e) {
+				$this->logger->warning(
+					'Pipelinq: availability cache row could not be deleted',
+					['resource' => $resourceId, 'row' => $uuid, 'exception' => $e->getMessage()]
+				);
+			}
+		}
+
+		return $deleted;
+	}//end invalidateResource()
+
+	/**
+	 * Delete the cached availability of every resource a service can run on:
+	 * the resources whose `type` is one of the service's required resource
+	 * types, or every resource when the service names none.
+	 *
+	 * @param array<int, string> $resourceTypes The service's `requiredResourceTypes`.
+	 *
+	 * @return int How many rows were deleted.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 */
+	public function invalidateForResourceTypes(array $resourceTypes): int {
+		$schema = $this->schemaId(key: self::RESOURCE_SCHEMA_KEY);
+		if ($schema === '') {
+			return 0;
+		}
+
+		$types = array_values(array_filter($resourceTypes, static fn ($type): bool => is_string($type) === true && $type !== ''));
+		$deleted = 0;
+		foreach ($this->findRows(schema: $schema, filters: []) as $resource) {
+			if ($types !== [] && in_array(needle: ($resource['type'] ?? null), haystack: $types, strict: true) === false) {
+				continue;
+			}
+
+			$deleted += $this->invalidateResource(resourceId: $this->idOf(object: $resource));
+		}
+
+		return $deleted;
+	}//end invalidateForResourceTypes()
+
+	/**
+	 * The objects of a pipelinq schema that match simple equality filters,
+	 * as arrays. A failed read is logged and answers none.
+	 *
+	 * @param string $schema The schema id.
+	 * @param array<string, string> $filters Equality filters.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function findRows(string $schema, array $filters): array {
+		$register = $this->registerId();
+		if ($register === '' || $schema === '') {
+			return [];
+		}
+
+		try {
+			$rows = $this->getObjectService()->findAll(
+				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: availability lookup failed',
+				['schema' => $schema, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+
+		$out = [];
+		foreach (($rows ?? []) as $row) {
+			$data = $this->toArray(object: $row);
+			if ($data !== null) {
+				$out[] = $data;
+			}
+		}
+
+		return $out;
+	}//end findRows()
+
+	/**
 	 * Read the cached free-block list, regenerating + persisting when missing.
 	 *
 	 * Stale entries (past `expiresAt`) are still returned but flagged stale —
@@ -440,21 +556,16 @@ class AvailabilityService {
 			date: $date,
 			serviceDurationMinutes: $duration
 		);
-		$expiresAt = $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS);
-		$this->persistCacheEntry(
-			resourceId: $resourceId,
-			date: $date,
-			freeBlocks: $free,
-			generatedAt: $nowIso,
-			expiresAt: $expiresAt
-		);
-
-		return [
+		$entry = [
+			'resourceId' => $resourceId,
+			'date' => $date,
 			'freeBlocks' => $free,
 			'generatedAt' => $nowIso,
-			'expiresAt' => $expiresAt,
-			'stale' => false,
+			'expiresAt' => $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS),
 		];
+		$this->persistCacheEntry(entry: $entry);
+
+		return array_diff_key($entry, ['resourceId' => true, 'date' => true]) + ['stale' => false];
 	}//end getOrComputeCache()
 
 	/**
@@ -713,38 +824,21 @@ class AvailabilityService {
 	/**
 	 * Persist (create or update) an AvailabilityCache row.
 	 *
-	 * @param string $resourceId Resource UUID/slug.
-	 * @param string $date ISO date `YYYY-MM-DD`.
-	 * @param array<int, array{startTime: string, endTime: string, durationMinutes: int}> $freeBlocks Free blocks.
-	 * @param string $generatedAt ISO timestamp.
-	 * @param string $expiresAt ISO timestamp.
+	 * @param array<string, mixed> $entry The row: resource UUID/slug (`resourceId`), ISO date `YYYY-MM-DD` (`date`),
+	 *                                    free blocks, and the ISO generation and expiry timestamps.
 	 *
 	 * @return void
 	 */
-	private function persistCacheEntry(
-		string $resourceId,
-		string $date,
-		array $freeBlocks,
-		string $generatedAt,
-		string $expiresAt,
-	): void {
+	private function persistCacheEntry(array $entry): void {
 		$register = $this->registerId();
 		$schema = $this->schemaId(key: self::AVAILABILITY_CACHE_SCHEMA_KEY);
 		if ($register === '' || $schema === '') {
 			return;
 		}
 
-		$payload = [
-			'resourceId' => $resourceId,
-			'date' => $date,
-			'freeBlocks' => $freeBlocks,
-			'generatedAt' => $generatedAt,
-			'expiresAt' => $expiresAt,
-		];
-
 		try {
 			$this->getObjectService()->saveObject(
-				object: $payload,
+				object: $entry,
 				extend: [],
 				register: $register,
 				schema: $schema,
@@ -753,7 +847,7 @@ class AvailabilityService {
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: availability cache write failed',
-				['resource' => $resourceId, 'date' => $date]
+				['resource' => $entry['resourceId'], 'date' => $entry['date']]
 			);
 		}
 	}//end persistCacheEntry()
@@ -1019,73 +1113,6 @@ class AvailabilityService {
 	private function schemaId(string $key): string {
 		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
 	}//end schemaId()
-
-	/**
-	 * Pull the canonical id out of a normalised object.
-	 *
-	 * @param array<string, mixed> $object Object data.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $object): string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

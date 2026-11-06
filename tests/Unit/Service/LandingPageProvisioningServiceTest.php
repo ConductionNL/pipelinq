@@ -181,6 +181,24 @@ class LandingPageProvisioningServiceTest extends TestCase {
 	}//end testTheRequestCarriesTheCampaignsArticleFormAndUtm()
 
 	/**
+	 * Decision 179: the request names the lead a submit of the form creates.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
+	 */
+	public function testTheRequestNamesTheLeadASubmitCreates(): void {
+		$this->build()->createFor(campaignId: 'camp-1');
+
+		$destination = $this->dispatched[0]->getForm()['destination'];
+		$this->assertSame(['register' => 'pipelinq', 'schema' => 'lead'], ['register' => $destination['register'], 'schema' => $destination['schema']]);
+		$this->assertSame(['title' => 'Webinar AI voor gemeenten', 'source' => 'landing-page', 'campaignId' => 'camp-1'], $destination['fixed']);
+		foreach (array_column($this->dispatched[0]->getForm()['fields'], 'id') as $field) {
+			$this->assertArrayHasKey($field, $destination['fields'], 'The form field "' . $field . '" writes nowhere.');
+		}
+	}//end testTheRequestNamesTheLeadASubmitCreates()
+
+	/**
 	 * @return void
 	 */
 	public function testSurfacesDuplicateRouteVerbatim(): void {

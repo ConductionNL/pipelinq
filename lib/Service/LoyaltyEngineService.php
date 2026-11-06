@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 
 declare(strict_types=1);
@@ -30,6 +30,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Loyalty\PointsCreditRun;
+use OCA\Pipelinq\Service\Loyalty\PointsGrant;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -41,12 +44,14 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Orchestrates the end-to-end loyalty credit flow on a POS-trigger.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) end-to-end POS credit orchestration is inherently branchy; split across small focused methods
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrator necessarily wires account/ledger/rule/tier/event collaborators
  */
 class LoyaltyEngineService {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -236,13 +241,8 @@ class LoyaltyEngineService {
 		}
 
 		return $this->creditAndFinalize(
-			programmeId: $programmeId,
-			accountId: $accountId,
-			rule: $rule,
-			toAward: $toAward,
-			context: $context,
-			transaction: $transaction,
-			multiplier: $multiplier
+			run: new PointsCreditRun(programmeId: $programmeId, accountId: $accountId, transaction: $transaction, context: $context),
+			grant: new PointsGrant(rule: $rule, points: $toAward, multiplier: $multiplier)
 		);
 	}//end awardPointsForActiveAccount()
 
@@ -325,54 +325,37 @@ class LoyaltyEngineService {
 	/**
 	 * Credit the ledger, re-evaluate tier, emit the event, and build the result.
 	 *
-	 * @param string $programmeId The programme UUID.
-	 * @param string $accountId The account UUID.
-	 * @param array<string, mixed> $rule The matched PointsRule.
-	 * @param int $toAward Points to credit.
-	 * @param array<string, mixed> $context The rule-evaluation context.
-	 * @param array<string, mixed> $transaction The transaction context.
-	 * @param float $multiplier The applied tier multiplier.
+	 * @param PointsCreditRun $run   The transaction, programme and account.
+	 * @param PointsGrant     $grant The rule, points and multiplier to credit.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function creditAndFinalize(
-		string $programmeId,
-		string $accountId,
-		array $rule,
-		int $toAward,
-		array $context,
-		array $transaction,
-		float $multiplier,
-	): array {
-		$ledgerEntry = $this->ledgerService->creditPoints(
-			accountId: $accountId,
-			amount: $toAward,
-			ruleId: $this->extractUuid(object: $rule),
-			sourceDocument: [
-				'transactionId' => $transaction['posTransactionId'] ?? null,
-				'amount' => $context['amount'],
-				'channel' => $context['channel'],
-			],
-			processedBy: (string)($transaction['posTerminalId'] ?? 'system')
+	private function creditAndFinalize(PointsCreditRun $run, PointsGrant $grant): array {
+		$ledgerEntry = $this->ledgerService->forOperation(operationId: $run->operationId())->creditPoints(
+			accountId: $run->accountId,
+			amount: $grant->points,
+			ruleId: $this->extractUuid(object: $grant->rule),
+			sourceDocument: $run->sourceDocument(),
+			processedBy: $run->processedBy()
 		);
 
 		// Re-evaluate tier.
-		$tierResult = $this->tierService->updateTierIfNeeded(accountId: $accountId);
+		$tierResult = $this->tierService->updateTierIfNeeded(accountId: $run->accountId);
 
 		$this->emitCreditedEvent(
-			accountId: $accountId,
-			programmeId: $programmeId,
+			accountId: $run->accountId,
+			programmeId: $run->programmeId,
 			ledgerEntry: $ledgerEntry
 		);
 
 		return [
-			'programmeId' => $programmeId,
-			'accountId' => $accountId,
+			'programmeId' => $run->programmeId,
+			'accountId' => $run->accountId,
 			'status' => 'credited',
-			'points' => $toAward,
-			'ruleId' => $this->extractUuid(object: $rule),
+			'points' => $grant->points,
+			'ruleId' => $this->extractUuid(object: $grant->rule),
 			'tierChanged' => $tierResult['changed'],
-			'multiplier' => $multiplier,
+			'multiplier' => $grant->multiplier,
 		];
 	}//end creditAndFinalize()
 
@@ -519,37 +502,6 @@ class LoyaltyEngineService {
 
 		return $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Normalise OR entity/array to array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) invoked via array_map([$this, 'toArray'], ...) callable reference, not statically detected
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the ObjectService.

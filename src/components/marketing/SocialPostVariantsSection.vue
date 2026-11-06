@@ -71,7 +71,7 @@
 				</p>
 			</template>
 
-			<section v-if="approvals.length > 0" class="social-variants__approvals">
+			<section v-if="!hideApprovals && approvals.length > 0" class="social-variants__approvals">
 				<h3 class="social-variants__approvals-title">
 					{{ t('pipelinq', 'Approvals') }}
 				</h3>
@@ -124,6 +124,12 @@ export default {
 		postId: {
 			type: String,
 			default: '',
+		},
+
+		/** Leaves the approvals list under the texts out, where the page has an Approvals card of its own. */
+		hideApprovals: {
+			type: Boolean,
+			default: false,
 		},
 	},
 

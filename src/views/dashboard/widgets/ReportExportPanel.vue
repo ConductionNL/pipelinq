@@ -1,216 +1,143 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <!--
-  Funder report export panel (openspec/changes/dashboard,
-  REQ-DASH-020 / REQ-DASH-021).
-
-  Collapsible panel offering:
-   - entity type selector (Leads / Verzoeken / Contactmomenten / Tevredenheidsscores)
-   - period selector (week / month / quarter / year)
-   - "Download report" button -> opens CnMassExportDialog (format picker
-     delegated to the shared component; ExportService does the actual work)
-
-  Collapse toggle responds to Enter + Space (WCAG AA) and the panel sets
-  aria-expanded correctly.
+  Report export card on the operational dashboard (openspec/specs/dashboard,
+  REQ-DASH-020 / REQ-DASH-021), as the PqOperationeel board draws it: one line
+  of explanation and a CSV and a PDF button. Both export the dashboard's
+  figures for the period chosen at the top of the page: CSV as the overview
+  figures with the period before, PDF through the browser's print dialog.
 -->
 <template>
 	<div class="report-export">
-		<div
-			role="button"
-			tabindex="0"
-			class="report-export__header"
-			:aria-expanded="expanded ? 'true' : 'false'"
-			aria-controls="report-export-body"
-			@click="toggle"
-			@keydown.enter.prevent="toggle"
-			@keydown.space.prevent="toggle">
-			<span class="report-export__title">
-				{{ t('pipelinq', 'Report Export') }}
-			</span>
-			<span class="report-export__subtitle">
-				{{
-					t(
-						'pipelinq',
-						'Download CSV / Excel / JSON reports for funders and stakeholders.',
-					)
-				}}
-			</span>
-			<span class="report-export__chevron" aria-hidden="true">
-				{{ expanded ? '▾' : '▸' }}
-			</span>
-		</div>
-		<div v-if="expanded" id="report-export-body" class="report-export__body">
-			<NcSelect
-				v-model="entityType"
-				:inputLabel="t('pipelinq', 'Entity type')"
-				:options="entityOptions"
-				label="label"
-				trackBy="value"
-				:reduce="(opt) => opt.value"
-				:clearable="false"
-				class="report-export__field" />
-			<NcSelect
-				v-model="period"
-				:inputLabel="t('pipelinq', 'Period')"
-				:options="periodOptions"
-				label="label"
-				trackBy="value"
-				:reduce="(opt) => opt.value"
-				:clearable="false"
-				class="report-export__field" />
+		<span class="report-export__text">
+			{{ t('pipelinq', 'Export these figures for the chosen period.') }}
+		</span>
+		<div class="report-export__buttons">
 			<NcButton
-				variant="primary"
-				class="report-export__download"
-				@click="downloadReport">
-				{{ t('pipelinq', 'Download Report') }}
+				variant="secondary"
+				class="report-export__button"
+				:disabled="busy"
+				@click="downloadCsv">
+				<template #icon>
+					<TrayArrowDown :size="16" />
+				</template>
+				CSV
+			</NcButton>
+			<NcButton
+				variant="secondary"
+				class="report-export__button"
+				@click="printPdf">
+				<template #icon>
+					<TrayArrowDown :size="16" />
+				</template>
+				PDF
 			</NcButton>
 		</div>
-		<CnMassExportDialog
-			v-if="showDialog"
-			ref="exportDialog"
-			:items="exportItems"
-			:dialogTitle="
-				t('pipelinq', 'Export {entity} report', {
-					entity: selectedEntityLabel,
-				})
-			"
-			:description="
-				t('pipelinq', 'Generates a {period} report for {entity}.', {
-					period: selectedPeriodLabel,
-					entity: selectedEntityLabel,
-				})
-			"
-			:formats="exportFormats"
-			defaultFormat="excel"
-			@confirm="onExportConfirm"
-			@close="showDialog = false" />
+		<p v-if="error" class="report-export__error" role="alert">
+			{{ error }}
+		</p>
 	</div>
 </template>
 
 <script>
-import { CnMassExportDialog } from '@conduction/nextcloud-vue'
-import { NcButton, NcSelect } from '@nextcloud/vue'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton } from '@nextcloud/vue'
+import { unref } from 'vue'
+import TrayArrowDown from 'vue-material-design-icons/TrayArrowDown.vue'
+import { rangeToPeriod } from '../../../services/analyticsPeriod.js'
+import { downloadCsv as saveCsv } from '../../../services/csvExport.js'
 
 /**
- * ReportExportPanel — collapsible exporter delegating to ExportService /
- * CnMassExportDialog.
+ * The overview figures a CSV export holds, by their key in
+ * GET /api/analytics/overview.
+ */
+const FIGURES = ['leadConversionRate', 'avgRequestResolutionTime', 'contactMomentVolume', 'customerSatisfactionScore']
+
+/**
+ * The overview payload as CSV rows: one row per figure, this period and the
+ * period before.
  *
+ * @param {object} overview The /api/analytics/overview payload.
+ * @param {(key: string) => string} label Maps a figure key to its readable name.
+ * @return {Array<Array<(string|number)>>} The rows: figure, this period, the period before.
  * @spec openspec/specs/dashboard/spec.md
+ */
+export function overviewRows(overview, label) {
+	const previous = (overview && overview.previousPeriod) || {}
+	return FIGURES.map((key) => [label(key), overview?.[key] ?? '', previous[key] ?? ''])
+}
+
+/**
+ * ReportExportPanel: the dashboard's figures as a CSV or a printed PDF.
+ *
  * @spec openspec/specs/dashboard/spec.md
  */
 export default {
 	name: 'ReportExportPanel',
 	components: {
 		NcButton,
-		NcSelect,
-		CnMassExportDialog,
+		TrayArrowDown,
 	},
 
-	emits: ['exportConfirmed'],
+	inject: {
+		cnDashboardDateRange: { default: null },
+	},
 
 	data() {
 		return {
-			expanded: false,
-			entityType: 'leads',
-			period: 'month',
-			showDialog: false,
-			exportFormats: [
-				{ id: 'excel', label: 'Excel (.xlsx)' },
-				{ id: 'csv', label: 'CSV (.csv)' },
-				{ id: 'json', label: 'JSON (.json)' },
-			],
+			busy: false,
+			error: null,
 		}
 	},
 
 	computed: {
 		/**
+		 * The analytics period of the dashboard's chosen range.
+		 *
+		 * @return {string} week | month | quarter | year.
 		 * @spec openspec/specs/dashboard/spec.md
 		 */
-		entityOptions() {
-			return [
-				{ value: 'leads', label: this.t('pipelinq', 'Leads') },
-				{ value: 'requests', label: this.t('pipelinq', 'Requests') },
-				{
-					value: 'contactmomenten',
-					label: this.t('pipelinq', 'Contact moments'),
-				},
-				{
-					value: 'satisfaction',
-					label: this.t('pipelinq', 'Satisfaction scores'),
-				},
-			]
-		},
-
-		periodOptions() {
-			return [
-				{ value: 'week', label: this.t('pipelinq', 'This week') },
-				{ value: 'month', label: this.t('pipelinq', 'This month') },
-				{ value: 'quarter', label: this.t('pipelinq', 'This quarter') },
-				{ value: 'year', label: this.t('pipelinq', 'This year') },
-			]
-		},
-
-		selectedEntityLabel() {
-			const opt = this.entityOptions.find((o) => o.value === this.entityType)
-			return opt ? opt.label : this.entityType
-		},
-
-		selectedPeriodLabel() {
-			const opt = this.periodOptions.find((o) => o.value === this.period)
-			return opt ? opt.label : this.period
-		},
-
-		/**
-		 * Synthetic items array used to satisfy CnMassExportDialog's items
-		 * prop. The actual export query is built by the consumer in
-		 * `onExportConfirm` from the entity + period filter.
-		 *
-		 * @return {Array<{id: string, title: string}>}
-		 */
-		exportItems() {
-			return [{ id: this.entityType, title: this.selectedEntityLabel }]
+		period() {
+			return rangeToPeriod(unref(this.cnDashboardDateRange) || null)
 		},
 	},
 
 	methods: {
 		/**
-		 * Toggle the collapsible body. Wired to click AND keyboard so the
-		 * panel meets WCAG AA (REQ-DASH-021).
-		 */
-		toggle() {
-			this.expanded = !this.expanded
-		},
-
-		/**
-		 * Open the CnMassExportDialog with the current filters applied.
+		 * Read the overview for the chosen period and save it as a CSV file.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md
 		 */
-		downloadReport() {
-			this.showDialog = true
-		},
-
-		/**
-		 * Handle the CnMassExportDialog confirm event — delegated to the
-		 * platform ExportService; this method only relays the selection
-		 * for the parent / app-wide event bus.
-		 *
-		 * @param {{format: string, ids: Array<string>}} payload - Dialog payload.
-		 *
-		 * @spec openspec/specs/dashboard/spec.md
-		 */
-		onExportConfirm(payload) {
-			this.$emit('exportConfirmed', {
-				entityType: this.entityType,
-				period: this.period,
-				format: payload?.format,
-			})
-			if (
-				this.$refs.exportDialog
-				&& typeof this.$refs.exportDialog.setResult === 'function'
-			) {
-				this.$refs.exportDialog.setResult({ success: true })
+		async downloadCsv() {
+			this.busy = true
+			this.error = null
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/analytics/overview'), { params: { period: this.period } })
+				const names = {
+					leadConversionRate: this.t('pipelinq', 'Lead conversion'),
+					avgRequestResolutionTime: this.t('pipelinq', 'Average request turnaround'),
+					contactMomentVolume: this.t('pipelinq', 'Contacts'),
+					customerSatisfactionScore: this.t('pipelinq', 'Customer satisfaction'),
+				}
+				const columns = [this.t('pipelinq', 'Figure'), this.t('pipelinq', 'This period'), this.t('pipelinq', 'The period before')]
+				const rows = overviewRows(data, (key) => names[key] || key)
+					.map((row) => Object.fromEntries(columns.map((column, i) => [column, row[i]])))
+				saveCsv(`pipelinq-report-${this.period}.csv`, rows, columns)
+			} catch {
+				this.error = this.t('pipelinq', 'The report could not be exported.')
+			} finally {
+				this.busy = false
 			}
+		},
+
+		/**
+		 * Open the browser's print dialog, where the page is saved as a PDF.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md
+		 */
+		printPdf() {
+			window.print()
 		},
 	},
 }
@@ -218,59 +145,31 @@ export default {
 
 <style scoped>
 .report-export {
-	height: 100%;
 	display: flex;
 	flex-direction: column;
-	padding: 8px;
-	box-sizing: border-box;
+	gap: 14px;
+	padding: 0 var(--cn-board-dashboard-card-inset, 22px) 20px;
 }
 
-.report-export__header {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 8px 12px;
-	border-radius: 8px;
-	cursor: pointer;
-	background: var(--color-background-hover);
-}
-
-.report-export__header:focus-visible {
-	outline: 2px solid var(--color-primary-element);
-	outline-offset: 2px;
-}
-
-.report-export__title {
-	font-weight: 600;
-	font-size: 14px;
-}
-
-.report-export__subtitle {
-	color: var(--color-text-maxcontrast);
-	font-size: 12px;
-	flex: 1;
-}
-
-.report-export__chevron {
+.report-export__text {
 	font-size: 14px;
 	color: var(--color-text-maxcontrast);
 }
 
-.report-export__body {
+.report-export__buttons {
 	display: flex;
-	gap: 8px;
 	flex-wrap: wrap;
-	align-items: flex-end;
-	margin-top: 8px;
-	padding: 8px 12px;
+	gap: 8px;
 }
 
-.report-export__field {
-	min-width: 200px;
-	flex: 1 1 200px;
+.report-export__button.button-vue.button-vue {
+	--button-padding: 14px;
+	min-height: 34px;
+	height: 34px;
 }
 
-.report-export__download {
-	flex-shrink: 0;
+.report-export__error {
+	margin: 0;
+	color: var(--color-error-text);
 }
 </style>

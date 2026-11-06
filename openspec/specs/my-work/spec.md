@@ -61,38 +61,34 @@ Within each temporal group, items MUST be sorted by priority first, then by due 
 #### Scenario: Items without due date positioning
 @e2e exclude requires items without due dates
 - WHEN items exist without a due date
-- THEN they MUST be grouped in the "No Due Date" section
+- THEN they MUST be grouped in the "Wacht op mij" section
 
 ---
 
-### Requirement: Temporal Grouping [MVP]
+### Requirement: Grouping by what to do [MVP]
 
-Items MUST be organized into four temporal groups displayed top to bottom: Overdue, Due This Week, Upcoming, No Due Date. Empty groups MUST be hidden.
+Items MUST be organised into three groups, top to bottom, by what the user has to do: "Vandaag beantwoorden", "Wacht op mij" and "Wacht op de klant". Each row MUST show its own term, such as "1 dag over tijd". Empty groups MUST be hidden.
 
-#### Scenario: Overdue group
+#### Scenario: The term is today or has passed
 @e2e exclude requires items with past due dates
-- WHEN a lead has expectedCloseDate in the past
-- THEN it MUST appear in the "Overdue" group with "N days overdue" displayed
+- WHEN an item's term is today or has passed
+- THEN it MUST appear in "Vandaag beantwoorden", under the hint "termijn is vandaag of verstreken"
+- AND a term that has passed MUST read "N dagen over tijd" on the row
 
-#### Scenario: Due This Week group
-@e2e exclude requires items due this week
-- WHEN a lead has expectedCloseDate within the current calendar week (today through Sunday)
-- THEN it MUST appear in the "Due This Week" group
+#### Scenario: The customer has reacted
+@e2e exclude requires items with a customer reaction
+- WHEN the customer has reacted, or the next step is the user's and the term is later
+- THEN the item MUST appear in "Wacht op mij", under the hint "de klant heeft gereageerd"
 
-#### Scenario: Upcoming group
-@e2e exclude requires future-dated items
-- WHEN a lead has expectedCloseDate after the current week
-- THEN it MUST appear in the "Upcoming" group
+#### Scenario: The customer has to act
+@e2e exclude requires items waiting on the customer
+- WHEN an item has status waiting for the customer
+- THEN it MUST appear in "Wacht op de klant", under the hint "niets te doen tot ze reageren"
 
-#### Scenario: No Due Date group
+#### Scenario: An item without a term
 @e2e exclude requires items without due dates
-- WHEN an item has no due date set
-- THEN it MUST appear in the "No Due Date" group (last group)
-
-#### Scenario: Section item counts
-@e2e exclude requires assigned items
-- WHEN a group contains items
-- THEN the group header MUST display its item count (e.g., "Overdue (2)")
+- WHEN an item has no term and is not waiting for the customer
+- THEN it MUST appear in "Wacht op mij"
 
 #### Scenario: Empty group behavior
 @e2e exclude requires controlled data state
@@ -120,17 +116,17 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests.
 
 ### Requirement: Overdue Item Highlighting [MVP]
 
-Overdue items MUST be visually distinct with red indicators and "N days overdue" text.
+Overdue items MUST be visually distinct with red indicators and "N dagen over tijd" text.
 
 #### Scenario: Overdue visual treatment
 @e2e exclude requires overdue items
 - WHEN an item is overdue
-- THEN it MUST display a red visual indicator and "N days overdue" in red text
+- THEN it MUST display a red visual indicator and "N dagen over tijd" in red text
 
 #### Scenario: Due today is not overdue
 @e2e exclude requires item due today
 - WHEN an item is due today
-- THEN it MUST appear in "Due This Week" (not Overdue)
+- THEN it MUST appear in "Vandaag beantwoorden", without "over tijd"
 - AND it SHOULD show "Due today" as a warning indicator
 
 ---
@@ -291,6 +287,27 @@ completed items.
 - WHEN the agent opens My Work
 - THEN both appear under Tickets, one badged as a complaint, one as a request
 
+### Requirement: My work lists all my items in one list
+
+`GET /api/worklist/items` MUST return the session user's open tickets (requests, complaints, reports, contact moments), leads that are not in a closed stage, and open follow-up tasks in one shape: `{ kind, id, title, priority, channel, clientName, routeName, record, dueAt, bucket, dueGroup }`.
+- `bucket` is `waiting-on-customer` for a ticket waiting on the customer, `answer-today` for an item due today or earlier, and `waiting-on-me` otherwise.
+- `dueGroup` is `late`, `today`, `week`, `later` or `none`.
+- `?bucket=`, `?lens=tickets|leads|tasks`, `?sort=deadline|waiting|newest|priority` and `?done=1` narrow and order the items.
+- `?format=csv` downloads them.
+
+My work's three lists MUST read this endpoint. On a phone the page MUST draw one list grouped by `dueGroup`.
+
+#### Scenario: A lead and a follow-up stand in the lists with the tickets
+- GIVEN Pieter has a request due yesterday, a lead closing yesterday, and a follow-up due in three days
+- WHEN My work opens
+- THEN "Vandaag beantwoorden" lists the lead and the request, each with its kind pill
+- AND "Wacht op mij" lists the follow-up
+
+#### Scenario: The phone groups by due
+- GIVEN the same items
+- WHEN My work opens 375px wide
+- THEN one list shows "Te laat" with the lead and the request, then "Deze week" with the follow-up
+
 ## UI Layout Reference
 
 The My Work view follows the wireframe in DESIGN-REFERENCES.md section 3.5:
@@ -299,20 +316,15 @@ The My Work view follows the wireframe in DESIGN-REFERENCES.md section 3.5:
 Header: "My Work"  [Filter: All | Leads | Requests]  [Show completed toggle]
 Subheader: "Leads (5) . Requests (3)  --  8 items total"
 
-[Overdue (2)]
+[Vandaag beantwoorden]  termijn is vandaag of verstreken
   - Item card (red highlight)
-  - Item card (red highlight)
-
-[Due This Week (3)]
-  - Item card
-  - Item card
   - Item card
 
-[Upcoming (2)]
+[Wacht op mij]  de klant heeft gereageerd
   - Item card
   - Item card
 
-[No Due Date (1)]
+[Wacht op de klant]  niets te doen tot ze reageren
   - Item card
 ```
 
@@ -331,7 +343,7 @@ Subheader: "Leads (5) . Requests (3)  --  8 items total"
 - Full `MyWork.vue` view exists at `src/views/MyWork.vue` with route `/my-work` (name `MyWork`) in `src/router/index.js`.
 - **REQ-MW-010 (Personal Workload View):** Fully implemented. Fetches leads and requests assigned to `OC.currentUser` via OpenRegister API. Shows entity type badge (LEAD/REQ), title, stage/status, pipeline name, value (leads only), due date, and priority badge.
 - **REQ-MW-020 (Sorting):** Implemented within each group -- items sorted by priority (urgent > high > normal > low), then by due date ascending.
-- **REQ-MW-030 (Temporal Grouping):** Fully implemented. Four groups: Overdue, Due This Week, Upcoming, No Due Date. Empty groups are hidden. Group headers include item count.
+- **REQ-MW-030 (Grouping by what to do):** Not built. The code groups by due date (Overdue, Due This Week, Upcoming, No Due Date); `pipelinq/PqMijnWerk` draws the three groups this spec now names.
 - **REQ-MW-040 (Filtering):** Implemented. Filter buttons for All, Leads, Requests. Item counts update with filter.
 - **REQ-MW-050 (Overdue Highlighting):** Implemented. Overdue items have red left border (`work-card--overdue`), red text showing "N days overdue". "Due today" warning is shown.
 - **REQ-MW-060 (Item Navigation):** Implemented. Clicking a card navigates to `LeadDetail` or `RequestDetail` via `$router.push`. Cards are keyboard accessible with `tabindex="0"` and `@keydown.enter`.

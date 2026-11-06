@@ -25,7 +25,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.1
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use RuntimeException;
  * same secret they always produce the same hex digest, so the auditor (or a
  * Newman integration test) can replay the chain from genesis.
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.1
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class KassakoppelingSignatureService {
 	/**
@@ -128,7 +128,7 @@ class KassakoppelingSignatureService {
 	 *
 	 * @return string The HMAC-SHA256 hex digest.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function generateSignature(array $entryData): string {
 		$message = $this->canonicalMessage(entryData: $entryData, fields: self::SIGNATURE_FIELDS);
@@ -148,7 +148,7 @@ class KassakoppelingSignatureService {
 	 *
 	 * @return string The SHA-256 hex digest.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function generateHash(array $entryData, string $previousHash): string {
 		$entry = $entryData;
@@ -171,7 +171,7 @@ class KassakoppelingSignatureService {
 	 *
 	 * @return bool Whether the signature matches.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function verifySignature(array $entryData, string $signature): bool {
 		if ($signature === '') {
@@ -196,7 +196,7 @@ class KassakoppelingSignatureService {
 	 *
 	 * @return array{chainValid: bool, brokenAt: int|null, unbrokenLinks: int}
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function verifyHashChain(array $entries): array {
 		$expectedPrevious = self::GENESIS_HASH;
@@ -241,7 +241,7 @@ class KassakoppelingSignatureService {
 	 *
 	 * @throws RuntimeException When no key material is available.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function getSecretKey(): string {
 		$configured = trim($this->appConfig->getValueString(Application::APP_ID, self::SECRET_KEY, ''));

@@ -234,16 +234,14 @@ describe('RoutingSuggestionSection', () => {
 			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
 		)
 		const page = manifest.pages.find((p) => p.id === 'LeadDetail')
-		const widget = (page.config.bodyWidgets || []).find(
-			(w) => w.component === 'RoutingSuggestionSection',
+		const widget = page.config.widgets.find(
+			(w) => w.type === 'RoutingSuggestionWidget',
 		)
 		expect(widget).toBeTruthy()
-		expect(widget.props).toEqual({
-			objectId: '@objectId',
-			category: '@object.category',
+		expect(page.config.sideColumn).toContain(widget.id)
+		expect(widget.content).toMatchObject({
 			entityType: 'lead',
 			objectType: 'lead',
-			assignee: '@object.assignee',
 		})
 	})
 

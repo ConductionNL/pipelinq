@@ -33,15 +33,18 @@ kept out of it. Each channel gets its own line.
 		<p v-else-if="error" class="survey-response-rate__error" role="alert">
 			{{ error }}
 		</p>
-		<NcEmptyContent
+		<div
 			v-else-if="!hasData"
-			:name="t('pipelinq', 'No survey invitations yet')"
-			:description="
+			role="note"
+			class="survey-response-rate__empty">
+			<strong class="survey-response-rate__empty-title">{{ t('pipelinq', 'No survey invitations yet') }}</strong>
+			<span class="survey-response-rate__empty-text">{{
 				t(
 					'pipelinq',
 					'When a dispatch rule sends satisfaction surveys, the response rate shows here.',
 				)
-			" />
+			}}</span>
+		</div>
 		<template v-else>
 			<p
 				class="survey-response-rate__headline"
@@ -99,12 +102,12 @@ kept out of it. Each channel gets its own line.
 </template>
 
 <script>
-import { NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import { fetchResponseRate } from '../../services/satisfactionApi.js'
 
 export default {
 	name: 'SurveyResponseRateWidget',
-	components: { NcEmptyContent, NcLoadingIcon },
+	components: { NcLoadingIcon },
 	data() {
 		return {
 			days: 30,
@@ -218,14 +221,52 @@ export default {
 .survey-response-rate {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	padding: 8px;
+	gap: 14px;
+	padding: 0 var(--cn-board-dashboard-card-inset, 22px) 20px;
 }
 
 .survey-response-rate__period {
 	display: flex;
-	align-items: center;
-	gap: 8px;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.survey-response-rate__period label {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.survey-response-rate__period select {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 260px;
+	height: 40px;
+	min-height: 40px;
+	margin: 0;
+	padding: 0 12px;
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: var(--border-radius-large, 8px);
+	background-color: var(--color-main-background);
+	font-size: 15px;
+}
+
+.survey-response-rate__empty {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px 0;
+	text-align: center;
+}
+
+.survey-response-rate__empty-title {
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.survey-response-rate__empty-text {
+	font-size: 14px;
+	color: var(--color-text-maxcontrast);
 }
 
 .survey-response-rate__headline strong {

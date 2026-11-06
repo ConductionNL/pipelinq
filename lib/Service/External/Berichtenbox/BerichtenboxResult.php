@@ -12,7 +12,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
+ * @spec openspec/specs/berichtenbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,7 +32,7 @@ namespace OCA\Pipelinq\Service\External\Berichtenbox;
  * `DISPATCH_DEFERRED` / `VERIFY_DEFERRED` / `MAILBOX_DEFERRED` are
  * dormant defaults so callers can branch on the prefix.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
+ * @spec openspec/specs/berichtenbox/spec.md
  */
 final class BerichtenboxResult {
 	/**

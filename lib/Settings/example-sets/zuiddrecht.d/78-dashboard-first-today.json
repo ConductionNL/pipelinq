@@ -1,0 +1,9 @@
+{
+	"$comment": "pipelinq's start page (board PqDashboard) for Pieter. The setting example_client names Bakkerij De Graaf as the client the link \"Bekijk een voorbeeld\" on the card \"Contact starten\" opens. The card \"Eerst, vandaag\" shows the handler's most overdue open assigned ticket: M. de Graaf's afvalpas request (PQ-2026-0409, in the main file), Pieter's, came in 3 days ago with its deadline a day behind.",
+	"appConfig": [
+		{
+			"key": "example_client",
+			"value": "{{object:client-bakkerijdegraaf.id}}"
+		}
+	]
+}

@@ -14,7 +14,7 @@
  * own error for any other. So a fetch on a slug the registry does not know
  * fails here the way it fails in the browser.
  *
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-01
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-01
  */
 
 declare(strict_types=1);
@@ -102,7 +102,7 @@ class ForecastSnapshotJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-01
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
