@@ -11325,7 +11325,7 @@
 			"route": "/flows/:id",
 			"type": "flow",
 			"title": "Flow",
-			"config": { "app": "pipelinq", "saveAsVersion": true, "layout": "canvas", "metaParts": ["trigger", "steps", "version", "saved"] },
+			"config": { "app": "pipelinq", "saveAsVersion": true, "layout": "canvas", "metaParts": ["trigger", "steps", "version", "saved"], "listMode": true, "testPayload": true },
 			"_note": "The shared CnFlowDetail canvas over the same single engine, laid out as boards PqFlow and PqFlowRun draw it (config.layout canvas: actions under the title, a floating toolbar and inspector, in a run the run card over the canvas and the legend card at its foot). The inspector replaces the app sidebar, so the page mounts none. metaParts adds when the version was saved to the path line. PqFlow edits the flow in place: a published flow is not locked behind a read-only notice; Save publishes the edits as the next version and runs already started keep theirs (CnFlowBoard saveAsVersion)."
 		}
 	]
