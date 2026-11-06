@@ -62,6 +62,7 @@ const { default: LeadExchangeRate } = await import('../../src/components/leads/L
 describe('rate helpers', () => {
 	it('names where a rate came from', () => {
 		expect(rateSourceLabel({ source: 'shillinq', origin: 'ecb' })).toBe('ECB via Shillinq')
+		expect(rateSourceLabel({ source: 'ecb', origin: 'ecb' })).toBe('ECB daily rate')
 		expect(rateSourceLabel({ source: 'manual' })).toBe('Typed in Forecast settings')
 		expect(rateSourceLabel({ source: 'override' })).toBe('Set by an administrator')
 		expect(rateSourceLabel({ source: 'none' })).toBe('No rate, counted at face value')

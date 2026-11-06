@@ -4,9 +4,9 @@
   - Verify: PHPUnit `tests/Unit/Service/ExchangeRateServiceTest.php`: override wins, shillinq ecb beats shillinq manual, ECB source used without shillinq, table used without both, USD to GBP via EUR
 - [x] 1.2 shillinq `FxRate` read through a lazy resolve; no hard dependency in `appinfo/info.xml`
   - Verify: PHPUnit with the container returning a reader and returning nothing
-- [ ] 1.3 ECB rates through OpenRegister from the integriq source `ecb-eurofxref-daily`, skipped cleanly when the source is absent
+- [x] 1.3 ECB rates through OpenRegister from the integriq source `ecb-eurofxref-daily`, skipped cleanly when the source is absent
   - Verify: PHPUnit with a 200 body, a 404 (no source) and a 503
-  - Open: needs an `ecb-eurofxref-daily` source in integriq and a way to read it through OpenRegister; neither exists yet, so the ECB step is not in the resolution order
+  - Built as `EcbRateReader`: reads register `integriq`, schema `exchange_rate` (integriq#2875) in process through OpenRegister's ObjectService, newest `rateDate` on or before today; `tests/Unit/Service/EcbRateReaderTest.php` covers rows found, register absent and a failing read
 - [x] 1.4 `convert()` returning the metadata; `ForecastRollupService` uses it
   - Verify: PHPUnit on the roll-up asserting rate, source and date per currency
 - [x] 1.5 Stale flag with `forecast_max_rate_age_days`

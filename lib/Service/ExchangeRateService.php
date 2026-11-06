@@ -39,7 +39,8 @@ use OCP\IAppConfig;
  * roll-up never silently drops a deal's value.
  *
  * A rate resolves from, in order: an administrator override, shillinq's
- * newest rate for the pair, and the hand-kept table. Every resolved rate
+ * newest rate for the pair, the ECB daily rate integriq keeps, and the
+ * hand-kept table. Every resolved rate
  * carries its source and date, and is flagged stale past a set age.
  *
  * @spec exclude infrastructure utility with no feature requirement of its own; it is
@@ -110,6 +111,7 @@ class ExchangeRateService {
 	public const SOURCE_SAME = 'same';
 	public const SOURCE_OVERRIDE = 'override';
 	public const SOURCE_SHILLINQ = 'shillinq';
+	public const SOURCE_ECB = 'ecb';
 	public const SOURCE_TABLE = 'manual';
 	public const SOURCE_NONE = 'none';
 
@@ -120,6 +122,7 @@ class ExchangeRateService {
 	 * @param ShillinqFxRateReader|null $fleetRates Shillinq's rates, when available.
 	 * @param ITimeFactory|null $timeFactory The clock for the stale check.
 	 * @param RateOverrideStore|null $overrides The fixed rates and typed dates.
+	 * @param EcbRateReader|null $ecbRates The ECB rates integriq keeps, when available.
 	 *
 	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
 	 */
@@ -128,6 +131,7 @@ class ExchangeRateService {
 		private ?ShillinqFxRateReader $fleetRates = null,
 		private ?ITimeFactory $timeFactory = null,
 		private ?RateOverrideStore $overrides = null,
+		private ?EcbRateReader $ecbRates = null,
 	) {
 	}//end __construct()
 
@@ -194,7 +198,7 @@ class ExchangeRateService {
 	}//end convert()
 
 	/**
-	 * Resolve the rate for one currency: override, shillinq, then the table.
+	 * Resolve the rate for one currency: override, shillinq, ECB, then the table.
 	 *
 	 * A currency with no rate anywhere converts 1:1 with source `none`, so a
 	 * roll-up never drops a deal's value and the screen can say why.
@@ -351,6 +355,18 @@ class ExchangeRateService {
 				'source' => self::SOURCE_SHILLINQ,
 				'origin' => $fleet['origin'],
 				'rateDate' => $fleet['date'],
+				'reason' => null,
+			];
+		}
+
+		$today = $this->overrideStore()->today()->format('Y-m-d');
+		$ecb = $this->ecbRates?->rateFor(from: $currency, to: $reporting, day: $today);
+		if ($ecb !== null) {
+			return [
+				'rate' => $ecb['rate'],
+				'source' => self::SOURCE_ECB,
+				'origin' => EcbRateReader::SOURCE,
+				'rateDate' => $ecb['date'],
 				'reason' => null,
 			];
 		}
