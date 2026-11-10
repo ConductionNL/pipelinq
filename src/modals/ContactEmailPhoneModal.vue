@@ -70,6 +70,15 @@ import {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
 
+/**
+ * The format each channel's value is checked against; another channel is
+ * not checked.
+ */
+const FORMAT_RULES = {
+	email: { pattern: EMAIL_REGEX, message: () => t('pipelinq', 'Invalid email format') },
+	phone: { pattern: PHONE_REGEX, message: () => t('pipelinq', 'Invalid phone format') },
+}
+
 export default {
 	name: 'ContactEmailPhoneModal',
 	components: {
@@ -158,21 +167,29 @@ export default {
 		 * @return {void}
 		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
+		/**
+		 * @return {string} The message for a missing value.
+		 */
+		requiredError() {
+			return this.channelType === 'email'
+				? t('pipelinq', 'Email address is required')
+				: t('pipelinq', 'Phone number is required')
+		},
+
+		/**
+		 * @param {string} value The trimmed value.
+		 * @return {string} The message when it does not match its channel's format, or ''.
+		 */
+		formatError(value) {
+			const rule = Object.hasOwn(FORMAT_RULES, this.channelType) ? FORMAT_RULES[this.channelType] : null
+			return rule && !rule.pattern.test(value) ? rule.message() : ''
+		},
+
 		submit() {
 			const value = (this.form.value || '').trim()
-			if (!value) {
-				this.error =
-					this.channelType === 'email'
-						? t('pipelinq', 'Email address is required')
-						: t('pipelinq', 'Phone number is required')
-				return
-			}
-			if (this.channelType === 'email' && !EMAIL_REGEX.test(value)) {
-				this.error = t('pipelinq', 'Invalid email format')
-				return
-			}
-			if (this.channelType === 'phone' && !PHONE_REGEX.test(value)) {
-				this.error = t('pipelinq', 'Invalid phone format')
+			const error = value ? this.formatError(value) : this.requiredError()
+			if (error) {
+				this.error = error
 				return
 			}
 
