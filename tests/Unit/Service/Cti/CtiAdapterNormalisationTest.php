@@ -501,6 +501,45 @@ class CtiAdapterNormalisationTest extends TestCase {
 	}//end testOriginateFailureIsLoggedAndReported()
 
 	/**
+	 * RingCentral subscribes the extension's presence, skips without config and logs a failure.
+	 *
+	 * @return void
+	 */
+	public function testRingCentralPresenceSubscription(): void {
+		$this->client->expects($this->never())->method('post');
+		$this->ringCentral()->subscribeToPresence('alice', '101');
+		$this->config = ['cti_ringcentral_api_base_url' => 'https://rc'];
+		$this->ringCentral()->subscribeToPresence('alice', '101');
+	}//end testRingCentralPresenceSubscription()
+
+	/**
+	 * RingCentral posts the presence filter with the bearer token, and logs a failed post.
+	 *
+	 * @return void
+	 */
+	public function testRingCentralPresenceSubscriptionPostsAndLogs(): void {
+		$this->config = ['cti_ringcentral_api_base_url' => 'https://rc/', 'cti_ringcentral_access_token' => 't'];
+		$this->client->expects($this->exactly(2))->method('post')->with(
+			'https://rc/restapi/v1.0/subscription',
+			[
+				'headers' => [
+					'Authorization' => 'Bearer t',
+					'Content-Type' => 'application/json',
+				],
+				'body' => '{"eventFilters":["\/restapi\/v1.0\/account\/~\/extension\/101\/presence"],"deliveryMode":{"transportType":"WebHook"}}',
+				'timeout' => 10,
+			]
+		)->willReturnOnConsecutiveCalls($this->response('{}'), $this->throwException(new \RuntimeException('down')));
+		$this->logger->expects($this->once())->method('warning')->with(
+			'RingCentral presence subscribe failed',
+			['exception' => 'down', 'userId' => 'alice']
+		);
+
+		$this->ringCentral()->subscribeToPresence('alice', '101');
+		$this->ringCentral()->subscribeToPresence('alice', '101');
+	}//end testRingCentralPresenceSubscriptionPostsAndLogs()
+
+	/**
 	 * Assert a call result's success, call id, error and platform.
 	 *
 	 * @param array{0:bool,1:?string,2:?string,3:string} $expected The expected values.
