@@ -272,10 +272,10 @@ class ReferencesAuditCommandGoldenTest extends TestCase {
 			public function patchObject(ObjectPatch $patch, bool $_rbac = true, bool $_multitenancy = true): array {
 				$this->test->calls[] = ['patchObject' => [$patch->objectId, $patch->data, $patch->target->register, $patch->target->schema, $_rbac, $_multitenancy]];
 				if (($this->case['patchThrows'] ?? false) === true) {
-					throw new RuntimeException('locked: '.$objectId);
+					throw new RuntimeException('locked: '.$patch->objectId);
 				}
 
-				return $data;
+				return $patch->data;
 			}
 		};
 	}//end objectService()
