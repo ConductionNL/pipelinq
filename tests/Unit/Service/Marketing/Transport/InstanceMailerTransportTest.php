@@ -215,6 +215,118 @@ class InstanceMailerTransportTest extends TestCase {
 
 		$this->assertTrue($result->accepted, 'the send must succeed even though the header guard is unavailable');
 	}//end testHeaderInjectionDegradesSoftWhenGuardUnavailable()
+
+	/**
+	 * A rendered mail with the given addressing, content and headers.
+	 *
+	 * @param array<string, string> $parts   fromName, replyTo, html, text overrides.
+	 * @param array<string, string> $headers The extra headers.
+	 *
+	 * @return RenderedMail
+	 */
+	private function mailWith(array $parts, array $headers): RenderedMail {
+		return new RenderedMail(
+			addressing: new MailAddressing(
+				fromEmail: 'noreply@example.test',
+				fromName: ($parts['fromName'] ?? ''),
+				replyTo: ($parts['replyTo'] ?? ''),
+				toEmail: 'user@example.test',
+			),
+			content: new MailContent(subject: 'Hi', html: ($parts['html'] ?? ''), text: ($parts['text'] ?? '')),
+			headers: $headers,
+			deliveryId: 'd-9',
+		);
+	}//end mailWith()
+
+	/**
+	 * Every way a send ends: no message, a failed send and a rejected
+	 * recipient each answer their own error with their own warning; the
+	 * envelope sets only what the mail carries; the unsubscribe pair goes
+	 * to the shared helper with the bare URL and never as a text header; a
+	 * helper that does not set it, or no helper, is logged; a failing
+	 * header injection is logged and the mail still goes.
+	 *
+	 * @return void
+	 */
+	public function testEveryWayASendEnds(): void {
+		$this->mailer->method('createMessage')->willThrowException(new \RuntimeException('down'));
+		$this->logger->expects($this->once())->method('warning')->with('InstanceMailerTransport.send: createMessage failed', ['exception' => 'down']);
+		$result = (new InstanceMailerTransport($this->mailer, $this->logger))->send($this->mailWith([], []));
+		$this->assertSame([false, 'instance-mailer-unavailable'], [$result->accepted, $result->error]);
+
+		$mailer = $this->createMock(IMailer::class);
+		$message = $this->fluentMessage();
+		$mailer->method('createMessage')->willReturn($message);
+		$mailer->method('send')->willThrowException(new \RuntimeException('smtp'));
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with('InstanceMailerTransport.send: send failed', ['deliveryId' => 'd-9', 'exception' => 'smtp']);
+		$result = (new InstanceMailerTransport($mailer, $logger))->send($this->mailWith([], []));
+		$this->assertSame([false, 'instance-mailer-send-failed'], [$result->accepted, $result->error]);
+
+		$mailer = $this->createMock(IMailer::class);
+		$message = $this->createMock(IMessage::class);
+		$message->expects($this->once())->method('setFrom')->with(['noreply@example.test']);
+		$message->expects($this->once())->method('setTo')->with(['user@example.test']);
+		$message->expects($this->once())->method('setReplyTo')->with(['reply@example.test']);
+		$message->expects($this->once())->method('setSubject')->with('Hi');
+		$message->expects($this->never())->method('setHtmlBody');
+		$message->expects($this->once())->method('setPlainBody')->with('hi');
+		$mailer->method('createMessage')->willReturn($message);
+		$mailer->method('send')->willReturn(['user@example.test']);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with('InstanceMailerTransport.send: provider rejected recipient(s)', ['deliveryId' => 'd-9', 'failedRecipients' => ['user@example.test']]);
+		$logger->expects($this->once())->method('info')->with('InstanceMailerTransport.applyHeaders: List-Unsubscribe not set; the body link remains');
+		$result = (new InstanceMailerTransport($mailer, $logger))->send(
+			$this->mailWith(['replyTo' => 'reply@example.test', 'text' => 'hi'], ['List-Unsubscribe' => ' <https://u.test/x> ', 'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click'])
+		);
+		$this->assertSame([false, 'recipient-rejected'], [$result->accepted, $result->error]);
+
+		$headerBag = new FakeSymfonyHeaderBag();
+		$message = $this->getMockBuilder(FakeMessageWithSymfonyEmail::class)->setConstructorArgs([new FakeSymfonyEmail($headerBag)])->getMock();
+		$message->method('getSymfonyEmail')->willReturn(new FakeSymfonyEmail($headerBag));
+		$message->expects($this->once())->method('setFrom')->with(['noreply@example.test' => 'Pipelinq']);
+		$message->expects($this->once())->method('setHtmlBody')->with('<p>hi</p>');
+		$message->expects($this->never())->method('setReplyTo');
+		$message->expects($this->never())->method('setPlainBody');
+		$mailer = $this->createMock(IMailer::class);
+		$mailer->method('createMessage')->willReturn($message);
+		$mailer->method('send')->willReturn([]);
+		$unsubscribe = $this->createMock(\OCA\Pipelinq\Service\UnsubscribeMail::class);
+		$unsubscribe->expects($this->once())->method('applyHeaders')->with($message, ['oneClickUrl' => 'https://u.test/x'])->willReturn(true);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->never())->method('info');
+		$result = (new InstanceMailerTransport($mailer, $logger, $unsubscribe))->send(
+			$this->mailWith(['fromName' => 'Pipelinq', 'html' => '<p>hi</p>'], ['List-Unsubscribe' => '<https://u.test/x>', 'List-Unsubscribe-Post' => 'x', 'X-Campaign' => 'c-1'])
+		);
+		$this->assertTrue($result->accepted);
+		$this->assertSame(['X-Campaign' => 'c-1'], $headerBag->headers);
+
+		$message = $this->getMockBuilder(FakeMessageWithSymfonyEmail::class)->setConstructorArgs([new FakeSymfonyEmail($headerBag)])->getMock();
+		$message->expects($this->never())->method('getSymfonyEmail');
+		$mailer = $this->createMock(IMailer::class);
+		$mailer->method('createMessage')->willReturn($message);
+		$mailer->method('send')->willReturn([]);
+		$unsubscribe = $this->createMock(\OCA\Pipelinq\Service\UnsubscribeMail::class);
+		$unsubscribe->expects($this->never())->method('applyHeaders');
+		$this->assertTrue((new InstanceMailerTransport($mailer, $this->createMock(LoggerInterface::class), $unsubscribe))->send($this->mailWith([], ['List-Unsubscribe' => '<>', 'List-Unsubscribe-Post' => 'x']))->accepted);
+
+		$message = $this->getMockBuilder(FakeMessageWithSymfonyEmail::class)->setConstructorArgs([new FakeSymfonyEmail($headerBag)])->getMock();
+		$message->method('getSymfonyEmail')->willThrowException(new \RuntimeException('no mime'));
+		$mailer = $this->createMock(IMailer::class);
+		$mailer->method('createMessage')->willReturn($message);
+		$mailer->expects($this->once())->method('send')->willReturn([]);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('info')->with('InstanceMailerTransport.applyHeaders: header injection failed — sending without extra headers', ['exception' => 'no mime']);
+		$this->assertTrue((new InstanceMailerTransport($mailer, $logger))->send($this->mailWith([], ['X-Campaign' => 'c-1']))->accepted);
+
+		$message = $this->fluentMessage();
+		$mailer = $this->createMock(IMailer::class);
+		$mailer->method('createMessage')->willReturn($message);
+		$mailer->method('send')->willReturn([]);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('info')->with('InstanceMailerTransport.applyHeaders: getSymfonyEmail() unavailable — sending without extra headers', ['headerNames' => ['X-Campaign']]);
+		$this->assertTrue((new InstanceMailerTransport($mailer, $logger))->send($this->mailWith([], ['X-Campaign' => 'c-1']))->accepted);
+	}//end testEveryWayASendEnds()
 }//end class
 
 /**
