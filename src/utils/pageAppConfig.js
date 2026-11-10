@@ -37,16 +37,40 @@ const CONFIG_TOKEN = /^@config\.([A-Za-z0-9_]+)\??$/
  * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
  */
 export function resolveGaugeTarget(widget, appConfig) {
-	const content = widget?.content
-	const raw = content?.target?.value
-	if (widget?.type !== 'gauge' || typeof raw !== 'string') {
+	const key = gaugeConfigKey(widget)
+	if (key === null) {
 		return widget
+	}
+	return { ...widget, content: withTarget(widget.content, Number(appConfig?.[key])) }
+}
+
+/**
+ * The app-config key a gauge's target names (`@config.<key>`), or null for
+ * any other widget or target.
+ *
+ * @param {object|null} widget The widget.
+ * @return {string|null} The key.
+ * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+ */
+function gaugeConfigKey(widget) {
+	const raw = widget?.content?.target?.value
+	if (widget?.type !== 'gauge' || typeof raw !== 'string') {
+		return null
 	}
 	const match = CONFIG_TOKEN.exec(raw)
-	if (!match) {
-		return widget
-	}
-	const value = Number(appConfig?.[match[1]])
+	return match ? match[1] : null
+}
+
+/**
+ * The gauge's content with the configured target, or 0 and the label for
+ * a gauge without one when no target is set.
+ *
+ * @param {object} content The gauge's content.
+ * @param {number} value The configured target.
+ * @return {object} The content.
+ * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+ */
+function withTarget(content, value) {
 	const hasTarget = Number.isFinite(value) && value > 0
 	const next = {
 		...content,
@@ -55,7 +79,7 @@ export function resolveGaugeTarget(widget, appConfig) {
 	if (!hasTarget && content.labelWithoutTarget) {
 		next.label = content.labelWithoutTarget
 	}
-	return { ...widget, content: next }
+	return next
 }
 
 /** The keys of the `case_target` initial state a page may read. */
