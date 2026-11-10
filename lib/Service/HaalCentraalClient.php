@@ -31,6 +31,7 @@ use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
+use OCP\Http\Client\IResponse;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 use OCP\Security\ICrypto;
@@ -75,6 +76,19 @@ class HaalCentraalClient {
 	 * @var string
 	 */
 	private const OR_EMPTY_SENTINEL_KEY = '__or_brp_empty__';
+
+	/**
+	 * The request options of the OpenRegister BRP leaf call (internal,
+	 * OCS-APIREQUEST, allow_local_address).
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const LEAF_REQUEST_OPTIONS = [
+		'timeout' => self::LOOKUP_TIMEOUT_SECONDS,
+		'connect_timeout' => 2,
+		'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
+		'nextcloud' => ['allow_local_address' => true],
+	];
 
 	/**
 	 * Cached access token (in-process only — re-fetched on cold boot).
@@ -129,8 +143,6 @@ class HaalCentraalClient {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-01
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-03
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)  Sequential guard clauses over the HTTP response; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Linear OR-first then legacy request/response handling.
 	 * @SuppressWarnings(PHPMD.StaticAccess)          BsnValidationService::mask is a pure stateless helper.
 	 */
 	public function lookupPersoon(
@@ -138,23 +150,37 @@ class HaalCentraalClient {
 		string $bsn,
 		?string $requestIdContext = null,
 	): ?array {
-		$maskedBsn = BsnValidationService::mask($bsn);
+		$lookup = new BsnLookup(bsn: $bsn, maskedBsn: BsnValidationService::mask($bsn));
 
 		// OR-first: try the OpenRegister BRP leaf, which relays the raw HAL+JSON
 		// person plus the Wet-BRP audit metadata. Returns the same shape as the
 		// legacy path on success, or null to fall back to the legacy direct path.
-		$viaOr = $this->lookupViaOpenRegister(bsn: $bsn, maskedBsn: $maskedBsn);
-		if ($viaOr !== null) {
-			// Sentinel for an OR-200 with zero persons (BSN not in BRP) — the
-			// leaf returns 200 { results: [] }; preserve the legacy not-found
-			// semantics (return null) without falling through to the legacy call.
-			if (isset($viaOr[self::OR_EMPTY_SENTINEL_KEY]) === true) {
-				return null;
-			}
-
-			return $viaOr;
+		$viaOr = $this->lookupViaOpenRegister(lookup: $lookup);
+		if ($viaOr === null) {
+			return $this->lookupDirect(lookup: $lookup, requestIdContext: $requestIdContext);
 		}
 
+		// Sentinel for an OR-200 with zero persons (BSN not in BRP) — the
+		// leaf returns 200 { results: [] }; preserve the legacy not-found
+		// semantics (return null) without falling through to the legacy call.
+		if (isset($viaOr[self::OR_EMPTY_SENTINEL_KEY]) === true) {
+			return null;
+		}
+
+		return $viaOr;
+	}//end lookupPersoon()
+
+	/**
+	 * The legacy direct lookup: OAuth2 token, then the mTLS HaalCentraal call.
+	 *
+	 * @param BsnLookup   $lookup           The BSN asked for.
+	 * @param string|null $requestIdContext Optional context UUID for correlation logging.
+	 *
+	 * @return array<string,mixed>|null The stamped person, or null when not found.
+	 *
+	 * @throws HaalCentraalException On transport / auth / server errors.
+	 */
+	private function lookupDirect(BsnLookup $lookup, ?string $requestIdContext): ?array {
 		$token = $this->getAccessToken();
 
 		$client = $this->buildHttpClient();
@@ -162,80 +188,165 @@ class HaalCentraalClient {
 
 		try {
 			$start = microtime(true);
-			$response = $client->post(
-				$url,
-				[
-					'headers' => [
-						'Authorization' => 'Bearer ' . $token,
-						'Accept' => 'application/hal+json',
-						'Content-Type' => 'application/json',
-						'User-Agent' => 'Pipelinq/' . Application::APP_ID . ' (Nextcloud)',
-					],
-					'body' => json_encode(
-						[
-							'type' => 'RaadpleegMetBurgerservicenummer',
-							'burgerservicenummer' => [$bsn],
-							'fields' => $this->getDefaultFields(),
-						],
-						JSON_THROW_ON_ERROR
-					),
-					'timeout' => self::LOOKUP_TIMEOUT_SECONDS,
-					'connect_timeout' => 2,
-				]
-			);
-			$duration = (int)((microtime(true) - $start) * 1000);
-
-			$status = (int)$response->getStatusCode();
-			$correlationId = self::firstHeader(response: $response, name: 'X-Correlation-ID');
-			if ($correlationId === null) {
-				$correlationId = self::firstHeader(response: $response, name: 'x-correlation-id');
-			}
-
-			if ($status === 404) {
-				$this->logger->info(
-					'HaalCentraal lookup not-found',
-					['bsn' => $maskedBsn, 'correlationId' => $correlationId, 'duration_ms' => $duration]
-				);
-				return null;
-			}
-
-			if ($status < 200 || $status >= 300) {
-				$this->logger->warning(
-					'HaalCentraal lookup error',
-					['bsn' => $maskedBsn, 'status' => $status, 'correlationId' => $correlationId]
-				);
-				throw new HaalCentraalException(
-					'BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.',
-					$status,
-					$correlationId,
-				);
-			}
-
-			$payload = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-			$person = $this->parseFirstPerson(payload: $payload);
-			if ($person === null) {
-				return null;
-			}
-
-			$person['_correlationId'] = $correlationId;
-			$person['_responseDurationMs'] = $duration;
-			$person['_responseStatus'] = $status;
-			return $person;
+			$response = $client->post($url, $this->lookupRequestOptions(token: $token, bsn: $lookup->bsn));
+			$timed = new TimedResponse(response: $response, durationMs: (int)((microtime(true) - $start) * 1000));
+			return $this->directOutcome(timed: $timed, lookup: $lookup);
 		} catch (HaalCentraalException $e) {
 			throw $e;
 		} catch (Throwable $e) {
-			$this->logger->error(
-				'HaalCentraal transport error',
-				['bsn' => $maskedBsn, 'error' => $e->getMessage(), 'requestId' => $requestIdContext]
+			throw $this->transportFailure(error: $e, context: ['bsn' => $lookup->maskedBsn, 'error' => $e->getMessage(), 'requestId' => $requestIdContext]);
+		}
+	}//end lookupDirect()
+
+	/**
+	 * The request options of a direct lookup.
+	 *
+	 * @param string $token The bearer token.
+	 * @param string $bsn   Raw 9-digit BSN, placed in the request body.
+	 *
+	 * @return array<string, mixed> The options.
+	 *
+	 * @throws \JsonException When the body cannot be encoded.
+	 */
+	private function lookupRequestOptions(
+		string $token,
+		#[\SensitiveParameter]
+		string $bsn,
+	): array {
+		return [
+			'headers' => self::lookupHeaders(token: $token),
+			'body' => json_encode(
+				['type' => 'RaadpleegMetBurgerservicenummer', 'burgerservicenummer' => [$bsn], 'fields' => $this->getDefaultFields()],
+				JSON_THROW_ON_ERROR
+			),
+			'timeout' => self::LOOKUP_TIMEOUT_SECONDS,
+			'connect_timeout' => 2,
+		];
+	}//end lookupRequestOptions()
+
+	/**
+	 * The headers of a direct lookup.
+	 *
+	 * @param string $token The bearer token.
+	 *
+	 * @return array<string, string> The headers.
+	 */
+	private static function lookupHeaders(string $token): array {
+		return [
+			'Authorization' => 'Bearer ' . $token,
+			'Accept' => 'application/hal+json',
+			'Content-Type' => 'application/json',
+			'User-Agent' => 'Pipelinq/' . Application::APP_ID . ' (Nextcloud)',
+		];
+	}//end lookupHeaders()
+
+	/**
+	 * What a direct lookup's response means: not found (logged), a refused
+	 * status (logged and thrown), or the stamped person.
+	 *
+	 * @param TimedResponse $timed  The response and its duration.
+	 * @param BsnLookup     $lookup The BSN asked for.
+	 *
+	 * @return array<string,mixed>|null The stamped person, or null when not found.
+	 *
+	 * @throws HaalCentraalException On a status outside 2xx.
+	 * @throws \JsonException When the body is not JSON.
+	 */
+	private function directOutcome(TimedResponse $timed, BsnLookup $lookup): ?array {
+		$status = $timed->status();
+		if ($status === 404) {
+			$this->logger->info(
+				'HaalCentraal lookup not-found',
+				['bsn' => $lookup->maskedBsn, 'correlationId' => self::correlationIdOf(response: $timed->response), 'duration_ms' => $timed->durationMs]
 			);
-			throw new HaalCentraalException(
-				'BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.',
-				0,
-				null,
-				$e,
-			);
-		}//end try
-	}//end lookupPersoon()
+			return null;
+		}
+
+		if ($status < 200 || $status >= 300) {
+			throw $this->refusedStatus(timed: $timed, lookup: $lookup);
+		}
+
+		return $this->stampedPerson(timed: $timed);
+	}//end directOutcome()
+
+	/**
+	 * Log a refused lookup status and build its exception.
+	 *
+	 * @param TimedResponse $timed  The response.
+	 * @param BsnLookup     $lookup The BSN asked for.
+	 *
+	 * @return HaalCentraalException The exception to throw.
+	 */
+	private function refusedStatus(TimedResponse $timed, BsnLookup $lookup): HaalCentraalException {
+		$status = $timed->status();
+		$correlationId = self::correlationIdOf(response: $timed->response);
+		$this->logger->warning(
+			'HaalCentraal lookup error',
+			['bsn' => $lookup->maskedBsn, 'status' => $status, 'correlationId' => $correlationId]
+		);
+		return new HaalCentraalException(
+			'BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.',
+			$status,
+			$correlationId,
+		);
+	}//end refusedStatus()
+
+	/**
+	 * The first person of a direct lookup's body, stamped with the response's
+	 * correlation id, duration and status.
+	 *
+	 * @param TimedResponse $timed The response and its duration.
+	 *
+	 * @return array<string,mixed>|null The stamped person, or null when the body holds none.
+	 *
+	 * @throws \JsonException When the body is not JSON.
+	 */
+	private function stampedPerson(TimedResponse $timed): ?array {
+		$payload = json_decode((string)$timed->response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+		$person = $this->parseFirstPerson(payload: $payload);
+		if ($person === null) {
+			return null;
+		}
+
+		$person['_correlationId'] = self::correlationIdOf(response: $timed->response);
+		$person['_responseDurationMs'] = $timed->durationMs;
+		$person['_responseStatus'] = $timed->status();
+		return $person;
+	}//end stampedPerson()
+
+	/**
+	 * Log a transport failure and build its exception.
+	 *
+	 * @param Throwable            $error   The failure.
+	 * @param array<string, mixed> $context The log context (masked BSN, error, request id).
+	 *
+	 * @return HaalCentraalException The exception to throw.
+	 */
+	private function transportFailure(Throwable $error, array $context): HaalCentraalException {
+		$this->logger->error('HaalCentraal transport error', $context);
+		return new HaalCentraalException(
+			'BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.',
+			0,
+			null,
+			$error,
+		);
+	}//end transportFailure()
+
+	/**
+	 * The correlation id header of a response, in either spelling.
+	 *
+	 * @param object $response The HTTP response.
+	 *
+	 * @return string|null The correlation id, or null.
+	 */
+	private static function correlationIdOf(object $response): ?string {
+		$correlationId = self::firstHeader(response: $response, name: 'X-Correlation-ID');
+		if ($correlationId === null) {
+			$correlationId = self::firstHeader(response: $response, name: 'x-correlation-id');
+		}
+
+		return $correlationId;
+	}//end correlationIdOf()
 
 	/**
 	 * Lookup a person via the OpenRegister BRP leaf (ADR-022, safe-partial).
@@ -268,106 +379,99 @@ class HaalCentraalClient {
 	 * The raw BSN is NEVER logged here (only the masked BSN), mirroring the
 	 * legacy path.
 	 *
-	 * @param string $bsn Raw 9-digit BSN (placed in the leaf query; never logged).
-	 * @param string $maskedBsn The masked BSN used for any logging.
+	 * @param BsnLookup $lookup The BSN (placed in the leaf query; never logged) and its masked form.
 	 *
 	 * @return array<string,mixed>|null The normalised+stamped person, OR_EMPTY_RESULT, or null to fall back.
 	 *
 	 * @spec openspec/specs/brp-lookup/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential payload-shape guard clauses; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential payload-shape guard clauses; extraction adds no clarity.
 	 */
-	private function lookupViaOpenRegister(
-		#[\SensitiveParameter]
-		string $bsn,
-		string $maskedBsn,
-	): ?array {
-		$params = http_build_query(['bsn' => $bsn]);
+	private function lookupViaOpenRegister(BsnLookup $lookup): ?array {
+		$payload = $this->leafPayload(lookup: $lookup);
+		if ($payload === null) {
+			return null;
+		}
+
+		if (empty($payload['results']) === true) {
+			// OR answered 200 but nobody is there — not-found, not a fallback.
+			// Return the sentinel using a named key so PHPStan can type it correctly.
+			return [self::OR_EMPTY_SENTINEL_KEY => true];
+		}
+
+		$first = (new BrpLeafResults())->askedPerson(results: $payload['results'], bsn: $lookup->bsn);
+		if (is_array($first) === false) {
+			return null;
+		}
+
+		$person = (new BrpLeafResults())->withLeafMeta(person: $this->normalisePerson(raw: $first), payload: $payload);
+		$this->logLeafSuccess(person: $person, lookup: $lookup);
+		return $person;
+	}//end lookupViaOpenRegister()
+
+	/**
+	 * Log a successful leaf lookup with the masked BSN and the audit metadata.
+	 *
+	 * @param array<string, mixed> $person The stamped person.
+	 * @param BsnLookup            $lookup The BSN asked for.
+	 *
+	 * @return void
+	 */
+	private function logLeafSuccess(array $person, BsnLookup $lookup): void {
+		$this->logger->info(
+			'BRP OR leaf lookup succeeded',
+			[
+				'bsn' => $lookup->maskedBsn,
+				'correlationId' => $person['_correlationId'],
+				'duration_ms' => $person['_responseDurationMs'],
+				'source' => 'openregister-leaf',
+			]
+		);
+	}//end logLeafSuccess()
+
+	/**
+	 * The leaf's payload when it answered 200 with a `results` list.
+	 *
+	 * @param BsnLookup $lookup The BSN asked for.
+	 *
+	 * @return array<string, mixed>|null The payload, or null when the leaf is not usable.
+	 */
+	private function leafPayload(BsnLookup $lookup): ?array {
+		$response = $this->leafResponse(lookup: $lookup);
+		if ($response === null || (int)$response->getStatusCode() !== 200) {
+			return null;
+		}
+
+		$payload = json_decode((string)$response->getBody(), true);
+		if ((new BrpLeafResults())->hasResultList(payload: $payload) === false) {
+			return null;
+		}
+
+		return $payload;
+	}//end leafPayload()
+
+	/**
+	 * Ask the leaf for the person.
+	 *
+	 * @param BsnLookup $lookup The BSN asked for.
+	 *
+	 * @return IResponse|null The response, or null when the leaf is unavailable (logged with the masked BSN).
+	 */
+	private function leafResponse(BsnLookup $lookup): ?IResponse {
+		$params = http_build_query(['bsn' => $lookup->bsn]);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/brp/person?' . $params);
 
 		try {
-			$client = $this->clientService->newClient();
-			$response = $client->get(
-				$url,
-				[
-					'timeout' => self::LOOKUP_TIMEOUT_SECONDS,
-					'connect_timeout' => 2,
-					'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
-					'nextcloud' => ['allow_local_address' => true],
-				]
-			);
+			return $this->clientService->newClient()->get($url, self::LEAF_REQUEST_OPTIONS);
 		} catch (Throwable $e) {
 			// 503 (source not usable) surfaces as a client exception here, as
 			// does connection-refused / OR absent — fall back to the legacy path.
 			// Never log the raw BSN; only the masked variant.
 			$this->logger->debug(
 				'BRP OR leaf unavailable, falling back to legacy HaalCentraal path',
-				['bsn' => $maskedBsn, 'error' => $e->getMessage()]
+				['bsn' => $lookup->maskedBsn, 'error' => $e->getMessage()]
 			);
 			return null;
-		}//end try
-
-		$status = (int)$response->getStatusCode();
-		if ($status !== 200) {
-			return null;
 		}
-
-		$payload = json_decode((string)$response->getBody(), true);
-		if (is_array($payload) === false || isset($payload['results']) === false || is_array($payload['results']) === false) {
-			return null;
-		}
-
-		$results = $payload['results'];
-		if (empty($results) === true) {
-			// OR answered 200 but nobody is there — not-found, not a fallback.
-			// Return the sentinel using a named key so PHPStan can type it correctly.
-			return [self::OR_EMPTY_SENTINEL_KEY => true];
-		}
-
-		// A source in mock mode answers every person it knows to any BSN; a
-		// live source answers only the one asked. Read the one asked for, and
-		// the first person when none carries that BSN (as before).
-		$first = $results[0];
-		foreach ($results as $candidate) {
-			if (is_array($candidate) === true && (string)($candidate['burgerservicenummer'] ?? '') === $bsn) {
-				$first = $candidate;
-				break;
-			}
-		}
-
-		if (is_array($first) === false) {
-			return null;
-		}
-
-		$person = $this->normalisePerson(raw: $first);
-
-		$meta = [];
-		if (is_array($payload['meta'] ?? null) === true) {
-			$meta = $payload['meta'];
-		}
-
-		$correlationId = ($meta['correlationId'] ?? null);
-		if ($correlationId !== null) {
-			$correlationId = (string)$correlationId;
-		}
-
-		$person['_correlationId'] = $correlationId;
-		$person['_responseDurationMs'] = (int)($meta['durationMs'] ?? 0);
-		$person['_responseStatus'] = (int)($meta['status'] ?? 200);
-
-		$this->logger->info(
-			'BRP OR leaf lookup succeeded',
-			[
-				'bsn' => $maskedBsn,
-				'correlationId' => $correlationId,
-				'duration_ms' => $person['_responseDurationMs'],
-				'source' => 'openregister-leaf',
-			]
-		);
-
-		return $person;
-	}//end lookupViaOpenRegister()
+	}//end leafResponse()
 
 	/**
 	 * Health-check: returns the certificate expiry (UTC) or null when unknown.
@@ -423,9 +527,6 @@ class HaalCentraalClient {
 	 * @return string Bearer token.
 	 *
 	 * @throws HaalCentraalException When the OAuth exchange fails.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential config/credential/HTTP guard clauses; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential config/credential/HTTP guard clauses; extraction adds no clarity.
 	 */
 	private function getAccessToken(): string {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
@@ -437,15 +538,46 @@ class HaalCentraalClient {
 		$clientSecretEnc = $this->appConfig->getValueString(Application::APP_ID, 'brp.client_secret_encrypted', '');
 		$oauthEndpoint = $this->appConfig->getValueString(Application::APP_ID, 'brp.oauth_endpoint', self::DEFAULT_OAUTH_ENDPOINT);
 
+		self::assertOauthConfigured(clientId: $clientId, clientSecretEnc: $clientSecretEnc);
+		$body = (new BrpOauthMessages())->requestBody(clientId: $clientId, clientSecret: $this->decryptSecret(clientSecretEnc: $clientSecretEnc));
+		$token = $this->requestToken(oauthEndpoint: $oauthEndpoint, body: $body);
+
+		$expiresAt = $now->modify('+' . self::TOKEN_TTL_SECONDS . ' seconds');
+		$this->tokenCache = ['token' => $token, 'expiresAt' => $expiresAt];
+		return $token;
+	}//end getAccessToken()
+
+	/**
+	 * Refuse when the OAuth2 client id or secret is not configured.
+	 *
+	 * @param string $clientId        The configured client id.
+	 * @param string $clientSecretEnc The configured encrypted client secret.
+	 *
+	 * @return void
+	 *
+	 * @throws HaalCentraalException When either is missing.
+	 */
+	private static function assertOauthConfigured(string $clientId, string $clientSecretEnc): void {
 		if ($clientId === '' || $clientSecretEnc === '') {
 			throw new HaalCentraalException(
 				'BRP-integratie is niet geconfigureerd (OAuth2 client_id/secret ontbreken).',
 				503,
 			);
 		}
+	}//end assertOauthConfigured()
 
+	/**
+	 * Decrypt the configured client secret.
+	 *
+	 * @param string $clientSecretEnc The encrypted client secret.
+	 *
+	 * @return string The client secret.
+	 *
+	 * @throws HaalCentraalException When it cannot be decrypted.
+	 */
+	private function decryptSecret(string $clientSecretEnc): string {
 		try {
-			$clientSecret = $this->crypto->decrypt($clientSecretEnc);
+			return $this->crypto->decrypt($clientSecretEnc);
 		} catch (Throwable $e) {
 			throw new HaalCentraalException(
 				'BRP-integratie configuratie is onleesbaar — controleer admin instellingen.',
@@ -454,28 +586,26 @@ class HaalCentraalClient {
 				$e,
 			);
 		}
+	}//end decryptSecret()
 
+	/**
+	 * Exchange the client credentials for an access token.
+	 *
+	 * @param string $oauthEndpoint The token endpoint.
+	 * @param string $body          The url-encoded token request body.
+	 *
+	 * @return string The access token.
+	 *
+	 * @throws HaalCentraalException When the endpoint is unreachable or refuses.
+	 */
+	private function requestToken(
+		string $oauthEndpoint,
+		#[\SensitiveParameter]
+		string $body,
+	): string {
 		$client = $this->buildHttpClient(forToken: true);
 		try {
-			$response = $client->post(
-				$oauthEndpoint,
-				[
-					'headers' => [
-						'Accept' => 'application/json',
-						'Content-Type' => 'application/x-www-form-urlencoded',
-					],
-					'body' => http_build_query(
-						[
-							'grant_type' => 'client_credentials',
-							'client_id' => $clientId,
-							'client_secret' => $clientSecret,
-							'scope' => 'haalcentraal.brp.personen',
-						]
-					),
-					'timeout' => self::LOOKUP_TIMEOUT_SECONDS,
-					'connect_timeout' => 2,
-				]
-			);
+			$response = $client->post($oauthEndpoint, (new BrpOauthMessages())->requestOptions(body: $body));
 		} catch (Throwable $e) {
 			throw new HaalCentraalException(
 				'BRP OAuth2-endpoint is niet bereikbaar.',
@@ -483,26 +613,10 @@ class HaalCentraalClient {
 				null,
 				$e,
 			);
-		}//end try
-
-		$status = (int)$response->getStatusCode();
-		$payload = json_decode((string)$response->getBody(), true);
-		$token = '';
-		if (is_array($payload) === true) {
-			$token = (string)($payload['access_token'] ?? '');
 		}
 
-		if ($status < 200 || $status >= 300 || $token === '') {
-			throw new HaalCentraalException(
-				'BRP OAuth2-token aanvraag is mislukt.',
-				$status,
-			);
-		}
-
-		$expiresAt = $now->modify('+' . self::TOKEN_TTL_SECONDS . ' seconds');
-		$this->tokenCache = ['token' => $token, 'expiresAt' => $expiresAt];
-		return $token;
-	}//end getAccessToken()
+		return (new BrpOauthMessages())->tokenFrom(response: $response);
+	}//end requestToken()
 
 	/**
 	 * Build a Guzzle-like HTTP client honouring the configured mTLS + CA bundle.
