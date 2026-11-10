@@ -115,12 +115,9 @@ class ContactMomentLeafProvider {
 	 */
 	public function list(string $hostId, int $limit = self::DEFAULT_LIMIT, string $partyId = ''): array {
 		$hostId = trim($hostId);
-		if ($hostId === '') {
-			return ['status' => 400, 'error' => 'A host object id is required.'];
-		}
-
-		if ($this->canReadHost(hostId: $hostId) === false) {
-			return ['status' => 403, 'error' => 'You may not read this object.'];
+		$refusal = $this->hostRefusal(hostId: $hostId);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$limit = max(1, min($limit, self::MAX_LIMIT));
@@ -173,16 +170,13 @@ class ContactMomentLeafProvider {
 	 */
 	public function create(string $hostId, array $payload): array {
 		$hostId = trim($hostId);
-		if ($hostId === '') {
-			return ['status' => 400, 'error' => 'A host object id is required.'];
-		}
-
 		// The read guard is the write guard: a caller who may not see the host
 		// may not file anything against it either. Checked BEFORE any field
 		// validation, so a refused caller learns nothing about the payload the
 		// surface would have accepted.
-		if ($this->canReadHost(hostId: $hostId) === false) {
-			return ['status' => 403, 'error' => 'You may not read this object.'];
+		$refusal = $this->hostRefusal(hostId: $hostId);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$partyId = trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
@@ -202,6 +196,37 @@ class ContactMomentLeafProvider {
 			return ['status' => 400, 'error' => 'A contact moment requires a channel.'];
 		}
 
+		return $this->appended(hostId: $hostId, ticket: $ticket);
+	}//end create()
+
+	/**
+	 * The refusal for a blank host id (400) or a host the caller may not read (403), or null.
+	 *
+	 * @param string $hostId The trimmed host object id.
+	 *
+	 * @return array<string, mixed>|null The refusal, or null when the host may be used.
+	 */
+	private function hostRefusal(string $hostId): ?array {
+		if ($hostId === '') {
+			return ['status' => 400, 'error' => 'A host object id is required.'];
+		}
+
+		if ($this->canReadHost(hostId: $hostId) === false) {
+			return ['status' => 403, 'error' => 'You may not read this object.'];
+		}
+
+		return null;
+	}//end hostRefusal()
+
+	/**
+	 * Save the contact moment, answering 201 with the stored row or the failure.
+	 *
+	 * @param string               $hostId The host object id.
+	 * @param array<string, mixed> $ticket The ticket to save.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function appended(string $hostId, array $ticket): array {
 		try {
 			$saved = $this->ticketService->save(
 				ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -220,7 +245,7 @@ class ContactMomentLeafProvider {
 		}//end try
 
 		return ['status' => 201, 'contactMoment' => $this->present(row: $saved, hostId: $hostId)];
-	}//end create()
+	}//end appended()
 
 	/**
 	 * The refusal an outbound append meets, or null when it may go ahead.
