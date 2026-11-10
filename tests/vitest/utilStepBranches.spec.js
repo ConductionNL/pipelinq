@@ -19,7 +19,7 @@ const { dueState } = await import('../../src/utils/dueState.js')
 const { rangeToPeriod } = await import('../../src/services/analyticsPeriod.js')
 const { confirmPayload } = await import('../../src/services/keywordIntel.js')
 const { fetchResponseRate } = await import('../../src/services/satisfactionApi.js')
-const { formatComparedOn } = await import('../../src/utils/capabilityComparison.js')
+const { formatComparedOn, labelFor } = await import('../../src/utils/capabilityComparison.js')
 const { writeBack } = await import('../../src/services/contactSyncApi.js')
 
 beforeEach(() => {
@@ -107,6 +107,19 @@ describe('formatComparedOn', () => {
 		expect(formatComparedOn(null, 'en')).toBe('')
 		expect(formatComparedOn('soon', 'en')).toBe('soon')
 		expect(formatComparedOn('2026-03-05', 'not a locale!')).toBe('2026-03-05')
+	})
+})
+
+describe('labelFor', () => {
+	it('picks the Dutch label for a Dutch locale when it is filled in', () => {
+		expect(labelFor(null, 'nl')).toBe('')
+		expect(labelFor({ name: 'A', name_nl: 'B' }, 'NL-be')).toBe('B')
+		expect(labelFor({ name: 'A', name_nl: 'B' }, null)).toBe('A')
+		expect(labelFor({ name: 'A', name_nl: 'B' })).toBe('A')
+		expect(labelFor({ name: 'A', name_nl: '  ' }, 'nl')).toBe('A')
+		expect(labelFor({ name: 'A', name_nl: 7 }, 'nl')).toBe('A')
+		expect(labelFor({ name_nl: '' }, 'nl')).toBe('')
+		expect(labelFor({ name: null }, 'en')).toBe('')
 	})
 })
 
