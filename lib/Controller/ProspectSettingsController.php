@@ -31,7 +31,6 @@ use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
-use RuntimeException;
 
 /**
  * Controller for prospect ICP settings (admin only).
@@ -39,6 +38,7 @@ use RuntimeException;
  * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class ProspectSettingsController extends Controller {
+	use OpenRegisterServiceLookup;
 
 	/**
 	 * The OpenRegister object service.
@@ -63,38 +63,6 @@ class ProspectSettingsController extends Controller {
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
-
-	/**
-	 * Attempts to retrieve the OpenRegister service from the container.
-	 *
-	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister service if available, null otherwise.
-	 * @throws \RuntimeException If the service is not available.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-4
-	 */
-	public function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
-			$this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			return $this->objectService;
-		}
-
-		throw new RuntimeException('OpenRegister service is not available.');
-	}//end getObjectService()
-
-	/**
-	 * Attempts to retrieve the Configuration service from the container.
-	 *
-	 * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
-	 * @throws \RuntimeException If the service is not available.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-3
-	 */
-	public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
-			$configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
-			return $configurationService;
-		}
-
-		throw new RuntimeException('Configuration service is not available.');
-	}//end getConfigurationService()
 
 	/**
 	 * Get current ICP configuration.
