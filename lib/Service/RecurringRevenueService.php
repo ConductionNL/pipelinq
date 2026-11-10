@@ -165,41 +165,81 @@ class RecurringRevenueService {
 	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
 	 */
 	public function computeRenewalMetrics(array $contracts, string $periodFrom, string $periodTo): array {
-		$renewed = 0;
-		$churned = 0;
-		$churnedMrr = 0.0;
+		$tally = ['renewed' => 0, 'churned' => 0, 'churnedMrr' => 0.0];
+		foreach ($this->endingWithin(contracts: $contracts, period: [$periodFrom, $periodTo]) as $contract) {
+			$tally = $this->tallied(tally: $tally, contract: $contract);
+		}
 
-		foreach ($contracts as $contract) {
-			$status = (string)($contract['status'] ?? '');
-			$endDate = (string)($contract['endDate'] ?? '');
-			if ($endDate === '' || $endDate < $periodFrom || $endDate > $periodTo) {
-				continue;
-			}
+		return $this->renewalFigures(tally: $tally);
+	}//end computeRenewalMetrics()
 
-			if ($status === 'renewed') {
-				$renewed++;
-			} elseif ($status === 'churned') {
-				$churned++;
-				$churnedMrr += $this->normalizeToMonthly(
-					billingInterval: (string)($contract['billingInterval'] ?? ''),
-					valuePerInterval: (float)($contract['valuePerInterval'] ?? 0)
-				);
-			}
-		}//end foreach
+	/**
+	 * The contracts whose end date falls within the period, bounds included.
+	 *
+	 * @param array<int, array<string, mixed>> $contracts The contracts.
+	 * @param array{0: string, 1: string}      $period    From and to (YYYY-MM-DD).
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function endingWithin(array $contracts, array $period): array {
+		[$periodFrom, $periodTo] = $period;
+		return array_values(
+			array_filter(
+				$contracts,
+				static function ($contract) use ($periodFrom, $periodTo): bool {
+					$endDate = (string)($contract['endDate'] ?? '');
+					return $endDate !== '' && $endDate >= $periodFrom && $endDate <= $periodTo;
+				}
+			)
+		);
+	}//end endingWithin()
 
-		$closed = ($renewed + $churned);
+	/**
+	 * The tally with one closing contract counted: a renewal, or a churn with
+	 * its monthly value; any other status leaves it as it is.
+	 *
+	 * @param array{renewed: int, churned: int, churnedMrr: float} $tally    The tally so far.
+	 * @param array<string, mixed>                                 $contract The contract.
+	 *
+	 * @return array{renewed: int, churned: int, churnedMrr: float}
+	 */
+	private function tallied(array $tally, array $contract): array {
+		$status = (string)($contract['status'] ?? '');
+		if ($status === 'renewed') {
+			$tally['renewed']++;
+		} elseif ($status === 'churned') {
+			$tally['churned']++;
+			$tally['churnedMrr'] += $this->normalizeToMonthly(
+				billingInterval: (string)($contract['billingInterval'] ?? ''),
+				valuePerInterval: (float)($contract['valuePerInterval'] ?? 0)
+			);
+		}
+
+		return $tally;
+	}//end tallied()
+
+	/**
+	 * The renewal figures of a tally: the rate over closed contracts, rounded
+	 * to one decimal, and the churned MRR rounded to cents.
+	 *
+	 * @param array{renewed: int, churned: int, churnedMrr: float} $tally The tally.
+	 *
+	 * @return array{renewed: int, churned: int, renewalRate: float, churnedMrr: float}
+	 */
+	private function renewalFigures(array $tally): array {
+		$closed = ($tally['renewed'] + $tally['churned']);
 		$renewalRate = 0.0;
 		if ($closed > 0) {
-			$renewalRate = round((($renewed / $closed) * 100.0), 1);
+			$renewalRate = round((($tally['renewed'] / $closed) * 100.0), 1);
 		}
 
 		return [
-			'renewed' => $renewed,
-			'churned' => $churned,
+			'renewed' => $tally['renewed'],
+			'churned' => $tally['churned'],
 			'renewalRate' => $renewalRate,
-			'churnedMrr' => round($churnedMrr, 2),
+			'churnedMrr' => round($tally['churnedMrr'], 2),
 		];
-	}//end computeRenewalMetrics()
+	}//end renewalFigures()
 
 	/**
 	 * Load all contracts from OpenRegister, returning [] on any failure
@@ -210,42 +250,55 @@ class RecurringRevenueService {
 	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
 	 */
 	public function loadContracts(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', '');
-		if ($registerId === '' || $schemaId === '') {
+		$scope = $this->contractScope();
+		if ($scope === null) {
 			return [];
 		}
 
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$results = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $schemaId,
-					],
-					'limit' => 10000,
-				]
-			);
-
-			$contracts = [];
-			foreach ($results as $row) {
-				if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-					$contracts[] = $row->jsonSerialize();
-				} elseif (is_array($row) === true) {
-					$contracts[] = $row;
-				}
-			}
-
-			return $contracts;
+			return $this->asArrays(rows: $objectService->findAll(['filters' => $scope, 'limit' => 10000]));
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'RecurringRevenueService: failed to load contracts',
-				['error' => $e->getMessage()]
-			);
+			$this->logger->warning('RecurringRevenueService: failed to load contracts', ['error' => $e->getMessage()]);
 			return [];
-		}//end try
+		}
 	}//end loadContracts()
+
+	/**
+	 * The configured register and contract schema; null when either is missing.
+	 *
+	 * @return array{register: string, schema: string}|null
+	 */
+	private function contractScope(): ?array {
+		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', '');
+		if ($registerId === '' || $schemaId === '') {
+			return null;
+		}
+
+		return ['register' => $registerId, 'schema' => $schemaId];
+	}//end contractScope()
+
+	/**
+	 * The rows as arrays, in order: entity rows serialised, array rows as
+	 * they are, anything else dropped.
+	 *
+	 * @param iterable<mixed> $rows The rows read.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function asArrays(iterable $rows): array {
+		$contracts = [];
+		foreach ($rows as $row) {
+			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+				$contracts[] = $row->jsonSerialize();
+			} elseif (is_array($row) === true) {
+				$contracts[] = $row;
+			}
+		}
+
+		return $contracts;
+	}//end asArrays()
 
 	/**
 	 * Build the full recurring-revenue summary for the dashboard.
@@ -256,23 +309,13 @@ class RecurringRevenueService {
 	 */
 	public function getSummary(): array {
 		$contracts = $this->loadContracts();
-
-		$activeCount = 0;
-		$expiringCount = 0;
-		foreach ($contracts as $contract) {
-			$status = (string)($contract['status'] ?? '');
-			if ($status === 'active') {
-				$activeCount++;
-			} elseif ($status === 'expiring') {
-				$expiringCount++;
-			}
-		}
+		$statuses = array_count_values(array_map(static fn ($contract): string => (string)($contract['status'] ?? ''), $contracts));
 
 		return [
 			'mrr' => $this->computeMrr(contracts: $contracts),
 			'arr' => $this->computeArr(contracts: $contracts),
-			'activeCount' => $activeCount,
-			'expiringCount' => $expiringCount,
+			'activeCount' => ($statuses['active'] ?? 0),
+			'expiringCount' => ($statuses['expiring'] ?? 0),
 		];
 	}//end getSummary()
 }//end class
