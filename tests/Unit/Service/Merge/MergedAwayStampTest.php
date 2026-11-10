@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Merge;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCA\Pipelinq\Service\Merge\MergedAwayStamp;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -65,8 +66,8 @@ class MergedAwayStampTest extends TestCase {
 			}
 		);
 		$objects->method('patchObject')->willReturnCallback(
-			function (string $objectId, array $data): ObjectEntity {
-				$this->patched[$objectId] = $data;
+			function (ObjectPatch $patch): ObjectEntity {
+				$this->patched[$patch->objectId] = $patch->data;
 				return new ObjectEntity();
 			}
 		);

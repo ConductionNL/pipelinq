@@ -50,6 +50,7 @@ namespace OCA\OpenRegister\Service;
 use LogicException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCP\IUser;
 
 if (class_exists(ObjectService::class) === false) {
@@ -556,24 +557,16 @@ if (class_exists(ObjectService::class) === false) {
 		 * path, and it is on the contract so callers stop reimplementing
 		 * read-merge-write or silently erasing the fields they did not send.
 		 *
-		 * @param string               $objectId       UUID of the object to patch.
-		 * @param array<string, mixed> $data           Fields to merge onto the stored object.
-		 * @param string|int|null      $register       Register the object belongs to.
-		 * @param string|int|null      $schema         Schema the object belongs to.
-		 * @param bool                 $_rbac          Whether to apply RBAC.
-		 * @param bool                 $_multitenancy  Whether to apply multitenancy.
-		 * @param IUser|null           $currentUser    Acting user.
+		 * @param ObjectPatch $patch         The object id, the fields to merge, the target and the acting user.
+		 * @param bool        $_rbac         Whether to apply RBAC.
+		 * @param bool        $_multitenancy Whether to apply multitenancy.
 		 *
 		 * @return ObjectEntityInterface
 		 */
 		public function patchObject(
-			string $objectId,
-			array $data,
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			ObjectPatch $patch,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			?IUser $currentUser = null,
 		): ObjectEntityInterface {
 			throw new LogicException(self::NOT_CONFIGURED);
 		}//end patchObject()

@@ -13,6 +13,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\LineTotals;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCA\Pipelinq\Service\LineTotals\LineRollUp;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -42,8 +43,8 @@ class LineRollUpTest extends TestCase {
 		);
 		$objects->method('find')->willReturnCallback(static fn (): ObjectEntity => self::entity(schema: '30', data: ['vatRate' => 9]));
 		$objects->method('patchObject')->willReturnCallback(
-			function (string $objectId, array $data): ObjectEntity {
-				$this->patched[$objectId] = $data;
+			function (ObjectPatch $patch): ObjectEntity {
+				$this->patched[$patch->objectId] = $patch->data;
 				return new ObjectEntity();
 			}
 		);

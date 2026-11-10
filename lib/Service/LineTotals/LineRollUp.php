@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Service\LineTotals;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 
@@ -91,7 +92,11 @@ class LineRollUp {
 
 		$patch = $this->patchFor(parent: $parent);
 		if ($patch !== []) {
-			$this->objects->patchObject(objectId: $parent->parentId, data: $patch, _rbac: false, _multitenancy: false);
+			$this->objects->patchObject(
+				patch: new ObjectPatch(objectId: $parent->parentId, data: $patch),
+				_rbac: false,
+				_multitenancy: false,
+			);
 		}
 	}//end apply()
 
