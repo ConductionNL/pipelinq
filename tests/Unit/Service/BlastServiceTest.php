@@ -1190,7 +1190,7 @@ class BlastServiceTest extends TestCase {
 				$register = $options?->register;
 				$schema = $options?->schema;
 				$this->findCalls[] = ['id' => $id, 'register' => $register, 'schema' => $schema];
-				return $this->delegate->find($id, $register, $schema);
+				return $this->delegate->find($id, $options);
 			}//end find()
 
 			public function findAll(array $config = []): array {

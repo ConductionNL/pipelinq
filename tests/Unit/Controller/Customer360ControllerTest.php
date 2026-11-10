@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\Customer360Controller;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\IAppConfig;
@@ -319,11 +320,12 @@ class Customer360ControllerTest extends TestCase {
 		$this->assertSame(200, $response->getStatus());
 		$this->assertCount(1, $calls);
 		$this->assertSame('client-1', $calls[0][0]);
-		$this->assertSame([], $calls[0][1], 'No extend directives.');
-		$this->assertSame('pipelinq', $calls[0][3], 'Register in the register parameter.');
-		$this->assertSame('client', $calls[0][4], 'Schema in the schema parameter.');
-		$this->assertTrue($calls[0][5], 'RBAC stays on.');
-		$this->assertTrue($calls[0][6], 'Multitenancy stays on.');
+		$this->assertInstanceOf(ObjectFindOptions::class, $calls[0][1], 'Register and schema ride in the find options.');
+		$this->assertSame([], $calls[0][1]->extend, 'No extend directives.');
+		$this->assertSame('pipelinq', $calls[0][1]->register, 'Register in the register option.');
+		$this->assertSame('client', $calls[0][1]->schema, 'Schema in the schema option.');
+		$this->assertTrue($calls[0][2], 'RBAC stays on.');
+		$this->assertTrue($calls[0][3], 'Multitenancy stays on.');
 	}//end testReadGuardPassesRegisterAndSchemaByName()
 
 	/**

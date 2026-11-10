@@ -30,6 +30,7 @@ use OCA\Pipelinq\Service\ContactVcardPropertyBuilder;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\ContactVcardWriterService;
 use OCA\Pipelinq\Service\RegisterResolverService;
+use OCA\Pipelinq\Tests\Unit\Support\FindCallShape;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -191,7 +192,7 @@ class ContactVcardGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (mixed ...$args) use ($world): ?ObjectEntityInterface {
-				$this->record(call: 'objects.find', args: $this->passed(class: ObjectServiceInterface::class, method: 'find', args: $args), result: null);
+				$this->record(call: 'objects.find', args: FindCallShape::trimmed(args: $args), result: null);
 				if ($world['found'] === 'throw') {
 					throw new RuntimeException('register down');
 				}

@@ -324,6 +324,8 @@ class WhatsAppAdapterSendGoldenTest extends TestCase {
 			}
 
 			public function find($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->test->note(['find' => compact('id', 'register', 'schema')]);
 				if ($id === $this->template['uuid']) {
 					return $this->template;

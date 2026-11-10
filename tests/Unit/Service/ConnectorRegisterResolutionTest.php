@@ -426,9 +426,9 @@ class ConnectorRegisterResolutionTest extends TestCase {
 			function (...$args) {
 				$this->readCount++;
 				// Positional: named arguments reach a mock callback in
-				// declaration order, and `register` is the FOURTH parameter of
-				// ObjectServiceInterface::find (id, _extend, files, register).
-				$this->readRegister = ($args[3] ?? null);
+				// declaration order, and the register rides in the find
+				// options, the SECOND parameter of ObjectServiceInterface::find.
+				$this->readRegister = (($args[1] ?? null)?->register ?? null);
 				return null;
 			}
 		);
