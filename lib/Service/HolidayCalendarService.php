@@ -99,38 +99,84 @@ class HolidayCalendarService {
 			return $this->cache[$calendarName];
 		}
 
+		$this->cache[$calendarName] = $this->readCalendar(calendarName: $calendarName);
+		return $this->cache[$calendarName];
+	}//end loadCalendar()
+
+	/**
+	 * Read a bundled calendar file, or an empty calendar of that name when
+	 * the file is missing or cannot be parsed.
+	 *
+	 * @param string $calendarName The calendar slug.
+	 *
+	 * @return array<string, mixed> The parsed calendar definition.
+	 */
+	private function readCalendar(string $calendarName): array {
 		$path = __DIR__ . '/../Resources/holidays/nl/' . $calendarName . '.json';
 		if (file_exists($path) === false) {
-			$this->logger->warning(
-				'HolidayCalendarService: calendar file not found, falling back to empty',
-				['calendar' => $calendarName, 'path' => $path]
-			);
-			$this->cache[$calendarName] = ['name' => $calendarName, 'rules' => [], 'computed' => []];
-			return $this->cache[$calendarName];
+			return $this->missingCalendar(calendarName: $calendarName, path: $path);
 		}
 
 		try {
-			$raw = file_get_contents($path);
-			if ($raw === false) {
-				$raw = '{}';
-			}
-
-			$data = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
-			if (is_array($data) === false) {
-				throw new RuntimeException('calendar root is not an object');
-			}
+			return self::decodeCalendarFile(path: $path);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'HolidayCalendarService: failed to parse calendar JSON',
 				['calendar' => $calendarName, 'error' => $e->getMessage()]
 			);
-			$this->cache[$calendarName] = ['name' => $calendarName, 'rules' => [], 'computed' => []];
-			return $this->cache[$calendarName];
+			return self::emptyCalendar(calendarName: $calendarName);
+		}
+	}//end readCalendar()
+
+	/**
+	 * Log a missing calendar file and fall back to an empty calendar.
+	 *
+	 * @param string $calendarName The calendar slug.
+	 * @param string $path         The path that was looked up.
+	 *
+	 * @return array<string, mixed> The empty calendar.
+	 */
+	private function missingCalendar(string $calendarName, string $path): array {
+		$this->logger->warning(
+			'HolidayCalendarService: calendar file not found, falling back to empty',
+			['calendar' => $calendarName, 'path' => $path]
+		);
+		return self::emptyCalendar(calendarName: $calendarName);
+	}//end missingCalendar()
+
+	/**
+	 * Decode a calendar file.
+	 *
+	 * @param string $path The calendar file path.
+	 *
+	 * @return array<string, mixed> The calendar definition.
+	 *
+	 * @throws RuntimeException When the root is not an object; JsonException on invalid JSON.
+	 */
+	private static function decodeCalendarFile(string $path): array {
+		$raw = file_get_contents($path);
+		if ($raw === false) {
+			$raw = '{}';
 		}
 
-		$this->cache[$calendarName] = $data;
+		$data = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
+		if (is_array($data) === false) {
+			throw new RuntimeException('calendar root is not an object');
+		}
+
 		return $data;
-	}//end loadCalendar()
+	}//end decodeCalendarFile()
+
+	/**
+	 * An empty calendar definition.
+	 *
+	 * @param string $calendarName The calendar slug.
+	 *
+	 * @return array{name: string, rules: array<never>, computed: array<never>} The empty calendar.
+	 */
+	private static function emptyCalendar(string $calendarName): array {
+		return ['name' => $calendarName, 'rules' => [], 'computed' => []];
+	}//end emptyCalendar()
 
 	/**
 	 * Compose multiple calendars into the union of their holidays.
@@ -185,9 +231,6 @@ class HolidayCalendarService {
 	 * @param int $year The calendar year.
 	 *
 	 * @return array<string, bool> Map of YYYY-MM-DD → true.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over rule/computed/override sets; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential guard clauses over rule/computed/override sets; extraction adds no clarity.
 	 */
 	private function resolveYearSet(string $calendarName, int $year): array {
 		$cacheKey = $calendarName . ':' . $year;
@@ -195,62 +238,139 @@ class HolidayCalendarService {
 			return $this->yearCache[$cacheKey];
 		}
 
-		$names = array_filter(array_map('trim', explode(',', $calendarName)));
+		$calendarYear = new CalendarYear(calendarName: $calendarName, year: $year);
+		$cal = $this->calendarFor(names: $calendarYear->names());
+
+		$set = $this->ruleDates(rules: ($cal['rules'] ?? []), calendarYear: $calendarYear)
+			+ $this->computedDates(computed: ($cal['computed'] ?? []), year: $year)
+			+ $this->overrideDates(calendarYear: $calendarYear);
+
+		$this->yearCache[$cacheKey] = $set;
+		return $set;
+	}//end resolveYearSet()
+
+	/**
+	 * The calendar definition for a list of names: the single calendar, or
+	 * the composite of all of them.
+	 *
+	 * @param array<int, string> $names The single calendar names.
+	 *
+	 * @return array<string, mixed> The calendar definition.
+	 */
+	private function calendarFor(array $names): array {
 		$cal = $this->loadCalendar(calendarName: ($names[0] ?? ''));
 		if (count($names) > 1) {
 			$cal = $this->compositeCalendar(calendarNames: $names);
 		}
 
+		return $cal;
+	}//end calendarFor()
+
+	/**
+	 * The fixed-date holidays of a year.
+	 *
+	 * @param array<int, array<string, mixed>> $rules        The calendar's fixed-date rules.
+	 * @param CalendarYear                     $calendarYear The calendar and year.
+	 *
+	 * @return array<string, bool> Map of YYYY-MM-DD → true.
+	 */
+	private function ruleDates(array $rules, CalendarYear $calendarYear): array {
 		$set = [];
-		foreach (($cal['rules'] ?? []) as $rule) {
-			if (isset($rule['date']) === false) {
-				continue;
+		foreach ($rules as $rule) {
+			if ($this->ruleApplies(rule: $rule, calendarYear: $calendarYear) === true) {
+				$set[$calendarYear->year . '-' . $rule['date']] = true;
 			}
-
-			// Lustrum-only holidays (Bevrijdingsdag): only in years divisible by 5.
-			if (($rule['lustrum'] ?? false) === true && ($year % 5) !== 0) {
-				if ($this->lustrumOverrideEnabled(calendarName: $calendarName) === false) {
-					continue;
-				}
-			}
-
-			$key = $year . '-' . $rule['date'];
-			$set[$key] = true;
 		}
 
-		foreach (($cal['computed'] ?? []) as $computed) {
-			$offset = (int)($computed['easterOffset'] ?? 0);
-			$easter = $this->easterDate(year: $year);
+		return $set;
+	}//end ruleDates()
+
+	/**
+	 * Whether a fixed-date rule gives a holiday in the year.
+	 *
+	 * Lustrum-only holidays (Bevrijdingsdag) apply only in years divisible
+	 * by 5, unless the tenant enabled them year-round.
+	 *
+	 * @param array<string, mixed> $rule         The rule.
+	 * @param CalendarYear         $calendarYear The calendar and year.
+	 *
+	 * @return bool True when the rule has a date and applies.
+	 */
+	private function ruleApplies(array $rule, CalendarYear $calendarYear): bool {
+		if (isset($rule['date']) === false) {
+			return false;
+		}
+
+		if (($rule['lustrum'] ?? false) !== true || ($calendarYear->year % 5) === 0) {
+			return true;
+		}
+
+		return $this->lustrumOverrideEnabled(calendarName: $calendarYear->calendarName);
+	}//end ruleApplies()
+
+	/**
+	 * The Easter-based holidays of a year.
+	 *
+	 * @param array<int, array<string, mixed>> $computed The calendar's Easter-offset rules.
+	 * @param int                              $year     The calendar year.
+	 *
+	 * @return array<string, bool> Map of YYYY-MM-DD → true.
+	 */
+	private function computedDates(array $computed, int $year): array {
+		$set = [];
+		foreach ($computed as $rule) {
+			$offset = (int)($rule['easterOffset'] ?? 0);
 			$sign = '';
 			if ($offset >= 0) {
 				$sign = '+';
 			}
 
-			$date = $easter->modify($sign . $offset . ' days');
+			$date = $this->easterDate(year: $year)->modify($sign . $offset . ' days');
 			$set[$date->format('Y-m-d')] = true;
 		}
 
-		// Tenant overrides: JSON-encoded { "<calendar>": [{ "date": "Y-m-d" or "MM-DD", "name": "..." }] }.
+		return $set;
+	}//end computedDates()
+
+	/**
+	 * The tenant's own holidays for each named calendar.
+	 *
+	 * Tenant overrides: JSON-encoded { "<calendar>": [{ "date": "Y-m-d" or "MM-DD", "name": "..." }] }.
+	 * A month-day date gets the year; an entry without a date is ignored.
+	 *
+	 * @param CalendarYear $calendarYear The calendar and year.
+	 *
+	 * @return array<string, bool> Map of date → true.
+	 */
+	private function overrideDates(CalendarYear $calendarYear): array {
 		$overrides = $this->loadTenantOverrides();
-		foreach ($names as $singleName) {
+		$set = [];
+		foreach ($calendarYear->names() as $singleName) {
 			foreach (($overrides[$singleName] ?? []) as $entry) {
-				if (isset($entry['date']) === false) {
-					continue;
+				if (isset($entry['date']) === true) {
+					$set[$this->overrideKey(raw: (string)$entry['date'], year: $calendarYear->year)] = true;
 				}
-
-				$raw = (string)$entry['date'];
-				$key = $raw;
-				if (strlen($raw) === 5) {
-					$key = $year . '-' . $raw;
-				}
-
-				$set[$key] = true;
 			}
 		}
 
-		$this->yearCache[$cacheKey] = $set;
 		return $set;
-	}//end resolveYearSet()
+	}//end overrideDates()
+
+	/**
+	 * The set key of a tenant override date.
+	 *
+	 * @param string $raw  The override date, "Y-m-d" or "MM-DD".
+	 * @param int    $year The calendar year.
+	 *
+	 * @return string The full date.
+	 */
+	private function overrideKey(string $raw, int $year): string {
+		if (strlen($raw) === 5) {
+			return $year . '-' . $raw;
+		}
+
+		return $raw;
+	}//end overrideKey()
 
 	/**
 	 * Whether the tenant has enabled year-round Bevrijdingsdag.
