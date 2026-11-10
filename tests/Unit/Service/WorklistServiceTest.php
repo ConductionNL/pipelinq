@@ -671,6 +671,26 @@ class WorklistServiceTest extends TestCase {
 	}//end testSummaryCountsTheWorkByKind()
 
 	/**
+	 * Three kinds are listed with commas and a final "and"; nothing due today adds no clause.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testSummaryListsThreeKinds(): void {
+		$service = $this->buildService([
+			'lead_schema' => [['id' => 'l1', 'title' => 'Catering', 'expectedCloseDate' => self::iso('+9 days')]],
+			'ticket_schema:request' => [['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'new', 'slaDeadline' => self::iso('+5 days')]],
+			'task_schema' => [
+				['id' => 'k1', 'subject' => 'Terugbellen', 'deadline' => self::iso('+3 days'), 'status' => 'open'],
+				['id' => 'k2', 'subject' => 'Mailen', 'deadline' => self::iso('+4 days'), 'status' => 'open'],
+			],
+		]);
+
+		self::assertSame('four items are with you: one ticket, one lead and two follow-ups', $service->summary(userId: 'pieter'));
+	}//end testSummaryListsThreeKinds()
+
+	/**
 	 * Above twenty the count stays in digits.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
