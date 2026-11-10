@@ -158,4 +158,52 @@ class PortalDelegationServiceTest extends TestCase {
 		$this->assertCount(1, $active);
 		$this->assertSame('g1', $active[0]['grantorAccountId']);
 	}//end testGetActiveScopesFiltersInactive()
+
+	/**
+	 * A grant stores the normalised email, the grantee's account in the same
+	 * tenant only, the sanitised scopes and the moment, and audits it; a grant
+	 * to the granter's own email (any case or spacing) is refused before any
+	 * write or audit.
+	 *
+	 * @return void
+	 */
+	public function testGrantRecordsAndAuditsAndRefusesSelfInAnyCase(): void {
+		$audits = [];
+		$audit = $this->createMock(PortalAuditService::class);
+		$audit->method('log')->willReturnCallback(
+			static function (...$args) use (&$audits): void {
+				$audits[] = $args;
+			}
+		);
+		$time = $this->createMock(ITimeFactory::class);
+		$time->method('getDateTime')->willReturn((new \DateTime())->setTimestamp(1000));
+		$service = new PortalDelegationService($this->repository, $audit, $time);
+		$this->repository->seed('crmPortalAccount', 'granter', ['email' => 'Boss@Org.nl', 'tenantId' => 'tenant-a']);
+		$this->repository->seed('crmPortalAccount', 'colleague-a', ['email' => 'colleague@org.nl', 'tenantId' => 'tenant-a']);
+		$this->repository->seed('crmPortalAccount', 'colleague-b', ['email' => 'other@org.nl', 'tenantId' => 'tenant-b']);
+
+		$delegation = $service->grant('granter', 'tenant-a', '  Colleague@ORG.nl ', ['view-invoices'], '2027-01-01T00:00:00+00:00');
+		$this->assertSame('colleague-a', $delegation['granteeAccountId']);
+		$this->assertSame('colleague@org.nl', $delegation['granteeEmail']);
+		$this->assertSame(['view-invoices'], $delegation['scopes']);
+		$this->assertSame((new \DateTime())->setTimestamp(1000)->format(DATE_ATOM), $delegation['validFrom']);
+		$this->assertSame('2027-01-01T00:00:00+00:00', $delegation['validUntil']);
+		$this->assertNull($delegation['revokedAt']);
+		$this->assertSame(
+			[['granter', 'tenant-a', 'delegation-grant', 'success', ['targetObjectType' => 'portalDelegation', 'targetObjectId' => $this->repository->idOf(object: $delegation), 'granteeEmail' => 'colleague@org.nl', 'scopes' => ['view-invoices']]]],
+			$audits
+		);
+
+		$this->assertNull($service->grant('granter', 'tenant-a', 'other@org.nl', [], null)['granteeAccountId']);
+
+		$audits = [];
+		try {
+			$service->grant('granter', 'tenant-a', ' BOSS@org.NL', ['view-invoices'], null);
+			$this->fail('Expected PortalException');
+		} catch (PortalException $e) {
+			$this->assertSame('cannotDelegateToSelf', $e->getErrorCode());
+		}
+
+		$this->assertSame([], $audits);
+	}//end testGrantRecordsAndAuditsAndRefusesSelfInAnyCase()
 }//end class
