@@ -78,37 +78,75 @@ class LinkedContactRecords {
 
 		$records = [];
 		foreach (['client', 'contact'] as $type) {
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, $type . '_schema', '');
-			if ($schemaId === '') {
-				continue;
-			}
-
-			try {
-				$objects = $this->objectService->findAll(
-					config: [
-						'filters' => ['@self' => ['register' => $registerId, 'schema' => $schemaId]],
-						'limit' => self::RUN_LIMIT,
-					]
-				);
-			} catch (\Throwable $e) {
-				$this->logger->warning('Pipelinq: linked records not read', ['exception' => $e->getMessage()]);
-				continue;
-			}
-
-			foreach ($objects as $object) {
-				$data = $this->toArray(value: $object);
-				if (empty($data['contactsUid']) === true) {
-					continue;
-				}
-
-				$records[] = [
-					'type' => $type,
-					'id' => (string)($data['id'] ?? ($data['@self']['id'] ?? '')),
-					'name' => (string)($data['name'] ?? ''),
-				];
-			}
-		}//end foreach
+			$records = array_merge($records, $this->linkedOfType(registerId: $registerId, type: $type));
+		}
 
 		return $records;
 	}//end all()
+
+	/**
+	 * The linked records of one type; none when the type has no schema
+	 * configured or its read fails (logged).
+	 *
+	 * @param string $registerId The register id.
+	 * @param string $type       `client` or `contact`.
+	 *
+	 * @return array<int, array{type: string, id: string, name: string}>
+	 */
+	private function linkedOfType(string $registerId, string $type): array {
+		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $type . '_schema', '');
+		if ($schemaId === '') {
+			return [];
+		}
+
+		$objects = $this->objectsIn(self: ['register' => $registerId, 'schema' => $schemaId]);
+		if ($objects === null) {
+			return [];
+		}
+
+		return $this->linked(objects: $objects, type: $type);
+	}//end linkedOfType()
+
+	/**
+	 * The objects of one register and schema, up to the run limit; null when
+	 * the read fails (logged).
+	 *
+	 * @param array{register: string, schema: string} $self The `@self` filter.
+	 *
+	 * @return array<mixed>|null
+	 */
+	private function objectsIn(array $self): ?array {
+		try {
+			return $this->objectService->findAll(config: ['filters' => ['@self' => $self], 'limit' => self::RUN_LIMIT]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: linked records not read', ['exception' => $e->getMessage()]);
+			return null;
+		}
+	}//end objectsIn()
+
+	/**
+	 * The objects that carry a `contactsUid`, as records of the type.
+	 *
+	 * @param array<mixed> $objects The objects read.
+	 * @param string       $type    `client` or `contact`.
+	 *
+	 * @return array<int, array{type: string, id: string, name: string}>
+	 */
+	private function linked(array $objects, string $type): array {
+		$records = [];
+		foreach ($objects as $object) {
+			$data = $this->toArray(value: $object);
+			if (empty($data['contactsUid']) === true) {
+				continue;
+			}
+
+			$records[] = [
+				'type' => $type,
+				'id' => (string)($data['id'] ?? ($data['@self']['id'] ?? '')),
+				'name' => (string)($data['name'] ?? ''),
+			];
+		}
+
+		return $records;
+	}//end linked()
 }//end class
