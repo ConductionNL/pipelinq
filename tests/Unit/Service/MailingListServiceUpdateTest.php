@@ -105,4 +105,23 @@ class MailingListServiceUpdateTest extends TestCase {
 		};
 		$this->assertSame(['error' => 'The mailing list could not be saved'], (new MailingListService(store: $failing))->updateMailingList(listId: 'l-1', patch: []));
 	}//end testEveryWayAnUpdateEnds()
+	/**
+	 * Every validation message, in the order the checks run, and none for a
+	 * valid list (an empty reply-to is allowed).
+	 *
+	 * @return void
+	 */
+	public function testEveryValidationMessage(): void {
+		$service = new MailingListService(store: new InMemoryListObjectStore());
+		$valid = $this->stored();
+
+		$this->assertNull($service->validatePayload(payload: $valid));
+		$this->assertSame('A mailing list needs a name', $service->validatePayload(payload: ['name' => ' '] + $valid));
+		$this->assertSame('A mailing list needs a name', $service->validatePayload(payload: []));
+		$this->assertSame('A mailing list needs a sender name', $service->validatePayload(payload: ['senderName' => ' ', 'senderEmail' => 'x'] + $valid));
+		$this->assertSame('A mailing list needs a valid sender address', $service->validatePayload(payload: ['senderEmail' => 'not-mail', 'replyTo' => 'x'] + $valid));
+		$this->assertNull($service->validatePayload(payload: ['senderEmail' => ' shop@example.test '] + $valid));
+		$this->assertSame('The reply-to address is not a valid email address', $service->validatePayload(payload: ['replyTo' => 'x', 'footerAddress' => ''] + $valid));
+		$this->assertSame('A mailing list needs a postal address for the footer', $service->validatePayload(payload: ['footerAddress' => ' '] + $valid));
+	}//end testEveryValidationMessage()
 }//end class
