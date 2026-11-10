@@ -105,8 +105,22 @@ class ShillinqStockReader {
 			return $this->answer(state: 'no-shillinq');
 		}
 
+		return $this->firstStock(objectService: $objectService, keys: $this->keys(productId: $productId, sku: $sku));
+	}//end stockFor()
+
+	/**
+	 * The stock under the first key that finds a location, else the last
+	 * (empty) sum; no access as soon as a read is refused.
+	 *
+	 * @param object                $objectService The object service.
+	 * @param array<string, string> $keys          Field => key, in reading order.
+	 *
+	 * @return array{state: string, available: float, onHand: float, reserved: float,
+	 *     locations: array<int, array{code: string, name: string, available: float}>}
+	 */
+	private function firstStock(object $objectService, array $keys): array {
 		$answer = $this->answer(state: 'ok');
-		foreach ($this->keys(productId: $productId, sku: $sku) as $field => $key) {
+		foreach ($keys as $field => $key) {
 			$rows = $this->rowsFor(objectService: $objectService, filter: [$field => $key]);
 			if ($rows === null) {
 				return $this->answer(state: 'no-access');
@@ -119,7 +133,7 @@ class ShillinqStockReader {
 		}
 
 		return $answer;
-	}//end stockFor()
+	}//end firstStock()
 
 	/**
 	 * The object service when shillinq is installed and OpenRegister answers, else null.
@@ -160,12 +174,7 @@ class ShillinqStockReader {
 	 */
 	private function rowsFor(object $objectService, array $filter): ?iterable {
 		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => ['register' => self::SHILLINQ_REGISTER, 'schema' => self::STOCK_SCHEMA, ...$filter],
-					'limit' => self::MAX_LOCATIONS,
-				]
-			);
+			$rows = $objectService->findAll(config: $this->query(filter: $filter));
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'ShillinqStockReader: the user cannot read shillinq stock',
@@ -176,6 +185,20 @@ class ShillinqStockReader {
 
 		return $this->iterable(value: $rows);
 	}//end rowsFor()
+
+	/**
+	 * The findAll() config for shillinq stock rows on one field => key.
+	 *
+	 * @param array<string, string> $filter The one field => key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function query(array $filter): array {
+		return [
+			'filters' => ['register' => self::SHILLINQ_REGISTER, 'schema' => self::STOCK_SCHEMA, ...$filter],
+			'limit' => self::MAX_LOCATIONS,
+		];
+	}//end query()
 
 	/**
 	 * A findAll() answer as an iterable.
@@ -225,14 +248,11 @@ class ShillinqStockReader {
 			}
 
 			$location = $this->location(row: $row);
-			$answer['onHand'] += $location['onHand'];
-			$answer['reserved'] += $location['reserved'];
-			$answer['available'] += $location['available'];
-			$answer['locations'][] = [
-				'code' => $location['code'],
-				'name' => $location['name'],
-				'available' => $location['available'],
-			];
+			foreach (['onHand', 'reserved', 'available'] as $figure) {
+				$answer[$figure] += $location[$figure];
+			}
+
+			$answer['locations'][] = ['code' => $location['code'], 'name' => $location['name'], 'available' => $location['available']];
 		}
 
 		return $answer;
