@@ -324,16 +324,40 @@ class MailingListService {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 	 */
 	public function validatePayload(array $payload): ?string {
-		if (trim((string)($payload['name'] ?? '')) === '') {
-			return 'A mailing list needs a name';
+		$names = ['name' => 'A mailing list needs a name', 'senderName' => 'A mailing list needs a sender name'];
+		return $this->missingText(payload: $payload, fields: $names)
+			?? $this->addressError(payload: $payload)
+			?? $this->missingText(payload: $payload, fields: ['footerAddress' => 'A mailing list needs a postal address for the footer']);
+	}//end validatePayload()
+
+	/**
+	 * The message of the first field that is empty once trimmed, or null.
+	 *
+	 * @param array<string, mixed>  $payload The list.
+	 * @param array<string, string> $fields  Field => message, in checking order.
+	 *
+	 * @return string|null
+	 */
+	private function missingText(array $payload, array $fields): ?string {
+		foreach ($fields as $field => $message) {
+			if (trim((string)($payload[$field] ?? '')) === '') {
+				return $message;
+			}
 		}
 
-		if (trim((string)($payload['senderName'] ?? '')) === '') {
-			return 'A mailing list needs a sender name';
-		}
+		return null;
+	}//end missingText()
 
-		$senderEmail = trim((string)($payload['senderEmail'] ?? ''));
-		if (filter_var($senderEmail, FILTER_VALIDATE_EMAIL) === false) {
+	/**
+	 * The message for an invalid sender address, or an invalid non-empty
+	 * reply-to address; null when both are fine.
+	 *
+	 * @param array<string, mixed> $payload The list.
+	 *
+	 * @return string|null
+	 */
+	private function addressError(array $payload): ?string {
+		if (filter_var(trim((string)($payload['senderEmail'] ?? '')), FILTER_VALIDATE_EMAIL) === false) {
 			return 'A mailing list needs a valid sender address';
 		}
 
@@ -342,12 +366,8 @@ class MailingListService {
 			return 'The reply-to address is not a valid email address';
 		}
 
-		if (trim((string)($payload['footerAddress'] ?? '')) === '') {
-			return 'A mailing list needs a postal address for the footer';
-		}
-
 		return null;
-	}//end validatePayload()
+	}//end addressError()
 
 	/**
 	 * Resolve the MailingList schema slug from app config.
