@@ -224,6 +224,29 @@ export default {
 			if (found) {
 				return found.name || found.code || t('pipelinq', 'Unknown')
 			}
+			return this.unlistedTypeLabel(id)
+		},
+
+		/**
+		 * Show the loaded tenders, and the validation when the server sent one.
+		 *
+		 * @param {object|undefined} data The answer.
+		 */
+		showTenders(data) {
+			this.tenders = data?.results || []
+			if (data?.validation) {
+				this.validation = data.validation
+			}
+		},
+
+		/**
+		 * The label of a tender type that is not listed: the name looked up
+		 * for it, an ellipsis while it is looked up, or Unknown.
+		 *
+		 * @param {string} id The tender type id, or ''.
+		 * @return {string} The label.
+		 */
+		unlistedTypeLabel(id) {
 			if (id && this.typeNames[id] !== undefined) {
 				return this.typeNames[id] || t('pipelinq', 'Unknown')
 			}
@@ -290,10 +313,7 @@ export default {
 					{ id: this.transactionId },
 				)
 				const response = await axios.get(url)
-				this.tenders = response?.data?.results || []
-				if (response?.data?.validation) {
-					this.validation = response.data.validation
-				}
+				this.showTenders(response?.data)
 			} catch (error) {
 				this.errorMessage =
 					error?.response?.data?.error

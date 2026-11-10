@@ -388,6 +388,34 @@ export default {
 
 	methods: {
 		/**
+		 * List the campaigns to pick from; a failure leaves none and says why.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 */
+		async loadCampaigns() {
+			try {
+				this.campaigns = await fetchCampaigns(100)
+			} catch (e) {
+				this.campaigns = []
+				this.error =
+					e?.response?.data?.error
+					|| this.t('pipelinq', 'Could not load the campaigns.')
+			}
+		},
+
+		/**
+		 * @return {object|null} The campaign the address names, else the first.
+		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 */
+		wantedCampaign() {
+			const wanted = this.$route?.query?.campaign
+			return this.campaignOptions.find((option) => option.id === wanted)
+				|| this.campaignOptions[0]
+				|| null
+		},
+
+		/**
 		 * Read the campaigns, then the report for the one in the route or
 		 * the first one there is.
 		 *
@@ -402,20 +430,8 @@ export default {
 				await this.fetchReport()
 				return
 			}
-			try {
-				this.campaigns = await fetchCampaigns(100)
-			} catch (e) {
-				this.campaigns = []
-				this.error =
-					e?.response?.data?.error
-					|| this.t('pipelinq', 'Could not load the campaigns.')
-			}
-
-			const wanted = this.$route?.query?.campaign
-			this.campaign =
-				this.campaignOptions.find((option) => option.id === wanted)
-				|| this.campaignOptions[0]
-				|| null
+			await this.loadCampaigns()
+			this.campaign = this.wantedCampaign()
 
 			if (!this.campaign) {
 				this.loading = false

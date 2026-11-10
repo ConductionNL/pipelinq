@@ -23,6 +23,15 @@ import { useObjectStore } from '../../../store/modules/object.js'
 const TYPE_SLUG = 'pipelinq-client'
 
 /**
+ * @param {unknown} items The clients read.
+ * @return {string|number|undefined} The id of the first one, if any.
+ */
+function firstClientId(items) {
+	const first = Array.isArray(items) ? items[0] : null
+	return first && (first.id || (first['@self'] && first['@self'].id))
+}
+
+/**
  * WerkplekClientSelect — the Customer Support page's client in focus, beside
  * the page title (the dashboard's `title-meta` slot).
  *
@@ -98,8 +107,7 @@ export default {
 			const items = await store.fetchCollectionForOptions(TYPE_SLUG, {
 				_limit: 1,
 			})
-			const first = Array.isArray(items) ? items[0] : null
-			const id = first && (first.id || (first['@self'] && first['@self'].id))
+			const id = firstClientId(items)
 			if (id && !this.selectedClient) {
 				this.onSelect(String(id))
 			}
