@@ -32,14 +32,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\SearchConsole;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -230,10 +227,7 @@ class SearchConsoleImportService {
 	 * @return ImportWindow
 	 */
 	private function windowEndingToday(int $days): ImportWindow {
-		return new ImportWindow(
-			today: (new DateTimeImmutable('@' . $this->time->getTime()))->setTimezone(new DateTimeZone('UTC')),
-			days: $days
-		);
+		return new ImportWindow(timestamp: $this->time->getTime(), days: $days);
 	}//end windowEndingToday()
 
 	/**
@@ -246,7 +240,7 @@ class SearchConsoleImportService {
 	 */
 	private function stampWhenImported(array $result, ImportWindow $window): void {
 		if ($result['properties'] > 0) {
-			$this->appConfig->setValueString(Application::APP_ID, self::LAST_IMPORT_KEY, $window->today->format('Y-m-d\TH:i:s\Z'));
+			$this->appConfig->setValueString(Application::APP_ID, self::LAST_IMPORT_KEY, $window->today()->format('Y-m-d\TH:i:s\Z'));
 		}
 	}//end stampWhenImported()
 
@@ -300,7 +294,7 @@ class SearchConsoleImportService {
 
 		$this->logger->info(
 			'SearchConsoleImportService: property imported',
-			['property' => $property, 'from' => $read->window->from(), 'to' => $read->window->to(), 'rows' => $saved]
+			['property' => $property, 'from' => $read->window->firstDay(), 'to' => $read->window->lastDay(), 'rows' => $saved]
 		);
 
 		return $saved;
@@ -314,7 +308,7 @@ class SearchConsoleImportService {
 	 *
 	 * @return array<int, array<string, mixed>> Normalised rows: date, query, page, clicks, impressions, ctr, position.
 	 *
-	 * @throws \RuntimeException When the API answers with an error.
+	 * @throws Throwable When the API answers with an error (from the property endpoint).
 	 */
 	private function fetchRows(SearchConsoleRead $read, string $property): array {
 		$endpoint = new PropertyEndpoint(
@@ -324,7 +318,7 @@ class SearchConsoleImportService {
 		$rows = [];
 		$startRow = 0;
 		while ($startRow < self::MAX_ROWS) {
-			$page = $this->fetchPage(endpoint: $endpoint, options: self::requestOptions(read: $read, startRow: $startRow));
+			$page = $endpoint->page(options: self::requestOptions(read: $read, startRow: $startRow));
 			$rows = array_merge($rows, $this->normalisedRows(page: $page));
 			if (count($page) < self::ROW_LIMIT) {
 				break;
@@ -348,8 +342,8 @@ class SearchConsoleImportService {
 		return [
 			'headers' => ['Authorization' => ('Bearer ' . $read->token), 'Accept' => 'application/json'],
 			'json' => [
-				'startDate' => $read->window->from(),
-				'endDate' => $read->window->to(),
+				'startDate' => $read->window->firstDay(),
+				'endDate' => $read->window->lastDay(),
 				'dimensions' => ['date', 'query', 'page'],
 				'rowLimit' => self::ROW_LIMIT,
 				'startRow' => $startRow,
@@ -358,36 +352,6 @@ class SearchConsoleImportService {
 			'timeout' => 60,
 		];
 	}//end requestOptions()
-
-	/**
-	 * POST one page request and answer its raw rows.
-	 *
-	 * @param PropertyEndpoint     $endpoint The client and the URL of the property.
-	 * @param array<string, mixed> $options  The request.
-	 *
-	 * @return array<int|string, mixed> The rows of the page (empty when it carries none).
-	 *
-	 * @throws \RuntimeException When the API answers with an error or not with JSON.
-	 */
-	private function fetchPage(PropertyEndpoint $endpoint, array $options): array {
-		$response = $endpoint->client->post($endpoint->url, $options);
-
-		$decoded = json_decode((string)$response->getBody(), true);
-		if (is_array($decoded) === false) {
-			throw new RuntimeException('Search Console: the API answered with something that is not JSON');
-		}
-
-		if (isset($decoded['error']) === true) {
-			throw new RuntimeException('Search Console: ' . $this->errorMessage(error: $decoded['error']));
-		}
-
-		$page = ($decoded['rows'] ?? []);
-		if (is_array($page) === false) {
-			return [];
-		}
-
-		return $page;
-	}//end fetchPage()
 
 	/**
 	 * The rows of a page that normalise, in order.
@@ -407,21 +371,6 @@ class SearchConsoleImportService {
 
 		return $rows;
 	}//end normalisedRows()
-
-	/**
-	 * The message of an API error object, or the error itself as a string.
-	 *
-	 * @param mixed $error The `error` member of the API answer.
-	 *
-	 * @return string
-	 */
-	private function errorMessage(mixed $error): string {
-		if (is_array($error) === true) {
-			return (string)($error['message'] ?? 'error');
-		}
-
-		return (string)$error;
-	}//end errorMessage()
 
 	/**
 	 * Turn one API row (`keys: [date, query, page]`) into a flat record.

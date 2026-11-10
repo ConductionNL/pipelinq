@@ -3,8 +3,9 @@
 /**
  * Pipelinq ImportWindow.
  *
- * The days one Search Console import reads: today (UTC) and how many days
- * back, with the first and last date of the window derived from them.
+ * The days one Search Console import reads: the moment it runs and how many
+ * days back, with today (UTC) and the first and last date of the window
+ * derived from them.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\SearchConsole
@@ -25,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\SearchConsole;
 
 use DateTimeImmutable;
+use DateTimeZone;
 
 /**
  * An import window ending today.
@@ -35,14 +37,25 @@ final class ImportWindow {
 	/**
 	 * Constructor.
 	 *
-	 * @param DateTimeImmutable $today Today, in UTC.
-	 * @param int               $days  How many days back from today, inclusive of today.
+	 * @param int $timestamp The moment of the import (Unix time).
+	 * @param int $days      How many days back from today, inclusive of today.
 	 */
 	public function __construct(
-		public readonly DateTimeImmutable $today,
+		public readonly int $timestamp,
 		public readonly int $days,
 	) {
 	}//end __construct()
+
+	/**
+	 * The moment of the import, in UTC.
+	 *
+	 * @return DateTimeImmutable
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 */
+	public function today(): DateTimeImmutable {
+		return (new DateTimeImmutable('@' . $this->timestamp))->setTimezone(new DateTimeZone('UTC'));
+	}//end today()
 
 	/**
 	 * The window start `YYYY-MM-DD`.
@@ -51,9 +64,9 @@ final class ImportWindow {
 	 *
 	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
-	public function from(): string {
-		return $this->today->modify('-' . max(0, $this->days) . ' days')->format('Y-m-d');
-	}//end from()
+	public function firstDay(): string {
+		return $this->today()->modify('-' . max(0, $this->days) . ' days')->format('Y-m-d');
+	}//end firstDay()
 
 	/**
 	 * The window end `YYYY-MM-DD`, inclusive.
@@ -62,7 +75,7 @@ final class ImportWindow {
 	 *
 	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
-	public function to(): string {
-		return $this->today->format('Y-m-d');
-	}//end to()
+	public function lastDay(): string {
+		return $this->today()->format('Y-m-d');
+	}//end lastDay()
 }//end class
