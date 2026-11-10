@@ -67,36 +67,59 @@ class RoadmapFeatureCatalog {
 	 * @spec openspec/specs/features-roadmap/spec.md
 	 */
 	public function load(): array {
-		$version = (string)$this->appManager->getAppVersion('pipelinq');
+		$cacheKey = $this->cacheKey();
 		$cache = $this->cacheFactory->createLocal('pipelinq_features');
-		// The curated file can change without a version bump (a deploy from a
-		// branch), so its content is part of the key.
-		$curatedHash = 'specs';
-		if (is_file(self::CURATED_PATH) === true) {
-			$curatedHash = (string)md5_file(self::CURATED_PATH);
-		}
-
-		$cacheKey = 'v' . $version . ':' . $curatedHash;
-
 		$cached = $cache->get($cacheKey);
 		if (is_array($cached) === true) {
 			return $cached;
 		}
 
-		$features = ($this->curatedFeatures(path: self::CURATED_PATH) ?? $this->extractFeaturesFromSpecs(specsDir: __DIR__ . '/../../openspec/specs'));
-		if ($features === []) {
-			$path = __DIR__ . '/../../docs/features.json';
-			if (is_file($path) === true) {
-				$decoded = json_decode((string)file_get_contents($path), associative: true);
-				if (is_array($decoded) === true) {
-					$features = $decoded;
-				}
-			}
-		}
-
+		$features = $this->freshFeatures();
 		$cache->set($cacheKey, $features, 86400);
 		return $features;
 	}//end load()
+
+	/**
+	 * The cache key: the app version and the curated file's content. The
+	 * curated file can change without a version bump (a deploy from a
+	 * branch), so its content is part of the key.
+	 *
+	 * @return string
+	 */
+	private function cacheKey(): string {
+		$version = (string)$this->appManager->getAppVersion('pipelinq');
+		$curatedHash = 'specs';
+		if (is_file(self::CURATED_PATH) === true) {
+			$curatedHash = (string)md5_file(self::CURATED_PATH);
+		}
+
+		return 'v' . $version . ':' . $curatedHash;
+	}//end cacheKey()
+
+	/**
+	 * The list read now: the curated file, else the done specs, else the
+	 * committed docs/features.json.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private function freshFeatures(): array {
+		$features = ($this->curatedFeatures(path: self::CURATED_PATH) ?? $this->extractFeaturesFromSpecs(specsDir: __DIR__ . '/../../openspec/specs'));
+		if ($features !== []) {
+			return $features;
+		}
+
+		$path = __DIR__ . '/../../docs/features.json';
+		if (is_file($path) === false) {
+			return [];
+		}
+
+		$decoded = json_decode((string)file_get_contents($path), associative: true);
+		if (is_array($decoded) === false) {
+			return [];
+		}
+
+		return $decoded;
+	}//end freshFeatures()
 
 	/**
 	 * The curated feature list: what a user gets, grouped and with a status,
@@ -110,31 +133,73 @@ class RoadmapFeatureCatalog {
 	 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
 	 */
 	public function curatedFeatures(string $path): ?array {
+		$entries = $this->curatedEntries(path: $path);
+		if ($entries === null) {
+			return null;
+		}
+
+		$features = [];
+		foreach ($entries as $entry) {
+			$feature = $this->curatedFeature(entry: $entry);
+			if ($feature !== null) {
+				$features[] = $feature;
+			}
+		}
+
+		return $features;
+	}//end curatedFeatures()
+
+	/**
+	 * The curated file's feature entries; null when the file is absent,
+	 * unreadable or holds no list of features.
+	 *
+	 * @param string $path The curated file.
+	 *
+	 * @return array<mixed>|null
+	 */
+	private function curatedEntries(string $path): ?array {
 		$document = $this->readCurated(path: $path);
 		if ($document === null || is_array($document['features'] ?? null) === false) {
 			return null;
 		}
 
-		$features = [];
-		foreach ($document['features'] as $entry) {
-			if (is_array($entry) === false || is_string($entry['slug'] ?? null) === false) {
-				continue;
-			}
+		return $document['features'];
+	}//end curatedEntries()
 
-			$feature = ['slug' => $entry['slug'], 'docsUrl' => ''];
-			foreach (['category', 'status', 'title', 'title_nl', 'summary', 'summary_nl'] as $field) {
-				$feature[$field] = (string)($entry[$field] ?? '');
-			}
-
-			if (is_string($entry['spec'] ?? null) === true && $entry['spec'] !== '') {
-				$feature['docsUrl'] = 'openspec/specs/' . $entry['spec'] . '/spec.md';
-			}
-
-			$features[] = $feature;
+	/**
+	 * One curated entry as a feature; null for an entry without a string slug.
+	 *
+	 * @param mixed $entry The entry.
+	 *
+	 * @return array<string, string>|null
+	 */
+	private function curatedFeature($entry): ?array {
+		if (is_array($entry) === false || is_string($entry['slug'] ?? null) === false) {
+			return null;
 		}
 
-		return $features;
-	}//end curatedFeatures()
+		$feature = ['slug' => $entry['slug'], 'docsUrl' => $this->docsUrlOf(spec: ($entry['spec'] ?? null))];
+		foreach (['category', 'status', 'title', 'title_nl', 'summary', 'summary_nl'] as $field) {
+			$feature[$field] = (string)($entry[$field] ?? '');
+		}
+
+		return $feature;
+	}//end curatedFeature()
+
+	/**
+	 * The docs link of the spec an entry names; '' when it names none.
+	 *
+	 * @param mixed $spec The entry's spec name.
+	 *
+	 * @return string
+	 */
+	private function docsUrlOf($spec): string {
+		if (is_string($spec) === false || $spec === '') {
+			return '';
+		}
+
+		return 'openspec/specs/' . $spec . '/spec.md';
+	}//end docsUrlOf()
 
 	/**
 	 * The curated list's groups, key to caption, in the order the page shows them.
@@ -188,6 +253,28 @@ class RoadmapFeatureCatalog {
 	 * @spec openspec/specs/features-roadmap/spec.md
 	 */
 	public function extractFeaturesFromSpecs(string $specsDir): array {
+		$entries = [];
+		foreach ($this->specPaths(specsDir: $specsDir) as $specPath) {
+			$entry = $this->doneFeature(specPath: $specPath);
+			if ($entry !== null) {
+				$entries[] = $entry;
+			}
+		}
+
+		// Sort by slug (not full path) to match extract-features.py and
+		// extractFeatures.js, which order by the capability slug.
+		usort($entries, static fn (array $a, array $b): int => strcmp($a['slug'], $b['slug']));
+		return $entries;
+	}//end extractFeaturesFromSpecs()
+
+	/**
+	 * The spec files under the directory; none when it is absent or unreadable.
+	 *
+	 * @param string $specsDir Absolute path to openspec/specs.
+	 *
+	 * @return array<int, string>
+	 */
+	private function specPaths(string $specsDir): array {
 		if (is_dir($specsDir) === false) {
 			return [];
 		}
@@ -197,42 +284,70 @@ class RoadmapFeatureCatalog {
 			return [];
 		}
 
-		$entries = [];
-		foreach ($paths as $specPath) {
-			$text = (string)file_get_contents($specPath);
-			if (preg_match('/^---\s*\n(.*?\n)---\s*\n(.*)$/s', $text, $matches) !== 1) {
-				continue;
-			}
+		return $paths;
+	}//end specPaths()
 
-			$front = $matches[1];
-			$body = $matches[2];
-			if (preg_match('/^status:\s*(.+?)\s*$/m', $front, $statusMatch) !== 1) {
-				continue;
-			}
+	/**
+	 * The feature entry of one spec; null unless its status is `done`.
+	 *
+	 * @param string $specPath The spec file.
+	 *
+	 * @return array{slug:string, title:string, summary:string, docsUrl:string}|null
+	 */
+	private function doneFeature(string $specPath): ?array {
+		$body = $this->doneBody(text: (string)file_get_contents($specPath));
+		if ($body === null) {
+			return null;
+		}
 
-			if (strtolower(trim($statusMatch[1], " \t\"'")) !== 'done') {
-				continue;
-			}
+		$slug = basename(dirname($specPath));
+		return [
+			'slug' => $slug,
+			'title' => $this->titleOf(body: $body, slug: $slug),
+			'summary' => $this->extractSummary(body: $body),
+			'docsUrl' => 'openspec/specs/' . $slug . '/spec.md',
+		];
+	}//end doneFeature()
 
-			$slug = basename(dirname($specPath));
-			$title = $slug;
-			if (preg_match('/^#\s+(.+?)\s*$/m', $body, $titleMatch) === 1) {
-				$title = trim((string)preg_replace('/\s+specification\s*$/i', '', trim($titleMatch[1])));
-			}
+	/**
+	 * The markdown body of a spec whose frontmatter status reads `done`
+	 * (quotes and case ignored); null otherwise.
+	 *
+	 * @param string $text The spec file's text.
+	 *
+	 * @return string|null
+	 */
+	private function doneBody(string $text): ?string {
+		if (preg_match('/^---\s*\n(.*?\n)---\s*\n(.*)$/s', $text, $matches) !== 1) {
+			return null;
+		}
 
-			$entries[] = [
-				'slug' => $slug,
-				'title' => $title,
-				'summary' => $this->extractSummary(body: $body),
-				'docsUrl' => 'openspec/specs/' . $slug . '/spec.md',
-			];
-		}//end foreach
+		if (preg_match('/^status:\s*(.+?)\s*$/m', $matches[1], $statusMatch) !== 1) {
+			return null;
+		}
 
-		// Sort by slug (not full path) to match extract-features.py and
-		// extractFeatures.js, which order by the capability slug.
-		usort($entries, static fn (array $a, array $b): int => strcmp($a['slug'], $b['slug']));
-		return $entries;
-	}//end extractFeaturesFromSpecs()
+		if (strtolower(trim($statusMatch[1], " \t\"'")) !== 'done') {
+			return null;
+		}
+
+		return $matches[2];
+	}//end doneBody()
+
+	/**
+	 * The spec's H1 minus a trailing "Specification"; the slug without an H1.
+	 *
+	 * @param string $body The markdown body.
+	 * @param string $slug The spec's slug.
+	 *
+	 * @return string
+	 */
+	private function titleOf(string $body, string $slug): string {
+		if (preg_match('/^#\s+(.+?)\s*$/m', $body, $titleMatch) !== 1) {
+			return $slug;
+		}
+
+		return trim((string)preg_replace('/\s+specification\s*$/i', '', trim($titleMatch[1])));
+	}//end titleOf()
 
 	/**
 	 * Extract the first paragraph under `## Purpose` as the feature summary.
