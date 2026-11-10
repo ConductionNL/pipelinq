@@ -89,45 +89,117 @@ class BrpMutationWebhookListener {
 	 *
 	 * @return array{result: string, invalidated: int}
 	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::mask() is a
-	 *  pure static log-masking helper with no instance state.
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 	 */
 	public function handle(string $rawBody, string $signature): array {
-		$secret = $this->appConfig->getValueString(
-			Application::APP_ID,
-			'brp.webhook_secret',
-			''
-		);
+		if ($this->isSignatureAccepted(rawBody: $rawBody, signature: $signature) === false) {
+			return $this->outcome(result: self::RESULT_FORBIDDEN, invalidated: 0);
+		}
+
+		$bsn = $this->payloadBsn(rawBody: $rawBody);
+		if ($bsn === null) {
+			return $this->outcome(result: self::RESULT_BAD_REQUEST, invalidated: 0);
+		}
+
+		return $this->invalidate(bsn: $bsn);
+	}//end handle()
+
+	/**
+	 * Whether a secret is configured and the signature is its HMAC-SHA256 of the body.
+	 *
+	 * @param string $rawBody   The raw request body bytes.
+	 * @param string $signature The delivered hex digest.
+	 *
+	 * @return bool
+	 */
+	private function isSignatureAccepted(string $rawBody, string $signature): bool {
+		$secret = $this->appConfig->getValueString(Application::APP_ID, 'brp.webhook_secret', '');
 		if ($secret === '') {
 			$this->logger->warning('BRP webhook secret not configured; dropping delivery');
-			return ['result' => self::RESULT_FORBIDDEN, 'invalidated' => 0];
+			return false;
 		}
 
 		// Constant-time signature comparison (ADR-005 — never use string equality on secrets).
-		$expected = hash_hmac('sha256', $rawBody, $secret);
-		if (hash_equals($expected, $signature) === false) {
+		if (hash_equals(hash_hmac('sha256', $rawBody, $secret), $signature) === false) {
 			$this->logger->warning('BRP webhook signature mismatch');
-			return ['result' => self::RESULT_FORBIDDEN, 'invalidated' => 0];
+			return false;
 		}
 
+		return true;
+	}//end isSignatureAccepted()
+
+	/**
+	 * The well-formed BSN the payload names, or null.
+	 *
+	 * @param string $rawBody The raw request body bytes.
+	 *
+	 * @return string|null
+	 */
+	private function payloadBsn(string $rawBody): ?string {
+		$payload = $this->decodedPayload(rawBody: $rawBody);
+		if ($payload === null) {
+			return null;
+		}
+
+		$bsn = (string)($payload['burgerservicenummer'] ?? $payload['bsn'] ?? '');
+		if (strlen($bsn) !== 9 || ctype_digit($bsn) === false) {
+			return null;
+		}
+
+		return $bsn;
+	}//end payloadBsn()
+
+	/**
+	 * The body decoded as a JSON object or list, or null.
+	 *
+	 * @param string $rawBody The raw request body bytes.
+	 *
+	 * @return array<mixed>|null
+	 */
+	private function decodedPayload(string $rawBody): ?array {
 		try {
 			$payload = json_decode($rawBody, true, 32, JSON_THROW_ON_ERROR);
 		} catch (Throwable $e) {
 			$this->logger->info('BRP webhook payload not valid JSON');
-			return ['result' => self::RESULT_BAD_REQUEST, 'invalidated' => 0];
+			return null;
 		}
 
 		if (is_array($payload) === false) {
-			return ['result' => self::RESULT_BAD_REQUEST, 'invalidated' => 0];
+			return null;
 		}
 
-		$bsn = (string)($payload['burgerservicenummer'] ?? $payload['bsn'] ?? '');
-		if ($bsn === '' || strlen($bsn) !== 9 || ctype_digit($bsn) === false) {
-			return ['result' => self::RESULT_BAD_REQUEST, 'invalidated' => 0];
-		}
+		return $payload;
+	}//end decodedPayload()
 
+	/**
+	 * Invalidate the cache for the BSN, audit it and report the count.
+	 *
+	 * @param string $bsn The BSN.
+	 *
+	 * @return array{result: string, invalidated: int}
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::mask() is a
+	 *  pure static log-masking helper with no instance state.
+	 */
+	private function invalidate(string $bsn): array {
 		$count = $this->cacheService->invalidate($bsn);
+		$this->recordInvalidation(bsn: $bsn);
+		$this->logger->info(
+			'BRP webhook invalidated cache',
+			['bsn' => BsnValidationService::mask($bsn), 'count' => $count]
+		);
+
+		return $this->outcome(result: self::RESULT_OK, invalidated: $count);
+	}//end invalidate()
+
+	/**
+	 * Write the audit record of a webhook-driven cache invalidation.
+	 *
+	 * @param string $bsn The BSN.
+	 *
+	 * @return void
+	 */
+	private function recordInvalidation(string $bsn): void {
 		$this->auditService->recordLookup(
 			actor: 'system:brp-webhook',
 			lookup: new LookupAudit(
@@ -135,19 +207,23 @@ class BrpMutationWebhookListener {
 				reason: new LookupReason(
 					verzoekreden: 'BRP mutation webhook',
 					purposeBinding: 'Cache-consistentie (BRP mutatie)',
-					linkedRequest: null,
-					vogScreening: false,
+					linkedRequest: null, vogScreening: false,
 				),
 				result: new LookupResult(outcome: 'cache-invalidated', action: 'brp-cache-invalidated', responseCode: 200),
 				actorRole: 'system',
 			),
 		);
+	}//end recordInvalidation()
 
-		$this->logger->info(
-			'BRP webhook invalidated cache',
-			['bsn' => BsnValidationService::mask($bsn), 'count' => $count]
-		);
-
-		return ['result' => self::RESULT_OK, 'invalidated' => $count];
-	}//end handle()
+	/**
+	 * The result shape handle() returns.
+	 *
+	 * @param string $result      Result code.
+	 * @param int    $invalidated Invalidated entry count.
+	 *
+	 * @return array{result: string, invalidated: int}
+	 */
+	private function outcome(string $result, int $invalidated): array {
+		return ['result' => $result, 'invalidated' => $invalidated];
+	}//end outcome()
 }//end class
