@@ -31,7 +31,7 @@ namespace OCA\Pipelinq\Service;
  * CostCaptureService — webhook-cost extraction with EUR conversion.
  *
  * Public entry points:
- * - capture(webhookPayload, vendor, channel, category, country) —
+ * - capture(DeliveryCostRequest) —
  *   returns ['costEur' => float, 'metadata' => array<string, mixed>]
  *   describing what to merge onto the message row.
  *
@@ -60,72 +60,88 @@ class CostCaptureService {
 	 * 2. If provider exposed a `costEur` directly, take it.
 	 * 3. Otherwise estimate via the price table.
 	 *
-	 * @param array<string, mixed> $payload Webhook event payload.
-	 * @param string $vendor Provider vendor key.
-	 * @param string $channel Channel (whatsapp / sms).
-	 * @param string $category Template category.
-	 * @param string $country ISO 3166-1 alpha-2.
+	 * @param DeliveryCostRequest $delivery The webhook event and the message it priced.
 	 *
 	 * @return array{costEur: float, metadata: array<string, mixed>} Cost
 	 *                                                               + metadata bundle to merge onto the message row.
 	 *
 	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
-	public function capture(
-		array $payload,
-		string $vendor,
-		string $channel,
-		string $category = 'utility',
-		string $country = 'NL',
-	): array {
+	public function capture(DeliveryCostRequest $delivery): array {
+		$payload = $delivery->payload;
 		// Twilio: { "Price": "-0.0075", "PriceUnit": "USD" }.
 		if (isset($payload['Price']) === true && isset($payload['PriceUnit']) === true) {
-			$rawPrice = abs((float)$payload['Price']);
-			$currency = strtoupper((string)$payload['PriceUnit']);
-			$eur = $this->exchangeRate->toEur(amount: $rawPrice, currency: $currency);
-			if ($eur === null) {
-				return [
-					'costEur' => 0.0,
-					'metadata' => [
-						'costSource' => 'webhook',
-						'costCurrency' => $currency,
-						'costSourceAmount' => $rawPrice,
-						'costCurrencyPending' => true,
-						'costEstimated' => false,
-					],
-				];
-			}
-
-			return [
-				'costEur' => round($eur, 6),
-				'metadata' => [
-					'costSource' => 'webhook',
-					'costCurrency' => $currency,
-					'costSourceAmount' => $rawPrice,
-					'costCurrencyPending' => false,
-					'costEstimated' => false,
-				],
-			];
-		}//end if
+			return $this->convertedVendorPrice(payload: $payload);
+		}
 
 		// Vendors that pre-compute EUR (some BSPs).
 		if (isset($payload['costEur']) === true && is_numeric($payload['costEur']) === true) {
-			return [
-				'costEur' => (float)$payload['costEur'],
-				'metadata' => [
-					'costSource' => 'webhook',
-					'costCurrency' => 'EUR',
-					'costEstimated' => false,
-				],
-			];
+			return $this->precomputedEurCost(costEur: (float)$payload['costEur']);
 		}
 
 		// Fallback: static price-table estimate (Meta has no cost in webhook).
+		return $this->priceTableEstimate(delivery: $delivery);
+	}//end capture()
+
+	/**
+	 * The vendor's own price converted to EUR, or zero pending conversion when no rate is available.
+	 *
+	 * @param array<string, mixed> $payload Webhook event payload carrying `Price` and `PriceUnit`.
+	 *
+	 * @return array{costEur: float, metadata: array<string, mixed>} Cost and metadata.
+	 */
+	private function convertedVendorPrice(array $payload): array {
+		$rawPrice = abs((float)$payload['Price']);
+		$currency = strtoupper((string)$payload['PriceUnit']);
+		$eur = $this->exchangeRate->toEur(amount: $rawPrice, currency: $currency);
+		$costEur = 0.0;
+		if ($eur !== null) {
+			$costEur = round($eur, 6);
+		}
+
+		return [
+			'costEur' => $costEur,
+			'metadata' => [
+				'costSource' => 'webhook',
+				'costCurrency' => $currency,
+				'costSourceAmount' => $rawPrice,
+				'costCurrencyPending' => $eur === null,
+				'costEstimated' => false,
+			],
+		];
+	}//end convertedVendorPrice()
+
+	/**
+	 * The EUR cost a vendor computed itself.
+	 *
+	 * @param float $costEur The vendor's EUR cost.
+	 *
+	 * @return array{costEur: float, metadata: array<string, mixed>} Cost and metadata.
+	 */
+	private function precomputedEurCost(float $costEur): array {
+		return [
+			'costEur' => $costEur,
+			'metadata' => [
+				'costSource' => 'webhook',
+				'costCurrency' => 'EUR',
+				'costEstimated' => false,
+			],
+		];
+	}//end precomputedEurCost()
+
+	/**
+	 * The static price-table estimate for the delivered message.
+	 *
+	 * @param DeliveryCostRequest $delivery The delivered message.
+	 *
+	 * @return array{costEur: float, metadata: array<string, mixed>} Cost and metadata.
+	 */
+	private function priceTableEstimate(DeliveryCostRequest $delivery): array {
 		$estimate = $this->estimator->estimate(
-			vendor: $vendor,
-			channel: $channel,
-			category: $category,
-			country: $country,
+			vendor: $delivery->vendor,
+			channel: $delivery->channel,
+			category: $delivery->category,
+			country: $delivery->country,
 		);
 
 		return [
@@ -136,5 +152,5 @@ class CostCaptureService {
 				'costEstimated' => true,
 			],
 		];
-	}//end capture()
+	}//end priceTableEstimate()
 }//end class
