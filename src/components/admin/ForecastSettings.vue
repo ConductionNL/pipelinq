@@ -332,6 +332,34 @@ import {
 	rowsFromRates,
 } from '../../services/leadCurrency.js'
 
+/**
+ * Why the rate rows do not make a rate table, or '' when they do. A fixed
+ * rate without a reason is named first.
+ *
+ * @param {string} ratesError The exchange rate rows' problem, or ''.
+ * @param {string} fixedError The fixed rate rows' problem, or ''.
+ * @return {string} The message.
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
+ */
+function rateRowsError(ratesError, fixedError) {
+	if (fixedError === 'reason') {
+		return t('pipelinq', 'Give a reason for every fixed rate.')
+	}
+	const failed = ratesError || fixedError
+	return failed ? rateValueError(failed) : ''
+}
+
+/**
+ * @param {string} failed The problem: `code`, or a rate that is not above zero.
+ * @return {string} The message.
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
+ */
+function rateValueError(failed) {
+	return failed === 'code'
+		? t('pipelinq', 'Use a three-letter currency code for every rate.')
+		: t('pipelinq', 'Every rate must be a number above zero.')
+}
+
 export default {
 	name: 'ForecastSettings',
 	components: {
@@ -432,41 +460,47 @@ export default {
 		async save() {
 			const { rates, error } = ratesFromRows(this.rateRows)
 			const fixed = overridesFromRows(this.overrideRows)
-			if (fixed.error === 'reason') {
-				this.message = t('pipelinq', 'Give a reason for every fixed rate.')
-				this.messageType = 'error'
-				return
-			}
-			if (error || fixed.error) {
-				this.message =
-					(error || fixed.error) === 'code'
-						? t(
-								'pipelinq',
-								'Use a three-letter currency code for every rate.',
-							)
-						: t('pipelinq', 'Every rate must be a number above zero.')
-				this.messageType = 'error'
+			const invalid = rateRowsError(error, fixed.error)
+			if (invalid) {
+				this.showMessage(invalid, 'error')
 				return
 			}
 			this.saving = true
 			this.message = ''
 			try {
-				const { rate_sources: _sources, ...form } = this.form
-				await axios.put(
-					generateUrl('/apps/pipelinq/api/settings/forecast'),
-					{ ...form, exchange_rates: rates, rate_overrides: fixed.overrides },
-				)
-				this.message = t('pipelinq', 'Forecast configuration saved.')
-				this.messageType = 'success'
+				await this.putSettings(rates, fixed.overrides)
+				this.showMessage(t('pipelinq', 'Forecast configuration saved.'), 'success')
 			} catch {
-				this.message = t(
-					'pipelinq',
-					'Could not save the forecast configuration.',
-				)
-				this.messageType = 'error'
+				this.showMessage(t('pipelinq', 'Could not save the forecast configuration.'), 'error')
 			} finally {
 				this.saving = false
 			}
+		},
+
+		/**
+		 * Store the form, without the rate sources it only shows, with the
+		 * exchange and fixed rates.
+		 *
+		 * @param {object} rates The exchange rates per currency.
+		 * @param {object} overrides The fixed rates per currency.
+		 * @return {Promise} The request.
+		 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
+		 */
+		putSettings(rates, overrides) {
+			const { rate_sources: _sources, ...form } = this.form
+			return axios.put(
+				generateUrl('/apps/pipelinq/api/settings/forecast'),
+				{ ...form, exchange_rates: rates, rate_overrides: overrides },
+			)
+		},
+
+		/**
+		 * @param {string} message The message to show.
+		 * @param {string} type Its kind: `success` or `error`.
+		 */
+		showMessage(message, type) {
+			this.message = message
+			this.messageType = type
 		},
 	},
 }

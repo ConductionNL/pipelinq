@@ -151,7 +151,29 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async onConfirm(values) {
-			const payload = {
+			const payload = this.taskPayload(values)
+			try {
+				const result = await this.objectStore.saveObject('crmTask', payload)
+				if (!result) {
+					this.reportNotCreated()
+					return
+				}
+				this.$emit('saved', result)
+			} catch (e) {
+				this.reportNotCreated()
+				console.warn('[WerkplekNewTaskDialog] save failed', e)
+			}
+		},
+
+		/**
+		 * The task to store: the form's values, open, for this client, with
+		 * the call's summary or else the task's description.
+		 *
+		 * @param {object} values The form's values.
+		 * @return {object} The task.
+		 */
+		taskPayload(values) {
+			return {
 				...values,
 				clientId: this.clientId,
 				contactMomentSummary:
@@ -159,34 +181,21 @@ export default {
 
 				status: 'open',
 			}
+		},
+
+		/**
+		 * Say the task was not created; a notice that cannot show is ignored.
+		 */
+		reportNotCreated() {
 			try {
-				const result = await this.objectStore.saveObject('crmTask', payload)
-				if (!result) {
-					try {
-						showError(
-							this.t(
-								'pipelinq',
-								'Could not create task. Please try again.',
-							),
-						)
-					} catch {
-						/* no-op */
-					}
-					return
-				}
-				this.$emit('saved', result)
-			} catch (e) {
-				try {
-					showError(
-						this.t(
-							'pipelinq',
-							'Could not create task. Please try again.',
-						),
-					)
-				} catch {
-					/* no-op */
-				}
-				console.warn('[WerkplekNewTaskDialog] save failed', e)
+				showError(
+					this.t(
+						'pipelinq',
+						'Could not create task. Please try again.',
+					),
+				)
+			} catch {
+				/* no-op */
 			}
 		},
 	},

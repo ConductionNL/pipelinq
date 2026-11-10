@@ -134,37 +134,53 @@ export default {
 			}
 
 			try {
-				const typeConfig = this.config.client
-				const params = new URLSearchParams({
-					_search: this.query,
-					_limit: '10',
-				})
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema
-						+ '?'
-						+ params.toString(),
-				)
-
-				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-				})
-
-				if (!response.ok) throw new Error('Search failed')
-				const data = await response.json()
-				this.results = data.results || data || []
+				this.results = await this.fetchMatchingClients()
 				this.showDropdown = this.results.length > 0
 			} catch (err) {
 				console.error('ClientAutocomplete search error:', err)
 				this.results = []
 				this.showDropdown = false
 			}
+		},
+
+		/**
+		 * The URL of the first ten clients matching the query.
+		 *
+		 * @return {string} The URL.
+		 */
+		clientSearchUrl() {
+			const typeConfig = this.config.client
+			const params = new URLSearchParams({
+				_search: this.query,
+				_limit: '10',
+			})
+			return generateUrl(
+				'/apps/openregister/api/objects/'
+					+ typeConfig.register
+					+ '/'
+					+ typeConfig.schema
+					+ '?'
+					+ params.toString(),
+			)
+		},
+
+		/**
+		 * The clients matching the query.
+		 *
+		 * @return {Promise<Array<object>>} The matches.
+		 */
+		async fetchMatchingClients() {
+			const response = await fetch(this.clientSearchUrl(), {
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+					'OCS-APIREQUEST': 'true',
+				},
+			})
+
+			if (!response.ok) throw new Error('Search failed')
+			const data = await response.json()
+			return data.results || data || []
 		},
 
 		/**
