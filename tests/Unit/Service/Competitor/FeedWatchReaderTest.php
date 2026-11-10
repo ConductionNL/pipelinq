@@ -29,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @covers \OCA\Pipelinq\Service\Competitor\FeedWatchReader
  * @uses \OCA\Pipelinq\Service\Competitor\WatchOutcome
+ * @uses \OCA\Pipelinq\Service\Competitor\QuietXmlParser
  * @uses \OCA\Pipelinq\Service\Egress\EgressResult
  */
 class FeedWatchReaderTest extends TestCase {
