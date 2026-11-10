@@ -162,10 +162,7 @@ class CostReconciliationService {
 
 				$objectService->saveObject(
 					object: $arr,
-					options: new ObjectSaveOptions(
-						target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()),
-						uuid: $uuid,
-					),
+					options: new ObjectSaveOptions(target: $this->costTarget(), uuid: $uuid),
 				);
 				$reconciled++;
 			} catch (Throwable $e) {
@@ -178,6 +175,17 @@ class CostReconciliationService {
 
 		return ['scanned' => $scanned, 'reconciled' => $reconciled];
 	}//end reconcile()
+
+	/**
+	 * The register and schema cost records are saved in.
+	 *
+	 * @return ObjectFindTarget The configured register and schema.
+	 *
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
+	 */
+	private function costTarget(): ObjectFindTarget {
+		return new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug());
+	}//end costTarget()
 
 	/**
 	 * Resolve OpenRegister ObjectService.

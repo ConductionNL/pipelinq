@@ -226,14 +226,10 @@ class DemoSeedGoldenTest extends TestCase {
 			}
 		);
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
-				$extend = ($options->extend ?? []);
-				$register = $options->target->register;
-				$schema = $options->target->schema;
-				$uuid = $options->uuid;
+			function (array $object, ObjectSaveOptions $o = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
 				$this->recordCall(
 					call: 'saveObject',
-					args: ['object' => $object, 'extend' => $extend, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid]
+					args: ['object' => $object, 'extend' => $o->extend ?? [], 'register' => $o->target->register, 'schema' => $o->target->schema, 'uuid' => $o->uuid]
 				);
 				return self::saved(uuid: 'saved-' . count($this->events));
 			}

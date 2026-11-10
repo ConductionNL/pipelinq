@@ -204,13 +204,7 @@ class LabelRenameGoldenTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function saveObject(array $object, mixed ...$args): array {
-				if (($args['options'] ?? null) instanceof ObjectSaveOptions) {
-					$options = $args['options'];
-					unset($args['options']);
-					$args = ['register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $options->uuid] + $args;
-				}
-
-				LabelRenameGoldenTest::$calls[] = ['saveObject' => $object, 'args' => $args];
+				LabelRenameGoldenTest::$calls[] = ['saveObject' => $object, 'args' => ($args = LabelRenameGoldenTest::flatSaveArgs(args: $args))];
 				$id = (string)($args['uuid'] ?? '');
 				if ($id === 'fail') {
 					throw new RuntimeException('locked');
@@ -253,4 +247,21 @@ class LabelRenameGoldenTest extends TestCase {
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
 		);
 	}//end service()
+
+	/**
+	 * Spread the save options a double received back into the flat register, schema and uuid keys the golden recording holds.
+	 *
+	 * @param array<int|string, mixed> $args The arguments the double received.
+	 *
+	 * @return array<int|string, mixed> The flat arguments.
+	 */
+	public static function flatSaveArgs(array $args): array {
+		$options = ($args['options'] ?? null);
+		if ($options instanceof ObjectSaveOptions === false) {
+			return $args;
+		}
+
+		unset($args['options']);
+		return ['register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $options->uuid] + $args;
+	}//end flatSaveArgs()
 }//end class

@@ -294,6 +294,8 @@ class IngestProductVendorMaster implements IRepairStep {
 				return null;
 			}
 
+			$target = new ObjectFindTarget(register: $registerId, schema: $schemaId);
+
 			// Match on sku first, then barcode.
 			$existing = $this->findProductBySku(
 				objectService: $objectService,
@@ -307,10 +309,7 @@ class IngestProductVendorMaster implements IRepairStep {
 				if (empty($updates) === false) {
 					$objectService->saveObject(
 						object: array_merge($existing, $updates),
-						options: new ObjectSaveOptions(
-							target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
-							uuid: $existing['id'] ?? null,
-						),
+						options: new ObjectSaveOptions(target: $target, uuid: $existing['id'] ?? null),
 					);
 				}
 
@@ -325,10 +324,7 @@ class IngestProductVendorMaster implements IRepairStep {
 
 			// Create: map shillinq fields onto the extended product schema.
 			$newProduct = $this->mapShillinqProductToSchema(shillinqProduct: $shillinqProduct);
-			$created = $objectService->saveObject(
-				object: $newProduct,
-				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId)),
-			);
+			$created = $objectService->saveObject(object: $newProduct, options: new ObjectSaveOptions(target: $target));
 			$createdArr = (array)$created;
 			if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
 				$createdArr = $created->jsonSerialize();
@@ -339,13 +335,7 @@ class IngestProductVendorMaster implements IRepairStep {
 			// Ensure productId == object UUID (REQ-PVM-002).
 			if (isset($createdArr['id']) === true && ($createdArr['productId'] ?? null) !== $createdArr['id']) {
 				$createdArr['productId'] = $createdArr['id'];
-				$objectService->saveObject(
-					object: $createdArr,
-					options: new ObjectSaveOptions(
-						target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
-						uuid: $createdArr['id'],
-					),
-				);
+				$objectService->saveObject(object: $createdArr, options: new ObjectSaveOptions(target: $target, uuid: $createdArr['id']));
 				$productId = $createdArr['id'];
 			}
 
