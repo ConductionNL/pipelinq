@@ -138,6 +138,8 @@ class PaymentAdapterGoldenTest extends TestCase {
 		$cases['capture, odd status'] = ['op' => 'capture', 'args' => ['pay 1/2'], 'reply' => ['status' => 200, 'body' => ['status' => 'weird'], 'raw' => '']];
 		$cases['refund, no session'] = ['op' => 'refund', 'args' => ['', 'x'], 'reply' => $ok];
 		$cases['refund, no reason'] = ['op' => 'refund', 'args' => ['pay 1/2', ''], 'reply' => $ok];
+		$cases['testConnection, HTTP 401'] = ['op' => 'testConnection', 'args' => [], 'reply' => ['status' => 401, 'body' => [], 'raw' => '']];
+		$cases['testConnection, HTTP 403'] = ['op' => 'testConnection', 'args' => [], 'reply' => ['status' => 403, 'body' => [], 'raw' => '']];
 		$cases['testConnection, only api key'] = ['op' => 'testConnection', 'args' => [], 'credentials' => ['apiKey' => 'key-only'], 'reply' => $ok];
 		return $cases;
 	}//end cases()

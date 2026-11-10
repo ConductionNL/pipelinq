@@ -659,6 +659,40 @@
         },
         "warnings": []
     },
+    "mollie: testConnection, HTTP 401": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/methods",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Mollie gaf HTTP 401 terug — controleer de API key"
+        },
+        "warnings": []
+    },
+    "mollie: testConnection, HTTP 403": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/methods",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Mollie gaf HTTP 403 terug — controleer de API key"
+        },
+        "warnings": []
+    },
     "mollie: testConnection, only api key": {
         "requests": [
             {
@@ -1340,6 +1374,42 @@
         },
         "warnings": []
     },
+    "adyen: testConnection, HTTP 401": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/paymentMethods",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"countryCode\":\"NL\",\"amount\":{\"value\":100,\"currency\":\"EUR\"}}"
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Adyen gaf HTTP 401 terug"
+        },
+        "warnings": []
+    },
+    "adyen: testConnection, HTTP 403": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/paymentMethods",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"countryCode\":\"NL\",\"amount\":{\"value\":100,\"currency\":\"EUR\"}}"
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Adyen gaf HTTP 403 terug"
+        },
+        "warnings": []
+    },
     "adyen: testConnection, only api key": {
         "requests": [
             {
@@ -2006,6 +2076,40 @@
             "refundId": "REF-1",
             "status": "refunded",
             "error": null
+        },
+        "warnings": []
+    },
+    "ccv: testConnection, HTTP 401": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/terminals",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Fout: Invalid API credentials. Controleer uw API key."
+        },
+        "warnings": []
+    },
+    "ccv: testConnection, HTTP 403": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/terminals",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Fout: Invalid API credentials. Controleer uw API key."
         },
         "warnings": []
     },
@@ -2690,6 +2794,40 @@
             "refundId": "pay_1",
             "status": "refunded",
             "error": null
+        },
+        "warnings": []
+    },
+    "stripe: testConnection, HTTP 401": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.stripe.com/v1/balance",
+                "headers": {
+                    "Authorization": "Bearer secret-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Stripe gaf HTTP 401 terug"
+        },
+        "warnings": []
+    },
+    "stripe: testConnection, HTTP 403": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.stripe.com/v1/balance",
+                "headers": {
+                    "Authorization": "Bearer secret-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Stripe gaf HTTP 403 terug"
         },
         "warnings": []
     },
