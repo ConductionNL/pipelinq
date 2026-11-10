@@ -191,39 +191,77 @@ class MailingListService {
 			return ['error' => 'Not found'];
 		}
 
-		$merged = $existing;
+		return $this->validatedSave(
+			list: $this->patched(list: $existing, patch: $patch),
+			id: $this->extractObjectId(payload: $existing)
+		);
+	}//end updateMailingList()
+
+	/**
+	 * The list with the patch's set fields: the six text fields trimmed, the
+	 * signup flag cast, the opt-in mode and status normalised.
+	 *
+	 * @param array<string, mixed> $list  The stored list.
+	 * @param array<string, mixed> $patch The patch.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function patched(array $list, array $patch): array {
 		foreach (['name', 'description', 'senderName', 'senderEmail', 'replyTo', 'footerAddress'] as $key) {
 			if (isset($patch[$key]) === true) {
-				$merged[$key] = trim((string)$patch[$key]);
+				$list[$key] = trim((string)$patch[$key]);
 			}
 		}
 
+		return $this->withSettings(list: $list, patch: $patch);
+	}//end patched()
+
+	/**
+	 * The list with the patch's signup flag, opt-in mode and status, each when set.
+	 *
+	 * @param array<string, mixed> $list  The list so far.
+	 * @param array<string, mixed> $patch The patch.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withSettings(array $list, array $patch): array {
 		if (isset($patch['publicSignup']) === true) {
-			$merged['publicSignup'] = (bool)$patch['publicSignup'];
+			$list['publicSignup'] = (bool)$patch['publicSignup'];
 		}
 
 		if (isset($patch['optInMode']) === true) {
-			$merged['optInMode'] = $this->normaliseOptInMode(value: $patch['optInMode']);
+			$list['optInMode'] = $this->normaliseOptInMode(value: $patch['optInMode']);
 		}
 
 		if (isset($patch['status']) === true) {
-			$merged['status'] = $this->normaliseStatus(value: $patch['status']);
+			$list['status'] = $this->normaliseStatus(value: $patch['status']);
 		}
 
-		$error = $this->validatePayload(payload: $merged);
+		return $list;
+	}//end withSettings()
+
+	/**
+	 * Validate the merged list, stamp it and save it under its id.
+	 *
+	 * @param array<string, mixed> $list The merged list.
+	 * @param string               $id   The stored list's id.
+	 *
+	 * @return array{list?: array<string, mixed>, error?: string}
+	 */
+	private function validatedSave(array $list, string $id): array {
+		$error = $this->validatePayload(payload: $list);
 		if ($error !== null) {
 			return ['error' => $error];
 		}
 
-		$merged['updatedAt'] = $this->nowIso();
-
-		$saved = $this->save(payload: $merged, id: $this->extractObjectId(payload: $existing));
+		$list['updatedAt'] = $this->nowIso();
+		$saved = $this->save(payload: $list, id: $id);
 		if ($saved === null) {
 			return ['error' => 'The mailing list could not be saved'];
 		}
 
 		return ['list' => $saved];
-	}//end updateMailingList()
+	}//end validatedSave()
 
 	/**
 	 * Whether a list currently accepts public signup.
