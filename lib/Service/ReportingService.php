@@ -588,16 +588,16 @@ class ReportingService {
 			return $row;
 		}
 
-		if (($row instanceof \JsonSerializable) === false) {
-			return null;
+		$data = null;
+		if ($row instanceof \JsonSerializable) {
+			$data = $row->jsonSerialize();
 		}
 
-		$data = $row->jsonSerialize();
-		if (is_array($data) === false) {
-			return null;
+		if (is_array($data) === true) {
+			return $data;
 		}
 
-		return $data;
+		return null;
 	}//end ticketData()
 
 	/**
