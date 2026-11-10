@@ -35,6 +35,8 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Controller\BookingAdminController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -319,8 +321,8 @@ class BookingAdminControllerTest extends TestCase {
 				int|string $id,
 				?array $_extend = [],
 				bool $files = false,
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				Register|string|int|null $register = null,
+				Schema|string|int|null $schema = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 				bool $_render = true,
@@ -462,10 +464,10 @@ class BookingAdminControllerTest extends TestCase {
 			 * @return ObjectEntityInterface The saved row, wrapped as an entity.
 			 */
 			public function saveObject(
-				array $object,
+				array|ObjectEntity $object,
 				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				Register|string|int|null $register = null,
+				Schema|string|int|null $schema = null,
 				?string $uuid = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
@@ -474,6 +476,9 @@ class BookingAdminControllerTest extends TestCase {
 				?array $uploadedFiles = null,
 				?IUser $currentUser = null,
 				bool $failIfExists = false,
+				bool $_unowned = false,
+				bool $_dedupOverride = false,
+				?string $_owner = null,
 			): ObjectEntityInterface {
 				$key = ($uuid ?? ('new-' . (count($this->store) + 1)));
 				$object['id'] = $key;
