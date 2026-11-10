@@ -68,16 +68,9 @@
 import { CnDetailCard, openRowTarget } from '@conduction/nextcloud-vue'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { BOOKING_STATUS_LABELS, bookingDateTime } from './bookingFormat.js'
 
-const STATUS_LABELS = {
-	'pending-deposit': 'Awaiting deposit',
-	confirmed: 'Confirmed',
-	completed: 'Completed',
-	'no-show': 'No-show',
-	'cancelled-by-customer': 'Cancelled (customer)',
-	'cancelled-by-business': 'Cancelled (business)',
-	rescheduled: 'Rescheduled',
-}
+const STATUS_LABELS = BOOKING_STATUS_LABELS
 
 export default {
 	name: 'BookingsCard',
@@ -253,12 +246,7 @@ export default {
 		},
 
 		formatDateTime(iso) {
-			if (!iso) return '-'
-			try {
-				return new Date(iso).toLocaleString('nl-NL')
-			} catch {
-				return iso
-			}
+			return bookingDateTime(iso)
 		},
 	},
 }
@@ -273,32 +261,6 @@ export default {
 
 .bookings-card__state--error {
 	color: var(--color-error);
-}
-
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
 }
 
 .viewTableRow {
@@ -353,3 +315,5 @@ export default {
 	}
 }
 </style>
+
+<style scoped src="./bookingTable.css"></style>
