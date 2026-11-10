@@ -415,6 +415,37 @@ class SocialPostServiceTest extends TestCase {
 	}
 
 	/**
+	 * Only a post waiting for approval can be decided on: a draft or a
+	 * scheduled post is refused unchanged, a missing post is not found, and
+	 * an earlier approval list is kept and appended to.
+	 *
+	 * @return void
+	 */
+	public function testOnlyAPostWaitingForApprovalCanBeDecided(): void {
+		foreach ([SocialPostService::STATUS_DRAFT, SocialPostService::STATUS_SCHEDULED] as $status) {
+			$postId = $this->seedPost(['accountIds' => ['acc-m'], 'status' => $status]);
+
+			$this->assertSame(['error' => 'This post is not waiting for approval.'], $this->service()->approve(postId: $postId, uid: 'marieke'));
+			$this->assertSame(['error' => 'This post is not waiting for approval.'], $this->service()->reject(postId: $postId, uid: 'marieke'));
+			$this->assertSame($status, $this->store->find(SocialPostService::SCHEMA, $postId)['status']);
+			$this->assertSame([], ($this->store->find(SocialPostService::SCHEMA, $postId)['approvals'] ?? []));
+		}
+
+		$this->assertSame(['error' => 'That post does not exist.'], $this->service()->approve(postId: 'no-such-post', uid: 'marieke'));
+
+		$postId = $this->seedPost([
+			'accountIds' => ['acc-m'],
+			'status' => SocialPostService::STATUS_APPROVAL,
+			'approvals' => [['userId' => 'ruben', 'decision' => 'rejected']],
+		]);
+		$result = $this->service()->approve(postId: $postId, uid: 'marieke', note: 'Nu wel');
+		$this->assertCount(2, $result['post']['approvals']);
+		$this->assertSame('ruben', $result['post']['approvals'][0]['userId']);
+		$this->assertSame('Nu wel', $result['post']['approvals'][1]['note']);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/', $result['post']['approvals'][1]['decidedAt']);
+	}
+
+	/**
 	 * An unapproved post is never published, whatever its schedule says.
 	 *
 	 * @return void
