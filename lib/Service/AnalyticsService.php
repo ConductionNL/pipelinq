@@ -692,17 +692,15 @@ class AnalyticsService {
 			throw new InvalidArgumentException(message: 'Invalid period');
 		}
 
-		$days = self::PERIOD_DAYS[$period];
-		$now = new DateTimeImmutable();
-
-		$currentStart = $now->modify(sprintf('-%d days', $days));
-		$previousStart = $currentStart->modify(sprintf('-%d days', $days));
+		$windows = $this->overviewWindows(period: $period);
 
 		$leads = $this->findObjects(schemaKey: 'lead_schema');
 		$pos = $this->findObjects(schemaKey: 'posTransaction_schema');
 
-		$current = $this->aggregateCommercialWindow(from: $currentStart, to: $now, leads: $leads, pos: $pos);
-		$previous = $this->aggregateCommercialWindow(from: $previousStart, to: $currentStart, leads: $leads, pos: $pos);
+		$records = new CommercialRecords(leads: $leads, pos: $pos);
+
+		$current = $this->aggregateCommercialWindow(window: $windows['current'], records: $records);
+		$previous = $this->aggregateCommercialWindow(window: $windows['previous'], records: $records);
 
 		$forecast = $this->aggregateOpenPipeline(leads: $this->leadsMatching(leads: $leads, filter: $leadFilter));
 		$cover = $this->pipelineCover(openValue: $forecast['openPipelineValue'], wonValue: $current['wonValue']);
@@ -727,84 +725,157 @@ class AnalyticsService {
 	}//end getCommercialOverview()
 
 	/**
+	 * The current trailing window of a period, ending now, and the window of
+	 * the same length before it; each upper bound is exclusive.
+	 *
+	 * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+	 *
+	 * @return array{current: ReportingWindow, previous: ReportingWindow} The two windows.
+	 */
+	private function overviewWindows(string $period): array {
+		$days = self::PERIOD_DAYS[$period];
+		$now = new DateTimeImmutable();
+
+		$currentStart = $now->modify(sprintf('-%d days', $days));
+		$previousStart = $currentStart->modify(sprintf('-%d days', $days));
+
+		return [
+			'current' => new ReportingWindow(startTs: $currentStart->getTimestamp(), lastTs: ($now->getTimestamp() - 1)),
+			'previous' => new ReportingWindow(startTs: $previousStart->getTimestamp(), lastTs: ($currentStart->getTimestamp() - 1)),
+		];
+	}//end overviewWindows()
+
+	/**
 	 * Aggregate the windowed commercial figures for one time window.
 	 *
-	 * @param DateTimeInterface $from Inclusive lower bound.
-	 * @param DateTimeInterface $to Exclusive upper bound.
-	 * @param array<int, array<string, mixed>> $leads Lead rows.
-	 * @param array<int, array<string, mixed>> $pos POS transaction rows.
+	 * @param ReportingWindow   $window  The window, upper bound exclusive.
+	 * @param CommercialRecords $records The lead and POS transaction rows.
 	 *
 	 * @return array{revenue: float, wonValue: float, winRate: float|null, avgDealSize: float|null, wonCount: int, lostCount: int}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential POS + lead window filters; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Independent guard clauses inflate NPath without real branching depth.
 	 */
-	private function aggregateCommercialWindow(
-		DateTimeInterface $from,
-		DateTimeInterface $to,
-		array $leads,
-		array $pos,
-	): array {
-		$fromTs = $from->getTimestamp();
-		$toTs = $to->getTimestamp();
-
-		$posRevenue = 0.0;
-		foreach ($pos as $txn) {
-			$timestamp = $this->posRevenueTimestamp(txn: $txn);
-			if ($this->isRevenueTransaction(txn: $txn) === false || $timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
-				continue;
-			}
-
-			$posRevenue += (float)($txn['total'] ?? 0);
-		}
-
-		$wonValue = 0.0;
-		$wonCount = 0;
-		$lostCount = 0;
-		foreach ($leads as $lead) {
-			$status = (string)($lead['status'] ?? '');
-			if ($status !== 'won' && $status !== 'lost') {
-				continue;
-			}
-
-			$timestamp = $this->leadCloseTimestamp(lead: $lead);
-			if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
-				continue;
-			}
-
-			if ($status === 'won') {
-				$wonValue += (float)($lead['value'] ?? 0);
-				$wonCount++;
-				continue;
-			}
-
-			$lostCount++;
-		}
-
-		$closed = ($wonCount + $lostCount);
-
-		$winRate = null;
-		if ($closed > 0) {
-			$winRate = round(($wonCount * 100.0) / $closed, 1);
-		}
-
-		$avgDealSize = null;
-		if ($wonCount > 0) {
-			$avgDealSize = round($wonValue / $wonCount, 2);
-		}
+	private function aggregateCommercialWindow(ReportingWindow $window, CommercialRecords $records): array {
+		$posRevenue = $this->posRevenueTotal(pos: $this->revenueTransactionsWithin(pos: $records->pos, window: $window));
+		$closed = $this->closedDealsWithin(leads: $records->leads, window: $window);
 
 		return [
-			'revenue' => round(($posRevenue + $wonValue), 2),
-			'wonValue' => round($wonValue, 2),
-			'winRate' => $winRate,
-			'avgDealSize' => $avgDealSize,
-			'wonCount' => $wonCount,
-			'lostCount' => $lostCount,
+			'revenue' => round(($posRevenue + $closed['wonValue']), 2),
+			'wonValue' => round($closed['wonValue'], 2),
+			'winRate' => $this->winRate(closed: $closed),
+			'avgDealSize' => $this->avgDealSize(closed: $closed),
+			'wonCount' => $closed['wonCount'],
+			'lostCount' => $closed['lostCount'],
 		];
 	}//end aggregateCommercialWindow()
+
+	/**
+	 * The POS transactions that realised revenue inside a window.
+	 *
+	 * @param array<int, array<string, mixed>> $pos    POS transaction rows.
+	 * @param ReportingWindow                  $window The window.
+	 *
+	 * @return array<int, array<string, mixed>> The revenue transactions inside the window.
+	 */
+	private function revenueTransactionsWithin(array $pos, ReportingWindow $window): array {
+		$within = [];
+		foreach ($pos as $txn) {
+			if ($this->isRevenueTransaction(txn: $txn) === true && $window->contains(timestamp: $this->posRevenueTimestamp(txn: $txn)) === true) {
+				$within[] = $txn;
+			}
+		}
+
+		return $within;
+	}//end revenueTransactionsWithin()
+
+	/**
+	 * The summed total of POS transactions.
+	 *
+	 * @param array<int, array<string, mixed>> $pos POS transaction rows.
+	 *
+	 * @return float The total.
+	 */
+	private function posRevenueTotal(array $pos): float {
+		$total = 0.0;
+		foreach ($pos as $txn) {
+			$total += (float)($txn['total'] ?? 0);
+		}
+
+		return $total;
+	}//end posRevenueTotal()
+
+	/**
+	 * The won value and the won and lost counts of the deals closed inside a window.
+	 *
+	 * @param array<int, array<string, mixed>> $leads  Lead rows.
+	 * @param ReportingWindow                  $window The window.
+	 *
+	 * @return array{wonValue: float, wonCount: int, lostCount: int}
+	 */
+	private function closedDealsWithin(array $leads, ReportingWindow $window): array {
+		$closed = ['wonValue' => 0.0, 'wonCount' => 0, 'lostCount' => 0];
+		foreach ($leads as $lead) {
+			$status = (string)($lead['status'] ?? '');
+			if (in_array($status, ['won', 'lost'], true) === false || $window->contains(timestamp: $this->leadCloseTimestamp(lead: $lead)) === false) {
+				continue;
+			}
+
+			$closed = $this->withClosedDeal(closed: $closed, lead: $lead);
+		}
+
+		return $closed;
+	}//end closedDealsWithin()
+
+	/**
+	 * Count one closed lead into the won value and the won or lost count.
+	 *
+	 * @param array{wonValue: float, wonCount: int, lostCount: int} $closed The tally so far.
+	 * @param array<string, mixed>                                  $lead   A won or lost lead row.
+	 *
+	 * @return array{wonValue: float, wonCount: int, lostCount: int} The tally with the lead counted.
+	 */
+	private function withClosedDeal(array $closed, array $lead): array {
+		if ((string)($lead['status'] ?? '') === 'won') {
+			$closed['wonValue'] += (float)($lead['value'] ?? 0);
+			$closed['wonCount']++;
+			return $closed;
+		}
+
+		$closed['lostCount']++;
+		return $closed;
+	}//end withClosedDeal()
+
+	/**
+	 * The share of closed deals that was won, as a percentage.
+	 *
+	 * @param array{wonValue: float, wonCount: int, lostCount: int} $closed The closed deals.
+	 *
+	 * @return float|null The win rate, null when no deal closed.
+	 */
+	private function winRate(array $closed): ?float {
+		$closedCount = ($closed['wonCount'] + $closed['lostCount']);
+		if ($closedCount === 0) {
+			return null;
+		}
+
+		return round(($closed['wonCount'] * 100.0) / $closedCount, 1);
+	}//end winRate()
+
+	/**
+	 * The average value of a won deal.
+	 *
+	 * @param array{wonValue: float, wonCount: int, lostCount: int} $closed The closed deals.
+	 *
+	 * @return float|null The average, null when no deal was won.
+	 */
+	private function avgDealSize(array $closed): ?float {
+		if ($closed['wonCount'] === 0) {
+			return null;
+		}
+
+		return round($closed['wonValue'] / $closed['wonCount'], 2);
+	}//end avgDealSize()
 
 	/**
 	 * Forward-looking open-pipeline figures (current state, not windowed).
@@ -1069,63 +1140,117 @@ class AnalyticsService {
 	 * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential filter/index/group loops; extraction adds no clarity.
 	 */
 	private function buildRevenueByCategorySeries(string $period): array {
-		$days = self::PERIOD_DAYS[$period];
-		$now = new DateTimeImmutable();
-		$startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
-		$nowTs = $now->getTimestamp();
+		$window = $this->trailingWindow(period: $period);
 
 		$pos = $this->findObjects(schemaKey: 'posTransaction_schema');
 		$lines = $this->findObjects(schemaKey: 'posTransactionLine_schema');
 		$products = $this->findObjects(schemaKey: 'product_schema');
 		$categories = $this->findObjects(schemaKey: 'productCategory_schema');
 
-		$eligibleTxn = [];
-		foreach ($pos as $txn) {
-			$timestamp = $this->posRevenueTimestamp(txn: $txn);
-			if ($this->isRevenueTransaction(txn: $txn) === false || $timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
-				continue;
-			}
+		$eligibleTxn = $this->transactionIdSet(pos: $this->revenueTransactionsWithin(pos: $pos, window: $window));
+		$categoryNames = new ProductCategoryNames(
+			categoryByProduct: $this->productCategoryIndex(products: $products),
+			categoryNames: $this->categoryNameIndex(categories: $categories),
+		);
+		$byCategory = $this->lineRevenueByCategory(
+			lines: $this->linesOfTransactions(lines: $lines, transactionIds: $eligibleTxn),
+			categories: $categoryNames,
+		);
 
+		return ['metric' => 'revenue-by-product-category', 'period' => $period, 'series' => $this->descendingSeries(totals: $byCategory)];
+	}//end buildRevenueByCategorySeries()
+
+	/**
+	 * The trailing window of a period, ending now, both bounds inclusive.
+	 *
+	 * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+	 *
+	 * @return ReportingWindow The window.
+	 */
+	private function trailingWindow(string $period): ReportingWindow {
+		$days = self::PERIOD_DAYS[$period];
+		$now = new DateTimeImmutable();
+
+		$startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
+
+		return new ReportingWindow(startTs: $startTs, lastTs: $now->getTimestamp());
+	}//end trailingWindow()
+
+	/**
+	 * The ids of POS transactions, as a set.
+	 *
+	 * @param array<int, array<string, mixed>> $pos POS transaction rows.
+	 *
+	 * @return array<string, true> Transaction id => true; rows without an id are left out.
+	 */
+	private function transactionIdSet(array $pos): array {
+		$ids = [];
+		foreach ($pos as $txn) {
 			$id = $this->objectId(row: $txn);
 			if ($id !== '') {
-				$eligibleTxn[$id] = true;
+				$ids[$id] = true;
 			}
 		}
 
-		$categoryByProduct = $this->productCategoryIndex(products: $products);
-		// Product.category is a UUID reference to a productCategory; resolve
-		// it to the display name. Legacy free-text categories (no matching
-		// productCategory row) fall through to their own value.
-		$categoryNames = $this->categoryNameIndex(categories: $categories);
+		return $ids;
+	}//end transactionIdSet()
 
-		$byCategory = [];
+	/**
+	 * The POS lines that belong to one of the given transactions.
+	 *
+	 * @param array<int, array<string, mixed>> $lines          POS line rows.
+	 * @param array<string, true>              $transactionIds Transaction id set.
+	 *
+	 * @return array<int, array<string, mixed>> The matching lines.
+	 */
+	private function linesOfTransactions(array $lines, array $transactionIds): array {
+		$matching = [];
 		foreach ($lines as $line) {
 			$txnId = (string)($line['transaction'] ?? '');
-			if ($txnId === '' || isset($eligibleTxn[$txnId]) === false) {
-				continue;
+			if ($txnId !== '' && isset($transactionIds[$txnId]) === true) {
+				$matching[] = $line;
 			}
+		}
 
-			$categoryRef = ($categoryByProduct[(string)($line['product'] ?? '')] ?? '');
-			$category = ($categoryNames[$categoryRef] ?? $categoryRef);
-			if ($category === '') {
-				$category = 'Other';
-			}
+		return $matching;
+	}//end linesOfTransactions()
 
+	/**
+	 * POS line totals summed per product category.
+	 *
+	 * @param array<int, array<string, mixed>> $lines      POS line rows.
+	 * @param ProductCategoryNames             $categories The category of each product.
+	 *
+	 * @return array<string, float> Category name => summed line total.
+	 */
+	private function lineRevenueByCategory(array $lines, ProductCategoryNames $categories): array {
+		$byCategory = [];
+		foreach ($lines as $line) {
+			$category = $categories->nameOf(productId: (string)($line['product'] ?? ''));
 			$byCategory[$category] = (($byCategory[$category] ?? 0.0) + (float)($line['lineTotal'] ?? 0));
 		}
 
-		arsort($byCategory);
+		return $byCategory;
+	}//end lineRevenueByCategory()
+
+	/**
+	 * A label => value series, highest value first, values rounded to cents.
+	 *
+	 * @param array<string, float> $totals Label => value.
+	 *
+	 * @return array<int, array{date: string, value: float}> The series.
+	 */
+	private function descendingSeries(array $totals): array {
+		arsort($totals);
 		$series = [];
-		foreach ($byCategory as $category => $value) {
-			$series[] = ['date' => (string)$category, 'value' => round((float)$value, 2)];
+		foreach ($totals as $label => $value) {
+			$series[] = ['date' => (string)$label, 'value' => round((float)$value, 2)];
 		}
 
-		return ['metric' => 'revenue-by-product-category', 'period' => $period, 'series' => $series];
-	}//end buildRevenueByCategorySeries()
+		return $series;
+	}//end descendingSeries()
 
 	/**
 	 * Won-deal + POS revenue grouped by client, top N by value.
@@ -1135,47 +1260,78 @@ class AnalyticsService {
 	 * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential lead + POS grouping loops; extraction adds no clarity.
 	 */
 	private function buildTopCustomersSeries(string $period): array {
-		$days = self::PERIOD_DAYS[$period];
-		$now = new DateTimeImmutable();
-		$startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
-		$nowTs = $now->getTimestamp();
+		$window = $this->trailingWindow(period: $period);
 
 		$leads = $this->findObjects(schemaKey: 'lead_schema');
 		$pos = $this->findObjects(schemaKey: 'posTransaction_schema');
 		$clients = $this->findObjects(schemaKey: 'client_schema');
 
 		$nameByClient = $this->clientNameIndex(clients: $clients);
+		$byClient = $this->revenueByClient(
+			wonLeads: $this->wonLeadsWithin(leads: $leads, window: $window),
+			revenuePos: $this->revenueTransactionsWithin(pos: $pos, window: $window),
+		);
 
-		$byClient = [];
+		return ['metric' => 'top-customers', 'period' => $period, 'series' => $this->topCustomerSeries(byClient: $byClient, nameByClient: $nameByClient)];
+	}//end buildTopCustomersSeries()
+
+	/**
+	 * The won leads that closed inside a window.
+	 *
+	 * @param array<int, array<string, mixed>> $leads  Lead rows.
+	 * @param ReportingWindow                  $window The window.
+	 *
+	 * @return array<int, array<string, mixed>> The won leads inside the window.
+	 */
+	private function wonLeadsWithin(array $leads, ReportingWindow $window): array {
+		$within = [];
 		foreach ($leads as $lead) {
-			$timestamp = $this->leadCloseTimestamp(lead: $lead);
-			if (((string)($lead['status'] ?? '')) !== 'won' || $timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
-				continue;
+			if (((string)($lead['status'] ?? '')) === 'won' && $window->contains(timestamp: $this->leadCloseTimestamp(lead: $lead)) === true) {
+				$within[] = $lead;
 			}
+		}
 
+		return $within;
+	}//end wonLeadsWithin()
+
+	/**
+	 * Won-deal value, then POS revenue, summed per client.
+	 *
+	 * @param array<int, array<string, mixed>> $wonLeads   Won lead rows.
+	 * @param array<int, array<string, mixed>> $revenuePos Revenue POS transaction rows.
+	 *
+	 * @return array<string, float> Client id => revenue; '' collects rows without a client.
+	 */
+	private function revenueByClient(array $wonLeads, array $revenuePos): array {
+		$byClient = [];
+		foreach ($wonLeads as $lead) {
 			$client = (string)($lead['client'] ?? '');
 			$byClient[$client] = (($byClient[$client] ?? 0.0) + (float)($lead['value'] ?? 0));
 		}
 
-		foreach ($pos as $txn) {
-			$timestamp = $this->posRevenueTimestamp(txn: $txn);
-			if ($this->isRevenueTransaction(txn: $txn) === false || $timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
-				continue;
-			}
-
+		foreach ($revenuePos as $txn) {
 			$client = (string)($txn['client'] ?? ($txn['customer'] ?? ''));
 			$byClient[$client] = (($byClient[$client] ?? 0.0) + (float)($txn['total'] ?? 0));
 		}
 
+		return $byClient;
+	}//end revenueByClient()
+
+	/**
+	 * The top customers by revenue, named, rows without a client left out.
+	 *
+	 * @param array<string, float>  $byClient     Client id => revenue.
+	 * @param array<string, string> $nameByClient Client id => display name.
+	 *
+	 * @return array<int, array{date: string, value: float}> At most TOP_CUSTOMERS_LIMIT entries.
+	 */
+	private function topCustomerSeries(array $byClient, array $nameByClient): array {
 		arsort($byClient);
 		$series = [];
-		$count = 0;
 		foreach ($byClient as $client => $value) {
-			if ($count >= self::TOP_CUSTOMERS_LIMIT) {
+			if (count($series) >= self::TOP_CUSTOMERS_LIMIT) {
 				break;
 			}
 
@@ -1184,11 +1340,10 @@ class AnalyticsService {
 			}
 
 			$series[] = ['date' => ($nameByClient[(string)$client] ?? (string)$client), 'value' => round((float)$value, 2)];
-			$count++;
 		}
 
-		return ['metric' => 'top-customers', 'period' => $period, 'series' => $series];
-	}//end buildTopCustomersSeries()
+		return $series;
+	}//end topCustomerSeries()
 
 	/**
 	 * Whether a POS transaction counts as realised revenue.
