@@ -50,6 +50,8 @@ namespace OCA\OpenRegister\Service;
 use LogicException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\LockRequest;
+use OCA\OpenRegister\Service\Object\UnlockRequest;
 use OCP\IUser;
 
 if (class_exists(ObjectService::class) === false) {
@@ -458,31 +460,23 @@ if (class_exists(ObjectService::class) === false) {
 		/**
 		 * Release a lock on an object.
 		 *
-		 * @param string|int $identifier The object identifier.
-		 * @param boolean    $advisory   Whether the lock is advisory.
+		 * @param UnlockRequest $request The object, advisory flag, run and break flag.
 		 *
 		 * @return boolean
 		 */
-		public function unlockObject(string|int $identifier, bool $advisory = false): bool {
+		public function unlockObject(UnlockRequest $request): bool {
 			return true;
 		}//end unlockObject()
 
 		/**
 		 * Take a lock on an object.
 		 *
-		 * @param string       $identifier The object identifier.
-		 * @param string|null  $process    The process taking the lock.
-		 * @param integer|null $duration   Lock duration in seconds.
-		 * @param boolean      $advisory   Whether the lock is advisory.
+		 * @param LockRequest $request  The object, process, duration and run step.
+		 * @param boolean     $advisory Whether the lock is advisory.
 		 *
 		 * @return array<string, mixed>
 		 */
-		public function lockObject(
-			string $identifier,
-			?string $process = null,
-			?int $duration = null,
-			bool $advisory = false,
-		): array {
+		public function lockObject(LockRequest $request, bool $advisory = false): array {
 			return [];
 		}//end lockObject()
 
