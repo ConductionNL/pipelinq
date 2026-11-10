@@ -33,6 +33,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\WebhookService;
@@ -143,10 +145,10 @@ class BookkeepingFakeObjectService extends ObjectService {
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
 	public function saveObject(
-		array $object,
+		array|ObjectEntity $object,
 		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
@@ -155,6 +157,9 @@ class BookkeepingFakeObjectService extends ObjectService {
 		?array $uploadedFiles = null,
 		?IUser $currentUser = null,
 		bool $failIfExists = false,
+		bool $_unowned = false,
+		bool $_dedupOverride = false,
+		?string $_owner = null,
 	): ObjectEntityInterface {
 		$schemaKey = (string)$schema;
 		$key = (string)$uuid;

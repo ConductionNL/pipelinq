@@ -50,6 +50,9 @@ namespace OCA\OpenRegister\Service;
 use LogicException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IUser;
 
@@ -100,14 +103,17 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<string, mixed>|null  $uploadedFiles  Files to attach.
 		 * @param IUser|null                 $currentUser    Acting user for folder access.
 		 * @param boolean                    $failIfExists   Whether a duplicate is an error.
+		 * @param boolean                    $_unowned       Whether to store the object without an owner.
+		 * @param boolean                    $_dedupOverride Whether to bypass duplicate detection.
+		 * @param string|null                $_owner         Explicit owner user id.
 		 *
 		 * @return ObjectEntityInterface
 		 */
 		public function saveObject(
-			array $object,
+			array|ObjectEntity $object,
 			?array $extend = [],
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			Register|string|int|null $register = null,
+			Schema|string|int|null $schema = null,
 			?string $uuid = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
@@ -116,6 +122,9 @@ if (class_exists(ObjectService::class) === false) {
 			?array $uploadedFiles = null,
 			?IUser $currentUser = null,
 			bool $failIfExists = false,
+			bool $_unowned = false,
+			bool $_dedupOverride = false,
+			?string $_owner = null,
 		): ObjectEntityInterface {
 			throw new LogicException(self::NOT_CONFIGURED);
 		}//end saveObject()
@@ -187,6 +196,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<int, mixed>|null  $ids           Restrict to these ids.
 		 * @param string|null             $uses          Restrict to objects using this one.
 		 * @param array<int, mixed>|null  $views         Views to apply.
+		 * @param boolean                 $_viewScopeRequired Whether a view scope is required.
 		 *
 		 * @return array<int, mixed>|int
 		 */
@@ -197,6 +207,7 @@ if (class_exists(ObjectService::class) === false) {
 			?array $ids = null,
 			?string $uses = null,
 			?array $views = null,
+			bool $_viewScopeRequired = false,
 		): array|int {
 			return [];
 		}//end searchObjects()
@@ -217,8 +228,8 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function deleteObject(
 			string $uuid,
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			Register|string|int|null $register = null,
+			Schema|string|int|null $schema = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
 			bool $_retentionSweep = false,
@@ -450,11 +461,12 @@ if (class_exists(ObjectService::class) === false) {
 		 * Release a lock on an object.
 		 *
 		 * @param string|int $identifier The object identifier.
-		 * @param boolean    $advisory   Whether the lock is advisory.
+		 * @param boolean     $advisory   Whether the lock is advisory.
+		 * @param string|null $runUuid    The flow run releasing a run-scoped lock.
 		 *
 		 * @return boolean
 		 */
-		public function unlockObject(string|int $identifier, bool $advisory = false): bool {
+		public function unlockObject(string|int $identifier, bool $advisory = false, ?string $runUuid = null): bool {
 			return true;
 		}//end unlockObject()
 
@@ -465,6 +477,8 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param string|null  $process    The process taking the lock.
 		 * @param integer|null $duration   Lock duration in seconds.
 		 * @param boolean      $advisory   Whether the lock is advisory.
+		 * @param string|null  $runUuid    The flow run taking a run-scoped lock.
+		 * @param string|null  $nodeId     The flow node that took it.
 		 *
 		 * @return array<string, mixed>
 		 */
@@ -473,6 +487,8 @@ if (class_exists(ObjectService::class) === false) {
 			?string $process = null,
 			?int $duration = null,
 			bool $advisory = false,
+			?string $runUuid = null,
+			?string $nodeId = null,
 		): array {
 			return [];
 		}//end lockObject()

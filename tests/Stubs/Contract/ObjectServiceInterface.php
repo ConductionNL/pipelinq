@@ -441,7 +441,7 @@ interface ObjectServiceInterface {
 	 *
 	 * @return bool True when the lock was released.
 	 */
-	public function unlockObject(string|int $identifier, bool $advisory=false): bool;
+	public function unlockObject(string|int $identifier, bool $advisory=false, ?string $runUuid=null): bool;
 
 	/**
 	 * Take a lock on an object.
@@ -457,7 +457,9 @@ interface ObjectServiceInterface {
 		string $identifier,
 		?string $process=null,
 		?int $duration=null,
-		bool $advisory=false
+		bool $advisory=false,
+		?string $runUuid=null,
+		?string $nodeId=null
 	): array;
 
 	/**

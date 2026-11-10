@@ -30,6 +30,8 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\RoutingController;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;

@@ -34,6 +34,8 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\BrpController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -318,10 +320,10 @@ class BrpControllerTest extends TestCase {
 			 * @return ObjectEntityInterface The saved row, wrapped as an entity.
 			 */
 			public function saveObject(
-				array $object,
+				array|ObjectEntity $object,
 				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				Register|string|int|null $register = null,
+				Schema|string|int|null $schema = null,
 				?string $uuid = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
@@ -330,6 +332,9 @@ class BrpControllerTest extends TestCase {
 				?array $uploadedFiles = null,
 				?IUser $currentUser = null,
 				bool $failIfExists = false,
+				bool $_unowned = false,
+				bool $_dedupOverride = false,
+				?string $_owner = null,
 			): ObjectEntityInterface {
 				if (isset($object['verzoekreden']) === true && isset($this->holder['verzoek']) === false) {
 					$this->holder['verzoek'] = $object;
@@ -970,10 +975,10 @@ class BrpControllerTest extends TestCase {
 			 * @return ObjectEntityInterface The saved row, wrapped as an entity.
 			 */
 			public function saveObject(
-				array $object,
+				array|ObjectEntity $object,
 				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				Register|string|int|null $register = null,
+				Schema|string|int|null $schema = null,
 				?string $uuid = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
@@ -982,6 +987,9 @@ class BrpControllerTest extends TestCase {
 				?array $uploadedFiles = null,
 				?IUser $currentUser = null,
 				bool $failIfExists = false,
+				bool $_unowned = false,
+				bool $_dedupOverride = false,
+				?string $_owner = null,
 			): ObjectEntityInterface {
 				$entity = new ObjectEntity();
 				$entity->setUuid(($uuid ?? 'saved-uuid'));

@@ -35,6 +35,8 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\OpenRegister\Service\ObjectService;
@@ -1480,10 +1482,10 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	 * @return array<string, mixed>|object
 	 */
 	public function saveObject(
-		array $object,
+		array|ObjectEntity $object,
 		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
@@ -1492,6 +1494,9 @@ class LoyaltyObjectStoreFake extends ObjectService {
 		?array $uploadedFiles = null,
 		?IUser $currentUser = null,
 		bool $failIfExists = false,
+		bool $_unowned = false,
+		bool $_dedupOverride = false,
+		?string $_owner = null,
 	): ObjectEntityInterface {
 		$schemaKey = (string)$schema;
 		$payload = (array)$object;
@@ -1556,8 +1561,8 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	 */
 	public function deleteObject(
 		string $uuid,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false,
