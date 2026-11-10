@@ -201,31 +201,10 @@ class KeywordAnalysisService {
 	public function strikingDistance(array $rows, int $minImpressions = self::DEFAULT_MIN_IMPRESSIONS): array {
 		$out = [];
 		foreach ($this->byQuery(rows: $rows) as $entry) {
-			if ($entry['impressions'] < $minImpressions || $entry['impressions'] <= 0) {
-				continue;
+			$finding = self::strikingFinding(entry: $entry, minImpressions: $minImpressions);
+			if ($finding !== null) {
+				$out[] = $finding;
 			}
-
-			$position = $entry['position'];
-			if ($position < self::STRIKING_FROM || $position > self::STRIKING_TO) {
-				continue;
-			}
-
-			$ctr = ($entry['clicks'] / $entry['impressions']);
-			$expected = ExpectedCtrCurve::rateAt(position: $position);
-			if ($ctr >= $expected) {
-				continue;
-			}
-
-			$out[] = [
-				'query' => $entry['query'],
-				'clicks' => $entry['clicks'],
-				'impressions' => $entry['impressions'],
-				'ctr' => round($ctr, 4),
-				'position' => round($position, 1),
-				'expectedCtr' => round($expected, 4),
-				'shortfall' => round(($expected - $ctr), 4),
-				'topPage' => $entry['topPage'],
-			];
 		}
 
 		usort(
@@ -237,6 +216,53 @@ class KeywordAnalysisService {
 
 		return $out;
 	}//end strikingDistance()
+
+	/**
+	 * The striking-distance finding for one query, or null when it does not qualify.
+	 *
+	 * @param array<string, mixed> $entry          One query's aggregate.
+	 * @param int                  $minImpressions Impressions a query needs to qualify.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function strikingFinding(array $entry, int $minImpressions): ?array {
+		if (self::inStrikingRange(entry: $entry, minImpressions: $minImpressions) === false) {
+			return null;
+		}
+
+		$ctr = ($entry['clicks'] / $entry['impressions']);
+		$expected = ExpectedCtrCurve::rateAt(position: $entry['position']);
+		if ($ctr >= $expected) {
+			return null;
+		}
+
+		return [
+			'query' => $entry['query'],
+			'clicks' => $entry['clicks'],
+			'impressions' => $entry['impressions'],
+			'ctr' => round($ctr, 4),
+			'position' => round($entry['position'], 1),
+			'expectedCtr' => round($expected, 4),
+			'shortfall' => round(($expected - $ctr), 4),
+			'topPage' => $entry['topPage'],
+		];
+	}//end strikingFinding()
+
+	/**
+	 * Whether a query has enough impressions and sits between the striking positions.
+	 *
+	 * @param array<string, mixed> $entry          One query's aggregate.
+	 * @param int                  $minImpressions Impressions a query needs to qualify.
+	 *
+	 * @return bool
+	 */
+	private static function inStrikingRange(array $entry, int $minImpressions): bool {
+		if ($entry['impressions'] < $minImpressions || $entry['impressions'] <= 0) {
+			return false;
+		}
+
+		return $entry['position'] >= self::STRIKING_FROM && $entry['position'] <= self::STRIKING_TO;
+	}//end inStrikingRange()
 
 	/**
 	 * Queries where two of our pages are competing and costing each other
@@ -293,14 +319,7 @@ class KeywordAnalysisService {
 			];
 		}
 
-		usort(
-			$out,
-			static function (array $a, array $b): int {
-				return [$b['impressions'], $a['query']] <=> [$a['impressions'], $b['query']];
-			}
-		);
-
-		return $out;
+		return self::mostImpressionsFirst(findings: $out);
 	}//end cannibalisation()
 
 	/**
@@ -324,40 +343,78 @@ class KeywordAnalysisService {
 			return [];
 		}
 
-		$haystacks = [];
-		foreach ($pages as $page) {
-			$haystacks[(string)($page['url'] ?? '')] = $this->normalise(value: (string)($page['text'] ?? ''));
-		}
-
+		$haystacks = $this->haystacksOf(pages: $pages);
 		$out = [];
 		foreach ($this->byQuery(rows: $rows) as $entry) {
 			if ($entry['impressions'] < $minImpressions) {
 				continue;
 			}
 
-			$tokens = $this->significantTokens(value: $entry['query']);
-			if ($tokens === [] || $this->anyPageCarries(tokens: $tokens, haystacks: $haystacks) === true) {
-				continue;
+			$gap = $this->gapFinding(entry: $entry, haystacks: $haystacks);
+			if ($gap !== null) {
+				$out[] = $gap;
 			}
-
-			$out[] = [
-				'query' => $entry['query'],
-				'clicks' => $entry['clicks'],
-				'impressions' => $entry['impressions'],
-				'position' => round($entry['position'], 1),
-				'terms' => $tokens,
-			];
 		}
 
+		return self::mostImpressionsFirst(findings: $out);
+	}//end contentGaps()
+
+	/**
+	 * Normalised title-and-headings text per crawled page URL.
+	 *
+	 * @param array<int, array<string, mixed>> $pages Crawled pages, each with `url` and `text`.
+	 *
+	 * @return array<string, string>
+	 */
+	private function haystacksOf(array $pages): array {
+		$haystacks = [];
+		foreach ($pages as $page) {
+			$haystacks[(string)($page['url'] ?? '')] = $this->normalise(value: (string)($page['text'] ?? ''));
+		}
+
+		return $haystacks;
+	}//end haystacksOf()
+
+	/**
+	 * The gap for one query, or null when it has no significant tokens or a page carries them all.
+	 *
+	 * @param array<string, mixed>  $entry     One query's aggregate.
+	 * @param array<string, string> $haystacks Normalised page text by URL.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function gapFinding(array $entry, array $haystacks): ?array {
+		$tokens = $this->significantTokens(value: $entry['query']);
+		if ($tokens === [] || $this->anyPageCarries(tokens: $tokens, haystacks: $haystacks) === true) {
+			return null;
+		}
+
+		return [
+			'query' => $entry['query'],
+			'clicks' => $entry['clicks'],
+			'impressions' => $entry['impressions'],
+			'position' => round($entry['position'], 1),
+			'terms' => $tokens,
+		];
+	}//end gapFinding()
+
+	/**
+	 * Findings sorted most impressions first, then by query.
+	 *
+	 * @param array<int, array<string, mixed>> $findings The findings.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function mostImpressionsFirst(array $findings): array {
 		usort(
-			$out,
+			$findings,
 			static function (array $a, array $b): int {
 				return [$b['impressions'], $a['query']] <=> [$a['impressions'], $b['query']];
 			}
 		);
 
-		return $out;
-	}//end contentGaps()
+		return $findings;
+	}//end mostImpressionsFirst()
 
 	/**
 	 * The significant tokens of a phrase: normalised, short ones and stop
@@ -447,42 +504,61 @@ class KeywordAnalysisService {
 		$acc = [];
 		foreach ($rows as $row) {
 			$query = trim((string)($row['query'] ?? ''));
-			if ($query === '') {
-				continue;
+			if ($query !== '') {
+				$acc[$query] = self::addQueryRow(
+					entry: ($acc[$query] ?? ['query' => $query, 'clicks' => 0, 'impressions' => 0, 'weighted' => 0.0, 'pages' => []]),
+					row: $row
+				);
 			}
-
-			$impressions = max(0, (int)($row['impressions'] ?? 0));
-			$entry = ($acc[$query] ?? ['query' => $query, 'clicks' => 0, 'impressions' => 0, 'weighted' => 0.0, 'pages' => []]);
-			$entry['clicks'] += max(0, (int)($row['clicks'] ?? 0));
-			$entry['impressions'] += $impressions;
-			$entry['weighted'] += ((float)($row['position'] ?? 0.0) * $impressions);
-			$page = (string)($row['page'] ?? '');
-			if ($page !== '') {
-				$entry['pages'][$page] = (($entry['pages'][$page] ?? 0) + $impressions);
-			}
-
-			$acc[$query] = $entry;
 		}
 
-		$out = [];
-		foreach ($acc as $entry) {
-			$position = 0.0;
-			if ($entry['impressions'] > 0) {
-				$position = ($entry['weighted'] / $entry['impressions']);
-			}
-
-			arsort($entry['pages']);
-			$out[] = [
-				'query' => $entry['query'],
-				'clicks' => (int)$entry['clicks'],
-				'impressions' => (int)$entry['impressions'],
-				'position' => $position,
-				'topPage' => (string)(array_key_first($entry['pages']) ?? ''),
-			];
-		}
-
-		return $out;
+		return array_map(static fn (array $entry): array => self::queryAggregate(entry: $entry), array_values($acc));
 	}//end byQuery()
+
+	/**
+	 * Add one row to a query's running totals and its per-page impressions.
+	 *
+	 * @param array<string, mixed> $entry The running totals.
+	 * @param array<string, mixed> $row   The row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function addQueryRow(array $entry, array $row): array {
+		$impressions = max(0, (int)($row['impressions'] ?? 0));
+		$entry['clicks'] += max(0, (int)($row['clicks'] ?? 0));
+		$entry['impressions'] += $impressions;
+		$entry['weighted'] += ((float)($row['position'] ?? 0.0) * $impressions);
+		$page = (string)($row['page'] ?? '');
+		if ($page !== '') {
+			$entry['pages'][$page] = (($entry['pages'][$page] ?? 0) + $impressions);
+		}
+
+		return $entry;
+	}//end addQueryRow()
+
+	/**
+	 * A query's aggregate: weighted mean position and the page with the most impressions.
+	 *
+	 * @param array<string, mixed> $entry The running totals.
+	 *
+	 * @return array{query: string, clicks: int, impressions: int, position: float, topPage: string}
+	 */
+	private static function queryAggregate(array $entry): array {
+		$position = 0.0;
+		if ($entry['impressions'] > 0) {
+			$position = ($entry['weighted'] / $entry['impressions']);
+		}
+
+		arsort($entry['pages']);
+
+		return [
+			'query' => $entry['query'],
+			'clicks' => (int)$entry['clicks'],
+			'impressions' => (int)$entry['impressions'],
+			'position' => $position,
+			'topPage' => (string)(array_key_first($entry['pages']) ?? ''),
+		];
+	}//end queryAggregate()
 
 	/**
 	 * Aggregate rows per query and page.
