@@ -439,6 +439,8 @@ class SurveyDispatchService {
 	 * @param string|null $uuid Its uuid, for an update.
 	 *
 	 * @return bool True when the write landed.
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
 	 */
 	public function write(array $invitation, ?string $uuid = null): bool {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

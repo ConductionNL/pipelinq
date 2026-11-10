@@ -154,6 +154,8 @@ abstract class AbstractExportService {
 	 * @param string|null $id The UUID (null to create a new object).
 	 *
 	 * @return array<string, mixed> The saved object as an array.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-001
 	 */
 	protected function saveObjectData(string $schemaKey, array $data, ?string $id = null): array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);

@@ -466,6 +466,8 @@ class ProgrammePortfolioService {
 	 * @param string|null $uuid Its uuid, for an update.
 	 *
 	 * @return bool True when the write landed.
+	 *
+	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	public function write(string $schemaKey, array $object, ?string $uuid = null): bool {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
