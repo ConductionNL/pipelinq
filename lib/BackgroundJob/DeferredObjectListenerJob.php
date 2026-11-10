@@ -139,11 +139,6 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 	 * @param array<string, mixed> $entry The entry captured at dispatch time.
 	 *
 	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
-	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
-	 *  instance in the request, which is exactly what an injected per-instance
-	 *  service cannot give. Static is the mechanism, not an accident.
 	 */
 	private function runEntry(array $entry): void {
 		$handler = ($entry['handler'] ?? '');
@@ -155,6 +150,20 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 			return;
 		}
 
+		$listener = $this->deferredListener(handler: $handler);
+		if ($listener !== null) {
+			$this->runGuarded(listener: $listener, entry: $entry);
+		}
+	}//end runEntry()
+
+	/**
+	 * The listener a known handler names, or null when it cannot be resolved or cannot defer (logged).
+	 *
+	 * @param string $handler The handler key.
+	 *
+	 * @return DeferredObjectWork|null The listener.
+	 */
+	private function deferredListener(string $handler): ?DeferredObjectWork {
 		try {
 			$listener = $this->container->get(self::HANDLERS[$handler]);
 		} catch (Throwable $e) {
@@ -162,7 +171,7 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 				'Pipelinq: deferred listener could not be resolved',
 				['handler' => $handler, 'exception' => $e->getMessage()]
 			);
-			return;
+			return null;
 		}
 
 		if (($listener instanceof DeferredObjectWork) === false) {
@@ -170,9 +179,27 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 				'Pipelinq: deferred listener does not implement DeferredObjectWork',
 				['handler' => $handler]
 			);
-			return;
+			return null;
 		}
 
+		return $listener;
+	}//end deferredListener()
+
+	/**
+	 * Run the listener's work for the entry unless it is already on this stack.
+	 *
+	 * @param DeferredObjectWork   $listener The listener.
+	 * @param array<string, mixed> $entry    The entry captured at dispatch time.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
+	 */
+	private function runGuarded(DeferredObjectWork $listener, array $entry): void {
+		$handler = (string)$entry['handler'];
 		$key = DeferredWorkGuard::key(handler: $handler, uuid: (string)($entry['uuid'] ?? ''));
 		if (DeferredWorkGuard::enter(key: $key) === false) {
 			// Already on this stack — the write we are about to make has
@@ -196,5 +223,5 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 		} finally {
 			DeferredWorkGuard::leave(key: $key);
 		}
-	}//end runEntry()
+	}//end runGuarded()
 }//end class
