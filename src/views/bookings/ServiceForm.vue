@@ -409,16 +409,6 @@ export default {
 	padding: 0 4px;
 }
 
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
-}
-
 .form-group textarea {
 	width: 100%;
 	padding: 8px;
@@ -427,30 +417,11 @@ export default {
 	resize: vertical;
 }
 
-.form-row {
-	display: flex;
-	gap: 16px;
-	flex-wrap: wrap;
-}
-
-.form-row .form-group {
-	flex: 1 1 200px;
-}
-
-.toggle-group {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.toggle-group label {
-	margin: 0;
-	font-weight: normal;
-}
-
 .service-form__actions {
 	display: flex;
 	gap: 12px;
 	margin-top: 24px;
 }
 </style>
+
+<style scoped src="./bookingForm.css"></style>
