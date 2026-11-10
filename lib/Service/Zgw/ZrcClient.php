@@ -190,51 +190,40 @@ class ZrcClient {
 	 * 2. Otherwise POST /rollen with the appropriate identification (inpBsn
 	 *    for natural persons, innNnpId for organisations).
 	 *
-	 * @param InitiatorLink $link The endpoint, zaak mapping, contact, roltype and role description.
+	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
+	 * @param InitiatorLink        $link     The parent zaak and the rol to assign on it.
 	 *
 	 * @return string Rol URL (existing or newly created).
 	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
 	 */
-	public function linkInitiator(InitiatorLink $link): string {
-		$run = $this->startRolLink(link: $link);
+	public function linkInitiator(array $endpoint, InitiatorLink $link): string {
+		$zrc = new ZrcConnection(
+			client: $this->requireClient(endpoint: $endpoint),
+			url: $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc')
+		);
 
-		$existing = $this->findExistingRol(run: $run);
+		$existing = $this->findExistingRol(zrc: $zrc, link: $link);
 		if ($existing !== null) {
 			return $existing;
 		}
 
-		return $this->createRol(run: $run);
+		return $this->createRol(zrc: $zrc, link: $link);
 	}//end linkInitiator()
-
-	/**
-	 * Resolve the client, the ZRC URL and the contact identification for a link.
-	 *
-	 * @param InitiatorLink $link The link request.
-	 *
-	 * @return RolLinkRun
-	 *
-	 * @throws ZgwException When the client or the ZRC URL cannot be resolved.
-	 */
-	private function startRolLink(InitiatorLink $link): RolLinkRun {
-		$client = $this->requireClient(endpoint: $link->endpoint);
-		$zrcUrl = $this->requireComponentUrl(endpoint: $link->endpoint, key: 'zrc');
-		[$betrType, $ident] = self::contactIdentification(contact: $link->contact);
-
-		return new RolLinkRun(link: $link, client: $client, zrcUrl: $zrcUrl, betrType: $betrType, ident: $ident);
-	}//end startRolLink()
 
 	/**
 	 * Pre-flight: the URL of a rol on the zaak that already identifies the contact.
 	 *
 	 * A failed listing is logged and answers null, so the caller falls through to POST.
 	 *
-	 * @param RolLinkRun $run The link run.
+	 * @param ZrcConnection $zrc  The resolved client and ZRC URL.
+	 * @param InitiatorLink $link The link request.
 	 *
 	 * @return string|null The existing rol URL, or null when there is none.
 	 */
-	private function findExistingRol(RolLinkRun $run): ?string {
+	private function findExistingRol(ZrcConnection $zrc, InitiatorLink $link): ?string {
 		try {
-			return self::matchingRolUrl(rows: $this->listRollen(run: $run), ident: $run->ident);
+			$ident = $link->rol->identification()[1];
+			return self::matchingRolUrl(rows: $this->listRollen(zrc: $zrc, link: $link), ident: $ident);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'ZGW ZRC: linkInitiator GET /rollen failed (will fall through to POST)',
@@ -248,17 +237,18 @@ class ZrcClient {
 	/**
 	 * GET the rollen of the zaak for the contact's betrokkeneType.
 	 *
-	 * @param RolLinkRun $run The link run.
+	 * @param ZrcConnection $zrc  The resolved client and ZRC URL.
+	 * @param InitiatorLink $link The link request.
 	 *
 	 * @return mixed The result rows (paginated `results` or the bare body).
 	 */
-	private function listRollen(RolLinkRun $run): mixed {
+	private function listRollen(ZrcConnection $zrc, InitiatorLink $link): mixed {
 		$existing = $this->api->callComponent(
-			componentUrl: $run->zrcUrl,
+			componentUrl: $zrc->url,
 			method: 'GET',
 			path: '/rollen',
-			client: $run->client,
-			query: ['zaak' => $run->link->caseUrl(), 'betrokkeneType' => $run->betrType]
+			client: $zrc->client,
+			query: ['zaak' => $link->caseUrl(), 'betrokkeneType' => $link->rol->identification()[0]]
 		);
 
 		return $existing['body']['results'] ?? $existing['body'];
@@ -311,24 +301,26 @@ class ZrcClient {
 	/**
 	 * POST a new rol for the contact on the zaak.
 	 *
-	 * @param RolLinkRun $run The link run.
+	 * @param ZrcConnection $zrc  The resolved client and ZRC URL.
+	 * @param InitiatorLink $link The link request.
 	 *
 	 * @return string The created rol URL (Location header, body url, or '').
 	 */
-	private function createRol(RolLinkRun $run): string {
+	private function createRol(ZrcConnection $zrc, InitiatorLink $link): string {
+		[$betrType, $ident] = $link->rol->identification();
 		$body = [
-			'zaak' => $run->link->caseUrl(),
-			'betrokkeneType' => $run->betrType,
-			'betrokkeneIdentificatie' => $run->ident,
-			'roltype' => $run->link->roltypeUrl,
-			'roltoelichting' => $run->link->roltoelichting,
+			'zaak' => $link->caseUrl(),
+			'betrokkeneType' => $betrType,
+			'betrokkeneIdentificatie' => $ident,
+			'roltype' => $link->rol->roltype->url,
+			'roltoelichting' => $link->rol->roltype->toelichting,
 		];
 
 		$response = $this->api->callComponent(
-			componentUrl: $run->zrcUrl,
+			componentUrl: $zrc->url,
 			method: 'POST',
 			path: '/rollen',
-			client: $run->client,
+			client: $zrc->client,
 			body: $body
 		);
 

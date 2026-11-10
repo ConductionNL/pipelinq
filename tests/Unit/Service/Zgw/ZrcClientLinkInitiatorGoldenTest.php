@@ -29,6 +29,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Zgw;
 
 use OCA\Pipelinq\Service\Zgw\InitiatorLink;
+use OCA\Pipelinq\Service\Zgw\RolAssignment;
+use OCA\Pipelinq\Service\Zgw\RolType;
 use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
 use OCA\Pipelinq\Service\Zgw\ZgwException;
 use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
@@ -212,7 +214,7 @@ class ZrcClientLinkInitiatorGoldenTest extends TestCase {
 
 		$this->expectException(ZgwException::class);
 		$this->expectExceptionMessage('ZGW: ZgwEndpoint "ep" references unknown clientId "cid"');
-		$zrc->linkInitiator(new InitiatorLink(['id' => 'ep', 'clientId' => 'cid', 'componenten' => ['zrc' => self::ZRC]], ['zgwUrl' => self::ZAAK], ['bsn' => '1'], self::ROLTYPE));
+		$zrc->linkInitiator(['id' => 'ep', 'clientId' => 'cid', 'componenten' => ['zrc' => self::ZRC]], new InitiatorLink(['zgwUrl' => self::ZAAK], new RolAssignment(['bsn' => '1'], new RolType(self::ROLTYPE))));
 	}//end testUnknownClientIsRefused()
 
 	/**
@@ -229,7 +231,7 @@ class ZrcClientLinkInitiatorGoldenTest extends TestCase {
 
 		$this->expectException(ZgwException::class);
 		$this->expectExceptionMessage('ZGW: endpoint missing "zrc" component URL');
-		$zrc->linkInitiator(new InitiatorLink(['id' => 'ep', 'componenten' => []], ['zgwUrl' => self::ZAAK], ['bsn' => '1'], self::ROLTYPE));
+		$zrc->linkInitiator(['id' => 'ep', 'componenten' => []], new InitiatorLink(['zgwUrl' => self::ZAAK], new RolAssignment(['bsn' => '1'], new RolType(self::ROLTYPE))));
 	}//end testMissingZrcIsRefused()
 
 	/**
@@ -248,9 +250,9 @@ class ZrcClientLinkInitiatorGoldenTest extends TestCase {
 		$zrc = new ZrcClient(api: $api, registers: $registers, logger: $logger);
 		$endpoint = ['id' => 'ep', 'componenten' => ['zrc' => self::ZRC]];
 		if ($toelichting === null) {
-			return $zrc->linkInitiator(new InitiatorLink($endpoint, ['zgwUrl' => self::ZAAK], $contact, self::ROLTYPE));
+			return $zrc->linkInitiator($endpoint, new InitiatorLink(['zgwUrl' => self::ZAAK], new RolAssignment($contact, new RolType(self::ROLTYPE))));
 		}
 
-		return $zrc->linkInitiator(new InitiatorLink($endpoint, ['zgwUrl' => self::ZAAK], $contact, self::ROLTYPE, $toelichting));
+		return $zrc->linkInitiator($endpoint, new InitiatorLink(['zgwUrl' => self::ZAAK], new RolAssignment($contact, new RolType(self::ROLTYPE, $toelichting))));
 	}//end linkFor()
 }//end class

@@ -3,8 +3,8 @@
 /**
  * Pipelinq InitiatorLink.
  *
- * One request to link a pipelinq Contact to a zaak as a rol: the endpoint,
- * the zaak mapping, the contact, the roltype and the role description.
+ * One request to link a pipelinq Contact to a zaak as a rol: the zaak
+ * mapping and the rol to assign on it.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Zgw
@@ -36,18 +36,12 @@ final class InitiatorLink {
 	/**
 	 * Constructor.
 	 *
-	 * @param array<string, mixed> $endpoint       ZgwEndpoint payload.
-	 * @param array<string, mixed> $caseMap        ZgwResourceMapping for the parent zaak.
-	 * @param array<string, mixed> $contact        Pipelinq Contact payload.
-	 * @param string               $roltypeUrl     Roltype URL (from ZtcClient::resolveRoltype).
-	 * @param string               $roltoelichting Free-text role description.
+	 * @param array<string, mixed> $caseMap ZgwResourceMapping for the parent zaak.
+	 * @param RolAssignment        $rol     The contact and the roltype to assign.
 	 */
 	public function __construct(
-		public readonly array $endpoint,
 		public readonly array $caseMap,
-		public readonly array $contact,
-		public readonly string $roltypeUrl,
-		public readonly string $roltoelichting = 'Initiator',
+		public readonly RolAssignment $rol,
 	) {
 	}//end __construct()
 
