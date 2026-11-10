@@ -94,9 +94,10 @@ class BlastWorkflowTest extends TestCase {
 			/**
 			 * Mock find() — returns a row by id across every table.
 			 *
-			 * @param string $id Identifier.
-			 * @param mixed $register Register slug (ignored).
-			 * @param mixed $schema Schema slug.
+			 * @param string                 $id            Identifier.
+			 * @param ObjectFindOptions|null $options       The schema slug rides here; the register is ignored.
+			 * @param boolean                $_rbac         Ignored.
+			 * @param boolean                $_multitenancy Ignored.
 			 *
 			 * @return array<string, mixed>|null Payload or null.
 			 */
@@ -483,14 +484,14 @@ class BlastWorkflowTest extends TestCase {
 
 		$this->complianceService->recordConsentWithdrawal('c1', 'email', 'user-unsubscribed', 'blast-1');
 
-		$queuedRow = $this->objectService->find('d1', null, 'blastDelivery');
-		$sentRow = $this->objectService->find('d2', null, 'blastDelivery');
+		$queuedRow = $this->objectService->find(id: 'd1', options: new ObjectFindOptions(schema: 'blastDelivery'));
+		$sentRow = $this->objectService->find(id: 'd2', options: new ObjectFindOptions(schema: 'blastDelivery'));
 
 		$this->assertSame('unsubscribed-before-send', $queuedRow['status']);
 		$this->assertSame('sent', $sentRow['status'], 'sent rows must not transition');
 
 		// ConsentRecord update was issued with a withdrawnAt timestamp.
-		$consent = $this->objectService->find('cr-c1', null, 'consentRecord');
+		$consent = $this->objectService->find(id: 'cr-c1', options: new ObjectFindOptions(schema: 'consentRecord'));
 		$this->assertNotEmpty((string)($consent['withdrawnAt'] ?? ''));
 		$this->assertSame('user-unsubscribed', $consent['withdrawnReason']);
 	}//end testWithdrawalTransitionsQueuedDeliveriesEndToEnd()

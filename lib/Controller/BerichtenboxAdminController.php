@@ -80,7 +80,10 @@ class BerichtenboxAdminController extends Controller {
 			$service = $this->getObjectService();
 			$message = $service->find(
 				id: $id,
-				options: new ObjectFindOptions(register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''), schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', ''))
+				options: new ObjectFindOptions(
+					register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
+					schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', ''),
+				)
 			);
 		} catch (Throwable $e) {
 			return new JSONResponse(

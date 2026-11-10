@@ -46,6 +46,7 @@ use Throwable;
  * Controller for the customer-360 consolidated summary endpoint.
  *
  * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister find options (openregister #9116) add one collaborator.
  */
 class Customer360Controller extends Controller {
 	/**

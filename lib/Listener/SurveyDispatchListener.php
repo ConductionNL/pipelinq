@@ -59,6 +59,7 @@ use Throwable;
  * @implements IEventListener<Event>
  *
  * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister find options (openregister #9116) add one collaborator.
  */
 class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 
