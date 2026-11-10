@@ -88,7 +88,7 @@ class XWikiPageStatusGoldenTest extends TestCase {
 
 		$this->bodies = [];
 		$failed = $this->service(base: 'https://wiki.test')->getPageContent('', 'Solo');
-		$this->assertSame(['url' => 'https://wiki.test/bin/view/Solo', 'space' => 'Solo', 'content' => ''], array_intersect_key($failed, ['url' => 1, 'space' => 1, 'content' => 1]));
+		$this->assertSame(['space' => 'Solo', 'content' => '', 'url' => 'https://wiki.test/bin/view/Solo'], array_intersect_key($failed, ['url' => 1, 'space' => 1, 'content' => 1]));
 		$this->assertSame('https://wiki.test/rest/wikis/xwiki/spaces//pages/Solo?media=xml', $this->trace[count($this->trace) - 5][1]);
 	}//end testPageContent()
 
