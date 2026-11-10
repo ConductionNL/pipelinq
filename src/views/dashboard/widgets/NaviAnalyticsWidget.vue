@@ -110,6 +110,33 @@ import CreationOutline from 'vue-material-design-icons/CreationOutline.vue'
  * @spec openspec/specs/dashboard/spec.md
  * @spec openspec/specs/dashboard/spec.md
  */
+/**
+ * Navi's answer as a message of the conversation.
+ *
+ * @param {?object} data The answer.
+ * @return {object} The message.
+ */
+function assistantMessage(data) {
+	return {
+		role: 'assistant',
+		text: data?.textResponse || '',
+		...answerParts(data),
+	}
+}
+
+/**
+ * @param {?object} data The answer.
+ * @return {object} Its result type (text by default), chart, table and follow-ups.
+ */
+function answerParts(data) {
+	return {
+		resultType: data?.resultType || 'text',
+		chartData: data?.chartData || null,
+		tableData: data?.tableData || null,
+		suggestedFollowUps: data?.suggestedFollowUps || [],
+	}
+}
+
 export default {
 	name: 'NaviAnalyticsWidget',
 	components: {
@@ -155,14 +182,7 @@ export default {
 				if (data && data.conversationId) {
 					this.conversationId = data.conversationId
 				}
-				this.messages.push({
-					role: 'assistant',
-					text: data?.textResponse || '',
-					resultType: data?.resultType || 'text',
-					chartData: data?.chartData || null,
-					tableData: data?.tableData || null,
-					suggestedFollowUps: data?.suggestedFollowUps || [],
-				})
+				this.messages.push(assistantMessage(data))
 			} catch (err) {
 				console.error('NaviAnalyticsWidget submit error:', err)
 				this.error = this.t(
