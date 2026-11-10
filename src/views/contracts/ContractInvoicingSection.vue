@@ -64,6 +64,24 @@ const DEFAULT_AVAILABILITY = {
 	canSend: false,
 }
 
+/**
+ * @param {object} body The refusal body.
+ * @return {string} Why the contract could not go to invoicing: the handoff's reason, or that it failed.
+ */
+function invoicingFailure(body) {
+	if (body.status === 'handoff-failed') {
+		return t(
+			'pipelinq',
+			'Could not send this contract to invoicing: {reason}',
+			{
+				reason:
+					body.reason || t('pipelinq', 'unknown error'),
+			},
+		)
+	}
+	return t('pipelinq', 'Could not send this contract to invoicing.')
+}
+
 export default {
 	name: 'ContractInvoicingSection',
 	components: {
@@ -183,41 +201,49 @@ export default {
 					),
 					{},
 				)
-				this.lastInvoiceReference = data.invoiceReference || ''
-				showSuccess(t('pipelinq', 'Contract sent to invoicing.'))
-				this.$emit('sent', { invoiceReference: this.lastInvoiceReference })
+				this.showSent(data.invoiceReference || '')
 			} catch (err) {
-				const body = (err && err.response && err.response.data) || {}
-				if (
-					body.status === 'invalid-status'
-					|| body.status === 'not-available'
-				) {
-					showError(
-						t(
-							'pipelinq',
-							'Sending to invoicing is no longer available for this contract.',
-						),
-					)
-					await this.loadAvailability()
-				} else if (body.status === 'handoff-failed') {
-					showError(
-						t(
-							'pipelinq',
-							'Could not send this contract to invoicing: {reason}',
-							{
-								reason:
-									body.reason || t('pipelinq', 'unknown error'),
-							},
-						),
-					)
-				} else {
-					showError(
-						t('pipelinq', 'Could not send this contract to invoicing.'),
-					)
-				}
+				await this.explainInvoicingFailure(err)
 			} finally {
 				this.busy = false
 			}
+		},
+
+		/**
+		 * The contract went to invoicing: keep the reference, say so, and emit it.
+		 *
+		 * @param {string} invoiceReference The invoice's reference.
+		 * @return {void}
+		 */
+		showSent(invoiceReference) {
+			this.lastInvoiceReference = invoiceReference
+			showSuccess(t('pipelinq', 'Contract sent to invoicing.'))
+			this.$emit('sent', { invoiceReference: this.lastInvoiceReference })
+		},
+
+		/**
+		 * Say why the send failed; when sending is no longer available, read
+		 * the availability again.
+		 *
+		 * @param {?object} err The failure.
+		 * @return {Promise<void>}
+		 */
+		async explainInvoicingFailure(err) {
+			const body = (err && err.response && err.response.data) || {}
+			if (
+				body.status === 'invalid-status'
+				|| body.status === 'not-available'
+			) {
+				showError(
+					t(
+						'pipelinq',
+						'Sending to invoicing is no longer available for this contract.',
+					),
+				)
+				await this.loadAvailability()
+				return
+			}
+			showError(invoicingFailure(body))
 		},
 
 		/**
