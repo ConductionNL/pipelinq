@@ -51,16 +51,6 @@ class BrpHealthCheckJob extends TimedJob {
 	private const DEFAULT_INTERVAL_SECONDS = 86400;
 
 	/**
-	 * Warn threshold in days.
-	 */
-	private const WARN_THRESHOLD_DAYS = 30;
-
-	/**
-	 * Critical threshold in days.
-	 */
-	private const CRITICAL_THRESHOLD_DAYS = 7;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
@@ -99,39 +89,40 @@ class BrpHealthCheckJob extends TimedJob {
 	 */
 	protected function run(mixed $argument): void {
 		try {
-			$expiry = $this->client->getCertificateExpiry();
-			if ($expiry === null) {
-				$this->logger->info('BRP cert health check: cert not configured');
-				$this->saveStatus(status: ['expiry' => null, 'status' => 'unconfigured', 'checkedAt' => $this->nowIso()]);
-				return;
-			}
-
-			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-			$daysLeft = (int)floor(($expiry->getTimestamp() - $now->getTimestamp()) / 86400);
-
-			$status = 'ok';
-			if ($daysLeft <= self::CRITICAL_THRESHOLD_DAYS) {
-				$status = 'critical';
-			} elseif ($daysLeft <= self::WARN_THRESHOLD_DAYS) {
-				$status = 'warning';
-			}
-
-			$this->saveStatus(
-				status: [
-					'expiry' => $expiry->format(DATE_ATOM),
-					'daysLeft' => $daysLeft,
-					'status' => $status,
-					'checkedAt' => $this->nowIso(),
-				]
-			);
-
-			if ($status !== 'ok') {
-				$this->notifyAdmins(daysLeft: $daysLeft, status: $status, expiry: $expiry);
-			}
+			$this->checkCertificate();
 		} catch (Throwable $e) {
 			$this->logger->error('BRP health check failed', ['error' => $e->getMessage()]);
-		}//end try
+		}
 	}//end run()
+
+	/**
+	 * Record the certificate's health, and tell the admins when it is not ok.
+	 *
+	 * @return void
+	 */
+	private function checkCertificate(): void {
+		$expiry = $this->client->getCertificateExpiry();
+		if ($expiry === null) {
+			$this->logger->info('BRP cert health check: cert not configured');
+			$this->saveStatus(status: ['expiry' => null, 'status' => 'unconfigured', 'checkedAt' => $this->nowIso()]);
+			return;
+		}
+
+		$health = CertificateHealth::at(expiry: $expiry, now: new DateTimeImmutable('now', new DateTimeZone('UTC')));
+		$status = $health->status();
+		$this->saveStatus(
+			status: [
+				'expiry' => $expiry->format(DATE_ATOM),
+				'daysLeft' => $health->daysLeft,
+				'status' => $status,
+				'checkedAt' => $this->nowIso(),
+			]
+		);
+
+		if ($status !== 'ok') {
+			$this->notifyAdmins(health: $health);
+		}
+	}//end checkCertificate()
 
 	/**
 	 * Persist the health-check snapshot for the admin tile.
@@ -151,13 +142,12 @@ class BrpHealthCheckJob extends TimedJob {
 	/**
 	 * Send an admin Nextcloud notification.
 	 *
-	 * @param int $daysLeft Days remaining.
-	 * @param string $status warning|critical.
-	 * @param DateTimeImmutable $expiry Expiry date.
+	 * @param CertificateHealth $health The certificate's health (warning or critical).
 	 *
 	 * @return void
 	 */
-	private function notifyAdmins(int $daysLeft, string $status, DateTimeImmutable $expiry): void {
+	private function notifyAdmins(CertificateHealth $health): void {
+		$status = $health->status();
 		$admins = $this->groupManager->get('admin');
 		if ($admins === null) {
 			return;
@@ -172,8 +162,8 @@ class BrpHealthCheckJob extends TimedJob {
 					->setSubject(
 						'brp_cert_' . $status,
 						[
-							'daysLeft' => $daysLeft,
-							'expiry' => $expiry->format('Y-m-d'),
+							'daysLeft' => $health->daysLeft,
+							'expiry' => $health->expiry->format('Y-m-d'),
 						]
 					)
 					->setDateTime(new DateTime());
