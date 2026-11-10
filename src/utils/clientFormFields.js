@@ -63,3 +63,49 @@ export function defaultLanguage(available, instanceDefault, userLanguage) {
 	}
 	return available.includes(instanceDefault) ? instanceDefault : ''
 }
+
+/**
+ * The client form's fields in form order, each with its empty value.
+ */
+const CLIENT_FORM_DEFAULTS = {
+	name: '',
+	type: null,
+	email: '',
+	phone: '',
+	website: '',
+	address: '',
+	notes: '',
+	industry: [],
+	labels: [],
+	accountOwner: null,
+	correspondenceLanguage: '',
+	timezone: null,
+}
+
+/**
+ * An empty client form, with lists of its own.
+ *
+ * @return {object} The form.
+ * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+ */
+export function emptyClientForm() {
+	return { ...CLIENT_FORM_DEFAULTS, industry: [], labels: [] }
+}
+
+/**
+ * The client form filled from a stored client: a missing value becomes the
+ * field's empty value, the industry becomes a list and the labels a copy.
+ *
+ * @param {object} data The client to load into the form.
+ * @return {object} The form.
+ * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+ */
+export function clientFormFrom(data) {
+	const form = {}
+	for (const [field, empty] of Object.entries(CLIENT_FORM_DEFAULTS)) {
+		form[field] = data[field] || empty
+	}
+	form.industry = industryList(data.industry)
+	form.labels = Array.isArray(data.labels) ? [...data.labels] : []
+	return form
+}
