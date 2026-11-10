@@ -46,7 +46,7 @@ describe('portalFetch', () => {
 		setToken('tok-1', '2026-12-01T00:00:00Z')
 		window.history.replaceState({}, '', '/apps/pipelinq/portal?tenant=zuiddrecht')
 		const fetchMock = answer(200, { ok: 1 })
-		expect(await portalFetch('POST', '/requests', { title: 'x' })).toEqual({ ok: 1 })
+		expect(await portalFetch({ method: 'POST', path: '/requests', body: { title: 'x' } })).toEqual({ ok: 1 })
 		expect(fetchMock).toHaveBeenCalledWith('/index.php/apps/pipelinq/portal/api/requests', {
 			method: 'POST',
 			headers: { Accept: 'application/json', Authorization: 'Bearer tok-1', 'X-Portal-Tenant': 'zuiddrecht', 'Content-Type': 'application/json' },
@@ -56,23 +56,23 @@ describe('portalFetch', () => {
 
 	it('sends no token, tenant or body when there are none', async () => {
 		const fetchMock = answer(200, [1])
-		expect(await portalFetch('GET', '/delegations')).toEqual([1])
+		expect(await portalFetch({ method: 'GET', path: '/delegations' })).toEqual([1])
 		expect(fetchMock).toHaveBeenCalledWith('/index.php/apps/pipelinq/portal/api/delegations', { method: 'GET', headers: { Accept: 'application/json' }, body: undefined })
 	})
 
 	it('rejects a refusal with its status, its message and its payload', async () => {
 		setToken('expired')
 		answer(401, { errorCode: 'session_expired', message: 'Session expired' })
-		await expect(portalFetch('GET', '/accounts/profile')).rejects.toMatchObject({ status: 401, errorCode: 'session_expired', message: 'Session expired' })
+		await expect(portalFetch({ method: 'GET', path: '/accounts/profile' })).rejects.toMatchObject({ status: 401, errorCode: 'session_expired', message: 'Session expired' })
 		answer(403, new Error('not json'))
-		const refusal = await portalFetch('POST', '/exports').catch((e) => e)
+		const refusal = await portalFetch({ method: 'POST', path: '/exports' }).catch((e) => e)
 		expect(refusal).toBeInstanceOf(Error)
 		expect([refusal.status, refusal.message]).toEqual([403, 'HTTP 403'])
 	})
 
 	it('answers an empty payload for a success without JSON', async () => {
 		answer(204, new Error('empty'))
-		expect(await portalFetch('POST', '/auth/logout')).toEqual({})
+		expect(await portalFetch({ method: 'POST', path: '/auth/logout' })).toEqual({})
 	})
 })
 
@@ -81,7 +81,7 @@ describe('portalApi', () => {
 		const fetchMock = answer(200, {})
 		const calls = [
 			[() => portalApi.tenantConfig(), 'GET', '/tenant-config', undefined],
-			[() => portalApi.login('a@b.nl', 'pw', '123456'), 'POST', '/auth/login', { email: 'a@b.nl', password: 'pw', totpCode: '123456' }],
+			[() => portalApi.login({ email: 'a@b.nl', password: 'pw', totpCode: '123456' }), 'POST', '/auth/login', { email: 'a@b.nl', password: 'pw', totpCode: '123456' }],
 			[() => portalApi.logout(), 'POST', '/auth/logout', undefined],
 			[() => portalApi.extendSession(), 'POST', '/auth/extend-session', undefined],
 			[() => portalApi.passwordResetRequest('a@b.nl'), 'POST', '/auth/password-reset-request', { email: 'a@b.nl' }],
