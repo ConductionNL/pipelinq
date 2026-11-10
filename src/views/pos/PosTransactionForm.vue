@@ -930,7 +930,7 @@ export default {
 			}
 			for (const [index, line] of this.lines.entries()) {
 				if (line._dirty && isStorable(line)) {
-					const saved = await this.objectStore.saveObject('posTransactionLine', linePayload(line, txId, index + 1))
+					const saved = await this.objectStore.saveObject('posTransactionLine', linePayload(line, { transactionId: txId, sortOrder: index + 1 }))
 					this.markStored(line, saved)
 				}
 			}
