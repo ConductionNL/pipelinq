@@ -187,6 +187,7 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 import CompetitorWatches from './CompetitorWatches.vue'
 import KeywordIntelligence from './KeywordIntelligence.vue'
 import { auditVerdict, CONNECTION_AUDIT_PATH } from '../../services/connectionAudit.js'
+import { downloadCsv } from '../../services/csvExport.js'
 
 const DAY = 24 * 60 * 60 * 1000
 
@@ -418,17 +419,7 @@ export default {
 		 */
 		download() {
 			const keys = ['query', 'clicks', 'impressions', 'ctr', 'position', 'pages']
-			const cell = (value) => {
-				const text = value === null || value === undefined ? '' : String(value)
-				return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-			}
-			const lines = [keys.join(';'), ...this.sortedRows.map((row) => keys.map((key) => cell(row[key])).join(';'))]
-			const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-			const link = document.createElement('a')
-			link.href = URL.createObjectURL(blob)
-			link.download = 'search-queries.csv'
-			link.click()
-			URL.revokeObjectURL(link.href)
+			downloadCsv('search-queries.csv', this.sortedRows, keys)
 		},
 
 		isoDay(date) {
