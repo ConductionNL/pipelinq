@@ -343,16 +343,45 @@ class SocialPostService {
 			'media' => $media,
 		];
 
-		$variants = ($post['variants'] ?? []);
-		$variant = null;
-		if (is_array($variants) === true) {
-			$variant = ($variants[$network] ?? null);
-		}
-
-		if (is_array($variant) === false) {
+		$variant = self::variantFor(post: $post, network: $network);
+		if ($variant === null) {
 			return $resolved;
 		}
 
+		return self::withVariant(resolved: $resolved, variant: $variant);
+	}//end resolveVariant()
+
+	/**
+	 * The post's variant for one network, when it carries one.
+	 *
+	 * @param array<string, mixed> $post    The post.
+	 * @param string               $network The network.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function variantFor(array $post, string $network): ?array {
+		$variants = ($post['variants'] ?? []);
+		if (is_array($variants) === false) {
+			return null;
+		}
+
+		$variant = ($variants[$network] ?? null);
+		if (is_array($variant) === false) {
+			return null;
+		}
+
+		return $variant;
+	}//end variantFor()
+
+	/**
+	 * Merge a variant's non-empty body and link, and its media when it has any.
+	 *
+	 * @param array{body: string, link: string, media: array<int, array<string, mixed>>} $resolved The post's own values.
+	 * @param array<string, mixed>                                                     $variant  The network's variant.
+	 *
+	 * @return array{body: string, link: string, media: array<int, array<string, mixed>>}
+	 */
+	private static function withVariant(array $resolved, array $variant): array {
 		foreach (['body', 'link'] as $field) {
 			$value = trim((string)($variant[$field] ?? ''));
 			if ($value !== '') {
@@ -366,7 +395,7 @@ class SocialPostService {
 		}
 
 		return $resolved;
-	}//end resolveVariant()
+	}//end withVariant()
 
 	/**
 	 * Every network whose resolved body is longer than that network accepts.
@@ -840,9 +869,47 @@ class SocialPostService {
 	 */
 	private function settle(string $postId, array $post): array {
 		$rows = $this->publications->forPost(postId: $postId);
+		$post = self::withSettledStatus(post: $post, rows: $rows);
+
+		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $postId);
+
+		return ($saved ?? $post);
+	}//end settle()
+
+	/**
+	 * The post with the status its publications give it: failed when any
+	 * failed, published when all are done, scheduled otherwise.
+	 *
+	 * @param array<string, mixed>             $post The post as read.
+	 * @param array<int, array<string, mixed>> $rows Its publications.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function withSettledStatus(array $post, array $rows): array {
+		[$failures, $done] = self::tallyPublications(rows: $rows);
+
+		$post['status'] = self::STATUS_SCHEDULED;
+		$post['failureReason'] = '';
+		if ($failures !== []) {
+			$post['status'] = self::STATUS_FAILED;
+			$post['failureReason'] = implode(' ', $failures);
+		} elseif ($rows !== [] && $done === count($rows)) {
+			$post = self::markedPublished(post: $post);
+		}
+
+		return $post;
+	}//end withSettledStatus()
+
+	/**
+	 * The failure lines (`network: reason`) and the number of settled publications.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The publications.
+	 *
+	 * @return array{0: array<int, string>, 1: int}
+	 */
+	private static function tallyPublications(array $rows): array {
 		$failures = [];
 		$done = 0;
-
 		foreach ($rows as $row) {
 			$status = (string)($row['status'] ?? '');
 			if ($status === SocialPublicationStore::FAILED) {
@@ -855,22 +922,24 @@ class SocialPostService {
 			}
 		}
 
-		$post['status'] = self::STATUS_SCHEDULED;
-		$post['failureReason'] = '';
-		if ($failures !== []) {
-			$post['status'] = self::STATUS_FAILED;
-			$post['failureReason'] = implode(' ', $failures);
-		} elseif ($rows !== [] && $done === count($rows)) {
-			$post['status'] = self::STATUS_PUBLISHED;
-			if (trim((string)($post['publishedAt'] ?? '')) === '') {
-				$post['publishedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-			}
+		return [$failures, $done];
+	}//end tallyPublications()
+
+	/**
+	 * The post marked published, stamped now unless it already carries a moment.
+	 *
+	 * @param array<string, mixed> $post The post.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function markedPublished(array $post): array {
+		$post['status'] = self::STATUS_PUBLISHED;
+		if (trim((string)($post['publishedAt'] ?? '')) === '') {
+			$post['publishedAt'] = gmdate('Y-m-d\TH:i:s\Z');
 		}
 
-		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $postId);
-
-		return ($saved ?? $post);
-	}//end settle()
+		return $post;
+	}//end markedPublished()
 
 	/**
 	 * Record one human decision and move the post.
