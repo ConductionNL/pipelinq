@@ -202,14 +202,14 @@ describe('accuracyRows', () => {
 
 describe('isAtRisk', () => {
 	it('is at risk below the attainment threshold with few days left, never without a quota', () => {
-		expect(isAtRisk(80, 100, 10)).toBe(true)
-		expect(isAtRisk(95, 100, 10)).toBe(false)
-		expect(isAtRisk(80, 100, 30)).toBe(false)
-		expect(isAtRisk(80, 100, 40, 85, 50)).toBe(true)
-		expect(isAtRisk(80, 100, 40, 75, 50)).toBe(false)
-		expect(isAtRisk(0, 0, 1)).toBe(false)
-		expect(isAtRisk(0, -5, 1)).toBe(false)
-		expect(isAtRisk('50', '100', 1)).toBe(true)
+		expect(isAtRisk({ projected: 80, quota: 100, daysRemaining: 10 })).toBe(true)
+		expect(isAtRisk({ projected: 95, quota: 100, daysRemaining: 10 })).toBe(false)
+		expect(isAtRisk({ projected: 80, quota: 100, daysRemaining: 30 })).toBe(false)
+		expect(isAtRisk({ projected: 80, quota: 100, daysRemaining: 40 }, { percent: 85, days: 50 })).toBe(true)
+		expect(isAtRisk({ projected: 80, quota: 100, daysRemaining: 40 }, { percent: 75, days: 50 })).toBe(false)
+		expect(isAtRisk({ projected: 0, quota: 0, daysRemaining: 1 })).toBe(false)
+		expect(isAtRisk({ projected: 0, quota: -5, daysRemaining: 1 })).toBe(false)
+		expect(isAtRisk({ projected: '50', quota: '100', daysRemaining: 1 })).toBe(true)
 	})
 })
 

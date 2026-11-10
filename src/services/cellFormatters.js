@@ -31,7 +31,7 @@ import { MARKETING_FORMATTERS } from './valueFormatters.js'
  * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
  */
 export function objectCurrency(value, row, _property, options) {
-	if (value === null || value === undefined || value === '') {
+	if (isBlank(value)) {
 		return ''
 	}
 	const num = Number(value)
@@ -39,21 +39,43 @@ export function objectCurrency(value, row, _property, options) {
 		return String(value)
 	}
 	const opts = options || {}
-	const decimals = Number.isFinite(opts.decimals) ? opts.decimals : 2
-	const field = opts.currencyField || 'currency'
-	// The reader's own locale (nl-NL reads "€ 120.000"); the browser's when
-	// Nextcloud has none to give.
-	const locale =
-		opts.locale
-		|| (typeof OC !== 'undefined' && OC.getLocale
-			? OC.getLocale().replace('_', '-')
-			: undefined)
-	return new Intl.NumberFormat(locale, {
+	const decimals = decimalsOf(opts)
+	return new Intl.NumberFormat(readerLocale(opts), {
 		style: 'currency',
-		currency: currencyOr(row?.[field]),
+		currency: currencyOr(row?.[opts.currencyField || 'currency']),
 		minimumFractionDigits: decimals,
 		maximumFractionDigits: decimals,
 	}).format(num)
+}
+
+/**
+ * @param {unknown} value A cell value.
+ * @return {boolean} Whether it is unset: null, undefined or ''.
+ */
+function isBlank(value) {
+	return value === null || value === undefined || value === ''
+}
+
+/**
+ * @param {{decimals: (number|undefined)}} opts Column options.
+ * @return {number} The decimals the column asks for; 2 when it asks for none.
+ */
+function decimalsOf(opts) {
+	return Number.isFinite(opts.decimals) ? opts.decimals : 2
+}
+
+/**
+ * The reader's own locale (nl-NL reads "€ 120.000"), unless the column
+ * gives one; the browser's when Nextcloud has none to give.
+ *
+ * @param {{locale: (string|undefined)}} opts Column options.
+ * @return {(string|undefined)} A BCP 47 tag.
+ */
+function readerLocale(opts) {
+	return opts.locale
+		|| (typeof OC !== 'undefined' && OC.getLocale
+			? OC.getLocale().replace('_', '-')
+			: undefined)
 }
 
 /**
@@ -143,6 +165,11 @@ export function yesNo(value) {
 }
 
 /**
+ * An ISO 8601 duration of days, hours, minutes and seconds.
+ */
+const ISO_DURATION = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/
+
+/**
  * Print an ISO 8601 duration ("PT6M", "PT1H5M", "PT45S") the way the lists
  * read it: "6 min", "1 h 5 min", "45 s". A value that is not an ISO duration
  * shows as stored.
@@ -152,14 +179,34 @@ export function yesNo(value) {
  * @spec openspec/specs/contactmomenten/spec.md
  */
 export function isoDuration(value) {
-	if (value === null || value === undefined || value === '') {
+	if (isBlank(value)) {
 		return ''
 	}
-	const match = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/.exec(String(value))
+	const match = ISO_DURATION.exec(String(value))
 	if (!match || match[0] === 'P' || match[0] === 'PT') {
 		return String(value)
 	}
-	const [, days, hours, minutes, seconds] = match
+	return durationWords(match).join(' ')
+}
+
+/**
+ * @param {Array<string>} match The ISO duration match: days, hours, minutes, seconds.
+ * @return {Array<string>} The parts in words; seconds only when nothing larger is set.
+ */
+function durationWords(match) {
+	const parts = dayAndTimeWords(match)
+	const seconds = match[4]
+	if (seconds && parts.length === 0) {
+		parts.push(t('pipelinq', '{count} s', { count: Math.round(Number(seconds)) }))
+	}
+	return parts
+}
+
+/**
+ * @param {Array<string>} match The ISO duration match.
+ * @return {Array<string>} The days, hours and minutes that are set, in words.
+ */
+function dayAndTimeWords([, days, hours, minutes]) {
 	const parts = []
 	if (days) {
 		parts.push(t('pipelinq', '{count} d', { count: Number(days) }))
@@ -170,10 +217,7 @@ export function isoDuration(value) {
 	if (minutes) {
 		parts.push(t('pipelinq', '{count} min', { count: Number(minutes) }))
 	}
-	if (seconds && parts.length === 0) {
-		parts.push(t('pipelinq', '{count} s', { count: Math.round(Number(seconds)) }))
-	}
-	return parts.join(' ')
+	return parts
 }
 
 /**

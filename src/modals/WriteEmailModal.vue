@@ -135,11 +135,15 @@ export default {
 		 */
 		url() {
 			return composeUrl(
-				this.address,
-				this.subject.trim(),
-				this.body,
-				this.mailEnabled,
-				generateUrl,
+				{
+					address: this.address,
+					subject: this.subject.trim(),
+					body: this.body,
+				},
+				{
+					enabled: this.mailEnabled,
+					generateUrl,
+				},
 			)
 		},
 	},

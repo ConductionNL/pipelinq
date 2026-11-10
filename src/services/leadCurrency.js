@@ -79,6 +79,30 @@ export function ratesFromRows(rows) {
 }
 
 /**
+ * @param {{origin: string|null}} resolved A rate from Shillinq.
+ * @return {string} Where Shillinq got it.
+ */
+function shillinqLabel(resolved) {
+	if (resolved.origin === 'ecb') {
+		return t('pipelinq', 'ECB via Shillinq')
+	}
+	if (resolved.origin === 'bank-feed') {
+		return t('pipelinq', 'Bank feed via Shillinq')
+	}
+	return t('pipelinq', 'Typed in Shillinq')
+}
+
+/**
+ * The words for each rate source; any other source has none.
+ */
+const RATE_SOURCE_LABELS = new Map([
+	['override', () => t('pipelinq', 'Set by an administrator')],
+	['shillinq', shillinqLabel],
+	['manual', () => t('pipelinq', 'Typed in Forecast settings')],
+	['none', () => t('pipelinq', 'No rate, counted at face value')],
+])
+
+/**
  * Where a resolved rate came from, in words.
  *
  * @param {{source: string, origin: string|null}} resolved A resolved rate.
@@ -86,24 +110,8 @@ export function ratesFromRows(rows) {
  * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
  */
 export function rateSourceLabel(resolved) {
-	switch (resolved?.source) {
-	case 'override':
-		return t('pipelinq', 'Set by an administrator')
-	case 'shillinq':
-		if (resolved.origin === 'ecb') {
-			return t('pipelinq', 'ECB via Shillinq')
-		}
-		if (resolved.origin === 'bank-feed') {
-			return t('pipelinq', 'Bank feed via Shillinq')
-		}
-		return t('pipelinq', 'Typed in Shillinq')
-	case 'manual':
-		return t('pipelinq', 'Typed in Forecast settings')
-	case 'none':
-		return t('pipelinq', 'No rate, counted at face value')
-	default:
-		return ''
-	}
+	const label = RATE_SOURCE_LABELS.get(resolved?.source)
+	return label ? label(resolved) : ''
 }
 
 /**
