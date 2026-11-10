@@ -249,4 +249,33 @@ class HolidayCalendarServiceTest extends TestCase {
 		$this->assertSame(['2025-03-02', '2025-03-03'], array_slice(array_keys($set), -2));
 		$this->assertSame(['sla_tenant_holiday_overrides'], $reads->getArrayCopy());
 	}//end testCompositeLustrumYearSet()
+	/**
+	 * A missing calendar file logs one warning with its path, falls back to
+	 * an empty calendar of that name and is cached; 'none' and '' are empty
+	 * without a lookup.
+	 *
+	 * @return void
+	 */
+	public function testMissingCalendarFallsBackOnceAndIsCached(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'HolidayCalendarService: calendar file not found, falling back to empty',
+			$this->callback(
+				static fn (array $context): bool => $context['calendar'] === 'xx-missing'
+					&& str_ends_with($context['path'], '/../Resources/holidays/nl/xx-missing.json')
+			)
+		);
+		$logger->expects($this->never())->method('error');
+		$service = new HolidayCalendarService($this->appConfig, $logger);
+
+		$empty = ['name' => 'xx-missing', 'rules' => [], 'computed' => []];
+		$this->assertSame($empty, $service->loadCalendar('xx-missing'));
+		$this->assertSame($empty, $service->loadCalendar('xx-missing'));
+		$this->assertSame(['name' => 'none', 'rules' => [], 'computed' => []], $service->loadCalendar(''));
+		$this->assertSame(['name' => 'none', 'rules' => [], 'computed' => []], $service->loadCalendar('none'));
+
+		$calendar = $service->loadCalendar('nl-feestdagen-rijksoverheid');
+		$this->assertSame('Nederlandse Rijksoverheid feestdagen', $calendar['name']);
+		$this->assertCount(5, $calendar['rules']);
+	}//end testMissingCalendarFallsBackOnceAndIsCached()
 }//end class
