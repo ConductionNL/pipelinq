@@ -91,6 +91,35 @@ class ZgwNotificationController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function inbox(): JSONResponse {
+		$abonnement = $this->bearerAbonnement();
+		if ($abonnement instanceof JSONResponse) {
+			return $abonnement;
+		}
+
+		$payload = json_decode($this->readRawBody(), true);
+		if (is_array($payload) === false) {
+			return new JSONResponse(
+				['error' => 'Invalid JSON payload'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		// The actual dispatch happens synchronously but the controller
+		// returns 202 to NRC immediately — listener errors do not propagate.
+		$this->listener->dispatch($abonnement, $payload);
+
+		return new JSONResponse(
+			['status' => 'accepted'],
+			Http::STATUS_ACCEPTED
+		);
+	}//end inbox()
+
+	/**
+	 * The subscription the request's bearer token belongs to, or the 422 refusing it.
+	 *
+	 * @return array<string, mixed>|JSONResponse The matching abonnement, or the refusal.
+	 */
+	private function bearerAbonnement(): array|JSONResponse {
 		// Webhook authenticity is enforced by the per-abonnement bearer match
 		// below. The endpoint is #[PublicPage] because NRC cannot present a
 		// Nextcloud session cookie; bearer mismatch maps to HTTP 422
@@ -118,23 +147,8 @@ class ZgwNotificationController extends Controller {
 			);
 		}
 
-		$payload = json_decode($this->readRawBody(), true);
-		if (is_array($payload) === false) {
-			return new JSONResponse(
-				['error' => 'Invalid JSON payload'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		// The actual dispatch happens synchronously but the controller
-		// returns 202 to NRC immediately — listener errors do not propagate.
-		$this->listener->dispatch($abonnement, $payload);
-
-		return new JSONResponse(
-			['status' => 'accepted'],
-			Http::STATUS_ACCEPTED
-		);
-	}//end inbox()
+		return $abonnement;
+	}//end bearerAbonnement()
 
 	/**
 	 * Walk all active NrcAbonnement records and return the one whose
