@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Forecast\CategoryOverride;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -111,6 +112,37 @@ class ForecastService {
 	public function computeRollUp(string $ownerId, string $periodId, string $level): array {
 		$snapshot = $this->latestSnapshot(ownerId: $ownerId, periodId: $periodId, level: $level);
 
+		$result = [
+			'owner_id' => $ownerId,
+			'period_id' => $periodId,
+			'level' => $level,
+		] + $this->snapshotFigures(snapshot: $snapshot) + [
+			'quota' => $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level),
+			'deal_snapshot_ids' => ($snapshot['deal_snapshot_ids'] ?? []),
+			'partial' => (bool)($snapshot['partial'] ?? false),
+		];
+
+		foreach (['commit', 'best_case'] as $category) {
+			$result = $this->withOverride(
+				rollUp: $result,
+				override: new CategoryOverride(
+					category: $category,
+					row: $this->latestOverride(ownerId: $ownerId, periodId: $periodId, level: $level, category: $category)
+				)
+			);
+		}
+
+		return $result;
+	}//end computeRollUp()
+
+	/**
+	 * The snapshot's four amounts, with the commit and best-case originals and empty override slots.
+	 *
+	 * @param array<string, mixed> $snapshot The latest snapshot, or the empty totals.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function snapshotFigures(array $snapshot): array {
 		$commit = (float)($snapshot['commit_amount'] ?? 0);
 		$bestCase = (float)($snapshot['best_case_amount'] ?? 0);
 		$pipeline = (float)($snapshot['pipeline_amount'] ?? 0);
@@ -118,10 +150,7 @@ class ForecastService {
 		$originalCommit = $commit;
 		$originalBest = $bestCase;
 
-		$result = [
-			'owner_id' => $ownerId,
-			'period_id' => $periodId,
-			'level' => $level,
+		return [
 			'commit' => $commit,
 			'original_commit' => $originalCommit,
 			'commit_override_id' => null,
@@ -132,27 +161,30 @@ class ForecastService {
 			'best_case_override_reason' => null,
 			'pipeline' => $pipeline,
 			'closed_won' => $closedWon,
-			'quota' => $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level),
-			'deal_snapshot_ids' => ($snapshot['deal_snapshot_ids'] ?? []),
-			'partial' => (bool)($snapshot['partial'] ?? false),
 		];
+	}//end snapshotFigures()
 
-		$commitOverride = $this->latestOverride(ownerId: $ownerId, periodId: $periodId, level: $level, category: 'commit');
-		if ($commitOverride !== null) {
-			$result['commit'] = (float)($commitOverride['override_amount'] ?? $commit);
-			$result['commit_override_id'] = $this->objectId(object: $commitOverride);
-			$result['commit_override_reason'] = (string)($commitOverride['reason'] ?? '');
+	/**
+	 * Apply one category's latest override to the roll-up; without one the roll-up is returned as is.
+	 *
+	 * The amount falls back to the snapshot's own figure, the reason to an empty string.
+	 *
+	 * @param array<string, mixed> $rollUp   The roll-up so far.
+	 * @param CategoryOverride     $override The category and its latest override.
+	 *
+	 * @return array<string, mixed> The roll-up with the override applied.
+	 */
+	private function withOverride(array $rollUp, CategoryOverride $override): array {
+		if ($override->row === null) {
+			return $rollUp;
 		}
 
-		$bestOverride = $this->latestOverride(ownerId: $ownerId, periodId: $periodId, level: $level, category: 'best_case');
-		if ($bestOverride !== null) {
-			$result['best_case'] = (float)($bestOverride['override_amount'] ?? $bestCase);
-			$result['best_case_override_id'] = $this->objectId(object: $bestOverride);
-			$result['best_case_override_reason'] = (string)($bestOverride['reason'] ?? '');
-		}
-
-		return $result;
-	}//end computeRollUp()
+		$key = $override->category;
+		$rollUp[$key] = (float)($override->row['override_amount'] ?? $rollUp[$key]);
+		$rollUp[$key.'_override_id'] = $this->objectId(object: $override->row);
+		$rollUp[$key.'_override_reason'] = (string)($override->row['reason'] ?? '');
+		return $rollUp;
+	}//end withOverride()
 
 	/**
 	 * Compute the forecast accuracy score for a closed period.
