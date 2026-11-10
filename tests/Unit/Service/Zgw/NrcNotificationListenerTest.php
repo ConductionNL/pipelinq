@@ -287,4 +287,98 @@ class NrcNotificationListenerTest extends TestCase {
 		$listener->dispatch(['endpointId' => 'ep-1', 'id' => 'id-7'], ['channel' => 'catalogi', 'resource' => 'statustype']);
 	}//end testMissingEndpointAndHandlerFailureAreLogged()
 
+	/**
+	 * Each way a status notification stops short of updating a Request.
+	 *
+	 * @param array<string, mixed>        $notification The inbound payload extras.
+	 * @param list<array<string, mixed>>  $mappings     The case mappings found.
+	 * @param array<string, mixed>|null   $status       The fetched status, null to throw.
+	 * @param list<string>                $expected     The calls expected, in order.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider statusStopProvider
+	 */
+	public function testStatusCreatedStopsShort(array $notification, array $mappings, ?array $status, array $expected): void {
+		$calls = new \ArrayObject();
+		$registers = $this->createMock(ZgwRegisterAccess::class);
+		$registers->method('find')->willReturnCallback(
+			static function (string $schema, string $id) use ($calls): ?array {
+				if ($schema === ZgwRegisterAccess::SCHEMA_ENDPOINT) {
+					return ['id' => 'ep-1'];
+				}
+
+				$calls[] = 'find:' . $schema . ':' . $id;
+				return null;
+			}
+		);
+		$registers->method('findAll')->willReturnCallback(
+			static function (string $schema, array $filters) use ($calls, $mappings): array {
+				$calls[] = 'findAll:' . $schema . ':' . $filters['zgwUrl'];
+				return $mappings;
+			}
+		);
+		$registers->method('save')->willReturnCallback(
+			static function (string $schema, array $data, ?string $uuid = null) use ($calls): array {
+				$calls[] = 'save:' . $schema;
+				return $data;
+			}
+		);
+		$zrc = $this->createMock(ZrcClient::class);
+		$zrc->method('getStatus')->willReturnCallback(
+			static function (array $endpoint, string $url) use ($calls, $status): array {
+				$calls[] = 'getStatus:' . $url;
+				if ($status === null) {
+					throw new \RuntimeException('zrc down');
+				}
+
+				return $status;
+			}
+		);
+		$ztc = $this->createMock(ZtcClient::class);
+		$ztc->method('resolveOmschrijvingFromUrl')->willReturnCallback(
+			static function (array $endpoint, string $url) use ($calls): ?string {
+				$calls[] = 'resolve:' . $url;
+				return str_contains($url, 'known') ? 'Afgerond' : null;
+			}
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			static function (string $message, array $context) use ($calls): void {
+				$calls[] = 'warning:' . $message . ':' . ($context['err'] ?? '');
+			}
+		);
+		$logger->method('info')->willReturnCallback(
+			static function (string $message, array $context) use ($calls): void {
+				$calls[] = 'info:' . $message . ':' . ($context['id'] ?? '');
+			}
+		);
+
+		$listener = new NrcNotificationListener($registers, $zrc, $ztc, $logger);
+		$listener->dispatch(['endpointId' => 'ep-1'], ['channel' => 'zaken', 'resource' => 'status', 'action' => 'create'] + $notification);
+
+		self::assertSame($expected, $calls->getArrayCopy());
+	}//end testStatusCreatedStopsShort()
+
+	/**
+	 * The stop cases.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: list<array<string, mixed>>, 2: array<string, mixed>|null, 3: list<string>}>
+	 */
+	public static function statusStopProvider(): array {
+		$urls = ['resourceUrl' => 'https://zrc/statussen/1', 'hoofdObject' => 'https://zrc/zaken/1'];
+		$mapped = [['pipelinqId' => 'req-1'], ['pipelinqId' => 'req-2']];
+		$found = ['findAll:zgwResourceMapping:https://zrc/zaken/1', 'getStatus:https://zrc/statussen/1'];
+		return [
+			'no status url' => [['hoofdObject' => 'https://zrc/zaken/1'], $mapped, [], ['save:nrcAbonnement']],
+			'no case url' => [['resourceUrl' => 'https://zrc/statussen/1'], $mapped, [], ['save:nrcAbonnement']],
+			'no mapping' => [$urls, [], [], ['save:nrcAbonnement', 'findAll:zgwResourceMapping:https://zrc/zaken/1']],
+			'status fetch fails' => [$urls, $mapped, null, array_merge(['save:nrcAbonnement'], $found, ['warning:ZGW NRC: failed to GET status:zrc down'])],
+			'no statustype' => [$urls, $mapped, ['statustype' => ''], array_merge(['save:nrcAbonnement'], $found)],
+			'unresolved statustype' => [$urls, $mapped, ['statustype' => 'https://ztc/other'], array_merge(['save:nrcAbonnement'], $found, ['resolve:https://ztc/other'])],
+			'mapping without request' => [$urls, [['zgwUrl' => 'x']], ['statustype' => 'https://ztc/known'], array_merge(['save:nrcAbonnement'], $found, ['resolve:https://ztc/known'])],
+			'unknown request' => [$urls, $mapped, ['statustype' => 'https://ztc/known'], array_merge(['save:nrcAbonnement'], $found, ['resolve:https://ztc/known', 'find:request:req-1', 'info:ZGW NRC: status for unknown pipelinq Request:req-1'])],
+		];
+	}//end statusStopProvider()
+
 }//end class
