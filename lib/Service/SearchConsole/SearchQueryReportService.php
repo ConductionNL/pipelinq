@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service\SearchConsole;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\ObjectPageReader;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -258,51 +259,27 @@ class SearchQueryReportService {
 			$filters['property'] = trim($property);
 		}
 
-		return $this->pages(objectService: $objectService, filters: $filters, pageSize: self::PAGE, maxRows: self::MAX_ROWS);
+		return $this->pages(objectService: $objectService, filters: $filters);
 	}//end loadRows()
 
 	/**
-	 * Read matching rows page by page until a short page or the cap.
+	 * Read matching rows page by page until a short page or the cap, as the
+	 * system; a failed read is logged and ends the read.
 	 *
-	 * @param object $objectService The OpenRegister object service.
-	 * @param array<string, mixed> $filters The filters, register and schema included.
-	 * @param int $pageSize Rows per page.
-	 * @param int $maxRows Never read more than this many rows.
+	 * @param object               $objectService The OpenRegister object service.
+	 * @param array<string, mixed> $filters       The filters, register and schema included.
 	 *
 	 * @return array<int, array<string, mixed>> Plain rows.
 	 */
-	private function pages(object $objectService, array $filters, int $pageSize, int $maxRows): array {
-		$rows = [];
-		$offset = 0;
-		while ($offset < $maxRows) {
-			try {
-				$page = $objectService->findAll(
-					config: ['filters' => $filters, 'limit' => $pageSize, 'offset' => $offset],
-					_rbac: false,
-					_multitenancy: false
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning('SearchQueryReportService: findAll failed', ['exception' => $e->getMessage()]);
-				break;
-			}
-
-			if (is_iterable($page) === false) {
-				break;
-			}
-
-			$count = 0;
-			foreach ($page as $row) {
-				$rows[] = $this->toArray(value: $row);
-				$count++;
-			}
-
-			if ($count < $pageSize) {
-				break;
-			}
-
-			$offset += $pageSize;
+	private function pages(object $objectService, array $filters): array {
+		$reader = new ObjectPageReader(objectService: $objectService, withRights: false);
+		$reader->pageSize = self::PAGE;
+		$reader->maxRows = self::MAX_ROWS;
+		$rows = $reader->readAll(filters: $filters);
+		if ($reader->failure !== null) {
+			$this->logger->warning('SearchQueryReportService: findAll failed', ['exception' => $reader->failure->getMessage()]);
 		}
 
-		return $rows;
+		return array_map(fn (mixed $row): array => $this->toArray(value: $row), $rows);
 	}//end pages()
 }//end class
