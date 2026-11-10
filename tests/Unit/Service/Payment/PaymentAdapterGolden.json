@@ -1,0 +1,2713 @@
+{
+    "mollie: initiate, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Mollie API key not configured"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"12.34\"},\"description\":\"Pipelinq POS POS-42\",\"method\":\"ideal\",\"metadata\":{\"reference\":\"POS-42\",\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": "https://pay.example/mollie",
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"12.34\"},\"description\":\"Pipelinq POS POS-42\",\"method\":\"ideal\",\"metadata\":{\"reference\":\"POS-42\",\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"12.34\"},\"description\":\"Pipelinq POS POS-42\",\"method\":\"ideal\",\"metadata\":{\"reference\":\"POS-42\",\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Mollie returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"12.34\"},\"description\":\"Pipelinq POS POS-42\",\"method\":\"ideal\",\"metadata\":{\"reference\":\"POS-42\",\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Mollie returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"12.34\"},\"description\":\"Pipelinq POS POS-42\",\"method\":\"ideal\",\"metadata\":{\"reference\":\"POS-42\",\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Mollie returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"12.34\"},\"description\":\"Pipelinq POS POS-42\",\"method\":\"ideal\",\"metadata\":{\"reference\":\"POS-42\",\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [mollie]: initiate failed",
+                {
+                    "provider": "mollie",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "mollie: capture, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Mollie API key or session missing"
+        },
+        "warnings": []
+    },
+    "mollie: capture, accepted": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "settled",
+            "error": null
+        },
+        "warnings": []
+    },
+    "mollie: capture, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "pending",
+            "error": null
+        },
+        "warnings": []
+    },
+    "mollie: capture, HTTP error": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Mollie returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "mollie: capture, status 199": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Mollie returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "mollie: capture, status 300": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Mollie returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "mollie: capture, transport fails": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [mollie]: capture failed",
+                {
+                    "provider": "mollie",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "mollie: refund, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Mollie API key or session missing"
+        },
+        "warnings": []
+    },
+    "mollie: refund, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"description\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "pay_1",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "mollie: refund, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"description\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "mollie: refund, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"description\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Mollie returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "mollie: refund, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"description\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Mollie returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "mollie: refund, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"description\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Mollie returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "mollie: refund, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"description\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [mollie]: refund failed",
+                {
+                    "provider": "mollie",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "mollie: testConnection, not configured": {
+        "requests": [],
+        "result": {
+            "status": "error",
+            "message": "API key niet ingesteld"
+        },
+        "warnings": []
+    },
+    "mollie: testConnection, accepted": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/methods",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met Mollie succesvol"
+        },
+        "warnings": []
+    },
+    "mollie: testConnection, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/methods",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met Mollie succesvol"
+        },
+        "warnings": []
+    },
+    "mollie: testConnection, HTTP error": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/methods",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Mollie gaf HTTP 422 terug — controleer de API key"
+        },
+        "warnings": []
+    },
+    "mollie: testConnection, status 199": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/methods",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Mollie gaf HTTP 199 terug — controleer de API key"
+        },
+        "warnings": []
+    },
+    "mollie: testConnection, status 300": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/methods",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Mollie gaf HTTP 300 terug — controleer de API key"
+        },
+        "warnings": []
+    },
+    "mollie: testConnection, transport fails": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/methods",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Verbinding met Mollie mislukt"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [mollie]: testConnection failed",
+                {
+                    "provider": "mollie",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "mollie: initiate, zero amount": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Invalid amount"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, other methods": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"5.00\"},\"description\":\"Pipelinq POS transactie\",\"method\":\"creditcard\",\"metadata\":{\"reference\":\"\",\"transactionId\":\"tx-1\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": "https://pay.example/mollie",
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, bancontact": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"5.00\"},\"description\":\"Pipelinq POS R\",\"method\":\"bancontact\",\"metadata\":{\"reference\":\"R\",\"transactionId\":\"\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": "https://pay.example/mollie",
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, only api key": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-only",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"1.00\"},\"description\":\"Pipelinq POS POS-42\",\"method\":\"creditcard\",\"metadata\":{\"reference\":\"POS-42\",\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": "https://pay.example/mollie",
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "mollie: initiate, no terminal or merchant": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"currency\":\"EUR\",\"value\":\"1.00\"},\"description\":\"Pipelinq POS POS-42\",\"method\":\"creditcard\",\"metadata\":{\"reference\":\"POS-42\",\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": "https://pay.example/mollie",
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "mollie: capture, no session": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "status": "failed",
+            "error": "Mollie API key or session missing"
+        },
+        "warnings": []
+    },
+    "mollie: capture, odd status": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/payments/pay+1%2F2",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay 1/2",
+            "status": "pending",
+            "error": null
+        },
+        "warnings": []
+    },
+    "mollie: refund, no session": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "refundId": "",
+            "status": "failed",
+            "error": "Mollie API key or session missing"
+        },
+        "warnings": []
+    },
+    "mollie: refund, no reason": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.mollie.com/v2/payments/pay+1%2F2/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"description\":\"Refund via Pipelinq POS\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay 1/2",
+            "refundId": "pay_1",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "mollie: testConnection, only api key": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.mollie.com/v2/methods",
+                "headers": {
+                    "Authorization": "Bearer key-only"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met Mollie succesvol"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Adyen API key or merchantAccount not configured"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"value\":1234,\"currency\":\"EUR\"},\"reference\":\"POS-42\",\"merchantAccount\":\"MERCHANT\",\"paymentMethod\":{\"type\":\"ideal\"},\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "PSP-1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-test.adyen.com/v71/payments",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"value\":1234,\"currency\":\"EUR\"},\"reference\":\"POS-42\",\"merchantAccount\":\"MERCHANT\",\"paymentMethod\":{\"type\":\"ideal\"},\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"value\":1234,\"currency\":\"EUR\"},\"reference\":\"POS-42\",\"merchantAccount\":\"MERCHANT\",\"paymentMethod\":{\"type\":\"ideal\"},\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Adyen returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"value\":1234,\"currency\":\"EUR\"},\"reference\":\"POS-42\",\"merchantAccount\":\"MERCHANT\",\"paymentMethod\":{\"type\":\"ideal\"},\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Adyen returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"value\":1234,\"currency\":\"EUR\"},\"reference\":\"POS-42\",\"merchantAccount\":\"MERCHANT\",\"paymentMethod\":{\"type\":\"ideal\"},\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Adyen returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"value\":1234,\"currency\":\"EUR\"},\"reference\":\"POS-42\",\"merchantAccount\":\"MERCHANT\",\"paymentMethod\":{\"type\":\"ideal\"},\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [adyen]: initiate failed",
+                {
+                    "provider": "adyen",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "adyen: capture, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Adyen API key or session missing"
+        },
+        "warnings": []
+    },
+    "adyen: capture, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/captures",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "captured",
+            "error": null
+        },
+        "warnings": []
+    },
+    "adyen: capture, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-test.adyen.com/v71/payments/pay_1/captures",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "captured",
+            "error": null
+        },
+        "warnings": []
+    },
+    "adyen: capture, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/captures",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Adyen returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "adyen: capture, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/captures",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Adyen returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "adyen: capture, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/captures",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Adyen returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "adyen: capture, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/captures",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [adyen]: capture failed",
+                {
+                    "provider": "adyen",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "adyen: refund, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Adyen API key or session missing"
+        },
+        "warnings": []
+    },
+    "adyen: refund, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/refunds",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"merchantRefundReason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "PSP-1",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "adyen: refund, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-test.adyen.com/v71/payments/pay_1/refunds",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"merchantRefundReason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "adyen: refund, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/refunds",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"merchantRefundReason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Adyen returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "adyen: refund, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/refunds",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"merchantRefundReason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Adyen returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "adyen: refund, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/refunds",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"merchantRefundReason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Adyen returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "adyen: refund, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay_1/refunds",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"merchantRefundReason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [adyen]: refund failed",
+                {
+                    "provider": "adyen",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "adyen: testConnection, not configured": {
+        "requests": [],
+        "result": {
+            "status": "error",
+            "message": "API key of merchantAccount niet ingesteld"
+        },
+        "warnings": []
+    },
+    "adyen: testConnection, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/paymentMethods",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"countryCode\":\"NL\",\"amount\":{\"value\":100,\"currency\":\"EUR\"}}"
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met Adyen succesvol"
+        },
+        "warnings": []
+    },
+    "adyen: testConnection, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-test.adyen.com/v71/paymentMethods",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"countryCode\":\"NL\",\"amount\":{\"value\":100,\"currency\":\"EUR\"}}"
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met Adyen succesvol"
+        },
+        "warnings": []
+    },
+    "adyen: testConnection, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/paymentMethods",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"countryCode\":\"NL\",\"amount\":{\"value\":100,\"currency\":\"EUR\"}}"
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Adyen gaf HTTP 422 terug"
+        },
+        "warnings": []
+    },
+    "adyen: testConnection, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/paymentMethods",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"countryCode\":\"NL\",\"amount\":{\"value\":100,\"currency\":\"EUR\"}}"
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Adyen gaf HTTP 199 terug"
+        },
+        "warnings": []
+    },
+    "adyen: testConnection, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/paymentMethods",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"countryCode\":\"NL\",\"amount\":{\"value\":100,\"currency\":\"EUR\"}}"
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Adyen gaf HTTP 300 terug"
+        },
+        "warnings": []
+    },
+    "adyen: testConnection, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/paymentMethods",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"countryCode\":\"NL\",\"amount\":{\"value\":100,\"currency\":\"EUR\"}}"
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Verbinding met Adyen mislukt"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [adyen]: testConnection failed",
+                {
+                    "provider": "adyen",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "adyen: initiate, zero amount": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Invalid amount"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, other methods": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"value\":500,\"currency\":\"EUR\"},\"reference\":\"\",\"merchantAccount\":\"MERCHANT\",\"paymentMethod\":{\"type\":\"scheme\"},\"metadata\":{\"transactionId\":\"tx-1\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "PSP-1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, bancontact": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"value\":500,\"currency\":\"EUR\"},\"reference\":\"R\",\"merchantAccount\":\"MERCHANT\",\"paymentMethod\":{\"type\":\"bcmc\"},\"metadata\":{\"transactionId\":\"\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "PSP-1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, only api key": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments",
+                "headers": {
+                    "X-API-Key": "key-only",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":{\"value\":100,\"currency\":\"EUR\"},\"reference\":\"POS-42\",\"merchantAccount\":\"MERCHANT\",\"paymentMethod\":{\"type\":\"scheme\"},\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "PSP-1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "adyen: initiate, no terminal or merchant": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Adyen API key or merchantAccount not configured"
+        },
+        "warnings": []
+    },
+    "adyen: capture, no session": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "status": "failed",
+            "error": "Adyen API key or session missing"
+        },
+        "warnings": []
+    },
+    "adyen: capture, odd status": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay+1%2F2/captures",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay 1/2",
+            "status": "captured",
+            "error": null
+        },
+        "warnings": []
+    },
+    "adyen: refund, no session": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "refundId": "",
+            "status": "failed",
+            "error": "Adyen API key or session missing"
+        },
+        "warnings": []
+    },
+    "adyen: refund, no reason": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/payments/pay+1%2F2/refunds",
+                "headers": {
+                    "X-API-Key": "key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"merchantRefundReason\":\"Refund via Pipelinq POS\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay 1/2",
+            "refundId": "PSP-1",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "adyen: testConnection, only api key": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://checkout-live.adyen.com/v71/paymentMethods",
+                "headers": {
+                    "X-API-Key": "key-only",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"merchantAccount\":\"MERCHANT\",\"countryCode\":\"NL\",\"amount\":{\"value\":100,\"currency\":\"EUR\"}}"
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met Adyen succesvol"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "CCV API key or terminal id not configured"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":1234,\"currency\":\"EUR\",\"method\":\"card\",\"terminalId\":\"TERM-1\",\"reference\":\"POS-42\",\"description\":\"Pipelinq POS POS-42\",\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "REF-1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.sandbox.ccv.eu/api/v1/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":1234,\"currency\":\"EUR\",\"method\":\"card\",\"terminalId\":\"TERM-1\",\"reference\":\"POS-42\",\"description\":\"Pipelinq POS POS-42\",\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":1234,\"currency\":\"EUR\",\"method\":\"card\",\"terminalId\":\"TERM-1\",\"reference\":\"POS-42\",\"description\":\"Pipelinq POS POS-42\",\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "CCV returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":1234,\"currency\":\"EUR\",\"method\":\"card\",\"terminalId\":\"TERM-1\",\"reference\":\"POS-42\",\"description\":\"Pipelinq POS POS-42\",\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "CCV returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":1234,\"currency\":\"EUR\",\"method\":\"card\",\"terminalId\":\"TERM-1\",\"reference\":\"POS-42\",\"description\":\"Pipelinq POS POS-42\",\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "CCV returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":1234,\"currency\":\"EUR\",\"method\":\"card\",\"terminalId\":\"TERM-1\",\"reference\":\"POS-42\",\"description\":\"Pipelinq POS POS-42\",\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [ccv]: initiate failed",
+                {
+                    "provider": "ccv",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "ccv: capture, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "CCV API key or session missing"
+        },
+        "warnings": []
+    },
+    "ccv: capture, accepted": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "settled",
+            "error": null
+        },
+        "warnings": []
+    },
+    "ccv: capture, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.sandbox.ccv.eu/api/v1/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "pending",
+            "error": null
+        },
+        "warnings": []
+    },
+    "ccv: capture, HTTP error": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "CCV returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "ccv: capture, status 199": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "CCV returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "ccv: capture, status 300": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "CCV returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "ccv: capture, transport fails": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [ccv]: capture failed",
+                {
+                    "provider": "ccv",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "ccv: refund, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "CCV API key or session missing"
+        },
+        "warnings": []
+    },
+    "ccv: refund, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"reason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "REF-1",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "ccv: refund, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.sandbox.ccv.eu/api/v1/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"reason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "ccv: refund, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"reason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "CCV returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "ccv: refund, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"reason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "CCV returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "ccv: refund, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"reason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "CCV returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "ccv: refund, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay_1/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"reason\":\"Wrong size\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [ccv]: refund failed",
+                {
+                    "provider": "ccv",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "ccv: testConnection, not configured": {
+        "requests": [],
+        "result": {
+            "status": "error",
+            "message": "API key niet ingesteld"
+        },
+        "warnings": []
+    },
+    "ccv: testConnection, accepted": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/terminals",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met CCV succesvol"
+        },
+        "warnings": []
+    },
+    "ccv: testConnection, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.sandbox.ccv.eu/api/v1/terminals",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met CCV succesvol"
+        },
+        "warnings": []
+    },
+    "ccv: testConnection, HTTP error": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/terminals",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "CCV gaf HTTP 422 terug"
+        },
+        "warnings": []
+    },
+    "ccv: testConnection, status 199": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/terminals",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "CCV gaf HTTP 199 terug"
+        },
+        "warnings": []
+    },
+    "ccv: testConnection, status 300": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/terminals",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "CCV gaf HTTP 300 terug"
+        },
+        "warnings": []
+    },
+    "ccv: testConnection, transport fails": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/terminals",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Verbinding met CCV mislukt"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [ccv]: testConnection failed",
+                {
+                    "provider": "ccv",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "ccv: initiate, zero amount": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Invalid amount"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, other methods": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":500,\"currency\":\"EUR\",\"method\":\"card\",\"terminalId\":\"TERM-1\",\"reference\":\"\",\"description\":\"Pipelinq POS transactie\",\"metadata\":{\"transactionId\":\"tx-1\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "REF-1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, bancontact": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":500,\"currency\":\"EUR\",\"method\":\"card\",\"terminalId\":\"TERM-1\",\"reference\":\"R\",\"description\":\"Pipelinq POS R\",\"metadata\":{\"transactionId\":\"\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "REF-1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, only api key": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments",
+                "headers": {
+                    "Authorization": "Bearer key-only",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"amount\":100,\"currency\":\"EUR\",\"method\":\"card\",\"terminalId\":\"TERM-1\",\"reference\":\"POS-42\",\"description\":\"Pipelinq POS POS-42\",\"metadata\":{\"transactionId\":\"tx-42\",\"app\":\"pipelinq\"}}"
+            }
+        ],
+        "result": {
+            "sessionId": "REF-1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "ccv: initiate, no terminal or merchant": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "CCV API key or terminal id not configured"
+        },
+        "warnings": []
+    },
+    "ccv: capture, no session": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "status": "failed",
+            "error": "CCV API key or session missing"
+        },
+        "warnings": []
+    },
+    "ccv: capture, odd status": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay+1%2F2",
+                "headers": {
+                    "Authorization": "Bearer key-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "sessionId": "pay 1/2",
+            "status": "pending",
+            "error": null
+        },
+        "warnings": []
+    },
+    "ccv: refund, no session": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "refundId": "",
+            "status": "failed",
+            "error": "CCV API key or session missing"
+        },
+        "warnings": []
+    },
+    "ccv: refund, no reason": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.psp.ccv.eu/api/v1/payments/pay+1%2F2/refunds",
+                "headers": {
+                    "Authorization": "Bearer key-1",
+                    "Content-Type": "application/json"
+                },
+                "body": "{\"reason\":\"Refund via Pipelinq POS\"}"
+            }
+        ],
+        "result": {
+            "sessionId": "pay 1/2",
+            "refundId": "REF-1",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "ccv: testConnection, only api key": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.psp.ccv.eu/api/v1/terminals",
+                "headers": {
+                    "Authorization": "Bearer key-only"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met CCV succesvol"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Stripe API secret not configured"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=1234&currency=eur&metadata%5Breference%5D=POS-42&metadata%5BtransactionId%5D=tx-42&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=1234&currency=eur&metadata%5Breference%5D=POS-42&metadata%5BtransactionId%5D=tx-42&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=1234&currency=eur&metadata%5Breference%5D=POS-42&metadata%5BtransactionId%5D=tx-42&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Stripe returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=1234&currency=eur&metadata%5Breference%5D=POS-42&metadata%5BtransactionId%5D=tx-42&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Stripe returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=1234&currency=eur&metadata%5Breference%5D=POS-42&metadata%5BtransactionId%5D=tx-42&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Stripe returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=1234&currency=eur&metadata%5Breference%5D=POS-42&metadata%5BtransactionId%5D=tx-42&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [stripe]: initiate failed",
+                {
+                    "provider": "stripe",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "stripe: capture, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Stripe API key or session missing"
+        },
+        "warnings": []
+    },
+    "stripe: capture, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents/pay_1/capture",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": ""
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "pending",
+            "error": null
+        },
+        "warnings": []
+    },
+    "stripe: capture, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents/pay_1/capture",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": ""
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "pending",
+            "error": null
+        },
+        "warnings": []
+    },
+    "stripe: capture, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents/pay_1/capture",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": ""
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Stripe returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "stripe: capture, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents/pay_1/capture",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": ""
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Stripe returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "stripe: capture, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents/pay_1/capture",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": ""
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Stripe returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "stripe: capture, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents/pay_1/capture",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": ""
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [stripe]: capture failed",
+                {
+                    "provider": "stripe",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "stripe: refund, not configured": {
+        "requests": [],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Stripe API key or session missing"
+        },
+        "warnings": []
+    },
+    "stripe: refund, accepted": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/refunds",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "payment_intent=pay_1&reason=requested_by_customer&metadata%5Breason%5D=Wrong+size&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "pay_1",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "stripe: refund, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/refunds",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "payment_intent=pay_1&reason=requested_by_customer&metadata%5Breason%5D=Wrong+size&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "stripe: refund, HTTP error": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/refunds",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "payment_intent=pay_1&reason=requested_by_customer&metadata%5Breason%5D=Wrong+size&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Stripe returned HTTP 422"
+        },
+        "warnings": []
+    },
+    "stripe: refund, status 199": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/refunds",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "payment_intent=pay_1&reason=requested_by_customer&metadata%5Breason%5D=Wrong+size&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Stripe returned HTTP 199"
+        },
+        "warnings": []
+    },
+    "stripe: refund, status 300": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/refunds",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "payment_intent=pay_1&reason=requested_by_customer&metadata%5Breason%5D=Wrong+size&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Stripe returned HTTP 300"
+        },
+        "warnings": []
+    },
+    "stripe: refund, transport fails": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/refunds",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "payment_intent=pay_1&reason=requested_by_customer&metadata%5Breason%5D=Wrong+size&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "refundId": "",
+            "status": "failed",
+            "error": "Verbinding met betalingsprovider verbroken"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [stripe]: refund failed",
+                {
+                    "provider": "stripe",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "stripe: testConnection, not configured": {
+        "requests": [],
+        "result": {
+            "status": "error",
+            "message": "API secret niet ingesteld"
+        },
+        "warnings": []
+    },
+    "stripe: testConnection, accepted": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.stripe.com/v1/balance",
+                "headers": {
+                    "Authorization": "Bearer secret-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met Stripe succesvol"
+        },
+        "warnings": []
+    },
+    "stripe: testConnection, accepted in sandbox": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.stripe.com/v1/balance",
+                "headers": {
+                    "Authorization": "Bearer secret-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met Stripe succesvol"
+        },
+        "warnings": []
+    },
+    "stripe: testConnection, HTTP error": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.stripe.com/v1/balance",
+                "headers": {
+                    "Authorization": "Bearer secret-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Stripe gaf HTTP 422 terug"
+        },
+        "warnings": []
+    },
+    "stripe: testConnection, status 199": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.stripe.com/v1/balance",
+                "headers": {
+                    "Authorization": "Bearer secret-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Stripe gaf HTTP 199 terug"
+        },
+        "warnings": []
+    },
+    "stripe: testConnection, status 300": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.stripe.com/v1/balance",
+                "headers": {
+                    "Authorization": "Bearer secret-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Stripe gaf HTTP 300 terug"
+        },
+        "warnings": []
+    },
+    "stripe: testConnection, transport fails": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.stripe.com/v1/balance",
+                "headers": {
+                    "Authorization": "Bearer secret-1"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "error",
+            "message": "Verbinding met Stripe mislukt"
+        },
+        "warnings": [
+            [
+                "Pipelinq POS payment [stripe]: testConnection failed",
+                {
+                    "provider": "stripe",
+                    "class": "RuntimeException"
+                }
+            ]
+        ]
+    },
+    "stripe: initiate, zero amount": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "redirectUrl": null,
+            "status": "failed",
+            "error": "Invalid amount"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, other methods": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=500&currency=eur&metadata%5Breference%5D=&metadata%5BtransactionId%5D=tx-1&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, bancontact": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=500&currency=eur&metadata%5Breference%5D=R&metadata%5BtransactionId%5D=&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, only api key": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer key-only",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=100&currency=eur&metadata%5Breference%5D=POS-42&metadata%5BtransactionId%5D=tx-42&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "stripe: initiate, no terminal or merchant": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "amount=100&currency=eur&metadata%5Breference%5D=POS-42&metadata%5BtransactionId%5D=tx-42&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay_1",
+            "redirectUrl": null,
+            "status": "pending"
+        },
+        "warnings": []
+    },
+    "stripe: capture, no session": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "status": "failed",
+            "error": "Stripe API key or session missing"
+        },
+        "warnings": []
+    },
+    "stripe: capture, odd status": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/payment_intents/pay+1%2F2/capture",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": ""
+            }
+        ],
+        "result": {
+            "sessionId": "pay 1/2",
+            "status": "pending",
+            "error": null
+        },
+        "warnings": []
+    },
+    "stripe: refund, no session": {
+        "requests": [],
+        "result": {
+            "sessionId": "",
+            "refundId": "",
+            "status": "failed",
+            "error": "Stripe API key or session missing"
+        },
+        "warnings": []
+    },
+    "stripe: refund, no reason": {
+        "requests": [
+            {
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/refunds",
+                "headers": {
+                    "Authorization": "Bearer secret-1",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                "body": "payment_intent=pay+1%2F2&reason=requested_by_customer&metadata%5Breason%5D=Refund+via+Pipelinq+POS&metadata%5Bapp%5D=pipelinq"
+            }
+        ],
+        "result": {
+            "sessionId": "pay 1/2",
+            "refundId": "pay_1",
+            "status": "refunded",
+            "error": null
+        },
+        "warnings": []
+    },
+    "stripe: testConnection, only api key": {
+        "requests": [
+            {
+                "method": "GET",
+                "url": "https://api.stripe.com/v1/balance",
+                "headers": {
+                    "Authorization": "Bearer key-only"
+                },
+                "body": null
+            }
+        ],
+        "result": {
+            "status": "ok",
+            "message": "Verbinding met Stripe succesvol"
+        },
+        "warnings": []
+    }
+}
