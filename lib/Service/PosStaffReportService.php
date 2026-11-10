@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationLayout;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -232,7 +233,9 @@ class PosStaffReportService {
 			metric: $metric,
 			field: $field,
 			filter: $filter,
-			groupBy: ['field' => 'staffMemberId'],
+			layout: new AggregationLayout(
+				groupBy: ['field' => 'staffMemberId']
+			),
 		);
 		$result = $runner->runAdhocByRef(registerRef: $register, schemaRef: $schema, query: $query);
 

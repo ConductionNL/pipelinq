@@ -64,7 +64,7 @@ if (class_exists(AggregationQuery::class) === false) {
 		 * @param string $metric One of count/sum/avg/min/max.
 		 * @param string|null $field Field for non-count metrics.
 		 * @param array<string, mixed> $filter Filter map.
-		 * @param array<string, mixed>|null $groupBy Optional groupBy spec.
+		 * @param AggregationLayout|null $layout Optional layout; only its groupBy is honoured here.
 		 *
 		 * @return self
 		 *
@@ -74,8 +74,9 @@ if (class_exists(AggregationQuery::class) === false) {
 			string $metric,
 			?string $field = null,
 			array $filter = [],
-			?array $groupBy = null,
+			?AggregationLayout $layout = null,
 		): self {
+			$groupBy = $layout?->groupBy;
 			if (in_array($metric, self::METRICS, true) === false) {
 				throw new InvalidArgumentException('aggregation metric MUST be one of: ' . implode(', ', self::METRICS));
 			}

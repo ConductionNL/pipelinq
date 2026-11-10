@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationLayout;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
@@ -278,7 +279,9 @@ class LoyaltyReportingService {
 			$query = AggregationQuery::create(
 				metric: 'count',
 				filter: ['programmeId' => $programmeId],
-				groupBy: ['field' => 'currentTierId'],
+				layout: new AggregationLayout(
+					groupBy: ['field' => 'currentTierId']
+				),
 			);
 			$result = $this->getAggregationRunner()->runAdhocByRef(
 				registerRef: $register,
