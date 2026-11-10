@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
 use OCA\Pipelinq\Service\Demo\DemoSeedContext;
@@ -234,7 +235,10 @@ class DemoSeedGoldenTest extends TestCase {
 			}
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid, $register=null, $schema=null): bool {
+			function (ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schema = $deletion->target->schema;
 				$this->recordCall(call: 'deleteObject', args: ['uuid' => $uuid, 'register' => $register, 'schema' => $schema]);
 				if ($uuid === 'fails') {
 					throw new RuntimeException('database gone');

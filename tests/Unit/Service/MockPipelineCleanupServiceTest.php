@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\Pipelinq\Service\MockPipelineCleanupService;
 use OCA\Pipelinq\Service\PipelineStageData;
 use OCA\Pipelinq\Service\SystemServiceAccount;
@@ -214,7 +215,8 @@ class MockPipelineCleanupServiceTest extends TestCase {
 			}
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid) use ($deleteResult): bool {
+			function (ObjectDeletion $deletion) use ($deleteResult): bool {
+					$uuid = $deletion->uuid;
 				$this->deleted[] = $uuid;
 				return $deleteResult;
 			}

@@ -394,7 +394,7 @@ class ScheduledTaskServiceGoldenTest extends TestCase {
 		);
 		$objects->method('deleteObject')->willReturnCallback(
 			function (...$args) use ($fail): bool {
-				$this->trace[] = ['deleteObject' => array_slice($args, 0, 3)];
+				$this->trace[] = ['deleteObject' => [$args[0]->uuid, $args[0]->target->register, $args[0]->target->schema]];
 				return $fail !== 'delete';
 			}
 		);

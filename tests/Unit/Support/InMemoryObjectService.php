@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Support;
 
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+
 /**
  * Rows by uuid, each remembering its schema.
  */
@@ -108,7 +110,8 @@ class InMemoryObjectService {
 		return $this->put(schema: (string)$schema, row: $object);
 	}//end updateObject()
 
-	public function deleteObject(string $uuid, $register = null, $schema = null): bool {
+	public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+		$uuid = $deletion->uuid;
 		unset($this->rows[$uuid]);
 		return true;
 	}//end deleteObject()

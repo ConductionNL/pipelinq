@@ -20,6 +20,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Demo;
 use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\ConfigurationService;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\Demo\DemoRecordSweeper;
 use OCA\Pipelinq\Service\Demo\DemoRecordsDescriptor;
@@ -134,7 +135,10 @@ class DemoRegisterImporterTest extends TestCase {
 			fn (array $config): array => $this->storedFor((string)$config['filters']['schema'])
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid, $register = null, $schemaId = null): bool {
+			function (ObjectDeletion $deletion): bool {
+					$uuid = $deletion->uuid;
+					$register = $deletion->target->register;
+					$schemaId = $deletion->target->schema;
 				$this->record(['deleteObject', $uuid, (string)$register, (string)$schemaId]);
 				return true;
 			}

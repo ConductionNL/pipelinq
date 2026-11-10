@@ -32,6 +32,7 @@ use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 
 /**
  * Service for contactmoment business operations.
@@ -354,7 +355,7 @@ class ContactmomentService {
 		$objectService
 			->setRegister($config['register'])
 			->setSchema($config['schema'])
-			->deleteObject(uuid: $id);
+			->deleteObject(deletion: new ObjectDeletion(uuid: $id));
 
 		$this->logger->info(
 			'Contactmoment deleted',

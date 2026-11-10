@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -193,7 +195,12 @@ class MockPipelineCleanupService {
 			return ['bucket' => 'removed', 'entry' => $entry, 'default' => false];
 		}
 
-		if ($this->objectService->deleteObject($entry['id'], $where['register'], $where['schema']) === false) {
+		if ($this->objectService->deleteObject(
+			deletion: new ObjectDeletion(
+				uuid: $entry['id'],
+				target: new ObjectFindTarget(register: $where['register'], schema: $where['schema']),
+			),
+		) === false) {
 			return ['bucket' => 'failed', 'entry' => $entry, 'default' => $isDefault];
 		}
 

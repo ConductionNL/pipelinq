@@ -26,6 +26,7 @@ use JsonSerializable;
 use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\ConfigurationService;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\Demo\DemoRecordSweeper;
 use OCA\Pipelinq\Service\Demo\DemoRecordsDescriptor;
@@ -321,7 +322,10 @@ class DemoRegisterImporterGoldenTest extends TestCase {
 			}
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid, $register=null, $schemaId=null): bool {
+			function (ObjectDeletion $deletion): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schemaId = $deletion->target->schema;
 				$this->recordCall(call: 'deleteObject', args: ['uuid' => $uuid, 'register' => $register, 'schema' => $schemaId]);
 				if ($uuid === 'id-archived') {
 					throw new RuntimeException('SCHEMA_ARCHIVAL_IMMUTABLE: append-only');

@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Consent\ConsentSubject;
 use OCA\Pipelinq\Service\Consent\ConsentWish;
@@ -57,6 +59,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Consent lifecycle (opt-in/opt-out/erasure/keyword detection) is one cohesive responsibility.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The store's reads, writes, erasure, and the migration and replay into
  *   integriq (opt-out-before-send) read the same append-only log; splitting them would duplicate its ordering rules.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister deletion value objects (openregister #9099) add the collaborators.
  */
 class ConsentService {
 	use PayloadToArray;
@@ -380,10 +383,13 @@ class ConsentService {
 			}
 
 			try {
-				if (method_exists($objectService, 'deleteObject') === true) {
-					$objectService->deleteObject($id, $register, $schema);
-					$deleted++;
-				}
+				$objectService->deleteObject(
+					deletion: new ObjectDeletion(
+						uuid: $id,
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+					),
+				);
+				$deleted++;
 			} catch (Throwable $e) {
 				$this->logger->warning(
 					'ConsentService.deleteForContact: delete failed',

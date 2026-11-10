@@ -48,6 +48,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
 use OCA\Pipelinq\Service\Demo\DemoSeedContext;
 use OCA\Pipelinq\Service\Demo\DemoSeedTarget;
@@ -483,7 +485,12 @@ class DemoSeedService {
 
 				foreach (($index[$lookupValue] ?? []) as $uuid) {
 					try {
-						$objectService->deleteObject($uuid, $registerId, $schemaIds[$schemaKey]);
+						$objectService->deleteObject(
+							deletion: new ObjectDeletion(
+								uuid: $uuid,
+								target: new ObjectFindTarget(register: $registerId, schema: $schemaIds[$schemaKey]),
+							),
+						);
 						$removed[$section]++;
 					} catch (\Throwable $e) {
 						if (str_contains($e->getMessage(), 'SCHEMA_ARCHIVAL_IMMUTABLE') === true) {

@@ -27,6 +27,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;
@@ -456,7 +457,13 @@ class AvailabilityServiceTest extends TestCase {
 		);
 		$object->expects($this->once())
 			->method('deleteObject')
-			->with('cache-zap', 'pipelinq', 'availability-cache')
+			->with(
+				$this->callback(
+					static fn (ObjectDeletion $deletion): bool => $deletion->uuid === 'cache-zap'
+						&& $deletion->target->register === 'pipelinq'
+						&& $deletion->target->schema === 'availability-cache'
+				)
+			)
 			->willReturn(true);
 
 		[$service] = $this->buildService(objectService: $object);
@@ -485,7 +492,8 @@ class AvailabilityServiceTest extends TestCase {
 			]);
 		$deleted = [];
 		$object->method('deleteObject')->willReturnCallback(
-			callback: static function (string $uuid) use (&$deleted): bool {
+			callback: static function (ObjectDeletion $deletion) use (&$deleted): bool {
+					$uuid = $deletion->uuid;
 				if ($uuid === 'day-2') {
 					throw new \RuntimeException('locked');
 				}
