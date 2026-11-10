@@ -152,4 +152,101 @@ class HolidayCalendarServiceTest extends TestCase {
 		$this->assertTrue($service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-05-05'))
 		);
 	}//end testLustrumTenantOverride()
+	/**
+	 * Build a service whose app config answers from a map and records every
+	 * key it is asked for, in order.
+	 *
+	 * @param array<string, string> $values The configured values.
+	 * @param \ArrayObject<int, string> $reads The keys read, appended in order.
+	 *
+	 * @return HolidayCalendarService The service.
+	 */
+	private function serviceWithConfig(array $values, \ArrayObject $reads): HolidayCalendarService {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = '') use ($values, $reads): string {
+				$reads[] = $key;
+				return $values[$key] ?? $default;
+			}
+		);
+
+		return new HolidayCalendarService($appConfig, $this->createMock(LoggerInterface::class));
+	}//end serviceWithConfig()
+
+	/**
+	 * The resolved holiday set of a year.
+	 *
+	 * @param HolidayCalendarService $service      The service.
+	 * @param string                 $calendarName The calendar name.
+	 * @param int                    $year         The year.
+	 *
+	 * @return array<string, bool> The set, in build order.
+	 */
+	private function yearSet(HolidayCalendarService $service, string $calendarName, int $year): array {
+		$method = new \ReflectionMethod(HolidayCalendarService::class, 'resolveYearSet');
+		$method->setAccessible(true);
+		return $method->invoke($service, $calendarName, $year);
+	}//end yearSet()
+
+	/**
+	 * The whole set of a non-lustrum year: fixed rules first, then the Easter
+	 * based dates, then the tenant overrides of each named calendar (a
+	 * month-day override gets the year, a full date stays as it is, an entry
+	 * without a date is ignored). The lustrum check reads its flag per
+	 * lustrum rule before the overrides are read, and a second call is cached.
+	 *
+	 * @return void
+	 */
+	public function testYearSetInBuildOrderWithOverrides(): void {
+		$reads = new \ArrayObject();
+		$overrides = json_encode(
+			[
+				'nl-feestdagen-rijksoverheid' => [['date' => '12-24'], ['date' => '2027-01-02'], ['name' => 'no date'], ['date' => '04-27']],
+				'other' => [['date' => '01-02']],
+			]
+		);
+		$service = $this->serviceWithConfig(['sla_tenant_holiday_overrides' => (string)$overrides], $reads);
+
+		$set = $this->yearSet($service, 'nl-feestdagen-rijksoverheid', 2026);
+		$this->assertSame(
+			[
+				'2026-01-01' => true,
+				'2026-04-27' => true,
+				'2026-12-25' => true,
+				'2026-12-26' => true,
+				'2026-04-03' => true,
+				'2026-04-05' => true,
+				'2026-04-06' => true,
+				'2026-05-14' => true,
+				'2026-05-24' => true,
+				'2026-05-25' => true,
+				'2026-12-24' => true,
+				'2027-01-02' => true,
+			],
+			$set
+		);
+		$this->assertSame(['sla_bevrijdingsdag_yearly', 'sla_tenant_holiday_overrides'], $reads->getArrayCopy());
+
+		$this->assertSame($set, $this->yearSet($service, 'nl-feestdagen-rijksoverheid', 2026));
+		$this->assertCount(2, $reads);
+	}//end testYearSetInBuildOrderWithOverrides()
+
+	/**
+	 * A lustrum year keeps Bevrijdingsdag without reading the flag, and a
+	 * composite name is trimmed and reads the overrides of each part.
+	 *
+	 * @return void
+	 */
+	public function testCompositeLustrumYearSet(): void {
+		$reads = new \ArrayObject();
+		$overrides = json_encode(['be-feestdagen' => [['date' => '03-03']], 'nl-feestdagen-rijksoverheid' => [['date' => '03-02']]]);
+		$service = $this->serviceWithConfig(['sla_tenant_holiday_overrides' => (string)$overrides], $reads);
+
+		$set = $this->yearSet($service, ' nl-feestdagen-rijksoverheid , be-feestdagen ,', 2025);
+
+		$this->assertArrayHasKey('2025-05-05', $set);
+		$this->assertArrayHasKey('2025-07-21', $set);
+		$this->assertSame(['2025-03-02', '2025-03-03'], array_slice(array_keys($set), -2));
+		$this->assertSame(['sla_tenant_holiday_overrides'], $reads->getArrayCopy());
+	}//end testCompositeLustrumYearSet()
 }//end class
