@@ -59,6 +59,7 @@ use Throwable;
  * Repair step: backfill lead.pipeline and the lead's stage.
  *
  * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BackfillLeadRelations implements IRepairStep {
 

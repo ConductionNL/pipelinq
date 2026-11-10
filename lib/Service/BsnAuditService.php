@@ -48,6 +48,7 @@ use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
  * tijdstip) remains traceable.
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BsnAuditService {
 	use EntityAccessorTrait;

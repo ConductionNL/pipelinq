@@ -44,6 +44,7 @@ use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) orchestrates the full
  *  redemption lifecycle (reserve/use/cancel/expire) across account + ledger
  *  services.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class RedemptionService {
 	use PayloadToArray;

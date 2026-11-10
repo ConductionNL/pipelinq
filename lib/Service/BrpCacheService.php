@@ -40,6 +40,7 @@ use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
  * Cache wrapper around the brpPersoon schema.
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BrpCacheService {
 	/**

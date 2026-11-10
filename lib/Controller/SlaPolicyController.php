@@ -55,6 +55,7 @@ use Throwable;
  *   - PUT   /api/sla/policies/{id} update policy (justification required)
  *
  * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class SlaPolicyController extends Controller {
 	/**

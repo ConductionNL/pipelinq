@@ -66,6 +66,7 @@ use Throwable;
  *  should have.
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class SegmentService {
 	use PayloadToArray;

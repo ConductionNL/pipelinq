@@ -36,6 +36,7 @@ use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
  * Service for searching and importing Nextcloud contacts into Pipelinq.
  *
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class ContactSyncService {
 	/**

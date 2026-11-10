@@ -54,6 +54,7 @@ use Throwable;
  * scalar email/phone fields.
  *
  * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BackfillContactChannelArrays implements IRepairStep {
 	/**

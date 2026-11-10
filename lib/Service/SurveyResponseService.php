@@ -49,6 +49,7 @@ use Throwable;
  * Open and answer a survey by its per-invitation token.
  *
  * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class SurveyResponseService {
 	/**

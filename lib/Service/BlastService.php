@@ -72,6 +72,7 @@ use Throwable;
  *  plus the repository surface justify the method count; splitting adds no clarity.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The REST controllers consume a
  *  cohesive public repository surface on top of the lifecycle operations.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BlastService {
 	use PayloadToArray;

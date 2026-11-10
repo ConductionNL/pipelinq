@@ -59,6 +59,7 @@ use Throwable;
  * Resolve a party's indicators, and answer whether one blocks an act.
  *
  * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class PartyIndicatorService {
 	/**

@@ -54,6 +54,7 @@ use Throwable;
  * each write: no proven silence, no write. See ObjectEventSilence.
  *
  * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class TaskNameBackfillService {
 	/**

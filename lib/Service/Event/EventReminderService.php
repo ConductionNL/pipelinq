@@ -47,6 +47,7 @@ use Throwable;
  * Sends the reminder of one event.
  *
  * @spec openspec/specs/campaign-events/spec.md
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class EventReminderService
 {

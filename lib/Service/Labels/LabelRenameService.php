@@ -46,6 +46,7 @@ use Throwable;
  * Renames a label and rewrites it on its items.
  *
  * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class LabelRenameService {
 	use SerialisedToArray;

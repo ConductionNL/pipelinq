@@ -60,6 +60,7 @@ use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
  * Resolver + read/write facade for the unified ticket schema.
  *
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class TicketService {
 	/**

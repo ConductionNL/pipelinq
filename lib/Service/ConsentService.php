@@ -59,6 +59,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Consent lifecycle (opt-in/opt-out/erasure/keyword detection) is one cohesive responsibility.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The store's reads, writes, erasure, and the migration and replay into
  *   integriq (opt-out-before-send) read the same append-only log; splitting them would duplicate its ordering rules.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class ConsentService {
 	use PayloadToArray;
