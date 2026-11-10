@@ -118,7 +118,7 @@ class LabelRenameServiceTest extends TestCase {
 			 * @return array<string, mixed>|null
 			 */
 			public function find(string $id, mixed ...$args): ?array {
-				return $this->test->storeFind(schema: (string)$args['schema'], id: $id);
+				return $this->test->storeFind(schema: (string)($args['options']?->schema ?? ''), id: $id);
 			}
 
 			/**

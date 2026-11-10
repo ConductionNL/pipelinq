@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
@@ -200,7 +201,7 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
+			$object = $objectService->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schema));
 			if ($object === null) {
 				return null;
 			}

@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\WhatsAppMessage;
@@ -1233,8 +1234,7 @@ class WhatsAppAdapter {
 		try {
 			$existing = $objectService->find(
 				id: $conversationId,
-				register: $this->getRegisterSlug(),
-				schema: $schema,
+				options: new ObjectFindOptions(register: $this->getRegisterSlug(), schema: $schema),
 				_rbac: self::LOOKUP_SCOPE['_rbac'],
 				_multitenancy: self::LOOKUP_SCOPE['_multitenancy'],
 			);
@@ -1312,8 +1312,10 @@ class WhatsAppAdapter {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'messageTemplate_schema', default: self::DEFAULT_TEMPLATE_SCHEMA_SLUG),
+				options: new ObjectFindOptions(
+					register: $this->getRegisterSlug(),
+					schema: $this->resolveSchemaSlug(key: 'messageTemplate_schema', default: self::DEFAULT_TEMPLATE_SCHEMA_SLUG),
+				),
 			);
 		} catch (Throwable $e) {
 			return null;

@@ -44,6 +44,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use Closure;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -704,7 +705,7 @@ class WebhookProcessorService {
 		}
 
 		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'WebhookProcessorService.loadDeliveryById: not found',

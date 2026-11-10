@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Labels;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\App\IAppManager;
@@ -350,7 +351,7 @@ class LabelRenameService {
 	 */
 	private function findLabel(object $objects, string $labelId): mixed {
 		try {
-			return $objects->find(id: $labelId, register: self::REGISTER, schema: self::LABEL_SCHEMA);
+			return $objects->find(id: $labelId, options: new ObjectFindOptions(register: self::REGISTER, schema: self::LABEL_SCHEMA));
 		} catch (Throwable $e) {
 			return null;
 		}

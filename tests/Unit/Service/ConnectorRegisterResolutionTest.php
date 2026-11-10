@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
@@ -616,7 +617,8 @@ class ConnectorRegisterResolutionTest extends TestCase {
 			 *
 			 * @return array<string, mixed> The source payload.
 			 */
-			public function find(string $id, ?string $register=null, ?string $schema=null): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = ($options?->register === null ? null : (string)$options->register);
 				$this->test->recordRead(register: $register);
 				return $this->source;
 			}//end find()

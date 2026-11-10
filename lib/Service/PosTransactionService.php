@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
@@ -805,7 +806,7 @@ class PosTransactionService {
 		}
 
 		try {
-			$product = $this->getObjectService()->find(id: $productId, register: $register, schema: $schema);
+			$product = $this->getObjectService()->find(id: $productId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return ['', ''];
 		}
@@ -1224,7 +1225,7 @@ class PosTransactionService {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}

@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
@@ -173,7 +174,7 @@ class ContactAddressLookup {
 			}
 
 			try {
-				$entity = $objectService->find(id: $contactId, register: $register, schema: $schema);
+				$entity = $objectService->find(id: $contactId, options: new ObjectFindOptions(register: $register, schema: $schema));
 			} catch (Throwable $e) {
 				$this->logger->debug('ContactAddressLookup: not found in '.$schema, ['contactId' => $contactId]);
 				$entity = null;

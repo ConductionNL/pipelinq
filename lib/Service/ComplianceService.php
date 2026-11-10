@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
@@ -844,7 +845,7 @@ class ComplianceService {
 		}
 
 		try {
-			$entity = $objectService->find(id: $templateId, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $templateId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'ComplianceService.getTemplateById: not found',

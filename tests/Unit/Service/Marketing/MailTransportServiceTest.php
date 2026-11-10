@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
@@ -65,7 +66,7 @@ class MailTransportServiceTest extends TestCase {
 			/** @var array<int, array<string, mixed>> */
 			public array $saved = [];
 
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 				return ($this->store[$id] ?? null);
 			}//end find()
 

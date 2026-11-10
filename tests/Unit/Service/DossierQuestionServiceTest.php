@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\DossierQuestionService;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCA\Pipelinq\Tests\Unit\Settings\DossierQuestionSchemaTest;
@@ -93,7 +94,9 @@ class DossierQuestionServiceTest extends TestCase {
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->assertSame('publication', $register, 'dossiers and publications live in opencatalogi\'s publication register');
 				$this->assertFalse($_rbac, 'a portal subject has no Nextcloud account; the owner check is the authorisation');
 				$data = ($this->catalogue[$schema . '/' . $id] ?? null);

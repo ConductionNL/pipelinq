@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -2054,8 +2055,7 @@ class SegmentService {
 		try {
 			$entity = $objectService->find(
 				id: $segmentId,
-				register: $register,
-				schema: $schema,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(

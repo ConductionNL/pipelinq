@@ -59,6 +59,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
@@ -630,7 +631,7 @@ class TimeBillingHandoffService {
 		}
 
 		try {
-			$entity = $objectService->find(id: $clientId, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			return null;
 		}

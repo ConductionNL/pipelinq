@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\ClientBusinessController;
 use OCA\Pipelinq\Service\ClientBusinessReader;
 use OCA\Pipelinq\Service\ShillinqInvoiceReader;
@@ -92,12 +93,9 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend=[],
-				bool $files=false,
-				mixed $register=null,
-				mixed $schema=null,
-				bool $_rbac=true,
-				bool $_multitenancy=true
+				?ObjectFindOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			): array {
 				return ['type' => 'person', 'shillinqOrganisationRef' => 'deb-1'];
 			}

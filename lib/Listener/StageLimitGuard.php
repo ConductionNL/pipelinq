@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCP\EventDispatcher\Event;
@@ -181,7 +182,7 @@ class StageLimitGuard implements IEventListener {
 		}
 
 		try {
-			$entity = $this->objectService->find(id: $pipelineId, register: $register, schema: $schema);
+			$entity = $this->objectService->find(id: $pipelineId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->warning('StageLimitGuard: pipeline not readable', ['pipeline' => $pipelineId, 'exception' => $e->getMessage()]);
 			return [];

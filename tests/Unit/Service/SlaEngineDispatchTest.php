@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\BusinessHoursCalculator;
 use OCA\Pipelinq\Service\HolidayCalendarService;
 use OCA\Pipelinq\Service\Sla\SlaEscalation;
@@ -113,7 +114,7 @@ class SlaEngineDispatchTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 				return ($this->store[$id] ?? null);
 			}
 		};

@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service\Mdm;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -136,8 +137,7 @@ class MdmObjectRepository {
 		try {
 			$object = $this->objectService()->find(
 				id: $id,
-				register: $this->register(),
-				schema: $this->schema(schemaSlug: $schemaSlug)
+				options: new ObjectFindOptions(register: $this->register(), schema: $this->schema(schemaSlug: $schemaSlug))
 			);
 		} catch (\Throwable $e) {
 			return null;

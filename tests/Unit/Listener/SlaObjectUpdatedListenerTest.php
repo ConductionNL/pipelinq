@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Tests\Unit\Listener;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Service\SchemaMapService;
@@ -96,7 +97,8 @@ class SlaObjectUpdatedListenerTest extends TestCase {
 			 *
 			 * @return ObjectEntity The ticket.
 			 */
-			public function find(string $id, string $register, string $schema): ObjectEntity {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+				$schema = (string)($options?->schema ?? '');
 				$entity = new ObjectEntity();
 				$entity->setUuid($id);
 				$entity->setSchema($schema);

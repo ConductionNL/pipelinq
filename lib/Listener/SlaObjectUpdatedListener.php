@@ -28,6 +28,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
@@ -396,7 +397,7 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schemaId);
+			$object = $objectService->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schemaId));
 			if ($object === null) {
 				return null;
 			}

@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\PosCart;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -111,8 +112,7 @@ class PosCartObjects {
 		if (trim($transactionId) !== '') {
 			$found = $this->objects->find(
 				id: $transactionId,
-				register: $this->registerId(),
-				schema: $this->schemaId(slug: 'posTransaction'),
+				options: new ObjectFindOptions(register: $this->registerId(), schema: $this->schemaId(slug: 'posTransaction')),
 				_rbac: false,
 				_multitenancy: false
 			);

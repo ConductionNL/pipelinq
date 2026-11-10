@@ -106,8 +106,7 @@ class RoutingService {
 
 		try {
 			$entity = $objectService->find(
-				$entityId,
-				[]
+				$entityId
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(

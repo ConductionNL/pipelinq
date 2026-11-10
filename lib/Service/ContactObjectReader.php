@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
@@ -93,10 +94,7 @@ class ContactObjectReader {
 		try {
 			$object = $this->objectService->find(
 				$objectId,
-				[],
-				false,
-				$registerId,
-				$schemaId
+				options: new ObjectFindOptions(register: $registerId, schema: $schemaId)
 			);
 		} catch (\Exception $e) {
 			$this->logger->error('Pipelinq: Failed to fetch object for sync', ['exception' => $e->getMessage()]);

@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -103,7 +104,7 @@ class ZgwRegisterAccess {
 		}
 
 		try {
-			$result = $objectService->find(id: $id, register: self::REGISTER, schema: $schema);
+			$result = $objectService->find(id: $id, options: new ObjectFindOptions(register: self::REGISTER, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info('ZGW: find failed', ['schema' => $schema, 'id' => $id, 'err' => $e->getMessage()]);
 			return null;

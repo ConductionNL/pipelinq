@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Controller;
@@ -104,7 +105,7 @@ class TicketAssignController extends Controller {
 		$objectService = $this->tickets->getObjectService();
 
 		try {
-			$ticket = $objectService->find(id: $id, register: $register, schema: $schema);
+			$ticket = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable) {
 			$ticket = null;
 		}

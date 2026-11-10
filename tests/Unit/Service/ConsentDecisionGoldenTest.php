@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Integriq\Event\OptOutChangeRequestedEvent;
 use OCA\Integriq\Event\OutboundSendDecisionRequestedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\MessagingController;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -536,7 +537,8 @@ class ConsentDecisionGoldenStore {
 	 *
 	 * @throws DoesNotExistException When there is no such object.
 	 */
-	public function find(string $id, $register = null, $schema = null): array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+		$schema = $options?->schema;
 		if ($schema === 'contact' && isset($this->contacts[$id]) === true) {
 			return $this->contacts[$id];
 		}

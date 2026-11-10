@@ -36,6 +36,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Sla\SlaBreachEvent;
 use OCA\Pipelinq\Service\Sla\SlaEscalation;
@@ -930,7 +931,7 @@ class SlaEngineService {
 		}
 
 		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: target object load failed',

@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -556,7 +557,7 @@ class GiftCardService {
 		}
 
 		try {
-			$object = $this->getObjectService()->find(id: $giftCardId, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $giftCardId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}

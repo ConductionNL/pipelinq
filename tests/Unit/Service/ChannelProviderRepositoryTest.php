@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -39,10 +40,7 @@ class ChannelProviderRepositoryTest extends TestCase {
 		$objectService = new class {
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				$register = null,
-				$schema = null,
+				?ObjectFindOptions $options = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {

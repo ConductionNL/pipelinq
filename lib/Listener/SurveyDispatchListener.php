@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
@@ -265,7 +266,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 		}
 
 		try {
-			$object = $this->objectService->find(id: $uuid, register: $register, schema: $schema);
+			$object = $this->objectService->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SurveyDispatchListener: an object could not be read for the survey dispatch',

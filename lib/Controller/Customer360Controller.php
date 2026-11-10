@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\AppFramework\Controller;
@@ -182,8 +183,7 @@ class Customer360Controller extends Controller {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$object = $objectService->find(
 				id: $clientId,
-				register: $register,
-				schema: $schema,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
 				_rbac: true,
 				_multitenancy: true,
 			);

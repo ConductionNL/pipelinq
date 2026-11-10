@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\Marketing\RecipientNameReader;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -53,7 +54,9 @@ class RecipientNameReaderTest extends TestCase {
 			public function __construct(private array $rows) {
 			}//end __construct()
 
-			public function find(string $id, $register = null, $schema = null): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($register !== 'pipelinq') {
 					throw new RuntimeException('wrong register: ' . $register);
 				}

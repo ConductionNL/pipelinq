@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use Psr\Container\ContainerInterface;
 use DateTimeImmutable;
@@ -102,7 +103,7 @@ abstract class AbstractExportService {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}

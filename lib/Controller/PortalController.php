@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCA\Pipelinq\Service\BookingService;
@@ -596,8 +597,7 @@ class PortalController extends Controller {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $serviceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: service load failed', ['service' => $serviceId]);
@@ -627,8 +627,7 @@ class PortalController extends Controller {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			return null;
@@ -873,8 +872,7 @@ class PortalController extends Controller {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			return '';

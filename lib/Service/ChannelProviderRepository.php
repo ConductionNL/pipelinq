@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -183,8 +184,7 @@ class ChannelProviderRepository {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
+				options: new ObjectFindOptions(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()),
 				_rbac: ($scope['_rbac'] ?? true),
 				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);

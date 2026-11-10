@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Service\LineTotals;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 
@@ -209,7 +210,7 @@ class LineRollUp {
 	 * @return array<string, mixed> The data, empty when it is not found.
 	 */
 	private function dataOf(string $objectId): array {
-		$found = $this->objects->find(id: $objectId, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		$found = $this->objects->find(id: $objectId, options: new ObjectFindOptions(render: false, audit: false), _rbac: false, _multitenancy: false);
 		return (array)($found?->getObject() ?? []);
 	}//end dataOf()
 

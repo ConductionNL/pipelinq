@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing\Transport;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\MailAddressing;
 use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
@@ -87,7 +88,7 @@ class ConnectorSourceTransportTest extends TestCase {
 		string $callServiceId = 'OCA\\Integriq\\Service\\CallService',
 	): ContainerInterface {
 		$objectService = new class {
-			public function find(string $id, $register = null, $schema = null): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
 				return ['uuid' => $id];
 			}//end find()
 		};
@@ -312,7 +313,7 @@ class ConnectorSourceTransportTest extends TestCase {
 	 */
 	public function testSendFailsClosedWhenSourceNotFound(): void {
 		$objectService = new class {
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 				return null;
 			}//end find()
 		};

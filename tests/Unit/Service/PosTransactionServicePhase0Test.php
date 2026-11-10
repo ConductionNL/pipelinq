@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosTransactionService;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -91,7 +92,7 @@ class Phase0FakeObjectService {
 	 *
 	 * @return array<string, mixed>|null The configured object.
 	 */
-	public function find(string $id, string $register = '', string $schema = ''): ?array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 		return $this->object;
 	}//end find()
 

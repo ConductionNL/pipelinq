@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
@@ -321,10 +322,7 @@ class ContactVcardPropertyBuilder {
 		try {
 			$client = $objectService->find(
 				$clientId,
-				[],
-				false,
-				$registerId,
-				$schemaId
+				options: new ObjectFindOptions(register: $registerId, schema: $schemaId)
 			);
 			$data = $this->serializeResult(result: $client);
 			return $data['name'] ?? null;

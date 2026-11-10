@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\BelastingdienstExportService;
 use OCA\Pipelinq\Service\KassakoppelingAuditService;
@@ -94,15 +95,11 @@ class FakeAuditObjectService extends ObjectService {
 	 */
 	public function find(
 		int|string $id,
-		?array $_extend = [],
-		bool $files = false,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
 	): ?ObjectEntityInterface {
+		$schema = $options?->schema;
 		$row = ($this->store[(string)$schema][(string)$id] ?? null);
 		if ($row === null) {
 			return null;

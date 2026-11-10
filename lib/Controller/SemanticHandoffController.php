@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -514,8 +515,7 @@ class SemanticHandoffController extends Controller {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $this->registerSlug(),
-				schema: $schema,
+				options: new ObjectFindOptions(register: $this->registerSlug(), schema: $schema),
 			);
 		} catch (Throwable $e) {
 			return null;

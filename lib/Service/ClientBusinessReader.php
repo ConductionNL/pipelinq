@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\AppInfo\Application;
 use DateTime;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -315,8 +316,7 @@ class ClientBusinessReader {
 		try {
 			$object = $this->container->get(self::OBJECT_SERVICE)->find(
 				id: $clientId,
-				register: $register,
-				schema: $schema,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
 				_rbac: true,
 				_multitenancy: true,
 			);

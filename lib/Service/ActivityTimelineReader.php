@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -293,7 +294,7 @@ class ActivityTimelineReader {
 	 */
 	private function serviceName(string $serviceId, string $registerId, string $schemaId): ?string {
 		try {
-			$service = $this->objectService->find(id: $serviceId, register: $registerId, schema: $schemaId);
+			$service = $this->objectService->find(id: $serviceId, options: new ObjectFindOptions(register: $registerId, schema: $schemaId));
 		} catch (Throwable) {
 			return null;
 		}

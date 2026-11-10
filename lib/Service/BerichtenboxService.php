@@ -37,6 +37,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
 use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
@@ -820,7 +821,7 @@ class BerichtenboxService {
 	private function findMessageByUuid(string $uuid): ?array {
 		[$register, $schema] = $this->messageConfig();
 		try {
-			$row = $this->getObjectService()->find(id: $uuid, register: $register, schema: $schema);
+			$row = $this->getObjectService()->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}

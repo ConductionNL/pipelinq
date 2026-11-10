@@ -35,6 +35,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\PortalAuthController;
 use OCA\Pipelinq\Service\Portal\PasswordResetService;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
@@ -221,7 +222,7 @@ class PortalPasswordResetFlowTest extends TestCase {
 		);
 
 		$service->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
 				if ($_rbac === true || $_multitenancy === true || isset($this->store[(string)$id]) === false) {
 					return null;
 				}

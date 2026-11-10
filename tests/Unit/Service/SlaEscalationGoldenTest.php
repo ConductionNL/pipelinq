@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\BusinessHoursCalculator;
 use OCA\Pipelinq\Service\HolidayCalendarService;
 use OCA\Pipelinq\Service\SlaEngineService;
@@ -324,7 +325,7 @@ class SlaEscalationGoldenTest extends TestCase {
 			public function __construct(private SlaEscalationGoldenTest $test, private array $store, private string $save) {
 			}
 
-			public function find($id, $register = null, $schema = null): ?array {
+			public function find($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 				$this->test->note(['find' => compact('id', 'register', 'schema')]);
 				return ($this->store[$id] ?? null);
 			}

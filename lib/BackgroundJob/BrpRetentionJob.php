@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -226,8 +227,7 @@ class BrpRetentionJob extends TimedJob {
 		try {
 			$existing = $objects->find(
 				id: $contactId,
-				register: $register,
-				schema: $contactSchema,
+				options: new ObjectFindOptions(register: $register, schema: $contactSchema),
 			);
 			$existingArr = $this->recordToArray(rec: $existing);
 

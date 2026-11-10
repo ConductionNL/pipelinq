@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\ActivityService;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotificationService;
@@ -182,7 +183,9 @@ class NoteEventServiceTest extends TestCase {
 			 *
 			 * @return array The stub object.
 			 */
-			public function find(string $id, string $register, string $schema): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = (string)($options?->register ?? '');
+				$schema = (string)($options?->schema ?? '');
 				$this->seen = [
 					'id' => $id,
 					'register' => $register,
@@ -227,7 +230,7 @@ class NoteEventServiceTest extends TestCase {
 			 *
 			 * @return object The stub entity.
 			 */
-			public function find(string $id, string $register, string $schema): object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): object {
 				return new class implements \JsonSerializable {
 					/**
 					 * @return array The serialised object.
@@ -264,7 +267,7 @@ class NoteEventServiceTest extends TestCase {
 			 *
 			 * @return object The stub entity with no normalisation surface.
 			 */
-			public function find(string $id, string $register, string $schema): object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): object {
 				return new \stdClass();
 			}
 		};

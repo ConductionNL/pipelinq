@@ -51,6 +51,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -204,7 +205,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$object = null;
 		}
@@ -1011,7 +1012,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$object = null;
 		}
@@ -1056,7 +1057,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			return null;
 		}

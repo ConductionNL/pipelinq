@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -152,9 +153,8 @@ class SlaPolicyController extends Controller {
 			$existing = null;
 			try {
 				$existing = $objectService->find(
-					register: $register,
-					schema: $schema,
-					uuid: $id,
+					id: $id,
+					options: new ObjectFindOptions(register: $register, schema: $schema),
 				);
 			} catch (Throwable $e) {
 				$this->logger->debug(

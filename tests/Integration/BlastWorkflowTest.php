@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Integration;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
@@ -99,7 +100,8 @@ class BlastWorkflowTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Payload or null.
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$schema = $options?->schema;
 				$rows = ($this->tables[$schema] ?? []);
 				foreach ($rows as $row) {
 					if (($row['uuid'] ?? null) === $id) {

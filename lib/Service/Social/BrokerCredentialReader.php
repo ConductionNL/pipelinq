@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -125,8 +126,7 @@ class BrokerCredentialReader {
 			$service = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$entity = $service->find(
 				id: $credentialRef,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
 			);
 		} catch (Throwable $failure) {
 			$this->logger->info(

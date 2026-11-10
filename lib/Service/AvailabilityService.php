@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
@@ -597,8 +598,7 @@ class AvailabilityService {
 		try {
 			$result = $this->getObjectService()->find(
 				id: $resourceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -725,8 +725,7 @@ class AvailabilityService {
 		try {
 			$svc = $this->getObjectService()->find(
 				id: $serviceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: service lookup failed', ['service' => $serviceId]);

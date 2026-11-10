@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\TemplateController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ArticleService;
@@ -72,7 +73,7 @@ class TemplateStoreDouble {
 	 *
 	 * @return array<string, mixed>|null The template, or null.
 	 */
-	public function find(string $id, $register = null, $schema = null): ?array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 		return ($this->store[$id] ?? null);
 	}//end find()
 

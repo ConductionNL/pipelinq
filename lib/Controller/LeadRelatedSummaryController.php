@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Lead\LeadRelatedSummary;
@@ -87,7 +88,7 @@ class LeadRelatedSummaryController extends Controller {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
 		try {
-			$found = $this->objectService->find(id: $id, register: $register, schema: $schema);
+			$found = $this->objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$found = null;
 		}
