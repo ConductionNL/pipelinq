@@ -217,9 +217,6 @@ const TIMELINE_ICONS = {
 	status: ProgressCheck,
 }
 
-/** The parts this section can render on its own. */
-const PARTS = ['all', 'context', 'assignments', 'timeline', 'customer', 'when']
-
 /**
  * The booking's timestamp fields the timeline lists, each with its kind and its words.
  */
@@ -232,6 +229,9 @@ const TIMESTAMP_EVENTS = [
 	['noShowFeeChargedAt', 'fee', () => t('pipelinq', 'No-show fee charged')],
 	['cancelledAt', 'cancel', () => t('pipelinq', 'Cancelled')],
 ]
+
+/** The parts this section can render on its own. */
+const PARTS = ['all', 'context', 'assignments', 'timeline', 'customer', 'when']
 
 const STATUS_LABELS = {
 	'pending-deposit': 'Awaiting deposit',
