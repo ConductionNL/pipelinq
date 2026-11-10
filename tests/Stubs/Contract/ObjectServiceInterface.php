@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace OCA\OpenRegister\Contract;
 
+use OCA\OpenRegister\Service\Object\LockRequest;
+use OCA\OpenRegister\Service\Object\UnlockRequest;
 use OCP\IUser;
 
 /**
@@ -445,29 +447,21 @@ interface ObjectServiceInterface {
 	/**
 	 * Release a lock on an object.
 	 *
-	 * @param string|int $identifier The object id or UUID.
-	 * @param bool       $advisory   Take an advisory (non-blocking) lock.
+	 * @param UnlockRequest $request The object, advisory flag, run and break flag.
 	 *
 	 * @return bool True when the lock was released.
 	 */
-	public function unlockObject(string|int $identifier, bool $advisory=false): bool;
+	public function unlockObject(UnlockRequest $request): bool;
 
 	/**
 	 * Take a lock on an object.
 	 *
-	 * @param string  $identifier The object id or UUID.
-	 * @param ?string $process    A label for the process holding the lock.
-	 * @param ?int    $duration   Lock duration in seconds.
-	 * @param bool    $advisory   Take an advisory (non-blocking) lock.
+	 * @param LockRequest $request  The object, process, duration and run step.
+	 * @param bool        $advisory Take an advisory (non-blocking) lock.
 	 *
 	 * @return array The resulting lock state.
 	 */
-	public function lockObject(
-		string $identifier,
-		?string $process=null,
-		?int $duration=null,
-		bool $advisory=false
-	): array;
+	public function lockObject(LockRequest $request, bool $advisory=false): array;
 
 	/**
 	 * Delete many objects by UUID.
