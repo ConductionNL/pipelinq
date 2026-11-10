@@ -28,6 +28,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\LanguageService;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\ScheduledTaskService;
@@ -729,14 +730,10 @@ class RecordingObjectService extends ObjectService {
 	 * @return bool Always true.
 	 */
 	public function deleteObject(
-		string $uuid,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false,
-		?IUser $currentUser = null,
-		bool $permanent = false,
 	): bool {
 		$this->deleted = true;
 

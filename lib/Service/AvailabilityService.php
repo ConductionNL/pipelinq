@@ -30,6 +30,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
@@ -395,9 +397,10 @@ class AvailabilityService {
 
 		try {
 			$this->getObjectService()->deleteObject(
-				uuid: $uuid,
-				register: $register,
-				schema: $schema
+				deletion: new ObjectDeletion(
+					uuid: $uuid,
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+				),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -436,7 +439,12 @@ class AvailabilityService {
 			}
 
 			try {
-				$this->getObjectService()->deleteObject(uuid: $uuid, register: $register, schema: $schema);
+				$this->getObjectService()->deleteObject(
+					deletion: new ObjectDeletion(
+						uuid: $uuid,
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+					),
+				);
 				$deleted++;
 			} catch (\Throwable $e) {
 				$this->logger->warning(

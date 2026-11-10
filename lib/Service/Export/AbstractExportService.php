@@ -39,6 +39,8 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 
 /**
  * Base class for the BI export services.
@@ -180,7 +182,12 @@ abstract class AbstractExportService {
 	protected function deleteObjectById(string $schemaKey, string $id): void {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
-		$this->getObjectService()->deleteObject(register: $register, schema: $schema, uuid: $id);
+		$this->getObjectService()->deleteObject(
+			deletion: new ObjectDeletion(
+				uuid: $id,
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+			),
+		);
 	}//end deleteObjectById()
 
 	/**

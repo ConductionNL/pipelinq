@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\ContactAddressLookup;
 use OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq;
@@ -140,7 +141,8 @@ class ConsentServiceTest extends TestCase {
 			 *
 			 * @return void
 			 */
-			public function deleteObject(string $uuid, $register = null, $schema = null): void {
+			public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): void {
+				$uuid = $deletion->uuid;
 				if (isset($this->store[$uuid]) === true) {
 					unset($this->store[$uuid]);
 					$this->deleted++;

@@ -50,6 +50,7 @@ namespace OCA\OpenRegister\Service;
 use LogicException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCP\IUser;
 
 if (class_exists(ObjectService::class) === false) {
@@ -213,26 +214,18 @@ if (class_exists(ObjectService::class) === false) {
 		/**
 		 * Delete an object by UUID.
 		 *
-		 * @param string          $uuid            The object UUID.
-		 * @param string|int|null $register        Register slug or ID.
-		 * @param string|int|null $schema          Schema slug or ID.
-		 * @param boolean         $_rbac           Whether to enforce RBAC checks.
-		 * @param boolean         $_multitenancy   Whether to enforce tenant scoping.
-		 * @param boolean         $_retentionSweep Whether this is a retention sweep.
-		 * @param IUser|null      $currentUser     Acting user.
-		 * @param boolean         $permanent       Whether to delete permanently.
+		 * @param ObjectDeletion $deletion        The uuid, register, schema, acting user and permanence.
+		 * @param boolean        $_rbac           Whether to enforce RBAC checks.
+		 * @param boolean        $_multitenancy   Whether to enforce tenant scoping.
+		 * @param boolean        $_retentionSweep Whether this is a retention sweep.
 		 *
 		 * @return boolean
 		 */
 		public function deleteObject(
-			string $uuid,
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			ObjectDeletion $deletion,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
 			bool $_retentionSweep = false,
-			?IUser $currentUser = null,
-			bool $permanent = false,
 		): bool {
 			return true;
 		}//end deleteObject()

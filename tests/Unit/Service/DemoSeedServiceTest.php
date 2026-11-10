@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\Demo\DemoJourneySeeder;
@@ -688,7 +689,8 @@ class DemoSeedServiceTest extends TestCase {
 		$deleted = [];
 		$this->objectService->method('deleteObject')
 			->willReturnCallback(
-				static function (string $uuid) use (&$deleted, &$store): bool {
+				static function (ObjectDeletion $deletion) use (&$deleted, &$store): bool {
+						$uuid = $deletion->uuid;
 					$deleted[] = $uuid;
 					// Drop the row from the store so the removal loop terminates.
 					foreach ($store as $schemaId => $rows) {
@@ -736,7 +738,9 @@ class DemoSeedServiceTest extends TestCase {
 
 		$this->objectService->method('deleteObject')
 			->willReturnCallback(
-				static function (string $uuid, string|int|null $register = null, string|int|null $schema = null) use (&$store): bool {
+				static function (ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false) use (&$store): bool {
+					$uuid = $deletion->uuid;
+					$schema = $deletion->target->schema;
 					if ((string)$schema === self::TICKET_SCHEMA_ID) {
 						throw new \Exception('SCHEMA_ARCHIVAL_IMMUTABLE: schema declares x-openregister-archival');
 					}

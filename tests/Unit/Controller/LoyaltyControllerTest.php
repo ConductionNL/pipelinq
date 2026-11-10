@@ -36,6 +36,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\LoyaltyController;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
@@ -1558,15 +1559,13 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	 *   parent's, not this fake's design.
 	 */
 	public function deleteObject(
-		string $uuid,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false,
-		?IUser $currentUser = null,
-		bool $permanent = false,
 	): bool {
+		$uuid = $deletion->uuid;
+		$schema = $deletion->target->schema;
 		unset($this->tables[(string)$schema][$uuid]);
 		return true;
 	}//end deleteObject()

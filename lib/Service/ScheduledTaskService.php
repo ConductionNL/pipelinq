@@ -32,6 +32,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskDeadlines;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskRights;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskStore;
@@ -424,7 +426,12 @@ class ScheduledTaskService {
 		}
 
 		[$registerId, $schemaId] = $this->store->location();
-		if ($this->store->objects()->deleteObject($uuid, $registerId, $schemaId) === false) {
+		if ($this->store->objects()->deleteObject(
+			deletion: new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+			),
+		) === false) {
 			throw new RuntimeException('Task could not be deleted');
 		}
 	}//end deleteScheduledTask()

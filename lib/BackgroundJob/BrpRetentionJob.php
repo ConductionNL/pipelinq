@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -186,7 +187,7 @@ class BrpRetentionJob extends TimedJob {
 		try {
 			$objects->setRegister($register)
 				->setSchema($personSchema)
-				->deleteObject(uuid: $uuid);
+				->deleteObject(deletion: new ObjectDeletion(uuid: $uuid));
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'BRP retention: delete failed',

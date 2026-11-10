@@ -33,6 +33,8 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 
 /**
  * Redemption lifecycle service.
@@ -512,7 +514,12 @@ class RedemptionService {
 		}
 
 		try {
-			$this->getObjectService()->deleteObject(uuid: $redemptionId, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				deletion: new ObjectDeletion(
+					uuid: $redemptionId,
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+				),
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: redemption rollback delete failed',

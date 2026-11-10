@@ -33,6 +33,8 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 
 /**
  * Service for POS role business operations.
@@ -202,7 +204,12 @@ class PosRoleService {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
 
 		try {
-			$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				deletion: new ObjectDeletion(
+					uuid: $id,
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+				),
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to delete posRole', ['exception' => $e->getMessage()]);
 			throw new OCSNotFoundException('POS-rol kon niet worden verwijderd.');

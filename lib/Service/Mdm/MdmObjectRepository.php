@@ -34,6 +34,7 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 
 /**
  * Repository helper for MDM OpenRegister objects.
@@ -221,7 +222,7 @@ class MdmObjectRepository {
 	public function delete(string $schemaSlug, string $id): void {
 		// Resolve to validate the schema is configured before mutating.
 		$this->schema(schemaSlug: $schemaSlug);
-		$this->objectService()->deleteObject($id);
+		$this->objectService()->deleteObject(deletion: new ObjectDeletion(uuid: $id));
 	}//end delete()
 
 	/**

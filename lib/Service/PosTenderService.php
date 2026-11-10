@@ -51,6 +51,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -318,7 +320,12 @@ class PosTenderService {
 
 		try {
 			// The parameter is `$uuid`; `id:` is `Error: Unknown named parameter`.
-			$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				deletion: new ObjectDeletion(
+					uuid: $id,
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+				),
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to delete tender type',
@@ -518,7 +525,12 @@ class PosTenderService {
 
 		try {
 			// The parameter is `$uuid`; `id:` is `Error: Unknown named parameter`.
-			$this->getObjectService()->deleteObject(uuid: $tenderId, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				deletion: new ObjectDeletion(
+					uuid: $tenderId,
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+				),
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to delete tender',

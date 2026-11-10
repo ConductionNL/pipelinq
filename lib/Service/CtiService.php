@@ -29,6 +29,8 @@ use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
 use InvalidArgumentException;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -738,7 +740,12 @@ class CtiService {
 				}
 
 				try {
-					$objectService->deleteObject(register: $register, schema: $schema, uuid: $id);
+					$objectService->deleteObject(
+						deletion: new ObjectDeletion(
+							uuid: $id,
+							target: new ObjectFindTarget(register: $register, schema: $schema),
+						),
+					);
 					$deleted++;
 				} catch (\Throwable $e) {
 					$this->logger->warning(

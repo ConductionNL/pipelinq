@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\Pipelinq\Service\InvalidTenderException;
 use OCA\Pipelinq\Service\PosTenderService;
 use OCA\Pipelinq\Service\TenderTypeNotFoundException;
@@ -269,7 +270,10 @@ class TenderFakeObjectService {
 	 *
 	 * @return void
 	 */
-	public function deleteObject(string $uuid, string|int|null $register = null, string|int|null $schema = null): void {
+	public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): void {
+		$uuid = $deletion->uuid;
+		$register = $deletion->target->register;
+		$schema = $deletion->target->schema;
 		$this->currentRegister = (string)$register;
 		$this->currentSchema = (string)$schema;
 

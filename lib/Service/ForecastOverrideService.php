@@ -26,6 +26,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -199,7 +201,12 @@ class ForecastOverrideService {
 		}
 
 		try {
-			return (bool)$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			return (bool)$this->getObjectService()->deleteObject(
+				deletion: new ObjectDeletion(
+					uuid: $id,
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+				),
+			);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: failed to delete forecast override', ['exception' => $e->getMessage(), 'id' => $id]);
 			return false;

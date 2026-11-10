@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\PosRoleService;
 use OCA\Pipelinq\Service\PosStaffService;
@@ -197,15 +198,13 @@ class StaffFakeObjectService extends ObjectService {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
 	public function deleteObject(
-		string $uuid,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false,
-		?IUser $currentUser = null,
-		bool $permanent = false,
 	): bool {
+		$uuid = $deletion->uuid;
+		$schema = $deletion->target->schema;
 		unset($this->store[(string)$schema][$uuid]);
 
 		return true;

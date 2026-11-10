@@ -34,6 +34,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -244,9 +246,10 @@ class ListObjectStore {
 
 		try {
 			return (bool)$context['service']->deleteObject(
-				uuid: $id,
-				register: $context['register'],
-				schema: $context['schema'],
+				deletion: new ObjectDeletion(
+					uuid: $id,
+					target: new ObjectFindTarget(register: $context['register'], schema: $context['schema']),
+				),
 				_rbac: false,
 				_multitenancy: false,
 			);

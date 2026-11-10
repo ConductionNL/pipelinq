@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\OpenRegister\Contract;
 
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCP\IUser;
 
 /**
@@ -248,26 +249,18 @@ interface ObjectServiceInterface {
 	/**
 	 * Delete an object by UUID.
 	 *
-	 * @param string          $uuid            The object UUID.
-	 * @param string|int|null $register        Register id, UUID or slug.
-	 * @param string|int|null $schema          Schema id, UUID or slug.
-	 * @param bool            $_rbac           Apply register RBAC.
-	 * @param bool            $_multitenancy   Apply organisation scoping.
-	 * @param bool            $_retentionSweep Run as part of a retention sweep.
-	 * @param ?IUser          $currentUser     Explicit acting user; null uses the session.
-	 * @param bool            $permanent       Delete permanently instead of soft-deleting.
+	 * @param ObjectDeletion $deletion        The uuid, register, schema, acting user and permanence.
+	 * @param bool           $_rbac           Apply register RBAC.
+	 * @param bool           $_multitenancy   Apply organisation scoping.
+	 * @param bool           $_retentionSweep Run as part of a retention sweep.
 	 *
 	 * @return bool True when the object was deleted.
 	 */
 	public function deleteObject(
-		string $uuid,
-		string|int|null $register=null,
-		string|int|null $schema=null,
-		bool $_rbac=true,
-		bool $_multitenancy=true,
-		bool $_retentionSweep=false,
-		?IUser $currentUser=null,
-		bool $permanent=false
+		ObjectDeletion $deletion,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
 	): bool;
 
 	/**
