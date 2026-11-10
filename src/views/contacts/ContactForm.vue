@@ -131,6 +131,48 @@ import { useObjectStore } from '../../store/modules/object.js'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
 
+/**
+ * @param {object} form The contact form.
+ * @return {string} The name's error, or ''.
+ */
+function nameError(form) {
+	return !form.form.name.trim() ? t('pipelinq', 'Name is required') : ''
+}
+
+/**
+ * @param {object} form The contact form.
+ * @return {string} The client's error, or ''.
+ */
+function clientError(form) {
+	return !form.selectedClient ? t('pipelinq', 'Client is required') : ''
+}
+
+/**
+ * @param {object} form The contact form.
+ * @return {string} The e-mail address's error, or ''.
+ */
+function emailError(form) {
+	return form.form.email && !EMAIL_REGEX.test(form.form.email) ? t('pipelinq', 'Invalid email format') : ''
+}
+
+/**
+ * @param {object} form The contact form.
+ * @return {string} The phone number's error, or ''.
+ */
+function phoneError(form) {
+	return form.form.phone && !PHONE_REGEX.test(form.form.phone) ? t('pipelinq', 'Invalid phone format') : ''
+}
+
+/**
+ * The check of each validated field: the error it shows, or '' when the field is fine.
+ */
+const FIELD_CHECKS = new Map([
+	['name', nameError],
+	['client', clientError],
+	['email', emailError],
+	['phone', phoneError],
+])
+
 export default {
 	name: 'ContactForm',
 	components: {
@@ -310,35 +352,9 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-52
 		 */
 		validateField(field) {
-			switch (field) {
-				case 'name':
-					if (!this.form.name.trim()) {
-						this.errors.name = t('pipelinq', 'Name is required')
-					} else {
-						this.errors.name = ''
-					}
-					break
-				case 'client':
-					if (!this.selectedClient) {
-						this.errors.client = t('pipelinq', 'Client is required')
-					} else {
-						this.errors.client = ''
-					}
-					break
-				case 'email':
-					if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
-						this.errors.email = t('pipelinq', 'Invalid email format')
-					} else {
-						this.errors.email = ''
-					}
-					break
-				case 'phone':
-					if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
-						this.errors.phone = t('pipelinq', 'Invalid phone format')
-					} else {
-						this.errors.phone = ''
-					}
-					break
+			const check = FIELD_CHECKS.get(field)
+			if (check) {
+				this.errors[field] = check(this)
 			}
 		},
 

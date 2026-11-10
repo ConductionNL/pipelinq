@@ -91,16 +91,36 @@ export function labelForModel(model) {
  */
 export function channelRows(report) {
 	const channels = report?.channels || []
-	return channels.map((row) => ({
+	return channels.map(channelRow)
+}
+
+/**
+ * @param {object} row One channel of the report.
+ * @return {object} The channel's table row.
+ */
+function channelRow(row) {
+	const count = (key) => row[key] || 0
+	return {
 		channel: row.channel,
-		reach: row.reach === null || row.reach === undefined ? null : row.reach,
-		opened: row.reach === null || row.reach === undefined ? null : row.opened || 0,
-		clicks: row.click || 0,
-		visits: row.visit || 0,
-		submissions: row.submit || 0,
-		replies: row.reply || 0,
-		leads: row.leads || 0,
-	}))
+		...reachCounts(row),
+		clicks: count('click'),
+		visits: count('visit'),
+		submissions: count('submit'),
+		replies: count('reply'),
+		leads: count('leads'),
+	}
+}
+
+/**
+ * @param {object} row One channel of the report.
+ * @return {{reach: (number|null), opened: (number|null)}} Its reach and opens; both unrecorded without a reach figure.
+ */
+function reachCounts(row) {
+	const unrecorded = row.reach === null || row.reach === undefined
+	return {
+		reach: unrecorded ? null : row.reach,
+		opened: unrecorded ? null : row.opened || 0,
+	}
 }
 
 /**

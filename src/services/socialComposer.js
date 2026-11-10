@@ -29,17 +29,35 @@ import { networkLimits } from './socialNetworks.js'
  * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export function resolveVariant(post, network) {
-	const resolved = {
-		body: String(post?.body || ''),
-		link: String(post?.link || ''),
-		media: Array.isArray(post?.media) ? post.media : [],
-	}
+	const resolved = baseVariant(post)
 
 	const variant = post?.variants?.[network]
 	if (!variant || typeof variant !== 'object') {
 		return resolved
 	}
+	return withVariant(resolved, variant)
+}
 
+/**
+ * @param {?object} post The post being composed.
+ * @return {{body: string, link: string, media: Array<object>}} The post's own body, link and media.
+ */
+function baseVariant(post) {
+	return {
+		body: String(post?.body || ''),
+		link: String(post?.link || ''),
+		media: Array.isArray(post?.media) ? post.media : [],
+	}
+}
+
+/**
+ * A network's own body, link and media in place of the post's, where it sets them.
+ *
+ * @param {{body: string, link: string, media: Array<object>}} resolved The post's values; changed in place.
+ * @param {object} variant The network's variant.
+ * @return {{body: string, link: string, media: Array<object>}} The resolved values.
+ */
+function withVariant(resolved, variant) {
 	for (const field of ['body', 'link']) {
 		const value = String(variant[field] || '').trim()
 		if (value !== '') {
