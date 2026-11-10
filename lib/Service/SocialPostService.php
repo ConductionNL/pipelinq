@@ -343,59 +343,14 @@ class SocialPostService {
 			'media' => $media,
 		];
 
-		$variant = self::variantFor(post: $post, network: $network);
+		$merge = new PostVariantMerge();
+		$variant = $merge->variantFor(post: $post, network: $network);
 		if ($variant === null) {
 			return $resolved;
 		}
 
-		return self::withVariant(resolved: $resolved, variant: $variant);
+		return $merge->merged(resolved: $resolved, variant: $variant);
 	}//end resolveVariant()
-
-	/**
-	 * The post's variant for one network, when it carries one.
-	 *
-	 * @param array<string, mixed> $post    The post.
-	 * @param string               $network The network.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private static function variantFor(array $post, string $network): ?array {
-		$variants = ($post['variants'] ?? []);
-		if (is_array($variants) === false) {
-			return null;
-		}
-
-		$variant = ($variants[$network] ?? null);
-		if (is_array($variant) === false) {
-			return null;
-		}
-
-		return $variant;
-	}//end variantFor()
-
-	/**
-	 * Merge a variant's non-empty body and link, and its media when it has any.
-	 *
-	 * @param array{body: string, link: string, media: array<int, array<string, mixed>>} $resolved The post's own values.
-	 * @param array<string, mixed>                                                     $variant  The network's variant.
-	 *
-	 * @return array{body: string, link: string, media: array<int, array<string, mixed>>}
-	 */
-	private static function withVariant(array $resolved, array $variant): array {
-		foreach (['body', 'link'] as $field) {
-			$value = trim((string)($variant[$field] ?? ''));
-			if ($value !== '') {
-				$resolved[$field] = $value;
-			}
-		}
-
-		$variantMedia = ($variant['media'] ?? null);
-		if (is_array($variantMedia) === true && $variantMedia !== []) {
-			$resolved['media'] = $variantMedia;
-		}
-
-		return $resolved;
-	}//end withVariant()
 
 	/**
 	 * Every network whose resolved body is longer than that network accepts.
@@ -869,77 +824,12 @@ class SocialPostService {
 	 */
 	private function settle(string $postId, array $post): array {
 		$rows = $this->publications->forPost(postId: $postId);
-		$post = self::withSettledStatus(post: $post, rows: $rows);
+		$post = (new PostSettlement())->settled(post: $post, rows: $rows);
 
 		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $postId);
 
 		return ($saved ?? $post);
 	}//end settle()
-
-	/**
-	 * The post with the status its publications give it: failed when any
-	 * failed, published when all are done, scheduled otherwise.
-	 *
-	 * @param array<string, mixed>             $post The post as read.
-	 * @param array<int, array<string, mixed>> $rows Its publications.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private static function withSettledStatus(array $post, array $rows): array {
-		[$failures, $done] = self::tallyPublications(rows: $rows);
-
-		$post['status'] = self::STATUS_SCHEDULED;
-		$post['failureReason'] = '';
-		if ($failures !== []) {
-			$post['status'] = self::STATUS_FAILED;
-			$post['failureReason'] = implode(' ', $failures);
-		} elseif ($rows !== [] && $done === count($rows)) {
-			$post = self::markedPublished(post: $post);
-		}
-
-		return $post;
-	}//end withSettledStatus()
-
-	/**
-	 * The failure lines (`network: reason`) and the number of settled publications.
-	 *
-	 * @param array<int, array<string, mixed>> $rows The publications.
-	 *
-	 * @return array{0: array<int, string>, 1: int}
-	 */
-	private static function tallyPublications(array $rows): array {
-		$failures = [];
-		$done = 0;
-		foreach ($rows as $row) {
-			$status = (string)($row['status'] ?? '');
-			if ($status === SocialPublicationStore::FAILED) {
-				$failures[] = (string)($row['network'] ?? '') . ': ' . (string)($row['failureReason'] ?? '');
-				continue;
-			}
-
-			if (in_array($status, self::SETTLED_STATUSES, true) === true) {
-				$done++;
-			}
-		}
-
-		return [$failures, $done];
-	}//end tallyPublications()
-
-	/**
-	 * The post marked published, stamped now unless it already carries a moment.
-	 *
-	 * @param array<string, mixed> $post The post.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private static function markedPublished(array $post): array {
-		$post['status'] = self::STATUS_PUBLISHED;
-		if (trim((string)($post['publishedAt'] ?? '')) === '') {
-			$post['publishedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		}
-
-		return $post;
-	}//end markedPublished()
 
 	/**
 	 * Record one human decision and move the post.
@@ -959,7 +849,8 @@ class SocialPostService {
 			return ['error' => 'This post is not waiting for approval.'];
 		}
 
-		$post['approvals'] = self::approvalsWith(post: $post, approval: self::approvalOf(review: $review, verdict: $verdict));
+		$approvals = new PostApprovals();
+		$post['approvals'] = $approvals->appended(post: $post, approval: $approvals->entryFor(review: $review, verdict: $verdict));
 		$post['status'] = self::DECISION_STATUS[$verdict->decision];
 
 		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $review->postId);
@@ -969,46 +860,6 @@ class SocialPostService {
 
 		return ['post' => $saved];
 	}//end decide()
-
-	/**
-	 * The approval entry for one decision.
-	 *
-	 * The approver is the session, always. A body naming somebody else is
-	 * ignored rather than refused, because refusing would tell a caller
-	 * which field it guessed right.
-	 *
-	 * @param PostReview    $review  The post and the person deciding.
-	 * @param ReviewVerdict $verdict The decision and its note.
-	 *
-	 * @return array{userId: string, decision: string, decidedAt: string, note: string}
-	 */
-	private static function approvalOf(PostReview $review, ReviewVerdict $verdict): array {
-		return [
-			'userId' => $review->uid,
-			'decision' => $verdict->decision,
-			'decidedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-			'note' => $verdict->note,
-		];
-	}//end approvalOf()
-
-	/**
-	 * The post's approvals with one more appended (a malformed list starts over).
-	 *
-	 * @param array<string, mixed>  $post     The post.
-	 * @param array<string, string> $approval The new approval entry.
-	 *
-	 * @return array<int, mixed>
-	 */
-	private static function approvalsWith(array $post, array $approval): array {
-		$approvals = ($post['approvals'] ?? []);
-		if (is_array($approvals) === false) {
-			$approvals = [];
-		}
-
-		$approvals[] = $approval;
-
-		return $approvals;
-	}//end approvalsWith()
 
 	/**
 	 * The networks a post goes to, derived from the accounts it names.
