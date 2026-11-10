@@ -404,6 +404,66 @@ class NaviServiceTest extends TestCase {
 	}
 
 	/**
+	 * Characterisation: a findAll() row is used as-is when it is an array,
+	 * else through jsonSerialize(), else through getObject(); a non-array
+	 * from jsonSerialize() falls through to getObject(), and anything else
+	 * is dropped.
+	 *
+	 * @return void
+	 */
+	public function testFindAllRowsAreNormalisedToArrays(): void {
+		$serialisable = new class () implements \JsonSerializable {
+			public function jsonSerialize(): mixed {
+				return ['via' => 'json'];
+			}
+		};
+		$wrapped = new class () {
+			public function getObject(): array {
+				return ['via' => 'object'];
+			}
+		};
+		$both = new class () {
+			public function jsonSerialize(): string {
+				return 'scalar';
+			}
+
+			public function getObject(): array {
+				return ['via' => 'fallback'];
+			}
+		};
+		$neither = new class () {
+			public function getObject(): string {
+				return 'scalar';
+			}
+		};
+
+		$method = new \ReflectionMethod(NaviService::class, 'normalizeFindObjectsResult');
+		$service = $this->buildService();
+		$outcomes = array_map(
+			static fn (mixed $row): ?array => $method->invoke($service, $row),
+			[['via' => 'array'], $serialisable, $wrapped, $both, $neither, 'text', 7]
+		);
+
+		$this->assertSame(
+			[['via' => 'array'], ['via' => 'json'], ['via' => 'object'], ['via' => 'fallback'], null, null, null],
+			$outcomes
+		);
+	}
+
+	/**
+	 * Characterisation: a schema that is not configured yields no rows; a
+	 * configured one yields its normalised findAll() rows.
+	 *
+	 * @return void
+	 */
+	public function testFindObjectsConfigAndFailurePaths(): void {
+		$method = new \ReflectionMethod(NaviService::class, 'findObjects');
+		$this->assertSame([], $method->invoke($this->buildService(configMissing: true), 'lead_schema'));
+		$configured = $this->buildService(byCollection: ['lead_schema' => [['status' => 'won'], 'dropped']]);
+		$this->assertSame([['status' => 'won']], $method->invoke($configured, 'lead_schema'));
+	}
+
+	/**
 	 * A breakdown query reads request TICKETS (ticketType: request on the
 	 * unified ticket schema) and groups them by category.
 	 *
