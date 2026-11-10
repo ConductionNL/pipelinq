@@ -148,43 +148,15 @@ class SearchQueryReportService {
 		$byQuery = [];
 		foreach ($rows as $row) {
 			$query = trim((string)($row['query'] ?? ''));
-			if ($query === '') {
-				continue;
+			if ($query !== '') {
+				$byQuery[$query] = self::addRow(
+					entry: ($byQuery[$query] ?? ['query' => $query, 'clicks' => 0, 'impressions' => 0, 'weightedPosition' => 0.0, 'pages' => []]),
+					row: $row
+				);
 			}
-
-			$impressions = max(0, (int)($row['impressions'] ?? 0));
-			$entry = ($byQuery[$query] ?? ['query' => $query, 'clicks' => 0, 'impressions' => 0, 'weightedPosition' => 0.0, 'pages' => []]);
-			$entry['clicks'] += max(0, (int)($row['clicks'] ?? 0));
-			$entry['impressions'] += $impressions;
-			$entry['weightedPosition'] += ((float)($row['position'] ?? 0.0) * $impressions);
-			$page = (string)($row['page'] ?? '');
-			if ($page !== '') {
-				$entry['pages'][$page] = true;
-			}
-
-			$byQuery[$query] = $entry;
 		}
 
-		$out = [];
-		foreach ($byQuery as $entry) {
-			$impressions = (int)$entry['impressions'];
-			$ctr = 0.0;
-			$position = 0.0;
-			if ($impressions > 0) {
-				$ctr = round(($entry['clicks'] / $impressions), 4);
-				$position = round(($entry['weightedPosition'] / $impressions), 1);
-			}
-
-			$out[] = [
-				'query' => $entry['query'],
-				'clicks' => (int)$entry['clicks'],
-				'impressions' => $impressions,
-				'ctr' => $ctr,
-				'position' => $position,
-				'pages' => count($entry['pages']),
-			];
-		}
-
+		$out = array_map(static fn (array $entry): array => self::reportRow(entry: $entry), array_values($byQuery));
 		usort(
 			$out,
 			static function (array $a, array $b): int {
@@ -194,6 +166,53 @@ class SearchQueryReportService {
 
 		return $out;
 	}//end aggregate()
+
+	/**
+	 * Add one row to a query's running totals and the pages it landed on.
+	 *
+	 * @param array<string, mixed> $entry The running totals.
+	 * @param array<string, mixed> $row   The row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function addRow(array $entry, array $row): array {
+		$impressions = max(0, (int)($row['impressions'] ?? 0));
+		$entry['clicks'] += max(0, (int)($row['clicks'] ?? 0));
+		$entry['impressions'] += $impressions;
+		$entry['weightedPosition'] += ((float)($row['position'] ?? 0.0) * $impressions);
+		$page = (string)($row['page'] ?? '');
+		if ($page !== '') {
+			$entry['pages'][$page] = true;
+		}
+
+		return $entry;
+	}//end addRow()
+
+	/**
+	 * One query's report row: rate and impression-weighted position, rounded.
+	 *
+	 * @param array<string, mixed> $entry The query's totals.
+	 *
+	 * @return array{query: string, clicks: int, impressions: int, ctr: float, position: float, pages: int}
+	 */
+	private static function reportRow(array $entry): array {
+		$impressions = (int)$entry['impressions'];
+		$ctr = 0.0;
+		$position = 0.0;
+		if ($impressions > 0) {
+			$ctr = round(($entry['clicks'] / $impressions), 4);
+			$position = round(($entry['weightedPosition'] / $impressions), 1);
+		}
+
+		return [
+			'query' => $entry['query'],
+			'clicks' => (int)$entry['clicks'],
+			'impressions' => $impressions,
+			'ctr' => $ctr,
+			'position' => $position,
+			'pages' => count($entry['pages']),
+		];
+	}//end reportRow()
 
 	/**
 	 * Resolve the window: valid explicit dates win, else the last 28 days.
