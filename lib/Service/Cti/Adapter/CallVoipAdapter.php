@@ -97,94 +97,46 @@ class CallVoipAdapter implements CtiAdapterInterface {
 	 *
 	 * @return CtiWebhookResult The parsed webhook result.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat field-by-field payload normalisation; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Flat field-by-field payload normalisation; extraction adds no clarity.
-	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.2
 	 */
 	public function handleInboundWebhook(array $payload): CtiWebhookResult {
-		$eventType = (string)($payload['event'] ?? 'unknown');
-		$callId = (string)($payload['callId'] ?? '');
-
-		$direction = null;
-		if (isset($payload['direction']) === true) {
-			$direction = (string)$payload['direction'];
-		} elseif ($eventType === 'answered' && isset($payload['extension']) === true) {
-			// Default: an extension-targeted answer is inbound.
-			$direction = 'inbound';
-		}
-
-		$recording = (array)($payload['recording'] ?? []);
-		$recordingUrl = ($recording['url'] ?? null);
-		$recordingExpiresAt = ($recording['expiresAt'] ?? null);
-
-		$fromNumber = null;
-		if (isset($payload['from']) === true) {
-			$fromNumber = (string)$payload['from'];
-		}
-
-		$toNumber = null;
-		if (isset($payload['to']) === true) {
-			$toNumber = (string)$payload['to'];
-		}
-
-		$extension = null;
-		if (isset($payload['extension']) === true) {
-			$extension = (string)$payload['extension'];
-		}
-
-		$userId = null;
-		if (isset($payload['userId']) === true) {
-			$userId = (string)$payload['userId'];
-		}
-
-		$durationSeconds = null;
-		if (isset($payload['duration']) === true) {
-			$durationSeconds = (int)$payload['duration'];
-		}
-
-		$recordingUrlString = null;
-		if ($recordingUrl !== null) {
-			$recordingUrlString = (string)$recordingUrl;
-		}
-
-		$recordingExpiresStr = null;
-		if ($recordingExpiresAt !== null) {
-			$recordingExpiresStr = (string)$recordingExpiresAt;
-		}
-
-		$presenceState = null;
-		if (isset($payload['presence']) === true) {
-			$presenceState = (string)$payload['presence'];
-		}
-
-		$queueName = null;
-		if (isset($payload['queue']) === true) {
-			$queueName = (string)$payload['queue'];
-		}
-
-		$agentSkill = null;
-		if (isset($payload['skill']) === true) {
-			$agentSkill = (string)$payload['skill'];
-		}
-
+		$recording = WebhookField::part(source: $payload, key: 'recording');
 		return new CtiWebhookResult(
-			eventType: $eventType,
-			externalCallId: $callId,
-			direction: $direction,
-			fromNumber: $fromNumber,
-			toNumber: $toNumber,
-			extension: $extension,
-			userId: $userId,
-			durationSeconds: $durationSeconds,
-			recordingUrl: $recordingUrlString,
-			recordingExpiresAt: $recordingExpiresStr,
-			presenceState: $presenceState,
-			queueName: $queueName,
-			agentSkill: $agentSkill,
+			eventType: (string)($payload['event'] ?? 'unknown'),
+			externalCallId: (string)($payload['callId'] ?? ''),
+			direction: $this->directionOf(payload: $payload),
+			fromNumber: WebhookField::text(source: $payload, key: 'from'),
+			toNumber: WebhookField::text(source: $payload, key: 'to'),
+			extension: WebhookField::text(source: $payload, key: 'extension'),
+			userId: WebhookField::text(source: $payload, key: 'userId'),
+			durationSeconds: WebhookField::number(source: $payload, key: 'duration'),
+			recordingUrl: WebhookField::text(source: $recording, key: 'url'),
+			recordingExpiresAt: WebhookField::text(source: $recording, key: 'expiresAt'),
+			presenceState: WebhookField::text(source: $payload, key: 'presence'),
+			queueName: WebhookField::text(source: $payload, key: 'queue'),
+			agentSkill: WebhookField::text(source: $payload, key: 'skill'),
 			raw: $payload,
 		);
 	}//end handleInboundWebhook()
+
+	/**
+	 * The call direction; an extension-targeted answer without one is inbound.
+	 *
+	 * @param array<string,mixed> $payload The inbound webhook payload.
+	 *
+	 * @return string|null inbound|outbound as supplied, or null when unknown.
+	 */
+	private function directionOf(array $payload): ?string {
+		if (isset($payload['direction']) === true) {
+			return (string)$payload['direction'];
+		}
+
+		if ((string)($payload['event'] ?? 'unknown') === 'answered' && isset($payload['extension']) === true) {
+			return 'inbound';
+		}
+
+		return null;
+	}//end directionOf()
 
 	/**
 	 * {@inheritDoc}
@@ -197,73 +149,47 @@ class CallVoipAdapter implements CtiAdapterInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {
+		$call = [
+			'extension' => $extension,
+			'target' => $targetNumber,
+			'callerId' => $callerId,
+		];
 		if ($this->rateLimit() === false) {
-			return new CtiCallResult(
-				success: false,
-				error: 'CallVoip rate limit exceeded (100/sec).',
-				platform: $this->getPlatform(),
-			);
+			return CtiCallResult::refused(error: 'CallVoip rate limit exceeded (100/sec).', platform: $this->getPlatform());
 		}
 
+		return $this->dial(call: $call);
+	}//end originateCall()
+
+	/**
+	 * Post the call to the configured CallVoip API, when one is configured.
+	 *
+	 * @param array<string,string> $call The extension, target and caller id.
+	 *
+	 * @return CtiCallResult The outcome.
+	 */
+	private function dial(array $call): CtiCallResult {
 		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_callvoip_api_base_url', '');
 		$apiKey = $this->appConfig->getValueString(Application::APP_ID, 'cti_callvoip_api_key', '');
 		if ($baseUrl === '') {
-			return new CtiCallResult(
-				success: false,
-				error: 'CallVoip API base URL not configured.',
-				platform: $this->getPlatform(),
-			);
+			return CtiCallResult::refused(error: 'CallVoip API base URL not configured.', platform: $this->getPlatform());
 		}
 
-		try {
-			$client = $this->clientService->newClient();
-			$response = $client->post(
-				rtrim($baseUrl, '/') . '/calls',
-				[
-					'headers' => [
-						'Authorization' => 'Bearer ' . $apiKey,
-						'Content-Type' => 'application/json',
-					],
-					'body' => json_encode(
-						[
-							'extension' => $extension,
-							'target' => $targetNumber,
-							'callerId' => $callerId,
-						]
-					),
-					'timeout' => 10,
-				]
-			);
+		$endpoint = new OriginateEndpoint(url: rtrim($baseUrl, '/') . '/calls', callIdKeys: ['callId']);
+		return $this->originate(request: new OriginateRequest(endpoint: $endpoint, options: BearerJsonPost::options(token: $apiKey, body: $call)));
+	}//end dial()
 
-			$bodyContents = (string)$response->getBody();
-			$body = json_decode($bodyContents, true);
-			$callId = null;
-			if (is_array($body) === true) {
-				$callId = ($body['callId'] ?? null);
-			}
-
-			$externalCallId = null;
-			if ($callId !== null) {
-				$externalCallId = (string)$callId;
-			}
-
-			return new CtiCallResult(
-				success: true,
-				externalCallId: $externalCallId,
-				platform: $this->getPlatform(),
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'CallVoip originate failed',
-				['exception' => $e->getMessage()]
-			);
-			return new CtiCallResult(
-				success: false,
-				error: 'CallVoip originate failed: ' . $e->getMessage(),
-				platform: $this->getPlatform(),
-			);
-		}//end try
-	}//end originateCall()
+	/**
+	 * Place the call and report the outcome under this platform's name.
+	 *
+	 * @param OriginateRequest $request The originate request.
+	 *
+	 * @return CtiCallResult The outcome.
+	 */
+	private function originate(OriginateRequest $request): CtiCallResult {
+		$originator = new CallOriginator(clientService: $this->clientService, logger: $this->logger);
+		return $originator->place(request: $request, vendor: new CtiVendor(platform: $this->getPlatform(), label: 'CallVoip'));
+	}//end originate()
 
 	/**
 	 * {@inheritDoc}

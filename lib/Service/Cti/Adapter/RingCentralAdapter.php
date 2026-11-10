@@ -43,6 +43,30 @@ use Psr\Log\LoggerInterface;
  */
 class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInterface {
 	/**
+	 * Normalised event type per party status code (lower-cased).
+	 *
+	 * @var array<string,string>
+	 */
+	private const EVENT_TYPES = [
+		'setup' => 'ringing',
+		'proceeding' => 'ringing',
+		'answered' => 'answered',
+		'disconnected' => 'ended',
+		'voicemail' => 'abandoned',
+		'parked' => 'transferred',
+	];
+
+	/**
+	 * Normalised direction per party direction (lower-cased).
+	 *
+	 * @var array<string,string>
+	 */
+	private const DIRECTIONS = [
+		'inbound' => 'inbound',
+		'outbound' => 'outbound',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
@@ -81,99 +105,55 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 *
 	 * @return CtiWebhookResult The normalised webhook result.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat field-by-field payload normalisation; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Flat field-by-field payload normalisation; extraction adds no clarity.
-	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.3
 	 */
 	public function handleInboundWebhook(array $payload): CtiWebhookResult {
 		$body = (array)($payload['body'] ?? $payload);
-		$party = ((array)($body['parties'] ?? []))[0] ?? [];
-		$party = (array)$party;
-
-		$statusCode = strtolower((string)(($party['status']['code'] ?? '')));
-		$defaultEventType = 'unknown';
-		if ($statusCode !== '') {
-			$defaultEventType = $statusCode;
-		}
-
-		$eventType = match ($statusCode) {
-			'setup', 'proceeding' => 'ringing',
-			'answered' => 'answered',
-			'disconnected' => 'ended',
-			'voicemail' => 'abandoned',
-			'parked' => 'transferred',
-			default => $defaultEventType,
-		};
-
-		$directionRaw = strtolower((string)($party['direction'] ?? ''));
-		$direction = match ($directionRaw) {
-			'inbound' => 'inbound',
-			'outbound' => 'outbound',
-			default => null,
-		};
-
-		$fromNumber = null;
-		if (isset($party['from']['phoneNumber']) === true) {
-			$fromNumber = (string)$party['from']['phoneNumber'];
-		}
-
-		$toNumber = null;
-		if (isset($party['to']['phoneNumber']) === true) {
-			$toNumber = (string)$party['to']['phoneNumber'];
-		}
-
-		$extension = null;
-		if (isset($party['extensionId']) === true) {
-			$extension = (string)$party['extensionId'];
-		}
-
-		$userId = null;
-		if (isset($party['accountId']) === true) {
-			$userId = (string)$party['accountId'];
-		}
-
-		$durationSeconds = null;
-		if (isset($body['duration']) === true) {
-			$durationSeconds = (int)$body['duration'];
-		}
-
-		$recordingUrl = null;
-		if (isset($body['recording']['contentUri']) === true) {
-			$recordingUrl = (string)$body['recording']['contentUri'];
-		}
-
-		$recordingExpiresAt = null;
-		if (isset($body['recording']['expirationTime']) === true) {
-			$recordingExpiresAt = (string)$body['recording']['expirationTime'];
-		}
-
-		$presenceState = null;
-		if (isset($body['presenceStatus']) === true) {
-			$presenceState = (string)$body['presenceStatus'];
-		}
-
-		$queueName = null;
-		if (isset($body['queue']) === true) {
-			$queueName = (string)$body['queue'];
-		}
-
+		$party = $this->firstPartyOf(body: $body);
 		return new CtiWebhookResult(
-			eventType: $eventType,
+			eventType: $this->eventTypeOf(party: $party),
 			externalCallId: (string)($body['telephonySessionId'] ?? ($body['sessionId'] ?? '')),
-			direction: $direction,
-			fromNumber: $fromNumber,
-			toNumber: $toNumber,
-			extension: $extension,
-			userId: $userId,
-			durationSeconds: $durationSeconds,
-			recordingUrl: $recordingUrl,
-			recordingExpiresAt: $recordingExpiresAt,
-			presenceState: $presenceState,
-			queueName: $queueName,
+			direction: self::DIRECTIONS[strtolower((string)($party['direction'] ?? ''))] ?? null,
+			fromNumber: WebhookField::text(source: WebhookField::part(source: $party, key: 'from'), key: 'phoneNumber'),
+			toNumber: WebhookField::text(source: WebhookField::part(source: $party, key: 'to'), key: 'phoneNumber'),
+			extension: WebhookField::text(source: $party, key: 'extensionId'),
+			userId: WebhookField::text(source: $party, key: 'accountId'),
+			durationSeconds: WebhookField::number(source: $body, key: 'duration'),
+			recordingUrl: WebhookField::text(source: WebhookField::part(source: $body, key: 'recording'), key: 'contentUri'),
+			recordingExpiresAt: WebhookField::text(source: WebhookField::part(source: $body, key: 'recording'), key: 'expirationTime'),
+			presenceState: WebhookField::text(source: $body, key: 'presenceStatus'),
+			queueName: WebhookField::text(source: $body, key: 'queue'),
 			raw: $payload,
 		);
 	}//end handleInboundWebhook()
+
+	/**
+	 * The first call party of a telephony-session body, or an empty party.
+	 *
+	 * @param array<array-key,mixed> $body The session body.
+	 *
+	 * @return array<array-key,mixed> The first party.
+	 */
+	private function firstPartyOf(array $body): array {
+		$party = ((array)($body['parties'] ?? []))[0] ?? [];
+		return (array)$party;
+	}//end firstPartyOf()
+
+	/**
+	 * The normalised event type of a party's status code.
+	 *
+	 * @param array<array-key,mixed> $party The call party.
+	 *
+	 * @return string ringing|answered|ended|abandoned|transferred, the lower-cased code, or unknown.
+	 */
+	private function eventTypeOf(array $party): string {
+		$statusCode = strtolower((string)(($party['status']['code'] ?? '')));
+		if ($statusCode === '') {
+			return 'unknown';
+		}
+
+		return (self::EVENT_TYPES[$statusCode] ?? $statusCode);
+	}//end eventTypeOf()
 
 	/**
 	 * {@inheritDoc}
@@ -192,63 +172,30 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_api_base_url', '');
 		$authToken = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_access_token', '');
 		if ($baseUrl === '') {
-			return new CtiCallResult(
-				success: false,
-				error: 'RingCentral API base URL not configured.',
-				platform: $this->getPlatform(),
-			);
+			return CtiCallResult::refused(error: 'RingCentral API base URL not configured.', platform: $this->getPlatform());
 		}
 
-		try {
-			$client = $this->clientService->newClient();
-			$response = $client->post(
-				rtrim($baseUrl, '/') . '/restapi/v1.0/account/~/extension/~/ring-out',
-				[
-					'headers' => [
-						'Authorization' => 'Bearer ' . $authToken,
-						'Content-Type' => 'application/json',
-					],
-					'body' => json_encode(
-						[
-							'from' => ['phoneNumber' => $callerId],
-							'to' => ['phoneNumber' => $targetNumber],
-							'caller' => ['phoneNumber' => $callerId],
-							'playPrompt' => false,
-						]
-					),
-					'timeout' => 10,
-				]
-			);
-
-			$bodyContents = (string)$response->getBody();
-			$body = json_decode($bodyContents, true);
-			$callId = null;
-			if (is_array($body) === true) {
-				$callId = ($body['id'] ?? null);
-			}
-
-			$externalCallId = null;
-			if ($callId !== null) {
-				$externalCallId = (string)$callId;
-			}
-
-			return new CtiCallResult(
-				success: true,
-				externalCallId: $externalCallId,
-				platform: $this->getPlatform(),
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'RingCentral originate failed',
-				['exception' => $e->getMessage()]
-			);
-			return new CtiCallResult(
-				success: false,
-				error: 'RingCentral originate failed: ' . $e->getMessage(),
-				platform: $this->getPlatform(),
-			);
-		}//end try
+		$ringOut = [
+			'from' => ['phoneNumber' => $callerId],
+			'to' => ['phoneNumber' => $targetNumber],
+			'caller' => ['phoneNumber' => $callerId],
+			'playPrompt' => false,
+		];
+		$endpoint = new OriginateEndpoint(url: rtrim($baseUrl, '/') . '/restapi/v1.0/account/~/extension/~/ring-out', callIdKeys: ['id']);
+		return $this->originate(request: new OriginateRequest(endpoint: $endpoint, options: BearerJsonPost::options(token: $authToken, body: $ringOut)));
 	}//end originateCall()
+
+	/**
+	 * Place the call and report the outcome under this platform's name.
+	 *
+	 * @param OriginateRequest $request The originate request.
+	 *
+	 * @return CtiCallResult The outcome.
+	 */
+	private function originate(OriginateRequest $request): CtiCallResult {
+		$originator = new CallOriginator(clientService: $this->clientService, logger: $this->logger);
+		return $originator->place(request: $request, vendor: new CtiVendor(platform: $this->getPlatform(), label: 'RingCentral'));
+	}//end originate()
 
 	/**
 	 * {@inheritDoc}
@@ -271,24 +218,13 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 
 		try {
 			$client = $this->clientService->newClient();
-			$client->post(
-				rtrim($baseUrl, '/') . '/restapi/v1.0/subscription',
-				[
-					'headers' => [
-						'Authorization' => 'Bearer ' . $authToken,
-						'Content-Type' => 'application/json',
-					],
-					'body' => json_encode(
-						[
-							'eventFilters' => [
-								'/restapi/v1.0/account/~/extension/' . $extension . '/presence',
-							],
-							'deliveryMode' => ['transportType' => 'WebHook'],
-						]
-					),
-					'timeout' => 10,
-				]
-			);
+			$filter = [
+				'eventFilters' => [
+					'/restapi/v1.0/account/~/extension/' . $extension . '/presence',
+				],
+				'deliveryMode' => ['transportType' => 'WebHook'],
+			];
+			$client->post(rtrim($baseUrl, '/') . '/restapi/v1.0/subscription', BearerJsonPost::options(token: $authToken, body: $filter));
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'RingCentral presence subscribe failed',

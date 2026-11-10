@@ -42,6 +42,20 @@ use Psr\Log\LoggerInterface;
  */
 class AsteriskAdapter implements CtiAdapterInterface {
 	/**
+	 * Presence value per Asterisk device state.
+	 *
+	 * @var array<string,string>
+	 */
+	private const PRESENCE_STATES = [
+		'NOT_INUSE' => 'available',
+		'INUSE' => 'on-call',
+		'BUSY' => 'on-call',
+		'RINGING' => 'on-call',
+		'ONHOLD' => 'wrap-up',
+		'UNAVAILABLE' => 'offline',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
@@ -78,14 +92,36 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 *
 	 * @return CtiWebhookResult Normalised event.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat field-by-field payload normalisation; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Flat field-by-field payload normalisation; extraction adds no clarity.
-	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.4
 	 */
 	public function handleInboundWebhook(array $payload): CtiWebhookResult {
+		return new CtiWebhookResult(
+			eventType: $this->eventTypeOf(payload: $payload),
+			externalCallId: (string)($payload['Uniqueid'] ?? ($payload['uniqueid'] ?? '')),
+			direction: WebhookField::text(source: $payload, key: 'direction'),
+			fromNumber: WebhookField::text(source: $payload, key: 'CallerIDNum'),
+			toNumber: WebhookField::text(source: $payload, key: 'ConnectedLineNum'),
+			extension: $this->extensionOf(payload: $payload),
+			userId: WebhookField::text(source: $payload, key: 'userId'),
+			durationSeconds: $this->durationOf(payload: $payload),
+			recordingUrl: WebhookField::text(source: $payload, key: 'RecordingURL'),
+			recordingExpiresAt: WebhookField::text(source: $payload, key: 'RecordingExpiresAt'),
+			presenceState: (self::PRESENCE_STATES[(string)($payload['State'] ?? ($payload['DeviceState'] ?? ''))] ?? null),
+			queueName: WebhookField::text(source: $payload, key: 'Queue'),
+			raw: $payload,
+		);
+	}//end handleInboundWebhook()
+
+	/**
+	 * The normalised event type of an AMI/Stasis event name.
+	 *
+	 * @param array<string,mixed> $payload Raw decoded webhook body.
+	 *
+	 * @return string ringing|answered|ended|presence, or the lower-cased event name.
+	 */
+	private function eventTypeOf(array $payload): string {
 		$event = strtolower((string)($payload['Event'] ?? ($payload['event'] ?? 'unknown')));
-		$eventType = match ($event) {
+		return match ($event) {
 			'newchannel', 'dialbegin' => 'ringing',
 			'bridgeenter', 'answer' => 'answered',
 			'hangup', 'dialend' => 'ended',
@@ -93,83 +129,43 @@ class AsteriskAdapter implements CtiAdapterInterface {
 			'devicestatechange' => 'presence',
 			default => $event,
 		};
+	}//end eventTypeOf()
 
-		$extension = null;
+	/**
+	 * The agent extension in the channel name (`SIP/101-00001234` gives `101`).
+	 *
+	 * @param array<string,mixed> $payload Raw decoded webhook body.
+	 *
+	 * @return string|null The extension, or null when the channel names none.
+	 */
+	private function extensionOf(array $payload): ?string {
 		$channel = (string)($payload['Channel'] ?? ($payload['channel'] ?? ''));
 		if ($channel !== '' && preg_match('#/(\d+)#', $channel, $matches) === 1) {
-			$extension = $matches[1];
+			return $matches[1];
 		}
 
-		$duration = null;
+		return null;
+	}//end extensionOf()
+
+	/**
+	 * The talk duration in seconds, from `HH:MM:SS` or a plain number.
+	 *
+	 * @param array<string,mixed> $payload Raw decoded webhook body.
+	 *
+	 * @return int|null The duration, or null when absent or unreadable.
+	 */
+	private function durationOf(array $payload): ?int {
 		$raw = ($payload['Duration'] ?? ($payload['duration'] ?? null));
 		if (is_string($raw) === true && preg_match('/(\d+):(\d+):(\d+)/', $raw, $matches) === 1) {
-			$duration = (((int)$matches[1]) * 3600) + (((int)$matches[2]) * 60) + ((int)$matches[3]);
-		} elseif (is_numeric($raw) === true) {
-			$duration = (int)$raw;
+			return (((int)$matches[1]) * 3600) + (((int)$matches[2]) * 60) + ((int)$matches[3]);
 		}
 
-		$presenceMap = [
-			'NOT_INUSE' => 'available',
-			'INUSE' => 'on-call',
-			'BUSY' => 'on-call',
-			'RINGING' => 'on-call',
-			'ONHOLD' => 'wrap-up',
-			'UNAVAILABLE' => 'offline',
-		];
-		$presenceRaw = (string)($payload['State'] ?? ($payload['DeviceState'] ?? ''));
-		$presence = ($presenceMap[$presenceRaw] ?? null);
-
-		$direction = null;
-		if (isset($payload['direction']) === true) {
-			$direction = (string)$payload['direction'];
+		if (is_numeric($raw) === true) {
+			return (int)$raw;
 		}
 
-		$fromNumber = null;
-		if (isset($payload['CallerIDNum']) === true) {
-			$fromNumber = (string)$payload['CallerIDNum'];
-		}
-
-		$toNumber = null;
-		if (isset($payload['ConnectedLineNum']) === true) {
-			$toNumber = (string)$payload['ConnectedLineNum'];
-		}
-
-		$userId = null;
-		if (isset($payload['userId']) === true) {
-			$userId = (string)$payload['userId'];
-		}
-
-		$recordingUrl = null;
-		if (isset($payload['RecordingURL']) === true) {
-			$recordingUrl = (string)$payload['RecordingURL'];
-		}
-
-		$recordingExpiresAt = null;
-		if (isset($payload['RecordingExpiresAt']) === true) {
-			$recordingExpiresAt = (string)$payload['RecordingExpiresAt'];
-		}
-
-		$queueName = null;
-		if (isset($payload['Queue']) === true) {
-			$queueName = (string)$payload['Queue'];
-		}
-
-		return new CtiWebhookResult(
-			eventType: $eventType,
-			externalCallId: (string)($payload['Uniqueid'] ?? ($payload['uniqueid'] ?? '')),
-			direction: $direction,
-			fromNumber: $fromNumber,
-			toNumber: $toNumber,
-			extension: $extension,
-			userId: $userId,
-			durationSeconds: $duration,
-			recordingUrl: $recordingUrl,
-			recordingExpiresAt: $recordingExpiresAt,
-			presenceState: $presence,
-			queueName: $queueName,
-			raw: $payload,
-		);
-	}//end handleInboundWebhook()
+		return null;
+	}//end durationOf()
 
 	/**
 	 * {@inheritDoc}
@@ -185,70 +181,77 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 */
 	public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {
 		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_api_base_url', '');
-		$user = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_ari_user', '');
-		$pass = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_ari_pass', '');
+		$auth = $this->ariAuth();
 		$context = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_context', 'from-internal');
 		if ($baseUrl === '') {
-			return new CtiCallResult(
-				success: false,
-				error: 'Asterisk API base URL not configured.',
-				platform: $this->getPlatform(),
-			);
+			return CtiCallResult::refused(error: 'Asterisk API base URL not configured.', platform: $this->getPlatform());
 		}
 
-		$auth = null;
-		if ($user !== '') {
-			$auth = [$user, $pass];
-		}
-
-		try {
-			$client = $this->clientService->newClient();
-			$response = $client->post(
-				rtrim($baseUrl, '/') . '/ari/channels',
-				[
-					'auth' => $auth,
-					'headers' => ['Content-Type' => 'application/json'],
-					'body' => json_encode(
-						[
-							'endpoint' => 'SIP/' . $extension,
-							'extension' => $targetNumber,
-							'context' => $context,
-							'callerId' => $callerId,
-						]
-					),
-					'timeout' => 10,
-				]
-			);
-
-			$bodyContents = (string)$response->getBody();
-			$body = json_decode($bodyContents, true);
-			$callId = null;
-			if (is_array($body) === true) {
-				$callId = ($body['id'] ?? ($body['uniqueid'] ?? null));
-			}
-
-			$externalCallId = null;
-			if ($callId !== null) {
-				$externalCallId = (string)$callId;
-			}
-
-			return new CtiCallResult(
-				success: true,
-				externalCallId: $externalCallId,
-				platform: $this->getPlatform(),
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Asterisk originate failed',
-				['exception' => $e->getMessage()]
-			);
-			return new CtiCallResult(
-				success: false,
-				error: 'Asterisk originate failed: ' . $e->getMessage(),
-				platform: $this->getPlatform(),
-			);
-		}//end try
+		$channel = [
+			'endpoint' => 'SIP/' . $extension,
+			'extension' => $targetNumber,
+			'context' => $context,
+			'callerId' => $callerId,
+		];
+		return $this->originate(request: $this->ariRequest(baseUrl: $baseUrl, options: $this->ariOptions(auth: $auth, channel: $channel)));
 	}//end originateCall()
+
+	/**
+	 * A request to the ARI channel-originate endpoint; its reply names the channel by `id` or `uniqueid`.
+	 *
+	 * @param string              $baseUrl The configured API base URL.
+	 * @param array<string,mixed> $options The client options.
+	 *
+	 * @return OriginateRequest The request.
+	 */
+	private function ariRequest(string $baseUrl, array $options): OriginateRequest {
+		$endpoint = new OriginateEndpoint(url: rtrim($baseUrl, '/') . '/ari/channels', callIdKeys: ['id', 'uniqueid']);
+		return new OriginateRequest(endpoint: $endpoint, options: $options);
+	}//end ariRequest()
+
+	/**
+	 * The ARI basic-auth pair, or null when no ARI user is configured.
+	 *
+	 * @return array{0:string,1:string}|null The user and password.
+	 */
+	private function ariAuth(): ?array {
+		$user = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_ari_user', '');
+		$pass = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_ari_pass', '');
+		if ($user === '') {
+			return null;
+		}
+
+		return [$user, $pass];
+	}//end ariAuth()
+
+	/**
+	 * The HTTP options of an ARI channel-originate request.
+	 *
+	 * @param array{0:string,1:string}|null $auth    The basic-auth pair, or null.
+	 * @param array<string,string>          $channel The channel to originate.
+	 *
+	 * @return array<string,mixed> The client options.
+	 */
+	private function ariOptions(?array $auth, array $channel): array {
+		return [
+			'auth' => $auth,
+			'headers' => ['Content-Type' => 'application/json'],
+			'body' => json_encode($channel),
+			'timeout' => 10,
+		];
+	}//end ariOptions()
+
+	/**
+	 * Place the call and report the outcome under this platform's name.
+	 *
+	 * @param OriginateRequest $request The originate request.
+	 *
+	 * @return CtiCallResult The outcome.
+	 */
+	private function originate(OriginateRequest $request): CtiCallResult {
+		$originator = new CallOriginator(clientService: $this->clientService, logger: $this->logger);
+		return $originator->place(request: $request, vendor: new CtiVendor(platform: $this->getPlatform(), label: 'Asterisk'));
+	}//end originate()
 
 	/**
 	 * {@inheritDoc}
