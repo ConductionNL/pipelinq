@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -101,7 +102,7 @@ class SlaPolicyController extends Controller {
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			$objectService = $this->container->get(ObjectService::class);
 			$saved = $objectService->saveObject(
 				object: $payload,
 				extend: [],
@@ -148,13 +149,13 @@ class SlaPolicyController extends Controller {
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			$objectService = $this->container->get(ObjectService::class);
 			$existing = null;
 			try {
 				$existing = $objectService->find(
+					id: $id,
 					register: $register,
 					schema: $schema,
-					uuid: $id,
 				);
 			} catch (Throwable $e) {
 				$this->logger->debug(

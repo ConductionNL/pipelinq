@@ -21,6 +21,8 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\Pipelinq\Controller\ContactSyncController;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -665,10 +667,10 @@ class ContactSyncControllerTest extends TestCase {
 			 * @return ObjectEntityInterface The saved object, wrapped as an entity.
 			 */
 			public function saveObject(
-				array $object,
+				array|ObjectEntity $object,
 				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				Register|string|int|null $register = null,
+				Schema|string|int|null $schema = null,
 				?string $uuid = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
@@ -677,6 +679,9 @@ class ContactSyncControllerTest extends TestCase {
 				?array $uploadedFiles = null,
 				?IUser $currentUser = null,
 				bool $failIfExists = false,
+				bool $_unowned = false,
+				bool $_dedupOverride = false,
+				?string $_owner = null,
 			): ObjectEntityInterface {
 				$this->captured[] = ['object' => $object, 'uuid' => $uuid, 'schema' => (string)$schema];
 

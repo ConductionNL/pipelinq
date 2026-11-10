@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCA\Pipelinq\AppInfo\Application;
@@ -180,13 +181,13 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 		}
 
 		try {
-			$schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+			$schemaMapper = $this->container->get(SchemaMapper::class);
 			// RBAC + multi-tenancy disabled: server-authoritative internal id
 			// lookup; the POS schema may be owned by another organisation than
 			// the acting cashier, where the default org filter would throw.
 			// OpenRegister's Schema uses magic getters, so method_exists(...,
 			// 'getId') is false even though getId() resolves — call it directly.
-			$schema = $schemaMapper->find($slug, [], null, false, false);
+			$schema = $schemaMapper->find(id: $slug, _extend: [], _rbac: false, _multitenancy: false);
 			if (is_object($schema) === true) {
 				return (string)$schema->getId();
 			}
