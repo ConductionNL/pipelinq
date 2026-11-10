@@ -192,4 +192,99 @@ class NrcNotificationListenerTest extends TestCase {
 		self::assertTrue(true);
 	}//end testHandlerExceptionIsSwallowed()
 
+	/**
+	 * Each channel/resource/action routes to its own handler, a route with
+	 * no handler does nothing beyond marking the subscription received, and
+	 * the subscription is saved under its own uuid.
+	 *
+	 * @param array<string, mixed> $notification The inbound payload.
+	 * @param list<string>         $infos        The info messages expected, in order.
+	 * @param int                  $invalidated  How often the ZTC cache is invalidated.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider routeProvider
+	 */
+	public function testRoutesEachNotificationToItsHandler(array $notification, array $infos, int $invalidated): void {
+		$endpoint = ['id' => 'ep-1'];
+		$registers = $this->createMock(ZgwRegisterAccess::class);
+		$registers->method('find')->willReturnCallback(
+			static fn (string $schema, string $id): ?array => ($schema === ZgwRegisterAccess::SCHEMA_ENDPOINT && $id === 'ep-1') ? $endpoint : null
+		);
+		$registers->method('findAll')->willReturn([]);
+		$saved = [];
+		$registers->method('save')->willReturnCallback(
+			static function (string $schema, array $data, ?string $uuid) use (&$saved): array {
+				$saved[] = [$schema, $data['endpointId'] ?? null, $uuid, isset($data['latestReceivedOn'])];
+				return $data;
+			}
+		);
+
+		$ztc = $this->createMock(ZtcClient::class);
+		$ztc->expects(self::exactly($invalidated))->method('invalidateCache')->with($endpoint, '*');
+
+		$logged = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('info')->willReturnCallback(
+			static function (string $message) use (&$logged): void {
+				$logged[] = $message;
+			}
+		);
+		$logger->expects(self::never())->method('warning');
+		$logger->expects(self::never())->method('error');
+
+		$listener = new NrcNotificationListener($registers, $this->createMock(ZrcClient::class), $ztc, $logger);
+		$listener->dispatch(['endpointId' => 'ep-1', '@self' => ['uuid' => 'ab-1']], $notification);
+
+		self::assertSame([[ZgwRegisterAccess::SCHEMA_ABONN, 'ep-1', 'ab-1', true]], $saved);
+		self::assertSame($infos, $logged);
+	}//end testRoutesEachNotificationToItsHandler()
+
+	/**
+	 * The routes.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: list<string>, 2: int}>
+	 */
+	public static function routeProvider(): array {
+		$url = ['hoofdObject' => 'https://zrc/zaken/1', 'resourceUrl' => 'https://zrc/x/1'];
+		return [
+			'zaak created' => [['channel' => 'zaken', 'resource' => 'zaak', 'action' => 'create'] + $url, ['ZGW NRC: observed externally-created zaak'], 0],
+			'besluit created' => [['channel' => 'besluiten', 'resource' => 'besluit', 'action' => 'create'] + $url, ['ZGW NRC: observed externally-created besluit'], 0],
+			'catalogi any resource' => [['channel' => 'catalogi', 'resource' => 'other', 'action' => 'destroy'], [], 1],
+			'zaak updated' => [['channel' => 'zaken', 'resource' => 'zaak', 'action' => 'update'] + $url, [], 0],
+			'besluit on zaken channel' => [['channel' => 'zaken', 'resource' => 'besluit', 'action' => 'create'] + $url, [], 0],
+			'nothing' => [[], [], 0],
+		];
+	}//end routeProvider()
+
+	/**
+	 * A subscription without endpoint is dropped without a lookup, and a
+	 * handler failure is logged with its route.
+	 *
+	 * @return void
+	 */
+	public function testMissingEndpointAndHandlerFailureAreLogged(): void {
+		$registers = $this->createMock(ZgwRegisterAccess::class);
+		$registers->expects(self::never())->method('find');
+		$registers->expects(self::never())->method('save');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('warning')->with('ZGW NRC: notification received for unknown endpoint', ['endpoint' => '']);
+		$listener = new NrcNotificationListener($registers, $this->createMock(ZrcClient::class), $this->createMock(ZtcClient::class), $logger);
+		$listener->dispatch([], ['channel' => 'catalogi']);
+
+		$registers = $this->createMock(ZgwRegisterAccess::class);
+		$registers->method('find')->willReturn(['id' => 'ep-1']);
+		$registers->expects(self::once())->method('save')->with(ZgwRegisterAccess::SCHEMA_ABONN, self::anything(), 'id-7');
+		$ztc = $this->createMock(ZtcClient::class);
+		$ztc->method('invalidateCache')->willThrowException(new \RuntimeException('cache down'));
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::never())->method('warning');
+		$logger->expects(self::once())->method('error')->with(
+			'ZGW NRC: dispatch handler threw',
+			['channel' => 'catalogi', 'resource' => 'statustype', 'action' => '', 'err' => 'cache down']
+		);
+		$listener = new NrcNotificationListener($registers, $this->createMock(ZrcClient::class), $ztc, $logger);
+		$listener->dispatch(['endpointId' => 'ep-1', 'id' => 'id-7'], ['channel' => 'catalogi', 'resource' => 'statustype']);
+	}//end testMissingEndpointAndHandlerFailureAreLogged()
+
 }//end class
