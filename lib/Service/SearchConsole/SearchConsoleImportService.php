@@ -201,28 +201,45 @@ class SearchConsoleImportService {
 	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function importRecent(int $days = 3): array {
-		$result = ['properties' => 0, 'rows' => 0, 'errors' => []];
 		$key = $this->key();
 		$properties = $this->properties();
 		if ($key === null || $properties === []) {
 			$this->logger->debug('SearchConsoleImportService: no key or no properties configured, skipping');
-			return $result;
+			return ['properties' => 0, 'rows' => 0, 'errors' => []];
 		}
 
-		$today = (new DateTimeImmutable('@' . $this->time->getTime()))->setTimezone(new DateTimeZone('UTC'));
-		$from = $today->modify('-' . max(0, $days) . ' days')->format('Y-m-d');
-		$to = $today->format('Y-m-d');
+		$window = new ImportWindow(
+			today: (new DateTimeImmutable('@' . $this->time->getTime()))->setTimezone(new DateTimeZone('UTC')),
+			days: $days
+		);
 
 		try {
 			$token = $this->auth->accessToken(key: $key, scope: self::SCOPE);
 		} catch (Throwable $e) {
-			$result['errors']['*'] = $e->getMessage();
-			return $result;
+			return ['properties' => 0, 'rows' => 0, 'errors' => ['*' => $e->getMessage()]];
 		}
 
+		$result = $this->importAll(read: new SearchConsoleRead(token: $token, window: $window), properties: $properties);
+		if ($result['properties'] > 0) {
+			$this->appConfig->setValueString(Application::APP_ID, self::LAST_IMPORT_KEY, $window->today->format('Y-m-d\TH:i:s\Z'));
+		}
+
+		return $result;
+	}//end importRecent()
+
+	/**
+	 * Import every property, a failing one reported without stopping the others.
+	 *
+	 * @param SearchConsoleRead  $read       The token and the window.
+	 * @param array<int, string> $properties The configured properties.
+	 *
+	 * @return array{properties: int, rows: int, errors: array<string, string>}
+	 */
+	private function importAll(SearchConsoleRead $read, array $properties): array {
+		$result = ['properties' => 0, 'rows' => 0, 'errors' => []];
 		foreach ($properties as $property) {
 			try {
-				$result['rows'] += $this->importProperty(property: $property, from: $from, to: $to, token: $token);
+				$result['rows'] += $this->importProperty(read: $read, property: $property);
 				$result['properties']++;
 			} catch (Throwable $e) {
 				$this->logger->warning(
@@ -233,20 +250,14 @@ class SearchConsoleImportService {
 			}
 		}
 
-		if ($result['properties'] > 0) {
-			$this->appConfig->setValueString(Application::APP_ID, self::LAST_IMPORT_KEY, $today->format('Y-m-d\TH:i:s\Z'));
-		}
-
 		return $result;
-	}//end importRecent()
+	}//end importAll()
 
 	/**
 	 * Import one property over a window.
 	 *
-	 * @param string $property The site URL or `sc-domain:` property.
-	 * @param string $from Window start `YYYY-MM-DD`.
-	 * @param string $to Window end `YYYY-MM-DD`, inclusive.
-	 * @param string $token A bearer token for the read-only scope.
+	 * @param SearchConsoleRead $read     The bearer token for the read-only scope and the window.
+	 * @param string            $property The site URL or `sc-domain:` property.
 	 *
 	 * @return int Rows upserted.
 	 *
@@ -254,8 +265,8 @@ class SearchConsoleImportService {
 	 *
 	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
-	public function importProperty(string $property, string $from, string $to, string $token): int {
-		$rows = $this->fetchRows(token: $token, property: $property, from: $from, to: $to);
+	public function importProperty(SearchConsoleRead $read, string $property): int {
+		$rows = $this->fetchRows(read: $read, property: $property);
 		$importedAt = gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime());
 		$saved = 0;
 		foreach ($rows as $row) {
@@ -266,7 +277,7 @@ class SearchConsoleImportService {
 
 		$this->logger->info(
 			'SearchConsoleImportService: property imported',
-			['property' => $property, 'from' => $from, 'to' => $to, 'rows' => $saved]
+			['property' => $property, 'from' => $read->window->from(), 'to' => $read->window->to(), 'rows' => $saved]
 		);
 
 		return $saved;
@@ -275,58 +286,23 @@ class SearchConsoleImportService {
 	/**
 	 * Fetch every row of the window, paging with `startRow` until a short page.
 	 *
-	 * @param string $token Bearer token.
-	 * @param string $property The property.
-	 * @param string $from Window start.
-	 * @param string $to Window end.
+	 * @param SearchConsoleRead $read     The bearer token and the window.
+	 * @param string            $property The property.
 	 *
 	 * @return array<int, array<string, mixed>> Normalised rows: date, query, page, clicks, impressions, ctr, position.
 	 *
 	 * @throws \RuntimeException When the API answers with an error.
 	 */
-	private function fetchRows(string $token, string $property, string $from, string $to): array {
-		$url = str_replace('{site}', rawurlencode($property), self::API_URL);
-		$client = $this->clientService->newClient();
+	private function fetchRows(SearchConsoleRead $read, string $property): array {
+		$endpoint = new PropertyEndpoint(
+			client: $this->clientService->newClient(),
+			url: str_replace('{site}', rawurlencode($property), self::API_URL)
+		);
 		$rows = [];
 		$startRow = 0;
 		while ($startRow < self::MAX_ROWS) {
-			$response = $client->post(
-				$url,
-				[
-					'headers' => ['Authorization' => ('Bearer ' . $token), 'Accept' => 'application/json'],
-					'json' => [
-						'startDate' => $from,
-						'endDate' => $to,
-						'dimensions' => ['date', 'query', 'page'],
-						'rowLimit' => self::ROW_LIMIT,
-						'startRow' => $startRow,
-						'dataState' => 'all',
-					],
-					'timeout' => 60,
-				]
-			);
-
-			$decoded = json_decode((string)$response->getBody(), true);
-			if (is_array($decoded) === false) {
-				throw new RuntimeException('Search Console: the API answered with something that is not JSON');
-			}
-
-			if (isset($decoded['error']) === true) {
-				throw new RuntimeException('Search Console: ' . $this->errorMessage(error: $decoded['error']));
-			}
-
-			$page = ($decoded['rows'] ?? []);
-			if (is_array($page) === false) {
-				$page = [];
-			}
-
-			foreach ($page as $raw) {
-				$row = $this->normaliseRow(raw: $raw);
-				if ($row !== null) {
-					$rows[] = $row;
-				}
-			}
-
+			$page = $this->fetchPage(endpoint: $endpoint, options: self::requestOptions(read: $read, startRow: $startRow));
+			$rows = array_merge($rows, $this->normalisedRows(page: $page));
 			if (count($page) < self::ROW_LIMIT) {
 				break;
 			}
@@ -336,6 +312,78 @@ class SearchConsoleImportService {
 
 		return $rows;
 	}//end fetchRows()
+
+	/**
+	 * The query request for one page of the window.
+	 *
+	 * @param SearchConsoleRead $read     The bearer token and the window.
+	 * @param int               $startRow The first row of the page.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function requestOptions(SearchConsoleRead $read, int $startRow): array {
+		return [
+			'headers' => ['Authorization' => ('Bearer ' . $read->token), 'Accept' => 'application/json'],
+			'json' => [
+				'startDate' => $read->window->from(),
+				'endDate' => $read->window->to(),
+				'dimensions' => ['date', 'query', 'page'],
+				'rowLimit' => self::ROW_LIMIT,
+				'startRow' => $startRow,
+				'dataState' => 'all',
+			],
+			'timeout' => 60,
+		];
+	}//end requestOptions()
+
+	/**
+	 * POST one page request and answer its raw rows.
+	 *
+	 * @param PropertyEndpoint     $endpoint The client and the URL of the property.
+	 * @param array<string, mixed> $options  The request.
+	 *
+	 * @return array<int|string, mixed> The rows of the page (empty when it carries none).
+	 *
+	 * @throws \RuntimeException When the API answers with an error or not with JSON.
+	 */
+	private function fetchPage(PropertyEndpoint $endpoint, array $options): array {
+		$response = $endpoint->client->post($endpoint->url, $options);
+
+		$decoded = json_decode((string)$response->getBody(), true);
+		if (is_array($decoded) === false) {
+			throw new RuntimeException('Search Console: the API answered with something that is not JSON');
+		}
+
+		if (isset($decoded['error']) === true) {
+			throw new RuntimeException('Search Console: ' . $this->errorMessage(error: $decoded['error']));
+		}
+
+		$page = ($decoded['rows'] ?? []);
+		if (is_array($page) === false) {
+			return [];
+		}
+
+		return $page;
+	}//end fetchPage()
+
+	/**
+	 * The rows of a page that normalise, in order.
+	 *
+	 * @param array<int|string, mixed> $page The raw rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function normalisedRows(array $page): array {
+		$rows = [];
+		foreach ($page as $raw) {
+			$row = $this->normaliseRow(raw: $raw);
+			if ($row !== null) {
+				$rows[] = $row;
+			}
+		}
+
+		return $rows;
+	}//end normalisedRows()
 
 	/**
 	 * The message of an API error object, or the error itself as a string.
