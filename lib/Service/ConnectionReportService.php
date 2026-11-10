@@ -236,32 +236,52 @@ class ConnectionReportService {
 	public function reportSocialReadiness(array $readiness): array {
 		$sent = [];
 		foreach ($readiness as $network => $entry) {
-			if (is_array($entry) === false) {
-				continue;
-			}
-
-			$key    = 'social-' . (string)$network;
-			$status = (self::READINESS_STATUS[(string)($entry['state'] ?? '')] ?? null);
-			if ($status === null || in_array($key, self::KEYS, true) === false) {
-				continue;
-			}
-
-			$message = trim((string)($entry['reason'] ?? ''));
-			if ($status === 'limited') {
-				$message = self::PREVIEW_MESSAGE;
-			}
-
-			if ($message === '' && $status === 'configured') {
-				$message = 'A developer application is filed for this network in the credential broker.';
-			}
-
-			if ($this->report(key: $key, status: $status, message: $message) === true) {
+			$key = 'social-' . (string)$network;
+			if (is_array($entry) === true && $this->reportedNetwork(key: $key, entry: $entry) === true) {
 				$sent[] = $key;
 			}
 		}
 
 		return $sent;
 	}//end reportSocialReadiness()
+
+	/**
+	 * Report one declared network's readiness; an unknown state or undeclared network sends nothing.
+	 *
+	 * @param string               $key   The `social-*` connection key.
+	 * @param array<string, mixed> $entry The network's `{state, reason}`.
+	 *
+	 * @return bool Whether a report was dispatched.
+	 */
+	private function reportedNetwork(string $key, array $entry): bool {
+		$status = (self::READINESS_STATUS[(string)($entry['state'] ?? '')] ?? null);
+		if ($status === null || in_array($key, self::KEYS, true) === false) {
+			return false;
+		}
+
+		return $this->report(key: $key, status: $status, message: $this->readinessMessage(status: $status, entry: $entry));
+	}//end reportedNetwork()
+
+	/**
+	 * The message for a network's readiness: the preview notice, its own reason, or the filed-application note.
+	 *
+	 * @param string               $status The registry status.
+	 * @param array<string, mixed> $entry  The network's `{state, reason}`.
+	 *
+	 * @return string The message.
+	 */
+	private function readinessMessage(string $status, array $entry): string {
+		if ($status === 'limited') {
+			return self::PREVIEW_MESSAGE;
+		}
+
+		$message = trim((string)($entry['reason'] ?? ''));
+		if ($message === '' && $status === 'configured') {
+			return 'A developer application is filed for this network in the credential broker.';
+		}
+
+		return $message;
+	}//end readinessMessage()
 
 	/**
 	 * The event class to instantiate, or null when integriq does not ship it.
