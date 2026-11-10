@@ -130,14 +130,7 @@ class TicketLeafProvider {
 			return ['status' => 400, 'error' => 'Unknown ticket status filter.'];
 		}
 
-		$refs = array_values(
-			array_unique(
-				array_filter(
-					array_map('trim', array_filter($refs, 'is_string')),
-					static fn (string $ref): bool => $ref !== ''
-				)
-			)
-		);
+		$refs = self::cleanRefs(refs: $refs);
 		if (count($refs) > self::MAX_REFS) {
 			return ['status' => 400, 'error' => 'Too many master entities in one read.'];
 		}
@@ -146,11 +139,7 @@ class TicketLeafProvider {
 			return ['status' => 200, 'tickets' => []];
 		}
 
-		$ids = [];
-		foreach (['register', 'client_schema', 'ticket_schema'] as $key) {
-			$ids[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-		}
-
+		$ids = $this->surfaceIds();
 		if (in_array('', $ids, true) === true) {
 			return ['status' => 503, 'error' => 'The ticket surface is not configured.'];
 		}
@@ -169,6 +158,38 @@ class TicketLeafProvider {
 			),
 		];
 	}//end byMasterEntity()
+
+	/**
+	 * The string references, trimmed, without blanks and duplicates, in first-seen order.
+	 *
+	 * @param array<int, mixed> $refs The master entity references as asked.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function cleanRefs(array $refs): array {
+		return array_values(
+			array_unique(
+				array_filter(
+					array_map('trim', array_filter($refs, 'is_string')),
+					static fn (string $ref): bool => $ref !== ''
+				)
+			)
+		);
+	}//end cleanRefs()
+
+	/**
+	 * The register, client schema and ticket schema ids, '' where not configured.
+	 *
+	 * @return array<string, string>
+	 */
+	private function surfaceIds(): array {
+		$ids = [];
+		foreach (['register', 'client_schema', 'ticket_schema'] as $key) {
+			$ids[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		}
+
+		return $ids;
+	}//end surfaceIds()
 
 	/**
 	 * The tickets of the clients, grouped by their master entity, every
