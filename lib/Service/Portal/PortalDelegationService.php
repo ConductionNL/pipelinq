@@ -105,35 +105,44 @@ class PortalDelegationService {
 		$this->refuseSelfGrant(granterAccountId: $granterAccountId, granteeEmail: $granteeEmail);
 		$granteeId = $this->granteeIdOf(granteeEmail: $granteeEmail, tenantId: $tenantId);
 
-		$delegation = $this->repository->save(
-			self::SCHEMA,
-			[
-				'granterAccountId' => $granterAccountId,
-				'granteeAccountId' => $granteeId,
-				'granteeEmail' => $granteeEmail,
-				'tenantId' => $tenantId,
-				'scopes' => $scopes,
-				'validFrom' => $this->time->getDateTime()->format(DATE_ATOM),
-				'validUntil' => $validUntil,
-				'revokedAt' => null,
-			]
-		);
+		$record = [
+			'granterAccountId' => $granterAccountId,
+			'granteeAccountId' => $granteeId,
+			'granteeEmail' => $granteeEmail,
+			'tenantId' => $tenantId,
+			'scopes' => $scopes,
+			'validFrom' => $this->time->getDateTime()->format(DATE_ATOM),
+			'validUntil' => $validUntil,
+			'revokedAt' => null,
+		];
+		$delegation = $this->repository->save(self::SCHEMA, $record);
+		$this->auditGrant(record: $record, delegationId: $this->repository->idOf(object: $delegation));
 
+		return $delegation;
+	}//end grant()
+
+	/**
+	 * Audit a stored grant against its granter and tenant.
+	 *
+	 * @param array<string, mixed> $record       The delegation as it was stored.
+	 * @param string|null          $delegationId The stored delegation's id.
+	 *
+	 * @return void
+	 */
+	private function auditGrant(array $record, ?string $delegationId): void {
 		$this->audit->log(
-			$granterAccountId,
-			$tenantId,
+			$record['granterAccountId'],
+			$record['tenantId'],
 			'delegation-grant',
 			'success',
 			[
 				'targetObjectType' => 'portalDelegation',
-				'targetObjectId' => $this->repository->idOf(object: $delegation),
-				'granteeEmail' => $granteeEmail,
-				'scopes' => $scopes,
+				'targetObjectId' => $delegationId,
+				'granteeEmail' => $record['granteeEmail'],
+				'scopes' => $record['scopes'],
 			]
 		);
-
-		return $delegation;
-	}//end grant()
+	}//end auditGrant()
 
 	/**
 	 * Refuse a grant to the granter's own email.
