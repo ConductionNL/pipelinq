@@ -46,6 +46,46 @@ import { useObjectStore } from '../../../store/modules/object.js'
  *
  * @spec openspec/changes/pipelinq-werkplek-declarative/tasks.md#task-3
  */
+/**
+ * The caller the address names: the client of an active call, or the
+ * client a previewed number looks up to; no client otherwise.
+ *
+ * @param {URLSearchParams} params The page address's query.
+ * @return {Promise<{clientId: string, clientName: string}>} The caller.
+ */
+async function callerFromAddress(params) {
+	if (params.get('call') === 'active') {
+		return { clientId: (params.get('client') || '').trim(), clientName: '' }
+	}
+	const preview = (params.get('inCallPreview') || '').trim()
+	if (preview === '') {
+		return { clientId: '', clientName: '' }
+	}
+	const result = await screenPop(preview).catch(() => null)
+	return callerOf(clientMatch(result))
+}
+
+/**
+ * @param {?object} result The screen pop answer.
+ * @return {(object|null)} The client it matched, or null.
+ */
+function clientMatch(result) {
+	return (result && Array.isArray(result.matches))
+		? result.matches.find((m) => m && m._matchType === 'client') || null
+		: null
+}
+
+/**
+ * @param {?object} match The matched client.
+ * @return {{clientId: string, clientName: string}} Its id and name; empty without a match.
+ */
+function callerOf(match) {
+	if (!match) {
+		return { clientId: '', clientName: '' }
+	}
+	return { clientId: String(match.id || match.uuid || ''), clientName: String(match.name || '') }
+}
+
 export default {
 	name: 'WerkplekHeaderActions',
 
@@ -131,22 +171,10 @@ export default {
 		 * @spec openspec/specs/kcc-werkplek/spec.md
 		 */
 		async startCallFromAddress() {
-			const params = new URLSearchParams(window.location.search)
-			let clientId = ''
-			let clientName = ''
-			if (params.get('call') === 'active') {
-				clientId = (params.get('client') || '').trim()
-			} else if ((params.get('inCallPreview') || '').trim() !== '') {
-				const result = await screenPop(params.get('inCallPreview').trim()).catch(() => null)
-				const match = (result && Array.isArray(result.matches))
-					? result.matches.find((m) => m && m._matchType === 'client')
-					: null
-				clientId = match ? String(match.id || match.uuid || '') : ''
-				clientName = match ? String(match.name || '') : ''
-			}
-			if (clientId !== '') {
-				this.writeWorkspace({ selectedClient: clientId, callActive: true, callIdentified: true, callStartedAt: new Date().toISOString() })
-				this.writeWorkspace({ selectedClientName: clientName || await this.clientNameOf(clientId) })
+			const caller = await callerFromAddress(new URLSearchParams(window.location.search))
+			if (caller.clientId !== '') {
+				this.writeWorkspace({ selectedClient: caller.clientId, callActive: true, callIdentified: true, callStartedAt: new Date().toISOString() })
+				this.writeWorkspace({ selectedClientName: caller.clientName || await this.clientNameOf(caller.clientId) })
 			}
 		},
 
