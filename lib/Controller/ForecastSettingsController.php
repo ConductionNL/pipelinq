@@ -49,6 +49,71 @@ use OCP\IRequest;
  */
 class ForecastSettingsController extends Controller {
 	/**
+	 * The plain forecast fields update() saves first, in save order: the
+	 * config key, the cast and, for integers, the accepted bounds and the
+	 * error for a value outside them.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const FORECAST_FIELDS = [
+		'commit_threshold' => [
+			'type' => 'int',
+			'key' => ForecastDealService::COMMIT_THRESHOLD_KEY,
+			'min' => 0,
+			'max' => PHP_INT_MAX,
+			'error' => 'commit_threshold must be non-negative.',
+		],
+		'pipeline_target' => [
+			'type' => 'int',
+			'key' => ForecastService::PIPELINE_TARGET_KEY,
+			'min' => 0,
+			'max' => PHP_INT_MAX,
+			'error' => 'pipeline_target must be non-negative.',
+		],
+		'generation_timezone' => ['type' => 'string', 'key' => 'forecast_generation_timezone'],
+		'generation_day' => [
+			'type' => 'int',
+			'key' => 'forecast_generation_day',
+			'min' => 1,
+			'max' => 7,
+			'error' => 'generation_day must be 1-7.',
+		],
+		'generation_hour' => [
+			'type' => 'int',
+			'key' => 'forecast_generation_hour',
+			'min' => 0,
+			'max' => 23,
+			'error' => 'generation_hour must be 0-23.',
+		],
+		'accuracy_green' => ['type' => 'float', 'key' => ForecastService::ACCURACY_GREEN_KEY],
+		'accuracy_amber' => ['type' => 'float', 'key' => ForecastService::ACCURACY_AMBER_KEY],
+		'at_risk_percent' => [
+			'type' => 'int',
+			'key' => QuotaService::AT_RISK_PERCENT_KEY,
+			'min' => PHP_INT_MIN,
+			'max' => PHP_INT_MAX,
+			'error' => '',
+		],
+		'at_risk_days' => [
+			'type' => 'int',
+			'key' => QuotaService::AT_RISK_DAYS_KEY,
+			'min' => PHP_INT_MIN,
+			'max' => PHP_INT_MAX,
+			'error' => '',
+		],
+	];
+
+	/**
+	 * The access-group fields update() saves last, in save order.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const GROUP_FIELDS = [
+		'manager_group' => ['type' => 'string', 'key' => ForecastAccessPolicy::MANAGER_GROUP_KEY],
+		'team_groups' => ['type' => 'string', 'key' => SnapshotGenerationService::TEAMS_KEY],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
@@ -108,116 +173,155 @@ class ForecastSettingsController extends Controller {
 	 * Persist forecast configuration changes.
 	 *
 	 * Only the provided keys are updated; each is validated before persistence.
+	 * The fields are saved in a fixed order and the first refused value stops
+	 * the save, leaving the fields before it stored.
 	 *
 	 * @return JSONResponse The save result.
 	 *
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-05
 	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
 	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Linear sequence of independent per-key
-	 *   `isset` guards — each validates one optional field before persistence; not nested logic.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Same rationale: the guards are independent,
-	 *   so the theoretical path count is high but each branch is trivial.
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function update(): JSONResponse {
 		$params = $this->request->getParams();
 
-		if (isset($params['commit_threshold']) === true) {
-			$threshold = (int)$params['commit_threshold'];
-			if ($threshold < 0) {
-				return new JSONResponse(['error' => 'commit_threshold must be non-negative.'], 400);
+		foreach ($this->saveSteps() as $saveStep) {
+			$error = $saveStep($params);
+			if ($error !== null) {
+				return new JSONResponse(['error' => $error], 400);
 			}
-
-			$this->appConfig->setValueInt(Application::APP_ID, ForecastDealService::COMMIT_THRESHOLD_KEY, $threshold);
-		}
-
-		if (isset($params['pipeline_target']) === true) {
-			$target = (int)$params['pipeline_target'];
-			if ($target < 0) {
-				return new JSONResponse(['error' => 'pipeline_target must be non-negative.'], 400);
-			}
-
-			$this->appConfig->setValueInt(Application::APP_ID, ForecastService::PIPELINE_TARGET_KEY, $target);
-		}
-
-		if (isset($params['generation_timezone']) === true) {
-			$this->appConfig->setValueString(Application::APP_ID, 'forecast_generation_timezone', (string)$params['generation_timezone']);
-		}
-
-		if (isset($params['generation_day']) === true) {
-			$day = (int)$params['generation_day'];
-			if ($day < 1 || $day > 7) {
-				return new JSONResponse(['error' => 'generation_day must be 1-7.'], 400);
-			}
-
-			$this->appConfig->setValueInt(Application::APP_ID, 'forecast_generation_day', $day);
-		}
-
-		if (isset($params['generation_hour']) === true) {
-			$hour = (int)$params['generation_hour'];
-			if ($hour < 0 || $hour > 23) {
-				return new JSONResponse(['error' => 'generation_hour must be 0-23.'], 400);
-			}
-
-			$this->appConfig->setValueInt(Application::APP_ID, 'forecast_generation_hour', $hour);
-		}
-
-		if (isset($params['accuracy_green']) === true) {
-			$this->appConfig->setValueString(Application::APP_ID, ForecastService::ACCURACY_GREEN_KEY, (string)(float)$params['accuracy_green']);
-		}
-
-		if (isset($params['accuracy_amber']) === true) {
-			$this->appConfig->setValueString(Application::APP_ID, ForecastService::ACCURACY_AMBER_KEY, (string)(float)$params['accuracy_amber']);
-		}
-
-		if (isset($params['at_risk_percent']) === true) {
-			$this->appConfig->setValueInt(Application::APP_ID, QuotaService::AT_RISK_PERCENT_KEY, (int)$params['at_risk_percent']);
-		}
-
-		if (isset($params['at_risk_days']) === true) {
-			$this->appConfig->setValueInt(Application::APP_ID, QuotaService::AT_RISK_DAYS_KEY, (int)$params['at_risk_days']);
-		}
-
-		if (isset($params['reporting_currency']) === true) {
-			// One reporting currency for the whole app: the setup wizard's
-			// setting, which dashboards format with (pipelinq#2040).
-			$currency = strtoupper(trim((string)$params['reporting_currency']));
-			if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
-				return new JSONResponse(['error' => 'reporting_currency must be a three-letter currency code.'], 400);
-			}
-
-			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::REPORTING_CURRENCY_KEY, $currency);
-		}
-
-		if (isset($params['exchange_rates']) === true) {
-			try {
-				$rates = $this->exchangeRate->normaliseRates(input: (array)$params['exchange_rates']);
-			} catch (\InvalidArgumentException $e) {
-				return new JSONResponse(['error' => $e->getMessage()], 400);
-			}
-
-			$dates = $this->exchangeRate->overrideStore()->rateDatesFor(rates: $rates, previousRates: $this->exchangeRate->getRates());
-			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATES_KEY, (string)json_encode($rates));
-			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATE_DATES_KEY, (string)json_encode($dates));
-		}
-
-		$rateError = $this->saveRateSettings(params: $params);
-		if ($rateError !== null) {
-			return new JSONResponse(['error' => $rateError], 400);
-		}
-
-		if (isset($params['manager_group']) === true) {
-			$this->appConfig->setValueString(Application::APP_ID, ForecastAccessPolicy::MANAGER_GROUP_KEY, (string)$params['manager_group']);
-		}
-
-		if (isset($params['team_groups']) === true) {
-			$this->appConfig->setValueString(Application::APP_ID, SnapshotGenerationService::TEAMS_KEY, (string)$params['team_groups']);
 		}
 
 		return new JSONResponse(['status' => 'saved']);
 	}//end update()
+
+	/**
+	 * The save steps of update(), in the order the fields are persisted.
+	 *
+	 * Each step takes the request parameters and returns its validation
+	 * error, or null when it saved or its fields are absent.
+	 *
+	 * @return list<callable(array<string, mixed>): ?string> The steps.
+	 */
+	private function saveSteps(): array {
+		return [
+			fn (array $params): ?string => $this->saveFields(params: $params, fields: self::FORECAST_FIELDS),
+			$this->saveReportingCurrency(...),
+			$this->saveExchangeRates(...),
+			$this->saveRateSettings(...),
+			fn (array $params): ?string => $this->saveFields(params: $params, fields: self::GROUP_FIELDS),
+		];
+	}//end saveSteps()
+
+	/**
+	 * Persist the submitted plain fields of one field table, in table order.
+	 *
+	 * @param array<string, mixed>                $params The request parameters.
+	 * @param array<string, array<string, mixed>> $fields The field table.
+	 *
+	 * @return string|null The first validation error, or null when all saved.
+	 */
+	private function saveFields(array $params, array $fields): ?string {
+		foreach ($fields as $name => $field) {
+			if (isset($params[$name]) === false) {
+				continue;
+			}
+
+			$error = $this->saveField(field: $field, value: $params[$name]);
+			if ($error !== null) {
+				return $error;
+			}
+		}
+
+		return null;
+	}//end saveFields()
+
+	/**
+	 * Persist one plain field with the cast its table entry names.
+	 *
+	 * @param array<string, mixed> $field The field's table entry.
+	 * @param mixed                $value The submitted value.
+	 *
+	 * @return string|null The validation error, or null when saved.
+	 */
+	private function saveField(array $field, mixed $value): ?string {
+		if ($field['type'] === 'int') {
+			return $this->saveBoundedInt(field: $field, value: (int)$value);
+		}
+
+		if ($field['type'] === 'float') {
+			$value = (float)$value;
+		}
+
+		$this->appConfig->setValueString(Application::APP_ID, $field['key'], (string)$value);
+		return null;
+	}//end saveField()
+
+	/**
+	 * Persist an integer field when it lies within its bounds.
+	 *
+	 * @param array<string, mixed> $field The field's table entry.
+	 * @param int                  $value The submitted value.
+	 *
+	 * @return string|null The field's error when out of bounds, or null when saved.
+	 */
+	private function saveBoundedInt(array $field, int $value): ?string {
+		if ($value < $field['min'] || $value > $field['max']) {
+			return $field['error'];
+		}
+
+		$this->appConfig->setValueInt(Application::APP_ID, $field['key'], $value);
+		return null;
+	}//end saveBoundedInt()
+
+	/**
+	 * Persist the reporting currency when it is submitted.
+	 *
+	 * One reporting currency for the whole app: the setup wizard's setting,
+	 * which dashboards format with (pipelinq#2040).
+	 *
+	 * @param array<string, mixed> $params The request parameters.
+	 *
+	 * @return string|null The validation error, or null when saved or absent.
+	 */
+	private function saveReportingCurrency(array $params): ?string {
+		if (isset($params['reporting_currency']) === false) {
+			return null;
+		}
+
+		$currency = strtoupper(trim((string)$params['reporting_currency']));
+		if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
+			return 'reporting_currency must be a three-letter currency code.';
+		}
+
+		$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::REPORTING_CURRENCY_KEY, $currency);
+		return null;
+	}//end saveReportingCurrency()
+
+	/**
+	 * Persist the rate table and its rate dates when it is submitted.
+	 *
+	 * @param array<string, mixed> $params The request parameters.
+	 *
+	 * @return string|null The validation error, or null when saved or absent.
+	 */
+	private function saveExchangeRates(array $params): ?string {
+		if (isset($params['exchange_rates']) === false) {
+			return null;
+		}
+
+		try {
+			$rates = $this->exchangeRate->normaliseRates(input: (array)$params['exchange_rates']);
+		} catch (\InvalidArgumentException $e) {
+			return $e->getMessage();
+		}
+
+		$dates = $this->exchangeRate->overrideStore()->rateDatesFor(rates: $rates, previousRates: $this->exchangeRate->getRates());
+		$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATES_KEY, (string)json_encode($rates));
+		$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATE_DATES_KEY, (string)json_encode($dates));
+		return null;
+	}//end saveExchangeRates()
 
 	/**
 	 * Persist the rate overrides and the stale limit when they are submitted.
