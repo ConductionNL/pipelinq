@@ -104,7 +104,7 @@ describe('ArticleEditModal.data', () => {
  * @return {object} A compose modal context.
  */
 function composeCtx(post) {
-	return { post, model: { body: 'Hi' }, chosenAccounts: ['a1'], saving: false, error: 'old', $emit: vi.fn() }
+	return { ...compose.methods, post, model: { body: 'Hi' }, chosenAccounts: ['a1'], saving: false, error: 'old', $emit: vi.fn() }
 }
 
 describe('SocialPostComposeModal.save', () => {
@@ -164,6 +164,7 @@ describe('SocialPostComposeModal.save', () => {
  */
 function cardCtx(call) {
 	return {
+		...card.methods,
 		call,
 		looking: false,
 		pop: null,

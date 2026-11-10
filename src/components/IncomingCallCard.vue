@@ -182,6 +182,24 @@ import { useObjectStore } from '../store/modules/object.js'
 /** How often the card asks again when no live event arrives. */
 export const POLL_MS = 15000
 
+/**
+ * The screen pop for a lookup result: a failed or empty lookup reads as
+ * an intake without matches.
+ *
+ * @param {object|null} result The lookup result.
+ * @return {{action: string, matches: Array, e164: string, rawNumber: string}} The pop.
+ * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+ */
+function popFrom(result) {
+	const found = result || {}
+	return {
+		action: found.action || 'intake',
+		matches: Array.isArray(found.matches) ? found.matches : [],
+		e164: found.e164 || '',
+		rawNumber: found.rawNumber || '',
+	}
+}
+
 export default {
 	name: 'IncomingCallCard',
 
@@ -455,16 +473,19 @@ export default {
 			if (this.call === null || this.call.id !== call.id) {
 				return
 			}
-			this.pop = {
-				action: (result && result.action) || 'intake',
-				matches: Array.isArray(result && result.matches)
-					? result.matches
-					: [],
-
-				e164: (result && result.e164) || '',
-				rawNumber: (result && result.rawNumber) || '',
-			}
+			this.pop = popFrom(result)
 			this.looking = false
+			this.openPreview(call)
+		},
+
+		/**
+		 * Open the part of the card the address previews: the chooser when
+		 * there is more than one match, the intake, or the wrap-up.
+		 *
+		 * @param {object} call The call that was looked up.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+		 */
+		openPreview(call) {
 			if (call.previewOpen === 'chooser' && this.pop.matches.length > 1) {
 				this.chooserOpen = true
 			}
