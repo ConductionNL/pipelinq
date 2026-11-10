@@ -191,20 +191,49 @@ class ZtcClient {
 	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function resolveOmschrijvingFromUrl(array $endpoint, string $statustypeUrl): ?string {
+		$cached = $this->cachedStatustype(endpoint: $endpoint, statustypeUrl: $statustypeUrl);
+		if ($cached !== null) {
+			return self::stringOrNull(value: $cached['data']['omschrijving'] ?? null);
+		}
+
+		// Cache miss: fetch directly.
+		$body = $this->fetchStatustype(endpoint: $endpoint, statustypeUrl: $statustypeUrl);
+		if ($body === null) {
+			return null;
+		}
+
+		return self::stringOrNull(value: $body['omschrijving'] ?? null);
+	}//end resolveOmschrijvingFromUrl()
+
+	/**
+	 * The cached statustype entry with this URL, when an earlier lookup stored it.
+	 *
+	 * @param array<string, mixed> $endpoint      ZgwEndpoint payload.
+	 * @param string               $statustypeUrl Fully-qualified statustype URL.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function cachedStatustype(array $endpoint, string $statustypeUrl): ?array {
 		$endpointId = (string)($endpoint['id'] ?? '');
 		$bucket = $this->cache[$endpointId][self::RESOURCE_STATUSTYPE] ?? [];
 		foreach ($bucket as $entry) {
 			if ($entry['url'] === $statustypeUrl) {
-				$omsch = $entry['data']['omschrijving'] ?? null;
-				if (is_string($omsch) === true) {
-					return $omsch;
-				}
-
-				return null;
+				return $entry;
 			}
 		}
 
-		// Cache miss: fetch directly.
+		return null;
+	}//end cachedStatustype()
+
+	/**
+	 * GET a statustype on the endpoint's own ZTC; null when it cannot be fetched.
+	 *
+	 * @param array<string, mixed> $endpoint      ZgwEndpoint payload.
+	 * @param string               $statustypeUrl Fully-qualified statustype URL.
+	 *
+	 * @return array<string, mixed>|null The decoded body.
+	 */
+	private function fetchStatustype(array $endpoint, string $statustypeUrl): ?array {
 		$client = $this->registers->findClientForEndpoint($endpoint);
 		$ztcUrl = (string)($endpoint['componenten']['ztc'] ?? '');
 		if ($client === null || $ztcUrl === '' || str_starts_with($statustypeUrl, $ztcUrl) === false) {
@@ -223,13 +252,23 @@ class ZtcClient {
 			return null;
 		}
 
-		$omsch = $response['body']['omschrijving'] ?? null;
-		if (is_string($omsch) === true) {
-			return $omsch;
+		return $response['body'];
+	}//end fetchStatustype()
+
+	/**
+	 * The value when it is a string, otherwise null.
+	 *
+	 * @param mixed $value Any value.
+	 *
+	 * @return string|null
+	 */
+	private static function stringOrNull(mixed $value): ?string {
+		if (is_string($value) === true) {
+			return $value;
 		}
 
 		return null;
-	}//end resolveOmschrijvingFromUrl()
+	}//end stringOrNull()
 
 	/**
 	 * Invalidate the cache for one resource type (called on catalogi NRC events).
