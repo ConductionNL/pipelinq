@@ -62,4 +62,34 @@ describe('a resource\'s load this week', () => {
 		expect(resourceWeekLoad({ bookings: [], resourceId: 'fatma', workingHours: [], vacations: [], now }))
 			.toEqual({ count: 0, percent: null })
 	})
+
+	it('skips unreadable bookings and counts a booking without a usable end as zero minutes', () => {
+		const bookings = [
+			null,
+			booking(at(19, 9), at(19, 10), { resourceAssignments: undefined }),
+			booking(at(19, 9), at(19, 10), { resourceAssignments: [null, { resourceId: 'fatma' }] }),
+			booking('not a date', at(19, 10)),
+			booking(at(18, 9), at(18, 10)),
+			booking(at(20, 9), 'not a date'),
+			booking(at(20, 9), at(20, 8)),
+			booking(at(21, 9), at(21, 9)),
+			booking(at(22, 9), at(22, 10), { status: 'rescheduled' }),
+			booking(at(23, 9), at(23, 10), { status: 'cancelled-by-business' }),
+		]
+		expect(resourceWeekLoad({ bookings, resourceId: 'fatma', workingHours, vacations: [], now }))
+			.toEqual({ count: 4, percent: 3 })
+	})
+
+	it('reads a vacation without an end as one day and ignores unreadable vacations and hours', () => {
+		const vacations = [null, { endDate: '2026-10-21' }, { startDate: '2026-10-19T00:00:00Z' }]
+		const hours = [null, ...workingHours, { day: 'thursday', openTime: '20:00', closeTime: '21:00' }, { day: 'friday', openTime: 'x', closeTime: '12:00' }]
+		// Monday is away; 510 + 240 + 690 + 60 + 240 = 1740 bookable minutes, 120 booked.
+		const bookings = [booking(at(20, 9), at(20, 11))]
+		expect(resourceWeekLoad({ bookings, resourceId: 'fatma', workingHours: hours, vacations, now }))
+			.toEqual({ count: 1, percent: 7 })
+	})
+
+	it('reads missing lists as empty', () => {
+		expect(resourceWeekLoad({ resourceId: 'fatma', now })).toEqual({ count: 0, percent: null })
+	})
 })
