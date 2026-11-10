@@ -40,6 +40,13 @@ use RuntimeException;
  */
 class BerichtenboxAdminControllerTest extends TestCase {
 	/**
+	 * The app config the controller reads.
+	 *
+	 * @var array<string, string>
+	 */
+	private const CONFIG = ['register' => 'pipelinq', 'berichtenboxMessage_schema' => 'bbMessage'];
+
+	/**
 	 * Build the controller over the given object service.
 	 *
 	 * @param ObjectServiceInterface $objects The object service double.
@@ -47,13 +54,13 @@ class BerichtenboxAdminControllerTest extends TestCase {
 	 * @return BerichtenboxAdminController The controller.
 	 */
 	private function controller(ObjectServiceInterface $objects): BerichtenboxAdminController {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
-			static fn (string $app, string $key, string $default = ''): string => (['register' => 'pipelinq', 'berichtenboxMessage_schema' => 'bbMessage'][$key] ?? $default)
+			static fn (string $app, string $key, string $default = ''): string => (self::CONFIG[$key] ?? $default)
 		);
 
 		return new BerichtenboxAdminController(
-			request: $this->createMock(IRequest::class),
+			request: $this->createMock(originalClassName: IRequest::class),
 			appConfig: $appConfig,
 			objectService: $objects,
 		);
@@ -70,12 +77,14 @@ class BerichtenboxAdminControllerTest extends TestCase {
 		$message->setObject(['uuid' => 'm-1', 'deliveryStatus' => 'failed', 'retryCount' => 5, 'nextRetryAt' => '2026-11-11']);
 
 		$saved = [];
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->expects($this->once())
 			->method('find')
 			->with(
 				'm-1',
-				$this->callback(static fn (?ObjectFindOptions $options): bool => $options?->register === 'pipelinq' && $options?->schema === 'bbMessage'),
+				$this->callback(
+					callback: static fn (?ObjectFindOptions $options): bool => $options?->register === 'pipelinq' && $options?->schema === 'bbMessage'
+				),
 			)
 			->willReturn($message);
 		$objects->method('saveObject')->willReturnCallback(
@@ -87,11 +96,11 @@ class BerichtenboxAdminControllerTest extends TestCase {
 
 		$response = $this->controller(objects: $objects)->retry(id: 'm-1');
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(['ok' => true, 'id' => 'm-1', 'status' => 'queued'], $response->getData());
-		$this->assertSame('queued', $saved['deliveryStatus']);
-		$this->assertSame(0, $saved['retryCount']);
-		$this->assertSame('', $saved['nextRetryAt']);
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: ['ok' => true, 'id' => 'm-1', 'status' => 'queued'], actual: $response->getData());
+		$this->assertSame(expected: 'queued', actual: $saved['deliveryStatus']);
+		$this->assertSame(expected: 0, actual: $saved['retryCount']);
+		$this->assertSame(expected: '', actual: $saved['nextRetryAt']);
 	}//end testRetryRequeuesTheMessage()
 
 	/**
@@ -100,12 +109,12 @@ class BerichtenboxAdminControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRetryOfAnUnknownMessageIsNotFound(): void {
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('find')->willThrowException(new RuntimeException('gone'));
 		$objects->expects($this->never())->method('saveObject');
 
 		$response = $this->controller(objects: $objects)->retry(id: 'm-404');
 
-		$this->assertSame(404, $response->getStatus());
+		$this->assertSame(expected: 404, actual: $response->getStatus());
 	}//end testRetryOfAnUnknownMessageIsNotFound()
 }//end class
