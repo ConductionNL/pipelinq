@@ -623,6 +623,8 @@ import {
 import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { initializeStores } from '../../store/store.js'
+import { boardLeadIds, groupLeadProducts, productNames, productTotals } from './leadProductBreakdown.js'
+import { placeOnStage, stagePayload, validationMessage } from './stageMove.js'
 
 // What an unscoped pipeline (no propertyMappings, no legacy entityType) boards.
 const UNSCOPED_SLUGS = ['lead', 'request']
@@ -1151,26 +1153,53 @@ export default {
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async syncLiveSubscriptions() {
-			const store = this.objectStore
-			if (typeof store.subscribe !== 'function') {
+			if (typeof this.objectStore.subscribe !== 'function') {
 				return
 			}
 			const types = this.liveTypes
+			if (!this.claimLiveScope(types)) {
+				return
+			}
+			const epoch = this.liveEpoch
+			const handles = await this.subscribeLiveTypes(types)
+			this.adoptLiveHandles(handles, epoch)
+		},
+
+		/**
+		 * Take the scope of the given types: release the previous scope and
+		 * mark this one pending before the subscribe awaits.
+		 *
+		 * @param {Array<string>} types The object types.
+		 * @return {boolean} Whether there is a new, non-empty scope to subscribe.
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		claimLiveScope(types) {
 			const key = types.join(',')
 			if (key === this.liveTypesKey) {
 				// Same scope already subscribed (or subscribe in flight).
-				return
+				return false
 			}
 			this.releaseLiveSubscriptions()
 			if (types.length === 0) {
-				return
+				return false
 			}
 			this.liveTypesKey = key
-			const epoch = this.liveEpoch
+			return true
+		},
+
+		/**
+		 * Subscribe to each object type in turn. A failure stops the run and
+		 * is logged; the handles gathered before it are kept.
+		 *
+		 * @param {Array<string>} types The object types.
+		 * @return {Promise<Array>} The subscription handles.
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		async subscribeLiveTypes(types) {
 			const handles = []
 			try {
-				for (const type of types) {
-					handles.push(await store.subscribe(type))
+				for (const objectType of types) {
+					handles.push(await this.objectStore.subscribe(objectType))
 				}
 			} catch (e) {
 				console.warn(
@@ -1178,10 +1207,23 @@ export default {
 					e?.message ?? e,
 				)
 			}
+			return handles
+		},
+
+		/**
+		 * Keep the new handles, unless the subscriptions were released while
+		 * they were being made.
+		 *
+		 * @param {Array} handles The subscription handles.
+		 * @param {number} epoch The live epoch the subscribe started in.
+		 * @return {void}
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		adoptLiveHandles(handles, epoch) {
 			if (this.liveEpoch !== epoch) {
 				// Released while awaiting (pipeline switch / destroy) — drop
 				// the now-stale subscriptions instead of leaking them.
-				handles.forEach((h) => store.unsubscribe(h))
+				handles.forEach((h) => this.objectStore.unsubscribe(h))
 				return
 			}
 			this.liveHandles = handles
@@ -1388,11 +1430,7 @@ export default {
 				this.loading = true
 			}
 
-			const pipeline = this.selectedPipeline
-			const items =
-				pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
-					? await this.fetchItemsViaMappings(pipeline)
-					: await this.fetchItemsBySlug(pipeline)
+			const items = await this.fetchSelectedPipelineItems()
 
 			if (seq === this.itemsFetchSeq) {
 				this.items = items
@@ -1401,6 +1439,20 @@ export default {
 			if (!silent && seq === this.itemsFetchSeq) {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * The items of the selected pipeline: through its property mappings
+		 * when it has any, by entity slug otherwise.
+		 *
+		 * @return {Promise<Array<object>>} The board items.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
+		 */
+		fetchSelectedPipelineItems() {
+			const pipeline = this.selectedPipeline
+			return pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
+				? this.fetchItemsViaMappings(pipeline)
+				: this.fetchItemsBySlug(pipeline)
 		},
 
 		/**
@@ -1421,16 +1473,10 @@ export default {
 		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
 		 */
 		async fetchLeadProductsForStages() {
-			const leadIds = new Set(
-				this.items
-					.filter((i) => i._schemaSlug === 'lead')
-					.map((i) => i.id)
-					.filter(Boolean),
-			)
+			const leadIds = boardLeadIds(this.items)
 
 			if (leadIds.size === 0) {
-				this.leadProductsByLead = {}
-				this.productNamesById = {}
+				this.clearLeadProducts()
 				return
 			}
 
@@ -1444,37 +1490,43 @@ export default {
 						_limit: 500,
 					},
 				)
-				const byLead = {}
-				const productIds = new Set()
-				for (const lp of lpCollection || []) {
-					if (!lp.lead || !leadIds.has(lp.lead)) continue
-					if (!byLead[lp.lead]) byLead[lp.lead] = []
-					byLead[lp.lead].push(lp)
-					if (lp.product) productIds.add(lp.product)
-				}
+				const { byLead, productIds } = groupLeadProducts(lpCollection, leadIds)
 				this.leadProductsByLead = byLead
-
-				if (productIds.size > 0) {
-					const products = await this.objectStore.fetchCollection(
-						'product',
-						{
-							_limit: 500,
-						},
-					)
-					const names = {}
-					for (const p of products || []) {
-						if (productIds.has(p.id)) {
-							names[p.id] = p.name || p.id
-						}
-					}
-					this.productNamesById = names
-				} else {
-					this.productNamesById = {}
-				}
+				this.productNamesById = await this.fetchProductNames(productIds)
 			} catch {
-				this.leadProductsByLead = {}
-				this.productNamesById = {}
+				this.clearLeadProducts()
 			}
+		},
+
+		/**
+		 * The names of the given products, read from the store; none without products.
+		 *
+		 * @param {Set<string>} productIds The products to name.
+		 * @return {Promise<object>} The names by product id.
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+		 */
+		async fetchProductNames(productIds) {
+			if (productIds.size === 0) {
+				return {}
+			}
+			const products = await this.objectStore.fetchCollection(
+				'product',
+				{
+					_limit: 500,
+				},
+			)
+			return productNames(products, productIds)
+		},
+
+		/**
+		 * Forget the line items and product names of the board leads.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+		 */
+		clearLeadProducts() {
+			this.leadProductsByLead = {}
+			this.productNamesById = {}
 		},
 
 		/**
@@ -1489,25 +1541,10 @@ export default {
 			const stageLeads = this.getStageItems(stageName).filter(
 				(i) => i._schemaSlug === 'lead',
 			)
-			const aggregate = new Map()
-			for (const lead of stageLeads) {
-				const lineItems = this.leadProductsByLead[lead.id] || []
-				for (const lp of lineItems) {
-					if (!lp.product) continue
-					const current = aggregate.get(lp.product) || {
-						product: lp.product,
-						name: this.productNamesById[lp.product] || lp.product,
-						count: 0,
-						total: 0,
-					}
-					current.count += 1
-					current.total += Number(lp.total) || 0
-					aggregate.set(lp.product, current)
-				}
-			}
-			const sorted = Array.from(aggregate.values()).sort(
-				(a, b) => b.total - a.total,
+			const lineItems = stageLeads.flatMap(
+				(lead) => this.leadProductsByLead[lead.id] || [],
 			)
+			const sorted = productTotals(lineItems, this.productNamesById)
 			const top = sorted.slice(0, 5)
 			const remaining = Math.max(0, sorted.length - top.length)
 			return { items: top, remaining }
@@ -1740,39 +1777,23 @@ export default {
 			const columnProp = this.getColumnProperty(item)
 			if (item[columnProp] === targetStage.name) return
 
-			const previous = {
-				[columnProp]: item[columnProp],
-				stageOrder: item.stageOrder,
-			}
-			item[columnProp] = targetStage.name
-			if (columnProp === 'stage' && typeof targetStage.order === 'number') {
-				item.stageOrder = targetStage.order
-			}
+			const previous = placeOnStage({ item, columnProp, targetStage })
 
 			// A request/complaint/contactmoment is stored as a `ticket` and must
 			// keep its ticketType discriminator (unify-ticket-supertype).
 			const { objectType, ticketType } = resolveObjectType(item._schemaSlug)
 			const current = await this.objectStore.fetchObject(objectType, item.id)
-			let saved = null
-			if (current) {
-				const payload = {
-					...current,
-					id: item.id,
-					[columnProp]: item[columnProp],
-				}
-				if (item.stageOrder !== previous.stageOrder)
-					payload.stageOrder = item.stageOrder
-				if (ticketType && !payload.ticketType)
-					payload.ticketType = ticketType
-				saved = await this.objectStore.saveObject(objectType, payload)
-			}
+			const saved = current
+				? await this.objectStore.saveObject(
+					objectType,
+					stagePayload(current, { item, columnProp, previous, ticketType }),
+				)
+				: null
 			if (!saved) {
 				Object.assign(item, previous)
-				const refusal = this.objectStore.errors?.[objectType]
 				showError(
-					refusal?.isValidation && refusal.message
-						? refusal.message
-						: t('pipelinq', 'Could not move the card to {stage}.', {
+					validationMessage(this.objectStore.errors?.[objectType])
+						?? t('pipelinq', 'Could not move the card to {stage}.', {
 							stage: targetStage.name,
 						}),
 				)
