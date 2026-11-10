@@ -242,3 +242,46 @@ describe('IncomingCallCard.lookUp', () => {
 		expect(ctx.intakeOpen).toBe(false)
 	})
 })
+
+describe('IncomingCallCard.wrapUpFor', () => {
+	it('reads the number, the single match, the duration and the contact moment', () => {
+		vi.useFakeTimers()
+		vi.setSystemTime(new Date('2026-01-01T10:01:30Z'))
+		try {
+			const ctx = {
+				...card.methods,
+				pop: { rawNumber: '06 1', matches: [{ name: 'Henk' }] },
+				displayName: (match) => match.name,
+				t: (app, text, vars) => text.replace('{reference}', vars?.reference ?? ''),
+				$router: { resolve: (to) => ({ href: '/tickets/' + to.params.id }) },
+			}
+			expect(card.methods.wrapUpFor.call(ctx, { id: 'c1', startedAt: '2026-01-01T10:00:00Z', fromNumber: '06', reference: 'R1' })).toEqual({
+				callId: 'c1',
+				preview: false,
+				number: '06 1',
+				clientName: 'Henk',
+				durationSeconds: 90,
+				recordedAs: 'Contact moment at R1',
+				recordedHref: '/tickets/c1',
+			})
+			ctx.pop = { rawNumber: '', matches: [{ name: 'A' }, { name: 'B' }] }
+			expect(card.methods.wrapUpFor.call(ctx, { id: 'preview', startedAt: 'nope', fromNumber: '06' })).toEqual({
+				callId: 'preview',
+				preview: true,
+				number: '06',
+				clientName: '',
+				durationSeconds: -1,
+				recordedAs: 'Contact moment',
+				recordedHref: '',
+			})
+			ctx.pop = null
+			expect(card.methods.wrapUpFor.call(ctx, { id: 'c2', startedAt: '2026-01-01T10:05:00Z' })).toMatchObject({
+				number: '',
+				clientName: '',
+				durationSeconds: 0,
+			})
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+})
