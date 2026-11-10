@@ -220,45 +220,97 @@ class ProductCatalogService {
 	 */
 	public function resolveEffectivePrice(array $product, float $quantity, ?string $variantSku = null): array {
 		$quantity = max(0.0, $quantity);
+		$price = $this->variantOrBasePrice(product: $product, variantSku: $variantSku);
+		// Quantity tier override (tiers price the line, not the variant).
+		if ($variantSku === null) {
+			$price = $this->withTier(price: $price, tier: $this->tierFor(product: $product, quantity: $quantity));
+		}
+
+		return [
+			'unitPrice' => round($price['unitPrice'], 2),
+			'source' => $price['source'],
+			'tierLabel' => $price['tierLabel'],
+			'quantity' => $quantity,
+			...$this->vatOf(product: $product),
+		];
+	}//end resolveEffectivePrice()
+
+	/**
+	 * The product's base price, or the requested variant's (validated, and
+	 * its own price when it has one).
+	 *
+	 * @param array<string, mixed> $product    The product object.
+	 * @param string|null          $variantSku Optional variant SKU.
+	 *
+	 * @return array{unitPrice: float, source: string, tierLabel: string}
+	 *
+	 * @throws OCSNotFoundException If the variant does not exist.
+	 * @throws OCSBadRequestException If the variant is inactive.
+	 */
+	private function variantOrBasePrice(array $product, ?string $variantSku): array {
 		$basePrice = max(0.0, (float)($product['unitPrice'] ?? 0));
 		$source = 'base';
-		$tierLabel = '';
-
-		// Variant override (validates + may replace the base price).
 		if ($variantSku !== null && $variantSku !== '') {
-			[$basePrice, $source] = $this->resolveVariantPrice(
-				product: $product,
-				sku: $variantSku,
-				basePrice: $basePrice
-			);
+			[$basePrice, $source] = $this->resolveVariantPrice(product: $product, sku: $variantSku, basePrice: $basePrice);
 		}
 
-		// Quantity tier override (tiers price the line, not the variant).
+		return ['unitPrice' => $basePrice, 'source' => $source, 'tierLabel' => ''];
+	}//end variantOrBasePrice()
+
+	/**
+	 * The price tier that applies to the quantity; null without tiers or
+	 * when none qualifies.
+	 *
+	 * @param array<string, mixed> $product  The product object.
+	 * @param float                $quantity The ordered quantity.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function tierFor(array $product, float $quantity): ?array {
 		$tiers = (array)($product['priceTiers'] ?? []);
-		if (count($tiers) > 0 && $variantSku === null) {
-			$tier = $this->resolveTier(tiers: $tiers, quantity: $quantity);
-			if ($tier !== null) {
-				$basePrice = max(0.0, (float)($tier['unitPrice'] ?? $basePrice));
-				$source = 'tier';
-				$tierLabel = (string)($tier['label'] ?? '');
-			}
+		if (count($tiers) === 0) {
+			return null;
 		}
 
+		return $this->resolveTier(tiers: $tiers, quantity: $quantity);
+	}//end tierFor()
+
+	/**
+	 * The price with the tier's price and label; unchanged without a tier.
+	 *
+	 * @param array{unitPrice: float, source: string, tierLabel: string} $price The price so far.
+	 * @param array<string, mixed>|null                                  $tier  The tier.
+	 *
+	 * @return array{unitPrice: float, source: string, tierLabel: string}
+	 */
+	private function withTier(array $price, ?array $tier): array {
+		if ($tier === null) {
+			return $price;
+		}
+
+		return [
+			'unitPrice' => max(0.0, (float)($tier['unitPrice'] ?? $price['unitPrice'])),
+			'source' => 'tier',
+			'tierLabel' => (string)($tier['label'] ?? ''),
+		];
+	}//end withTier()
+
+	/**
+	 * The product's VAT class and its tax rate (an empty class reads as none).
+	 *
+	 * @param array<string, mixed> $product The product object.
+	 *
+	 * @return array{vatClass: string, taxRate: int|float}
+	 */
+	private function vatOf(array $product): array {
 		$vatClass = (string)($product['vatClass'] ?? '');
 		$vatClassOrNull = $vatClass;
 		if ($vatClass === '') {
 			$vatClassOrNull = null;
 		}
 
-		return [
-			'unitPrice' => round($basePrice, 2),
-			'source' => $source,
-			'tierLabel' => $tierLabel,
-			'quantity' => $quantity,
-			'vatClass' => $vatClass,
-			'taxRate' => $this->btwClassToRate(vatClass: $vatClassOrNull),
-		];
-	}//end resolveEffectivePrice()
+		return ['vatClass' => $vatClass, 'taxRate' => $this->btwClassToRate(vatClass: $vatClassOrNull)];
+	}//end vatOf()
 
 	/**
 	 * Resolve the base price + source for a requested variant.
