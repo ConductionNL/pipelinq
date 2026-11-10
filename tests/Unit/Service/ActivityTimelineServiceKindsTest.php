@@ -482,8 +482,8 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 
 		$this->queries = [];
 		$result = $service->getTimeline(entityType: 'client', entityId: 'client-1', params: ['types' => ['bogus'], 'from' => '', 'to' => '']);
-		$this->assertSame(9, $result['total']);
-		$this->assertSame(['ticket-s', 'task-s', 'message-s', 'contact-s', 'booking-s'], array_column($this->queries, 'schema'));
+		$this->assertSame(10, $result['total']);
+		$this->assertSame(['ticket-s', 'task-s', 'contact-s', 'booking-s'], array_column($this->queries, 'schema'));
 	}//end testTypesAndDatesFilterTheTimeline()
 
 	/**
