@@ -136,7 +136,9 @@ class BelastingdienstExportService {
 		$metadata->appendChild($document->createElement('EntryCount', (string)$manifest['entryCount']));
 		$metadata->appendChild($this->xmlDateRange(document: $document, dateRange: $manifest['dateRange']));
 		$registerList = $document->createElement('RegisterList');
-		$registerList->appendChild($document->createTextNode(implode(', ', (array)($manifest['registerList'] ?? []))));
+		$registerList->appendChild(
+			$document->createTextNode(implode(', ', (array)($manifest['registerList'] ?? [])))
+		);
 		$metadata->appendChild($registerList);
 		$metadata->appendChild($document->createElement('ChainIntegrity', (string)$manifest['chainIntegrity']));
 		if (($manifest['chainStatus'] ?? '') !== '') {
@@ -281,7 +283,10 @@ class BelastingdienstExportService {
 		return [
 			'exportDate' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM),
 			'entryCount' => count($entries),
-			'dateRange' => ['from' => $fromDate, 'to' => $toDate],
+			'dateRange' => [
+				'from' => $fromDate,
+				'to' => $toDate,
+			],
 			'registerList' => $registers,
 			'chainIntegrity' => $this->chainIntegrity(perRegisterStatus: $perRegisterStatus),
 			'chainStatus' => $this->chainStatus(perRegisterStatus: $perRegisterStatus),
@@ -338,11 +343,18 @@ class BelastingdienstExportService {
 	 */
 	private function registerEntries(array $entries, string $register): array {
 		$forRegister = array_values(
-			array_filter($entries, fn (array $row): bool => (string)($row['registerNumber'] ?? '') === $register)
+			array_filter(
+				$entries,
+				fn (array $row): bool => (string)($row['registerNumber'] ?? '') === $register
+			)
 		);
+
 		usort(
 			$forRegister,
-			fn (array $left, array $right): int => strcmp((string)($left['timestamp'] ?? ''), (string)($right['timestamp'] ?? ''))
+			fn (array $left, array $right): int => strcmp(
+				(string)($left['timestamp'] ?? ''),
+				(string)($right['timestamp'] ?? '')
+			)
 		);
 		return $forRegister;
 	}//end registerEntries()
