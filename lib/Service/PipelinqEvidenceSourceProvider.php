@@ -160,49 +160,87 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
 			return [];
 		}
 
-		[$objectService, $registerId, $schemaIds] = $context;
-
-		$items = [];
-		foreach (self::SUBJECT_LINKS as $sourceKey => $linkFields) {
-			$schemaId = $schemaIds[$sourceKey];
-
-			$rows = $this->safeFindAll(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $schemaId,
-				ticketType: (self::SOURCE_TICKET_TYPES[$sourceKey] ?? null)
-			);
-
-			foreach ($rows as $row) {
-				$data = $this->rowToArray(row: $row);
-				if ($data === null) {
-					continue;
-				}
-
-				if ($this->matchesSubject(data: $data, subjectId: $subjectId, linkFields: $linkFields) === false) {
-					continue;
-				}
-
-				$items[] = new EvidenceItem(
-					self::SOURCE_ID,
-					$this->contentHash(sourceKey: $sourceKey, data: $data),
-					EvidenceItem::STATUS_COLLECTED,
-					[
-						'schema' => $sourceKey,
-						'objectId' => (string)($data['id'] ?? ($data['uuid'] ?? '')),
-						'caseUuid' => $caseUuid,
-					]
-				);
-			}//end foreach
-		}//end foreach
+		$run = new EvidenceHarvest(caseUuid: $caseUuid, subjectId: $subjectId);
+		$run->objectService = $context[0];
+		$run->registerId = $context[1];
+		$run->schemaIds = $context[2];
+		foreach (array_keys(self::SUBJECT_LINKS) as $sourceKey) {
+			$run->sourceKey = $sourceKey;
+			$this->harvestSource(run: $run);
+		}
 
 		$this->logger->info(
 			'Pipelinq DSAR evidence harvest complete',
-			['case' => $caseUuid, 'items' => count($items)]
+			['case' => $caseUuid, 'items' => count($run->items)]
 		);
 
-		return $items;
+		return $run->items;
 	}//end harvest()
+
+	/**
+	 * Collect the subject's objects of the run's current source.
+	 *
+	 * @param EvidenceHarvest $run The harvest.
+	 *
+	 * @return void
+	 */
+	private function harvestSource(EvidenceHarvest $run): void {
+		$filters = self::sourceFilters(
+			sourceKey: $run->sourceKey,
+			base: ['register' => $run->registerId, 'schema' => $run->schemaIds[$run->sourceKey]]
+		);
+		foreach ($this->safeFindAll(objectService: $run->objectService, filters: $filters) as $row) {
+			$this->collectWhenMatching(run: $run, row: $row);
+		}
+	}//end harvestSource()
+
+	/**
+	 * The read filters of a source: register and schema, narrowed to the
+	 * ticket subtype for a ticket-backed source.
+	 *
+	 * @param string               $sourceKey The source key.
+	 * @param array<string, mixed> $base      The register and schema.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function sourceFilters(string $sourceKey, array $base): array {
+		$ticketType = (self::SOURCE_TICKET_TYPES[$sourceKey] ?? null);
+		if ($ticketType !== null) {
+			$base['ticketType'] = $ticketType;
+		}
+
+		return $base;
+	}//end sourceFilters()
+
+	/**
+	 * Add an evidence item for a row that belongs to the run's subject.
+	 *
+	 * @param EvidenceHarvest $run The harvest.
+	 * @param mixed           $row One row of the current source.
+	 *
+	 * @return void
+	 */
+	private function collectWhenMatching(EvidenceHarvest $run, $row): void {
+		$data = $this->rowToArray(row: $row);
+		if ($data === null) {
+			return;
+		}
+
+		if ($this->matchesSubject(data: $data, subjectId: $run->subjectId, linkFields: self::SUBJECT_LINKS[$run->sourceKey]) === false) {
+			return;
+		}
+
+		$run->items[] = new EvidenceItem(
+			self::SOURCE_ID,
+			$this->contentHash(sourceKey: $run->sourceKey, data: $data),
+			EvidenceItem::STATUS_COLLECTED,
+			[
+				'schema' => $run->sourceKey,
+				'objectId' => (string)($data['id'] ?? ($data['uuid'] ?? '')),
+				'caseUuid' => $run->caseUuid,
+			]
+		);
+	}//end collectWhenMatching()
 
 	/**
 	 * Whether an object belongs to the subject via own identity or a FK link.
@@ -309,27 +347,12 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
 	 * A ticket-backed source narrows the unified `ticket` schema with the
 	 * `ticketType` discriminator so each subtype still harvests only its own rows.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $registerId Register id.
-	 * @param string $schemaId Schema id.
-	 * @param string|null $ticketType The ticket subtype, or null for a plain schema.
+	 * @param object               $objectService The OpenRegister ObjectService.
+	 * @param array<string, mixed> $filters       Register, schema and an optional ticketType.
 	 *
 	 * @return array<int, mixed> The rows (empty on failure).
 	 */
-	private function safeFindAll(
-		object $objectService,
-		string $registerId,
-		string $schemaId,
-		?string $ticketType = null,
-	): array {
-		$filters = [
-			'register' => $registerId,
-			'schema' => $schemaId,
-		];
-		if ($ticketType !== null) {
-			$filters['ticketType'] = $ticketType;
-		}
-
+	private function safeFindAll(object $objectService, array $filters): array {
 		try {
 			$rows = $objectService->findAll(
 				[
@@ -340,7 +363,7 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq DSAR evidence harvest: schema read failed',
-				['schema' => $schemaId, 'exception' => $e->getMessage()]
+				['schema' => $filters['schema'], 'exception' => $e->getMessage()]
 			);
 			return [];
 		}
