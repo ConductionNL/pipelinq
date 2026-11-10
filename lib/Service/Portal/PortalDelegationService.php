@@ -102,23 +102,8 @@ class PortalDelegationService {
 		$granteeEmail = strtolower(trim($granteeEmail));
 		$scopes = $this->sanitiseScopes(scopes: $scopes);
 
-		$granter = $this->repository->find(self::ACCOUNT_SCHEMA, $granterAccountId);
-		if ($granter !== null && strtolower((string)($granter['email'] ?? '')) === $granteeEmail) {
-			throw new PortalException(
-				Http::STATUS_UNPROCESSABLE_ENTITY,
-				'cannotDelegateToSelf',
-				'U kunt geen toegang aan uzelf verlenen.'
-			);
-		}
-
-		$grantee = $this->repository->findOneBy(
-			self::ACCOUNT_SCHEMA,
-			['email' => $granteeEmail, 'tenantId' => $tenantId]
-		);
-		$granteeId = null;
-		if ($grantee !== null) {
-			$granteeId = $this->repository->idOf(object: $grantee);
-		}
+		$this->refuseSelfGrant(granterAccountId: $granterAccountId, granteeEmail: $granteeEmail);
+		$granteeId = $this->granteeIdOf(granteeEmail: $granteeEmail, tenantId: $tenantId);
 
 		$delegation = $this->repository->save(
 			self::SCHEMA,
@@ -149,6 +134,47 @@ class PortalDelegationService {
 
 		return $delegation;
 	}//end grant()
+
+	/**
+	 * Refuse a grant to the granter's own email.
+	 *
+	 * @param string $granterAccountId The authenticated granter.
+	 * @param string $granteeEmail     The normalised colleague email.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException When the granter delegates to themself.
+	 */
+	private function refuseSelfGrant(string $granterAccountId, string $granteeEmail): void {
+		$granter = $this->repository->find(self::ACCOUNT_SCHEMA, $granterAccountId);
+		if ($granter !== null && strtolower((string)($granter['email'] ?? '')) === $granteeEmail) {
+			throw new PortalException(
+				Http::STATUS_UNPROCESSABLE_ENTITY,
+				'cannotDelegateToSelf',
+				'U kunt geen toegang aan uzelf verlenen.'
+			);
+		}
+	}//end refuseSelfGrant()
+
+	/**
+	 * The id of the tenant's portal account with the colleague email, or null when there is none yet.
+	 *
+	 * @param string $granteeEmail The normalised colleague email.
+	 * @param string $tenantId     The tenant id.
+	 *
+	 * @return string|null
+	 */
+	private function granteeIdOf(string $granteeEmail, string $tenantId): ?string {
+		$grantee = $this->repository->findOneBy(
+			self::ACCOUNT_SCHEMA,
+			['email' => $granteeEmail, 'tenantId' => $tenantId]
+		);
+		if ($grantee === null) {
+			return null;
+		}
+
+		return $this->repository->idOf(object: $grantee);
+	}//end granteeIdOf()
 
 	/**
 	 * Revoke a delegation owned by the authenticated granter.
