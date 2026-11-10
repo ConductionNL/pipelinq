@@ -52,7 +52,7 @@ namespace OCA\Pipelinq\Service\Social;
  *  definition, and the alternative PHPMD is asking for, a factory injected
  *  into every adapter, would add a collaborator that constructs a struct.
  */
-class ThreadsAdapter extends AbstractSocialAdapter {
+class ThreadsAdapter extends AbstractSocialAdapter implements PublishesThroughContainer {
 	/**
 	 * The network name, matching the schema enum.
 	 *
@@ -149,28 +149,10 @@ class ThreadsAdapter extends AbstractSocialAdapter {
 			return $refusal;
 		}
 
-		$container = $this->send(call: $this->publishCall(request: $request), request: $request);
-		if ($container->accepted === false) {
-			return SocialPublishOutcome::fromGatewayFailure(result: $container);
-		}
-
-		$containerId = (string)($container->body['id'] ?? '');
-		if ($containerId === '') {
-			return SocialPublishOutcome::refused(
-				code: SocialGatewayResult::REJECTED_BY_NETWORK,
-				reason: 'Threads accepted the text but named no container, so there is nothing to publish.',
-			);
-		}
-
-		$published = $this->send(
-			call: $this->publishContainerCall(request: $request, containerId: $containerId),
+		return $this->publishContainer(
 			request: $request,
+			noContainerReason: 'Threads accepted the text but named no container, so there is nothing to publish.',
 		);
-		if ($published->accepted === false) {
-			return SocialPublishOutcome::fromGatewayFailure(result: $published);
-		}
-
-		return SocialPublishOutcome::published(externalId: $this->readPublishedId(payload: $published->body));
 	}//end publish()
 
 	/**
