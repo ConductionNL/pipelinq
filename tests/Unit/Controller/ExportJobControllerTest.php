@@ -175,6 +175,24 @@ class ExportJobControllerTest extends TestCase {
 	}//end setUp()
 
 	/**
+	 * The controller over the current mocks, logging to the given logger.
+	 *
+	 * @param LoggerInterface $logger The logger.
+	 *
+	 * @return ExportJobController The controller.
+	 */
+	private function controllerLoggingTo(LoggerInterface $logger): ExportJobController {
+		return new ExportJobController($this->request,
+			$this->jobs,
+			$this->destinations,
+			$this->policy,
+			$this->userSession,
+			$this->translator(),
+			$logger
+		);
+	}//end controllerLoggingTo()
+
+	/**
 	 * A pass-through localization mock.
 	 *
 	 * @return IL10N&MockObject The translator.
@@ -1058,4 +1076,58 @@ class ExportJobControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $listResponse->getStatus());
 		$this->assertSame([], $listResponse->getData()['jobs'], 'A deleted job must not reappear in the list.');
 	}//end testDeleteJobRemovesItFromTheList()
+
+	/**
+	 * Golden: the export-admin gate asks the policy about the session user, and an
+	 * unexpected failure is logged under the action's label and answered 500.
+	 *
+	 * @return void
+	 */
+	public function testUnexpectedFailureIsLoggedAndAnswered500(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')
+			->with('ExportJobController::showJob failed', ['exception' => 'disk full']);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('analyst-1');
+		$this->userSession->method('getUser')->willReturn($user);
+		$this->policy->expects($this->once())->method('isExportAdmin')->with('analyst-1')->willReturn(true);
+		$this->jobs->method('getJob')->willThrowException(new \RuntimeException('disk full'));
+
+		$response = $this->controllerLoggingTo($logger)->showJob('job-1');
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertSame(['error' => 'An unexpected error occurred'], $response->getData());
+	}//end testUnexpectedFailureIsLoggedAndAnswered500()
+
+	/**
+	 * Golden: every refusal and every service exception maps to its exact status and body,
+	 * and a refused caller never reaches the service.
+	 *
+	 * @return void
+	 */
+	public function testGateAndErrorMappingAnswerExactly(): void {
+		$cases = [
+			'no session' => [null, true, null, [Http::STATUS_UNAUTHORIZED, ['error' => 'Authentication required']]],
+			'no export role' => ['u1', false, null, [Http::STATUS_FORBIDDEN, ['error' => 'Insufficient permissions']]],
+			'not found' => ['u1', true, new OCSNotFoundException('gone'), [Http::STATUS_NOT_FOUND, ['error' => 'gone']]],
+			'forbidden' => ['u1', true, new OCSForbiddenException('nope'), [Http::STATUS_FORBIDDEN, ['error' => 'nope']]],
+			'bad request' => ['u1', true, new OCSBadRequestException('bad'), [Http::STATUS_UNPROCESSABLE_ENTITY, ['error' => 'bad']]],
+		];
+		foreach ($cases as $name => [$uid, $isAdmin, $thrown, $expected]) {
+			$this->userSession = $this->createMock(IUserSession::class);
+			$this->policy = $this->createMock(ExportAccessPolicy::class);
+			$this->jobs = $this->createMock(ExportJobService::class);
+			$this->authenticate($uid, $isAdmin);
+			if ($thrown === null) {
+				$this->jobs->expects($this->never())->method('getJob');
+			} else {
+				$this->jobs->method('getJob')->willThrowException($thrown);
+			}
+
+			$response = $this->controllerLoggingTo($this->createMock(LoggerInterface::class))->showJob('job-1');
+
+			$this->assertSame($expected, [$response->getStatus(), $response->getData()], $name);
+		}
+	}//end testGateAndErrorMappingAnswerExactly()
+
 }//end class
