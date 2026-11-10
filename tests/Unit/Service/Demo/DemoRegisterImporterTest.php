@@ -136,10 +136,7 @@ class DemoRegisterImporterTest extends TestCase {
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
 			function (ObjectDeletion $deletion): bool {
-					$uuid = $deletion->uuid;
-					$register = $deletion->target->register;
-					$schemaId = $deletion->target->schema;
-				$this->record(['deleteObject', $uuid, (string)$register, (string)$schemaId]);
+				$this->record(['deleteObject', $deletion->uuid, (string)$deletion->target->register, (string)$deletion->target->schema]);
 				return true;
 			}
 		);

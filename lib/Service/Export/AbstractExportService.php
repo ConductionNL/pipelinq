@@ -178,6 +178,8 @@ abstract class AbstractExportService {
 	 * @param string $id The object UUID.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-001
 	 */
 	protected function deleteObjectById(string $schemaKey, string $id): void {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);

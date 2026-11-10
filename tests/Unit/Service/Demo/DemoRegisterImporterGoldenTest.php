@@ -322,16 +322,13 @@ class DemoRegisterImporterGoldenTest extends TestCase {
 			}
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (ObjectDeletion $deletion): bool {
-				$uuid = $deletion->uuid;
-				$register = $deletion->target->register;
-				$schemaId = $deletion->target->schema;
-				$this->recordCall(call: 'deleteObject', args: ['uuid' => $uuid, 'register' => $register, 'schema' => $schemaId]);
-				if ($uuid === 'id-archived') {
+			function (ObjectDeletion $d): bool {
+				$this->recordCall(call: 'deleteObject', args: ['uuid' => $d->uuid, 'register' => $d->target->register, 'schema' => $d->target->schema]);
+				if ($d->uuid === 'id-archived') {
 					throw new RuntimeException('SCHEMA_ARCHIVAL_IMMUTABLE: append-only');
 				}
 
-				if ($uuid === 'id-fails') {
+				if ($d->uuid === 'id-fails') {
 					throw new RuntimeException('database gone');
 				}
 

@@ -142,9 +142,8 @@ class ConsentServiceTest extends TestCase {
 			 * @return void
 			 */
 			public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): void {
-				$uuid = $deletion->uuid;
-				if (isset($this->store[$uuid]) === true) {
-					unset($this->store[$uuid]);
+				if (isset($this->store[$deletion->uuid]) === true) {
+					unset($this->store[$deletion->uuid]);
 					$this->deleted++;
 				}
 			}

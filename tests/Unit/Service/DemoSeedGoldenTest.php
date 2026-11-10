@@ -235,16 +235,13 @@ class DemoSeedGoldenTest extends TestCase {
 			}
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
-				$uuid = $deletion->uuid;
-				$register = $deletion->target->register;
-				$schema = $deletion->target->schema;
-				$this->recordCall(call: 'deleteObject', args: ['uuid' => $uuid, 'register' => $register, 'schema' => $schema]);
-				if ($uuid === 'fails') {
+			function (ObjectDeletion $d, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+				$this->recordCall(call: 'deleteObject', args: ['uuid' => $d->uuid, 'register' => $d->target->register, 'schema' => $d->target->schema]);
+				if ($d->uuid === 'fails') {
 					throw new RuntimeException('database gone');
 				}
 
-				if (str_starts_with($uuid, 'contactmomenten-') === true) {
+				if (str_starts_with($d->uuid, 'contactmomenten-') === true) {
 					throw new RuntimeException('SCHEMA_ARCHIVAL_IMMUTABLE');
 				}
 
