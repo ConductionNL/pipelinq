@@ -246,54 +246,112 @@ class RenameDutchColumns implements IRepairStep {
 			return;
 		}
 
-		$renamed = 0;
-		$copied = 0;
-		$refused = 0;
-
+		$tally = ['renamed' => 0, 'copied' => 0, 'refused' => 0];
 		foreach ($tables as $table) {
-			$columns = $this->columnsOf(table: $table);
-			$qTable = $this->quote(identifier: $table);
-
-			foreach (self::COLUMN_MAP as $old => $new) {
-				if (in_array($old, $columns, true) === false) {
-					continue;
-				}
-
-				if ($this->hasCollision(columns: $columns, target: $new) === true) {
-					$this->logger->warning(
-						'RenameDutchColumns: two sources target one destination; migrating neither.',
-						['table' => $table, 'source' => $old, 'destination' => $new]
-					);
-					$refused++;
-					continue;
-				}
-
-				if (in_array($new, $columns, true) === false) {
-					$sql = 'ALTER TABLE ' . $qTable . ' RENAME COLUMN '
-						. $this->quote(identifier: $old) . ' TO ' . $this->quote(identifier: $new);
-					if ($this->exec(sql: $sql) === true) {
-						$renamed++;
-					}
-
-					continue;
-				}
-
-				$qNew = $this->quote(identifier: $new);
-				$qOld = $this->quote(identifier: $old);
-				$sql = 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
-					. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
-				if ($this->exec(sql: $sql) === true) {
-					$copied++;
-				}
-			}//end foreach
-		}//end foreach
+			foreach ($this->migrateTable(table: new ShardTable(name: $table, columns: $this->columnsOf(table: $table))) as $outcome) {
+				$tally[$outcome]++;
+			}
+		}
 
 		$output->info(
-			'RenameDutchColumns: ' . $renamed . ' renamed, ' . $copied . ' back-filled, '
-			. $refused . ' refused, across ' . count($tables) . ' shard table(s).'
+			'RenameDutchColumns: ' . $tally['renamed'] . ' renamed, ' . $tally['copied'] . ' back-filled, '
+			. $tally['refused'] . ' refused, across ' . count($tables) . ' shard table(s).'
 		);
-
 	}//end run()
+
+	/**
+	 * Migrate every mapped Dutch column a shard table holds.
+	 *
+	 * @param ShardTable $table The table and its columns.
+	 *
+	 * @return array<int, string> One outcome (renamed / copied / refused) per column that changed or was refused.
+	 */
+	private function migrateTable(ShardTable $table): array {
+		$outcomes = [];
+		foreach (array_keys(self::COLUMN_MAP) as $old) {
+			if (in_array($old, $table->columns, true) === false) {
+				continue;
+			}
+
+			$outcome = $this->migrateColumn(table: $table, old: $old);
+			if ($outcome !== null) {
+				$outcomes[] = $outcome;
+			}
+		}
+
+		return $outcomes;
+	}//end migrateTable()
+
+	/**
+	 * Move one Dutch column to its English name: rename it, back-fill the English
+	 * one when both exist, or refuse when two sources compete for it.
+	 *
+	 * @param ShardTable $table The table and its columns.
+	 * @param string     $old   The Dutch column.
+	 *
+	 * @return string|null The outcome, or null when the statement failed.
+	 */
+	private function migrateColumn(ShardTable $table, string $old): ?string {
+		$new = self::COLUMN_MAP[$old];
+		if ($this->hasCollision(columns: $table->columns, target: $new) === true) {
+			$this->logger->warning(
+				'RenameDutchColumns: two sources target one destination; migrating neither.',
+				['table' => $table->name, 'source' => $old, 'destination' => $new]
+			);
+			return 'refused';
+		}
+
+		if (in_array($new, $table->columns, true) === false) {
+			return $this->outcomeOf(sql: $this->renameSql(table: $table, old: $old), outcome: 'renamed');
+		}
+
+		return $this->outcomeOf(sql: $this->backfillSql(table: $table, old: $old), outcome: 'copied');
+	}//end migrateColumn()
+
+	/**
+	 * The statement renaming a Dutch column to its English name.
+	 *
+	 * @param ShardTable $table The table.
+	 * @param string     $old   The Dutch column.
+	 *
+	 * @return string The SQL.
+	 */
+	private function renameSql(ShardTable $table, string $old): string {
+		return 'ALTER TABLE ' . $this->quote(identifier: $table->name) . ' RENAME COLUMN '
+			. $this->quote(identifier: $old) . ' TO ' . $this->quote(identifier: self::COLUMN_MAP[$old]);
+	}//end renameSql()
+
+	/**
+	 * The statement copying a Dutch column into its empty English one.
+	 *
+	 * @param ShardTable $table The table.
+	 * @param string     $old   The Dutch column.
+	 *
+	 * @return string The SQL.
+	 */
+	private function backfillSql(ShardTable $table, string $old): string {
+		$qTable = $this->quote(identifier: $table->name);
+		$qNew = $this->quote(identifier: self::COLUMN_MAP[$old]);
+		$qOld = $this->quote(identifier: $old);
+		return 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
+			. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
+	}//end backfillSql()
+
+	/**
+	 * Run a statement and name its outcome when it succeeds.
+	 *
+	 * @param string $sql     The statement.
+	 * @param string $outcome The outcome on success.
+	 *
+	 * @return string|null The outcome, or null when the statement failed.
+	 */
+	private function outcomeOf(string $sql, string $outcome): ?string {
+		if ($this->exec(sql: $sql) === true) {
+			return $outcome;
+		}
+
+		return null;
+	}//end outcomeOf()
 
 	/**
 	 * Whether another mapped source already targets the same destination here.
@@ -337,22 +395,50 @@ class RenameDutchColumns implements IRepairStep {
 			return [];
 		}
 
+		$markers = $this->shardMarkers(ids: $ids);
+		$tables = [];
+		foreach ($names as $name) {
+			if ($this->isShardOfAny(name: $name, markers: $markers) === true) {
+				$tables[] = $name;
+			}
+		}
+
+		return array_values(array_unique($tables));
+	}//end shardTables()
+
+	/**
+	 * The table-name marker of each register's shard tables.
+	 *
+	 * @param array<int, mixed> $ids The register ids.
+	 *
+	 * @return array<int, string> The markers.
+	 */
+	private function shardMarkers(array $ids): array {
 		$markers = [];
 		foreach ($ids as $id) {
 			$markers[] = 'openregister_table_' . ((int)$id) . '_';
 		}
 
-		$tables = [];
-		foreach ($names as $name) {
-			foreach ($markers as $marker) {
-				$offset = strpos($name, $marker);
-				if ($offset !== false && ctype_digit(substr($name, ($offset + strlen($marker)))) === true) {
-					$tables[] = $name;
-				}
+		return $markers;
+	}//end shardMarkers()
+
+	/**
+	 * Whether a table is a shard table of one of the registers: a marker followed by digits only.
+	 *
+	 * @param string             $name    The table name.
+	 * @param array<int, string> $markers The registers' markers.
+	 *
+	 * @return bool True when it is one of their shard tables.
+	 */
+	private function isShardOfAny(string $name, array $markers): bool {
+		foreach ($markers as $marker) {
+			$offset = strpos($name, $marker);
+			if ($offset !== false && ctype_digit(substr($name, ($offset + strlen($marker)))) === true) {
+				return true;
 			}
 		}
 
-		return array_values(array_unique($tables));
+		return false;
 	}
 
 	/**
@@ -413,7 +499,7 @@ class RenameDutchColumns implements IRepairStep {
 		}
 
 		return $names;
-	}//end shardTables()
+	}//end openRegisterTableNames()
 
 	/**
 	 * List the column names of a table.
