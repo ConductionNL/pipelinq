@@ -40,6 +40,8 @@ use ReflectionClass;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for POS refund business operations.
@@ -714,10 +716,7 @@ class PosRefundService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $refund,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 		);
 
 		return $this->toArray(object: $saved);
@@ -745,10 +744,7 @@ class PosRefundService {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $line,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to persist refund line', ['exception' => $e->getMessage()]);

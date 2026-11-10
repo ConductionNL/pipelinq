@@ -23,6 +23,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\LeadService;
 use OCP\IAppConfig;
@@ -272,11 +273,13 @@ class LeadServiceTest extends TestCase {
 		$objectService->method('saveObject')->willReturnCallback(
 			static function (
 				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$captured): ObjectEntityInterface {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = [
 					'object' => $object,
 					'register' => $register,

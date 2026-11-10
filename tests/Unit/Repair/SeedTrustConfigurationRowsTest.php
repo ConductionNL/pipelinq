@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Repair\SeedTrustConfigurationRows;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
@@ -92,10 +93,7 @@ final class RecordingObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		array $extend = [],
-		mixed $register = null,
-		mixed $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	): array {

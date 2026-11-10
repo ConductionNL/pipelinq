@@ -47,6 +47,8 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Pipelinq contact lookup, attachment, history and consent sync for the POS.
@@ -474,10 +476,10 @@ class PosCustomerLinkService {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $contactUuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $contactUuid,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -725,10 +727,7 @@ class PosCustomerLinkService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $transaction,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 		);
 
 		return $this->toArray(object: $saved);

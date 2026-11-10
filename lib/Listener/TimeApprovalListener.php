@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Service\ShillinqWipService;
@@ -139,10 +141,7 @@ class TimeApprovalListener implements IEventListener {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$objectService->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

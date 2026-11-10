@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\Marketing\DeliverabilityCheckService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -57,7 +58,8 @@ class DeliverabilityCheckServiceTest extends TestCase {
 				return ($this->store[$id] ?? null);
 			}//end find()
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$uuid = $options->uuid;
 				$this->store[(string)$uuid] = $object;
 				return $object;
 			}//end saveObject()

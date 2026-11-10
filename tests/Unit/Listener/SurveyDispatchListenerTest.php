@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Listener\DeferredWorkGuard;
 use OCA\Pipelinq\Listener\SurveyDispatchListener;
@@ -444,7 +445,8 @@ class SurveyDispatchListenerTest extends TestCase {
 			}
 		);
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array|object $object, ?array $_extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntity {
+			function (array|object $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+				$schema = $options->target->schema;
 				$this->written[] = ['object' => (array)$object, 'schema' => $schema];
 
 				return new ObjectEntity();

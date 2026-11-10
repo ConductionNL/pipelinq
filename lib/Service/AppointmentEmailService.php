@@ -41,6 +41,8 @@ use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * AppointmentEmailService — composes confirmation + reminder emails.
@@ -607,10 +609,10 @@ class AppointmentEmailService {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $bookingId
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $bookingId,
+				),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

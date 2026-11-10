@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Tests\Unit\Listener;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Service\SchemaMapService;
@@ -115,7 +116,7 @@ class SlaObjectUpdatedListenerTest extends TestCase {
 			 *
 			 * @return void
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): void {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): void {
 				$this->test->recordSave($object);
 			}
 		};

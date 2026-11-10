@@ -39,6 +39,8 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Base class for the BI export services.
@@ -160,10 +162,7 @@ abstract class AbstractExportService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $data,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 		);
 
 		return $this->toArray(object: $saved);

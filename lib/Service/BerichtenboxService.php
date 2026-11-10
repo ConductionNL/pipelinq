@@ -46,6 +46,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Berichtenbox message lifecycle service.
@@ -492,10 +494,10 @@ class BerichtenboxService {
 				try {
 					$this->getObjectService()->saveObject(
 						object: $data,
-						extend: [],
-						register: $registerId,
-						schema: $schemaId,
-						uuid: ($data['uuid'] ?? null)
+						options: new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+							uuid: ($data['uuid'] ?? null),
+						),
 					);
 					$total++;
 				} catch (\Throwable $e) {
@@ -982,10 +984,10 @@ class BerichtenboxService {
 		[$register, $schema] = $this->messageConfig();
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: ($payload['uuid'] ?? null)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: ($payload['uuid'] ?? null),
+			),
 		);
 		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveMessage()
@@ -1010,10 +1012,10 @@ class BerichtenboxService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: ($payload['uuid'] ?? null)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: ($payload['uuid'] ?? null),
+			),
 		);
 		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveReply()

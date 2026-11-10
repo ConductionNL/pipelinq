@@ -36,6 +36,8 @@ use OCP\IGroupManager;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Snapshot generation orchestration.
@@ -466,10 +468,7 @@ class SnapshotGenerationService {
 
 		$this->getObjectService()->saveObject(
 			object: $snapshot,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: null
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 		);
 	}//end persistSnapshot()
 

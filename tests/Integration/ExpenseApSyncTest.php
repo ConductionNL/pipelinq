@@ -46,6 +46,7 @@ namespace OCA\Pipelinq\Tests\Integration;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Event\ExpenseApprovedEvent;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Service\ApSyncNotifier;
@@ -99,7 +100,8 @@ class IntegrationFakeObjectService {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+	public function saveObject($object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$uuid = $options->uuid;
 		$data = (array)$object;
 		$this->saved[(string)$uuid] = $data;
 		$this->stored[(string)$uuid] = $data;

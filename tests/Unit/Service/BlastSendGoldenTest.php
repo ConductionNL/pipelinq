@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SegmentService;
@@ -278,7 +279,10 @@ class BlastSendGoldenStore {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->test->trace[] = ['saveObject' => ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid]];
 		if (($object['contactId'] ?? '') === 'c-fail' || str_starts_with((string)($object['name'] ?? ''), 'fail-variant') === true && isset($object['abVariantOf']) === true) {
 			throw new RuntimeException('save failed');

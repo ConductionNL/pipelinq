@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -166,9 +168,10 @@ class OrganisationEnrichmentService {
 			[$register, $schema] = $this->config();
 			$this->objectService->saveObject(
 				object: $data,
-				register: $register,
-				schema: $schema,
-				uuid: (string)$clientId
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: (string)$clientId,
+				),
 			);
 			$updated += count($fields);
 		}

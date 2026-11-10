@@ -35,6 +35,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Controller\PortalAuthController;
 use OCA\Pipelinq\Service\Portal\PasswordResetService;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
@@ -231,7 +232,9 @@ class PortalPasswordResetFlowTest extends TestCase {
 		);
 
 		$service->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$actor = $this->sessionUser?->getUID();
 				$this->writes[] = ['user' => $actor, 'rbac' => $_rbac, 'multitenancy' => $_multitenancy];
 

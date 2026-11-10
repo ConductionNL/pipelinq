@@ -31,6 +31,8 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -613,9 +615,10 @@ class SemanticHandoffController extends Controller {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $this->registerSlug(),
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->registerSlug(), schema: $schema),
+					uuid: $id,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

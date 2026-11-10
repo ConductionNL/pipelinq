@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\PointsLedgerService;
 use OCP\IAppConfig;
@@ -110,10 +111,9 @@ class PointsLedgerOperationIdTest extends TestCase {
 		$objects->method('saveObject')->willReturnCallback(
 			function (
 				array $object,
-				?array $extend=[],
-				string|int|null $register=null,
-				string|int|null $schema=null,
-				?string $uuid=null
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			): ObjectEntity {
 				$id = 'entry-' . (count($this->entries) + 1);
 				$this->entries[$id] = $object;

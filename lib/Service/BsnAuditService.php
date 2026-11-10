@@ -35,6 +35,8 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Append-only audit-trail service for BSN bevragingen.
@@ -46,6 +48,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * tijdstip) remains traceable.
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BsnAuditService {
 	use EntityAccessorTrait;
@@ -157,9 +160,7 @@ class BsnAuditService {
 		[$register, $schema] = $this->config();
 		$saved = $this->getObjectService()->saveObject(
 			object: $record,
-			extend: [],
-			register: $register,
-			schema: $schema,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 		);
 
 		if (is_array($saved) === true) {
@@ -279,10 +280,10 @@ class BsnAuditService {
 				$arr['outcome'] = 'pseudonymised';
 				$this->getObjectService()->saveObject(
 					object: $arr,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: $uuid,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+						uuid: $uuid,
+					),
 				);
 				$count++;
 			}//end foreach

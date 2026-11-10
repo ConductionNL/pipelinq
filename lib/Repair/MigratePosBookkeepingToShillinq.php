@@ -43,6 +43,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -273,10 +275,10 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 				->setSchema(self::ZREPORT_SCHEMA)
 				->saveObject(
 					object: $zReport,
-					extend: [],
-					register: $register,
-					schema: self::ZREPORT_SCHEMA,
-					uuid: (string)($zReport['id'] ?? $zReport['uuid'] ?? '')
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: self::ZREPORT_SCHEMA),
+						uuid: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
+					),
 				);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

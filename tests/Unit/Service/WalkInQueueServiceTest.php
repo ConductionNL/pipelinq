@@ -25,6 +25,7 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\WalkInQueueService;
 use OCP\IAppConfig;
@@ -130,10 +131,9 @@ class WalkInQueueServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 't-1']]);
@@ -185,10 +185,9 @@ class WalkInQueueServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 't-anon']]);
@@ -243,11 +242,11 @@ class WalkInQueueServiceTest extends TestCase {
 		$object->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$captured, &$capturedUuid): ObjectEntityInterface {
+				$uuid = $options->uuid;
 				$captured = $payload;
 				$capturedUuid = $uuid;
 				return self::entity(['@self' => ['id' => $uuid]]);
@@ -301,10 +300,9 @@ class WalkInQueueServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 't-called']]);
@@ -341,10 +339,9 @@ class WalkInQueueServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 't-gone']]);
@@ -459,11 +456,11 @@ class WalkInQueueServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$saved): ObjectEntityInterface {
+				$uuid = $options->uuid;
 				$saved[] = ['uuid' => $uuid, 'payload' => $payload];
 				return self::entity(['@self' => ['id' => $uuid]]);
 			}
@@ -577,11 +574,11 @@ class WalkInQueueServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$writes): ObjectEntityInterface {
+				$uuid = $options->uuid;
 				$writes++;
 				return self::entity(['@self' => ['id' => (string)$uuid]]);
 			}

@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Integriq\Event\OptOutChangeRequestedEvent;
 use OCA\Integriq\Event\OutboundSendDecisionRequestedEvent;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Controller\MessagingController;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -554,7 +555,10 @@ class ConsentDecisionGoldenStore {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$object['uuid'] = ($uuid ?? ('row-' . (count($this->written) + 1)));
 		if (isset($object['recordedAt']) === true) {
 			$object['recordedAt'] = '<now>';

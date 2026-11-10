@@ -60,6 +60,8 @@ use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Controller for the BRP-lookup REST surface.
@@ -828,9 +830,7 @@ class BrpController extends Controller {
 		try {
 			$saved = $this->getObjectService()->saveObject(
 				object: $request,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 			if (is_array($saved) === true) {
 				return $saved;
@@ -870,10 +870,10 @@ class BrpController extends Controller {
 		try {
 			$saved = $this->getObjectService()->saveObject(
 				object: $person,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuidRef,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuidRef,
+				),
 			);
 			if (is_array($saved) === true) {
 				return $saved;
@@ -929,7 +929,13 @@ class BrpController extends Controller {
 				$client['identityCheck'] = $identityCheck;
 			}
 
-			$this->getObjectService()->saveObject(object: $client, extend: [], register: $register, schema: $schema, uuid: $clientId);
+			$this->getObjectService()->saveObject(
+				object: $client,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $clientId,
+				),
+			);
 		} catch (Throwable $e) {
 			$this->logger->error('client identity stamp failed', ['clientId' => $clientId, 'error' => $e->getMessage()]);
 		}//end try
@@ -978,10 +984,10 @@ class BrpController extends Controller {
 			$existingArr['secrecy'] = $secrecy;
 			$this->getObjectService()->saveObject(
 				object: $existingArr,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $contactId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $contactId,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

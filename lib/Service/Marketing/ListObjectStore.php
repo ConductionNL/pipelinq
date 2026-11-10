@@ -34,6 +34,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -209,9 +211,10 @@ class ListObjectStore {
 		try {
 			$saved = $context['service']->saveObject(
 				object: $payload,
-				register: $context['register'],
-				schema: $context['schema'],
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $context['register'], schema: $context['schema']),
+					uuid: $uuid,
+				),
 				_rbac: false,
 				_multitenancy: false,
 			);

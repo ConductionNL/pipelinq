@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Cti;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\Cti\EscalationQueues;
 use OCA\Pipelinq\Service\CtiDispositionService;
 use OCA\Pipelinq\Service\TicketService;
@@ -104,11 +105,12 @@ class EscalationQueuesTest extends TestCase {
 			}
 
 			/**
-			 * @param array<string, mixed> $object The payload.
+			 * @param array<string, mixed> $object  The payload.
+			 * @param ObjectSaveOptions    $options Where it is saved (unused).
 			 *
 			 * @return array<string, string>
 			 */
-			public function saveObject(array $object): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): array {
 				$this->saved[] = $object;
 				return ['id' => 'task-1'];
 			}

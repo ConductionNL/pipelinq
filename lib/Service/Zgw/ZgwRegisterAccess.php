@@ -40,6 +40,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -191,10 +193,10 @@ class ZgwRegisterAccess {
 		try {
 			$saved = $objectService->saveObject(
 				object: $data,
-				extend: [],
-				register: self::REGISTER,
-				schema: $schema,
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: $schema),
+					uuid: $uuid,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

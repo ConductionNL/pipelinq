@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\SmsMessage;
@@ -718,9 +720,12 @@ class SmsAdapter {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-				uuid: null,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+						register: $this->getRegisterSlug(),
+						schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
+					),
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -788,9 +793,7 @@ class SmsAdapter {
 					'status' => 'open',
 					'lastInboundAt' => $this->nowIso(),
 				],
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: null,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema)),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
 use OCA\Pipelinq\Service\Demo\DemoSeedContext;
@@ -225,7 +226,11 @@ class DemoSeedGoldenTest extends TestCase {
 			}
 		);
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array $object, $extend=[], $register=null, $schema=null, $uuid=null): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+				$extend = ($options->extend ?? []);
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->recordCall(
 					call: 'saveObject',
 					args: ['object' => $object, 'extend' => $extend, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid]

@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\WhatsAppMessage;
@@ -1192,9 +1194,7 @@ class WhatsAppAdapter {
 					'channel' => $channel,
 					'status' => 'open',
 				],
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: null,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema)),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1253,9 +1253,10 @@ class WhatsAppAdapter {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: $conversationId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema),
+					uuid: $conversationId,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1281,9 +1282,12 @@ class WhatsAppAdapter {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-				uuid: null,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+						register: $this->getRegisterSlug(),
+						schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
+					),
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

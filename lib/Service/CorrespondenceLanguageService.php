@@ -42,6 +42,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -269,9 +271,13 @@ class CorrespondenceLanguageService {
 		try {
 			$this->objectService->saveObject(
 				object: $party,
-				register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
-				uuid: (string)($party['id'] ?? $party['uuid'] ?? $partyId),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+						register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
+						schema: $this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
+					),
+					uuid: (string)($party['id'] ?? $party['uuid'] ?? $partyId),
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

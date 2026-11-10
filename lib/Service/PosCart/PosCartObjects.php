@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\PosCart;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -158,11 +160,12 @@ class PosCartObjects {
 		unset($line['@self']);
 		$this->objects->saveObject(
 			object: $line,
-			register: $this->registerId(),
-			schema: $this->schemaId(slug: 'posTransactionLine'),
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->registerId(), schema: $this->schemaId(slug: 'posTransactionLine')),
+				uuid: $uuid,
+			),
 			_rbac: false,
-			_multitenancy: false
+			_multitenancy: false,
 		);
 	}//end saveLine()
 

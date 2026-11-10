@@ -39,6 +39,8 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Admin endpoints for Berichtenbox ops.
@@ -106,10 +108,13 @@ class BerichtenboxAdminController extends Controller {
 			$service
 				->saveObject(
 					object: $data,
-					extend: [],
-					register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-					schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', ''),
-					uuid: ($data['uuid'] ?? $id)
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+							register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
+							schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', ''),
+						),
+						uuid: ($data['uuid'] ?? $id),
+					),
 				);
 		} catch (Throwable $e) {
 			return new JSONResponse(

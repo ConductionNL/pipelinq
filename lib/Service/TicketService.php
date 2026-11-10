@@ -53,11 +53,14 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Resolver + read/write facade for the unified ticket schema.
  *
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class TicketService {
 	/**
@@ -360,9 +363,10 @@ class TicketService {
 
 		return $this->getObjectService()->saveObject(
 			object: $payload,
-			register: $this->getRegisterId(),
-			schema: $this->getSchemaId(),
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->getRegisterId(), schema: $this->getSchemaId()),
+				uuid: $uuid,
+			),
 		);
 	}//end save()
 

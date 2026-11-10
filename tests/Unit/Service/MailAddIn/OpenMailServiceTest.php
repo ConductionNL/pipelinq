@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\MailAddIn;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCA\Pipelinq\Service\ContactSyncService;
@@ -114,7 +115,9 @@ class OpenMailServiceTest extends TestCase {
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true) {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema];
 				$entity = $this->createMock(ObjectEntityInterface::class);
 				$entity->method('getUuid')->willReturn('cm-1');

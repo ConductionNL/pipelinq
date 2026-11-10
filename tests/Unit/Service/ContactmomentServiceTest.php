@@ -22,6 +22,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IGroupManager;
@@ -156,11 +157,12 @@ class ContactmomentServiceTest extends TestCase {
 		$this->objectService->method('saveObject')->willReturnCallback(
 			static function (
 				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$saves): ObjectEntityInterface {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$saves[] = ['payload' => $object, 'register' => $register, 'schema' => $schema];
 
 				$entity = new ObjectEntity();
@@ -332,13 +334,12 @@ class ContactmomentServiceTest extends TestCase {
 		$this->objectService->method('saveObject')->willReturnCallback(
 			function (
 				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): ObjectEntityInterface {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->saves[] = ['payload' => $object, 'register' => $register, 'schema' => $schema, '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
 
 				$entity = new ObjectEntity();

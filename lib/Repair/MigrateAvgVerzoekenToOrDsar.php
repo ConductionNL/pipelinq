@@ -42,6 +42,9 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
 use OCP\IAppConfig;
@@ -467,14 +470,13 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			// what made every migration attempt fail. Both writes are system
 			// writes, as in the other repair/CLI object writers.
 			$saved = $objectService->saveObject(
-				$case,
-				[],
-				self::OR_REGISTER,
-				self::OR_SCHEMA,
-				null,
+				object: $case,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::OR_REGISTER, schema: self::OR_SCHEMA),
+					actor: new SaveActor(currentUser: $this->resolveActingUser()),
+				),
 				_rbac: false,
 				_multitenancy: false,
-				currentUser: $this->resolveActingUser()
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -502,14 +504,14 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			$payload = array_filter($request, static fn ($value): bool => $value !== null);
 
 			$objectService->saveObject(
-				$payload,
-				[],
-				$registerId,
-				$requestSchema,
-				(string)($request['id'] ?? ($request['uuid'] ?? '')),
+				object: $payload,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $registerId, schema: $requestSchema),
+					uuid: (string)($request['id'] ?? ($request['uuid'] ?? '')),
+					actor: new SaveActor(currentUser: $this->resolveActingUser()),
+				),
 				_rbac: false,
 				_multitenancy: false,
-				currentUser: $this->resolveActingUser()
 			);
 			return 'migrated';
 		} catch (\Throwable $e) {

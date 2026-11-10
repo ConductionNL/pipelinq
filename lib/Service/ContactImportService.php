@@ -29,6 +29,8 @@ use OCP\IAppConfig;
 use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for importing Nextcloud contacts into Pipelinq objects.
@@ -148,11 +150,11 @@ class ContactImportService {
 		);
 
 		$created = $objectService->saveObject(
-			$data,
-			[],
-			$registerId,
-			$schemaId,
-			$existingUuid
+			object: $data,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+				uuid: $existingUuid,
+			),
 		);
 
 		return $this->serializeResult(result: $created);

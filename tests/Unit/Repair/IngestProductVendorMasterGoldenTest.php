@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Repair\IngestProductVendorMaster;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
@@ -253,6 +254,16 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			 * @return ObjectEntity The saved object, as OpenRegister returns it.
 			 */
 			public function saveObject(mixed ...$args): ObjectEntity {
+				$options = ($args['options'] ?? null);
+				if ($options instanceof ObjectSaveOptions) {
+					$args = [
+						'object' => ($args['object'] ?? $args[0] ?? null),
+						'register' => $options->target->register,
+						'schema' => $options->target->schema,
+						'uuid' => $options->uuid,
+					];
+				}
+
 				$this->test->trace[] = ['saveObject' => $args];
 				$schema = ($args['schema'] ?? $args[1] ?? null);
 				if (($this->scenario['throwOn'] ?? null) === $schema) {

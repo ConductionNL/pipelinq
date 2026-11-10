@@ -36,6 +36,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Marketing\BlastSendRun;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
@@ -70,6 +72,7 @@ use Throwable;
  *  plus the repository surface justify the method count; splitting adds no clarity.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The REST controllers consume a
  *  cohesive public repository surface on top of the lifecycle operations.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BlastService {
 	use PayloadToArray;
@@ -1469,9 +1472,7 @@ class BlastService {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schemaSlug,
-				uuid: $id,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schemaSlug), uuid: $id),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

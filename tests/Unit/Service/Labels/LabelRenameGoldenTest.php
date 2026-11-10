@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Labels;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\Labels\LabelRenameService;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
@@ -203,6 +204,12 @@ class LabelRenameGoldenTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function saveObject(array $object, mixed ...$args): array {
+				if (($args['options'] ?? null) instanceof ObjectSaveOptions) {
+					$options = $args['options'];
+					unset($args['options']);
+					$args = ['register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $options->uuid] + $args;
+				}
+
 				LabelRenameGoldenTest::$calls[] = ['saveObject' => $object, 'args' => $args];
 				$id = (string)($args['uuid'] ?? '');
 				if ($id === 'fail') {

@@ -35,6 +35,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
 use OCP\IAppConfig;
@@ -51,6 +54,7 @@ use Throwable;
  * scalar email/phone fields.
  *
  * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BackfillContactChannelArrays implements IRepairStep {
 	/**
@@ -210,13 +214,13 @@ class BackfillContactChannelArrays implements IRepairStep {
 		try {
 			$target->objectService->saveObject(
 				object: $record,
-				extend: [],
-				register: $target->register,
-				schema: $target->schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target->register, schema: $target->schema),
+					uuid: $uuid,
+					actor: new SaveActor(currentUser: $target->actingAdmin),
+				),
 				_rbac: false,
 				_multitenancy: false,
-				currentUser: $target->actingAdmin,
 			);
 
 			return 'fixed';

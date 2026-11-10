@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -63,7 +65,9 @@ class MessagingOptOutWiringTest extends TestCase {
 			/** @var array<string, array{schema: string, row: array<string, mixed>}> */
 			public array $rows = [];
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$uuid = ($uuid ?? ($object['uuid'] ?? ('obj-'.count($this->rows))));
 				$object['uuid'] = $uuid;
 				$this->rows[$uuid] = ['schema' => (string)$schema, 'row' => $object];
@@ -228,8 +232,8 @@ class MessagingOptOutWiringTest extends TestCase {
 
 	public function testAnSmsReplyToTheContactsOwnMessagePassesTheOptOut(): void {
 		$this->integriq->seed(['address' => '+31612345678', 'state' => 'opted-out', 'scope' => 'channel', 'channel' => 'sms']);
-		$this->store->saveObject(['uuid' => 'in-1', 'contactId' => 'c-1', 'channel' => 'sms', 'direction' => 'inbound', 'body' => 'Wanneer?'], 'pipelinq', 'channelMessage');
-		$this->store->saveObject(['uuid' => 'in-x', 'contactId' => 'someone-else', 'channel' => 'sms', 'direction' => 'inbound'], 'pipelinq', 'channelMessage');
+		$this->store->saveObject(['uuid' => 'in-1', 'contactId' => 'c-1', 'channel' => 'sms', 'direction' => 'inbound', 'body' => 'Wanneer?'], new ObjectSaveOptions(target: new ObjectFindTarget(register: 'pipelinq', schema: 'channelMessage')));
+		$this->store->saveObject(['uuid' => 'in-x', 'contactId' => 'someone-else', 'channel' => 'sms', 'direction' => 'inbound'], new ObjectSaveOptions(target: new ObjectFindTarget(register: 'pipelinq', schema: 'channelMessage')));
 
 		$foreign = $this->smsAdapter->send(['uuid' => 'c-1', 'phone' => '+31612345678'], 'Antwoord', null, ['inReplyTo' => 'in-x']);
 		self::assertSame('consentMissing', $foreign['status'], 'a message of somebody else is no reply');
@@ -245,8 +249,7 @@ class MessagingOptOutWiringTest extends TestCase {
 		$this->integriq->seed(['address' => '+31612345678', 'state' => 'opted-out', 'scope' => 'channel', 'channel' => 'whatsapp']);
 		$this->store->saveObject(
 			['uuid' => 'wa-in-1', 'contactId' => 'c-1', 'channel' => 'whatsapp', 'direction' => 'inbound', 'sentAt' => gmdate('Y-m-d\TH:i:s\Z', time() - 600)],
-			'pipelinq',
-			'channelMessage'
+			new ObjectSaveOptions(target: new ObjectFindTarget(register: 'pipelinq', schema: 'channelMessage'))
 		);
 
 		$this->whatsAppClient->expects($this->once())->method('sendFreeForm');
@@ -259,7 +262,7 @@ class MessagingOptOutWiringTest extends TestCase {
 	}//end testAWhatsAppAnswerInsideTheSessionIsSentAsReply()
 
 	public function testAWhatsAppTemplateIsNotAReplyAndNeedsConsent(): void {
-		$this->store->saveObject(['uuid' => 'tpl-1', 'status' => 'approved', 'externalId' => 'reminder', 'language' => 'nl', 'body' => 'Hoi'], 'pipelinq', 'messageTemplate');
+		$this->store->saveObject(['uuid' => 'tpl-1', 'status' => 'approved', 'externalId' => 'reminder', 'language' => 'nl', 'body' => 'Hoi'], new ObjectSaveOptions(target: new ObjectFindTarget(register: 'pipelinq', schema: 'messageTemplate')));
 		$this->whatsAppClient->expects($this->never())->method('sendTemplate');
 
 		$outcome = $this->whatsAppAdapter->send(['uuid' => 'c-3', 'phone' => '+31600000003'], '', 'tpl-1', []);

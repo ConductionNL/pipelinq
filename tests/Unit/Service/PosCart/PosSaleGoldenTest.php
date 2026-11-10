@@ -13,6 +13,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\PosCart;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
@@ -214,7 +215,10 @@ class PosSaleGoldenTest extends TestCase {
 		$objects = $this->createMock($class);
 		$objects->method('find')->willReturnCallback(fn (string|int $id): ?object => $this->store->entity((string)$id));
 		$objects->method('findAll')->willReturnCallback(fn (array $config = []): array => $this->store->findAll(config: $config));
-		$objects->method('saveObject')->willReturnCallback(fn (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): object => PosSaleStore::makeEntity(object: $this->store->save(object: $object, schema: (string)$schema, uuid: $uuid), schema: (string)$schema));
+		$objects->method('saveObject')->willReturnCallback(fn (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): object => PosSaleStore::makeEntity(
+			object: $this->store->save(object: $object, schema: (string)$options->target->schema, uuid: $options->uuid),
+			schema: (string)$options->target->schema
+		));
 		return $objects;
 	}//end objectsDouble()
 

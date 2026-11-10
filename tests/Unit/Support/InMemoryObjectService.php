@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Support;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+
 /**
  * Rows by uuid, each remembering its schema.
  */
@@ -95,7 +97,9 @@ class InMemoryObjectService {
 		return $out;
 	}//end findAll()
 
-	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		if ($uuid !== null && $uuid !== '') {
 			$object['uuid'] = $uuid;
 		}

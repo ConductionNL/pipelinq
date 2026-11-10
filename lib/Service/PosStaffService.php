@@ -35,6 +35,8 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for POS staff business operations.
@@ -191,10 +193,7 @@ class PosStaffService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid),
 		);
 
 		return $this->stripSensitive(staff: $this->toArray(object: $saved));
@@ -611,10 +610,7 @@ class PosStaffService {
 			[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
 			$this->getObjectService()->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to update posStaff', ['exception' => $e->getMessage()]);

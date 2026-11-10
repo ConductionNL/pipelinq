@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Controller;
@@ -185,9 +187,13 @@ class TicketAssignController extends Controller {
 		try {
 			$this->tickets->getObjectService()->saveObject(
 				object: $ticket,
-				register: $this->tickets->getRegisterId(),
-				schema: $this->tickets->getSchemaId(),
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+						register: $this->tickets->getRegisterId(),
+						schema: $this->tickets->getSchemaId(),
+					),
+					uuid: $id,
+				),
 			);
 		} catch (Throwable) {
 			return new JSONResponse(['error' => 'You cannot change this ticket'], Http::STATUS_FORBIDDEN);

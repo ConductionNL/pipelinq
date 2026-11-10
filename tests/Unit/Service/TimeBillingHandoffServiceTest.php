@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\BillingHandoffNotifier;
 use OCA\Pipelinq\Service\TimeBillingHandoffService;
 use OCP\App\IAppManager;
@@ -76,7 +77,9 @@ class BillingHandoffFakeObjectService {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$schema = (string)($options->target->schema ?? '');
+		$uuid = (string)($options->uuid ?? '');
 		$object['id'] = $uuid;
 		$this->store[$schema][$uuid] = $object;
 		return $object;

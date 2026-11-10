@@ -45,6 +45,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCP\IAppConfig;
@@ -168,9 +170,9 @@ class LeadService {
 
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $config['register'],
-				schema: $config['schema'],
-				uuid: null,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']),
+				),
 			);
 		} catch (\Exception $e) {
 			return $this->mcp->fromException(operation: 'create lead', exception: $e);

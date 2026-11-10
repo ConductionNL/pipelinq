@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\SearchConsole;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\SearchConsole\GoogleServiceAccountAuth;
 use OCA\Pipelinq\Service\SearchConsole\SearchConsoleImportService;
 use OCA\Pipelinq\Service\SearchConsole\SearchQueryDailyStore;
@@ -164,7 +165,8 @@ class SearchConsoleImportServiceTest extends TestCase {
 			}//end findAll()
 
 			/** @return array<string, mixed> */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$uuid = $options->uuid;
 				if ($uuid === null) {
 					$this->created++;
 					$uuid = ('obj-' . $this->created);

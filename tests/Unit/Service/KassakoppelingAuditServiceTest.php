@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\BelastingdienstExportService;
 use OCA\Pipelinq\Service\KassakoppelingAuditService;
@@ -154,18 +155,12 @@ class FakeAuditObjectService extends ObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $silent = false,
-		bool $_validation = true,
-		?array $uploadedFiles = null,
-		?IUser $currentUser = null,
-		bool $failIfExists = false,
 	): ObjectEntityInterface {
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$schemaKey = (string)$schema;
 		$resolvedUuid = $uuid;
 		if ($resolvedUuid === null || $resolvedUuid === '') {

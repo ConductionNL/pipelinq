@@ -29,6 +29,8 @@ use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
 use InvalidArgumentException;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -493,17 +495,14 @@ class CtiService {
 			}
 
 			$objectService->saveObject(
-				[
+				object: [
 					'user_id' => $userId,
 					'extension' => ($extension ?? ''),
 					'presence_state' => $presenceState,
 					'last_updated_at' => gmdate('Y-m-d\TH:i:s\Z'),
 					'platform' => ($platform ?? $this->activePlatform()),
 				],
-				[],
-				$register,
-				$schema,
-				$uuid
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -594,7 +593,10 @@ class CtiService {
 				$uuid = $this->extractId(object: $existing[0]);
 			}
 
-			$saved = $objectService->saveObject($config, [], $register, $schema, $uuid);
+			$saved = $objectService->saveObject(
+				object: $config,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid),
+			);
 			return $this->toArray(value: $saved);
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -783,7 +785,7 @@ class CtiService {
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$objectService->saveObject(
-				[
+				object: [
 					'received_at' => gmdate('Y-m-d\TH:i:s\Z'),
 					'platform' => $platform,
 					'event_type' => $event->eventType,
@@ -793,10 +795,7 @@ class CtiService {
 					'processing_error' => $processingError,
 					'signature_valid' => $signatureValid,
 				],
-				[],
-				$register,
-				$schema,
-				null
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

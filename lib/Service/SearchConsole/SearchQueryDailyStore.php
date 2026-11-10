@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\SearchConsole;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -96,11 +98,12 @@ class SearchQueryDailyStore {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
-				uuid: $existingId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $existingId,
+				),
 				_rbac: false,
-				_multitenancy: false
+				_multitenancy: false,
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('SearchQueryDailyStore: save failed', ['exception' => $e->getMessage()]);

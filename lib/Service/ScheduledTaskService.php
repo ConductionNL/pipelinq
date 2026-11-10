@@ -32,6 +32,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskDeadlines;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskRights;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskStore;
@@ -312,11 +314,8 @@ class ScheduledTaskService {
 		}
 
 		$saved = $this->store->objects()->saveObject(
-			$data,
-			[],
-			$registerId,
-			$schemaId,
-			null
+			object: $data,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId)),
 		);
 
 		return $this->normalizeToArray(object: $saved);
@@ -394,11 +393,8 @@ class ScheduledTaskService {
 		}
 
 		$saved = $this->store->objects()->saveObject(
-			$merged,
-			[],
-			$registerId,
-			$schemaId,
-			$id
+			object: $merged,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId), uuid: $id),
 		);
 
 		return $this->normalizeToArray(object: $saved);
@@ -673,11 +669,11 @@ class ScheduledTaskService {
 	private function persistProcessedTask(array $task, array $tick): void {
 		try {
 			$this->store->objects()->saveObject(
-				$task,
-				[],
-				$tick['registerId'],
-				$tick['schemaId'],
-				(string)($task['id'] ?? '')
+				object: $task,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $tick['registerId'], schema: $tick['schemaId']),
+					uuid: (string)($task['id'] ?? ''),
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

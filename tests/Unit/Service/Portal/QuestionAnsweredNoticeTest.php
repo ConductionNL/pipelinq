@@ -30,6 +30,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
 use OCA\Pipelinq\Service\Portal\QuestionAnsweredNotice;
@@ -90,7 +91,9 @@ class QuestionAnsweredNoticeTest extends TestCase {
 		$this->objects = $this->createMock(ObjectServiceInterface::class);
 		$this->objects->method('runAsSystem')->willReturnCallback(fn (callable $operation): mixed => $operation());
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->saved[] = [$object, $register, $schema];
 				return new ObjectEntity();
 			}

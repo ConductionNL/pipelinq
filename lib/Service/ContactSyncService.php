@@ -29,11 +29,14 @@ use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for searching and importing Nextcloud contacts into Pipelinq.
  *
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class ContactSyncService {
 	/**
@@ -121,11 +124,8 @@ class ContactSyncService {
 		}
 
 		$created = $this->getObjectService()->saveObject(
-			$payload,
-			[],
-			$registerId,
-			$schemaId,
-			null
+			object: $payload,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId)),
 		);
 
 		if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {

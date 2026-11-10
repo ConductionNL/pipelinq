@@ -67,6 +67,8 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Throwable;
 
 /**
@@ -490,11 +492,8 @@ class StoreController extends Controller {
 
 			try {
 				$this->objectService->saveObject(
-					$this->asNewObject(object: $object),
-					[],
-					$registerId,
-					$schemaId,
-					null
+					object: $this->asNewObject(object: $object),
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId)),
 				);
 				$report[] = ['schema' => $slug, 'status' => 'installed', 'message' => ''];
 			} catch (Throwable $e) {

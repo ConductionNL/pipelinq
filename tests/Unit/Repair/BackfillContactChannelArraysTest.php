@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Repair\BackfillContactChannelArrays;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -89,17 +90,12 @@ class FakeChannelBackfillObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		?string $register = null,
-		?string $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $silent = false,
-		bool $_validation = true,
-		?array $uploadedFiles = null,
-		mixed $currentUser = null,
 	): array {
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$id = ($uuid ?? ($object['id'] ?? 'new'));
 		$object['id'] = $id;
 		$this->store[(string)$schema][$id] = $object;

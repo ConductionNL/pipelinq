@@ -24,6 +24,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Cti\EscalationQueues;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
@@ -269,7 +271,7 @@ class CtiDispositionService {
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$saved = $objectService->saveObject(
-				array_filter(
+				object: array_filter(
 					[
 						'type' => $type,
 						'subject' => $subject,
@@ -280,10 +282,7 @@ class CtiDispositionService {
 					],
 					static fn ($value): bool => ($value !== null && $value !== '')
 				),
-				[],
-				$register,
-				$taskSchema,
-				null
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $taskSchema)),
 			);
 
 			$id = null;

@@ -37,6 +37,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -167,12 +169,11 @@ class SeedTrustConfigurationRows implements IRepairStep {
 				// context, as the other repair/CLI writers do.
 				$objectService->saveObject(
 					object: $row,
-					extend: [],
-					register: self::OR_TRUST_REGISTER,
-					schema: self::OR_TRUST_SCHEMA,
-					uuid: null,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: self::OR_TRUST_REGISTER, schema: self::OR_TRUST_SCHEMA),
+					),
 					_rbac: false,
-					_multitenancy: false
+					_multitenancy: false,
 				);
 				$seeded++;
 			} catch (\Throwable $e) {

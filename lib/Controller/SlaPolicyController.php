@@ -33,6 +33,8 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -53,6 +55,7 @@ use Throwable;
  *   - PUT   /api/sla/policies/{id} update policy (justification required)
  *
  * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class SlaPolicyController extends Controller {
 	/**
@@ -104,9 +107,7 @@ class SlaPolicyController extends Controller {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$saved = $objectService->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 			$this->auditLog(action: 'create', existing: null, payload: $payload, justification: $justification);
 			return new JSONResponse($this->serialise(saved: $saved));
@@ -165,10 +166,7 @@ class SlaPolicyController extends Controller {
 
 			$saved = $objectService->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 			);
 			$this->auditLog(action: 'update', existing: $existing, payload: $payload, justification: $justification);
 			return new JSONResponse($this->serialise(saved: $saved));

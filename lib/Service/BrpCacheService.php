@@ -33,11 +33,14 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Cache wrapper around the brpPersoon schema.
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BrpCacheService {
 	/**
@@ -151,9 +154,7 @@ class BrpCacheService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $person,
-			extend: [],
-			register: $register,
-			schema: $schema,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 		);
 		return self::toArray(object: $saved);
 	}//end set()
@@ -201,10 +202,10 @@ class BrpCacheService {
 				$arr['retentionTo'] = $expired;
 				$this->getObjectService()->saveObject(
 					object: $arr,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: $uuid,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+						uuid: $uuid,
+					),
 				);
 				$count++;
 			}

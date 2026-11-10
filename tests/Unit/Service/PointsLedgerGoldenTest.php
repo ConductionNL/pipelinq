@@ -26,6 +26,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\PointsLedgerService;
+use OCA\Pipelinq\Tests\Unit\Support\SaveCallShape;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -269,6 +270,10 @@ class PointsLedgerGoldenTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function named(string $class, string $method, array $args): array {
+		if ($method === 'saveObject') {
+			return SaveCallShape::named(args: $args);
+		}
+
 		$out = [];
 		foreach ((new ReflectionMethod($class, $method))->getParameters() as $i => $param) {
 			if (array_key_exists($i, $args) === false) {

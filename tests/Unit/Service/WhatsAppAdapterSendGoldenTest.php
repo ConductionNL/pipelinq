@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -303,7 +304,10 @@ class WhatsAppAdapterSendGoldenTest extends TestCase {
 			public function __construct(private WhatsAppAdapterSendGoldenTest $test, private bool $saveFails, private array $template) {
 			}
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->note(['saveObject' => compact('object', 'register', 'schema', 'uuid', '_rbac', '_multitenancy')]);
 				if ($this->saveFails === true && ($object['direction'] ?? '') === 'outbound') {
 					throw new RuntimeException('save down');

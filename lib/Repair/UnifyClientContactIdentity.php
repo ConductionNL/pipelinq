@@ -50,6 +50,8 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\TicketService;
@@ -509,10 +511,10 @@ class UnifyClientContactIdentity implements IRepairStep {
 					->setSchema($schema)
 					->saveObject(
 						object: $payload,
-						extend: [],
-						register: $register,
-						schema: $schema,
-						uuid: $objectId
+						options: new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: $register, schema: $schema),
+							uuid: $objectId,
+						),
 					)
 			);
 		} catch (\Throwable $e) {
@@ -578,10 +580,10 @@ class UnifyClientContactIdentity implements IRepairStep {
 						->setSchema($schema)
 						->saveObject(
 							object: $payload,
-							extend: [],
-							register: $register,
-							schema: $schema,
-							uuid: $momentId
+							options: new ObjectSaveOptions(
+								target: new ObjectFindTarget(register: $register, schema: $schema),
+								uuid: $momentId,
+							),
 						)
 				);
 				$rekeyed++;
@@ -650,10 +652,9 @@ class UnifyClientContactIdentity implements IRepairStep {
 							'linkageConfidence' => 1.0,
 							'confidence' => 1.0,
 						],
-						extend: [],
-						register: $register,
-						schema: $sourceRecordSchema,
-						uuid: null
+						options: new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: $register, schema: $sourceRecordSchema),
+						),
 					)
 			);
 		} catch (\Throwable $e) {

@@ -39,6 +39,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
 use OCP\IURLGenerator;
@@ -157,10 +159,14 @@ class QuestionAnsweredNotice {
 			$this->objectService->runAsSystem(
 				fn (): mixed => $this->objectService->saveObject(
 					object: $message,
-					register: self::PORTAL_MESSAGE_REGISTER,
-					schema: self::PORTAL_MESSAGE_SCHEMA,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+							register: self::PORTAL_MESSAGE_REGISTER,
+							schema: self::PORTAL_MESSAGE_SCHEMA,
+						),
+					),
 					_rbac: false,
-					_multitenancy: false
+					_multitenancy: false,
 				)
 			);
 		} catch (Throwable $e) {

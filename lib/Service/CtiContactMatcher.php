@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -329,11 +331,11 @@ class CtiContactMatcher {
 					$this->execAsSystem(
 						objectService: $objectService,
 						operation: static fn () => $objectService->saveObject(
-							['phoneE164' => $normalised['e164']],
-							[],
-							$register,
-							$schema,
-							$id
+							object: ['phoneE164' => $normalised['e164']],
+							options: new ObjectSaveOptions(
+								target: new ObjectFindTarget(register: $register, schema: $schema),
+								uuid: $id,
+							),
 						)
 					);
 					$updated++;

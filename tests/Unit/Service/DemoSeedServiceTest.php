@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\Demo\DemoJourneySeeder;
@@ -456,7 +457,8 @@ class DemoSeedServiceTest extends TestCase {
 		$sequence = 0;
 		$this->objectService->method('saveObject')
 			->willReturnCallback(
-				function (array $data, array $extend, string $register, string $schema) use (&$savedPayloads, &$sequence): object {
+				function (array $data, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true) use (&$savedPayloads, &$sequence): object {
+					$schema = (string)($options->target->schema ?? '');
 					$sequence++;
 					$uuid = 'uuid-' . $schema . '-' . $sequence;
 					$savedPayloads[] = ['schema' => $schema, 'data' => $data, 'uuid' => $uuid];
@@ -651,8 +653,8 @@ class DemoSeedServiceTest extends TestCase {
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
 			static function (array $object, ...$rest) use (&$saved): ObjectEntity {
-				$saved[] = ['object' => $object, 'schema' => $rest[2] ?? null, 'uuid' => $rest[3] ?? null];
-				return self::savedEntity((string)($rest[3] ?? 'new'));
+				$saved[] = ['object' => $object, 'schema' => $rest[0]->target->schema, 'uuid' => $rest[0]->uuid];
+				return self::savedEntity((string)($rest[0]->uuid ?? 'new'));
 			}
 		);
 		$this->ticketService->expects(self::never())->method('save');
@@ -832,7 +834,8 @@ class DemoSeedServiceTest extends TestCase {
 		$sequence = 0;
 		$this->objectService->method('saveObject')
 			->willReturnCallback(
-				static function (array $data, array $extend, string $register, string $schema) use (&$sequence): object {
+				static function (array $data, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true) use (&$sequence): object {
+					$schema = (string)($options->target->schema ?? '');
 					$sequence++;
 					return self::savedEntity('uuid-' . $schema . '-' . $sequence);
 				}

@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\BsnValidationService;
 use OCA\Pipelinq\Service\HaalCentraalClient;
 use OCA\Pipelinq\Service\HaalCentraalException;
 use OCA\Pipelinq\Service\OptOutService;
+use OCA\Pipelinq\Tests\Unit\Support\SaveCallShape;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -359,6 +360,12 @@ class BrpLookupGoldenTest extends TestCase {
 	 * @return void
 	 */
 	private function record(string $name, array $args): void {
+		if (str_ends_with($name, '::saveObject') === true) {
+			$named = array_map(fn (mixed $value): mixed => $this->plain(value: $value), SaveCallShape::named(args: $args));
+			$this->calls[] = [$this->shortName(name: $name) => $named];
+			return;
+		}
+
 		$named = [];
 		foreach ((new ReflectionMethod($name))->getParameters() as $i => $param) {
 			if (array_key_exists($i, $args) === false) {
@@ -448,7 +455,7 @@ class BrpLookupGoldenTest extends TestCase {
 			case 'OptOutService::recordFromBrpResponse':
 				return true;
 			case 'ObjectServiceInterface::saveObject':
-				return $this->saved(object: $args[0], schema: (string)$args[3]);
+				return $this->saved(object: $args[0], schema: (string)$args[1]->target->schema);
 			case 'ObjectServiceInterface::find':
 				return $this->found();
 			case 'ObjectServiceInterface::findAll':

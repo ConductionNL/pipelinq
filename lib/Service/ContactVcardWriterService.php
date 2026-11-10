@@ -30,11 +30,14 @@ use OCP\IAddressBook;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for writing vCard data to Nextcloud addressbooks.
  *
  * @spec openspec/specs/contacts-sync/spec.md
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class ContactVcardWriterService {
 	/**
@@ -345,11 +348,8 @@ class ContactVcardWriterService {
 			$updateData = $objData;
 			$updateData['contactsUid'] = $contactsUid;
 			$objectService->saveObject(
-				$updateData,
-				[],
-				$registerId,
-				$schemaId,
-				null
+				object: $updateData,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId)),
 			);
 		} catch (\Exception $e) {
 			$this->logger->warning(

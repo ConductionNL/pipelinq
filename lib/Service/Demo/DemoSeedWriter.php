@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Demo;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\TicketService;
 
@@ -87,6 +89,12 @@ class DemoSeedWriter {
 			return $this->ticketService->save(ticketType: $target->ticketType, payload: $data, uuid: $uuid);
 		}
 
-		return $target->objectService->saveObject($data, [], $target->registerId, $target->schemaId, $uuid);
+		return $target->objectService->saveObject(
+			object: $data,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $target->registerId, schema: $target->schemaId),
+				uuid: $uuid,
+			),
+		);
 	}//end save()
 }//end class

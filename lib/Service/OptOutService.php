@@ -32,6 +32,8 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Opt-out lookup + recording service.
@@ -41,6 +43,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash() is a pure,
  *  side-effect-free hashing utility shared across BSN-handling services; injecting
  *  it as a collaborator would not change behaviour.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class OptOutService {
 	/**
@@ -153,9 +156,7 @@ class OptOutService {
 			];
 			$this->getObjectService()->saveObject(
 				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 			return true;
 		} catch (Throwable $e) {
@@ -199,9 +200,7 @@ class OptOutService {
 			$object = array_filter($object, static fn ($v) => $v !== null);
 			$this->getObjectService()->saveObject(
 				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 			return true;
 		} catch (Throwable $e) {

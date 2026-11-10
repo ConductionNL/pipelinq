@@ -41,6 +41,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\LeadStagePlacer;
 use OCP\IAppConfig;
@@ -56,6 +59,7 @@ use Throwable;
  * Repair step: backfill lead.pipeline and the lead's stage.
  *
  * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister save options (openregister #9123) add the collaborators.
  */
 class BackfillLeadRelations implements IRepairStep {
 
@@ -362,13 +366,13 @@ class BackfillLeadRelations implements IRepairStep {
 		try {
 			$this->container->get('OCA\\OpenRegister\\Service\\ObjectService')->saveObject(
 				object: array_merge($lead, $patch),
-				extend: [],
-				register: $context['register'],
-				schema: $context['schema'],
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $context['register'], schema: $context['schema']),
+					uuid: $uuid,
+					actor: new SaveActor(currentUser: $actingAdmin),
+				),
 				_rbac: false,
 				_multitenancy: false,
-				currentUser: $actingAdmin,
 			);
 
 			return 'fixed';

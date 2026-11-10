@@ -40,6 +40,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -146,12 +148,11 @@ class SeedWeeklyReviewAgentTemplate implements IRepairStep {
 			// how every other seed in this app writes system data.
 			$objectService->saveObject(
 				object: $this->template(),
-				extend: [],
-				register: self::HERMIQ_REGISTER,
-				schema: self::TEMPLATE_SCHEMA,
-				uuid: null,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::HERMIQ_REGISTER, schema: self::TEMPLATE_SCHEMA),
+				),
 				_rbac: false,
-				_multitenancy: false
+				_multitenancy: false,
 			);
 			$output->info('Seeded the weekly marketing review agent template.');
 		} catch (Throwable $e) {
