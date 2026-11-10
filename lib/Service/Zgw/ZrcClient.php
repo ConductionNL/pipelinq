@@ -190,77 +190,150 @@ class ZrcClient {
 	 * 2. Otherwise POST /rollen with the appropriate identification (inpBsn
 	 *    for natural persons, innNnpId for organisations).
 	 *
-	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param array<string, mixed> $caseMap ZgwResourceMapping for the parent zaak.
-	 * @param array<string, mixed> $contact Pipelinq Contact payload.
-	 * @param string $roltypeUrl Roltype URL (from ZtcClient::resolveRoltype).
-	 * @param string $roltoelichting Free-text role description.
+	 * @param InitiatorLink $link The endpoint, zaak mapping, contact, roltype and role description.
 	 *
 	 * @return string Rol URL (existing or newly created).
 	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
 	 */
-	public function linkInitiator(
-		array $endpoint,
-		array $caseMap,
-		array $contact,
-		string $roltypeUrl,
-		string $roltoelichting = 'Initiator',
-	): string {
-		$client = $this->requireClient(endpoint: $endpoint);
-		$zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
-		$caseUrl = (string)($caseMap['zgwUrl'] ?? '');
-		[$betrType, $ident] = self::contactIdentification(contact: $contact);
+	public function linkInitiator(InitiatorLink $link): string {
+		$run = $this->startRolLink(link: $link);
 
-		// Pre-flight: list existing rollen on the zaak.
+		$existing = $this->findExistingRol(run: $run);
+		if ($existing !== null) {
+			return $existing;
+		}
+
+		return $this->createRol(run: $run);
+	}//end linkInitiator()
+
+	/**
+	 * Resolve the client, the ZRC URL and the contact identification for a link.
+	 *
+	 * @param InitiatorLink $link The link request.
+	 *
+	 * @return RolLinkRun
+	 *
+	 * @throws ZgwException When the client or the ZRC URL cannot be resolved.
+	 */
+	private function startRolLink(InitiatorLink $link): RolLinkRun {
+		$client = $this->requireClient(endpoint: $link->endpoint);
+		$zrcUrl = $this->requireComponentUrl(endpoint: $link->endpoint, key: 'zrc');
+		[$betrType, $ident] = self::contactIdentification(contact: $link->contact);
+
+		return new RolLinkRun(link: $link, client: $client, zrcUrl: $zrcUrl, betrType: $betrType, ident: $ident);
+	}//end startRolLink()
+
+	/**
+	 * Pre-flight: the URL of a rol on the zaak that already identifies the contact.
+	 *
+	 * A failed listing is logged and answers null, so the caller falls through to POST.
+	 *
+	 * @param RolLinkRun $run The link run.
+	 *
+	 * @return string|null The existing rol URL, or null when there is none.
+	 */
+	private function findExistingRol(RolLinkRun $run): ?string {
 		try {
-			$existing = $this->api->callComponent(
-				componentUrl: $zrcUrl,
-				method: 'GET',
-				path: '/rollen',
-				client: $client,
-				query: ['zaak' => $caseUrl, 'betrokkeneType' => $betrType]
-			);
-			$rows = $existing['body']['results'] ?? $existing['body'];
-			if (is_array($rows) === true) {
-				foreach ($rows as $row) {
-					if (is_array($row) === false) {
-						continue;
-					}
-
-					$hit = $row['betrokkeneIdentificatie'] ?? [];
-					if (is_array($hit) === true && self::identMatches(a: $hit, b: $ident) === true) {
-						$url = (string)($row['url'] ?? '');
-						if ($url !== '') {
-							return $url;
-						}
-					}
-				}
-			}
+			return self::matchingRolUrl(rows: $this->listRollen(run: $run), ident: $run->ident);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'ZGW ZRC: linkInitiator GET /rollen failed (will fall through to POST)',
 				['err' => $e->getMessage()]
 			);
-		}//end try
+		}
 
+		return null;
+	}//end findExistingRol()
+
+	/**
+	 * GET the rollen of the zaak for the contact's betrokkeneType.
+	 *
+	 * @param RolLinkRun $run The link run.
+	 *
+	 * @return mixed The result rows (paginated `results` or the bare body).
+	 */
+	private function listRollen(RolLinkRun $run): mixed {
+		$existing = $this->api->callComponent(
+			componentUrl: $run->zrcUrl,
+			method: 'GET',
+			path: '/rollen',
+			client: $run->client,
+			query: ['zaak' => $run->link->caseUrl(), 'betrokkeneType' => $run->betrType]
+		);
+
+		return $existing['body']['results'] ?? $existing['body'];
+	}//end listRollen()
+
+	/**
+	 * The URL of the first row whose identification overlaps the contact's.
+	 *
+	 * @param mixed                $rows  The listed rollen.
+	 * @param array<string, mixed> $ident The contact's identification.
+	 *
+	 * @return string|null
+	 */
+	private static function matchingRolUrl(mixed $rows, array $ident): ?string {
+		if (is_array($rows) === false) {
+			return null;
+		}
+
+		foreach ($rows as $row) {
+			$url = self::rolUrlWhenMatching(row: $row, ident: $ident);
+			if ($url !== '') {
+				return $url;
+			}
+		}
+
+		return null;
+	}//end matchingRolUrl()
+
+	/**
+	 * The row's URL when its identification overlaps the contact's, otherwise ''.
+	 *
+	 * @param mixed                $row   One listed rol.
+	 * @param array<string, mixed> $ident The contact's identification.
+	 *
+	 * @return string
+	 */
+	private static function rolUrlWhenMatching(mixed $row, array $ident): string {
+		if (is_array($row) === false) {
+			return '';
+		}
+
+		$hit = $row['betrokkeneIdentificatie'] ?? [];
+		if (is_array($hit) === false || self::identMatches(a: $hit, b: $ident) === false) {
+			return '';
+		}
+
+		return (string)($row['url'] ?? '');
+	}//end rolUrlWhenMatching()
+
+	/**
+	 * POST a new rol for the contact on the zaak.
+	 *
+	 * @param RolLinkRun $run The link run.
+	 *
+	 * @return string The created rol URL (Location header, body url, or '').
+	 */
+	private function createRol(RolLinkRun $run): string {
 		$body = [
-			'zaak' => $caseUrl,
-			'betrokkeneType' => $betrType,
-			'betrokkeneIdentificatie' => $ident,
-			'roltype' => $roltypeUrl,
-			'roltoelichting' => $roltoelichting,
+			'zaak' => $run->link->caseUrl(),
+			'betrokkeneType' => $run->betrType,
+			'betrokkeneIdentificatie' => $run->ident,
+			'roltype' => $run->link->roltypeUrl,
+			'roltoelichting' => $run->link->roltoelichting,
 		];
 
 		$response = $this->api->callComponent(
-			componentUrl: $zrcUrl,
+			componentUrl: $run->zrcUrl,
 			method: 'POST',
 			path: '/rollen',
-			client: $client,
+			client: $run->client,
 			body: $body
 		);
 
 		return (string)($response['headers']['location'] ?? $response['body']['url'] ?? '');
-	}//end linkInitiator()
+	}//end createRol()
 
 	/**
 	 * Translate a pipelinq Contact into ZGW betrokkeneType + identification map.
