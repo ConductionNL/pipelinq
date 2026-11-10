@@ -98,15 +98,9 @@ class BookingAdminController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function reschedule(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorised();
-		}
-
-		// Booking administration moves other people's appointments — a CRM
-		// capability, not an any-authenticated-user one.
-		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
-			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		$uid = $this->staffUid();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$newStartAt = (string)$this->request->getParam('newStartAt', '');
@@ -162,15 +156,9 @@ class BookingAdminController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function markCompleted(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorised();
-		}
-
-		// Booking administration moves other people's appointments — a CRM
-		// capability, not an any-authenticated-user one.
-		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
-			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		$uid = $this->staffUid();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		return $this->run(
@@ -196,17 +184,9 @@ class BookingAdminController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function markNoShow(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorised();
-		}
-
-		// Booking administration moves other people's appointments — a CRM
-		// capability, not an any-authenticated-user one. This one was MISSED in
-		// the first pass: its four siblings on this controller got the guard
-		// and markNoShow did not, and marking a no-show can charge a fee.
-		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
-			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		$uid = $this->staffUid();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		return $this->run(
@@ -234,15 +214,9 @@ class BookingAdminController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function sendReminder(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorised();
-		}
-
-		// Booking administration moves other people's appointments — a CRM
-		// capability, not an any-authenticated-user one.
-		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
-			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		$uid = $this->staffUid();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		return $this->run(
@@ -279,15 +253,9 @@ class BookingAdminController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function confirmDeposit(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorised();
-		}
-
-		// Booking administration moves other people's appointments — a CRM
-		// capability, not an any-authenticated-user one.
-		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
-			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		$uid = $this->staffUid();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$reason = (string)$this->request->getParam('reason', '');
@@ -303,6 +271,29 @@ class BookingAdminController extends Controller {
 			}
 		);
 	}//end confirmDeposit()
+
+	/**
+	 * The caller's uid when they are CRM staff, else the refusal.
+	 *
+	 * Booking administration moves other people's appointments — a CRM
+	 * capability, not an any-authenticated-user one. Every action but a
+	 * cancellation goes through here; markNoShow was once MISSED, and marking a
+	 * no-show can charge a fee.
+	 *
+	 * @return string|JSONResponse The uid, 401 without a session, or 403 without the CRM privilege.
+	 */
+	private function staffUid(): string|JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorised();
+		}
+
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		}
+
+		return $uid;
+	}//end staffUid()
 
 	/**
 	 * Resolve the acting user UID or return null when unauthenticated.
