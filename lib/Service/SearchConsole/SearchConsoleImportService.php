@@ -208,10 +208,7 @@ class SearchConsoleImportService {
 			return ['properties' => 0, 'rows' => 0, 'errors' => []];
 		}
 
-		$window = new ImportWindow(
-			today: (new DateTimeImmutable('@' . $this->time->getTime()))->setTimezone(new DateTimeZone('UTC')),
-			days: $days
-		);
+		$window = $this->windowEndingToday(days: $days);
 
 		try {
 			$token = $this->auth->accessToken(key: $key, scope: self::SCOPE);
@@ -220,12 +217,38 @@ class SearchConsoleImportService {
 		}
 
 		$result = $this->importAll(read: new SearchConsoleRead(token: $token, window: $window), properties: $properties);
-		if ($result['properties'] > 0) {
-			$this->appConfig->setValueString(Application::APP_ID, self::LAST_IMPORT_KEY, $window->today->format('Y-m-d\TH:i:s\Z'));
-		}
+		$this->stampWhenImported(result: $result, window: $window);
 
 		return $result;
 	}//end importRecent()
+
+	/**
+	 * The window of `$days` days back ending today (UTC).
+	 *
+	 * @param int $days How many days back from today, inclusive of today.
+	 *
+	 * @return ImportWindow
+	 */
+	private function windowEndingToday(int $days): ImportWindow {
+		return new ImportWindow(
+			today: (new DateTimeImmutable('@' . $this->time->getTime()))->setTimezone(new DateTimeZone('UTC')),
+			days: $days
+		);
+	}//end windowEndingToday()
+
+	/**
+	 * Keep the import moment when at least one property was imported.
+	 *
+	 * @param array{properties: int, rows: int, errors: array<string, string>} $result The run's counts.
+	 * @param ImportWindow                                                      $window The window it read.
+	 *
+	 * @return void
+	 */
+	private function stampWhenImported(array $result, ImportWindow $window): void {
+		if ($result['properties'] > 0) {
+			$this->appConfig->setValueString(Application::APP_ID, self::LAST_IMPORT_KEY, $window->today->format('Y-m-d\TH:i:s\Z'));
+		}
+	}//end stampWhenImported()
 
 	/**
 	 * Import every property, a failing one reported without stopping the others.
