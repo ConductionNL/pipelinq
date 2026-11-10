@@ -101,31 +101,57 @@ class ExportSchedulerJob extends TimedJob {
 
 		$enqueued = 0;
 		foreach ($jobs as $job) {
-			if (($job['enabled'] ?? false) !== true) {
+			if ($this->isScheduledNow(job: $job, now: $now) === false) {
 				continue;
 			}
 
-			$cron = (string)($job['scheduleCron'] ?? '');
-			if ($this->isDueSinceLastTick(cron: $cron, now: $now) === false) {
-				continue;
-			}
-
-			try {
-				$watermarkFrom = $this->resolveWatermarkFrom(job: $job);
-				$this->runs->createPendingRun(job: $job, watermarkFrom: $watermarkFrom);
+			if ($this->enqueue(job: $job) === true) {
 				$enqueued++;
-			} catch (\Throwable $e) {
-				$this->logger->error(
-					'ExportSchedulerJob: failed to enqueue run',
-					['jobId' => ($job['id'] ?? $job['uuid'] ?? ''), 'error' => $e->getMessage()]
-				);
 			}
-		}//end foreach
+		}
 
 		if ($enqueued > 0) {
 			$this->logger->info('ExportSchedulerJob: enqueued export runs', ['count' => $enqueued]);
 		}
 	}//end run()
+
+	/**
+	 * Whether the job is enabled and its schedule fired since the previous tick.
+	 *
+	 * @param array<string, mixed> $job The job.
+	 * @param DateTimeImmutable    $now The current tick.
+	 *
+	 * @return bool
+	 */
+	private function isScheduledNow(array $job, DateTimeImmutable $now): bool {
+		if (($job['enabled'] ?? false) !== true) {
+			return false;
+		}
+
+		$cron = (string)($job['scheduleCron'] ?? '');
+		return $this->isDueSinceLastTick(cron: $cron, now: $now);
+	}//end isScheduledNow()
+
+	/**
+	 * Create the job's pending run; a failure is logged and does not stop the tick.
+	 *
+	 * @param array<string, mixed> $job The job.
+	 *
+	 * @return bool Whether a run was enqueued.
+	 */
+	private function enqueue(array $job): bool {
+		try {
+			$watermarkFrom = $this->resolveWatermarkFrom(job: $job);
+			$this->runs->createPendingRun(job: $job, watermarkFrom: $watermarkFrom);
+			return true;
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'ExportSchedulerJob: failed to enqueue run',
+				['jobId' => ($job['id'] ?? $job['uuid'] ?? ''), 'error' => $e->getMessage()]
+			);
+			return false;
+		}
+	}//end enqueue()
 
 	/**
 	 * Whether the schedule fired in a minute since the previous tick.
