@@ -199,27 +199,70 @@ class PartyKindRegistryService {
 		$recordType = trim($recordType);
 		$kind = trim($kind);
 
+		$refusal = $this->kindRefusal(recordType: $recordType, kind: $kind);
+		if ($refusal !== '') {
+			return ['allowed' => false, 'reason' => $refusal];
+		}
+
+		if ($this->holdsOne(kind: $kind) === false) {
+			return ['allowed' => true, 'reason' => ''];
+		}
+
+		$holder = self::otherHolder(links: $this->linksOn(recordType: $recordType, recordId: $recordId), slot: ['kind' => $kind, 'party' => $party]);
+		if ($holder !== null) {
+			return self::slotTaken(kind: $kind, holder: $holder);
+		}
+
+		return ['allowed' => true, 'reason' => ''];
+	}//end mayLink()
+
+	/**
+	 * Why a kind may not be linked to a record type at all; '' when it may.
+	 *
+	 * @param string $recordType The trimmed `<app>:<schema>:<type>` literal.
+	 * @param string $kind       The trimmed party kind code.
+	 *
+	 * @return string
+	 */
+	private function kindRefusal(string $recordType, string $kind): string {
 		if ($kind === '') {
-			return ['allowed' => false, 'reason' => 'A party kind is required.'];
+			return 'A party kind is required.';
 		}
 
 		$declared = $this->acceptanceFor(recordType: $recordType);
 		if ($declared !== null && in_array($kind, $declared, true) === false) {
-			return [
-				'allowed' => false,
-				'reason' => "{$recordType} does not accept a party of kind {$kind}.",
-			];
+			return "{$recordType} does not accept a party of kind {$kind}.";
 		}
 
+		return '';
+	}//end kindRefusal()
+
+	/**
+	 * Whether a kind holds at most one party per record.
+	 *
+	 * @param string $kind The party kind code.
+	 *
+	 * @return bool
+	 */
+	private function holdsOne(string $kind): bool {
 		$vocabulary = $this->vocabulary();
 		$declaredKind = ($vocabulary[$kind] ?? null);
-		$maxPerRecord = (int)($declaredKind['maxPerRecord'] ?? 0);
-		if ($maxPerRecord !== 1) {
-			return ['allowed' => true, 'reason' => ''];
-		}
 
-		foreach ($this->linksOn(recordType: $recordType, recordId: $recordId) as $link) {
-			if ((string)($link['kind'] ?? '') !== $kind) {
+		return (int)($declaredKind['maxPerRecord'] ?? 0) === 1;
+	}//end holdsOne()
+
+	/**
+	 * The party other than the one being linked that holds the kind's slot on
+	 * the record through a link that has not ended; null when the slot is free.
+	 *
+	 * @param array<int, array<string, mixed>> $links The links on the record.
+	 * @param array{kind: string, party: string} $slot The kind and the party being linked.
+	 *
+	 * @return string|null
+	 */
+	private static function otherHolder(array $links, array $slot): ?string {
+		foreach ($links as $link) {
+			if ((string)($link['kind'] ?? '') !== $slot['kind']) {
 				continue;
 			}
 
@@ -230,18 +273,28 @@ class PartyKindRegistryService {
 			}
 
 			$holder = (string)($link['party'] ?? '');
-			if ($holder === $party) {
-				continue;
+			if ($holder !== $slot['party']) {
+				return $holder;
 			}
-
-			return [
-				'allowed' => false,
-				'reason' => "This record already holds a {$kind}: party {$holder}.",
-			];
 		}
 
-		return ['allowed' => true, 'reason' => ''];
-	}//end mayLink()
+		return null;
+	}//end otherHolder()
+
+	/**
+	 * The refusal of a held slot, naming its holder.
+	 *
+	 * @param string $kind   The party kind code.
+	 * @param string $holder The party that holds it.
+	 *
+	 * @return array{allowed: bool, reason: string}
+	 */
+	private static function slotTaken(string $kind, string $holder): array {
+		return [
+			'allowed' => false,
+			'reason' => "This record already holds a {$kind}: party {$holder}.",
+		];
+	}//end slotTaken()
 
 	/**
 	 * Judge a batch of links by exactly the rule one link is judged by.
@@ -277,14 +330,8 @@ class PartyKindRegistryService {
 
 			// A batch judges itself as well as the store: two aanvragers in
 			// one import must not both land because neither was written yet.
-			if ($answer['allowed'] === true && isset($taken[$kind]) === true) {
-				$vocabulary = $this->vocabulary();
-				if ((int)($vocabulary[$kind]['maxPerRecord'] ?? 0) === 1) {
-					$answer = [
-						'allowed' => false,
-						'reason' => "This record already holds a {$kind}: party {$taken[$kind]}.",
-					];
-				}
+			if ($answer['allowed'] === true && isset($taken[$kind]) === true && $this->holdsOne(kind: $kind) === true) {
+				$answer = self::slotTaken(kind: $kind, holder: $taken[$kind]);
 			}
 
 			if ($answer['allowed'] === true) {
@@ -328,21 +375,15 @@ class PartyKindRegistryService {
 	 * @return array<int, array<string, mixed>> The rows.
 	 */
 	private function read(string $schemaKey, array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-		if ($register === '' || $schema === '') {
-			$this->logger->debug(
-				'PartyKindRegistryService: the party kind surface is not configured',
-				['schemaKey' => $schemaKey]
-			);
-
+		$scope = $this->scopeOf(schemaKey: $schemaKey);
+		if ($scope === null) {
 			return [];
 		}
 
 		try {
 			$rows = $this->objectService->findAll(
 				[
-					'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
+					'filters' => array_merge($scope, $filters),
 					'limit' => self::LIMIT,
 				]
 			);
@@ -355,6 +396,40 @@ class PartyKindRegistryService {
 			return [];
 		}
 
+		return self::plainRows(rows: $rows);
+	}//end read()
+
+	/**
+	 * The register and schema filters of a schema key; null (logged) when either is unset.
+	 *
+	 * @param string $schemaKey The app-config key holding the schema id.
+	 *
+	 * @return array{register: string, schema: string}|null
+	 */
+	private function scopeOf(string $schemaKey): ?array {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		if ($register === '' || $schema === '') {
+			$this->logger->debug(
+				'PartyKindRegistryService: the party kind surface is not configured',
+				['schemaKey' => $schemaKey]
+			);
+
+			return null;
+		}
+
+		return ['register' => $register, 'schema' => $schema];
+	}//end scopeOf()
+
+	/**
+	 * The rows as plain arrays: arrays as they are, serialisable entities by
+	 * what they serialise to; anything else is dropped.
+	 *
+	 * @param iterable<mixed> $rows The rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function plainRows($rows): array {
 		$out = [];
 		foreach ($rows as $row) {
 			if (is_array($row) === true) {
@@ -371,5 +446,5 @@ class PartyKindRegistryService {
 		}
 
 		return $out;
-	}//end read()
+	}//end plainRows()
 }//end class
