@@ -74,25 +74,64 @@ export function applyMenuModules(profileFile, enabled) {
 	if (!modules || typeof modules !== 'object') {
 		return profileFile
 	}
-	const on = new Set(Array.isArray(enabled) ? enabled : [])
-	const removals = new Set(profileFile.removals || [])
-	const menu = [...(profileFile.menu || [])]
-	let anyOn = false
+	const on = new Set(listOf(enabled))
+	const result = startingLists(profileFile)
 	for (const key of Object.keys(modules)) {
-		const module = modules[key] || {}
-		const ids = Array.isArray(module.ids) ? module.ids : []
-		if (on.has(key)) {
-			anyOn = true
-			ids.forEach((id) => removals.delete(id))
-			menu.push(...(Array.isArray(module.menu) ? module.menu : []))
-		} else {
-			ids.forEach((id) => removals.add(id))
-		}
+		applyModule(modules[key] || {}, { isOn: on.has(key), result })
 	}
-	if (anyOn && profileFile.modulesCaption) {
-		menu.push(profileFile.modulesCaption)
+	if (Object.keys(modules).some((key) => on.has(key))) {
+		pushCaption(result.menu, profileFile.modulesCaption)
 	}
-	return { ...profileFile, removals: [...removals], menu }
+	return { ...profileFile, removals: [...result.removals], menu: result.menu }
+}
+
+/**
+ * @param {unknown} value A value.
+ * @return {Array} The value when it is an array, else an empty list.
+ */
+function listOf(value) {
+	return Array.isArray(value) ? value : []
+}
+
+/**
+ * @param {object} profileFile The profile file.
+ * @return {{removals: Set<string>, menu: Array<object>}} Copies of its removals and its menu.
+ */
+function startingLists(profileFile) {
+	return {
+		removals: new Set(profileFile.removals || []),
+		menu: [...(profileFile.menu || [])],
+	}
+}
+
+/**
+ * Switch one module on (its ids out of the removals, its menu added) or off
+ * (its ids into the removals).
+ *
+ * @param {object} module The module.
+ * @param {{isOn: boolean, result: {removals: Set<string>, menu: Array<object>}}} change Whether it is on, and the lists it changes.
+ * @return {void}
+ */
+function applyModule(module, change) {
+	const { removals, menu } = change.result
+	const ids = listOf(module.ids)
+	if (change.isOn) {
+		ids.forEach((id) => removals.delete(id))
+		menu.push(...listOf(module.menu))
+		return
+	}
+	ids.forEach((id) => removals.add(id))
+}
+
+/**
+ * @param {Array<object>} menu The menu.
+ * @param {(object|undefined)} caption The modules caption.
+ * @return {void}
+ */
+function pushCaption(menu, caption) {
+	if (caption) {
+		menu.push(caption)
+	}
 }
 
 /**
