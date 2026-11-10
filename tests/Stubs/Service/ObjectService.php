@@ -50,6 +50,9 @@ namespace OCA\OpenRegister\Service;
 use LogicException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\ObjectSelection;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
+use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 use OCP\IUser;
 
 if (class_exists(ObjectService::class) === false) {
@@ -193,9 +196,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<string, mixed>    $query         The search query.
 		 * @param boolean                 $_rbac         Whether to enforce RBAC checks.
 		 * @param boolean                 $_multitenancy Whether to enforce tenant scoping.
-		 * @param array<int, mixed>|null  $ids           Restrict to these ids.
-		 * @param string|null             $uses          Restrict to objects using this one.
-		 * @param array<int, mixed>|null  $views         Views to apply.
+		 * @param SearchOptions           $options       Selection, views, view scope and deleted flag.
 		 *
 		 * @return array<int, mixed>|int
 		 */
@@ -203,9 +204,7 @@ if (class_exists(ObjectService::class) === false) {
 			array $query = [],
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			?array $ids = null,
-			?string $uses = null,
-			?array $views = null,
+			SearchOptions $options = new SearchOptions(),
 		): array|int {
 			return [];
 		}//end searchObjects()
@@ -243,10 +242,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<string, mixed>   $query         The search query.
 		 * @param boolean                $_rbac         Whether to enforce RBAC checks.
 		 * @param boolean                $_multitenancy Whether to enforce tenant scoping.
-		 * @param boolean                $deleted       Whether to include deleted objects.
-		 * @param array<int, mixed>|null $ids           Restrict to these ids.
-		 * @param string|null            $uses          Restrict to objects using this one.
-		 * @param array<int, mixed>|null $views         Views to apply.
+		 * @param SearchOptions          $options       Selection, views, view scope and deleted flag.
 		 *
 		 * @return array<string, mixed>
 		 */
@@ -254,10 +250,7 @@ if (class_exists(ObjectService::class) === false) {
 			array $query = [],
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			bool $deleted = false,
-			?array $ids = null,
-			?string $uses = null,
-			?array $views = null,
+			SearchOptions $options = new SearchOptions(),
 		): array {
 			return [];
 		}//end searchObjectsPaginated()
@@ -265,8 +258,7 @@ if (class_exists(ObjectService::class) === false) {
 		/**
 		 * Search objects by register and schema slug.
 		 *
-		 * @param string               $registerSlug  The register slug.
-		 * @param string               $schemaSlug    The schema slug.
+		 * @param RegisterSchemaRef    $target        The register and schema, by slug.
 		 * @param array<string, mixed> $filters       Filters to apply.
 		 * @param boolean              $_rbac         Whether to enforce RBAC checks.
 		 * @param boolean              $_multitenancy Whether to enforce tenant scoping.
@@ -274,8 +266,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @return array<int, mixed>|int
 		 */
 		public function searchObjectsBySlug(
-			string $registerSlug,
-			string $schemaSlug,
+			RegisterSchemaRef $target,
 			array $filters = [],
 			bool $_rbac = true,
 			bool $_multitenancy = true,
@@ -659,8 +650,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<string, mixed>   $query         The search query.
 		 * @param boolean                $_rbac         Whether to enforce RBAC checks.
 		 * @param boolean                $_multitenancy Whether to enforce tenant scoping.
-		 * @param array<int, mixed>|null $ids           Restrict to these ids.
-		 * @param string|null            $uses          Restrict to objects using this one.
+		 * @param ObjectSelection        $selection     The id and uses restriction.
 		 *
 		 * @return integer
 		 */
@@ -668,8 +658,7 @@ if (class_exists(ObjectService::class) === false) {
 			array $query = [],
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			?array $ids = null,
-			?string $uses = null,
+			ObjectSelection $selection = new ObjectSelection(),
 		): int {
 			return 0;
 		}//end countSearchObjects()
