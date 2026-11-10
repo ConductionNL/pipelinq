@@ -1,0 +1,4328 @@
+{
+    "kvk search, key none, leaf rows, direct json": {
+        "result": [
+            {
+                "kvkNumber": "111@6201",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6201",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            },
+            {
+                "kvkNumber": "111@6202",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6202",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf rows, direct json": {
+        "result": [
+            {
+                "kvkNumber": "111@6201",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6201",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            },
+            {
+                "kvkNumber": "111@6202",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6202",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf rows, direct json": {
+        "result": [
+            {
+                "kvkNumber": "111",
+                "company": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222",
+                "company": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf rows, direct not json": {
+        "result": [
+            {
+                "kvkNumber": "111@6201",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6201",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            },
+            {
+                "kvkNumber": "111@6202",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6202",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf rows, direct not json": {
+        "result": [
+            {
+                "kvkNumber": "111@6201",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6201",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            },
+            {
+                "kvkNumber": "111@6202",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6202",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf rows, direct not json": {
+        "result": [
+            {
+                "kvkNumber": "111",
+                "company": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222",
+                "company": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf rows, direct throws": {
+        "result": [
+            {
+                "kvkNumber": "111@6201",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6201",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            },
+            {
+                "kvkNumber": "111@6202",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6202",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf rows, direct throws": {
+        "result": [
+            {
+                "kvkNumber": "111@6201",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6201",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            },
+            {
+                "kvkNumber": "111@6202",
+                "item": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222@6202",
+                "item": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf rows, direct throws": {
+        "result": [
+            {
+                "kvkNumber": "111",
+                "company": {
+                    "kvkNummer": "111",
+                    "naam": "A"
+                }
+            },
+            {
+                "kvkNumber": "222",
+                "company": {
+                    "kvkNummer": "222",
+                    "naam": "B"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk companyByNumber, leaf rows": {
+        "result": [
+            {
+                "kvkNummer": "111",
+                "naam": "A"
+            },
+            {
+                "kvkNummer": "222",
+                "naam": "B"
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/company?kvkNumber=69599084",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk searchByName, leaf rows": {
+        "result": [
+            {
+                "kvkNummer": "111",
+                "naam": "A"
+            },
+            {
+                "kvkNummer": "222",
+                "naam": "B"
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?q=Conduction+%26+Co&limit=10&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf empty rows, direct json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf empty rows, direct json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf empty rows, direct json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf empty rows, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf empty rows, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf empty rows, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf empty rows, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf empty rows, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf empty rows, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk companyByNumber, leaf empty rows": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/company?kvkNumber=69599084",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk searchByName, leaf empty rows": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?q=Conduction+%26+Co&limit=10&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf http 503, direct json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf http 503, direct json": {
+        "result": [
+            {
+                "kvkNumber": "333@6201",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            },
+            {
+                "kvkNumber": "333@6202",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf http 503, direct json": {
+        "result": [
+            {
+                "kvkNumber": "444",
+                "company": {
+                    "company_number": "444"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf http 503, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf http 503, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf http 503, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf http 503, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf http 503, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6201",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6202",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf http 503, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "bakker",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "smid",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "kvk companyByNumber, leaf http 503": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/company?kvkNumber=69599084",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk searchByName, leaf http 503": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?q=Conduction+%26+Co&limit=10&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf not json, direct json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf not json, direct json": {
+        "result": [
+            {
+                "kvkNumber": "333@6201",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            },
+            {
+                "kvkNumber": "333@6202",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf not json, direct json": {
+        "result": [
+            {
+                "kvkNumber": "444",
+                "company": {
+                    "company_number": "444"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf not json, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf not json, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf not json, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf not json, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf not json, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6201",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6202",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf not json, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "bakker",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "smid",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "kvk companyByNumber, leaf not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/company?kvkNumber=69599084",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk searchByName, leaf not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?q=Conduction+%26+Co&limit=10&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf no results key, direct json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf no results key, direct json": {
+        "result": [
+            {
+                "kvkNumber": "333@6201",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            },
+            {
+                "kvkNumber": "333@6202",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf no results key, direct json": {
+        "result": [
+            {
+                "kvkNumber": "444",
+                "company": {
+                    "company_number": "444"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf no results key, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf no results key, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf no results key, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf no results key, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf no results key, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6201",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6202",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf no results key, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "bakker",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "smid",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "kvk companyByNumber, leaf no results key": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/company?kvkNumber=69599084",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk searchByName, leaf no results key": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?q=Conduction+%26+Co&limit=10&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf results not a list, direct json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf results not a list, direct json": {
+        "result": [
+            {
+                "kvkNumber": "333@6201",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            },
+            {
+                "kvkNumber": "333@6202",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf results not a list, direct json": {
+        "result": [
+            {
+                "kvkNumber": "444",
+                "company": {
+                    "company_number": "444"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf results not a list, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf results not a list, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf results not a list, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf results not a list, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf results not a list, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6201",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6202",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf results not a list, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "bakker",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "smid",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "kvk companyByNumber, leaf results not a list": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/company?kvkNumber=69599084",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk searchByName, leaf results not a list": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?q=Conduction+%26+Co&limit=10&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf throws, direct json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf throws, direct json": {
+        "result": [
+            {
+                "kvkNumber": "333@6201",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            },
+            {
+                "kvkNumber": "333@6202",
+                "item": {
+                    "kvkNummer": "333"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf throws, direct json": {
+        "result": [
+            {
+                "kvkNumber": "444",
+                "company": {
+                    "company_number": "444"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "OpenCorporates OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "OpenCorporates OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf throws, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf throws, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf throws, direct not json": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "OpenCorporates OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "OpenCorporates OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ]
+        ]
+    },
+    "kvk search, key none, leaf throws, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ]
+        ]
+    },
+    "kvk search, key set, leaf throws, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6201&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6201",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6201",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?sbiHoofdActiviteit=6202&type=hoofdvestiging&limit=50&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.kvk.nl/api/v1/zoeken?apikey=key-1&type=hoofdvestiging&pagina=1&count=50&sbiHoofdActiviteit=6202",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "KVK API search failed for SBI code {sbi}",
+                {
+                    "sbi": "6202",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "opencorporates search, leaf throws, direct throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=bakker&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "OpenCorporates OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=bakker&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "bakker",
+                    "error": "down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/opencorporates/search?q=smid&jurisdiction=nl&limit=30&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "OpenCorporates OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://api.opencorporates.com/v0.4/companies/search?q=smid&jurisdiction_code=nl&per_page=30&order=score",
+                {
+                    "headers": {
+                        "Accept": "application/json"
+                    },
+                    "timeout": 15
+                }
+            ],
+            [
+                "warning",
+                "OpenCorporates search failed for keyword {kw}",
+                {
+                    "kw": "smid",
+                    "error": "down"
+                }
+            ]
+        ]
+    },
+    "kvk companyByNumber, leaf throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/company?kvkNumber=69599084",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ]
+        ]
+    },
+    "kvk searchByName, leaf throws": {
+        "result": [],
+        "calls": [
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "http://nc.test/apps/openregister/api/integrations/kvk/search?q=Conduction+%26+Co&limit=10&page=1",
+                {
+                    "timeout": 15,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "OCS-APIREQUEST": "true",
+                        "Accept": "application/json"
+                    },
+                    "nextcloud": {
+                        "allow_local_address": true
+                    }
+                }
+            ],
+            [
+                "debug",
+                "KVK OR search unavailable, falling back to direct path",
+                {
+                    "exception": "RuntimeException: down"
+                }
+            ]
+        ]
+    },
+    "opencorporates, no keywords": {
+        "result": [],
+        "calls": []
+    }
+}
