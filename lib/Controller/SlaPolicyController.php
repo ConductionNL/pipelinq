@@ -152,9 +152,9 @@ class SlaPolicyController extends Controller {
 			$existing = null;
 			try {
 				$existing = $objectService->find(
+					id: $id,
 					register: $register,
 					schema: $schema,
-					uuid: $id,
 				);
 			} catch (Throwable $e) {
 				$this->logger->debug(

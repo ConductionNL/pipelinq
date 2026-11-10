@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
@@ -1469,7 +1470,7 @@ class PosTransactionService {
 		}
 
 		try {
-			$schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+			$schemaMapper = $this->container->get(SchemaMapper::class);
 			// Resolve with RBAC + multi-tenancy disabled: this is a
 			// server-authoritative internal id lookup (not a user-scoped read),
 			// and the POS schemas may be owned by a different organisation than
@@ -1479,7 +1480,7 @@ class PosTransactionService {
 			// method_exists($schema, 'getId') returns false even though
 			// $schema->getId() resolves — call getId() directly (any failure is
 			// caught below and yields the '' "not configured" path).
-			$schema = $schemaMapper->find($slug, [], null, false, false);
+			$schema = $schemaMapper->find(id: $slug, _extend: [], _rbac: false, _multitenancy: false);
 			$id = '';
 			if (is_object($schema) === true) {
 				$id = (string)$schema->getId();
