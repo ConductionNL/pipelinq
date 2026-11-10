@@ -155,4 +155,76 @@ final class ReportingPeriodActionsGoldenTest extends TestCase {
 
 		return new ReportingController($request, $service, new CrmPrivilegeCheck($session, $policy));
 	}//end controller()
+
+	/**
+	 * A named period resolves against today; an explicit bound wins over it.
+	 *
+	 * @return void
+	 */
+	public function testNamedPeriodsResolveAgainstToday(): void {
+		$cases = [
+			'today' => ['period' => 'today'],
+			'week' => ['period' => 'week'],
+			'month' => ['period' => 'month'],
+			'explicit wins' => ['period' => 'today', 'from' => '2026-06-01', 'to' => '2026-06-30'],
+		];
+		$seen = [];
+		foreach ($cases as $name => $query) {
+			$calls = [];
+			$this->controller(caller: 'agent', query: $query, service: $this->service(throws: false, calls: $calls))->getAgents();
+			$seen[$name] = [$calls[0][1], $calls[0][2]];
+		}
+
+		$today = (new \DateTimeImmutable('now'))->format('Y-m-d');
+		$this->assertSame([$today, $today], $seen['today']);
+		$this->assertSame([(new \DateTimeImmutable('now'))->format('Y-m-01'), $today], $seen['month']);
+		$this->assertSame($today, $seen['week'][1]);
+		$this->assertSame('1', (new \DateTimeImmutable($seen['week'][0]))->format('N'), 'a week starts on Monday');
+		$this->assertLessThan(7, (new \DateTimeImmutable($seen['week'][0]))->diff(new \DateTimeImmutable($today))->days);
+		$this->assertSame(['2026-06-01', '2026-06-30'], $seen['explicit wins']);
+	}//end testNamedPeriodsResolveAgainstToday()
+
+	/**
+	 * Saving SLA targets stores every numeric pair, refuses when any is rejected, and fails closed.
+	 *
+	 * @return void
+	 */
+	public function testSavingSlaTargetsAnswersExactly(): void {
+		$targets = ['phone' => ['fcr' => 80, 'aht' => '300'], 'email' => 'not-a-map', 'chat' => ['fcr' => 70]];
+		$cases = [
+			'not a map' => ['nope', [], 400, ['message' => 'Operation failed']],
+			'all accepted' => [$targets, [], 200, ['success' => true, 'targets' => ['phone' => ['fcr' => '80']]]],
+			'one rejected' => [$targets, ['aht'], 400, ['message' => 'Operation failed']],
+			'store fails' => [$targets, ['throw'], 500, ['message' => 'Operation failed']],
+		];
+		foreach ($cases as $name => [$given, $rejected, $status, $body]) {
+			$calls = [];
+			$service = $this->createMock(ReportingService::class);
+			$service->method('setSlaTarget')->willReturnCallback(
+				static function (string $channel, string $metric, string $value) use ($rejected, &$calls): bool {
+					$calls[] = [$channel, $metric, $value];
+					if ($rejected === ['throw']) {
+						throw new RuntimeException('store offline');
+					}
+
+					return in_array($metric, $rejected, true) === false;
+				}
+			);
+			$service->method('getAllSlaTargets')->willReturn(['phone' => ['fcr' => '80']]);
+
+			$response = $this->controller(caller: 'agent', query: ['targets' => $given], service: $service)->updateSla();
+
+			$this->assertSame([$status, $body], [$response->getStatus(), $response->getData()], $name);
+			$expectedCalls = [['phone', 'fcr', '80'], ['phone', 'aht', '300'], ['chat', 'fcr', '70']];
+			if ($name === 'not a map') {
+				$expectedCalls = [];
+			}
+
+			if ($name === 'store fails') {
+				$expectedCalls = [['phone', 'fcr', '80']];
+			}
+
+			$this->assertSame($expectedCalls, $calls, $name.' calls');
+		}
+	}//end testSavingSlaTargetsAnswersExactly()
 }//end class
