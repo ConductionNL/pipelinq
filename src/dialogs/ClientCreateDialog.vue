@@ -36,6 +36,7 @@ import { showError } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import Check from 'vue-material-design-icons/Check.vue'
 import ClientForm from '../views/clients/ClientForm.vue'
+import createDialogMixin from '../mixins/createDialogMixin.js'
 import { createWithContact } from '../services/contactSyncApi.js'
 
 export default {
@@ -46,6 +47,8 @@ export default {
 		CnDialog,
 		NcButton,
 	},
+
+	mixins: [createDialogMixin],
 
 	props: {
 		/** The name typed into a client picker, prefilled in the form. */
@@ -74,12 +77,6 @@ export default {
 	},
 
 	emits: ['created', 'close'],
-	data() {
-		return {
-			valid: false,
-			saving: false,
-		}
-	},
 
 	computed: {
 		/**
@@ -105,22 +102,12 @@ export default {
 
 	methods: {
 		/**
-		 * Navigate to the created record and close.
+		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
 		 *
-		 * A registry modal is mounted by CnAppRoot, which forwards only
-		 * `close` — there is no parent to route on the dialog's behalf the way
-		 * the old bespoke header-actions component did.
-		 *
-		 * @param {string} route The detail route name.
-		 * @param {string} id The created object's id.
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+		 * @spec openspec/specs/unify-client-contact/spec.md
 		 */
-		goToDetail(route, id) {
-			this.$emit('close')
-			if (id && this.$router) {
-				this.$router.push({ name: route, params: { id } }).catch(() => {})
-			}
+		submit() {
+			this.$refs.form.onSave()
 		},
 
 		/**
@@ -139,15 +126,6 @@ export default {
 					detail: { ...created, register: 'pipelinq', schema: 'client' },
 				}),
 			)
-		},
-
-		/**
-		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
-		 *
-		 * @spec openspec/specs/unify-client-contact/spec.md
-		 */
-		submit() {
-			this.$refs.form.onSave()
 		},
 
 		/**

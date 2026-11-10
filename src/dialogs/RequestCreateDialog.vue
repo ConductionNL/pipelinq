@@ -62,6 +62,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import RequestForm from '../views/requests/RequestForm.vue'
+import createDialogMixin from '../mixins/createDialogMixin.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
@@ -73,6 +74,8 @@ export default {
 		Plus,
 		RequestForm,
 	},
+
+	mixins: [createDialogMixin],
 
 	props: {
 		/**
@@ -89,8 +92,6 @@ export default {
 
 	data() {
 		return {
-			valid: false,
-			saving: false,
 			openAfter: true,
 		}
 	},
@@ -105,25 +106,6 @@ export default {
 	},
 
 	methods: {
-		/**
-		 * Navigate to the created record and close.
-		 *
-		 * A registry modal is mounted by CnAppRoot, which forwards only
-		 * `close` — there is no parent to route on the dialog's behalf the way
-		 * the old bespoke header-actions component did.
-		 *
-		 * @param {string} route The detail route name.
-		 * @param {string} id The created object's id.
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
-		 */
-		goToDetail(route, id) {
-			this.$emit('close')
-			if (id && this.$router) {
-				this.$router.push({ name: route, params: { id } }).catch(() => {})
-			}
-		},
-
 		/**
 		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
 		 */
