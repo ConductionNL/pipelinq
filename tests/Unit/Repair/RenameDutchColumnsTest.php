@@ -295,6 +295,9 @@ final class RenameDutchColumnsTest extends TestCase {
 			['table_name' => 'oc_openregister_table_7_42'],
 			['table_name' => 'oc_openregister_table_7_43'],
 			['table_name' => 'oc_other_table'],
+			['table_name' => 'oc_openregister_table_7_42_archive'],
+			['table_name' => 'oc_openregister_table_8_1'],
+			['table_name' => 'oc_openregister_table_7_42'],
 			false
 		);
 		$columns42 = $this->createMock(\OCP\DB\IPreparedStatement::class);
