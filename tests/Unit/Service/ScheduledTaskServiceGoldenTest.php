@@ -28,6 +28,7 @@ use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCA\Pipelinq\Tests\Unit\Support\Autowire;
 use OCA\Pipelinq\Tests\Unit\Support\ComparesGolden;
+use OCA\Pipelinq\Tests\Unit\Support\SaveCallShape;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -384,7 +385,7 @@ class ScheduledTaskServiceGoldenTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($fail): ObjectEntityInterface {
-				$this->trace[] = ['saveObject' => array_slice($args, 0, 5)];
+				$this->trace[] = ['saveObject' => array_slice(SaveCallShape::flat(args: $args), 0, 5)];
 				if ($fail === 'save') {
 					throw new RuntimeException('locked');
 				}

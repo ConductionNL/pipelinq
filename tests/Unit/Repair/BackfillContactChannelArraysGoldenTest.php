@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Repair;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Repair\BackfillContactChannelArrays;
+use OCA\Pipelinq\Tests\Unit\Support\SaveCallShape;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -217,7 +218,7 @@ class BackfillContactChannelArraysGoldenTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($scenario): ObjectEntityInterface {
-				$named = $this->named(method: 'saveObject', args: $args);
+				$named = SaveCallShape::named(args: $args);
 				if (($named['currentUser'] ?? null) instanceof IUser) {
 					$named['currentUser'] = 'user:' . $named['currentUser']->getUID();
 				}

@@ -39,6 +39,7 @@ use OCA\Pipelinq\Service\LogiusConnector;
 use OCA\Pipelinq\Service\MailboxResolver;
 use OCA\Pipelinq\Service\TemplateRenderer;
 use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Tests\Unit\Support\SaveCallShape;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -240,6 +241,10 @@ class BerichtenboxQueueGoldenTest extends TestCase {
 				}
 
 				$named[$param->getName()] = $args[$i];
+			}
+
+			if ($target[1] === 'saveObject') {
+				$named = SaveCallShape::named(args: $args);
 			}
 
 			$this->calls[] = ['call' => $target[1], 'args' => array_map(static fn (mixed $v): mixed => ($v instanceof DateTimeImmutable ? $v->format(DATE_ATOM) : $v), $named)];

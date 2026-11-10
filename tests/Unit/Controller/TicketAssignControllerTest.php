@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Controller\TicketAssignController;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
@@ -98,10 +99,11 @@ class TicketAssignControllerTest extends TestCase {
 			$this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
 				&& $object['ticketType'] === 'complaint'
 				&& $object['title'] === 'Late delivery'),
-			$this->anything(),
-			'20',
-			'40',
-			't-1',
+			$this->callback(
+				static fn (ObjectSaveOptions $options): bool => $options->target->register === '20'
+					&& $options->target->schema === '40'
+					&& $options->uuid === 't-1'
+			),
 		)->willReturn($this->ticket());
 
 		$response = $controller->assignToMe(id: 't-1');
@@ -170,10 +172,11 @@ class TicketAssignControllerTest extends TestCase {
 			$this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
 				&& $object['title'] === 'Waiting'
 				&& isset($object['@self']) === false),
-			$this->anything(),
-			'20',
-			'40',
-			't-3',
+			$this->callback(
+				static fn (ObjectSaveOptions $options): bool => $options->target->register === '20'
+					&& $options->target->schema === '40'
+					&& $options->uuid === 't-3'
+			),
 		)->willReturn($this->ticket());
 
 		$response = $controller->assignOldest();

@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Labels;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
 use OCA\Pipelinq\Service\Labels\LabelRenameException;
 use OCA\Pipelinq\Service\Labels\LabelRenameService;
@@ -136,6 +137,12 @@ class LabelRenameServiceTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function saveObject(array $object, mixed ...$args): array {
+				if (($args['options'] ?? null) instanceof ObjectSaveOptions) {
+					$options = $args['options'];
+					unset($args['options']);
+					$args = ['register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $options->uuid] + $args;
+				}
+
 				return $this->test->storeSave(schema: (string)$args['schema'], id: (string)$args['uuid'], payload: $object, rbac: (bool)($args['_rbac'] ?? true));
 			}
 		};

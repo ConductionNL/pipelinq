@@ -512,15 +512,11 @@ class BackfillLeadRelationsTest extends TestCase {
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
-				$extend = ($options->extend ?? []);
-				$register = $options->target->register;
-				$schema = $options->target->schema;
-				$uuid = $options->uuid;
-				if ($uuid === 'l1') {
+				if ($options->uuid === 'l1') {
 					throw new RuntimeException('The required property (title) is missing');
 				}
 
-				return parent::saveObject($object, $extend, $register, $schema, $uuid);
+				return parent::saveObject($object, $options);
 			}//end saveObject()
 		};
 		$objects->store['lead-schema']['l1'] = ['id' => 'l1'];

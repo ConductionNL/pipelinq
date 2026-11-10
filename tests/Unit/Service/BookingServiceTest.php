@@ -32,6 +32,7 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
@@ -199,10 +200,9 @@ class BookingServiceTest extends TestCase {
 		$object->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (
 				array|object $bookingObject,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$captured): ObjectEntityInterface {
 				$captured = $bookingObject;
 				return self::entity(['@self' => ['id' => 'b-new']]);
@@ -254,10 +254,9 @@ class BookingServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $bookingObject,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$captured): ObjectEntityInterface {
 				$captured = $bookingObject;
 				return self::entity(['@self' => ['id' => 'b-pending']]);
@@ -326,11 +325,11 @@ class BookingServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$saved): ObjectEntityInterface {
+				$uuid = $options->uuid;
 				// First call = new booking (uuid null); second = update of original.
 				if ($uuid === null) {
 					$saved['new'] = $payload;
@@ -413,10 +412,9 @@ class BookingServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$saved): ObjectEntityInterface {
 				$saved = $payload;
 				return self::entity(['@self' => ['id' => 'b-free']]);
@@ -602,10 +600,9 @@ class BookingServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$saved): ObjectEntityInterface {
 				$saved = $payload;
 				return self::entity(['@self' => ['id' => 'b-staff']]);
@@ -698,11 +695,12 @@ class BookingServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$saves): ObjectEntityInterface {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saves[] = ['payload' => $payload, 'schema' => $schema, 'uuid' => $uuid];
 				return self::entity(['@self' => ['id' => ($uuid ?? 'new')]]);
 			}
@@ -849,10 +847,9 @@ class BookingServiceTest extends TestCase {
 		$object->method('saveObject')->willReturnCallback(
 			function (
 				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 'b-pending']]);

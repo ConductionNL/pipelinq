@@ -36,6 +36,7 @@ use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCA\Pipelinq\Service\HaalCentraalClient;
 use OCA\Pipelinq\Service\OptOutService;
+use OCA\Pipelinq\Tests\Unit\Support\SaveCallShape;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -427,7 +428,8 @@ class BsnAuditTraceTest extends TestCase {
 	private function auditStore(string $save): ObjectServiceInterface {
 		$store = $this->createMock(ObjectServiceInterface::class);
 		$store->method('saveObject')->willReturnCallback(function (...$args) use ($save): ObjectEntityInterface {
-			$this->calls[] = ['saveObject' => ['object' => $args[0], 'extend' => $args[1], 'register' => $args[2], 'schema' => $args[3]]];
+			$flat = SaveCallShape::flat(args: $args);
+			$this->calls[] = ['saveObject' => ['object' => $flat[0], 'extend' => $flat[1], 'register' => $flat[2], 'schema' => $flat[3]]];
 			if ($save === 'throw') {
 				throw new RuntimeException('store down');
 			}

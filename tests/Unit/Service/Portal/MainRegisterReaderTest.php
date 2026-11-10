@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -45,10 +46,11 @@ class MainRegisterReaderTest extends TestCase {
 			->method('saveObject')
 			->with(
 				$this->equalTo(['title' => 'Vraag']),
-				$this->anything(),
-				$this->equalTo('7'),
-				$this->equalTo('42'),
-				$this->isNull(),
+				$this->callback(
+					static fn (ObjectSaveOptions $options): bool => $options->target->register === '7'
+						&& $options->target->schema === '42'
+						&& $options->uuid === null
+				),
 				$this->isFalse(),
 				$this->isFalse(),
 			)

@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Tests\Unit\Repair;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar;
 use OCP\IAppConfig;
@@ -137,7 +138,8 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 		$store2 = &$this->store;
 		$seq = 0;
 		$this->objectService->method('saveObject')->willReturnCallback(
-			static function (array $data, array $extend, $register, $schema, $uuid) use (&$savedCases, &$markedSources, &$store2, &$seq): object {
+			static function (array $data, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true) use (&$savedCases, &$markedSources, &$store2, &$seq): object {
+				$schema = $options->target->schema;
 				if ((string)$schema === 'dataSubjectRequest') {
 					$seq++;
 					$data['id'] = 'dsar-' . $seq;

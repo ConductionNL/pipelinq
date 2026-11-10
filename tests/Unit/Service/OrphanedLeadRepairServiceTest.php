@@ -26,6 +26,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\OrphanedLeadPlacer;
 use OCA\Pipelinq\Service\OrphanedLeadRepairService;
 use OCA\Pipelinq\Service\SystemServiceAccount;
+use OCA\Pipelinq\Tests\Unit\Support\SaveCallShape;
 use OCP\IAppConfig;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -79,7 +80,7 @@ class OrphanedLeadRepairServiceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			static function (...$args) use (&$writes, &$active, &$actor): ObjectEntity {
-				$writes[] = $args;
+				$writes[] = SaveCallShape::flat(args: $args);
 				$actor ??= $active;
 				return new ObjectEntity();
 			}

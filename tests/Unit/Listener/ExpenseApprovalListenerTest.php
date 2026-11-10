@@ -163,11 +163,7 @@ class ReDispatchingApFakeObjectService extends ApFakeObjectService {
 	 * @return array<string, mixed>
 	 */
 	public function saveObject($object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
-		$extend = ($options->extend ?? []);
-		$register = (string)($options->target->register ?? '');
-		$schema = (string)($options->target->schema ?? '');
-		$uuid = $options->uuid;
-		$saved = parent::saveObject($object, $extend, $register, $schema, $uuid);
+		$saved = parent::saveObject($object, $options);
 
 		if ($this->listener === null || $this->entityFactory === null) {
 			return $saved;

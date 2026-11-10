@@ -1201,10 +1201,7 @@ class BlastServiceTest extends TestCase {
 			}//end count()
 
 			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
-				$register = $options->target->register;
-				$schema = $options->target->schema;
-				$uuid = $options->uuid;
-				return $this->delegate->saveObject($object, $register, $schema, $uuid);
+				return $this->delegate->saveObject($object, $options);
 			}//end saveObject()
 		};
 
