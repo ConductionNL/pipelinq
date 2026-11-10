@@ -266,4 +266,46 @@ class CampaignReportServiceTest extends TestCase {
 		$asked = $this->build()->forCampaign(campaignId: 'camp-1', from: '2026-10-10', to: '2026-10-20');
 		$this->assertSame(['from' => '2026-10-10', 'to' => '2026-10-20'], $asked['window']);
 	}//end testTheWindowDefaultsToTheCampaignDatesAndStopsAtToday()
+
+	/**
+	 * Every channel row is exact: keys, order, reach, counts and distinct leads.
+	 *
+	 * @return void
+	 */
+	public function testChannelRowsAreExact(): void {
+		$row = static fn (string $channel, ?int $reach, array $counts, int $leads): array => array_merge(
+			['channel' => $channel, 'reach' => $reach, 'sent' => 0, 'opened' => 0, 'click' => 0, 'visit' => 0, 'submit' => 0, 'reply' => 0],
+			$counts,
+			['leads' => $leads]
+		);
+		$rows = $this->build()->channels(
+			[
+				['channel' => 'email', 'totals' => ['delivered' => 90, 'sent' => 100, 'opened' => 40]],
+				['totals' => ['delivered' => '10', 'sent' => 12]],
+				['channel' => 'sms'],
+				['channel' => 'whatsapp', 'totals' => 'none'],
+			],
+			[
+				['channel' => 'email', 'kind' => 'click', 'leadId' => ' l-1 '],
+				['channel' => 'email', 'kind' => 'click', 'leadId' => 'l-1'],
+				['channel' => 'email', 'kind' => 'reply', 'leadId' => 'l-2'],
+				['channel' => 'email', 'kind' => 'bounce', 'leadId' => ''],
+				['kind' => 'visit'],
+				['channel' => 'social', 'kind' => 'unknown', 'leadId' => 'l-3'],
+				['channel' => 'social', 'kind' => 'submit', 'leadId' => 'l-3'],
+				['channel' => 'sms', 'kind' => 'channel'],
+			]
+		);
+		$this->assertSame(
+			[
+				$row('direct', null, ['visit' => 1], 0),
+				$row('email', 100, ['sent' => 112, 'opened' => 40, 'click' => 2, 'reply' => 1], 2),
+				// A kind that names a row key bumps that key: today the channel name itself.
+				array_replace($row('sms', 0, [], 0), ['channel' => 'smt']),
+				$row('social', null, ['submit' => 1], 1),
+				$row('whatsapp', 0, [], 0),
+			],
+			$rows
+		);
+	}//end testChannelRowsAreExact()
 }//end class
