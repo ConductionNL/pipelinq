@@ -63,6 +63,7 @@ nobody has surveyed gets a sentence saying so.
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { fetchClientSatisfaction } from '../../services/satisfactionApi.js'
+import { sectionValues } from '../../utils/sectionContext.js'
 
 export default {
 	name: 'ClientSatisfactionSection',
@@ -98,9 +99,7 @@ export default {
 			if (this.clientId) {
 				return this.clientId
 			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+			const bag = sectionValues(this.cnSectionContext)
 			return (bag && bag.objectId) || ''
 		},
 

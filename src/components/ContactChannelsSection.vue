@@ -295,6 +295,7 @@ import ContactSocialProfileModal from '../modals/ContactSocialProfileModal.vue'
 import WriteEmailModal from '../modals/WriteEmailModal.vue'
 import { writeBack } from '../services/contactSyncApi.js'
 import { useObjectStore } from '../store/modules/object.js'
+import { sectionValues } from '../utils/sectionContext.js'
 
 const KIND_LABELS = {
 	work: () => t('pipelinq', 'Work'),
@@ -315,6 +316,18 @@ const NETWORK_LABELS = {
 	tiktok: 'TikTok',
 	youtube: 'YouTube',
 	other: () => t('pipelinq', 'Other'),
+}
+
+/**
+ * The value of the primary entry, else the first, or ''.
+ *
+ * @param {Array<{value: string, primary?: boolean}>} entries The channel entries.
+ * @return {string} The value.
+ * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+ */
+function primaryValue(entries) {
+	const primary = entries.find((e) => e.primary) || entries[0]
+	return primary ? primary.value : ''
 }
 
 export default {
@@ -397,9 +410,7 @@ export default {
 			if (this.entityId) {
 				return this.entityId
 			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+			const bag = sectionValues(this.cnSectionContext)
 			return (bag && bag.objectId) || ''
 		},
 
@@ -474,27 +485,11 @@ export default {
 			if (!this.entity) {
 				return ''
 			}
-			const parts = []
-			if (this.entity.preferredChannel) {
-				parts.push(
-					t('pipelinq', 'Prefers {channel}', {
-						channel: this.preferredChannelLabel(
-							this.entity.preferredChannel,
-						),
-					}),
-				)
-			}
-			if (this.entity.timezone) {
-				parts.push(this.entity.timezone)
-			}
-			// correspondenceLanguage replaced `language` in the forms
-			// (pipelinq-forms-review); an older record may only have the latter.
-			const language =
-				this.entity.correspondenceLanguage || this.entity.language
-			if (language) {
-				parts.push(language.toUpperCase())
-			}
-			return parts.join(' · ')
+			return [
+				this.preferredChannelPart(),
+				this.entity.timezone,
+				this.languagePart(),
+			].filter(Boolean).join(' · ')
 		},
 	},
 
@@ -552,6 +547,45 @@ export default {
 		 * @return {string} The localised or proper-noun label.
 		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
 		 */
+		/**
+		 * @return {string} "Prefers …" for the preferred channel, or ''.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 */
+		preferredChannelPart() {
+			if (!this.entity.preferredChannel) {
+				return ''
+			}
+			return t('pipelinq', 'Prefers {channel}', {
+				channel: this.preferredChannelLabel(this.entity.preferredChannel),
+			})
+		},
+
+		/**
+		 * correspondenceLanguage replaced `language` in the forms
+		 * (pipelinq-forms-review); an older record may only have the latter.
+		 *
+		 * @return {string} The language code in capitals, or ''.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 */
+		languagePart() {
+			const language =
+				this.entity.correspondenceLanguage || this.entity.language
+			return language ? language.toUpperCase() : ''
+		},
+
+		/**
+		 * Say the channels were not saved, with the store's reason when it has one.
+		 *
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 */
+		reportSaveFailure() {
+			const error = this.objectStore.getError?.(this.entityType)
+			showError(
+				error?.message
+					|| t('pipelinq', 'Failed to save contact channels.'),
+			)
+		},
+
 		preferredChannelLabel(channel) {
 			if (channel === 'email') {
 				return t('pipelinq', 'Email')
@@ -685,23 +719,15 @@ export default {
 			const merged = { ...this.entity, ...patch }
 
 			if ('emails' in patch) {
-				const primary =
-					merged.emails.find((e) => e.primary) || merged.emails[0]
-				merged.email = primary ? primary.value : ''
+				merged.email = primaryValue(merged.emails)
 			}
 			if ('phones' in patch) {
-				const primary =
-					merged.phones.find((e) => e.primary) || merged.phones[0]
-				merged.phone = primary ? primary.value : ''
+				merged.phone = primaryValue(merged.phones)
 			}
 
 			const saved = await this.objectStore.saveObject(this.entityType, merged)
 			if (!saved) {
-				const error = this.objectStore.getError?.(this.entityType)
-				showError(
-					error?.message
-						|| t('pipelinq', 'Failed to save contact channels.'),
-				)
+				this.reportSaveFailure()
 				return
 			}
 
