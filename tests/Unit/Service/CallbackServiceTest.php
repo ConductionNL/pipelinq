@@ -355,4 +355,35 @@ class CallbackServiceTest extends TestCase {
 		$this->assertNull($result['assigneeUserId']);
 		$this->assertSame('new-group', $result['assigneeGroupId']);
 	}//end testApplyReassignmentToGroup()
+
+	/**
+	 * Golden: every claim refusal and the eligible answer, and the group asked about.
+	 *
+	 * @return void
+	 */
+	public function testClaimAnswersExactly(): void {
+		$user = $this->createMock(\OCP\IUser::class);
+		$user->method('getUID')->willReturn('agent-1');
+		$asked = [];
+		$build = function (?\OCP\IUser $sessionUser) use (&$asked): CallbackService {
+			$session = $this->createMock(\OCP\IUserSession::class);
+			$session->method('getUser')->willReturn($sessionUser);
+			$groups = $this->createMock(\OCP\IGroupManager::class);
+			$groups->method('isInGroup')->willReturnCallback(
+				static function (string $uid, string $group) use (&$asked): bool {
+					$asked[] = [$uid, $group];
+					return $group === 'kcc';
+				}
+			);
+			return new CallbackService($groups, $session, $this->createMock(\Psr\Log\LoggerInterface::class));
+		};
+
+		$this->assertSame(['eligible' => false, 'reason' => 'Task is not assigned to a group'], $build($user)->validateClaim([]));
+		$this->assertSame(['eligible' => false, 'reason' => 'Task is not assigned to a group'], $build($user)->validateClaim(['assigneeGroupId' => '']));
+		$this->assertSame(['eligible' => false, 'reason' => 'Task is already claimed by a user'], $build($user)->validateClaim(['assigneeGroupId' => 'kcc', 'assigneeUserId' => 'other']));
+		$this->assertSame(['eligible' => false, 'reason' => 'No authenticated user'], $build(null)->validateClaim(['assigneeGroupId' => 'kcc']));
+		$this->assertSame(['eligible' => false, 'reason' => 'User is not a member of the assigned group'], $build($user)->validateClaim(['assigneeGroupId' => 'sales', 'assigneeUserId' => '']));
+		$this->assertSame(['eligible' => true, 'reason' => ''], $build($user)->validateClaim(['assigneeGroupId' => 'kcc']));
+		$this->assertSame([['agent-1', 'sales'], ['agent-1', 'kcc']], $asked);
+	}//end testClaimAnswersExactly()
 }//end class
