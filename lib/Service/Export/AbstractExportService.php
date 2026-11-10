@@ -98,6 +98,8 @@ abstract class AbstractExportService {
 	 * @param string $id The object UUID.
 	 *
 	 * @return array<string, mixed>|null The object as an array, or null when absent.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-001
 	 */
 	protected function findObjectById(string $schemaKey, string $id): ?array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
