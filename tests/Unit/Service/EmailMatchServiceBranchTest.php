@@ -26,6 +26,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use ArrayObject;
 use OCA\Pipelinq\Service\EmailMatchService;
+use OCA\Pipelinq\Service\MailMessageKey;
+use OCA\Pipelinq\Service\MailMessageReader;
 use OCP\DB\IResult;
 use OCP\DB\QueryBuilder\IExpressionBuilder;
 use OCP\DB\QueryBuilder\IQueryBuilder;
@@ -63,12 +65,12 @@ class EmailMatchServiceBranchTest extends TestCase {
 	 */
 	public function testMissingMessageLinksNothing(): void {
 		$service = $this->service(db: $this->db(results: [[]]));
-		$this->assertSame(0, $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice'));
+		$this->assertSame(0, $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice'));
 		$this->assertSame(['query'], $this->log->getArrayCopy());
 
 		$this->log = new ArrayObject();
 		$service = $this->service(db: $this->db(results: [], throws: true));
-		$this->assertSame(0, $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice'));
+		$this->assertSame(0, $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice'));
 		$this->assertSame([], $this->log->getArrayCopy());
 	}//end testMissingMessageLinksNothing()
 
@@ -79,7 +81,7 @@ class EmailMatchServiceBranchTest extends TestCase {
 	 */
 	public function testMessageWithoutAddressesLinksNothing(): void {
 		$service = $this->service(db: $this->db(results: [[$this->row()], [['email' => ' ', 'type' => 1]]]));
-		$this->assertSame(0, $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice'));
+		$this->assertSame(0, $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice'));
 		$this->assertSame(['query', 'query'], $this->log->getArrayCopy());
 	}//end testMessageWithoutAddressesLinksNothing()
 
@@ -102,7 +104,7 @@ class EmailMatchServiceBranchTest extends TestCase {
 			settings: ['excludedAddresses' => ['me@corp.nl']],
 		);
 
-		$this->assertSame(2, $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice'));
+		$this->assertSame(2, $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice'));
 		$this->assertSame(
 			[
 				'query',
@@ -147,13 +149,13 @@ class EmailMatchServiceBranchTest extends TestCase {
 	public function testNoLeafOrNoRegisterLinksNothing(): void {
 		$recipients = [['email' => 'sales@acme.nl', 'type' => 0]];
 		$service = $this->service(db: $this->db(results: [[$this->row()], $recipients]), leaf: null);
-		$this->assertSame(0, $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice'));
+		$this->assertSame(0, $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice'));
 		$this->assertNotContains('link:c-sales:7', $this->log->getArrayCopy());
 
 		$this->log = new ArrayObject();
 		$config = ['register' => '', 'contact_schema' => '7', 'client_schema' => '8'];
 		$service = $this->service(db: $this->db(results: [[$this->row()], $recipients]), config: $config);
-		$this->assertSame(0, $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice'));
+		$this->assertSame(0, $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice'));
 		$this->assertSame([], array_values(array_filter($this->log->getArrayCopy(), static fn (string $entry): bool => str_starts_with($entry, 'link'))));
 	}//end testNoLeafOrNoRegisterLinksNothing()
 
@@ -184,14 +186,14 @@ class EmailMatchServiceBranchTest extends TestCase {
 			}
 		};
 		$service = $this->service(db: $this->db(results: [[$this->row()], $recipients]), leaf: $leaf);
-		$this->assertSame(1, $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice'));
+		$this->assertSame(1, $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice'));
 		$links = array_values(array_filter($this->log->getArrayCopy(), static fn (string $entry): bool => str_starts_with($entry, 'link')));
 		$this->assertSame(['linked:c-sales:100', 'link:c-sales', 'linked:k-acme:100', 'link:k-acme'], $links);
 
 		$this->log = new ArrayObject();
 		$config = ['register' => '5', 'contact_schema' => '7', 'client_schema' => ''];
 		$service = $this->service(db: $this->db(results: [[$this->row()], $recipients]), config: $config);
-		$this->assertSame(1, $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice'));
+		$this->assertSame(1, $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice'));
 		$this->assertSame(['link:c-sales:7'], array_values(array_filter($this->log->getArrayCopy(), static fn (string $entry): bool => str_starts_with($entry, 'link'))));
 	}//end testExistingLinksAreNotCounted()
 
@@ -251,26 +253,23 @@ class EmailMatchServiceBranchTest extends TestCase {
 	 * @return void
 	 */
 	public function testMessageMetadataShape(): void {
-		$method = new \ReflectionMethod(EmailMatchService::class, 'fetchMailMessageMeta');
-		$method->setAccessible(true);
-
-		$recipients = [
+				$recipients = [
 			['email' => ' A@x.nl ', 'type' => 1],
 			['email' => 'b@x.nl', 'type' => 0],
 			['email' => 'a@x.nl', 'type' => 2],
 			['email' => '', 'type' => 1],
 			['email' => 'c@x.nl'],
 		];
-		$service = $this->service(db: $this->db(results: [[$this->row()], $recipients]));
+		$reader = new MailMessageReader($this->db(results: [[$this->row()], $recipients]), $this->createMock(LoggerInterface::class));
 		$this->assertSame(
 			['uid' => 'imap-9', 'subject' => 'Offer', 'sender' => 'b@x.nl', 'recipients' => ['a@x.nl', 'c@x.nl'], 'date' => date('c', 1767225600)],
-			$method->invoke($service, 44, 3)
+			$reader->fetchMeta(new MailMessageKey(mailAccountId: 3, mailMessageId: 44))
 		);
 
-		$service = $this->service(db: $this->db(results: [[['id' => 44]]], throwsAfter: 1));
+		$reader = new MailMessageReader($this->db(results: [[['id' => 44]]], throwsAfter: 1), $this->createMock(LoggerInterface::class));
 		$this->assertSame(
 			['uid' => '', 'subject' => null, 'sender' => null, 'recipients' => [], 'date' => null],
-			$method->invoke($service, 44, 3)
+			$reader->fetchMeta(new MailMessageKey(mailAccountId: 3, mailMessageId: 44))
 		);
 	}//end testMessageMetadataShape()
 
