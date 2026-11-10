@@ -335,6 +335,22 @@ import {
 
 const DAY = 24 * 60 * 60 * 1000
 
+/**
+ * The sections the keyword proposals answer fills, in order, each with what
+ * it shows when the answer has none.
+ */
+const PROPOSAL_SECTIONS = [
+	['buckets', () => []],
+	['strikingDistance', () => []],
+	['cannibalisation', () => []],
+	['gaps', () => []],
+	['crawl', () => ({ crawled: false, reason: '' })],
+	['confirmedTerms', () => []],
+	['minImpressions', () => 0],
+	['from', () => ''],
+	['to', () => ''],
+]
+
 export default {
 	name: 'KeywordIntelligence',
 	components: {
@@ -508,7 +524,7 @@ export default {
 		async fetchProposals() {
 			this.loading = true
 			this.error = ''
-			const days = this.days || this.window?.days || 28
+			const days = this.windowDays()
 			const today = new Date()
 			const start = new Date(today.getTime() - days * DAY)
 			try {
@@ -518,15 +534,9 @@ export default {
 				const { data } = await axios.get(url, {
 					params: { from: this.isoDay(start), to: this.isoDay(today) },
 				})
-				this.buckets = data?.buckets || []
-				this.strikingDistance = data?.strikingDistance || []
-				this.cannibalisation = data?.cannibalisation || []
-				this.gaps = data?.gaps || []
-				this.crawl = data?.crawl || { crawled: false, reason: '' }
-				this.confirmedTerms = data?.confirmedTerms || []
-				this.minImpressions = data?.minImpressions || 0
-				this.from = data?.from || ''
-				this.to = data?.to || ''
+				for (const [key, empty] of PROPOSAL_SECTIONS) {
+					this[key] = data?.[key] || empty()
+				}
 			} catch (e) {
 				this.buckets = []
 				this.error =
@@ -535,6 +545,13 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * @return {number} The days the page looks back: the chosen window, else 28.
+		 */
+		windowDays() {
+			return this.days || this.window?.days || 28
 		},
 
 		/**
