@@ -149,6 +149,17 @@ class SocialPostService {
 	];
 
 	/**
+	 * Where a review decision moves the post: an approval schedules it, a
+	 * rejection sends it back to the marketer.
+	 *
+	 * @var array<string, string>
+	 */
+	private const DECISION_STATUS = [
+		'approved' => self::STATUS_SCHEDULED,
+		'rejected' => self::STATUS_DRAFT,
+	];
+
+	/**
 	 * Fields a client may set. `status`, `approvals`, `agentAuthored`,
 	 * `agentAuthoredBy`, `createdBy`, `publishedAt` and `failureReason` are
 	 * written by this service and are ignored wherever a client sends them.
@@ -444,11 +455,8 @@ class SocialPostService {
 	 */
 	public function approve(string $postId, string $uid, string $note = ''): array {
 		return $this->decide(
-			postId: $postId,
-			uid: $uid,
-			decision: 'approved',
-			note: $note,
-			nextStatus: self::STATUS_SCHEDULED,
+			review: new PostReview(postId: $postId, uid: $uid),
+			verdict: new ReviewVerdict(decision: 'approved', note: $note),
 		);
 	}//end approve()
 
@@ -465,11 +473,8 @@ class SocialPostService {
 	 */
 	public function reject(string $postId, string $uid, string $note = ''): array {
 		return $this->decide(
-			postId: $postId,
-			uid: $uid,
-			decision: 'rejected',
-			note: $note,
-			nextStatus: self::STATUS_DRAFT,
+			review: new PostReview(postId: $postId, uid: $uid),
+			verdict: new ReviewVerdict(decision: 'rejected', note: $note),
 		);
 	}//end reject()
 
@@ -590,66 +595,95 @@ class SocialPostService {
 	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	private function publishToAccount(array $post, string $accountId): ?array {
-		$account = $this->accounts->getAccount(accountId: $accountId);
-		$network = '';
-		if ($account !== null) {
-			$network = (string)($account['network'] ?? '');
-		}
-
+		$account = new PublishingAccount(id: $accountId, row: $this->accounts->getAccount(accountId: $accountId));
 		$publication = $this->publications->open(
 			postId: $this->store->idOf(payload: $post),
 			accountId: $accountId,
-			network: $network,
+			network: $account->network(),
 		);
 
 		if ($publication === null) {
 			return null;
 		}
 
-		if ($account === null) {
-			return $this->publications->record(
-				publication: $publication,
-				outcome: SocialPublishOutcome::refused(
-					code: SocialGatewayResult::NOT_CONFIGURED,
-					reason: 'This post names an account that no longer exists.',
-				),
-			);
+		$run = new AccountPublishRun(post: $post, account: $account);
+		$run->publication = $publication;
+		if ($account->row === null) {
+			return $this->recordNotConfigured(run: $run, reason: 'This post names an account that no longer exists.');
 		}
 
-		$request = $this->requestFor(post: $post, account: $account);
+		return $this->publishOpened(run: $run);
+	}//end publishToAccount()
+
+	/**
+	 * Publish to an existing account whose publication row is open: hand a
+	 * share-mode account to advocacy, otherwise go through its network's adapter.
+	 *
+	 * @param AccountPublishRun $run The post, account and publication.
+	 *
+	 * @return array<string, mixed>|null The publication row, or null when it could not be written.
+	 */
+	private function publishOpened(AccountPublishRun $run): ?array {
+		$account = $run->account;
+		$request = $this->requestFor(post: $run->post, account: (array)$account->row);
 
 		// The accounts no application may post to never reach an adapter.
-		if ((string)($account['publishMode'] ?? 'api') === 'share') {
+		if ($account->publishMode() === 'share') {
 			return $this->advocacy->requestShare(
-				publication: $publication,
-				account: $account,
-				post: $post,
+				publication: $run->publication,
+				account: (array)$account->row,
+				post: $run->post,
 				request: $request,
 			);
 		}
 
-		$adapter = $this->registry->forNetwork(network: $network);
+		$adapter = $this->registry->forNetwork(network: $account->network());
 		if ($adapter === null) {
-			return $this->publications->record(
-				publication: $publication,
-				outcome: SocialPublishOutcome::refused(
-					code: SocialGatewayResult::NOT_CONFIGURED,
-					reason: 'Pipelinq cannot publish to ' . $network . ' yet.',
-				),
-			);
+			return $this->recordNotConfigured(run: $run, reason: 'Pipelinq cannot publish to ' . $account->network() . ' yet.');
 		}
 
-		$stop = $this->budgetRefusal(adapter: $adapter);
+		return $this->publishThrough(run: $run, attempt: new AdapterAttempt(adapter: $adapter, request: $request));
+	}//end publishOpened()
+
+	/**
+	 * Publish through an adapter unless the spend budget stops it, record the
+	 * outcome and settle the budget and the account's grant.
+	 *
+	 * @param AccountPublishRun $run     The post, account and publication.
+	 * @param AdapterAttempt    $attempt The adapter and the resolved request.
+	 *
+	 * @return array<string, mixed>|null The publication row, or null when it could not be written.
+	 */
+	private function publishThrough(AccountPublishRun $run, AdapterAttempt $attempt): ?array {
+		$stop = $this->budgetRefusal(adapter: $attempt->adapter);
 		if ($stop !== null) {
-			return $this->publications->record(publication: $publication, outcome: $stop);
+			return $this->publications->record(publication: $run->publication, outcome: $stop);
 		}
 
-		$outcome = $adapter->publish(request: $request);
-		$recorded = $this->publications->record(publication: $publication, outcome: $outcome);
-		$this->afterAttempt(accountId: $accountId, adapter: $adapter, outcome: $outcome);
+		$outcome = $attempt->adapter->publish(request: $attempt->request);
+		$recorded = $this->publications->record(publication: $run->publication, outcome: $outcome);
+		$this->afterAttempt(accountId: $run->account->id, adapter: $attempt->adapter, outcome: $outcome);
 
 		return $recorded;
-	}//end publishToAccount()
+	}//end publishThrough()
+
+	/**
+	 * Record a typed not-configured refusal on the run's publication.
+	 *
+	 * @param AccountPublishRun $run    The post, account and publication.
+	 * @param string            $reason Why nothing was sent.
+	 *
+	 * @return array<string, mixed>|null The publication row, or null when it could not be written.
+	 */
+	private function recordNotConfigured(AccountPublishRun $run, string $reason): ?array {
+		return $this->publications->record(
+			publication: $run->publication,
+			outcome: SocialPublishOutcome::refused(
+				code: SocialGatewayResult::NOT_CONFIGURED,
+				reason: $reason,
+			),
+		);
+	}//end recordNotConfigured()
 
 	/**
 	 * Build the resolved request one account gets, with the campaign link
@@ -841,16 +875,13 @@ class SocialPostService {
 	/**
 	 * Record one human decision and move the post.
 	 *
-	 * @param string $postId The post.
-	 * @param string $uid The person deciding.
-	 * @param string $decision `approved` or `rejected`.
-	 * @param string $note Their words.
-	 * @param string $nextStatus Where the post goes.
+	 * @param PostReview    $review  The post and the person deciding.
+	 * @param ReviewVerdict $verdict `approved` or `rejected`, with their words.
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 */
-	private function decide(string $postId, string $uid, string $decision, string $note, string $nextStatus): array {
-		$post = $this->getPost(postId: $postId);
+	private function decide(PostReview $review, ReviewVerdict $verdict): array {
+		$post = $this->getPost(postId: $review->postId);
 		if ($post === null) {
 			return ['error' => 'That post does not exist.'];
 		}
@@ -859,31 +890,56 @@ class SocialPostService {
 			return ['error' => 'This post is not waiting for approval.'];
 		}
 
-		$approvals = ($post['approvals'] ?? []);
-		if (is_array($approvals) === false) {
-			$approvals = [];
-		}
+		$post['approvals'] = self::approvalsWith(post: $post, approval: self::approvalOf(review: $review, verdict: $verdict));
+		$post['status'] = self::DECISION_STATUS[$verdict->decision];
 
-		// The approver is the session, always. A body naming somebody else is
-		// ignored rather than refused, because refusing would tell a caller
-		// which field it guessed right.
-		$approvals[] = [
-			'userId' => $uid,
-			'decision' => $decision,
-			'decidedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-			'note' => $note,
-		];
-
-		$post['approvals'] = $approvals;
-		$post['status'] = $nextStatus;
-
-		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $postId);
+		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $review->postId);
 		if ($saved === null) {
 			return ['error' => 'The decision could not be saved.'];
 		}
 
 		return ['post' => $saved];
 	}//end decide()
+
+	/**
+	 * The approval entry for one decision.
+	 *
+	 * The approver is the session, always. A body naming somebody else is
+	 * ignored rather than refused, because refusing would tell a caller
+	 * which field it guessed right.
+	 *
+	 * @param PostReview    $review  The post and the person deciding.
+	 * @param ReviewVerdict $verdict The decision and its note.
+	 *
+	 * @return array{userId: string, decision: string, decidedAt: string, note: string}
+	 */
+	private static function approvalOf(PostReview $review, ReviewVerdict $verdict): array {
+		return [
+			'userId' => $review->uid,
+			'decision' => $verdict->decision,
+			'decidedAt' => gmdate('Y-m-d\TH:i:s\Z'),
+			'note' => $verdict->note,
+		];
+	}//end approvalOf()
+
+	/**
+	 * The post's approvals with one more appended (a malformed list starts over).
+	 *
+	 * @param array<string, mixed>  $post     The post.
+	 * @param array<string, string> $approval The new approval entry.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private static function approvalsWith(array $post, array $approval): array {
+		$approvals = ($post['approvals'] ?? []);
+		if (is_array($approvals) === false) {
+			$approvals = [];
+		}
+
+		$approvals[] = $approval;
+
+		return $approvals;
+	}//end approvalsWith()
 
 	/**
 	 * The networks a post goes to, derived from the accounts it names.
