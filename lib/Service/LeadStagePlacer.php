@@ -91,12 +91,26 @@ final class LeadStagePlacer {
 	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
 	 */
 	public function firstOpenStage(array $pipeline): ?array {
-		$stages = array_values(array_filter(
+		$stages = array_filter(
 			(array)($pipeline['stages'] ?? []),
 			static fn ($stage): bool => is_array($stage) === true
 				&& trim((string)($stage['name'] ?? '')) !== ''
 				&& ($stage['isClosed'] ?? false) !== true
-		));
+		);
+		return $this->lowestStage(stages: $stages);
+	}//end firstOpenStage()
+
+	/**
+	 * The stage with the lowest order (a missing order sorts as 0 and reads as 1).
+	 *
+	 * @param array<array-key, array<string, mixed>> $stages Named stages.
+	 *
+	 * @return array{name: string, order: int}|null The stage, or null when there is none.
+	 *
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 */
+	public function lowestStage(array $stages): ?array {
+		$stages = array_values($stages);
 		if ($stages === []) {
 			return null;
 		}
@@ -110,7 +124,7 @@ final class LeadStagePlacer {
 			'name' => (string)$stages[0]['name'],
 			'order' => (int)($stages[0]['order'] ?? 1),
 		];
-	}//end firstOpenStage()
+	}//end lowestStage()
 
 	/**
 	 * The fields a NEW lead is missing to sit in a stage.
@@ -134,7 +148,7 @@ final class LeadStagePlacer {
 		}
 
 		if (isset($patch['stage']) === true || $this->isBlank(value: $lead['stageEnteredAt'] ?? null) === true) {
-			$patch['stageEnteredAt'] = $this->moment(iso: $now);
+			$patch['stageEnteredAt'] = $this->entryMoment(iso: $now);
 		}
 
 		return $patch;
@@ -162,7 +176,7 @@ final class LeadStagePlacer {
 		}
 
 		if (isset($patch['stage']) === true) {
-			$patch['stageEnteredAt'] = $this->moment(iso: $enteredAt);
+			$patch['stageEnteredAt'] = $this->entryMoment(iso: $enteredAt);
 		}
 
 		return $patch;
@@ -219,14 +233,16 @@ final class LeadStagePlacer {
 	 * @param string|null $iso The moment, or null for now.
 	 *
 	 * @return string The moment.
+	 *
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
 	 */
-	private function moment(?string $iso): string {
+	public function entryMoment(?string $iso): string {
 		if ($iso !== null && trim($iso) !== '') {
 			return $iso;
 		}
 
 		return (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-	}//end moment()
+	}//end entryMoment()
 
 	/**
 	 * The pipeline a lead belongs to: its own, or the default when it has none.
