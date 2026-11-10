@@ -77,12 +77,10 @@ if (interface_exists(IFlowNode::class) === false) {
 		/**
 		 * Do the work.
 		 *
-		 * @param array $items The input items.
-		 * @param array $config The step configuration.
-		 * @param array $context Run-level metadata.
+		 * @param FlowNodeCall $call The items, the step configuration and the run-level metadata.
 		 *
 		 * @return array The output items.
 		 */
-		public function execute(array $items, array $config, array $context): array;
+		public function execute(FlowNodeCall $call): array;
 	}//end interface
 }
