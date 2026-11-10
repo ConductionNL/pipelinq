@@ -78,12 +78,9 @@ class MailingListController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse($this->lists->listMailingLists(page: $page, limit: $limit));
+		return $this->crmUserGuard()->respond(
+			action: fn (string $uid): JSONResponse => new JSONResponse($this->lists->listMailingLists(page: $page, limit: $limit))
+		);
 	}//end index()
 
 	/**
@@ -97,20 +94,17 @@ class MailingListController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+			$list = $this->lists->getMailingListById(listId: $id);
+			if ($list === null) {
+				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+			}
 
-		$list = $this->lists->getMailingListById(listId: $id);
-		if ($list === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse([
-			'list' => $list,
-			'counts' => $this->queries->countsForList(listId: $id),
-		]);
+			return new JSONResponse([
+				'list' => $list,
+				'counts' => $this->queries->countsForList(listId: $id),
+			]);
+		});
 	}//end show()
 
 	/**
@@ -122,17 +116,14 @@ class MailingListController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function (string $uid): JSONResponse {
+			$result = $this->lists->createMailingList(payload: $this->collectBody(), createdByUid: $uid);
+			if (isset($result['error']) === true) {
+				return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
+			}
 
-		$result = $this->lists->createMailingList(payload: $this->collectBody(), createdByUid: $uid);
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse(['list' => ($result['list'] ?? null)], Http::STATUS_CREATED);
+			return new JSONResponse(['list' => ($result['list'] ?? null)], Http::STATUS_CREATED);
+		});
 	}//end create()
 
 	/**
@@ -146,21 +137,18 @@ class MailingListController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+			$result = $this->lists->updateMailingList(listId: $id, patch: $this->collectBody());
+			if (($result['error'] ?? '') === 'Not found') {
+				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+			}
 
-		$result = $this->lists->updateMailingList(listId: $id, patch: $this->collectBody());
-		if (($result['error'] ?? '') === 'Not found') {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
+			if (isset($result['error']) === true) {
+				return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
+			}
 
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse(['list' => ($result['list'] ?? null)]);
+			return new JSONResponse(['list' => ($result['list'] ?? null)]);
+		});
 	}//end update()
 
 	/**
@@ -176,48 +164,21 @@ class MailingListController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function subscriptions(string $id, int $page = 1, int $limit = 25): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		$envelope = $this->queries->listSubscriptionsForList(listId: $id, page: $page, limit: $limit);
-		$envelope['counts'] = $this->queries->countsForList(listId: $id);
-		return new JSONResponse($envelope);
+		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id, $page, $limit): JSONResponse {
+			$envelope = $this->queries->listSubscriptionsForList(listId: $id, page: $page, limit: $limit);
+			$envelope['counts'] = $this->queries->countsForList(listId: $id);
+			return new JSONResponse($envelope);
+		});
 	}//end subscriptions()
 
 	/**
-	 * Resolve the caller, refusing anyone who is not a CRM user.
+	 * The CRM-user gate over this request's session.
 	 *
-	 * Authentication is not authorization: a mailing list holds who asked
-	 * to hear from the tenant, so reading one is gated on the same policy
-	 * a segment is.
-	 *
-	 * @return string|null The uid, or null when the caller may not proceed.
+	 * @return CrmUserGuard The gate.
 	 */
-	private function requireCrmUser(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		$uid = $user->getUID();
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return null;
-		}
-
-		return $uid;
-	}//end requireCrmUser()
-
-	/**
-	 * The single refusal, so an unauthenticated and an unprivileged caller
-	 * cannot tell each other apart.
-	 *
-	 * @return JSONResponse A 403.
-	 */
-	private function refuse(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end refuse()
+	private function crmUserGuard(): CrmUserGuard {
+		return new CrmUserGuard(userSession: $this->userSession, policy: $this->policy);
+	}//end crmUserGuard()
 
 	/**
 	 * Collect a sanitised list body. Unknown keys are dropped, not merged.
