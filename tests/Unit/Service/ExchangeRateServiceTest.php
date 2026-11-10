@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
+use OCA\Pipelinq\Service\EcbRateReader;
 use OCA\Pipelinq\Service\ExchangeRateService;
 use OCA\Pipelinq\Service\ShillinqFxRateReader;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -309,22 +310,76 @@ class ExchangeRateServiceTest extends TestCase {
 	}//end testDescribeRatesListsKnownCurrencies()
 
 	/**
-	 * A service over a store, an optional shillinq answer and a clock on 30 Oct 2026.
+	 * Without shillinq the ECB rate integriq keeps beats the hand-kept table.
+	 *
+	 * @return void
+	 */
+	public function testEcbRateUsedWithoutShillinq(): void {
+		$svc = $this->resolving(
+			values: ['forecast_exchange_rates' => '{"USD":0.9}'],
+			fleet: null,
+			ecb: ['rate' => 0.9132, 'date' => '2026-10-30']
+		);
+
+		$converted = $svc->convert(10000.0, 'USD');
+		$this->assertSame(9132.0, $converted['amount']);
+		$this->assertSame('ecb', $converted['source']);
+		$this->assertSame('ecb', $converted['origin']);
+		$this->assertSame('2026-10-30', $converted['rateDate']);
+	}//end testEcbRateUsedWithoutShillinq()
+
+	/**
+	 * Shillinq's rate is asked before the ECB rate.
+	 *
+	 * @return void
+	 */
+	public function testShillinqRateBeatsTheEcbRate(): void {
+		$svc = $this->resolving(
+			values: [],
+			fleet: ['rate' => 0.95, 'date' => '2026-10-30', 'origin' => 'manual'],
+			ecb: ['rate' => 0.9132, 'date' => '2026-10-30']
+		);
+
+		$this->assertSame('shillinq', $svc->resolve('USD')['source']);
+	}//end testShillinqRateBeatsTheEcbRate()
+
+	/**
+	 * The ECB reader is asked for the pair to the reporting currency on today.
+	 *
+	 * @return void
+	 */
+	public function testEcbAskedForThePairOnToday(): void {
+		$appConfig = $this->storeConfig(['currency' => 'GBP']);
+		$appConfig->method('getValueInt')->willReturn(7);
+		$ecb = $this->createMock(EcbRateReader::class);
+		$ecb->expects($this->once())->method('rateFor')->with('USD', 'GBP', '2026-10-30')
+			->willReturn(['rate' => 0.79, 'date' => '2026-10-29']);
+		$svc = new ExchangeRateService(appConfig: $appConfig, timeFactory: $this->clock(), ecbRates: $ecb);
+
+		$this->assertSame(790.0, $svc->toReportingCurrency(1000.0, 'USD'));
+	}//end testEcbAskedForThePairOnToday()
+
+	/**
+	 * A service over a store, optional shillinq and ECB answers and a clock on 30 Oct 2026.
 	 *
 	 * @param array<string, string> $values The stored values.
 	 * @param array{rate: float, date: string, origin: string}|null $fleet What shillinq answers.
 	 * @param int $maxAge The stale limit setting.
+	 * @param array{rate: float, date: string}|null $ecb What the ECB reader answers.
 	 *
 	 * @return ExchangeRateService The service.
 	 */
-	private function resolving(array $values, ?array $fleet, int $maxAge = 7): ExchangeRateService {
+	private function resolving(array $values, ?array $fleet, int $maxAge = 7, ?array $ecb = null): ExchangeRateService {
 		$appConfig = $this->storeConfig($values);
 		$appConfig->method('getValueInt')->willReturn($maxAge);
 
 		$reader = $this->createMock(ShillinqFxRateReader::class);
 		$reader->method('rateFor')->willReturn($fleet);
 
-		return new ExchangeRateService(appConfig: $appConfig, fleetRates: $reader, timeFactory: $this->clock());
+		$ecbReader = $this->createMock(EcbRateReader::class);
+		$ecbReader->method('rateFor')->willReturn($ecb);
+
+		return new ExchangeRateService(appConfig: $appConfig, fleetRates: $reader, timeFactory: $this->clock(), ecbRates: $ecbReader);
 	}//end resolving()
 
 	/**
