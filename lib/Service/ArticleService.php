@@ -287,9 +287,30 @@ class ArticleService {
 			return ['error' => 'Not found'];
 		}
 
+		$clean = $this->checkedPatch(existing: $existing, patch: $patch);
+		if (is_string($clean) === true) {
+			return ['error' => $clean];
+		}
+
+		$merged = array_merge($existing, $clean);
+		$merged['updatedAt'] = $this->nowIso();
+		$merged['agentAuthored'] = ($agent !== '');
+		$merged['agentAuthoredBy'] = $agent;
+		return $this->savedOver(existing: $existing, merged: $merged);
+	}//end updateArticle()
+
+	/**
+	 * The sanitised patch with its slug resolved, or why it is refused.
+	 *
+	 * @param array<string, mixed> $existing The stored article.
+	 * @param array<string, mixed> $patch    Fields to change.
+	 *
+	 * @return array<string, mixed>|string The clean patch, or the refusal.
+	 */
+	private function checkedPatch(array $existing, array $patch): array|string {
 		$clean = $this->sanitise(payload: $patch);
 		if (isset($clean['title']) === true && trim((string)$clean['title']) === '') {
-			return ['error' => 'A title is required'];
+			return 'A title is required';
 		}
 
 		if (isset($clean['slug']) === true) {
@@ -298,17 +319,24 @@ class ArticleService {
 				title: (string)($clean['title'] ?? ($existing['title'] ?? '')),
 			);
 			if ($this->slugTaken(slug: $slug, exceptId: $this->store->idOf(payload: $existing)) === true) {
-				return ['error' => 'That slug is already in use'];
+				return 'That slug is already in use';
 			}
 
 			$clean['slug'] = $slug;
 		}
 
-		$merged = array_merge($existing, $clean);
-		$merged['updatedAt'] = $this->nowIso();
-		$merged['agentAuthored'] = ($agent !== '');
-		$merged['agentAuthoredBy'] = $agent;
+		return $clean;
+	}//end checkedPatch()
 
+	/**
+	 * Save the merged article over the stored one.
+	 *
+	 * @param array<string, mixed> $existing The stored article.
+	 * @param array<string, mixed> $merged   What to store.
+	 *
+	 * @return array{article?: array<string, mixed>, error?: string} The saved article, or the save failure.
+	 */
+	private function savedOver(array $existing, array $merged): array {
 		$saved = $this->store->save(
 			schemaSlug: $this->articleSchemaSlug(),
 			payload: $merged,
@@ -319,7 +347,7 @@ class ArticleService {
 		}
 
 		return ['article' => $saved];
-	}//end updateArticle()
+	}//end savedOver()
 
 	/**
 	 * Publish an article, stamping `publishedAt` on the first publish only.
@@ -372,33 +400,47 @@ class ArticleService {
 			return ['error' => 'Not found'];
 		}
 
-		$status = (string)($existing['status'] ?? 'draft');
-		if (in_array($status, self::STATUSES, true) === false) {
-			$status = 'draft';
-		}
-
-		if (in_array($status, $rule['from'], true) === false) {
+		if (in_array($this->statusOf(article: $existing), $rule['from'], true) === false) {
 			return ['error' => 'That change is not allowed from the current status'];
 		}
 
-		$merged = $existing;
-		$merged['status'] = $rule['to'];
+		return $this->savedOver(existing: $existing, merged: $this->transitioned(article: $existing, status: $rule['to']));
+	}//end applyTransition()
+
+	/**
+	 * An article's lifecycle status; an unknown one counts as a draft.
+	 *
+	 * @param array<string, mixed> $article The article.
+	 *
+	 * @return string The status.
+	 */
+	private function statusOf(array $article): string {
+		$status = (string)($article['status'] ?? 'draft');
+		if (in_array($status, self::STATUSES, true) === false) {
+			return 'draft';
+		}
+
+		return $status;
+	}//end statusOf()
+
+	/**
+	 * The article moved to a status, stamping `publishedAt` on its first publish only.
+	 *
+	 * @param array<string, mixed> $article The stored article.
+	 * @param string               $status  The status it moves to.
+	 *
+	 * @return array<string, mixed> What to store.
+	 */
+	private function transitioned(array $article, string $status): array {
+		$merged = $article;
+		$merged['status'] = $status;
 		$merged['updatedAt'] = $this->nowIso();
-		if ($rule['to'] === 'published' && trim((string)($existing['publishedAt'] ?? '')) === '') {
+		if ($status === 'published' && trim((string)($article['publishedAt'] ?? '')) === '') {
 			$merged['publishedAt'] = $merged['updatedAt'];
 		}
 
-		$saved = $this->store->save(
-			schemaSlug: $this->articleSchemaSlug(),
-			payload: $merged,
-			id: $this->store->idOf(payload: $existing),
-		);
-		if ($saved === null) {
-			return ['error' => 'The article could not be saved'];
-		}
-
-		return ['article' => $saved];
-	}//end applyTransition()
+		return $merged;
+	}//end transitioned()
 
 	/**
 	 * Where an article has been used, derived at read time.
@@ -420,28 +462,83 @@ class ArticleService {
 			return ['data' => [], 'counts' => ['template' => 0, 'blast' => 0]];
 		}
 
-		$identities = $this->identitiesOf(object: $article);
-		$usages = [];
-		$templateIds = [];
-		foreach ($this->store->findAll(schemaSlug: $this->templateSchemaSlug()) as $template) {
-			if ($this->namesArticle(template: $template, identities: $identities) === false) {
-				continue;
-			}
+		$templates = $this->templatesNaming(identities: $this->identitiesOf(object: $article));
+		$usages = array_merge(
+			array_map(fn (array $template): array => $this->templateUsage(template: $template), $templates),
+			$this->blastUsages(templateIds: $this->templateIdentities(templates: $templates))
+		);
 
-			$templateId = $this->store->idOf(payload: $template);
-			$templateIds[] = $templateId;
+		return [
+			'data' => $usages,
+			'counts' => [
+				'template' => count(array_filter($usages, static fn (array $usage): bool => $usage['kind'] === 'template')),
+				'blast' => count(array_filter($usages, static fn (array $usage): bool => $usage['kind'] === 'blast')),
+			],
+		];
+	}//end listUsages()
+
+	/**
+	 * The campaign templates whose `articleIds` name the article by any of its identities.
+	 *
+	 * @param array<int, string> $identities The article's identities.
+	 *
+	 * @return array<int, array<string, mixed>> The templates.
+	 */
+	private function templatesNaming(array $identities): array {
+		$templates = [];
+		foreach ($this->store->findAll(schemaSlug: $this->templateSchemaSlug()) as $template) {
+			if ($this->namesArticle(template: $template, identities: $identities) === true) {
+				$templates[] = $template;
+			}
+		}
+
+		return $templates;
+	}//end templatesNaming()
+
+	/**
+	 * A template's usage row.
+	 *
+	 * @param array<string, mixed> $template The template.
+	 *
+	 * @return array{kind: string, id: string, name: string, status: string} The usage.
+	 */
+	private function templateUsage(array $template): array {
+		return [
+			'kind' => 'template',
+			'id' => $this->store->idOf(payload: $template),
+			'name' => (string)($template['name'] ?? ''),
+			'status' => (string)($template['channel'] ?? ''),
+		];
+	}//end templateUsage()
+
+	/**
+	 * Every identity a blast may name the templates by: each one's id and its identities.
+	 *
+	 * @param array<int, array<string, mixed>> $templates The templates.
+	 *
+	 * @return array<int, string> The identities.
+	 */
+	private function templateIdentities(array $templates): array {
+		$templateIds = [];
+		foreach ($templates as $template) {
+			$templateIds[] = $this->store->idOf(payload: $template);
 			foreach ($this->identitiesOf(object: $template) as $identity) {
 				$templateIds[] = $identity;
 			}
-
-			$usages[] = [
-				'kind' => 'template',
-				'id' => $templateId,
-				'name' => (string)($template['name'] ?? ''),
-				'status' => (string)($template['channel'] ?? ''),
-			];
 		}
 
+		return $templateIds;
+	}//end templateIdentities()
+
+	/**
+	 * The usage rows of the blasts built on one of the templates.
+	 *
+	 * @param array<int, string> $templateIds The templates' identities.
+	 *
+	 * @return array<int, array{kind: string, id: string, name: string, status: string}> The usages.
+	 */
+	private function blastUsages(array $templateIds): array {
+		$usages = [];
 		foreach ($this->store->findAll(schemaSlug: $this->blastSchemaSlug()) as $blast) {
 			if (in_array((string)($blast['templateId'] ?? ''), $templateIds, true) === false) {
 				continue;
@@ -455,14 +552,8 @@ class ArticleService {
 			];
 		}
 
-		return [
-			'data' => $usages,
-			'counts' => [
-				'template' => count(array_filter($usages, static fn (array $usage): bool => $usage['kind'] === 'template')),
-				'blast' => count(array_filter($usages, static fn (array $usage): bool => $usage['kind'] === 'blast')),
-			],
-		];
-	}//end listUsages()
+		return $usages;
+	}//end blastUsages()
 
 	/**
 	 * Load the articles a template names, in the order it named them.
