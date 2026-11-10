@@ -51,20 +51,20 @@ final class CallOriginator {
 	 * Post the request; a failure is logged as a warning and reported on the result.
 	 *
 	 * @param OriginateRequest $request The originate request.
-	 * @param CtiVendor        $vendor  The platform placing the call.
+	 * @param CtiPlatform      $platform The platform placing the call.
 	 *
 	 * @return CtiCallResult The outcome, with the new call id when the reply carries one.
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
 	 */
-	public function place(OriginateRequest $request, CtiVendor $vendor): CtiCallResult {
+	public function place(OriginateRequest $request, CtiPlatform $platform): CtiCallResult {
 		try {
 			$client = $this->clientService->newClient();
 			$response = $client->post($request->endpoint->url, $request->options);
 			$callId = $this->callIdIn(contents: (string)$response->getBody(), endpoint: $request->endpoint);
-			return CtiCallResult::placed(externalCallId: $callId, platform: $vendor->platform);
+			return $platform->placed(externalCallId: $callId);
 		} catch (\Throwable $e) {
-			return $this->failed(error: $e, vendor: $vendor);
+			return $this->failed(error: $e, platform: $platform);
 		}
 	}//end place()
 
@@ -72,19 +72,16 @@ final class CallOriginator {
 	 * Log a failed originate as a warning and report it on the result.
 	 *
 	 * @param \Throwable $error  What went wrong.
-	 * @param CtiVendor  $vendor The platform that failed to place the call.
+	 * @param CtiPlatform $platform The platform that failed to place the call.
 	 *
 	 * @return CtiCallResult The failed result.
 	 */
-	private function failed(\Throwable $error, CtiVendor $vendor): CtiCallResult {
+	private function failed(\Throwable $error, CtiPlatform $platform): CtiCallResult {
 		$this->logger->warning(
-			$vendor->label . ' originate failed',
+			$platform->label . ' originate failed',
 			['exception' => $error->getMessage()]
 		);
-		return CtiCallResult::refused(
-			error: $vendor->label . ' originate failed: ' . $error->getMessage(),
-			platform: $vendor->platform
-		);
+		return $platform->refused(error: $platform->label . ' originate failed: ' . $error->getMessage());
 	}//end failed()
 
 	/**

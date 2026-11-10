@@ -30,19 +30,28 @@ namespace OCA\Pipelinq\Service\Cti\Adapter;
  */
 final class BearerJsonPost {
 	/**
+	 * Constructor.
+	 *
+	 * @param string $token The bearer token.
+	 */
+	public function __construct(
+		private readonly string $token,
+	) {
+	}//end __construct()
+
+	/**
 	 * The client options: bearer authorisation, JSON content type and body, 10 s timeout.
 	 *
-	 * @param string              $token The bearer token.
-	 * @param array<string,mixed> $body  The JSON body.
+	 * @param array<string,mixed> $body The JSON body.
 	 *
 	 * @return array<string,mixed> The client options.
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
 	 */
-	public static function options(string $token, array $body): array {
+	public function options(array $body): array {
 		return [
 			'headers' => [
-				'Authorization' => 'Bearer ' . $token,
+				'Authorization' => 'Bearer ' . $this->token,
 				'Content-Type' => 'application/json',
 			],
 			'body' => json_encode($body),

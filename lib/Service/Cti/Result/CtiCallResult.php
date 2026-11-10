@@ -45,40 +45,4 @@ final class CtiCallResult {
 		public readonly ?string $platform = null,
 	) {
 	}//end __construct()
-
-	/**
-	 * An accepted originate request.
-	 *
-	 * @param string|null $externalCallId The platform's call id, when the reply carries one.
-	 * @param string      $platform       The adapter platform identifier.
-	 *
-	 * @return self The successful result.
-	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
-	 */
-	public static function placed(?string $externalCallId, string $platform): self {
-		return new self(
-			success: true,
-			externalCallId: $externalCallId,
-			platform: $platform,
-		);
-	}//end placed()
-
-	/**
-	 * A refused or failed originate request.
-	 *
-	 * @param string $error    Why the call was not placed.
-	 * @param string $platform The adapter platform identifier.
-	 *
-	 * @return self The failed result.
-	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
-	 */
-	public static function refused(string $error, string $platform): self {
-		return new self(
-			success: false,
-			error: $error,
-			platform: $platform,
-		);
-	}//end refused()
 }//end class

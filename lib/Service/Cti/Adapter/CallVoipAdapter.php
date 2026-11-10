@@ -100,21 +100,22 @@ class CallVoipAdapter implements CtiAdapterInterface {
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.2
 	 */
 	public function handleInboundWebhook(array $payload): CtiWebhookResult {
-		$recording = WebhookField::part(source: $payload, key: 'recording');
+		$fields = new WebhookFields(source: $payload);
+		$recording = $fields->part(key: 'recording');
 		return new CtiWebhookResult(
 			eventType: (string)($payload['event'] ?? 'unknown'),
 			externalCallId: (string)($payload['callId'] ?? ''),
 			direction: $this->directionOf(payload: $payload),
-			fromNumber: WebhookField::text(source: $payload, key: 'from'),
-			toNumber: WebhookField::text(source: $payload, key: 'to'),
-			extension: WebhookField::text(source: $payload, key: 'extension'),
-			userId: WebhookField::text(source: $payload, key: 'userId'),
-			durationSeconds: WebhookField::number(source: $payload, key: 'duration'),
-			recordingUrl: WebhookField::text(source: $recording, key: 'url'),
-			recordingExpiresAt: WebhookField::text(source: $recording, key: 'expiresAt'),
-			presenceState: WebhookField::text(source: $payload, key: 'presence'),
-			queueName: WebhookField::text(source: $payload, key: 'queue'),
-			agentSkill: WebhookField::text(source: $payload, key: 'skill'),
+			fromNumber: $fields->text(key: 'from'),
+			toNumber: $fields->text(key: 'to'),
+			extension: $fields->text(key: 'extension'),
+			userId: $fields->text(key: 'userId'),
+			durationSeconds: $fields->number(key: 'duration'),
+			recordingUrl: $recording->text(key: 'url'),
+			recordingExpiresAt: $recording->text(key: 'expiresAt'),
+			presenceState: $fields->text(key: 'presence'),
+			queueName: $fields->text(key: 'queue'),
+			agentSkill: $fields->text(key: 'skill'),
 			raw: $payload,
 		);
 	}//end handleInboundWebhook()
@@ -155,7 +156,7 @@ class CallVoipAdapter implements CtiAdapterInterface {
 			'callerId' => $callerId,
 		];
 		if ($this->rateLimit() === false) {
-			return CtiCallResult::refused(error: 'CallVoip rate limit exceeded (100/sec).', platform: $this->getPlatform());
+			return $this->platform()->refused(error: 'CallVoip rate limit exceeded (100/sec).');
 		}
 
 		return $this->dial(call: $call);
@@ -172,24 +173,34 @@ class CallVoipAdapter implements CtiAdapterInterface {
 		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_callvoip_api_base_url', '');
 		$apiKey = $this->appConfig->getValueString(Application::APP_ID, 'cti_callvoip_api_key', '');
 		if ($baseUrl === '') {
-			return CtiCallResult::refused(error: 'CallVoip API base URL not configured.', platform: $this->getPlatform());
+			return $this->platform()->refused(error: 'CallVoip API base URL not configured.');
 		}
 
 		$endpoint = new OriginateEndpoint(url: rtrim($baseUrl, '/') . '/calls', callIdKeys: ['callId']);
-		return $this->originate(request: new OriginateRequest(endpoint: $endpoint, options: BearerJsonPost::options(token: $apiKey, body: $call)));
+		return $this->originate(endpoint: $endpoint, options: (new BearerJsonPost(token: $apiKey))->options(body: $call));
 	}//end dial()
 
 	/**
 	 * Place the call and report the outcome under this platform's name.
 	 *
-	 * @param OriginateRequest $request The originate request.
+	 * @param OriginateEndpoint   $endpoint Where the call is placed.
+	 * @param array<string,mixed> $options  The HTTP client options.
 	 *
 	 * @return CtiCallResult The outcome.
 	 */
-	private function originate(OriginateRequest $request): CtiCallResult {
+	private function originate(OriginateEndpoint $endpoint, array $options): CtiCallResult {
 		$originator = new CallOriginator(clientService: $this->clientService, logger: $this->logger);
-		return $originator->place(request: $request, vendor: new CtiVendor(platform: $this->getPlatform(), label: 'CallVoip'));
+		return $originator->place(request: $endpoint->request(options: $options), platform: $this->platform());
 	}//end originate()
+
+	/**
+	 * This adapter's platform, for its call results and log lines.
+	 *
+	 * @return CtiPlatform The platform.
+	 */
+	private function platform(): CtiPlatform {
+		return new CtiPlatform(platform: $this->getPlatform(), label: 'CallVoip');
+	}//end platform()
 
 	/**
 	 * {@inheritDoc}

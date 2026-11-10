@@ -95,19 +95,20 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.4
 	 */
 	public function handleInboundWebhook(array $payload): CtiWebhookResult {
+		$fields = new WebhookFields(source: $payload);
 		return new CtiWebhookResult(
 			eventType: $this->eventTypeOf(payload: $payload),
 			externalCallId: (string)($payload['Uniqueid'] ?? ($payload['uniqueid'] ?? '')),
-			direction: WebhookField::text(source: $payload, key: 'direction'),
-			fromNumber: WebhookField::text(source: $payload, key: 'CallerIDNum'),
-			toNumber: WebhookField::text(source: $payload, key: 'ConnectedLineNum'),
+			direction: $fields->text(key: 'direction'),
+			fromNumber: $fields->text(key: 'CallerIDNum'),
+			toNumber: $fields->text(key: 'ConnectedLineNum'),
 			extension: $this->extensionOf(payload: $payload),
-			userId: WebhookField::text(source: $payload, key: 'userId'),
+			userId: $fields->text(key: 'userId'),
 			durationSeconds: $this->durationOf(payload: $payload),
-			recordingUrl: WebhookField::text(source: $payload, key: 'RecordingURL'),
-			recordingExpiresAt: WebhookField::text(source: $payload, key: 'RecordingExpiresAt'),
+			recordingUrl: $fields->text(key: 'RecordingURL'),
+			recordingExpiresAt: $fields->text(key: 'RecordingExpiresAt'),
 			presenceState: (self::PRESENCE_STATES[(string)($payload['State'] ?? ($payload['DeviceState'] ?? ''))] ?? null),
-			queueName: WebhookField::text(source: $payload, key: 'Queue'),
+			queueName: $fields->text(key: 'Queue'),
 			raw: $payload,
 		);
 	}//end handleInboundWebhook()
@@ -184,7 +185,7 @@ class AsteriskAdapter implements CtiAdapterInterface {
 		$auth = $this->ariAuth();
 		$context = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_context', 'from-internal');
 		if ($baseUrl === '') {
-			return CtiCallResult::refused(error: 'Asterisk API base URL not configured.', platform: $this->getPlatform());
+			return $this->platform()->refused(error: 'Asterisk API base URL not configured.');
 		}
 
 		$channel = [
@@ -193,21 +194,19 @@ class AsteriskAdapter implements CtiAdapterInterface {
 			'context' => $context,
 			'callerId' => $callerId,
 		];
-		return $this->originate(request: $this->ariRequest(baseUrl: $baseUrl, options: $this->ariOptions(auth: $auth, channel: $channel)));
+		return $this->originate(endpoint: $this->ariEndpoint(baseUrl: $baseUrl), options: $this->ariOptions(auth: $auth, channel: $channel));
 	}//end originateCall()
 
 	/**
-	 * A request to the ARI channel-originate endpoint; its reply names the channel by `id` or `uniqueid`.
+	 * The ARI channel-originate endpoint; its reply names the channel by `id` or `uniqueid`.
 	 *
-	 * @param string              $baseUrl The configured API base URL.
-	 * @param array<string,mixed> $options The client options.
+	 * @param string $baseUrl The configured API base URL.
 	 *
-	 * @return OriginateRequest The request.
+	 * @return OriginateEndpoint The endpoint.
 	 */
-	private function ariRequest(string $baseUrl, array $options): OriginateRequest {
-		$endpoint = new OriginateEndpoint(url: rtrim($baseUrl, '/') . '/ari/channels', callIdKeys: ['id', 'uniqueid']);
-		return new OriginateRequest(endpoint: $endpoint, options: $options);
-	}//end ariRequest()
+	private function ariEndpoint(string $baseUrl): OriginateEndpoint {
+		return new OriginateEndpoint(url: rtrim($baseUrl, '/') . '/ari/channels', callIdKeys: ['id', 'uniqueid']);
+	}//end ariEndpoint()
 
 	/**
 	 * The ARI basic-auth pair, or null when no ARI user is configured.
@@ -244,14 +243,24 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	/**
 	 * Place the call and report the outcome under this platform's name.
 	 *
-	 * @param OriginateRequest $request The originate request.
+	 * @param OriginateEndpoint   $endpoint Where the call is placed.
+	 * @param array<string,mixed> $options  The HTTP client options.
 	 *
 	 * @return CtiCallResult The outcome.
 	 */
-	private function originate(OriginateRequest $request): CtiCallResult {
+	private function originate(OriginateEndpoint $endpoint, array $options): CtiCallResult {
 		$originator = new CallOriginator(clientService: $this->clientService, logger: $this->logger);
-		return $originator->place(request: $request, vendor: new CtiVendor(platform: $this->getPlatform(), label: 'Asterisk'));
+		return $originator->place(request: $endpoint->request(options: $options), platform: $this->platform());
 	}//end originate()
+
+	/**
+	 * This adapter's platform, for its call results and log lines.
+	 *
+	 * @return CtiPlatform The platform.
+	 */
+	private function platform(): CtiPlatform {
+		return new CtiPlatform(platform: $this->getPlatform(), label: 'Asterisk');
+	}//end platform()
 
 	/**
 	 * {@inheritDoc}

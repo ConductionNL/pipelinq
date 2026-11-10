@@ -33,11 +33,24 @@ final class OriginateEndpoint {
 	 * Constructor.
 	 *
 	 * @param string       $url         The absolute originate URL.
-	 * @param list<string> $callIdKeys  Reply fields holding the call id, first present wins.
+	 * @param list<string> $callIdKeys Reply fields holding the call id, first present wins.
 	 */
 	public function __construct(
 		public readonly string $url,
 		public readonly array $callIdKeys,
 	) {
 	}//end __construct()
+
+	/**
+	 * A request to this endpoint with the given HTTP client options.
+	 *
+	 * @param array<string,mixed> $options The HTTP client options (auth, headers, body, timeout).
+	 *
+	 * @return OriginateRequest The request.
+	 *
+	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+	 */
+	public function request(array $options): OriginateRequest {
+		return new OriginateRequest(endpoint: $this, options: $options);
+	}//end request()
 }//end class
