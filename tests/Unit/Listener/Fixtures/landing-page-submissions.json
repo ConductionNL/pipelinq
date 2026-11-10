@@ -1,0 +1,1249 @@
+{
+    "new contact": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "J. de Vries",
+                    "email": "jane.doe@example.com",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "Webinar AI: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            }
+        ]
+    },
+    "redelivered": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "J. de Vries",
+                    "email": "jane.doe@example.com",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "Webinar AI: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            },
+            {
+                "handled": true,
+                "lead": null
+            }
+        ]
+    },
+    "blank nonce twice": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "J. de Vries",
+                    "email": "jane.doe@example.com",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "Webinar AI: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                },
+                "obj-4": {
+                    "title": "Webinar AI: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-4"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                },
+                "obj-5": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-1",
+                    "leadId": "obj-4",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "",
+                    "createdAt": "<now>",
+                    "uuid": "obj-5"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 2,
+            "touchpoint": 2
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            },
+            {
+                "handled": true,
+                "lead": "obj-4"
+            }
+        ]
+    },
+    "existing contact": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "ct-9": {
+                    "uuid": "ct-9",
+                    "email": "jane.doe@example.com"
+                }
+            },
+            "lead": {
+                "obj-1": {
+                    "title": "Webinar AI: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "ct-9",
+                    "uuid": "obj-1"
+                }
+            },
+            "touchpoint": {
+                "obj-2": {
+                    "campaignId": "camp-1",
+                    "contactId": "ct-9",
+                    "leadId": "obj-1",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-2"
+                }
+            }
+        },
+        "writes": {
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-1"
+            }
+        ]
+    },
+    "contact as submitted": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "ct-8": {
+                    "uuid": "ct-8",
+                    "email": "JANE.DOE@EXAMPLE.COM"
+                }
+            },
+            "lead": {
+                "obj-1": {
+                    "title": "Webinar AI: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "ct-8",
+                    "uuid": "obj-1"
+                }
+            },
+            "touchpoint": {
+                "obj-2": {
+                    "campaignId": "camp-1",
+                    "contactId": "ct-8",
+                    "leadId": "obj-1",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-2"
+                }
+            }
+        },
+        "writes": {
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-1"
+            }
+        ]
+    },
+    "organisation twice": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "a@b.nl",
+                    "email": "a@b.nl",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                },
+                "obj-5": {
+                    "name": "c@d.nl",
+                    "email": "c@d.nl",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-5"
+                }
+            },
+            "client": {
+                "obj-2": {
+                    "name": "Gemeente X",
+                    "type": "organization",
+                    "notes": "Created from a landing page submission.",
+                    "uuid": "obj-2"
+                }
+            },
+            "lead": {
+                "obj-3": {
+                    "title": "Webinar AI: open-tilburg",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nemail: a@b.nl\norganisation:  Gemeente X \nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "client": "obj-2",
+                    "uuid": "obj-3"
+                },
+                "obj-6": {
+                    "title": "Webinar AI: open-tilburg",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nemail: c@d.nl\norganisation: Gemeente X\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-5",
+                    "client": "obj-2",
+                    "uuid": "obj-6"
+                }
+            },
+            "touchpoint": {
+                "obj-4": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-1",
+                    "leadId": "obj-3",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "n-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-4"
+                },
+                "obj-7": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-5",
+                    "leadId": "obj-6",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "n-2",
+                    "createdAt": "<now>",
+                    "uuid": "obj-7"
+                }
+            }
+        },
+        "writes": {
+            "contact": 2,
+            "client": 1,
+            "lead": 2,
+            "touchpoint": 2
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-3"
+            },
+            {
+                "handled": true,
+                "lead": "obj-6"
+            }
+        ]
+    },
+    "existing client": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "client": {
+                "cl-1": {
+                    "uuid": "cl-1",
+                    "name": "Gemeente X"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "a@b.nl",
+                    "email": "a@b.nl",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "Webinar AI: open-tilburg",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nemail: a@b.nl\norganisation: Gemeente X\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "client": "cl-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            }
+        ]
+    },
+    "no email": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "touchpoint": {
+                "obj-1": {
+                    "campaignId": "camp-1",
+                    "contactId": "",
+                    "leadId": "",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-1"
+                }
+            }
+        },
+        "writes": {
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": null
+            }
+        ]
+    },
+    "by form id": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "J. de Vries",
+                    "email": "jane.doe@example.com",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "Webinar AI: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            }
+        ]
+    },
+    "empty reference id": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "J. de Vries",
+                    "email": "jane.doe@example.com",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "Webinar AI: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            }
+        ]
+    },
+    "unknown form": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "J. de Vries",
+                    "email": "jane.doe@example.com",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "/campagne/webinar: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            }
+        ]
+    },
+    "no form": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "J. de Vries",
+                    "email": "jane.doe@example.com",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "/campagne/webinar: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            }
+        ]
+    },
+    "missing campaign": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "J. de Vries",
+                    "email": "jane.doe@example.com",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "/campagne/webinar: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "gone",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "gone",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            }
+        ]
+    },
+    "no campaign no route": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "J. de Vries",
+                    "email": "jane.doe@example.com",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "Landing page: J. de Vries",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "gone",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on   (open-tilburg).\nname: J. de Vries\nemail: JANE.DOE@EXAMPLE.COM\nconsent: 1",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "gone",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            }
+        ]
+    },
+    "no name": {
+        "rows": {
+            "campaign": {
+                "camp-1": {
+                    "uuid": "camp-1",
+                    "name": " Webinar AI ",
+                    "utmCampaign": "webinar",
+                    "formRef": "form-1"
+                }
+            },
+            "contact": {
+                "obj-1": {
+                    "name": "x@y.nl",
+                    "email": "x@y.nl",
+                    "source": "landing-page",
+                    "marketingConsent": false,
+                    "uuid": "obj-1"
+                }
+            },
+            "lead": {
+                "obj-2": {
+                    "title": "Webinar AI: open-tilburg",
+                    "source": "landing-page",
+                    "status": "open",
+                    "campaignId": "camp-1",
+                    "firstTouch": {
+                        "campaign": "webinar",
+                        "source": "nieuwsbrief",
+                        "medium": "email",
+                        "term": "",
+                        "content": ""
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "description": "Submitted on /campagne/webinar (open-tilburg).\nemail: x@y.nl\nReferrer: https://www.linkedin.com/",
+                    "contact": "obj-1",
+                    "uuid": "obj-2"
+                }
+            },
+            "touchpoint": {
+                "obj-3": {
+                    "campaignId": "camp-1",
+                    "contactId": "obj-1",
+                    "leadId": "obj-2",
+                    "kind": "submit",
+                    "channel": "social",
+                    "utm": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": ""
+                    },
+                    "sourceRef": "page-1",
+                    "occurredAt": "2026-10-21T09:47:12+00:00",
+                    "nonce": "nonce-1",
+                    "createdAt": "<now>",
+                    "uuid": "obj-3"
+                }
+            }
+        },
+        "writes": {
+            "contact": 1,
+            "lead": 1,
+            "touchpoint": 1
+        },
+        "events": [
+            {
+                "handled": true,
+                "lead": "obj-2"
+            }
+        ]
+    }
+}
