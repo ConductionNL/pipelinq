@@ -133,6 +133,19 @@ class SemanticHandoffService {
 			return null;
 		}
 
+		return self::usableLocation(slugs: $this->resolvedSlugs(resolver: $resolver, kindUri: $kindUri));
+	}//end implementerLocation()
+
+	/**
+	 * The schema and register slugs of the kind's implementer; null when the
+	 * kind has no schema, the schema sits in no register, or the resolver threw (logged).
+	 *
+	 * @param object $resolver The OpenRegister semantic resolver.
+	 * @param string $kindUri  Canonical kind URI.
+	 *
+	 * @return array{schema: string, register: string}|null
+	 */
+	private function resolvedSlugs(object $resolver, string $kindUri): ?array {
 		try {
 			$schema = $resolver->resolveSchemaByImplements($kindUri);
 			if (is_object($schema) === false) {
@@ -144,8 +157,7 @@ class SemanticHandoffService {
 				return null;
 			}
 
-			$schemaSlug = (string)$schema->getSlug();
-			$registerSlug = (string)$register->getSlug();
+			return ['schema' => (string)$schema->getSlug(), 'register' => (string)$register->getSlug()];
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SemanticHandoffService.implementerLocation: resolver threw',
@@ -153,13 +165,22 @@ class SemanticHandoffService {
 			);
 			return null;
 		}
+	}//end resolvedSlugs()
 
-		if ($schemaSlug === '' || $registerSlug === '') {
+	/**
+	 * The location, when both slugs are filled.
+	 *
+	 * @param array{schema: string, register: string}|null $slugs The resolved slugs.
+	 *
+	 * @return array{register: string, schema: string}|null
+	 */
+	private static function usableLocation(?array $slugs): ?array {
+		if ($slugs === null || $slugs['schema'] === '' || $slugs['register'] === '') {
 			return null;
 		}
 
-		return ['register' => $registerSlug, 'schema' => $schemaSlug];
-	}//end implementerLocation()
+		return ['register' => $slugs['register'], 'schema' => $slugs['schema']];
+	}//end usableLocation()
 
 	/**
 	 * Execute a declared handoff via OpenRegister's engine.
@@ -198,17 +219,23 @@ class SemanticHandoffService {
 			return $this->outcome(succeeded:false, reason: 'handoff-failed');
 		}
 
+		return $this->resultOutcome(result: $result);
+	}//end handoff()
+
+	/**
+	 * The outcome of the engine's answer: executed (with the target), parked
+	 * (queued), or a failure named by its status.
+	 *
+	 * @param array<string, mixed> $result The engine's answer.
+	 *
+	 * @return array{ok: bool, targetUuid: string, correlationId: string, reason: string}
+	 */
+	private function resultOutcome(array $result): array {
 		$status = (string)($result['status'] ?? '');
 		$correlationId = (string)($result['correlationId'] ?? '');
 
 		if ($status === 'executed') {
-			$target = ($result['target'] ?? []);
-			$uuid = '';
-			if (is_array($target) === true) {
-				$uuid = (string)($target['uuid'] ?? '');
-			}
-
-			return $this->outcome(succeeded:true, targetUuid: $uuid, correlationId: $correlationId);
+			return $this->outcome(succeeded:true, targetUuid: self::targetUuidOf(result: $result), correlationId: $correlationId);
 		}
 
 		if ($status === 'parked') {
@@ -221,7 +248,23 @@ class SemanticHandoffService {
 		}
 
 		return $this->outcome(succeeded:false, reason: $reason);
-	}//end handoff()
+	}//end resultOutcome()
+
+	/**
+	 * The uuid of the object the handoff created, '' when the answer names none.
+	 *
+	 * @param array<string, mixed> $result The engine's answer.
+	 *
+	 * @return string
+	 */
+	private static function targetUuidOf(array $result): string {
+		$target = ($result['target'] ?? []);
+		if (is_array($target) === true) {
+			return (string)($target['uuid'] ?? '');
+		}
+
+		return '';
+	}//end targetUuidOf()
 
 	/**
 	 * Build a normalised outcome envelope.
