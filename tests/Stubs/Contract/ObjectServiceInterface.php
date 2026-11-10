@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\OpenRegister\Contract;
 
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCP\IUser;
 
 /**
@@ -530,25 +531,13 @@ interface ObjectServiceInterface {
 	 * declares a narrower surface than the real interface is a different type
 	 * wearing the same name.
 	 *
-	 * @param string          $objectId       Object id or UUID.
-	 * @param array           $data           Fields to merge onto the stored object.
-	 * @param string|int|null $register       Register id, UUID or slug.
-	 * @param string|int|null $schema         Schema id, UUID or slug.
-	 * @param bool            $_rbac          Whether to apply RBAC.
-	 * @param bool            $_multitenancy  Whether to apply multitenancy.
-	 * @param ?IUser          $currentUser    Acting user.
+	 * @param ObjectPatch $patch         The object id, the fields to merge, the target and the acting user.
+	 * @param bool        $_rbac         Whether to apply RBAC.
+	 * @param bool        $_multitenancy Whether to apply multitenancy.
 	 *
 	 * @return ObjectEntityInterface
 	 */
-	public function patchObject(
-		string $objectId,
-		array $data,
-		string|int|null $register=null,
-		string|int|null $schema=null,
-		bool $_rbac=true,
-		bool $_multitenancy=true,
-		?IUser $currentUser=null
-	): ObjectEntityInterface;
+	public function patchObject(ObjectPatch $patch, bool $_rbac=true, bool $_multitenancy=true): ObjectEntityInterface;
 
 	/**
 	 * The objects this object refers to.

@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 
@@ -81,7 +82,7 @@ class MergedAwayStamp {
 			$fields = $this->stampFor(survivorUuid: $event->getSurvivorUuid());
 		}
 
-		$this->objects->patchObject(objectId: $uuid, data: $fields, _rbac: false, _multitenancy: false);
+		$this->objects->patchObject(patch: new ObjectPatch(objectId: $uuid, data: $fields), _rbac: false, _multitenancy: false);
 	}//end apply()
 
 	/**

@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Command;
 
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCA\Pipelinq\Command\ReferencesAuditCommand;
 use OCA\Pipelinq\Tests\Unit\Support\ComparesGolden;
 use PHPUnit\Framework\TestCase;
@@ -262,17 +263,14 @@ class ReferencesAuditCommandGoldenTest extends TestCase {
 			}
 
 			/**
-			 * @param string      $objectId      The object id.
-			 * @param array       $data          The patch.
-			 * @param string|null $register      The register.
-			 * @param string|null $schema        The schema.
+			 * @param ObjectPatch $patch         The object id, the patch and the target.
 			 * @param bool        $_rbac         RBAC flag.
 			 * @param bool        $_multitenancy Multitenancy flag.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function patchObject(string $objectId, array $data, ?string $register = null, ?string $schema = null, bool $_rbac = true, bool $_multitenancy = true): array {
-				$this->test->calls[] = ['patchObject' => [$objectId, $data, $register, $schema, $_rbac, $_multitenancy]];
+			public function patchObject(ObjectPatch $patch, bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->test->calls[] = ['patchObject' => [$patch->objectId, $patch->data, $patch->target->register, $patch->target->schema, $_rbac, $_multitenancy]];
 				if (($this->case['patchThrows'] ?? false) === true) {
 					throw new RuntimeException('locked: '.$objectId);
 				}
