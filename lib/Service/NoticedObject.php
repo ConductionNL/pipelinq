@@ -32,12 +32,12 @@ final class NoticedObject {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $type The object type (lead, request, task, ...), or ''.
-	 * @param string $id   The object id, or ''.
+	 * @param string $objectType The object type (lead, request, task, ...), or ''.
+	 * @param string $objectId   The object id, or ''.
 	 */
 	public function __construct(
-		public readonly string $type,
-		public readonly string $id,
+		public readonly string $objectType,
+		public readonly string $objectId,
 	) {
 	}//end __construct()
 }//end class

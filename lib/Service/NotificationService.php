@@ -134,7 +134,7 @@ class NotificationService {
 				'author' => $author,
 			]
 		);
-		$about = new NoticedObject(type: $entityType, id: $objectId);
+		$about = new NoticedObject(objectType: $entityType, objectId: $objectId);
 		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyAssignment()
 
@@ -166,7 +166,7 @@ class NotificationService {
 				'author' => $author,
 			]
 		);
-		$about = new NoticedObject(type: 'task', id: $objectId);
+		$about = new NoticedObject(objectType: 'task', objectId: $objectId);
 		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $userId, object: $about));
 	}//end notifyTaskCompleted()
 
@@ -198,7 +198,7 @@ class NotificationService {
 				'deadline' => $deadline,
 			]
 		);
-		$about = new NoticedObject(type: 'task', id: $objectId);
+		$about = new NoticedObject(objectType: 'task', objectId: $objectId);
 		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyTaskReassigned()
 
@@ -227,7 +227,7 @@ class NotificationService {
 				'deadline' => $deadline,
 			]
 		);
-		$about = new NoticedObject(type: 'task', id: $objectId);
+		$about = new NoticedObject(objectType: 'task', objectId: $objectId);
 		$this->send(notice: $notice, recipient: new NoticeRecipient(userId: $userId, object: $about));
 	}//end notifyTaskExpired()
 
@@ -259,7 +259,7 @@ class NotificationService {
 				'author' => $author,
 			]
 		);
-		$about = new NoticedObject(type: 'lead', id: $objectId);
+		$about = new NoticedObject(objectType: 'lead', objectId: $objectId);
 		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyStageChange()
 
@@ -291,7 +291,7 @@ class NotificationService {
 				'author' => $author,
 			]
 		);
-		$about = new NoticedObject(type: 'request', id: $objectId);
+		$about = new NoticedObject(objectType: 'request', objectId: $objectId);
 		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyStatusChange()
 
@@ -323,7 +323,7 @@ class NotificationService {
 				'author' => $author,
 			]
 		);
-		$about = new NoticedObject(type: $entityType, id: $objectId);
+		$about = new NoticedObject(objectType: $entityType, objectId: $objectId);
 		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyNoteAdded()
 
@@ -355,7 +355,7 @@ class NotificationService {
 				'author' => $author,
 			]
 		);
-		$about = new NoticedObject(type: 'lead', id: $objectId);
+		$about = new NoticedObject(objectType: 'lead', objectId: $objectId);
 		$this->send(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyDealWon()
 
@@ -384,7 +384,7 @@ class NotificationService {
 				'author' => $author,
 			]
 		);
-		$about = new NoticedObject(type: 'lead', id: $objectId);
+		$about = new NoticedObject(objectType: 'lead', objectId: $objectId);
 		$this->send(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyDealLost()
 
@@ -413,7 +413,7 @@ class NotificationService {
 	): void {
 		$this->send(
 			notice: new UserNotice(subject: $subject, parameters: $parameters),
-			recipient: new NoticeRecipient(userId: $userId, object: new NoticedObject(type: $objectType, id: $objectId))
+			recipient: new NoticeRecipient(userId: $userId, object: new NoticedObject(objectType: $objectType, objectId: $objectId))
 		);
 	}//end sendNotification()
 
@@ -452,7 +452,7 @@ class NotificationService {
 			$notification->setApp(Application::APP_ID)
 				->setUser($recipient->userId)
 				->setDateTime(new DateTime())
-				->setObject(type: $recipient->object->type, id: $recipient->object->id)
+				->setObject(type: $recipient->object->objectType, id: $recipient->object->objectId)
 				->setSubject(subject: $notice->subject, parameters: $notice->parameters);
 
 			$this->notificationManager->notify($notification);
