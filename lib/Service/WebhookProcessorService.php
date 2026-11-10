@@ -44,6 +44,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use Closure;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -796,9 +798,7 @@ class WebhookProcessorService {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

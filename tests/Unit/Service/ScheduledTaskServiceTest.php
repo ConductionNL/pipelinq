@@ -28,6 +28,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\LanguageService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\ScheduledTaskService;
@@ -690,18 +691,13 @@ class RecordingObjectService extends ObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $silent = false,
-		bool $_validation = true,
-		?array $uploadedFiles = null,
-		?IUser $currentUser = null,
-		bool $failIfExists = false,
 	): ObjectEntityInterface {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->lastSaveArgs = [
 			'object' => $object,
 			'register' => $register,

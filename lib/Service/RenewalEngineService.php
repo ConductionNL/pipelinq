@@ -34,6 +34,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -312,11 +314,8 @@ class RenewalEngineService {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$saved = $objectService->saveObject(
-				$this->buildRenewalLead(contract: $contract),
-				[],
-				$registerId,
-				$leadSchema,
-				null
+				object: $this->buildRenewalLead(contract: $contract),
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $leadSchema)),
 			);
 			$arr = (array)$saved;
 			if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
@@ -359,7 +358,7 @@ class RenewalEngineService {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$objectService->saveObject(
-				[
+				object: [
 					'type' => 'follow_up',
 					'subject' => $title,
 					'status' => 'open',
@@ -367,10 +366,7 @@ class RenewalEngineService {
 					'relatedEntityType' => 'contract',
 					'relatedEntityId' => (string)($contract['id'] ?? ($contract['uuid'] ?? '')),
 				],
-				[],
-				$registerId,
-				$taskSchema,
-				null
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $taskSchema)),
 			);
 		} catch (Throwable $e) {
 			$this->logger->error('RenewalEngineService: notice My Work entry failed', ['error' => $e->getMessage()]);

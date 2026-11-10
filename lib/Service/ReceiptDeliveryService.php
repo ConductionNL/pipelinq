@@ -43,6 +43,8 @@ use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for receipt rendering, email delivery and thermal output.
@@ -501,10 +503,7 @@ class ReceiptDeliveryService {
 			unset($persist['lines'], $persist['@self']);
 			$this->getObjectService()->saveObject(
 				object: $persist,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: failed to persist invoice number', ['exception' => $e->getMessage()]);
@@ -587,9 +586,7 @@ class ReceiptDeliveryService {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptPrintLog_schema');
 			$saved = $this->getObjectService()->saveObject(
 				object: $log,
-				extend: [],
-				register: $register,
-				schema: $schema
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 			$saved = $this->toArray(object: $saved);
 

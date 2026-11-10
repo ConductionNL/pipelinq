@@ -35,6 +35,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -202,13 +205,13 @@ class MigrateContactMomentDirection implements IRepairStep {
 			try {
 				$objectService->saveObject(
 					object: $data,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: (string)($data['id'] ?? ''),
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+						uuid: (string)($data['id'] ?? ''),
+						actor: new SaveActor(currentUser: $actingAdmin),
+					),
 					_rbac: false,
 					_multitenancy: false,
-					currentUser: $actingAdmin,
 				);
 				$filled++;
 			} catch (Throwable $e) {

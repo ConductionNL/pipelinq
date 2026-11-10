@@ -38,6 +38,8 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Append-only audit logger.
@@ -349,10 +351,7 @@ class DeliveryAuditLogger {
 			[$register, $schema] = $this->config();
 			$this->getObjectService()->saveObject(
 				object: $row,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: null
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 		} catch (\Throwable $e) {
 			// Audit logging should not break the dispatch path; we still

@@ -35,6 +35,8 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Gift card lifecycle.
@@ -702,10 +704,7 @@ class GiftCardService {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: null
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -756,10 +755,7 @@ class GiftCardService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid),
 		);
 
 		return $this->toArray(value: $saved);

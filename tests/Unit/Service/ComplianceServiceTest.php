@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
@@ -155,7 +156,9 @@ class ComplianceServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed> The saved payload.
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('saved-' . count($this->saved));
 				}

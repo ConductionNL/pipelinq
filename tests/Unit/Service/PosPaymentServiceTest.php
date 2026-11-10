@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\PosPaymentService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -207,11 +208,13 @@ class PaymentFakeObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		bool $_rbac = true,
+		bool $_multitenancy = true,
 	): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->currentRegister = (string)$register;
 		$this->currentSchema = (string)$schema;
 

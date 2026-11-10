@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -243,10 +245,10 @@ class BrpRetentionJob extends TimedJob {
 			// Per spec REQ-BSN-008-01: brpPersoonId stays (dangling pointer to deleted record).
 			$objects->saveObject(
 				object: $existingArr,
-				extend: [],
-				register: $register,
-				schema: $contactSchema,
-				uuid: $contactId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $contactSchema),
+					uuid: $contactId,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

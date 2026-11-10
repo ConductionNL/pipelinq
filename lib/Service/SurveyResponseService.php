@@ -38,6 +38,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -396,8 +398,7 @@ class SurveyResponseService {
 		try {
 			$saved = $this->objectService->saveObject(
 				object: $response,
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 				_rbac: false,
 				_multitenancy: false,
 			);

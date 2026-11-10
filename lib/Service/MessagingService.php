@@ -32,6 +32,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
@@ -373,9 +375,10 @@ class MessagingService {
 		try {
 			$objectService->saveObject(
 				object: $row,
-				register: $this->registerSlug(),
-				schema: $this->messageSchema(),
-				uuid: $rowId
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->registerSlug(), schema: $this->messageSchema()),
+					uuid: $rowId,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

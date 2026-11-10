@@ -40,6 +40,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Controller\PosCustomerController;
 use OCA\Pipelinq\Service\PosCustomerLinkService;
 use OCP\AppFramework\Http;
@@ -555,18 +556,13 @@ class PosCustomerControllerTest extends TestCase {
 			->willReturnCallback(
 				function (
 					array $object,
-					?array $extend = [],
-					string|int|null $register = null,
-					string|int|null $schema = null,
-					?string $uuid = null,
+					ObjectSaveOptions $options = new ObjectSaveOptions(),
 					bool $_rbac = true,
 					bool $_multitenancy = true,
-					bool $silent = false,
-					bool $_validation = true,
-					?array $uploadedFiles = null,
-					?IUser $currentUser = null,
-					bool $failIfExists = false,
 				): ObjectEntityInterface {
+					$register = $options->target->register;
+					$schema = $options->target->schema;
+					$uuid = $options->uuid;
 					$this->saves[] = [(string)$schema, (string)$uuid, $object];
 
 					$entity = new ObjectEntity();

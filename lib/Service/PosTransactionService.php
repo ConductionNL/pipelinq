@@ -26,6 +26,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
@@ -1399,10 +1401,7 @@ class PosTransactionService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $transaction,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 		);
 
 		return $this->toArray(object: $saved);

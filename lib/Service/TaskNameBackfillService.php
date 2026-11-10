@@ -29,6 +29,10 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
+use OCA\OpenRegister\Service\Object\SavePolicy;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -192,14 +196,14 @@ class TaskNameBackfillService {
 			try {
 				$this->objectService->saveObject(
 					object: $payload,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: $uuid,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+						uuid: $uuid,
+						policy: new SavePolicy(silent: true),
+						actor: new SaveActor(currentUser: $actingAdmin),
+					),
 					_rbac: false,
 					_multitenancy: false,
-					silent: true,
-					currentUser: $actingAdmin,
 				);
 				$counts['named']++;
 			} catch (Throwable $e) {

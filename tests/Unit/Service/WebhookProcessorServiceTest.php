@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
@@ -158,7 +159,8 @@ class WebhookProcessorServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, mixed $register = null, mixed $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$uuid = $options->uuid;
 				$id = ($uuid ?? ($object['uuid'] ?? 'gen-' . count($this->store)));
 				$object['uuid'] = $id;
 				$this->store[$id] = $object;

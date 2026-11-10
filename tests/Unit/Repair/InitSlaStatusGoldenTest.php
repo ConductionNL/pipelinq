@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
 use DateTimeInterface;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Repair\InitSlaStatus;
 use OCA\Pipelinq\Service\SlaEngineService;
 use OCA\Pipelinq\Service\TicketService;
@@ -320,7 +321,11 @@ trait InitSlaStatusFakeStore {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject(array $object, array $extend = [], ?string $register = null, ?string $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$extend = ($options->extend ?? []);
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->test->trace[] = ['saveObject' => [$object, $extend, $register, $schema, $uuid]];
 		if (($this->case['saveFails'] ?? false) === true) {
 			throw new RuntimeException('locked');

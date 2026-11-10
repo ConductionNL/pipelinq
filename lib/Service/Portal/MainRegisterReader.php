@@ -35,6 +35,8 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Reads objects from the main pipelinq register.
@@ -187,12 +189,9 @@ class MainRegisterReader {
 			// The register and schema stay pinned above.
 			$saved = $this->objectService()->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 				_rbac: false,
-				_multitenancy: false
+				_multitenancy: false,
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(

@@ -30,6 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Labels;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\App\IAppManager;
@@ -157,7 +159,13 @@ class LabelRenameService {
 		}
 
 		$label['name'] = $name;
-		$objects->saveObject(object: $label, register: self::REGISTER, schema: self::LABEL_SCHEMA, uuid: $labelId);
+		$objects->saveObject(
+			object: $label,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::LABEL_SCHEMA),
+				uuid: $labelId,
+			),
+		);
 
 		$result['rewritten'] = $this->rewrite(rename: ['objects' => $objects, 'from' => $from, 'to' => $name], budget: self::INLINE_LIMIT);
 		if ($this->anyCarries(objects: $objects, name: $from) === true) {
@@ -278,7 +286,13 @@ class LabelRenameService {
 		$id = (string)($row['id'] ?? ($row['@self']['id'] ?? ''));
 		$row[$field] = $names;
 		try {
-			$rename['objects']->saveObject(object: $row, register: self::REGISTER, schema: $schema, uuid: $id);
+			$rename['objects']->saveObject(
+				object: $row,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: $schema),
+					uuid: $id,
+				),
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'LabelRenameService: an item kept the old label',

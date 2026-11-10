@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCP\IAppConfig;
@@ -70,7 +71,8 @@ class BudgetServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = (string)($object['uuid'] ?? '');
 				}

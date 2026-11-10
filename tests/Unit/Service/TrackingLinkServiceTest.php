@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\TrackingLinkService;
@@ -125,7 +126,8 @@ class TrackingLinkServiceTest extends TestCase {
 				return ($this->store[$id] ?? null);
 			}//end find()
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('saved-' . count($this->saved));
 				}

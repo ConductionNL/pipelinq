@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Tests\Unit\Repair;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Register;
 use OCA\OpenRegister\Db\Schema;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Repair\IngestProductVendorMaster;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
@@ -133,20 +134,13 @@ class FakeIngestObjectService {
 	 */
 	public function saveObject(
 		array|ObjectEntity $object,
-		?array $extend=[],
-		Register|string|int|null $register=null,
-		Schema|string|int|null $schema=null,
-		?string $uuid=null,
-		bool $_rbac=true,
-		bool $_multitenancy=true,
-		bool $silent=false,
-		bool $_validation=true,
-		?array $uploadedFiles=null,
-		?IUser $currentUser=null,
-		bool $failIfExists=false,
-		bool $_unowned=false,
-		bool $_dedupOverride=false,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		bool $_rbac = true,
+		bool $_multitenancy = true,
 	): ObjectEntity {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->saves[] = ['register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 		$data = $object;
 		if ($object instanceof ObjectEntity) {

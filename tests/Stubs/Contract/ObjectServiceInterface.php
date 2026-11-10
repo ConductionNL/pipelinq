@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\OpenRegister\Contract;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IUser;
 
 /**
@@ -134,34 +135,18 @@ interface ObjectServiceInterface {
 	/**
 	 * Persist an object, creating or updating it.
 	 *
-	 * @param array           $object        The object to store.
-	 * @param ?array          $extend        Relations to expand on the result.
-	 * @param string|int|null $register      Register id, UUID or slug.
-	 * @param string|int|null $schema        Schema id, UUID or slug.
-	 * @param ?string         $uuid          The object UUID.
-	 * @param bool            $_rbac         Apply register RBAC.
-	 * @param bool            $_multitenancy Apply organisation scoping.
-	 * @param bool            $silent        Suppress events for this save.
-	 * @param bool            $_validation   Validate against the schema.
-	 * @param ?array          $uploadedFiles Files uploaded alongside the object.
-	 * @param ?IUser          $currentUser   Explicit acting user; null uses the session.
-	 * @param bool            $failIfExists  Fail instead of updating when the object already exists.
+	 * @param array             $object        The object to store.
+	 * @param ObjectSaveOptions $options       Target, uuid, extend, files, policy and actor.
+	 * @param bool              $_rbac         Apply register RBAC.
+	 * @param bool              $_multitenancy Apply organisation scoping.
 	 *
 	 * @return ObjectEntityInterface The stored object.
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend=[],
-		string|int|null $register=null,
-		string|int|null $schema=null,
-		?string $uuid=null,
+		ObjectSaveOptions $options=new ObjectSaveOptions(),
 		bool $_rbac=true,
-		bool $_multitenancy=true,
-		bool $silent=false,
-		bool $_validation=true,
-		?array $uploadedFiles=null,
-		?IUser $currentUser=null,
-		bool $failIfExists=false
+		bool $_multitenancy=true
 	): ObjectEntityInterface;
 
 	/**

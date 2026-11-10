@@ -27,6 +27,8 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for creating the default agent skills.
@@ -118,11 +120,8 @@ class DefaultSkillService {
 
 			foreach (self::DEFAULT_SKILLS as $skillData) {
 				$objectService->saveObject(
-					$skillData,
-					[],
-					$registerId,
-					$skillSchemaId,
-					null
+					object: $skillData,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $skillSchemaId)),
 				);
 				$this->logger->info("Pipelinq: Created default skill '{$skillData['title']}'");
 			}

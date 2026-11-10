@@ -53,6 +53,8 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Resolver + read/write facade for the unified ticket schema.
@@ -360,9 +362,10 @@ class TicketService {
 
 		return $this->getObjectService()->saveObject(
 			object: $payload,
-			register: $this->getRegisterId(),
-			schema: $this->getSchemaId(),
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->getRegisterId(), schema: $this->getSchemaId()),
+				uuid: $uuid,
+			),
 		);
 	}//end save()
 

@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
@@ -80,13 +81,12 @@ class SeedWeeklyReviewAgentTemplateTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				array $extend = [],
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->written[] = ['register' => $register, 'schema' => $schema, 'object' => $object];
 				$this->rows[] = $object;
 				return $object;

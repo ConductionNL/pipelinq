@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use ArrayIterator;
 use DateTimeInterface;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob;
 use OCA\Pipelinq\Service\ComplaintSlaService;
 use OCA\Pipelinq\Service\Sla\SlaEntitySweeper;
@@ -359,7 +360,11 @@ class SlaDeadlineSweepGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, array $extend=[], ?string $register=null, ?string $schema=null, ?string $uuid=null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$extend = ($options->extend ?? []);
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->recordCall(
 					call: 'saveObject',
 					args: ['object' => $object, 'extend' => $extend, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid]

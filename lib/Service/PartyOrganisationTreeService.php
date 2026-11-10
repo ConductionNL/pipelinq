@@ -44,6 +44,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -415,9 +417,13 @@ class PartyOrganisationTreeService {
 		try {
 			$this->objectService->saveObject(
 				object: $object,
-				register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+						register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
+						schema: $this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
+					),
+					uuid: $uuid,
+				),
 			);
 
 			return true;

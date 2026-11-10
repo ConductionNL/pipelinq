@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\CampaignLinkDecorator;
 use OCA\Pipelinq\Service\CampaignService;
 use OCA\Pipelinq\Service\Marketing\CampaignFormDestination;
@@ -105,7 +106,10 @@ class FormDestinationBackfillTest extends TestCase {
 			/**
 			 * @param array<string, mixed> $object The object.
 			 */
-			public function saveObject(array $object, string $register, string $schema, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+				$register = (string)($options->target->register ?? '');
+				$schema = (string)($options->target->schema ?? '');
+				$uuid = $options->uuid;
 				if ($uuid === 'form-broken') {
 					throw new RuntimeException('refused');
 				}

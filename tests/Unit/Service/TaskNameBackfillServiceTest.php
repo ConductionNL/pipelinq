@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Repair\BackfillTaskNames;
 use OCA\Pipelinq\Service\ObjectEventSilence;
 use OCA\Pipelinq\Service\TaskNameBackfillService;
@@ -104,17 +105,15 @@ class TaskNameBackfillServiceTest extends TestCase {
 		$objectService->method('saveObject')->willReturnCallback(
 			function (
 				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
 				bool $_multitenancy = true,
-				bool $silent = false,
-				bool $_validation = true,
-				?array $uploadedFiles = null,
-				?IUser $currentUser = null,
 			) use ($failOn): ObjectEntity {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$silent = $options->policy->silent;
+				$currentUser = $options->actor->currentUser;
 				$this->writes[] = [
 					'object' => $object,
 					'register' => $register,

@@ -32,6 +32,8 @@ use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for contactmoment business operations.
@@ -262,9 +264,9 @@ class ContactmomentService {
 		try {
 			$saved = $this->objectService->saveObject(
 				object: $payload,
-				register: $config['register'],
-				schema: $config['schema'],
-				uuid: null,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']),
+				),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

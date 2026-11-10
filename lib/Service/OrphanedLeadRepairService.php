@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -107,10 +109,10 @@ class OrphanedLeadRepairService {
 			try {
 				$this->objectService->saveObject(
 					object: array_merge($payload, $patch),
-					extend: [],
-					register: $register,
-					schema: $leadSchema,
-					uuid: $uuid,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $leadSchema),
+						uuid: $uuid,
+					),
 				);
 				$counts['moved']++;
 			} catch (Throwable $e) {

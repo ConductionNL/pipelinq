@@ -21,6 +21,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\KvkApiClient;
 use OCA\Pipelinq\Service\OrganisationEnrichmentService;
 use OCP\IAppConfig;
@@ -60,7 +61,8 @@ class OrganisationEnrichmentServiceTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true) {
+				$uuid = $options->uuid;
 				$this->saved[] = [$object, $uuid];
 				return $this->createMock(ObjectEntityInterface::class);
 			}

@@ -29,6 +29,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -326,9 +328,10 @@ class BudgetService {
 
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
-				uuid: $saveUuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()),
+					uuid: $saveUuid,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

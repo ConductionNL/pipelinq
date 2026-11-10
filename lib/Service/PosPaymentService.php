@@ -34,6 +34,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
 use OCA\Pipelinq\Service\Payment\AdyenAdapter;
@@ -1356,10 +1358,7 @@ class PosPaymentService {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$saved = $objectService->saveObject(
 				object: $current,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

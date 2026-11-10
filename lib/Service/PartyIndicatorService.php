@@ -47,6 +47,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -257,9 +259,10 @@ class PartyIndicatorService {
 		try {
 			$this->objectService->saveObject(
 				object: $data,
-				register: $this->registerId(),
-				schema: $schema,
-				uuid: $valueId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->registerId(), schema: $schema),
+					uuid: $valueId,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

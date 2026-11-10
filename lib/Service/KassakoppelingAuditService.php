@@ -48,6 +48,8 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for the POS Kassakoppeling audit log.
@@ -661,10 +663,7 @@ class KassakoppelingAuditService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 		);
 
 		return $this->toArray(object: $saved);

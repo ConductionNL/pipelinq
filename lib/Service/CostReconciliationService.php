@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -160,9 +162,10 @@ class CostReconciliationService {
 
 				$objectService->saveObject(
 					object: $arr,
-					register: $this->getRegisterSlug(),
-					schema: $this->getSchemaSlug(),
-					uuid: $uuid,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()),
+						uuid: $uuid,
+					),
 				);
 				$reconciled++;
 			} catch (Throwable $e) {

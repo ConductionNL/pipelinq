@@ -43,6 +43,8 @@ use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * BookingService — booking lifecycle service.
@@ -1137,10 +1139,10 @@ class BookingService {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $this->stripSelf(payload: $data),
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $customerId
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $customerId,
+				),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -1167,10 +1169,7 @@ class BookingService {
 
 		return $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid),
 		);
 	}//end saveBooking()
 

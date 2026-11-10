@@ -35,6 +35,8 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Append-only audit-trail service for BSN bevragingen.
@@ -157,9 +159,7 @@ class BsnAuditService {
 		[$register, $schema] = $this->config();
 		$saved = $this->getObjectService()->saveObject(
 			object: $record,
-			extend: [],
-			register: $register,
-			schema: $schema,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 		);
 
 		if (is_array($saved) === true) {
@@ -279,10 +279,10 @@ class BsnAuditService {
 				$arr['outcome'] = 'pseudonymised';
 				$this->getObjectService()->saveObject(
 					object: $arr,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: $uuid,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+						uuid: $uuid,
+					),
 				);
 				$count++;
 			}//end foreach

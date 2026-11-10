@@ -61,6 +61,8 @@ use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for the POS end-of-day pipeline + registry-mediated journal raise.
@@ -851,10 +853,7 @@ class PosBookkeepingService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 		);
 
 		return $this->toArray(object: $saved);

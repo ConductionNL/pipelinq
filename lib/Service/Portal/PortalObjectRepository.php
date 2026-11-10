@@ -52,6 +52,8 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Thin, register-scoped wrapper over the OpenRegister ObjectService for the
@@ -276,10 +278,7 @@ class PortalObjectRepository {
 			$saved = $this->serviceAccount->runAs(
 				fn (): mixed => $this->objectService()->saveObject(
 					object: $data,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: $id
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 				)
 			);
 		} catch (PortalException $e) {

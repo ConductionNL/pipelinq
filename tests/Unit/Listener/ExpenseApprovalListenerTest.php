@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Listener;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Service\ApSyncNotifier;
 use OCA\Pipelinq\Service\SchemaMapService;
@@ -73,7 +74,8 @@ class ApFakeObjectService {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+	public function saveObject($object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$uuid = $options->uuid;
 		$this->saved[(string)$uuid] = (array)$object;
 		$this->stored[(string)$uuid] = (array)$object;
 		return (array)$object;
@@ -160,7 +162,11 @@ class ReDispatchingApFakeObjectService extends ApFakeObjectService {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+	public function saveObject($object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$extend = ($options->extend ?? []);
+		$register = (string)($options->target->register ?? '');
+		$schema = (string)($options->target->schema ?? '');
+		$uuid = $options->uuid;
 		$saved = parent::saveObject($object, $extend, $register, $schema, $uuid);
 
 		if ($this->listener === null || $this->entityFactory === null) {

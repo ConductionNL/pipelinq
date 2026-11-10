@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Controller\PortalController;
 use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCA\Pipelinq\Service\BookingService;
@@ -152,10 +153,9 @@ class PortalControllerTest extends TestCase {
 
 			public function saveObject(
 				array $object,
-				array $extend,
-				string $register,
-				string $schema,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			): array {
 				$this->saveCalls++;
 				$this->lastSaved = $object;

@@ -32,6 +32,8 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Opt-out lookup + recording service.
@@ -153,9 +155,7 @@ class OptOutService {
 			];
 			$this->getObjectService()->saveObject(
 				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 			return true;
 		} catch (Throwable $e) {
@@ -199,9 +199,7 @@ class OptOutService {
 			$object = array_filter($object, static fn ($v) => $v !== null);
 			$this->getObjectService()->saveObject(
 				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 			return true;
 		} catch (Throwable $e) {

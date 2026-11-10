@@ -32,6 +32,8 @@ namespace OCA\Pipelinq\Service\Event;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCP\IAppConfig;
@@ -129,11 +131,9 @@ class EventReminderService
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'campaignEvent_schema', '');
         try {
             $this->objectService->saveObject(
-                object: array_merge($event, ['reminderSentAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM)]),
-                register: $register,
-                schema: $schema,
-                uuid: $eventId,
-            );
+	object: array_merge($event, ['reminderSentAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM)]),
+	options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $eventId),
+);
         } catch (Throwable $e) {
             throw new RuntimeException('event_not_saved: '.$e->getMessage(), 0, $e);
         }

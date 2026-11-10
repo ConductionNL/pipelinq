@@ -27,6 +27,8 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for creating default pipelines.
@@ -153,11 +155,8 @@ class DefaultPipelineService {
 	 */
 	private function savePipeline(object $objectService, string $registerId, string $schemaId, array $data): void {
 		$objectService->saveObject(
-			$data,
-			[],
-			$registerId,
-			$schemaId,
-			null
+			object: $data,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId)),
 		);
 
 		$title = $data['title'] ?? 'Unknown';

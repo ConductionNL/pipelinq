@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Event;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\Event\EventReminderService;
 use OCP\IAppConfig;
@@ -92,7 +93,9 @@ class EventReminderServiceTest extends TestCase
         $order   = [];
         $objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
         $objects->expects($this->once())->method('saveObject')->willReturnCallback(
-            function (array $object, $extend, $register, $schema, $uuid) use (&$order) {
+            function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true) use (&$order) {
+	$schema = $options->target->schema;
+	$uuid = $options->uuid;
                 $order[] = 'stamp';
                 $this->assertSame(expected: '21', actual: $schema);
                 $this->assertSame(expected: 'e1', actual: $uuid);

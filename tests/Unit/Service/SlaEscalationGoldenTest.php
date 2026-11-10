@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\BusinessHoursCalculator;
 use OCA\Pipelinq\Service\HolidayCalendarService;
 use OCA\Pipelinq\Service\SlaEngineService;
@@ -329,7 +330,10 @@ class SlaEscalationGoldenTest extends TestCase {
 				return ($this->store[$id] ?? null);
 			}
 
-			public function saveObject(array $object, array $extend = [], $register = null, $schema = null): mixed {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$extend = ($options->extend ?? []);
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->test->note(['saveObject' => compact('object', 'extend', 'register', 'schema')]);
 				$this->count++;
 				return match ($this->save) {

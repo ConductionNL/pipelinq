@@ -30,6 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -294,9 +296,13 @@ class DeliverabilityCheckService {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+						register: $this->getRegisterSlug(),
+						schema: $this->getMailTransportSchemaSlug(),
+					),
+					uuid: $id,
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('DeliverabilityCheckService.persistVerdict: save failed', ['id' => $id, 'exception' => $e->getMessage()]);

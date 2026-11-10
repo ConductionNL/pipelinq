@@ -50,6 +50,7 @@ namespace OCA\OpenRegister\Service;
 use LogicException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IUser;
 
 if (class_exists(ObjectService::class) === false) {
@@ -87,34 +88,18 @@ if (class_exists(ObjectService::class) === false) {
 		/**
 		 * Persist an object.
 		 *
-		 * @param array<string, mixed>       $object         The data to persist.
-		 * @param array<string, mixed>|null  $extend         Additional field values.
-		 * @param string|int|null            $register       Register slug or ID.
-		 * @param string|int|null            $schema         Schema slug or ID.
-		 * @param string|null                $uuid           UUID for update; null for create.
-		 * @param boolean                    $_rbac          Whether to enforce RBAC checks.
-		 * @param boolean                    $_multitenancy  Whether to enforce tenant scoping.
-		 * @param boolean                    $silent         Whether to suppress side-effects.
-		 * @param boolean                    $_validation    Whether to validate against the schema.
-		 * @param array<string, mixed>|null  $uploadedFiles  Files to attach.
-		 * @param IUser|null                 $currentUser    Acting user for folder access.
-		 * @param boolean                    $failIfExists   Whether a duplicate is an error.
+		 * @param array<string, mixed> $object        The data to persist.
+		 * @param ObjectSaveOptions    $options       Target, uuid, extend, files, policy and actor.
+		 * @param boolean              $_rbac         Whether to enforce RBAC checks.
+		 * @param boolean              $_multitenancy Whether to enforce tenant scoping.
 		 *
 		 * @return ObjectEntityInterface
 		 */
 		public function saveObject(
 			array $object,
-			?array $extend = [],
-			string|int|null $register = null,
-			string|int|null $schema = null,
-			?string $uuid = null,
+			ObjectSaveOptions $options = new ObjectSaveOptions(),
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			bool $silent = false,
-			bool $_validation = true,
-			?array $uploadedFiles = null,
-			?IUser $currentUser = null,
-			bool $failIfExists = false,
 		): ObjectEntityInterface {
 			throw new LogicException(self::NOT_CONFIGURED);
 		}//end saveObject()

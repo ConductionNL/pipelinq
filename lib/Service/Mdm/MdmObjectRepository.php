@@ -34,6 +34,8 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Repository helper for MDM OpenRegister objects.
@@ -200,10 +202,10 @@ class MdmObjectRepository {
 
 		$saved = $this->objectService()->saveObject(
 			object: $object,
-			extend: [],
-			register: $this->register(),
-			schema: $this->schema(schemaSlug: $schemaSlug),
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->register(), schema: $this->schema(schemaSlug: $schemaSlug)),
+				uuid: $uuid,
+			),
 		);
 
 		return $this->toArray(object: $saved);

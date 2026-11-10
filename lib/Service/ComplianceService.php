@@ -30,6 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
@@ -1065,9 +1067,7 @@ class ComplianceService {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1276,8 +1276,7 @@ class ComplianceService {
 
 			$objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

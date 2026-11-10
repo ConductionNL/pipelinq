@@ -50,6 +50,8 @@ use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Service for POS cash-drawer (shift / drop / count / diff) operations.
@@ -823,10 +825,7 @@ class CashShiftService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id),
 		);
 
 		return $this->toArray(object: $saved);

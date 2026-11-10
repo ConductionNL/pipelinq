@@ -41,6 +41,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -252,8 +254,7 @@ class DetractorFollowUpService {
 		try {
 			$saved = $this->objectService->saveObject(
 				object: $task,
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 			);
 
 			return (string)($saved->getUuid() ?? '');
@@ -284,9 +285,10 @@ class DetractorFollowUpService {
 		try {
 			$this->objectService->saveObject(
 				object: $response,
-				register: $register,
-				schema: $schema,
-				uuid: (string)($response['id'] ?? $response['uuid'] ?? ''),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: (string)($response['id'] ?? $response['uuid'] ?? ''),
+				),
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

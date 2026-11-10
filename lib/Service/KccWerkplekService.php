@@ -30,6 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -435,11 +437,8 @@ class KccWerkplekService {
 			}
 
 			$objectService->saveObject(
-				$payload,
-				[],
-				$register,
-				$schema,
-				$saveId
+				object: $payload,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $saveId),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(

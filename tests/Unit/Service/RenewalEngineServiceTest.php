@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\ContractService;
 use OCA\Pipelinq\Service\RenewalEngineService;
 use OCP\IAppConfig;
@@ -62,7 +63,10 @@ class FakeRenewalObjectService {
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function saveObject($object, $extend = [], $register = null, $schema = null, $uuid = null): array {
+	public function saveObject($object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$data = (array)$object;
 		$this->seq++;
 		$data['id'] = ($uuid ?? 'new-' . $this->seq);

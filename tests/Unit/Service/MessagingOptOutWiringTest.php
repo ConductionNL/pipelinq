@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -63,7 +64,9 @@ class MessagingOptOutWiringTest extends TestCase {
 			/** @var array<string, array{schema: string, row: array<string, mixed>}> */
 			public array $rows = [];
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$uuid = ($uuid ?? ($object['uuid'] ?? ('obj-'.count($this->rows))));
 				$object['uuid'] = $uuid;
 				$this->rows[$uuid] = ['schema' => (string)$schema, 'row' => $object];
