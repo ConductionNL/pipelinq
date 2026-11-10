@@ -298,29 +298,45 @@ class KeywordAnalysisService {
 			}
 
 			$contenders = $this->contenders(pages: $pages, queryImpressions: $totals['impressions'], minPageShare: $minPageShare);
-			if (count($contenders) < 2) {
-				continue;
+			$finding = $this->materialLoss(contest: new QueryContest(totals: $totals, contenders: $contenders), materiality: $materiality);
+			if ($finding !== null) {
+				$out[] = (['query' => $query] + $finding);
 			}
-
-			$combined = ($totals['clicks'] / $totals['impressions']);
-			$best = $this->bestPage(contenders: $contenders);
-			if ($combined > ($best['ctr'] * (1.0 - $materiality))) {
-				continue;
-			}
-
-			$out[] = [
-				'query' => $query,
-				'clicks' => $totals['clicks'],
-				'impressions' => $totals['impressions'],
-				'combinedCtr' => round($combined, 4),
-				'bestPage' => $best['page'],
-				'bestPageCtr' => round($best['ctr'], 4),
-				'pages' => array_values($contenders),
-			];
 		}
 
 		return self::mostImpressionsFirst(findings: $out);
 	}//end cannibalisation()
+
+	/**
+	 * The cannibalisation finding (without its query) when at least two pages
+	 * compete and the combined rate falls materially below the best page's.
+	 *
+	 * @param QueryContest $contest     The query's totals and contending pages.
+	 * @param float        $materiality How far below the better rate the combined rate must fall.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function materialLoss(QueryContest $contest, float $materiality): ?array {
+		if (count($contest->contenders) < 2) {
+			return null;
+		}
+
+		$totals = $contest->totals;
+		$combined = ($totals['clicks'] / $totals['impressions']);
+		$best = $this->bestPage(contenders: $contest->contenders);
+		if ($combined > ($best['ctr'] * (1.0 - $materiality))) {
+			return null;
+		}
+
+		return [
+			'clicks' => $totals['clicks'],
+			'impressions' => $totals['impressions'],
+			'combinedCtr' => round($combined, 4),
+			'bestPage' => $best['page'],
+			'bestPageCtr' => round($best['ctr'], 4),
+			'pages' => array_values($contest->contenders),
+		];
+	}//end materialLoss()
 
 	/**
 	 * Queries with demand that no page of ours answers.
