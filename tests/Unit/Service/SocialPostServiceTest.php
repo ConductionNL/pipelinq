@@ -743,6 +743,48 @@ class SocialPostServiceTest extends TestCase {
 	}
 
 	/**
+	 * A post naming an account that no longer exists records a typed refusal
+	 * without a network and without calling any adapter.
+	 *
+	 * @return void
+	 */
+	public function testAVanishedAccountIsRecordedAsNotConfigured(): void {
+		$postId = $this->seedPost([
+			'accountIds' => ['acc-gone'],
+			'status' => SocialPostService::STATUS_SCHEDULED,
+		]);
+
+		$this->service()->publishPost(postId: $postId);
+
+		$row = $this->publications->forPost(postId: $postId)[0];
+		$this->assertSame(SocialPublicationStore::FAILED, $row['status']);
+		$this->assertSame(SocialGatewayResult::NOT_CONFIGURED, $row['failureCode']);
+		$this->assertSame('This post names an account that no longer exists.', $row['failureReason']);
+		$this->assertSame('', $row['network']);
+		$this->assertSame('acc-gone', $row['accountId']);
+		$this->assertSame([], $this->requests);
+	}
+
+	/**
+	 * An unconfigured network's refusal names the network.
+	 *
+	 * @return void
+	 */
+	public function testAnUnconfiguredNetworkRefusalNamesTheNetwork(): void {
+		$this->seedAccount(id: 'acc-t', network: 'threads');
+		$postId = $this->seedPost([
+			'accountIds' => ['acc-t'],
+			'status' => SocialPostService::STATUS_SCHEDULED,
+		]);
+
+		$this->service()->publishPost(postId: $postId);
+
+		$row = $this->publications->forPost(postId: $postId)[0];
+		$this->assertSame('Pipelinq cannot publish to threads yet.', $row['failureReason']);
+		$this->assertSame('threads', $row['network']);
+	}
+
+	/**
 	 * A share-mode account never reaches an adapter at all: it goes down the
 	 * advocacy path instead.
 	 *
