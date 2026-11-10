@@ -50,6 +50,7 @@ namespace OCA\OpenRegister\Service;
 use LogicException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\BulkSaveOptions;
 use OCP\IUser;
 
 if (class_exists(ObjectService::class) === false) {
@@ -313,30 +314,18 @@ if (class_exists(ObjectService::class) === false) {
 		/**
 		 * Persist many objects at once.
 		 *
-		 * @param array<int, mixed> $objects         The objects to persist.
-		 * @param string|int|null   $register        Register slug or ID.
-		 * @param string|int|null   $schema          Schema slug or ID.
-		 * @param boolean           $_rbac           Whether to enforce RBAC checks.
-		 * @param boolean           $_multitenancy   Whether to enforce tenant scoping.
-		 * @param boolean           $validation      Whether to validate.
-		 * @param boolean           $events          Whether to emit events.
-		 * @param boolean           $deduplicateIds  Whether to deduplicate ids.
-		 * @param boolean           $enrich          Whether to enrich the results.
-		 * @param boolean           $_audit          Whether to write an audit trail.
+		 * @param array<int, mixed> $objects       The objects to persist.
+		 * @param BulkSaveOptions   $options       Batch defaults, validation, events and audit.
+		 * @param boolean           $_rbac         Whether to enforce RBAC checks.
+		 * @param boolean           $_multitenancy Whether to enforce tenant scoping.
 		 *
 		 * @return array<int, mixed>
 		 */
 		public function saveObjects(
 			array $objects,
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			BulkSaveOptions $options = new BulkSaveOptions(),
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			bool $validation = false,
-			bool $events = false,
-			bool $deduplicateIds = true,
-			bool $enrich = true,
-			bool $_audit = true,
 		): array {
 			return [];
 		}//end saveObjects()
