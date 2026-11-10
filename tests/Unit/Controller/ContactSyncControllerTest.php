@@ -747,4 +747,60 @@ class ContactSyncControllerTest extends TestCase {
 			revisions: new VcardRevision(),
 		);
 	}//end realSyncService()
+
+	/**
+	 * Golden: every action's unexpected failure logs its own line with the exception, and answers the generic 500.
+	 *
+	 * @return void
+	 */
+	public function testEveryUnexpectedFailureLogsItsActionAndAnswers500(): void {
+		$failure = new \RuntimeException('directory offline');
+		$cases = [
+			'status' => [['uid' => 'u-1'], 'cardStatus'],
+			'search' => [['q' => 'acme'], 'searchContacts'],
+			'import' => [['uid' => 'u-1'], 'importContact'],
+			'create' => [['objectType' => 'client', 'object' => ['name' => 'Acme']], 'createWithContact'],
+			'writeBack' => [['objectType' => 'client', 'objectId' => 'obj-1'], 'syncToContacts'],
+		];
+		foreach ($cases as $action => [$params, $serviceMethod]) {
+			$request = $this->createMock(IRequest::class);
+			$request->method('getParam')->willReturnCallback(
+				static fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default)
+			);
+			$service = $this->createMock(ContactSyncService::class);
+			$service->method($serviceMethod)->willThrowException(
+				$action === 'create' ? new \LogicException('directory offline') : $failure
+			);
+			$logged = [];
+			$logger = $this->createMock(LoggerInterface::class);
+			$logger->method('error')->willReturnCallback(
+				static function (string $message, array $context = []) use (&$logged): void {
+					$logged[] = [$message, get_class($context['exception']), $context['exception']->getMessage()];
+				}
+			);
+			$user = $this->createMock(IUser::class);
+			$user->method('getUID')->willReturn('test-user');
+			$session = $this->createMock(IUserSession::class);
+			$session->method('getUser')->willReturn($user);
+			$l10n = $this->createMock(IL10N::class);
+			$l10n->method('t')->willReturnArgument(0);
+			$controller = new ContactSyncController($request,
+				$service,
+				$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => true]),
+				new CrmPrivilegeCheck($session, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
+				$l10n,
+				$logger,
+			);
+
+			$response = $controller->$action();
+
+			$this->assertSame([500, ['error' => 'An unexpected error occurred']], [$response->getStatus(), $response->getData()], $action);
+			$expectedClass = \RuntimeException::class;
+			if ($action === 'create') {
+				$expectedClass = \LogicException::class;
+			}
+
+			$this->assertSame([['ContactSyncController::'.$action.' failed', $expectedClass, 'directory offline']], $logged, $action);
+		}
+	}//end testEveryUnexpectedFailureLogsItsActionAndAnswers500()
 }//end class
