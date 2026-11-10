@@ -1,0 +1,1889 @@
+{
+    "billing isManager / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "billing isManager / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "billing isManager / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "billing_handoff_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "billing isManager / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "billing_handoff_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "billing isManager / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "billing isManager / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "billing isManager / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "billing_handoff_manager_group",
+                ""
+            ]
+        ]
+    },
+    "billing isManager / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "billing_handoff_manager_group",
+                ""
+            ]
+        ]
+    },
+    "billing isManager / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "billing isManager / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "billing isManager / unset / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "billing_handoff_manager_group",
+                ""
+            ]
+        ]
+    },
+    "billing isManager / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "billing_handoff_manager_group",
+                ""
+            ]
+        ]
+    },
+    "pos isPosUser / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos isPosUser / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos isPosUser / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "pos isPosUser / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "pos isPosUser / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos isPosUser / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos isPosUser / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ]
+        ]
+    },
+    "pos isPosUser / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ]
+        ]
+    },
+    "pos isPosUser / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos isPosUser / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos isPosUser / unset / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "member",
+                "pos"
+            ]
+        ]
+    },
+    "pos isPosUser / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "pos"
+            ]
+        ]
+    },
+    "pos isManager / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos isManager / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos isManager / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "pos isManager / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "pos isManager / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos isManager / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos isManager / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_manager_group",
+                ""
+            ]
+        ]
+    },
+    "pos isManager / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_manager_group",
+                ""
+            ]
+        ]
+    },
+    "pos isManager / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos isManager / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos isManager / unset / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_manager_group",
+                ""
+            ]
+        ]
+    },
+    "pos isManager / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_manager_group",
+                ""
+            ]
+        ]
+    },
+    "pos canAccessTransaction, no cashier / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos canAccessTransaction, no cashier / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, no cashier / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, no cashier / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, no cashier / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos canAccessTransaction, no cashier / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, no cashier / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, no cashier / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, no cashier / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos canAccessTransaction, no cashier / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, no cashier / unset / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "member",
+                "pos"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, no cashier / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "pos"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, own sale / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos canAccessTransaction, own sale / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, own sale / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, own sale / configured / outsider": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, own sale / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos canAccessTransaction, own sale / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, own sale / explicitly empty / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, own sale / explicitly empty / outsider": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, own sale / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos canAccessTransaction, own sale / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, own sale / unset / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, own sale / unset / outsider": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, other cashier / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos canAccessTransaction, other cashier / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, other cashier / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, other cashier / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, other cashier / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos canAccessTransaction, other cashier / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, other cashier / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, other cashier / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, other cashier / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "pos canAccessTransaction, other cashier / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, other cashier / unset / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "member",
+                "pos"
+            ]
+        ]
+    },
+    "pos canAccessTransaction, other cashier / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "pos_group",
+                "pos"
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "pos"
+            ]
+        ]
+    },
+    "forecast isManager / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast isManager / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast isManager / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "forecast isManager / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "forecast isManager / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast isManager / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast isManager / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast isManager / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast isManager / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast isManager / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast isManager / unset / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast isManager / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep own / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead rep own / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead rep own / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canRead rep own / configured / outsider": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canRead rep own / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead rep own / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead rep own / explicitly empty / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep own / explicitly empty / outsider": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep own / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead rep own / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead rep own / unset / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep own / unset / outsider": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep other / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead rep other / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead rep other / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canRead rep other / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canRead rep other / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead rep other / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead rep other / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep other / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep other / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead rep other / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead rep other / unset / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep other / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep no owner / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead rep no owner / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead rep no owner / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canRead rep no owner / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canRead rep no owner / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead rep no owner / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead rep no owner / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep no owner / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep no owner / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead rep no owner / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead rep no owner / unset / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead rep no owner / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead team own / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead team own / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead team own / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canRead team own / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canRead team own / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead team own / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead team own / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead team own / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead team own / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canRead team own / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canRead team own / unset / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canRead team own / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canOverride team / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride team / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canOverride team / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canOverride team / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canOverride team / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride team / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canOverride team / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canOverride team / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canOverride team / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride team / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canOverride team / unset / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canOverride team / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canOverride company / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / configured / admin": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / configured / member": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / configured / outsider": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / explicitly empty / admin": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / explicitly empty / member": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / unset / admin": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / unset / member": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canOverride company / unset / outsider": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota division / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota division / configured / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canSetQuota division / configured / member": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "member",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canSetQuota division / configured / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ],
+            [
+                "isInGroup",
+                "outsider",
+                "grp"
+            ]
+        ]
+    },
+    "forecast canSetQuota division / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota division / explicitly empty / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canSetQuota division / explicitly empty / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canSetQuota division / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canSetQuota division / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota division / unset / admin": {
+        "answer": true,
+        "lookups": [
+            [
+                "isAdmin",
+                "admin"
+            ]
+        ]
+    },
+    "forecast canSetQuota division / unset / member": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "member"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canSetQuota division / unset / outsider": {
+        "answer": false,
+        "lookups": [
+            [
+                "isAdmin",
+                "outsider"
+            ],
+            [
+                "getValueString",
+                "pipelinq",
+                "forecast_manager_group",
+                ""
+            ]
+        ]
+    },
+    "forecast canSetQuota company / configured / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / configured / admin": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / configured / member": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / configured / outsider": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / explicitly empty / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / explicitly empty / admin": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / explicitly empty / member": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / explicitly empty / outsider": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / unset / (empty)": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / unset / admin": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / unset / member": {
+        "answer": false,
+        "lookups": []
+    },
+    "forecast canSetQuota company / unset / outsider": {
+        "answer": false,
+        "lookups": []
+    }
+}
