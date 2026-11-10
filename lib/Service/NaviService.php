@@ -571,6 +571,30 @@ class NaviService {
 	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
 	 */
 	private function findObjects(string $schemaKey): array {
+		$filters = $this->schemaFilters(schemaKey: $schemaKey);
+		if ($filters === []) {
+			return [];
+		}
+
+		$objects = [];
+		foreach ($this->fetchRows(filters: $filters, schemaKey: $schemaKey) as $result) {
+			$normalized = $this->normalizeFindObjectsResult(result: $result);
+			if ($normalized !== null) {
+				$objects[] = $normalized;
+			}
+		}
+
+		return $objects;
+	}//end findObjects()
+
+	/**
+	 * Register / schema filter for a configured schema; [] when either is unset.
+	 *
+	 * @param string $schemaKey App-config key holding the schema ID.
+	 *
+	 * @return array<string, string>
+	 */
+	private function schemaFilters(string $schemaKey): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
@@ -581,10 +605,24 @@ class NaviService {
 			return [];
 		}
 
+		return ['register' => $register, 'schema' => $schema];
+	}//end schemaFilters()
+
+	/**
+	 * Run findAll() for the filter; a failure is logged and rethrown.
+	 *
+	 * The findAll() contract returns a non-nullable array, so no `?? []`.
+	 *
+	 * @param array<string, string> $filters   Register / schema filter.
+	 * @param string                $schemaKey App-config key, for the log.
+	 *
+	 * @return array<int, mixed>
+	 *
+	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
+	 */
+	private function fetchRows(array $filters, string $schemaKey): array {
 		try {
-			$results = $this->objectService->findAll(
-				config: ['filters' => ['register' => $register, 'schema' => $schema]]
-			);
+			return $this->objectService->findAll(config: ['filters' => $filters]);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				message: '[NaviService] findAll failed',
@@ -592,19 +630,7 @@ class NaviService {
 			);
 			throw new RuntimeException(message: 'Navi query failed', code: 0, previous: $e);
 		}
-
-		$objects = [];
-		// The findAll() contract returns a non-nullable array, so the `?? []`
-		// that used to sit here was dead code (reported by phpstan).
-		foreach ($results as $result) {
-			$normalized = $this->normalizeFindObjectsResult(result: $result);
-			if ($normalized !== null) {
-				$objects[] = $normalized;
-			}
-		}
-
-		return $objects;
-	}//end findObjects()
+	}//end fetchRows()
 
 	/**
 	 * Normalize a single ObjectService::findAll() result row to a plain array.
@@ -623,20 +649,34 @@ class NaviService {
 			return $result;
 		}
 
-		if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-			$serialized = $result->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($result) === true && method_exists($result, 'getObject') === true) {
-			$data = $result->getObject();
-			if (is_array($data) === true) {
+		foreach (['jsonSerialize', 'getObject'] as $method) {
+			$data = $this->unwrapped(result: $result, method: $method);
+			if ($data !== null) {
 				return $data;
 			}
 		}
 
 		return null;
 	}//end normalizeFindObjectsResult()
+
+	/**
+	 * Array returned by the given method of an object row, if it has one.
+	 *
+	 * @param mixed  $result A single row from ObjectService::findAll().
+	 * @param string $method `jsonSerialize` or `getObject`.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function unwrapped(mixed $result, string $method): ?array {
+		if (is_object($result) === false || method_exists($result, $method) === false) {
+			return null;
+		}
+
+		$data = $result->$method();
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
+	}//end unwrapped()
 }//end class
