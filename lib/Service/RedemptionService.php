@@ -44,6 +44,7 @@ use OCA\OpenRegister\Service\Object\ObjectFindTarget;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) orchestrates the full
  *  redemption lifecycle (reserve/use/cancel/expire) across account + ledger
  *  services.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister deletion value objects (openregister #9099) add the collaborators.
  */
 class RedemptionService {
 	use PayloadToArray;
