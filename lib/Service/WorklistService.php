@@ -228,8 +228,37 @@ class WorklistService {
 			filters: ['assignee' => $userId],
 			limit: self::LEAD_FETCH_LIMIT
 		);
-		// Every ticket type assigned to the user, not only requests: an
-		// assigned complaint or contact moment is work too (pipelinq review G1).
+		$requests = $this->assignedTickets(userId: $userId);
+		$pipelines = $this->findObjects(
+			schemaKey: 'pipeline_schema',
+			filters: [],
+			limit: self::PIPELINE_FETCH_LIMIT
+		);
+
+		$openLeads = $this->openLeads(leads: $leads, closedStages: $this->getClosedStageNames(pipelines: $pipelines));
+		$nowTs = (new DateTimeImmutable())->getTimestamp();
+		$items = array_merge(
+			$this->buildLeadRows(leads: $openLeads, nowTs: $nowTs),
+			$this->buildRequestRows(requests: $requests, nowTs: $nowTs)
+		);
+
+		// Stable sort (PHP >= 8.0) mirroring the stable Array.prototype.sort
+		// comparator in MyWorkWidget.vue:103-112.
+		usort($items, $this->compareRows(...));
+		return $this->mineResponse(items: $items, limit: $limit);
+	}//end getMine()
+
+	/**
+	 * Every ticket assigned to the user, of every work ticket type.
+	 *
+	 * Every ticket type assigned to the user, not only requests: an
+	 * assigned complaint or contact moment is work too (pipelinq review G1).
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 *
+	 * @return array<int, array<string, mixed>> The tickets.
+	 */
+	private function assignedTickets(string $userId): array {
 		$requests = [];
 		foreach (self::WORK_TICKET_TYPES as $ticketType) {
 			$requests = array_merge(
@@ -242,54 +271,38 @@ class WorklistService {
 			);
 		}
 
-		$pipelines = $this->findObjects(
-			schemaKey: 'pipeline_schema',
-			filters: [],
-			limit: self::PIPELINE_FETCH_LIMIT
-		);
+		return $requests;
+	}//end assignedTickets()
 
-		$closedStages = $this->getClosedStageNames(pipelines: $pipelines);
-		$nowTs = (new DateTimeImmutable())->getTimestamp();
-
-		$items = array_merge(
-			$this->buildLeadRows(leads: $leads, closedStages: $closedStages, nowTs: $nowTs),
-			$this->buildRequestRows(requests: $requests, nowTs: $nowTs)
-		);
-
-		// Stable sort (PHP >= 8.0) mirroring the stable Array.prototype.sort
-		// comparator in MyWorkWidget.vue:103-112.
-		usort($items, $this->compareRows(...));
-
+	/**
+	 * The worklist answer: the (capped) rows without their sort key, and the counts of the full union.
+	 *
+	 * @param array<int, array<string, mixed>> $items The sorted rows.
+	 * @param int|null                         $limit Optional cap on returned rows.
+	 *
+	 * @return array{items: array<int, array<string, mixed>>, total: int, leadCount: int, requestCount: int}
+	 */
+	private function mineResponse(array $items, ?int $limit): array {
 		$total = count($items);
-		$leadCount = 0;
-		$requestCount = 0;
-		foreach ($items as $item) {
-			if ($item['entityType'] === 'lead') {
-				$leadCount++;
-				continue;
-			}
-
-			$requestCount++;
-		}
-
+		$leadCount = count(array_filter($items, static fn (array $item): bool => $item['entityType'] === 'lead'));
 		if ($limit !== null) {
 			$items = array_slice($items, 0, $limit);
 		}
 
-		$rows = [];
-		foreach ($items as $item) {
-			// Internal sort key — not part of the response contract.
-			unset($item['dueTimestamp']);
-			$rows[] = $item;
-		}
-
 		return [
-			'items' => $rows,
+			'items' => array_map(
+				static function (array $item): array {
+					// Internal sort key — not part of the response contract.
+					unset($item['dueTimestamp']);
+					return $item;
+				},
+				$items
+			),
 			'total' => $total,
 			'leadCount' => $leadCount,
-			'requestCount' => $requestCount,
+			'requestCount' => ($total - $leadCount),
 		];
-	}//end getMine()
+	}//end mineResponse()
 
 	/**
 	 * Normalize the user's leads into worklist rows.
@@ -298,55 +311,72 @@ class WorklistService {
 	 * closed stage, default stage to `-` and priority to `normal`, due
 	 * date = expectedCloseDate, overdue when strictly before now.
 	 *
-	 * @param array<int, array<string, mixed>> $leads Lead rows from OpenRegister.
-	 * @param array<int, string> $closedStages Closed stage names.
-	 * @param int $nowTs Current Unix timestamp.
+	 * @param array<int, array<string, mixed>> $leads Open lead rows from OpenRegister.
+	 * @param int                              $nowTs Current Unix timestamp.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function buildLeadRows(array $leads, array $closedStages, int $nowTs): array {
-		$rows = [];
-		foreach ($leads as $lead) {
-			$stage = (string)($lead['stage'] ?? '');
-			if (in_array($stage, $closedStages, true) === true) {
-				// Leads in a closed pipeline stage are not open work (MyWorkWidget.vue:76).
-				continue;
-			}
-
-			$dueDate = $this->normalizeDate(value: ($lead['expectedCloseDate'] ?? null));
-			$dueTs = $this->toTimestamp(value: $dueDate);
-
-			$stageOrStatus = '-';
-			if ($stage !== '') {
-				$stageOrStatus = $stage;
-			}
-
-			$priority = (string)($lead['priority'] ?? '');
-			if ($priority === '') {
-				$priority = 'normal';
-			}
-
-			$isOverdue = false;
-			if ($dueTs !== null && $dueTs < $nowTs) {
-				// Lead overdue = expectedCloseDate strictly before now (MyWorkWidget.vue:85).
-				$isOverdue = true;
-			}
-
-			$rows[] = [
-				'entityType' => 'lead',
-				'id' => (string)($lead['id'] ?? ''),
-				'title' => (string)($lead['title'] ?? ''),
-				'stageOrStatus' => $stageOrStatus,
-				'priority' => $priority,
-				'dueDate' => $dueDate,
-				'isOverdue' => $isOverdue,
-				'routeName' => 'LeadDetail',
-				'dueTimestamp' => $dueTs,
-			];
-		}//end foreach
-
-		return $rows;
+	private function buildLeadRows(array $leads, int $nowTs): array {
+		return array_values(array_map(fn (array $lead): array => $this->leadRow(lead: $lead, nowTs: $nowTs), $leads));
 	}//end buildLeadRows()
+
+	/**
+	 * The leads that are open work: not in a closed pipeline stage (MyWorkWidget.vue:76).
+	 *
+	 * @param array<int, array<string, mixed>> $leads        Lead rows from OpenRegister.
+	 * @param array<int, string>               $closedStages Closed stage names.
+	 *
+	 * @return array<int, array<string, mixed>> The open leads.
+	 */
+	private function openLeads(array $leads, array $closedStages): array {
+		return array_filter(
+			$leads,
+			static fn (array $lead): bool => in_array((string)($lead['stage'] ?? ''), $closedStages, true) === false
+		);
+	}//end openLeads()
+
+	/**
+	 * One open lead as a worklist row.
+	 *
+	 * @param array<string, mixed> $lead  The lead.
+	 * @param int                  $nowTs Current Unix timestamp.
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private function leadRow(array $lead, int $nowTs): array {
+		$stage = (string)($lead['stage'] ?? '');
+		$dueDate = $this->normalizeDate(value: ($lead['expectedCloseDate'] ?? null));
+		$dueTs = $this->toTimestamp(value: $dueDate);
+
+		return [
+			'entityType' => 'lead',
+			'id' => (string)($lead['id'] ?? ''),
+			'title' => (string)($lead['title'] ?? ''),
+			'stageOrStatus' => $this->orDefault(value: $stage, default: '-'),
+			'priority' => $this->orDefault(value: (string)($lead['priority'] ?? ''), default: 'normal'),
+			'dueDate' => $dueDate,
+			// Lead overdue = expectedCloseDate strictly before now (MyWorkWidget.vue:85).
+			'isOverdue' => ($dueTs !== null && $dueTs < $nowTs),
+			'routeName' => 'LeadDetail',
+			'dueTimestamp' => $dueTs,
+		];
+	}//end leadRow()
+
+	/**
+	 * The value, or the default when it is empty.
+	 *
+	 * @param string $value   The value.
+	 * @param string $default The default.
+	 *
+	 * @return string The value or the default.
+	 */
+	private function orDefault(string $value, string $default): string {
+		if ($value === '') {
+			return $default;
+		}
+
+		return $value;
+	}//end orDefault()
 
 	/**
 	 * Normalize the user's requests into worklist rows.
@@ -370,38 +400,40 @@ class WorklistService {
 				continue;
 			}
 
-			$dueDate = $this->normalizeDate(value: ($request['occurredAt'] ?? null));
-			$dueTs = $this->toTimestamp(value: $dueDate);
-
-			$priority = (string)($request['priority'] ?? '');
-			if ($priority === '') {
-				$priority = 'normal';
-			}
-
-			$isOverdue = false;
-			if ($dueTs !== null && ($nowTs - $dueTs) > self::REQUEST_OVERDUE_AGE_SECONDS) {
-				// Request overdue = occurredAt older than 30 days (MyWorkWidget.vue:99).
-				$isOverdue = true;
-			}
-
-			$rows[] = [
-				'entityType' => 'request',
-				'ticketType' => (string)($request['ticketType'] ?? TicketService::TYPE_REQUEST),
-				'id' => (string)($request['id'] ?? ''),
-				'title' => (string)($request['title'] ?? ''),
-				'stageOrStatus' => $this->statusLabel(status: $status),
-				'priority' => $priority,
-				'dueDate' => $dueDate,
-				'isOverdue' => $isOverdue,
-				// Unify-ticket-supertype: request-type tickets render on the one
-				// unified detail page; the retired RequestDetail page is gone.
-				'routeName' => 'TicketDetail',
-				'dueTimestamp' => $dueTs,
-			];
-		}//end foreach
+			$rows[] = $this->requestRow(request: $request, nowTs: $nowTs);
+		}
 
 		return $rows;
 	}//end buildRequestRows()
+
+	/**
+	 * One open request ticket as a worklist row.
+	 *
+	 * @param array<string, mixed> $request The request ticket.
+	 * @param int                  $nowTs   Current Unix timestamp.
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private function requestRow(array $request, int $nowTs): array {
+		$dueDate = $this->normalizeDate(value: ($request['occurredAt'] ?? null));
+		$dueTs = $this->toTimestamp(value: $dueDate);
+
+		return [
+			'entityType' => 'request',
+			'ticketType' => (string)($request['ticketType'] ?? TicketService::TYPE_REQUEST),
+			'id' => (string)($request['id'] ?? ''),
+			'title' => (string)($request['title'] ?? ''),
+			'stageOrStatus' => $this->statusLabel(status: (string)($request['status'] ?? '')),
+			'priority' => $this->orDefault(value: (string)($request['priority'] ?? ''), default: 'normal'),
+			'dueDate' => $dueDate,
+			// Request overdue = occurredAt older than 30 days (MyWorkWidget.vue:99).
+			'isOverdue' => ($dueTs !== null && ($nowTs - $dueTs) > self::REQUEST_OVERDUE_AGE_SECONDS),
+			// Unify-ticket-supertype: request-type tickets render on the one
+			// unified detail page; the retired RequestDetail page is gone.
+			'routeName' => 'TicketDetail',
+			'dueTimestamp' => $dueTs,
+		];
+	}//end requestRow()
 
 	/**
 	 * Every open item of the user's work, tickets, leads and follow-up tasks,
@@ -517,26 +549,31 @@ class WorklistService {
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	public function summary(string $userId): string {
-		$items   = $this->items(userId: $userId)['items'];
-		$counts  = ['tickets' => 0, 'leads' => 0, 'tasks' => 0];
-		$dueNow  = 0;
-		$buckets = new WorkBuckets();
-		foreach ($items as $item) {
-			foreach (array_keys($counts) as $lens) {
-				if ($buckets->inLens(kind: $item['kind'], lens: $lens) === true) {
-					$counts[$lens]++;
-				}
-			}
-
-			if ($item['bucket'] === 'answer-today') {
-				$dueNow++;
-			}
-		}
+		$items = $this->items(userId: $userId)['items'];
+		$counts = (new WorkBuckets())->countsByLens(items: $items);
+		$dueNow = count(array_filter($items, static fn (array $item): bool => $item['bucket'] === 'answer-today'));
 
 		if ($items === []) {
 			return $this->l10n->t('Nothing is with you right now');
 		}
 
+		$kinds = $this->kindsPhrase(counts: $counts);
+		$sentence = $this->counted(singular: '%n item is with you', plural: '%n items are with you', count: count($items)) . ': ' . $kinds;
+		if ($dueNow > 0) {
+			$sentence .= '; ' . $this->counted(singular: '%n must be answered today', plural: '%n must be answered today', count: $dueNow);
+		}
+
+		return $sentence;
+	}//end summary()
+
+	/**
+	 * The kinds of work as a list: "two tickets and one lead", "one ticket, one lead and two follow-ups".
+	 *
+	 * @param array{tickets: int, leads: int, tasks: int} $counts The counts by lens.
+	 *
+	 * @return string The phrase.
+	 */
+	private function kindsPhrase(array $counts): string {
 		$phrases = [
 			'tickets' => $this->counted(singular: '%n ticket', plural: '%n tickets', count: $counts['tickets']),
 			'leads' => $this->counted(singular: '%n lead', plural: '%n leads', count: $counts['leads']),
@@ -546,18 +583,12 @@ class WorklistService {
 			array_filter($phrases, static fn (string $key): bool => ($counts[$key] > 0), ARRAY_FILTER_USE_KEY)
 		);
 		$last = array_pop($parts);
-		$kinds = $last;
-		if ($parts !== []) {
-			$kinds = $this->l10n->t('%1$s and %2$s', [implode(', ', $parts), $last]);
+		if ($parts === []) {
+			return $last;
 		}
 
-		$sentence = $this->counted(singular: '%n item is with you', plural: '%n items are with you', count: count($items)) . ': ' . $kinds;
-		if ($dueNow > 0) {
-			$sentence .= '; ' . $this->counted(singular: '%n must be answered today', plural: '%n must be answered today', count: $dueNow);
-		}
-
-		return $sentence;
-	}//end summary()
+		return $this->l10n->t('%1$s and %2$s', [implode(', ', $parts), $last]);
+	}//end kindsPhrase()
 
 	/**
 	 * A counted phrase with the count written as a word from one to twenty
@@ -881,16 +912,27 @@ class WorklistService {
 			return [];
 		}
 
-		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
+		$config = [
+			'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
+			'limit' => $limit,
+		];
+		return array_map(fn ($result): array => $this->toArray(value: $result), $this->runFindAll(config: $config, schemaKey: $schemaKey));
+	}//end findObjects()
 
+	/**
+	 * Run the OpenRegister query; a failure is logged and rethrown as a RuntimeException.
+	 *
+	 * @param array<string, mixed> $config    The findAll configuration.
+	 * @param string               $schemaKey The schema key, for the log line.
+	 *
+	 * @return array<int, mixed> The results.
+	 *
+	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
+	 */
+	private function runFindAll(array $config, string $schemaKey): array {
 		try {
 			$objectService = $this->getObjectService();
-			$results = $objectService->findAll(
-				config: [
-					'filters' => $allFilters,
-					'limit' => $limit,
-				]
-			);
+			$results = $objectService->findAll(config: $config);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				message: '[WorklistService] findAll failed',
@@ -899,13 +941,8 @@ class WorklistService {
 			throw new RuntimeException(message: 'Worklist query failed', code: 0, previous: $e);
 		}
 
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(value: $result);
-		}
-
-		return $objects;
-	}//end findObjects()
+		return array_values(($results ?? []));
+	}//end runFindAll()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via DI container.
