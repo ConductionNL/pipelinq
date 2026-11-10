@@ -36,6 +36,30 @@ import { NcButton } from '@nextcloud/vue'
 import ReceiptModalBody from '../components/pos/ReceiptModalBody.vue'
 import receiptModalMixin from '../mixins/receiptModalMixin.js'
 
+/**
+ * Why the server did not send the receipt: its refusal, or a failed delivery.
+ *
+ * @param {boolean} ok Whether the server took the request.
+ * @param {object} data Its answer.
+ * @return {(string|null)} The message, or null when the receipt was sent.
+ */
+function emailRefusal(ok, data) {
+	if (!ok) {
+		return data.error
+			|| t('pipelinq', 'Error sending receipt: {error}', {
+				error: '',
+			})
+	}
+	if (data.receipt && data.receipt.status === 'failed') {
+		return data.receipt.error
+			|| t(
+				'pipelinq',
+				'Mail delivery failed (no SMTP relay configured).',
+			)
+	}
+	return null
+}
+
 export default {
 	name: 'EmailReceiptModal',
 	components: {
@@ -73,23 +97,9 @@ export default {
 			this.statusMessage = ''
 			try {
 				const { ok, data } = await this.postReceipt('email')
-				if (!ok) {
-					this.showReceiptError(
-						data.error
-						|| t('pipelinq', 'Error sending receipt: {error}', {
-							error: '',
-						}),
-					)
-					return
-				}
-				if (data.receipt && data.receipt.status === 'failed') {
-					this.showReceiptError(
-						data.receipt.error
-						|| t(
-							'pipelinq',
-							'Mail delivery failed (no SMTP relay configured).',
-						),
-					)
+				const refusal = emailRefusal(ok, data)
+				if (refusal !== null) {
+					this.showReceiptError(refusal)
 					return
 				}
 				this.showReceiptSuccess(t('pipelinq', 'Receipt sent successfully'))

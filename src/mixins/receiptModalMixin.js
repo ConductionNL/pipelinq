@@ -6,6 +6,18 @@ import { generateUrl } from '@nextcloud/router'
 import { loadActiveReceiptTemplates } from '../services/receiptTemplates.js'
 
 /**
+ * The headers of a request to the receipt endpoints.
+ *
+ * @return {object} The headers.
+ */
+function receiptHeaders() {
+	return {
+		requesttoken: OC.requestToken,
+		'OCS-APIREQUEST': 'true',
+	}
+}
+
+/**
  * What the till's receipt modals (Email Receipt, Print Receipt) share: the
  * template choice, the preview, the request to the transaction's receipt
  * endpoint and the status line.
@@ -98,28 +110,33 @@ export default {
 			this.previewLoading = true
 			this.statusMessage = ''
 			try {
-				const params = this.selectedTemplate
-					? `?template=${encodeURIComponent(this.selectedTemplate.id)}`
-					: ''
-				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/preview${params}`,
-					),
-					{
-						headers: {
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
-				const data = await response.json().catch(() => ({}))
-				if (response.ok && data.receipt) {
-					this.previewText = data.receipt.text || ''
-					this.showPreview(data.receipt)
+				const receipt = await this.fetchPreview()
+				if (receipt) {
+					this.previewText = receipt.text || ''
+					this.showPreview(receipt)
 				}
 			} finally {
 				this.previewLoading = false
 			}
+		},
+
+		/**
+		 * The receipt rendered with the chosen template.
+		 *
+		 * @return {Promise<(object|null)>} The receipt, or null when the server gave none.
+		 */
+		async fetchPreview() {
+			const params = this.selectedTemplate
+				? `?template=${encodeURIComponent(this.selectedTemplate.id)}`
+				: ''
+			const response = await fetch(
+				this.receiptUrl(`preview${params}`),
+				{
+					headers: receiptHeaders(),
+				},
+			)
+			const data = await response.json().catch(() => ({}))
+			return response.ok && data.receipt ? data.receipt : null
 		},
 
 		/**
@@ -129,26 +146,41 @@ export default {
 		 * @return {Promise<{ok: boolean, data: object}>} Whether the server took it, and its answer.
 		 */
 		async postReceipt(action) {
-			const body = {}
-			if (this.selectedTemplate) {
-				body.template = this.selectedTemplate.id
-			}
+			const body = this.templateBody()
 			const response = await fetch(
-				generateUrl(
-					`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/${action}`,
-				),
+				this.receiptUrl(action),
 				{
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
+						...receiptHeaders(),
 					},
 					body: JSON.stringify(body),
 				},
 			)
 			const data = await response.json().catch(() => ({}))
 			return { ok: response.ok, data }
+		},
+
+		/**
+		 * @return {object} The request body: the chosen template, when there is one.
+		 */
+		templateBody() {
+			const body = {}
+			if (this.selectedTemplate) {
+				body.template = this.selectedTemplate.id
+			}
+			return body
+		},
+
+		/**
+		 * @param {string} path The path under the transaction's receipt endpoint.
+		 * @return {string} The URL.
+		 */
+		receiptUrl(path) {
+			return generateUrl(
+				`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/${path}`,
+			)
 		},
 
 		/**

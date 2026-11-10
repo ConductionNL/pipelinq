@@ -71,16 +71,10 @@ export default {
 			try {
 				const { ok, data } = await this.postReceipt('print')
 				if (!ok) {
-					this.showReceiptError(
-						data.error
-						|| t('pipelinq', 'Error printing receipt: {error}', {
-							error: '',
-						}),
-					)
+					this.showReceiptError(data.error || t('pipelinq', 'Error printing receipt: {error}', { error: '' }))
 					return
 				}
-				this.printerDevice =
-					(data.receipt && data.receipt.printerDevice) || ''
+				this.printerDevice = (data.receipt && data.receipt.printerDevice) || ''
 				this.showReceiptSuccess(t('pipelinq', 'Receipt sent to printer'))
 				this.$emit('printed', data.receipt)
 				this.closeAfterReceipt()
