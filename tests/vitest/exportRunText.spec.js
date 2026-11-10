@@ -43,4 +43,9 @@ describe('the BI export run texts', () => {
 		expect(exportSchedule('*/15 9-17 * * 1-5', 'nl')).toBe('*/15 9-17 * * 1-5')
 		expect(exportSchedule('', 'nl')).toBe('')
 	})
+
+	it('reads every other schedule shape the same way', () => {
+		const cases = [null, 5, '   ', ' @HOURLY ', '@weekly', '@monthly', '@yearly', '@nope', '0 0 * *', '0 0 * * * *', '5 * * * *', '0  *  *  *  *', 'x 2 * * *', '0 y * * *', '0 2 * 1 *', '0 6 * * *', '59 5 * * *', '0 3 * * 0', '0 3 * * 7', '0 3 * * 8', '0 3 2 * 1', '0 3 * * x', '0 3 15 * *', '0 3 x * *']
+		expect(cases.map((value) => exportSchedule(value, 'en'))).toEqual(['', '', '', 'Every hour', 'Sunday at 00:00', 'On day 1 of every month at 00:00', '@yearly', '@nope', '0 0 * *', '0 0 * * * *', '5 * * * *', 'Every hour', 'x 2 * * *', '0 y * * *', '0 2 * 1 *', 'Every day at 06:00', 'Every night at 05:59', 'Sunday at 03:00', 'Sunday at 03:00', '0 3 * * 8', '0 3 2 * 1', '0 3 * * x', 'On day 15 of every month at 03:00', '0 3 x * *'])
+	})
 })
