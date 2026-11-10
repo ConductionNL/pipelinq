@@ -192,6 +192,7 @@ import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
+import { fetchRegisteredObjects } from '../../services/objectFetch.js'
 import { resolveObjectType } from '../../services/pipelineUtils.js'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
@@ -336,34 +337,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-39
 		 */
 		async fetchRaw(type, params = {}) {
-			const typeConfig = this.config[type]
-			if (!typeConfig) return []
-
-			const queryParams = new URLSearchParams()
-			for (const [key, value] of Object.entries(params)) {
-				if (value === undefined || value === null || value === '') continue
-				queryParams.set(key, value)
-			}
-
-			const url = generateUrl(
-				'/apps/openregister/api/objects/'
-					+ typeConfig.register
-					+ '/'
-					+ typeConfig.schema
-					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-			)
-
-			const response = await fetch(url, {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
-			})
-
-			if (!response.ok) throw new Error('Failed to fetch ' + type)
-			const data = await response.json()
-			return data.results || data || []
+			return fetchRegisteredObjects(this.config, { type, params })
 		},
 
 		/**
