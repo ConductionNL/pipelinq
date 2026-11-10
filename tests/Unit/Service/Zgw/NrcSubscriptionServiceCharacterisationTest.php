@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Zgw;
 
+use OCA\Pipelinq\Service\Zgw\AbonnementRequest;
 use OCA\Pipelinq\Service\Zgw\NrcSubscriptionFailedException;
 use OCA\Pipelinq\Service\Zgw\NrcSubscriptionService;
 use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
@@ -82,7 +83,7 @@ class NrcSubscriptionServiceCharacterisationTest extends TestCase {
 		] as [$answer, $url, $saved]) {
 			$service = $this->service(client: ['id' => 'c'], post: $answer, saved: $saved);
 
-			$result = $service->registerAbonnement(['id' => 'ep-1', 'componenten' => ['nrc' => self::NRC]], self::KANALEN, 'https://pipelinq/inbox');
+			$result = $service->registerAbonnement(['id' => 'ep-1', 'componenten' => ['nrc' => self::NRC]], new AbonnementRequest(self::KANALEN, 'https://pipelinq/inbox'));
 
 			[$post, $save] = $this->seen;
 			self::assertSame('post', $post[0]);
@@ -123,7 +124,7 @@ class NrcSubscriptionServiceCharacterisationTest extends TestCase {
 			$service = $this->service(client: $client, post: $answer, saved: null);
 			$caught = null;
 			try {
-				$service->registerAbonnement($endpoint, self::KANALEN, 'https://pipelinq/inbox');
+				$service->registerAbonnement($endpoint, new AbonnementRequest(self::KANALEN, 'https://pipelinq/inbox'));
 			} catch (Throwable $e) {
 				$caught = $e;
 			}
