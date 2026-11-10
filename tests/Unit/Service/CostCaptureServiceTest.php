@@ -21,6 +21,9 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\CostCaptureService;
 use OCA\Pipelinq\Service\CostEstimationService;
+use OCA\Pipelinq\Service\DeliveredMessage;
+use OCA\Pipelinq\Service\MessageRoute;
+use OCA\Pipelinq\Service\MessageTariff;
 use OCA\Pipelinq\Service\MessagingExchangeRateService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -58,7 +61,7 @@ class CostCaptureServiceTest extends TestCase {
 			->with(0.0075, 'USD')->willReturn(0.00691234567);
 		$this->estimator->expects($this->never())->method('estimate');
 
-		$result = $this->service->capture(['Price' => '-0.0075', 'PriceUnit' => 'usd'], 'twilio', 'sms');
+		$result = $this->service->capture(['Price' => '-0.0075', 'PriceUnit' => 'usd'], new DeliveredMessage(new MessageRoute('twilio', 'sms')));
 
 		$this->assertSame(
 			[
@@ -84,7 +87,7 @@ class CostCaptureServiceTest extends TestCase {
 		$this->exchangeRate->method('toEur')->willReturn(null);
 		$this->estimator->expects($this->never())->method('estimate');
 
-		$result = $this->service->capture(['Price' => '0.05', 'PriceUnit' => 'GBP', 'costEur' => 9], 'twilio', 'sms');
+		$result = $this->service->capture(['Price' => '0.05', 'PriceUnit' => 'GBP', 'costEur' => 9], new DeliveredMessage(new MessageRoute('twilio', 'sms')));
 
 		$this->assertSame(
 			[
@@ -110,7 +113,7 @@ class CostCaptureServiceTest extends TestCase {
 		$this->exchangeRate->expects($this->never())->method('toEur');
 		$this->estimator->expects($this->never())->method('estimate');
 
-		$result = $this->service->capture(['Price' => '0.05', 'costEur' => '0.031'], 'bsp', 'whatsapp');
+		$result = $this->service->capture(['Price' => '0.05', 'costEur' => '0.031'], new DeliveredMessage(new MessageRoute('bsp', 'whatsapp')));
 
 		$this->assertSame(
 			[
@@ -134,7 +137,7 @@ class CostCaptureServiceTest extends TestCase {
 		$this->estimator->expects($this->once())->method('estimate')
 			->with('meta', 'whatsapp', 'marketing', 'BE')->willReturn(0.12);
 
-		$result = $this->service->capture(['costEur' => 'n/a'], 'meta', 'whatsapp', 'marketing', 'BE');
+		$result = $this->service->capture(['costEur' => 'n/a'], new DeliveredMessage(new MessageRoute('meta', 'whatsapp'), new MessageTariff('marketing', 'BE')));
 
 		$this->assertSame(
 			[
@@ -158,7 +161,7 @@ class CostCaptureServiceTest extends TestCase {
 		$this->estimator->expects($this->once())->method('estimate')
 			->with('meta', 'sms', 'utility', 'NL')->willReturn(0.07);
 
-		$result = $this->service->capture([], 'meta', 'sms');
+		$result = $this->service->capture([], new DeliveredMessage(new MessageRoute('meta', 'sms')));
 
 		$this->assertSame(0.07, $result['costEur']);
 	}//end testEstimatesAUtilityMessageInTheNetherlandsByDefault()
