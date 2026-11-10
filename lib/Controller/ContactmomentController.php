@@ -88,22 +88,37 @@ class ContactmomentController extends Controller {
 				$user->getUID()
 			);
 			return new JSONResponse(['success' => true]);
-		} catch (DoesNotExistException $e) {
+		} catch (\Exception $e) {
+			return $this->deleteFailure(exception: $e);
+		}
+	}//end destroy()
+
+	/**
+	 * The answer to a failed delete: 404 when missing, 403 when not permitted, else a logged 500.
+	 *
+	 * @param \Exception $exception What the delete threw.
+	 *
+	 * @return JSONResponse
+	 */
+	private function deleteFailure(\Exception $exception): JSONResponse {
+		if ($exception instanceof DoesNotExistException) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Contactmoment not found')],
 				404
 			);
-		} catch (NotPermittedException $e) {
+		}
+
+		if ($exception instanceof NotPermittedException) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('You do not have permission to delete this contactmoment')],
 				403
 			);
-		} catch (\Exception $e) {
-			$this->logger->error('ContactmomentController::destroy failed', ['exception' => $e]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Operation failed')],
-				500
-			);
-		}//end try
-	}//end destroy()
+		}
+
+		$this->logger->error('ContactmomentController::destroy failed', ['exception' => $exception]);
+		return new JSONResponse(
+			['error' => $this->l10n->t('Operation failed')],
+			500
+		);
+	}//end deleteFailure()
 }//end class
