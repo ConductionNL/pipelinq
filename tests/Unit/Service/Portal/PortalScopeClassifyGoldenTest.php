@@ -91,6 +91,46 @@ class PortalScopeClassifyGoldenTest extends TestCase {
 	}//end testEmptyScopeShowsNothing()
 
 	/**
+	 * resolve(): own ids always; a delegation only for the asked scope and an existing grantor.
+	 *
+	 * @return void
+	 */
+	public function testResolveBuckets(): void {
+		$repository = $this->createMock(PortalObjectRepository::class);
+		$repository->method('idOf')->willReturn('acct-me');
+		$repository->expects($this->exactly(2))->method('find')->willReturnCallback(
+			static fn (string $schema, string $id): ?array => match ($id) {
+				'acct-gone' => null,
+				'acct-kept' => ['linkedContactId' => 'c-kept', 'linkedOrganisationId' => ['o-1', '', 'o-2']],
+			}
+		);
+		$delegations = $this->createMock(PortalDelegationService::class);
+		$delegations->expects($this->once())->method('getActiveScopes')->with('acct-me')->willReturn(
+			[
+				['grantorAccountId' => 'acct-other-scope', 'scopes' => ['view-orders']],
+				['grantorAccountId' => 'acct-gone', 'scopes' => ['view-invoices']],
+				['grantorAccountId' => 'acct-kept', 'scopes' => ['view-orders', 'view-invoices']],
+			]
+		);
+
+		$resolved = (new PortalScopeResolver($repository, $delegations))->resolve(
+			['linkedContactId' => 'c-me', 'linkedOrganisationId' => ''],
+			'view-invoices'
+		);
+
+		$this->assertSame(
+			[
+				'ownContactIds' => ['c-me'],
+				'ownClientIds' => [],
+				'delegated' => [
+					['from' => 'acct-kept', 'contactIds' => ['c-kept'], 'clientIds' => ['o-1', 'o-2']],
+				],
+			],
+			$resolved
+		);
+	}//end testResolveBuckets()
+
+	/**
 	 * A resolver; classify() uses none of its collaborators.
 	 *
 	 * @return PortalScopeResolver
