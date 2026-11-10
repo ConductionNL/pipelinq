@@ -333,41 +333,78 @@ class ExchangeRateService {
 			return ['rate' => 1.0, 'source' => self::SOURCE_SAME, 'origin' => null, 'rateDate' => null, 'reason' => null];
 		}
 
-		$override = ($this->overrideStore()->getOverrides()[$currency] ?? null);
-		if ($override !== null) {
-			return [
-				'rate' => $override['rate'],
-				'source' => self::SOURCE_OVERRIDE,
-				'origin' => null,
-				'rateDate' => $override['date'],
-				'reason' => $override['reason'],
-			];
-		}
-
-		$fleet = $this->fleetRates?->rateFor(from: $currency, to: $reporting);
-		if ($fleet !== null) {
-			return [
-				'rate' => $fleet['rate'],
-				'source' => self::SOURCE_SHILLINQ,
-				'origin' => $fleet['origin'],
-				'rateDate' => $fleet['date'],
-				'reason' => null,
-			];
-		}
-
-		$typed = $this->getRates()[$currency] ?? null;
-		if ($typed !== null) {
-			return [
-				'rate' => $typed,
-				'source' => self::SOURCE_TABLE,
-				'origin' => null,
-				'rateDate' => ($this->overrideStore()->getRateDates()[$currency] ?? null),
-				'reason' => null,
-			];
-		}
-
-		return ['rate' => 1.0, 'source' => self::SOURCE_NONE, 'origin' => null, 'rateDate' => null, 'reason' => null];
+		return $this->overrideRate(currency: $currency)
+			?? $this->fleetRate(currency: $currency, reporting: $reporting)
+			?? $this->tableRate(currency: $currency)
+			?? ['rate' => 1.0, 'source' => self::SOURCE_NONE, 'origin' => null, 'rateDate' => null, 'reason' => null];
 	}//end findRate()
+
+	/**
+	 * The rate an administrator set by hand for the currency, or null.
+	 *
+	 * @param string $currency The upper-cased source currency.
+	 *
+	 * @return array{rate: float, source: string, origin: string|null, rateDate: string|null, reason: string|null}|null The rate.
+	 */
+	private function overrideRate(string $currency): ?array {
+		$override = ($this->overrideStore()->getOverrides()[$currency] ?? null);
+		if ($override === null) {
+			return null;
+		}
+
+		return [
+			'rate' => $override['rate'],
+			'source' => self::SOURCE_OVERRIDE,
+			'origin' => null,
+			'rateDate' => $override['date'],
+			'reason' => $override['reason'],
+		];
+	}//end overrideRate()
+
+	/**
+	 * The fleet's rate for the pair, or null.
+	 *
+	 * @param string $currency  The upper-cased source currency.
+	 * @param string $reporting The reporting currency.
+	 *
+	 * @return array{rate: float, source: string, origin: string|null, rateDate: string|null, reason: string|null}|null The rate.
+	 */
+	private function fleetRate(string $currency, string $reporting): ?array {
+		$fleet = $this->fleetRates?->rateFor(from: $currency, to: $reporting);
+		if ($fleet === null) {
+			return null;
+		}
+
+		return [
+			'rate' => $fleet['rate'],
+			'source' => self::SOURCE_SHILLINQ,
+			'origin' => $fleet['origin'],
+			'rateDate' => $fleet['date'],
+			'reason' => null,
+		];
+	}//end fleetRate()
+
+	/**
+	 * The rate typed into the rate table, or null.
+	 *
+	 * @param string $currency The upper-cased source currency.
+	 *
+	 * @return array{rate: float, source: string, origin: string|null, rateDate: string|null, reason: string|null}|null The rate.
+	 */
+	private function tableRate(string $currency): ?array {
+		$typed = $this->getRates()[$currency] ?? null;
+		if ($typed === null) {
+			return null;
+		}
+
+		return [
+			'rate' => $typed,
+			'source' => self::SOURCE_TABLE,
+			'origin' => null,
+			'rateDate' => ($this->overrideStore()->getRateDates()[$currency] ?? null),
+			'reason' => null,
+		];
+	}//end tableRate()
 
 	/**
 	 * Whether a rate's date is older than the stale limit.
