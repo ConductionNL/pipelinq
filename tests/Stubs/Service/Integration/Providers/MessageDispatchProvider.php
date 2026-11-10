@@ -39,19 +39,17 @@ class MessageDispatchProvider {
 	/**
 	 * Record the call and return the scripted envelope.
 	 *
-	 * @param string $source Source slug.
-	 * @param array<string, mixed> $body Vendor-shaped body.
-	 * @param string $path Send path.
-	 * @param array<string, string> $headers Extra headers.
+	 * @param string          $source  Source slug.
+	 * @param OutboundMessage $message The send path, vendor-shaped body and extra headers.
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function dispatch(string $source, array $body, string $path, array $headers = []): array {
+	public function dispatch(string $source, OutboundMessage $message): array {
 		$this->calls[] = [
 			'source' => $source,
-			'body' => $body,
-			'path' => $path,
-			'headers' => $headers,
+			'body' => $message->body,
+			'path' => $message->path,
+			'headers' => $message->headers,
 		];
 
 		if ($this->nextResult !== null) {
