@@ -75,18 +75,32 @@ class TierService {
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function getTierRules(string $programmeId): array {
-		[$register, $schema] = $this->config(schemaKey: 'tierRule_schema');
-		if ($register === '' || $schema === '' || $programmeId === '') {
+		$ids = $this->config(schemaKey: 'tierRule_schema');
+		if ($ids[0] === '' || $ids[1] === '' || $programmeId === '') {
 			return [];
 		}
 
+		$rules = array_map([$this, 'toArray'], $this->tierRuleRows(ids: $ids, programmeId: $programmeId));
+
+		return self::sortedBySequence(rules: $rules);
+	}//end getTierRules()
+
+	/**
+	 * Read the programme's TierRule rows; an empty list when the read fails.
+	 *
+	 * @param array{0: string, 1: string} $ids         The [register, schema] ids.
+	 * @param string                      $programmeId The programme UUID.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function tierRuleRows(array $ids, string $programmeId): array {
 		try {
 			$rows = $this->getObjectService()->findAll(
 				config: [
 					'filters' => [
 						'programmeId' => $programmeId,
-						'register' => $register,
-						'schema' => $schema,
+						'register' => $ids[0],
+						'schema' => $ids[1],
 					],
 					'limit' => 100,
 				]
@@ -95,20 +109,28 @@ class TierService {
 			return [];
 		}
 
-		$rowList = [];
 		if (is_array($rows) === true) {
-			$rowList = array_values($rows);
+			return array_values($rows);
 		}
 
-		$rules = array_map([$this, 'toArray'], $rowList);
+		return [];
+	}//end tierRuleRows()
 
+	/**
+	 * Sort tier rules by sequence, lowest first.
+	 *
+	 * @param array<int, array<string, mixed>> $rules The rules.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function sortedBySequence(array $rules): array {
 		usort(
 			$rules,
 			static fn (array $a, array $b): int => (int)($a['sequence'] ?? 0) <=> (int)($b['sequence'] ?? 0)
 		);
 
 		return $rules;
-	}//end getTierRules()
+	}//end sortedBySequence()
 
 	/**
 	 * Pick the tier rule matching a given lifetimePoints (or rolling metric).
@@ -174,11 +196,7 @@ class TierService {
 		}
 
 		// Decide upgrade vs downgrade.
-		$isUpgrade = $this->isUpgrade(
-			programmeId: $change->programmeId(),
-			currentTierId: $currentTierId,
-			newTierId: $newTierUuid
-		);
+		$isUpgrade = $this->isUpgrade(change: $change, newTierId: $newTierUuid);
 		if ($isUpgrade === true) {
 			$this->handleTierUpgrade(accountId: $change->accountId, newTier: $newTier);
 			return $this->announceTierChange(change: $change, newTier: $newTier);
@@ -352,15 +370,15 @@ class TierService {
 	}//end emitTierChangedEvent()
 
 	/**
-	 * Whether $newTierId is higher than $currentTierId (by sequence).
+	 * Whether $newTierId is higher than the account's current tier (by sequence).
 	 *
-	 * @param string $programmeId The programme UUID.
-	 * @param ?string $currentTierId Current tier UUID (null = no tier yet).
-	 * @param ?string $newTierId New tier UUID.
+	 * @param TierChange $change    The re-evaluation (programme and current tier).
+	 * @param ?string    $newTierId New tier UUID.
 	 *
 	 * @return bool True for upgrade (or first assignment).
 	 */
-	private function isUpgrade(string $programmeId, ?string $currentTierId, ?string $newTierId): bool {
+	private function isUpgrade(TierChange $change, ?string $newTierId): bool {
+		$currentTierId = $change->currentTierId();
 		if ($currentTierId === null || $currentTierId === '') {
 			return true;
 		}
@@ -369,14 +387,26 @@ class TierService {
 			return false;
 		}
 
-		$current = $this->findRuleByUuid(programmeId: $programmeId, tierId: $currentTierId);
-		$new = $this->findRuleByUuid(programmeId: $programmeId, tierId: $newTierId);
+		return $this->ranksAboveCurrent(change: $change, newTierId: $newTierId);
+	}//end isUpgrade()
+
+	/**
+	 * Whether the new tier's sequence is above the current tier's; false when either is unknown.
+	 *
+	 * @param TierChange $change    The re-evaluation (programme and current tier).
+	 * @param string     $newTierId New tier UUID.
+	 *
+	 * @return bool
+	 */
+	private function ranksAboveCurrent(TierChange $change, string $newTierId): bool {
+		$current = $this->findRuleByUuid(programmeId: $change->programmeId(), tierId: (string)$change->currentTierId());
+		$new = $this->findRuleByUuid(programmeId: $change->programmeId(), tierId: $newTierId);
 		if ($current === null || $new === null) {
 			return false;
 		}
 
 		return (int)($new['sequence'] ?? 0) > (int)($current['sequence'] ?? 0);
-	}//end isUpgrade()
+	}//end ranksAboveCurrent()
 
 	/**
 	 * Find a tier rule by UUID in a programme.
