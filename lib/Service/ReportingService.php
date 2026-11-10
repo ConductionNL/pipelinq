@@ -89,43 +89,7 @@ class ReportingService {
 	 */
 	public function getKpis(string $from, string $to): array {
 		try {
-			$contactmomenten = $this->fetchContactmomenten(from: $from, to: $to);
-
-			$total = count($contactmomenten);
-			$fcrRate = $this->calculateFcr(contactmomenten: $contactmomenten);
-			$avgHandlingTime = $this->calculateAverageHandlingTime(
-				durations: array_values(
-					array_filter(
-						array_column($contactmomenten, 'duration'),
-						static fn ($v) => $v !== null && $v !== '',
-					)
-				)
-			);
-
-			// Compute SLA compliance across all channels.
-			$slaCompliance = 0.0;
-			if ($total > 0) {
-				// Group by channel preserving full moment arrays for SLA threshold evaluation.
-				$channelGroups = [];
-				foreach ($contactmomenten as $moment) {
-					$channelName = $moment['channel'] ?? 'unknown';
-					$channelGroups[$channelName][] = $moment;
-				}
-
-				$totalWithin = 0;
-				foreach ($channelGroups as $channel => $items) {
-					$totalWithin += $this->countWithinSla(channel: $channel, moments: $items);
-				}
-
-				$slaCompliance = round(($totalWithin / $total) * 100, 1);
-			}
-
-			return [
-				'total' => $total,
-				'fcrRate' => $fcrRate,
-				'avgHandlingTime' => $avgHandlingTime,
-				'slaCompliance' => $slaCompliance,
-			];
+			return $this->kpisOf(contactmomenten: $this->fetchContactmomenten(from: $from, to: $to));
 		} catch (\Throwable $e) {
 			$this->logger->error('ReportingService::getKpis failed', ['exception' => $e]);
 			return [
@@ -134,8 +98,81 @@ class ReportingService {
 				'avgHandlingTime' => '0:00',
 				'slaCompliance' => 0.0,
 			];
-		}//end try
+		}
 	}//end getKpis()
+
+	/**
+	 * The KPIs of a set of contactmomenten.
+	 *
+	 * @param array<array<string, mixed>> $contactmomenten The contactmoment data.
+	 *
+	 * @return array{total: int, fcrRate: float, avgHandlingTime: string, slaCompliance: float}
+	 */
+	private function kpisOf(array $contactmomenten): array {
+		return [
+			'total' => count($contactmomenten),
+			'fcrRate' => $this->calculateFcr(contactmomenten: $contactmomenten),
+			'avgHandlingTime' => $this->calculateAverageHandlingTime(durations: self::durationsOf(moments: $contactmomenten)),
+			// Compute SLA compliance across all channels.
+			'slaCompliance' => $this->overallSlaCompliance(contactmomenten: $contactmomenten),
+		];
+	}//end kpisOf()
+
+	/**
+	 * The share of contactmomenten handled within their channel's SLA, as a
+	 * percentage; 0.0 for none.
+	 *
+	 * @param array<array<string, mixed>> $contactmomenten The contactmoment data.
+	 *
+	 * @return float
+	 */
+	private function overallSlaCompliance(array $contactmomenten): float {
+		$total = count($contactmomenten);
+		if ($total === 0) {
+			return 0.0;
+		}
+
+		// Group by channel preserving full moment arrays for SLA threshold evaluation.
+		$totalWithin = 0;
+		foreach (self::groupedBy(moments: $contactmomenten, field: 'channel') as $channel => $items) {
+			$totalWithin += $this->countWithinSla(channel: $channel, moments: $items);
+		}
+
+		return round(($totalWithin / $total) * 100, 1);
+	}//end overallSlaCompliance()
+
+	/**
+	 * The non-empty handling durations of a set of contactmomenten, in order.
+	 *
+	 * @param array<array<string, mixed>> $moments The contactmoment data.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private static function durationsOf(array $moments): array {
+		return array_values(
+			array_filter(
+				array_column($moments, 'duration'),
+				static fn ($v) => $v !== null && $v !== '',
+			)
+		);
+	}//end durationsOf()
+
+	/**
+	 * Contactmomenten grouped by one of their fields ('unknown' when absent), in first-seen order.
+	 *
+	 * @param array<array<string, mixed>> $moments The contactmoment data.
+	 * @param string                      $field   `channel` or `agent`.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>>
+	 */
+	private static function groupedBy(array $moments, string $field): array {
+		$groups = [];
+		foreach ($moments as $moment) {
+			$groups[$moment[$field] ?? 'unknown'][] = $moment;
+		}
+
+		return $groups;
+	}//end groupedBy()
 
 	/**
 	 * Get channel distribution for the given date range.
@@ -214,33 +251,10 @@ class ReportingService {
 	 */
 	public function getAgentPerformance(string $from, string $to): array {
 		try {
-			$contactmomenten = $this->fetchContactmomenten(from: $from, to: $to);
-			$byAgent = [];
-
-			foreach ($contactmomenten as $moment) {
-				$agent = $moment['agent'] ?? 'unknown';
-				if (isset($byAgent[$agent]) === false) {
-					$byAgent[$agent] = [];
-				}
-
-				$byAgent[$agent][] = $moment;
-			}
-
-			$result = [];
-			foreach ($byAgent as $agent => $moments) {
-				$durations = array_values(
-					array_filter(
-						array_column($moments, 'duration'),
-						static fn ($v) => $v !== null && $v !== '',
-					)
-				);
-
-				$result[$agent] = [
-					'count' => count($moments),
-					'fcrRate' => $this->calculateFcr(contactmomenten: $moments),
-					'avgHandlingTime' => $this->calculateAverageHandlingTime(durations: $durations),
-				];
-			}
+			$result = array_map(
+				fn (array $moments): array => $this->agentMetrics(moments: $moments),
+				self::groupedBy(moments: $this->fetchContactmomenten(from: $from, to: $to), field: 'agent')
+			);
 
 			// Sort by contact count descending.
 			uasort($result, static fn ($a, $b) => $b['count'] <=> $a['count']);
@@ -249,8 +263,23 @@ class ReportingService {
 		} catch (\Throwable $e) {
 			$this->logger->error('ReportingService::getAgentPerformance failed', ['exception' => $e]);
 			return [];
-		}//end try
+		}
 	}//end getAgentPerformance()
+
+	/**
+	 * One agent's count, first-contact resolution and average handling time.
+	 *
+	 * @param array<array<string, mixed>> $moments The agent's contactmomenten.
+	 *
+	 * @return array{count: int, fcrRate: float, avgHandlingTime: string}
+	 */
+	private function agentMetrics(array $moments): array {
+		return [
+			'count' => count($moments),
+			'fcrRate' => $this->calculateFcr(contactmomenten: $moments),
+			'avgHandlingTime' => $this->calculateAverageHandlingTime(durations: self::durationsOf(moments: $moments)),
+		];
+	}//end agentMetrics()
 
 	/**
 	 * Get SLA compliance percentage for a given channel and date range.
@@ -533,37 +562,64 @@ class ReportingService {
 
 		$moments = [];
 		foreach ($rows as $row) {
-			$data = $row;
-			if (is_array($data) === false) {
-				if (($row instanceof \JsonSerializable) === false) {
-					continue;
-				}
-
-				$data = $row->jsonSerialize();
-				if (is_array($data) === false) {
-					continue;
-				}
-			}
-
-			$occurredAt = (string)($data['occurredAt'] ?? '');
-			if ($this->withinRange(occurredAt: $occurredAt, from: $from, to: $to) === false) {
+			$data = self::ticketData(row: $row);
+			if ($data === null) {
 				continue;
 			}
 
-			$moments[] = [
-				// Renamed on the ticket schema — translate back for the calculators.
-				'contactedAt' => $occurredAt,
-				'agent' => ($data['assignee'] ?? 'unknown'),
-				// Unchanged between contactmoment and ticket.
-				'channel' => ($data['channel'] ?? 'unknown'),
-				'outcome' => ($data['outcome'] ?? ''),
-				'duration' => ($data['duration'] ?? null),
-				'channelMetadata' => ($data['channelMetadata'] ?? []),
-			];
-		}//end foreach
+			$occurredAt = (string)($data['occurredAt'] ?? '');
+			if ($this->withinRange(occurredAt: $occurredAt, from: $from, to: $to) === true) {
+				$moments[] = self::momentOf(data: $data, occurredAt: $occurredAt);
+			}
+		}
 
 		return $moments;
 	}//end fetchContactmomenten()
+
+	/**
+	 * A ticket row as an array: the row itself, or what it serialises to; null otherwise.
+	 *
+	 * @param mixed $row The ticket row or entity.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function ticketData($row): ?array {
+		if (is_array($row) === true) {
+			return $row;
+		}
+
+		if (($row instanceof \JsonSerializable) === false) {
+			return null;
+		}
+
+		$data = $row->jsonSerialize();
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
+	}//end ticketData()
+
+	/**
+	 * The contactmoment the calculators read, from a ticket's data.
+	 *
+	 * @param array<string, mixed> $data       The ticket data.
+	 * @param string               $occurredAt The ticket's `occurredAt`.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function momentOf(array $data, string $occurredAt): array {
+		return [
+			// Renamed on the ticket schema — translate back for the calculators.
+			'contactedAt' => $occurredAt,
+			'agent' => ($data['assignee'] ?? 'unknown'),
+			// Unchanged between contactmoment and ticket.
+			'channel' => ($data['channel'] ?? 'unknown'),
+			'outcome' => ($data['outcome'] ?? ''),
+			'duration' => ($data['duration'] ?? null),
+			'channelMetadata' => ($data['channelMetadata'] ?? []),
+		];
+	}//end momentOf()
 
 	/**
 	 * Whether an occurrence timestamp falls inside an inclusive date window.
