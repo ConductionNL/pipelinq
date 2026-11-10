@@ -24,17 +24,39 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\SystemTagService;
+use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IRequest;
+use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for lead source management.
  *
  * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
  */
-class LeadSourceController extends SystemTagController {
+class LeadSourceController extends Controller {
 	private const OBJECT_TYPE = 'pipelinq_lead_source';
+
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param SystemTagService $systemTagService The system tag service.
+	 * @param IUserSession $userSession The user session.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private SystemTagService $systemTagService,
+		private IUserSession $userSession,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
 	/**
 	 * List all lead source tags.
@@ -45,7 +67,7 @@ class LeadSourceController extends SystemTagController {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		return $this->listTags();
+		return $this->tagActions()->index(user: $this->userSession->getUser());
 	}//end index()
 
 	/**
@@ -57,7 +79,7 @@ class LeadSourceController extends SystemTagController {
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function create(): JSONResponse {
-		return $this->createTag();
+		return $this->tagActions()->create(name: $this->request->getParam('name', ''));
 	}//end create()
 
 	/**
@@ -71,7 +93,7 @@ class LeadSourceController extends SystemTagController {
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function update(string $id): JSONResponse {
-		return $this->renameTagById(id: $id);
+		return $this->tagActions()->rename(id: $id, name: $this->request->getParam('name', ''));
 	}//end update()
 
 	/**
@@ -85,24 +107,18 @@ class LeadSourceController extends SystemTagController {
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function destroy(string $id): JSONResponse {
-		return $this->deleteTag(id: $id);
+		return $this->tagActions()->delete(id: $id, logger: $this->logger);
 	}//end destroy()
 
 	/**
-	 * The object type of the system tags this controller manages.
+	 * The actions on this controller's kind of tag.
 	 *
-	 * @return string The object type.
+	 * @return SystemTagActions The actions.
 	 */
-	protected function objectType(): string {
-		return self::OBJECT_TYPE;
-	}//end objectType()
-
-	/**
-	 * The controller name its failures are logged under.
-	 *
-	 * @return string The log label.
-	 */
-	protected function logLabel(): string {
-		return 'LeadSourceController';
-	}//end logLabel()
+	private function tagActions(): SystemTagActions {
+		return new SystemTagActions(
+			systemTagService: $this->systemTagService,
+			kind: new SystemTagKind(objectType: self::OBJECT_TYPE, logLabel: 'LeadSourceController')
+		);
+	}//end tagActions()
 }//end class
