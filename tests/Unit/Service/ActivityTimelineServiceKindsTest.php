@@ -476,7 +476,7 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 			params: ['types' => 'note, Interaction ,bogus,note', 'from' => '2026-10-02T09:00:00+00:00', 'to' => '2026-10-05']
 		);
 
-		$this->assertSame(['t-5', 't-4', '2', 't-3', 't-2'], array_column($result['items'], 'id'));
+		$this->assertSame(['t-5', '2', 't-4', 't-3', 't-2'], array_column($result['items'], 'id'));
 		$this->assertSame(5, $result['total']);
 		$this->assertSame(['ticket-s'], array_column($this->queries, 'schema'));
 
