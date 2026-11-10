@@ -81,48 +81,43 @@ class RapportageController extends Controller {
 			return $refusal;
 		}
 
-		$pipelineId = (string)$this->request->getParam('pipelineId', '');
-		$dateFrom = (string)$this->request->getParam('dateFrom', '');
-		$dateTo = (string)$this->request->getParam('dateTo', '');
-
-		$pipelineIdArg = null;
-		if ($pipelineId !== '') {
-			$pipelineIdArg = $pipelineId;
-		}
-
-		$dateFromArg = null;
-		if ($dateFrom !== '') {
-			$dateFromArg = $dateFrom;
-		}
-
-		$dateToArg = null;
-		if ($dateTo !== '') {
-			$dateToArg = $dateTo;
-		}
+		$pipelineId = $this->optionalParam(key: 'pipelineId');
+		$dateFrom = $this->optionalParam(key: 'dateFrom');
+		$dateTo = $this->optionalParam(key: 'dateTo');
 
 		try {
-			$stageValues = $this->rapportageService->getStageValues(pipelineId: $pipelineIdArg);
-			$sourcePerformance = $this->rapportageService->getSourcePerformance(
-				dateFrom: $dateFromArg,
-				dateTo: $dateToArg,
-			);
-			$agingBuckets = $this->rapportageService->getAgingBuckets();
-			$winLoss = $this->rapportageService->getWinLossAnalysis(
-				dateFrom: $dateFromArg,
-				dateTo: $dateToArg,
-			);
+			$stats = [
+				'stageValues' => $this->rapportageService->getStageValues(pipelineId: $pipelineId),
+				'sourcePerformance' => $this->rapportageService->getSourcePerformance(
+					dateFrom: $dateFrom,
+					dateTo: $dateTo,
+				),
+				'agingBuckets' => $this->rapportageService->getAgingBuckets(),
+				'winLoss' => $this->rapportageService->getWinLossAnalysis(
+					dateFrom: $dateFrom,
+					dateTo: $dateTo,
+				),
+			];
 		} catch (\Throwable) {
 			return new JSONResponse(data: ['message' => 'Operation failed'], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
-		return new JSONResponse(
-			data: [
-				'stageValues' => $stageValues,
-				'sourcePerformance' => $sourcePerformance,
-				'agingBuckets' => $agingBuckets,
-				'winLoss' => $winLoss,
-			]
-		);
-
+		return new JSONResponse(data: $stats);
 	}//end getPipelineStats()
+
+	/**
+	 * A request parameter, or null when it is absent or empty.
+	 *
+	 * @param string $key The parameter.
+	 *
+	 * @return string|null The value.
+	 */
+	private function optionalParam(string $key): ?string {
+		$value = (string)$this->request->getParam($key, '');
+		if ($value === '') {
+			return null;
+		}
+
+		return $value;
+	}//end optionalParam()
 }//end class
