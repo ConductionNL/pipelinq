@@ -262,7 +262,7 @@ class ZtcClient {
 	 *
 	 * @return string|null
 	 */
-	private static function stringOrNull(mixed $value): ?string {
+	private static function stringOrNull($value): ?string {
 		if (is_string($value) === true) {
 			return $value;
 		}

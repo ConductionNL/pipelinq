@@ -222,7 +222,7 @@ class ZrcClient {
 	 */
 	private function findExistingRol(ZrcConnection $zrc, InitiatorLink $link): ?string {
 		try {
-			$ident = $link->rol->identification()[1];
+			$ident = self::contactIdentification(contact: $link->rol->contact)[1];
 			return self::matchingRolUrl(rows: $this->listRollen(zrc: $zrc, link: $link), ident: $ident);
 		} catch (Throwable $e) {
 			$this->logger->info(
@@ -248,7 +248,7 @@ class ZrcClient {
 			method: 'GET',
 			path: '/rollen',
 			client: $zrc->client,
-			query: ['zaak' => $link->caseUrl(), 'betrokkeneType' => $link->rol->identification()[0]]
+			query: ['zaak' => $link->caseUrl(), 'betrokkeneType' => self::contactIdentification(contact: $link->rol->contact)[0]]
 		);
 
 		return $existing['body']['results'] ?? $existing['body'];
@@ -307,7 +307,7 @@ class ZrcClient {
 	 * @return string The created rol URL (Location header, body url, or '').
 	 */
 	private function createRol(ZrcConnection $zrc, InitiatorLink $link): string {
-		[$betrType, $ident] = $link->rol->identification();
+		[$betrType, $ident] = self::contactIdentification(contact: $link->rol->contact);
 		$body = [
 			'zaak' => $link->caseUrl(),
 			'betrokkeneType' => $betrType,

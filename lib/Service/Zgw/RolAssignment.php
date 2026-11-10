@@ -43,15 +43,4 @@ final class RolAssignment {
 		public readonly RolType $roltype,
 	) {
 	}//end __construct()
-
-	/**
-	 * The contact's ZGW betrokkeneType and identification map.
-	 *
-	 * @return array{0:string,1:array<string,mixed>} [betrokkeneType, ident]
-	 *
-	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
-	 */
-	public function identification(): array {
-		return ZrcClient::contactIdentification(contact: $this->contact);
-	}//end identification()
 }//end class
