@@ -209,7 +209,8 @@ class ForecastSettingsController extends Controller {
 			fn (array $params): ?string => $this->saveFields(params: $params, fields: self::FORECAST_FIELDS),
 			$this->saveReportingCurrency(...),
 			$this->saveExchangeRates(...),
-			$this->saveRateSettings(...),
+			$this->saveMaxRateAge(...),
+			$this->saveRateOverrides(...),
 			fn (array $params): ?string => $this->saveFields(params: $params, fields: self::GROUP_FIELDS),
 		];
 	}//end saveSteps()
@@ -324,7 +325,7 @@ class ForecastSettingsController extends Controller {
 	}//end saveExchangeRates()
 
 	/**
-	 * Persist the rate overrides and the stale limit when they are submitted.
+	 * Persist the stale limit for exchange rates when it is submitted.
 	 *
 	 * @param array<string, mixed> $params The request parameters.
 	 *
@@ -332,26 +333,41 @@ class ForecastSettingsController extends Controller {
 	 *
 	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
 	 */
-	private function saveRateSettings(array $params): ?string {
-		if (isset($params['max_rate_age_days']) === true) {
-			$days = (int)$params['max_rate_age_days'];
-			if ($days < 1) {
-				return 'max_rate_age_days must be at least 1.';
-			}
-
-			$this->appConfig->setValueInt(Application::APP_ID, ExchangeRateService::MAX_RATE_AGE_KEY, $days);
+	private function saveMaxRateAge(array $params): ?string {
+		if (isset($params['max_rate_age_days']) === false) {
+			return null;
 		}
 
-		if (isset($params['rate_overrides']) === true) {
-			try {
-				$overrides = $this->exchangeRate->overrideStore()->normaliseOverrides(input: (array)$params['rate_overrides']);
-			} catch (\InvalidArgumentException $e) {
-				return $e->getMessage();
-			}
-
-			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::OVERRIDES_KEY, (string)json_encode($overrides));
+		$days = (int)$params['max_rate_age_days'];
+		if ($days < 1) {
+			return 'max_rate_age_days must be at least 1.';
 		}
 
+		$this->appConfig->setValueInt(Application::APP_ID, ExchangeRateService::MAX_RATE_AGE_KEY, $days);
 		return null;
-	}//end saveRateSettings()
+	}//end saveMaxRateAge()
+
+	/**
+	 * Persist the rate overrides when they are submitted.
+	 *
+	 * @param array<string, mixed> $params The request parameters.
+	 *
+	 * @return string|null The validation error, or null when saved or absent.
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+	 */
+	private function saveRateOverrides(array $params): ?string {
+		if (isset($params['rate_overrides']) === false) {
+			return null;
+		}
+
+		try {
+			$overrides = $this->exchangeRate->overrideStore()->normaliseOverrides(input: (array)$params['rate_overrides']);
+		} catch (\InvalidArgumentException $e) {
+			return $e->getMessage();
+		}
+
+		$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::OVERRIDES_KEY, (string)json_encode($overrides));
+		return null;
+	}//end saveRateOverrides()
 }//end class
