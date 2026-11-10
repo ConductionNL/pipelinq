@@ -152,6 +152,32 @@ class KccWerkplekController extends Controller {
 			);
 		}
 
+		$available = $this->requestedAvailability();
+		if ($available instanceof JSONResponse) {
+			return $available;
+		}
+
+		try {
+			$result = $this->werkplekService->setAvailability($user->getUID(), $available);
+			return new JSONResponse($result);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				message: '[KccWerkplekController] setAvailability failed',
+				context: ['error' => $e->getMessage()]
+			);
+			return new JSONResponse(
+				['message' => 'Operation failed'],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}//end try
+	}//end setAvailabilityAction()
+
+	/**
+	 * The availability the request asks for, or the 400 that refuses it.
+	 *
+	 * @return bool|JSONResponse The requested flag, or the refusal.
+	 */
+	private function requestedAvailability(): bool|JSONResponse {
 		$param = $this->request->getParam('isAvailable', null);
 		if ($param === null) {
 			return new JSONResponse(
@@ -169,20 +195,8 @@ class KccWerkplekController extends Controller {
 			);
 		}
 
-		try {
-			$result = $this->werkplekService->setAvailability($user->getUID(), $available);
-			return new JSONResponse($result);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				message: '[KccWerkplekController] setAvailability failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
-	}//end setAvailabilityAction()
+		return $available;
+	}//end requestedAvailability()
 
 	/**
 	 * Coerce the request's isAvailable param to a strict boolean.
