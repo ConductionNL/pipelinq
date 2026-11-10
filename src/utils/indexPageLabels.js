@@ -27,22 +27,63 @@ const PAGE_TEXT_KEYS = ['countText', 'footerNote', 'bulkHint']
  */
 export function translateIndexPageLabels(manifest, translate) {
 	for (const page of manifest?.pages || []) {
-		const config = page?.config
-		if (page?.type !== 'index' || !config || typeof config !== 'object') {
+		const config = indexPageConfig(page)
+		if (config === null) {
 			continue
 		}
-		for (const key of PAGE_TEXT_KEYS) {
-			if (typeof config[key] === 'string' && config[key] !== '') {
-				config[key] = translate(config[key])
-			}
-		}
-		for (const list of [config.quickFilters, config.headerButtons]) {
-			for (const entry of Array.isArray(list) ? list : []) {
-				if (typeof entry?.label === 'string' && entry.label !== '') {
-					entry.label = translate(entry.label)
-				}
-			}
-		}
+		translatePageTexts(config, translate)
+		translateLabels(config.quickFilters, translate)
+		translateLabels(config.headerButtons, translate)
 	}
 	return manifest
+}
+
+/**
+ * @param {?object} page A manifest page.
+ * @return {(object|null)} The config of an index page, or null for any other page.
+ */
+function indexPageConfig(page) {
+	const config = page?.config
+	if (page?.type !== 'index' || !config || typeof config !== 'object') {
+		return null
+	}
+	return config
+}
+
+/**
+ * Translate the count line, footer note and bulk hint of a page, in place.
+ *
+ * @param {object} config The index page config.
+ * @param {(text: string) => string} translate Translates an English source string.
+ * @return {void}
+ */
+function translatePageTexts(config, translate) {
+	for (const key of PAGE_TEXT_KEYS) {
+		if (isText(config[key])) {
+			config[key] = translate(config[key])
+		}
+	}
+}
+
+/**
+ * Translate the labels of a list of chips or buttons, in place.
+ *
+ * @param {unknown} list The list; anything that is not an array is left alone.
+ * @param {(text: string) => string} translate Translates an English source string.
+ * @return {void}
+ */
+function translateLabels(list, translate) {
+	for (const entry of Array.isArray(list) ? list : []) {
+		if (isText(entry?.label)) {
+			entry.label = translate(entry.label)
+		}
+	}
+}
+
+/**
+ * @param {unknown} value A value.
+ * @return {boolean} Whether it is a non-empty string.
+ */
+function isText(value) {
+	return typeof value === 'string' && value !== ''
 }
