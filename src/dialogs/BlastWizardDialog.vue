@@ -719,79 +719,7 @@ export default {
 		 */
 		reviewRows() {
 			const none = this.t('pipelinq', 'None')
-			const audience =
-				this.audienceKind === 'list'
-					? this.t('pipelinq', 'Mailing list: {name}', {
-							name: this.selectedList?.name || '',
-						})
-					: this.t('pipelinq', 'Segment: {name}', {
-							name: this.selectedSegment?.name || '',
-						})
-			const channel =
-				this.channelOptions.find((o) => o.value === this.selectedChannel)
-					?.label || ''
-			const when =
-				this.scheduleMode === 'later' && this.scheduledForDate
-					? this.scheduledForDate.toLocaleString()
-					: this.t('pipelinq', 'As soon as the blast is created')
-			const ab = this.abEnabled
-				? this.t('pipelinq', 'Variant A {a}%, variant B {b}%', {
-						a: this.model.abSplitPercent,
-						b: 100 - this.model.abSplitPercent,
-					})
-				: this.t('pipelinq', 'Off')
-			return [
-				{
-					key: 'name',
-					step: 'basics',
-					label: this.t('pipelinq', 'Name'),
-					value: this.model.name.trim(),
-				},
-				{
-					key: 'channel',
-					step: 'basics',
-					label: this.t('pipelinq', 'Channel'),
-					value: channel,
-				},
-				{
-					key: 'audience',
-					step: 'audience',
-					label: this.t('pipelinq', 'Audience'),
-					value: audience,
-				},
-				{
-					key: 'template',
-					step: 'content',
-					label: this.t('pipelinq', 'Template'),
-					value: this.selectedTemplate?.name || none,
-				},
-				{
-					key: 'transport',
-					step: 'delivery',
-					label: this.t('pipelinq', 'Send through'),
-					value:
-						this.selectedTransport?.label
-						|| this.t('pipelinq', 'Default transport'),
-				},
-				{
-					key: 'source',
-					step: 'delivery',
-					label: this.t('pipelinq', 'Connector source'),
-					value: this.selectedConnectorSource?.label || none,
-				},
-				{
-					key: 'when',
-					step: 'delivery',
-					label: this.t('pipelinq', 'When'),
-					value: when,
-				},
-				{
-					key: 'ab',
-					step: 'ab',
-					label: this.t('pipelinq', 'A/B test'),
-					value: ab,
-				},
-			]
+			return [...this.basicsReviewRows(none), ...this.deliveryReviewRows(none)]
 		},
 	},
 
@@ -929,6 +857,120 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The review rows of the basics, audience and content steps.
+		 *
+		 * @param {string} none What an unset choice reads.
+		 * @return {Array<object>} The rows.
+		 */
+		basicsReviewRows(none) {
+			return [
+				{
+					key: 'name',
+					step: 'basics',
+					label: this.t('pipelinq', 'Name'),
+					value: this.model.name.trim(),
+				},
+				{
+					key: 'channel',
+					step: 'basics',
+					label: this.t('pipelinq', 'Channel'),
+					value: this.reviewChannel(),
+				},
+				{
+					key: 'audience',
+					step: 'audience',
+					label: this.t('pipelinq', 'Audience'),
+					value: this.reviewAudience(),
+				},
+				{
+					key: 'template',
+					step: 'content',
+					label: this.t('pipelinq', 'Template'),
+					value: this.selectedTemplate?.name || none,
+				},
+			]
+		},
+
+		/**
+		 * The review rows of the delivery and A/B steps.
+		 *
+		 * @param {string} none What an unset choice reads.
+		 * @return {Array<object>} The rows.
+		 */
+		deliveryReviewRows(none) {
+			return [
+				{
+					key: 'transport',
+					step: 'delivery',
+					label: this.t('pipelinq', 'Send through'),
+					value:
+						this.selectedTransport?.label
+						|| this.t('pipelinq', 'Default transport'),
+				},
+				{
+					key: 'source',
+					step: 'delivery',
+					label: this.t('pipelinq', 'Connector source'),
+					value: this.selectedConnectorSource?.label || none,
+				},
+				{
+					key: 'when',
+					step: 'delivery',
+					label: this.t('pipelinq', 'When'),
+					value: this.reviewWhen(),
+				},
+				{
+					key: 'ab',
+					step: 'ab',
+					label: this.t('pipelinq', 'A/B test'),
+					value: this.reviewAb(),
+				},
+			]
+		},
+
+		/**
+		 * @return {string} The audience as the review reads it: the mailing list or the segment.
+		 */
+		reviewAudience() {
+			return this.audienceKind === 'list'
+				? this.t('pipelinq', 'Mailing list: {name}', {
+						name: this.selectedList?.name || '',
+					})
+				: this.t('pipelinq', 'Segment: {name}', {
+						name: this.selectedSegment?.name || '',
+					})
+		},
+
+		/**
+		 * @return {string} The chosen channel's label, or ''.
+		 */
+		reviewChannel() {
+			return this.channelOptions.find((o) => o.value === this.selectedChannel)
+				?.label || ''
+		},
+
+		/**
+		 * @return {string} When the blast goes out: the scheduled moment, or as soon as it is created.
+		 */
+		reviewWhen() {
+			return this.scheduleMode === 'later' && this.scheduledForDate
+				? this.scheduledForDate.toLocaleString()
+				: this.t('pipelinq', 'As soon as the blast is created')
+		},
+
+		/**
+		 * @return {string} The A/B split, or Off.
+		 */
+		reviewAb() {
+			return this.abEnabled
+				? this.t('pipelinq', 'Variant A {a}%, variant B {b}%', {
+						a: this.model.abSplitPercent,
+						b: 100 - this.model.abSplitPercent,
+					})
+				: this.t('pipelinq', 'Off')
+		},
+
 		/**
 		 * @param {string} key A step key.
 		 * @return {boolean} Whether that step is filled in well enough.
