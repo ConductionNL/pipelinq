@@ -1,18 +1,7 @@
-import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
+import { keepingError, loadSettingsTags, replaceTag, sendSettingsTagChange, settingsTagsUrl } from './settingsTags.js'
 
-const API_BASE = generateUrl('/apps/pipelinq/api/settings/lead-sources')
-
-/**
- *
- */
-function headers() {
-	return {
-		'Content-Type': 'application/json',
-		requesttoken: OC.requestToken,
-		'OCS-APIREQUEST': 'true',
-	}
-}
+const API_BASE = settingsTagsUrl('lead-sources')
 
 export const useLeadSourcesStore = defineStore('leadSources', {
 	state: () => ({
@@ -28,24 +17,7 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-29
 		 */
 		async fetchSources() {
-			this.loading = true
-			this.error = null
-
-			try {
-				const response = await fetch(API_BASE, { headers: headers() })
-				if (!response.ok) {
-					throw new Error(
-						`Failed to fetch lead sources (${response.status})`,
-					)
-				}
-				const data = await response.json()
-				this.tags = data.tags || []
-			} catch (error) {
-				this.error = error.message
-				console.error('Error fetching lead sources:', error)
-			} finally {
-				this.loading = false
-			}
+			await loadSettingsTags(this, { url: API_BASE, what: 'lead sources' })
 		},
 
 		/**
@@ -56,27 +28,15 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-28
 		 */
 		async addSource(name) {
-			try {
-				const response = await fetch(API_BASE, {
+			return keepingError(this, async () => {
+				const data = await sendSettingsTagChange(API_BASE, {
 					method: 'POST',
-					headers: headers(),
-					body: JSON.stringify({ name }),
+					body: { name },
+					failure: 'Failed to add source',
 				})
-				if (!response.ok) {
-					throw new Error(`Failed to add source (${response.status})`)
-				}
-				const data = await response.json()
-
-				if (!data.success) {
-					throw new Error(data.message || 'Failed to add source')
-				}
-
 				this.tags.push(data.tag)
 				return data.tag
-			} catch (error) {
-				this.error = error.message
-				throw error
-			}
+			})
 		},
 
 		/**
@@ -84,25 +44,13 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-30
 		 */
 		async removeSource(id) {
-			try {
-				const response = await fetch(`${API_BASE}/${id}`, {
+			await keepingError(this, async () => {
+				await sendSettingsTagChange(`${API_BASE}/${id}`, {
 					method: 'DELETE',
-					headers: headers(),
+					failure: 'Failed to remove source',
 				})
-				if (!response.ok) {
-					throw new Error(`Failed to remove source (${response.status})`)
-				}
-				const data = await response.json()
-
-				if (!data.success) {
-					throw new Error(data.message || 'Failed to remove source')
-				}
-
 				this.tags = this.tags.filter((t) => t.id !== id)
-			} catch (error) {
-				this.error = error.message
-				throw error
-			}
+			})
 		},
 
 		/**
@@ -111,30 +59,15 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-31
 		 */
 		async renameSource(id, name) {
-			try {
-				const response = await fetch(`${API_BASE}/${id}`, {
+			return keepingError(this, async () => {
+				const data = await sendSettingsTagChange(`${API_BASE}/${id}`, {
 					method: 'PUT',
-					headers: headers(),
-					body: JSON.stringify({ name }),
+					body: { name },
+					failure: 'Failed to rename source',
 				})
-				if (!response.ok) {
-					throw new Error(`Failed to rename source (${response.status})`)
-				}
-				const data = await response.json()
-
-				if (!data.success) {
-					throw new Error(data.message || 'Failed to rename source')
-				}
-
-				const index = this.tags.findIndex((t) => t.id === id)
-				if (index !== -1) {
-					this.tags[index] = data.tag
-				}
+				replaceTag(this, { id, tag: data.tag })
 				return data.tag
-			} catch (error) {
-				this.error = error.message
-				throw error
-			}
+			})
 		},
 	},
 })
