@@ -170,78 +170,53 @@ class EmailMatchService {
 	 * @return array{entityType:string,entityId:string}|null
 	 *
 	 * @spec openspec/specs/email-calendar-sync/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered domain-matching strategies
-	 *  guarded by flat early returns; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat strategy chain; path count is a
-	 *  product of independent guards, not nesting.
 	 */
 	public function matchDomainToOrganization(string $domain): ?array {
 		$domain = strtolower(trim($domain));
-		if ($domain === '') {
+		if ($this->isCorporateDomain(domain: $domain) === false) {
 			return null;
 		}
 
-		if ($this->isPublicDomain(domain: $domain) === true) {
+		$filters = $this->schemaFilters(schemaKey: 'client_schema');
+		if ($filters === null) {
 			return null;
 		}
 
-		$register = $this->registerSlug();
-		$schema = $this->schemaSlug(key: 'client_schema');
-		if ($register === '' || $schema === '') {
-			return null;
-		}
+		$rows = $this->organizationRows(filters: $filters, domain: $domain);
+		return (new EmailRowMatcher())->firstOrganizationWithSuffix(rows: $rows, suffix: '@' . $domain);
+	}//end matchDomainToOrganization()
 
+	/**
+	 * The organization clients of the configured schema; a failed lookup is logged.
+	 *
+	 * @param array{register:string,schema:string} $filters The register and schema filters.
+	 * @param string                               $domain  The domain being matched, for the log.
+	 *
+	 * @return mixed The rows, or null when the lookup failed or OpenRegister is unavailable.
+	 */
+	private function organizationRows(array $filters, string $domain): mixed {
 		try {
-			$service = $this->getObjectService();
-			if ($service === null) {
-				return null;
-			}
-
-			$rows = $service->findAll(
-				[
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'type' => 'organization',
-					],
-					'limit' => 1000,
-				]
-			);
+			return $this->findAllRows(config: ['filters' => $filters + ['type' => 'organization'], 'limit' => 1000]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: matchDomainToOrganization lookup failed',
 				['domain' => $domain]
 			);
 			return null;
-		}//end try
-
-		if (is_array($rows) === false) {
-			return null;
 		}
+	}//end organizationRows()
 
-		$suffix = '@' . $domain;
-		foreach ($rows as $row) {
-			$data = $this->toArray(object: $row);
-			if ($data === null) {
-				continue;
-			}
-
-			$email = strtolower((string)($data['email'] ?? ''));
-			if ($email === '') {
-				continue;
-			}
-
-			if (str_ends_with($email, $suffix) === true) {
-				$id = $this->idOf(object: $data);
-				if ($id !== '') {
-					return ['entityType' => 'client', 'entityId' => $id];
-				}
-			}
-		}
-
-		return null;
-	}//end matchDomainToOrganization()
+	/**
+	 * Whether a (normalised) domain can match an organization: not empty and
+	 * not a public email provider.
+	 *
+	 * @param string $domain The lowercased, trimmed domain.
+	 *
+	 * @return bool True for a corporate domain.
+	 */
+	private function isCorporateDomain(string $domain): bool {
+		return $domain !== '' && $this->isPublicDomain(domain: $domain) === false;
+	}//end isCorporateDomain()
 
 	/**
 	 * Return true when the domain is a public email provider.
@@ -269,112 +244,187 @@ class EmailMatchService {
 	 * API. Returns the count of new links the leaf actually created
 	 * (the leaf is idempotent — pre-existing links are not re-counted).
 	 *
-	 * @param int $mailAccountId The Mail account id.
-	 * @param int $mailMessageId The Mail message id.
-	 * @param string $userId The owning user.
+	 * @param MailMessageKey $message The Mail message.
+	 * @param string         $userId  The owning user.
 	 *
 	 * @return int Number of new links created via the leaf.
 	 *
 	 * @spec openspec/specs/email-calendar-sync/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential address/entity linking
-	 *  guards; each condition is a flat skip, extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat linking guards; path count is a
-	 *  product of independent conditions, not nesting.
 	 */
-	public function matchAndLinkMessage(int $mailAccountId, int $mailMessageId, string $userId): int {
-		$message = $this->fetchMailMessageMeta(messageId: $mailMessageId, accountId: $mailAccountId);
-		if ($message === null) {
+	public function matchAndLinkMessage(MailMessageKey $message, string $userId): int {
+		$meta = (new MailMessageReader(db: $this->db, logger: $this->logger))->fetchMeta(message: $message);
+		if ($meta === null) {
 			return 0;
 		}
 
-		$addresses = $this->extractAddresses(message: $message);
-		if ($addresses === []) {
+		$entities = $this->entitiesForMessage(meta: $meta, userId: $userId);
+		if ($entities === []) {
 			return 0;
+		}
+
+		$leaf = $this->emailLeaf();
+		if ($leaf === null) {
+			return 0;
+		}
+
+		$run = new MessageLinkRun(leaf: $leaf, message: new FetchedMailMessage(key: $message, uid: (string)$meta['uid']));
+		return $this->linkEntities(entities: $entities, run: $run);
+	}//end matchAndLinkMessage()
+
+	/**
+	 * The unique CRM entities a message's addresses match, the user's
+	 * excluded addresses left out.
+	 *
+	 * @param array<string, mixed> $meta   The message metadata.
+	 * @param string               $userId The owning user.
+	 *
+	 * @return array<string, array{entityType:string,entityId:string}> Keyed by `type:id`.
+	 */
+	private function entitiesForMessage(array $meta, string $userId): array {
+		$addresses = $this->extractAddresses(message: $meta);
+		if ($addresses === []) {
+			return [];
 		}
 
 		$exclude = $this->getExcludedAddresses(userId: $userId);
 		$entities = [];
 		foreach ($addresses as $address) {
-			if (in_array($address, $exclude, true) === true) {
-				continue;
+			if (in_array($address, $exclude, true) === false) {
+				$entities = $this->withAddressEntities(entities: $entities, address: $address);
 			}
-
-			foreach ($this->matchEmailToEntities(address: $address) as $hit) {
-				$key = $hit['entityType'] . ':' . $hit['entityId'];
-				$entities[$key] = $hit;
-			}
-
-			$domain = $this->extractDomain(email: $address);
-			if ($domain === null) {
-				continue;
-			}
-
-			$org = $this->matchDomainToOrganization(domain: $domain);
-			if ($org !== null) {
-				$key = $org['entityType'] . ':' . $org['entityId'];
-				$entities[$key] = $org;
-			}
-		}//end foreach
-
-		if ($entities === []) {
-			return 0;
 		}
 
+		return $entities;
+	}//end entitiesForMessage()
+
+	/**
+	 * Add the entities one address matches: by exact email, then the
+	 * organization of its corporate domain.
+	 *
+	 * @param array<string, array{entityType:string,entityId:string}> $entities The entities so far.
+	 * @param string                                                  $address  The address.
+	 *
+	 * @return array<string, array{entityType:string,entityId:string}> The entities with this address's matches.
+	 */
+	private function withAddressEntities(array $entities, string $address): array {
+		foreach ($this->matchEmailToEntities(address: $address) as $hit) {
+			$entities[$hit['entityType'] . ':' . $hit['entityId']] = $hit;
+		}
+
+		$domain = $this->extractDomain(email: $address);
+		if ($domain === null) {
+			return $entities;
+		}
+
+		$org = $this->matchDomainToOrganization(domain: $domain);
+		if ($org !== null) {
+			$entities[$org['entityType'] . ':' . $org['entityId']] = $org;
+		}
+
+		return $entities;
+	}//end withAddressEntities()
+
+	/**
+	 * The email leaf bound to the configured register, or null when either
+	 * is missing.
+	 *
+	 * Fails closed on an unconfigured register. Without this the link would
+	 * cast '' to int and link every email against register id 0 — a write
+	 * scoped to the wrong register rather than a refused one.
+	 *
+	 * @return EmailLeaf|null The leaf, or null.
+	 */
+	private function emailLeaf(): ?EmailLeaf {
 		$linkService = $this->getEmailLinkService();
 		if ($linkService === null) {
-			return 0;
+			return null;
 		}
 
 		$register = $this->registerSlug();
-
-		// Fail closed on an unconfigured register. Without this the loop below
-		// casts '' to int and links every email against register id 0 — a write
-		// scoped to the wrong register rather than a refused one.
 		if ($register === '') {
+			return null;
+		}
+
+		return new EmailLeaf(linkService: $linkService, register: $register);
+	}//end emailLeaf()
+
+	/**
+	 * Link the message to every entity.
+	 *
+	 * @param array<string, array{entityType:string,entityId:string}> $entities The matched entities.
+	 * @param MessageLinkRun                                          $run      The leaf and the message.
+	 *
+	 * @return int Number of new links.
+	 */
+	private function linkEntities(array $entities, MessageLinkRun $run): int {
+		$createdCount = 0;
+		foreach ($entities as $entity) {
+			$createdCount += $this->linkEntity(entity: $entity, run: $run);
+		}
+
+		return $createdCount;
+	}//end linkEntities()
+
+	/**
+	 * Link the message to one entity through the leaf; a failure is logged.
+	 *
+	 * @param array{entityType:string,entityId:string} $entity The entity.
+	 * @param MessageLinkRun                           $run    The leaf and the message.
+	 *
+	 * @return int 1 when the leaf held no link for the message before, else 0.
+	 */
+	private function linkEntity(array $entity, MessageLinkRun $run): int {
+		$schema = $this->schemaSlug(key: $entity['entityType'] . '_schema');
+		if ($schema === '') {
 			return 0;
 		}
 
-		$createdCount = 0;
-		foreach ($entities as $entity) {
-			$schemaSlug = $entity['entityType'] . '_schema';
-			$schema = $this->schemaSlug(key: $schemaSlug);
-			if ($schema === '') {
-				continue;
-			}
+		try {
+			$before = (new LinkedEmails(linkService: $run->leaf->linkService))->existingLinkId(objectUuid: $entity['entityId'], message: $run->message->key);
+			$target = (new LinkTarget(objectUuid: $entity['entityId'], registerId: (int)$run->leaf->register))->inSchema(schemaId: (int)$schema);
+			$this->linkInLeaf(target: $target, run: $run);
+			return (int)($before === null);
+		} catch (Throwable $e) {
+			$this->logLinkFailure(entity: $entity, run: $run);
+			return 0;
+		}
+	}//end linkEntity()
 
-			try {
-				$before = $this->existingLinkId(
-					linkService: $linkService,
-					objectUuid: $entity['entityId'],
-					mailAccountId: $mailAccountId,
-					mailMessageId: $mailMessageId
-				);
+	/**
+	 * Ask the leaf to link the run's message to a target.
+	 *
+	 * @param LinkTarget     $target The object to link to.
+	 * @param MessageLinkRun $run    The leaf and the message.
+	 *
+	 * @return void
+	 */
+	private function linkInLeaf(LinkTarget $target, MessageLinkRun $run): void {
+		$key = $run->message->key;
+		$run->leaf->linkService->linkEmail(
+			target: $target,
+			message: (new EmailMessageRef(mailAccountId: $key->mailAccountId, messageId: (string)$key->mailMessageId))
+				->withUid(uid: $run->message->uid)
+		);
+	}//end linkInLeaf()
 
-				$linkService->linkEmail(
-					target: (new LinkTarget(objectUuid: $entity['entityId'], registerId: (int)$register))
-						->inSchema(schemaId: (int)$schema),
-					message: (new EmailMessageRef(mailAccountId: $mailAccountId, messageId: (string)$mailMessageId))
-						->withUid(uid: (string)$message['uid'])
-				);
-
-				if ($before === null) {
-					$createdCount++;
-				}
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'Pipelinq: email leaf linkEmail failed',
-					[
-						'entityType' => $entity['entityType'],
-						'entityId' => $entity['entityId'],
-						'messageId' => $mailMessageId,
-					]
-				);
-			}//end try
-		}//end foreach
-
-		return $createdCount;
-	}//end matchAndLinkMessage()
+	/**
+	 * Log a failed leaf call for one entity.
+	 *
+	 * @param array{entityType:string,entityId:string} $entity The entity.
+	 * @param MessageLinkRun                           $run    The leaf and the message.
+	 *
+	 * @return void
+	 */
+	private function logLinkFailure(array $entity, MessageLinkRun $run): void {
+		$this->logger->warning(
+			'Pipelinq: email leaf linkEmail failed',
+			[
+				'entityType' => $entity['entityType'],
+				'entityId' => $entity['entityId'],
+				'messageId' => $run->message->key->mailMessageId,
+			]
+		);
+	}//end logLinkFailure()
 
 	/**
 	 * Run the matching job for one user.
@@ -406,13 +456,12 @@ class EmailMatchService {
 		$lastId = (int)$settings['cursor'];
 		$maxId = $lastId;
 
-		$messages = $this->listInboundMessages(accountId: $settings['account'], sinceId: $lastId);
+		$messages = (new MailMessageReader(db: $this->db, logger: $this->logger))->listInbound(accountId: $settings['account'], sinceId: $lastId);
 		foreach ($messages as $msg) {
 			$scanned++;
 			try {
 				$linked += $this->matchAndLinkMessage(
-					mailAccountId: $settings['account'],
-					mailMessageId: $msg['id'],
+					message: new MailMessageKey(mailAccountId: $settings['account'], mailMessageId: $msg['id']),
 					userId: $userId
 				);
 				if ($msg['id'] > $maxId) {
@@ -731,65 +780,60 @@ class EmailMatchService {
 	 * @param string $email Lowercased email to match.
 	 *
 	 * @return array<int,string> Matched object ids.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat guards over register/schema
-	 *  resolution and result normalisation; extraction adds no clarity.
 	 */
 	private function findObjectsByEmail(string $schemaKey, string $email): array {
-		$register = $this->registerSlug();
-		$schema = $this->schemaSlug(key: $schemaKey);
-		if ($register === '' || $schema === '') {
+		$filters = $this->schemaFilters(schemaKey: $schemaKey);
+		if ($filters === null) {
 			return [];
 		}
 
 		try {
-			$service = $this->getObjectService();
-			if ($service === null) {
-				return [];
-			}
-
-			$rows = $service->findAll(
-				[
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'email' => $email,
-					],
-					'limit' => 100,
-				]
-			);
+			$rows = $this->findAllRows(config: ['filters' => $filters + ['email' => $email], 'limit' => 100]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: findObjectsByEmail failed',
 				['schemaKey' => $schemaKey]
 			);
 			return [];
-		}//end try
-
-		if (is_array($rows) === false) {
-			return [];
 		}
 
-		$ids = [];
-		foreach ($rows as $row) {
-			$data = $this->toArray(object: $row);
-			if ($data === null) {
-				continue;
-			}
-
-			$rowEmail = strtolower((string)($data['email'] ?? ''));
-			if ($rowEmail !== $email) {
-				continue;
-			}
-
-			$id = $this->idOf(object: $data);
-			if ($id !== '') {
-				$ids[] = $id;
-			}
-		}
-
-		return $ids;
+		return (new EmailRowMatcher())->idsWithEmail(rows: $rows, email: $email);
 	}//end findObjectsByEmail()
+
+	/**
+	 * The register and schema filters of a configured schema.
+	 *
+	 * @param string $schemaKey Pipelinq app-config schema key.
+	 *
+	 * @return array{register:string,schema:string}|null The filters, null when either is not configured.
+	 */
+	private function schemaFilters(string $schemaKey): ?array {
+		$register = $this->registerSlug();
+		$schema = $this->schemaSlug(key: $schemaKey);
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		return ['register' => $register, 'schema' => $schema];
+	}//end schemaFilters()
+
+	/**
+	 * Run one OpenRegister listing.
+	 *
+	 * @param array<string, mixed> $config The findAll() config.
+	 *
+	 * @return mixed The rows, or null when OpenRegister is not available.
+	 *
+	 * @throws Throwable When the listing fails.
+	 */
+	private function findAllRows(array $config): mixed {
+		$service = $this->getObjectService();
+		if ($service === null) {
+			return null;
+		}
+
+		return $service->findAll($config);
+	}//end findAllRows()
 
 	/**
 	 * Resolve the OR ObjectService through DI (null on missing).
@@ -818,190 +862,6 @@ class EmailMatchService {
 		}
 
 	}//end getEmailLinkService()
-
-	/**
-	 * Check whether the leaf already holds a link for the (object, account,
-	 * message) triple. Returns the existing link id when found, null otherwise.
-	 *
-	 * The lookup uses the leaf's mapper indirectly — if introspection isn't
-	 * available we return null and let the leaf's own idempotency handle the
-	 * dedup. The count delta will still be correct because the leaf returns
-	 * the same entity row on the second call.
-	 *
-	 * @param object $linkService OR EmailLinkService instance.
-	 * @param string $objectUuid Parent OR object uuid.
-	 * @param int $mailAccountId Mail account id.
-	 * @param int $mailMessageId Mail message id.
-	 *
-	 * @return int|null Existing link id, or null.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat guards over the linked-email
-	 *  lookup and shape normalisation; each branch is an independent early return.
-	 */
-	private function existingLinkId(
-		object $linkService,
-		string $objectUuid,
-		int $mailAccountId,
-		int $mailMessageId,
-	): ?int {
-		if (method_exists($linkService, 'getLinkedEmails') === false) {
-			return null;
-		}
-
-		try {
-			$page = $linkService->getLinkedEmails($objectUuid, null, 100);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (is_array($page) === false) {
-			return null;
-		}
-
-		$items = [];
-		if (isset($page['items']) === true && is_array($page['items']) === true) {
-			$items = $page['items'];
-		}
-
-		foreach ($items as $row) {
-			if (is_array($row) === false) {
-				continue;
-			}
-
-			$accId = (int)($row['mailAccountId'] ?? 0);
-			$msgId = (int)($row['mailMessageId'] ?? 0);
-			if ($accId === $mailAccountId && $msgId === $mailMessageId) {
-				return (int)($row['id'] ?? 0);
-			}
-		}
-
-		return null;
-	}//end existingLinkId()
-
-	/**
-	 * Fetch a Mail message's metadata from the Mail app DB.
-	 *
-	 * Returns null when Mail is uninstalled or the row is absent.
-	 *
-	 * @param int $messageId Mail message id.
-	 * @param int $accountId Mail account id.
-	 *
-	 * @return array{uid:string,subject:?string,sender:?string,recipients:array<int,string>,date:?string}|null
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Two guarded DB lookups plus row
-	 *  normalisation; the branches are flat, not nested.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat lookup/normalise guards; path
-	 *  count is a product of independent conditions.
-	 */
-	private function fetchMailMessageMeta(int $messageId, int $accountId): ?array {
-		try {
-			$qb = $this->db->getQueryBuilder();
-			$qb->select('m.id', 'm.uid', 'm.subject', 'm.sent_at', 'mb.account_id')
-				->from('mail_messages', 'm')
-				->join('m', 'mail_mailboxes', 'mb', $qb->expr()->eq('mb.id', 'm.mailbox_id'))
-				->where($qb->expr()->eq('m.id', $qb->createNamedParameter($messageId)))
-				->andWhere($qb->expr()->eq('mb.account_id', $qb->createNamedParameter($accountId)))
-				->setMaxResults(1);
-
-			$result = $qb->executeQuery();
-			$row = $result->fetch();
-			$result->closeCursor();
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if ($row === false || is_array($row) === false) {
-			return null;
-		}
-
-		$recipients = [];
-		$sender = null;
-		try {
-			$qb = $this->db->getQueryBuilder();
-			$qb->select('email', 'type')
-				->from('mail_recipients')
-				->where($qb->expr()->eq('message_id', $qb->createNamedParameter($messageId)));
-
-			$result = $qb->executeQuery();
-			while (($rcpt = $result->fetch()) !== false) {
-				$email = strtolower(trim((string)($rcpt['email'] ?? '')));
-				if ($email === '') {
-					continue;
-				}
-
-				$type = (int)($rcpt['type'] ?? -1);
-				if ($type === 0) {
-					$sender = $email;
-					continue;
-				}
-
-				$recipients[] = $email;
-			}
-
-			$result->closeCursor();
-		} catch (Throwable $e) {
-			// Leave recipients empty on lookup failure.
-		}//end try
-
-		$sentAt = null;
-		// `isset()` is already false for null — the `!== null` conjunct this
-		// replaces was unreachable.
-		if (isset($row['sent_at']) === true) {
-			$sentAt = date('c', (int)$row['sent_at']);
-		}
-
-		$subject = null;
-		if (isset($row['subject']) === true) {
-			$subject = (string)$row['subject'];
-		}
-
-		return [
-			'uid' => (string)($row['uid'] ?? ''),
-			'subject' => $subject,
-			'sender' => $sender,
-			'recipients' => array_values(array_unique($recipients)),
-			'date' => $sentAt,
-		];
-
-	}//end fetchMailMessageMeta()
-
-	/**
-	 * List inbound Mail message rows for an account, since a cursor id.
-	 *
-	 * Returns rows ordered by id ascending so the cursor advances
-	 * monotonically. The cap of 200 prevents a single run from holding
-	 * the DB busy when an account has a large historical backlog.
-	 *
-	 * @param int $accountId Mail account id.
-	 * @param int $sinceId Last processed message id (0 = from the start).
-	 *
-	 * @return array<int,array{id:int}>
-	 */
-	private function listInboundMessages(int $accountId, int $sinceId): array {
-		try {
-			$qb = $this->db->getQueryBuilder();
-			$qb->select('m.id')
-				->from('mail_messages', 'm')
-				->join('m', 'mail_mailboxes', 'mb', $qb->expr()->eq('mb.id', 'm.mailbox_id'))
-				->where($qb->expr()->eq('mb.account_id', $qb->createNamedParameter($accountId)))
-				->andWhere($qb->expr()->gt('m.id', $qb->createNamedParameter($sinceId)))
-				->orderBy('m.id', 'ASC')
-				->setMaxResults(200);
-
-			$result = $qb->executeQuery();
-			$rows = [];
-			while (($row = $result->fetch()) !== false) {
-				$rows[] = ['id' => (int)($row['id'] ?? 0)];
-			}
-
-			$result->closeCursor();
-			return $rows;
-		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: listInboundMessages failed');
-			return [];
-		}//end try
-
-	}//end listInboundMessages()
 
 	/**
 	 * Resolve the pipelinq register slug.
