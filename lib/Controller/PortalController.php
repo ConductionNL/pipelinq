@@ -343,17 +343,23 @@ class PortalController extends Controller {
 			return new JSONResponse(['error' => 'token and newStartAt are required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$payload = $this->openSignedLink(token: $token);
-		if (is_string($payload) === true) {
-			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
+		$link = $this->openBookingLink(token: $token, action: 'reschedule');
+		if ($link instanceof JSONResponse) {
+			return $link;
 		}
 
-		$bookingId = (string)($payload['bookingId'] ?? '');
-		$action = (string)($payload['action'] ?? '');
-		if ($bookingId === '' || $action !== 'reschedule') {
-			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
-		}
+		return $this->rescheduleLinkedBooking(bookingId: (string)$link['bookingId'], newStartAt: $newStartAt);
+	}//end reschedule()
 
+	/**
+	 * Reschedule the booking a valid link names and answer the new id.
+	 *
+	 * @param string $bookingId  The linked booking.
+	 * @param string $newStartAt The new ISO-8601 start.
+	 *
+	 * @return JSONResponse 200 with both ids, 400 on an invalid request, 503 on a failure.
+	 */
+	private function rescheduleLinkedBooking(string $bookingId, string $newStartAt): JSONResponse {
 		try {
 			$newId = $this->bookingService->rescheduleBooking(bookingId: $bookingId, newStartAt: $newStartAt);
 		} catch (InvalidArgumentException $e) {
@@ -364,7 +370,39 @@ class PortalController extends Controller {
 		}
 
 		return new JSONResponse(['bookingId' => $newId, 'previousBookingId' => $bookingId], Http::STATUS_OK);
-	}//end reschedule()
+	}//end rescheduleLinkedBooking()
+
+	/**
+	 * The payload of a signed link that is valid, names a booking and grants
+	 * the given action; a 410 response otherwise.
+	 *
+	 * @param string $token  The presented token.
+	 * @param string $action The action the endpoint performs.
+	 *
+	 * @return array<string, mixed>|JSONResponse
+	 */
+	private function openBookingLink(string $token, string $action): array|JSONResponse {
+		$payload = $this->openSignedLink(token: $token);
+		if (is_string($payload) === true) {
+			return $this->linkGone();
+		}
+
+		$bookingId = (string)($payload['bookingId'] ?? '');
+		if ($bookingId === '' || (string)($payload['action'] ?? '') !== $action) {
+			return $this->linkGone();
+		}
+
+		return $payload;
+	}//end openBookingLink()
+
+	/**
+	 * The 410 answer to an expired, invalid or misused signed link.
+	 *
+	 * @return JSONResponse
+	 */
+	private function linkGone(): JSONResponse {
+		return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
+	}//end linkGone()
 
 	/**
 	 * POST /portal/cancel — cancel a booking via signed link.
@@ -387,23 +425,28 @@ class PortalController extends Controller {
 			return new JSONResponse(['error' => 'token is required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$payload = $this->openSignedLink(token: $token);
-		if (is_string($payload) === true) {
-			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
+		$link = $this->openBookingLink(token: $token, action: 'cancel');
+		if ($link instanceof JSONResponse) {
+			return $link;
 		}
 
-		$bookingId = (string)($payload['bookingId'] ?? '');
-		$action = (string)($payload['action'] ?? '');
-		$customerId = (string)($payload['customerId'] ?? '');
-		if ($bookingId === '' || $action !== 'cancel') {
-			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
-		}
+		return $this->cancelLinkedBooking(link: $link, reason: $reason);
+	}//end cancel()
 
+	/**
+	 * Cancel the booking a valid link names, on behalf of its customer.
+	 *
+	 * @param array<string, mixed> $link   The link payload.
+	 * @param string               $reason The customer's reason.
+	 *
+	 * @return JSONResponse 200 with the receipt, 400 on an invalid request, 503 on a failure.
+	 */
+	private function cancelLinkedBooking(array $link, string $reason): JSONResponse {
 		try {
 			$this->bookingService->cancelBooking(
-				bookingId: $bookingId,
+				bookingId: (string)$link['bookingId'],
 				reason: substr($reason, 0, self::MAX_TEXT_LENGTH),
-				cancelledBy: $customerId
+				cancelledBy: (string)($link['customerId'] ?? '')
 			);
 		} catch (InvalidArgumentException $e) {
 			return new JSONResponse(['error' => 'Invalid cancel request'], Http::STATUS_BAD_REQUEST);
@@ -412,8 +455,8 @@ class PortalController extends Controller {
 			return new JSONResponse(['error' => 'Cancellation failed'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		return new JSONResponse(['bookingId' => $bookingId, 'cancelled' => true], Http::STATUS_OK);
-	}//end cancel()
+		return new JSONResponse(['bookingId' => (string)$link['bookingId'], 'cancelled' => true], Http::STATUS_OK);
+	}//end cancelLinkedBooking()
 
 	/**
 	 * Collect and normalise the `/portal/book` body.
@@ -439,11 +482,8 @@ class PortalController extends Controller {
 	 * @return JSONResponse|null A 400 response on the first failure, null when valid.
 	 */
 	private function validateBookParams(array $params): ?JSONResponse {
-		$required = ['customerName', 'email', 'phone', 'serviceId', 'startAt'];
-		foreach ($required as $field) {
-			if (($params[$field] ?? '') === '') {
-				return new JSONResponse(['error' => 'Missing required field'], Http::STATUS_BAD_REQUEST);
-			}
+		if ($this->hasRequiredBookFields(params: $params) === false) {
+			return new JSONResponse(['error' => 'Missing required field'], Http::STATUS_BAD_REQUEST);
 		}
 
 		if (filter_var($params['email'], FILTER_VALIDATE_EMAIL) === false) {
@@ -456,6 +496,23 @@ class PortalController extends Controller {
 
 		return null;
 	}//end validateBookParams()
+
+	/**
+	 * Whether every required `/portal/book` field is filled.
+	 *
+	 * @param array<string, string> $params The collected body.
+	 *
+	 * @return bool
+	 */
+	private function hasRequiredBookFields(array $params): bool {
+		foreach (['customerName', 'email', 'phone', 'serviceId', 'startAt'] as $field) {
+			if (($params[$field] ?? '') === '') {
+				return false;
+			}
+		}
+
+		return true;
+	}//end hasRequiredBookFields()
 
 	/**
 	 * Create a Booking from validated portal input.
@@ -532,21 +589,40 @@ class PortalController extends Controller {
 			throw new RuntimeException('Service register/schema not configured');
 		}
 
+		$rows = $this->findBookableRows(
+			filters: [
+				'register' => $register,
+				'schema' => $schema,
+				'bookableOnline' => true,
+			]
+		);
+		return $this->publicServices(rows: $rows);
+	}//end listBookableServices()
+
+	/**
+	 * The stored Services matching the filters; none when the read fails.
+	 *
+	 * @param array<string, mixed> $filters The register, schema and bookableOnline filters.
+	 *
+	 * @return mixed The rows as findAll() answers them.
+	 */
+	private function findBookableRows(array $filters): mixed {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'bookableOnline' => true,
-					],
-				]
-			);
+			return $this->getObjectService()->findAll(config: ['filters' => $filters]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: services findAll failed');
 			return [];
 		}
+	}//end findBookableRows()
 
+	/**
+	 * The public projection of every row that really is bookable online.
+	 *
+	 * @param mixed $rows The rows, bare or under `results`.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function publicServices(mixed $rows): array {
 		$results = ($rows['results'] ?? $rows);
 		if (is_array($results) === false) {
 			return [];
@@ -554,30 +630,55 @@ class PortalController extends Controller {
 
 		$out = [];
 		foreach ($results as $row) {
-			$data = $this->toArray(object: $row);
-			if ($data === null) {
-				continue;
+			$service = $this->publicService(row: $row);
+			if ($service !== null) {
+				$out[] = $service;
 			}
-
-			// Defence in depth: the OR filter is best-effort, never trust it.
-			if (($data['bookableOnline'] ?? false) !== true) {
-				continue;
-			}
-
-			$out[] = [
-				'id' => $this->idOf(object: $data),
-				'name' => (string)($data['name'] ?? ''),
-				'description' => (string)($data['description'] ?? ''),
-				'durationMinutes' => (int)($data['durationMinutes'] ?? 0),
-				'price' => (float)($data['price'] ?? 0.0),
-				'currency' => (string)($data['currency'] ?? 'EUR'),
-				'requiresDeposit' => (bool)($data['requiresDeposit'] ?? false),
-				'depositAmount' => (float)($data['depositAmount'] ?? 0.0),
-			];
-		}//end foreach
+		}
 
 		return $out;
-	}//end listBookableServices()
+	}//end publicServices()
+
+	/**
+	 * One row's public projection; null when it is not bookable online.
+	 *
+	 * @param mixed $row A stored Service.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function publicService(mixed $row): ?array {
+		$data = $this->toArray(object: $row);
+		if ($data === null) {
+			return null;
+		}
+
+		// Defence in depth: the OR filter is best-effort, never trust it.
+		if (($data['bookableOnline'] ?? false) !== true) {
+			return null;
+		}
+
+		return $this->serviceProjection(data: $data);
+	}//end publicService()
+
+	/**
+	 * The fields of a Service a customer may see.
+	 *
+	 * @param array<string, mixed> $data The Service.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function serviceProjection(array $data): array {
+		return [
+			'id' => $this->idOf(object: $data),
+			'name' => (string)($data['name'] ?? ''),
+			'description' => (string)($data['description'] ?? ''),
+			'durationMinutes' => (int)($data['durationMinutes'] ?? 0),
+			'price' => (float)($data['price'] ?? 0.0),
+			'currency' => (string)($data['currency'] ?? 'EUR'),
+			'requiresDeposit' => (bool)($data['requiresDeposit'] ?? false),
+			'depositAmount' => (float)($data['depositAmount'] ?? 0.0),
+		];
+	}//end serviceProjection()
 
 	/**
 	 * Load a Service by id (best-effort — returns null on miss).
@@ -812,14 +913,8 @@ class PortalController extends Controller {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function openSignedLink(string $token): array|string {
-		$parts = explode('.', $token);
-		if (count($parts) !== 2) {
-			return 'invalid';
-		}
-
-		[$encoded, $signature] = $parts;
-		$expected = $this->base64UrlEncode(data: hash_hmac('sha256', $encoded, $this->signingKey(), true));
-		if (hash_equals($expected, $signature) === false) {
+		$encoded = $this->verifiedLinkBody(token: $token);
+		if ($encoded === null) {
 			return 'invalid';
 		}
 
@@ -834,6 +929,28 @@ class PortalController extends Controller {
 
 		return $decoded;
 	}//end openSignedLink()
+
+	/**
+	 * The encoded payload of a token whose shape and signature check out.
+	 *
+	 * @param string $token The presented token.
+	 *
+	 * @return string|null The encoded payload, or null when the token is malformed or forged.
+	 */
+	private function verifiedLinkBody(string $token): ?string {
+		$parts = explode('.', $token);
+		if (count($parts) !== 2) {
+			return null;
+		}
+
+		[$encoded, $signature] = $parts;
+		$expected = $this->base64UrlEncode(data: hash_hmac('sha256', $encoded, $this->signingKey(), true));
+		if (hash_equals($expected, $signature) === false) {
+			return null;
+		}
+
+		return $encoded;
+	}//end verifiedLinkBody()
 
 	/**
 	 * Validate a signed link bound to a specific booking id.
