@@ -240,7 +240,19 @@ export default {
 		 */
 		async runPreview() {
 			const seq = this.requestSeq
-			let data
+			const data = await this.requestPreview()
+			if (seq !== this.requestSeq) {
+				return
+			}
+			this.showPreview(data)
+		},
+
+		/**
+		 * Ask the server to validate the rules and estimate the segment.
+		 *
+		 * @return {Promise<object|null>} The answer, or null when it failed.
+		 */
+		async requestPreview() {
 			try {
 				const response = await axios.post(
 					generateUrl('/apps/pipelinq/api/segments/preview'),
@@ -249,13 +261,19 @@ export default {
 						rules: this.tree,
 					},
 				)
-				data = response.data
+				return response.data
 			} catch {
-				data = null
+				return null
 			}
-			if (seq !== this.requestSeq) {
-				return
-			}
+		},
+
+		/**
+		 * Show the preview: could not validate, the validator's message, or
+		 * the estimated size.
+		 *
+		 * @param {object|null} data The answer.
+		 */
+		showPreview(data) {
 			if (!data) {
 				this.status = 'failed'
 				this.generalError = this.t('pipelinq', 'Could not validate rules.')
