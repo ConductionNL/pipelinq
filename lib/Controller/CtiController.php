@@ -213,6 +213,34 @@ class CtiController extends Controller {
 
 		$targetNumber = (string)$this->request->getParam('targetNumber', '');
 		$extension = (string)$this->request->getParam('extension', '');
+		$refusal = self::dialRefusal(targetNumber: $targetNumber, extension: $extension);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$result = $this->ctiService->originateCall(
+			userId: $uid,
+			extension: $extension,
+			targetNumber: $targetNumber,
+		);
+
+		$status = Http::STATUS_BAD_GATEWAY;
+		if ($result->success === true) {
+			$status = Http::STATUS_OK;
+		}
+
+		return new JSONResponse($result->toArray(), $status);
+	}//end clickToDial()
+
+	/**
+	 * The 400 for a missing or undialable target number or extension, or null when both may be dialled.
+	 *
+	 * @param string $targetNumber The number to dial.
+	 * @param string $extension    The agent's extension.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private static function dialRefusal(string $targetNumber, string $extension): ?JSONResponse {
 		if ($targetNumber === '' || $extension === '') {
 			return new JSONResponse(
 				['error' => 'targetNumber and extension are required'],
@@ -245,19 +273,8 @@ class CtiController extends Controller {
 			);
 		}
 
-		$result = $this->ctiService->originateCall(
-			userId: $uid,
-			extension: $extension,
-			targetNumber: $targetNumber,
-		);
-
-		$status = Http::STATUS_BAD_GATEWAY;
-		if ($result->success === true) {
-			$status = Http::STATUS_OK;
-		}
-
-		return new JSONResponse($result->toArray(), $status);
-	}//end clickToDial()
+		return null;
+	}//end dialRefusal()
 
 	/**
 	 * Submit a disposition form.
