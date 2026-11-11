@@ -175,58 +175,73 @@ class GenerateZReportJob extends TimedJob {
 	 * @return array<int, string> The terminal IDs.
 	 */
 	private function discoverTerminals(string $reportDate): array {
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
-			if ($register === '' || $schema === '') {
-				return [];
+		$terminals = [];
+		foreach ($this->transactionRows() as $row) {
+			$terminalId = $this->terminalSellingOn(data: $this->toArray(object: $row), reportDate: $reportDate);
+			if ($terminalId !== '') {
+				$terminals[$terminalId] = true;
 			}
+		}
 
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+		return array_keys($terminals);
+	}//end discoverTerminals()
+
+	/**
+	 * Every posTransaction, or [] when they cannot be read (logged).
+	 *
+	 * @return iterable<mixed> The transactions.
+	 */
+	private function transactionRows(): iterable {
+		try {
+			$rows = (new ConfiguredSchemaRows(container: $this->container, appConfig: $this->appConfig))
+				->rows(schemaKey: 'posTransaction_schema');
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'GenerateZReportJob: failed to enumerate terminals',
 				['exception' => $e->getMessage()]
 			);
 			return [];
-		}//end try
+		}
 
-		$terminals = [];
-		foreach (($rows ?? []) as $row) {
-			$data = $this->toArray(object: $row);
-			$tid = (string)($data['terminalId'] ?? '');
-			if ($tid === '') {
-				continue;
-			}
+		return ($rows ?? []);
+	}//end transactionRows()
 
-			$stamp = (string)($data['settledAt'] ?? $data['confirmedAt'] ?? '');
-			if ($stamp === '') {
-				continue;
-			}
+	/**
+	 * The terminal of a transaction settled (or confirmed) on the report date, or ''.
+	 *
+	 * @param array<string, mixed> $data       The transaction.
+	 * @param string               $reportDate The target date (UTC, Y-m-d).
+	 *
+	 * @return string The terminal ID, or '' when the transaction does not count.
+	 */
+	private function terminalSellingOn(array $data, string $reportDate): string {
+		$terminalId = (string)($data['terminalId'] ?? '');
+		$stamp = (string)($data['settledAt'] ?? $data['confirmedAt'] ?? '');
+		if ($terminalId === '' || $stamp === '') {
+			return '';
+		}
 
-			try {
-				$day = (new DateTimeImmutable($stamp))->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
-			} catch (\Throwable $e) {
-				continue;
-			}
+		if ($this->utcDay(stamp: $stamp) !== $reportDate) {
+			return '';
+		}
 
-			if ($day !== $reportDate) {
-				continue;
-			}
+		return $terminalId;
+	}//end terminalSellingOn()
 
-			$terminals[$tid] = true;
-		}//end foreach
-
-		return array_keys($terminals);
-	}//end discoverTerminals()
+	/**
+	 * The UTC calendar day of a timestamp, or null when it does not parse.
+	 *
+	 * @param string $stamp The timestamp.
+	 *
+	 * @return string|null The day as Y-m-d.
+	 */
+	private function utcDay(string $stamp): ?string {
+		try {
+			return (new DateTimeImmutable($stamp))->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
+		} catch (\Throwable $e) {
+			return null;
+		}
+	}//end utcDay()
 
 	/**
 	 * Generate a Z-report and swallow any exception (job must not throw).
