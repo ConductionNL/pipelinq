@@ -274,8 +274,7 @@ export default {
 		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		async finishConnection() {
-			const id = this.$route?.params?.id || ''
-			const outcome = this.$route?.query?.connected || ''
+			const { id, outcome } = this.connectionReturn()
 			if (!id || !outcome) {
 				return
 			}
@@ -288,6 +287,27 @@ export default {
 				return
 			}
 
+			await this.recordConnection(id)
+		},
+
+		/**
+		 * @return {{id: string, outcome: string}} The account and outcome the broker sent back in the address.
+		 */
+		connectionReturn() {
+			return {
+				id: this.$route?.params?.id || '',
+				outcome: this.$route?.query?.connected || '',
+			}
+		},
+
+		/**
+		 * Record the connected account, then reload the accounts; a failure
+		 * says why.
+		 *
+		 * @param {string} id The account.
+		 * @return {Promise<void>}
+		 */
+		async recordConnection(id) {
 			try {
 				await attachCredential(id)
 				this.notice = t('pipelinq', 'The account is connected.')
