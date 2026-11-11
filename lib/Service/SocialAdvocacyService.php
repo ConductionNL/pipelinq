@@ -91,23 +91,9 @@ class SocialAdvocacyService {
 	 *
 	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
-	public function requestShare(
-		array $publication,
-		array $account,
-		array $post,
-		SocialPublishRequest $request,
-	): ?array {
-		$publication['status'] = SocialPublicationStore::AWAITING_SHARE;
-		$publication['sharePromptedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		// The words are FROZEN here rather than rebuilt when the person opens
-		// the notification. Editing the post afterwards must not change what
-		// somebody was asked to post.
-		$publication['preparedBody'] = $request->bodyWithLink();
-		$publication['preparedMedia'] = $request->media;
-		$publication['failureCode'] = '';
-		$publication['failureReason'] = '';
-		$saved = $this->publications->save(publication: $publication);
-
+	public function requestShare(array $publication, array $account, array $post, SocialPublishRequest $request): ?array {
+		$prepared = $this->asAwaitingShare(publication: $publication, request: $request);
+		$saved = $this->publications->save(publication: $prepared);
 		$owner = trim((string)($account['ownerUserId'] ?? ''));
 		if ($owner === '') {
 			return $saved;
@@ -116,18 +102,50 @@ class SocialAdvocacyService {
 		$this->notifications->sendNotification(
 			userId: $owner,
 			subject: self::SUBJECT_SHARE_REQUESTED,
-			parameters: [
-				'handle' => (string)($account['handle'] ?? ''),
-				'network' => (string)($account['network'] ?? ''),
-				'title' => (string)($post['title'] ?? ''),
-				'body' => $request->bodyWithLink(),
-			],
-			objectType: 'socialPublication',
-			objectId: $this->publications->idOf(publication: $saved ?? $publication),
+			parameters: $this->shareParameters(account: $account, post: $post) + ['body' => $request->bodyWithLink()],
+			objectType: 'socialPublication', objectId: $this->publications->idOf(publication: $saved ?? $prepared),
 		);
 
 		return $saved;
 	}//end requestShare()
+
+	/**
+	 * The publication waiting for its share, with the words and media it
+	 * asks for. The words are FROZEN here rather than rebuilt when the person
+	 * opens the notification: editing the post afterwards must not change
+	 * what somebody was asked to post.
+	 *
+	 * @param array<string, mixed> $publication The opened publication.
+	 * @param SocialPublishRequest $request     The resolved request.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function asAwaitingShare(array $publication, SocialPublishRequest $request): array {
+		$publication['status'] = SocialPublicationStore::AWAITING_SHARE;
+		$publication['sharePromptedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+		$publication['preparedBody'] = $request->bodyWithLink();
+		$publication['preparedMedia'] = $request->media;
+		$publication['failureCode'] = '';
+		$publication['failureReason'] = '';
+
+		return $publication;
+	}//end asAwaitingShare()
+
+	/**
+	 * The share notification's account and post parameters.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 * @param array<string, mixed> $post    The post.
+	 *
+	 * @return array{handle: string, network: string, title: string}
+	 */
+	private function shareParameters(array $account, array $post): array {
+		return [
+			'handle' => (string)($account['handle'] ?? ''),
+			'network' => (string)($account['network'] ?? ''),
+			'title' => (string)($post['title'] ?? ''),
+		];
+	}//end shareParameters()
 
 	/**
 	 * Everything the owner needs to post it: the prepared text, the media and
@@ -146,33 +164,49 @@ class SocialAdvocacyService {
 			return ['error' => $context['error']];
 		}
 
-		$publication = $context['publication'];
-		$account = $context['account'];
-		$adapter = $this->registry->forNetwork(network: (string)($account['network'] ?? ''));
+		$share = $this->shareOf(publication: $context['publication'], account: $context['account']);
+		return ['share' => ['publicationId' => $publicationId] + $share];
+	}//end shareBundle()
 
-		$request = new SocialPublishRequest(
-			network: (string)($account['network'] ?? ''),
-			body: (string)($publication['preparedBody'] ?? ''),
-			handle: (string)($account['handle'] ?? ''),
-		);
+	/**
+	 * The frozen share of a publication: network, handle, status, the
+	 * prepared words and media, and the network's composer link.
+	 *
+	 * @param array<string, mixed> $publication The publication.
+	 * @param array<string, mixed> $account     Its account.
+	 *
+	 * @return array{network: string, handle: string, status: string, body: string, media: array<mixed>, composerUrl: string}
+	 */
+	private function shareOf(array $publication, array $account): array {
+		$network = (string)($account['network'] ?? '');
+		$adapter = $this->registry->forNetwork(network: $network);
+		$body = (string)($publication['preparedBody'] ?? '');
+		$request = new SocialPublishRequest(network: $network, body: $body, handle: (string)($account['handle'] ?? ''));
+		return [
+			'network' => $network,
+			'handle' => (string)($account['handle'] ?? ''),
+			'status' => (string)($publication['status'] ?? ''),
+			'body' => $request->body,
+			'media' => $this->preparedMedia(publication: $publication),
+			'composerUrl' => ($adapter?->composerUrl(request: $request) ?? ''),
+		];
+	}//end shareOf()
 
+	/**
+	 * The publication's frozen media; none when they are not a list.
+	 *
+	 * @param array<string, mixed> $publication The publication.
+	 *
+	 * @return array<mixed>
+	 */
+	private function preparedMedia(array $publication): array {
 		$media = ($publication['preparedMedia'] ?? []);
 		if (is_array($media) === false) {
-			$media = [];
+			return [];
 		}
 
-		return [
-			'share' => [
-				'publicationId' => $publicationId,
-				'network' => (string)($account['network'] ?? ''),
-				'handle' => (string)($account['handle'] ?? ''),
-				'status' => (string)($publication['status'] ?? ''),
-				'body' => $request->body,
-				'media' => $media,
-				'composerUrl' => ($adapter?->composerUrl(request: $request) ?? ''),
-			],
-		];
-	}//end shareBundle()
+		return $media;
+	}//end preparedMedia()
 
 	/**
 	 * Record that the owner posted it.

@@ -494,26 +494,16 @@ class AnalyticsService {
 		$startTs = $start->getTimestamp();
 		$nowTs = $now->getTimestamp();
 
-		// Bucket granularity: day for week/month, week for quarter, month for year.
-		$bucketSize = match ($period) {
-			'week', 'month' => 86400,
-			// 1 day.
-			'quarter' => 86400 * 7,
-			// 1 week.
-			'year' => 86400 * 30,
-			// ~1 month.
-			default => 86400,
-		};
+		$bucketSize = $this->bucketSizeForPeriod(period: $period);
 
 		$buckets = [];
 		foreach ($leads as $lead) {
 			$timestamp = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
-			if ($timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
+			$key = $this->bucketKey(timestamp: $timestamp, startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+			if ($key === null) {
 				continue;
 			}
 
-			$bucketTs = $startTs + ((int)floor(($timestamp - $startTs) / $bucketSize)) * $bucketSize;
-			$key = date('Y-m-d', $bucketTs);
 			if (isset($buckets[$key]) === false) {
 				$buckets[$key] = 0;
 			}
@@ -526,6 +516,18 @@ class AnalyticsService {
 			$buckets[$key] += (float)($lead['value'] ?? 0);
 		}
 
+		return ['metric' => $metric, 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: $metric)];
+	}//end buildTimeBucketSeries()
+
+	/**
+	 * The buckets as a dated series in date order: whole counts for leads, cents for any other metric.
+	 *
+	 * @param array<string, int|float> $buckets The bucket totals by date.
+	 * @param string                   $metric  `leads`, `pipeline-value` or `revenue`.
+	 *
+	 * @return array<int, array{date: string, value: int|float}>
+	 */
+	private static function bucketSeries(array $buckets, string $metric): array {
 		ksort($buckets);
 		$series = [];
 		foreach ($buckets as $date => $value) {
@@ -537,8 +539,8 @@ class AnalyticsService {
 			$series[] = ['date' => $date, 'value' => $bucketValue];
 		}
 
-		return ['metric' => $metric, 'period' => $period, 'series' => $series];
-	}//end buildTimeBucketSeries()
+		return $series;
+	}//end bucketSeries()
 
 	/**
 	 * Build the requests-by-category series. Categories with zero requests in
@@ -576,6 +578,17 @@ class AnalyticsService {
 			$counts[$category]++;
 		}
 
+		return ['metric' => 'requests-by-category', 'period' => $period, 'series' => self::countSeries(counts: $counts)];
+	}//end buildCategorySeries()
+
+	/**
+	 * The counts as a series, largest first; a zero count is left out.
+	 *
+	 * @param array<string, int> $counts Count per category.
+	 *
+	 * @return array<int, array{date: string, value: int}>
+	 */
+	private static function countSeries(array $counts): array {
 		// Sort by descending count for stable rendering.
 		arsort($counts);
 
@@ -588,8 +601,8 @@ class AnalyticsService {
 			$series[] = ['date' => $category, 'value' => $count];
 		}
 
-		return ['metric' => 'requests-by-category', 'period' => $period, 'series' => $series];
-	}//end buildCategorySeries()
+		return $series;
+	}//end countSeries()
 
 	/**
 	 * Lead-to-close and request-to-resolved funnel data.
@@ -611,39 +624,54 @@ class AnalyticsService {
 		$leads = $this->findObjects(schemaKey: 'lead_schema');
 		$requests = $this->findTickets(ticketType: TicketService::TYPE_REQUEST);
 
-		$leadCounts = ['open' => 0, 'won' => 0, 'lost' => 0];
-		foreach ($leads as $lead) {
-			$status = (string)($lead['status'] ?? '');
-			if (isset($leadCounts[$status]) === true) {
-				$leadCounts[$status]++;
-			}
-		}
-
+		$leadCounts = self::statusCounts(rows: $leads, counts: ['open' => 0, 'won' => 0, 'lost' => 0]);
 		$leadTotal = $leadCounts['open'] + $leadCounts['won'] + $leadCounts['lost'];
-		$leadConversionRate = null;
-		if ($leadTotal > 0) {
-			$leadConversionRate = round(($leadCounts['won'] * 100.0) / $leadTotal, 1);
-		}
+		$leadConversionRate = self::percentOf(part: $leadCounts['won'], total: $leadTotal);
 
-		$requestCounts = ['new' => 0, 'in_progress' => 0, 'completed' => 0, 'rejected' => 0];
-		foreach ($requests as $request) {
-			$status = (string)($request['status'] ?? '');
-			if (isset($requestCounts[$status]) === true) {
-				$requestCounts[$status]++;
-			}
-		}
-
+		$requestCounts = self::statusCounts(rows: $requests, counts: ['new' => 0, 'in_progress' => 0, 'completed' => 0, 'rejected' => 0]);
 		$requestTotal = array_sum($requestCounts);
-		$resolutionRate = null;
-		if ($requestTotal > 0) {
-			$resolutionRate = round(($requestCounts['completed'] * 100.0) / $requestTotal, 1);
-		}
+		$resolutionRate = self::percentOf(part: $requestCounts['completed'], total: $requestTotal);
 
 		return [
 			'leadFunnel' => array_merge($leadCounts, ['conversionRate' => $leadConversionRate]),
 			'requestFunnel' => array_merge($requestCounts, ['resolutionRate' => $resolutionRate]),
 		];
 	}//end getFunnels()
+
+	/**
+	 * How many rows carry each of the given statuses; other statuses are not counted.
+	 *
+	 * @param array<int, array<string, mixed>> $rows   The rows.
+	 * @param array<string, int>               $counts The statuses to count, at zero, in answer order.
+	 *
+	 * @return array<string, int>
+	 */
+	private static function statusCounts(array $rows, array $counts): array {
+		foreach ($rows as $row) {
+			$status = (string)($row['status'] ?? '');
+			if (isset($counts[$status]) === true) {
+				$counts[$status]++;
+			}
+		}
+
+		return $counts;
+	}//end statusCounts()
+
+	/**
+	 * A part of a total as a percentage with one decimal, or null for an empty total.
+	 *
+	 * @param int $part  The part.
+	 * @param int $total The total.
+	 *
+	 * @return float|null
+	 */
+	private static function percentOf(int $part, int $total): ?float {
+		if ($total > 0) {
+			return round(($part * 100.0) / $total, 1);
+		}
+
+		return null;
+	}//end percentOf()
 
 	/**
 	 * Commercial KPI overview for the Commercial dashboard.
@@ -1069,13 +1097,7 @@ class AnalyticsService {
 			}
 		}
 
-		ksort($buckets);
-		$series = [];
-		foreach ($buckets as $date => $value) {
-			$series[] = ['date' => $date, 'value' => round((float)$value, 2)];
-		}
-
-		return ['metric' => 'revenue', 'period' => $period, 'series' => $series];
+		return ['metric' => 'revenue', 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: 'revenue')];
 	}//end buildRevenueSeries()
 
 	/**
@@ -1108,6 +1130,18 @@ class AnalyticsService {
 			}
 		}
 
+		return ['metric' => 'pipeline-by-stage', 'period' => $period, 'series' => self::stageSeries(byStage: $byStage, order: $order)];
+	}//end buildPipelineByStageSeries()
+
+	/**
+	 * The stage totals as a series in stage order, rounded to cents; equal orders keep first-seen order.
+	 *
+	 * @param array<string, float> $byStage Value per stage.
+	 * @param array<string, int>   $order   Order per stage.
+	 *
+	 * @return array<int, array{date: string, value: float}>
+	 */
+	private static function stageSeries(array $byStage, array $order): array {
 		$rows = [];
 		foreach ($byStage as $stage => $value) {
 			$rows[] = ['date' => (string)$stage, 'value' => round((float)$value, 2), 'order' => $order[$stage]];
@@ -1125,8 +1159,8 @@ class AnalyticsService {
 			$series[] = ['date' => $row['date'], 'value' => $row['value']];
 		}
 
-		return ['metric' => 'pipeline-by-stage', 'period' => $period, 'series' => $series];
-	}//end buildPipelineByStageSeries()
+		return $series;
+	}//end stageSeries()
 
 	/**
 	 * POS line revenue grouped by the linked product's category.

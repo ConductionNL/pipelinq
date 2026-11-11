@@ -357,6 +357,17 @@ class PosPaymentController extends Controller {
 			);
 		}
 
+		return $this->webhookAnswer(result: $result);
+	}//end webhook()
+
+	/**
+	 * The answer to the provider for what the service made of the delivery.
+	 *
+	 * @param array<string, mixed> $result The service's verdict.
+	 *
+	 * @return JSONResponse 400 for an invalid signature, 503 when unmatched, else 200 with the verdict.
+	 */
+	private function webhookAnswer(array $result): JSONResponse {
 		$status = (string)($result['status'] ?? '');
 		if ($status === 'invalid') {
 			return new JSONResponse(
@@ -382,7 +393,7 @@ class PosPaymentController extends Controller {
 		}
 
 		return new JSONResponse($result);
-	}//end webhook()
+	}//end webhookAnswer()
 
 	// ---------------------------------------------------------------------
 	// Helpers.

@@ -572,27 +572,7 @@ class ActivityTimelineService {
 			throw new RuntimeException('Contactmoment register or schema not configured.');
 		}
 
-		$user = $this->userSession->getUser();
-
-		$agentUid = '';
-		if ($user !== null) {
-			$agentUid = (string)$user->getUID();
-		}
-
-		$duration = $this->stringOrNull(value: ($data['duration'] ?? null));
-		$summary = $this->stringOrNull(value: ($data['description'] ?? null));
-		$date = $this->stringOrNull(value: ($data['date'] ?? null)) ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-
-		$payload = [
-			'channel' => 'worklog',
-			// A worklog is a handler writing down what they did, not contact
-			// with the party, so it is internal by construction.
-			'direction' => 'internal',
-			'description' => $summary ?? '',
-			'duration' => $duration ?? '',
-			'occurredAt' => $date,
-			'assignee' => $agentUid,
-		];
+		$payload = $this->worklogPayload(data: $data);
 
 		if ($entityType === 'client') {
 			$payload['client'] = $entityId;
@@ -612,6 +592,39 @@ class ActivityTimelineService {
 
 		return $normalized ?? [];
 	}//end createWorklog()
+
+	/**
+	 * The contact moment a worklog becomes, before it is tied to its entity.
+	 *
+	 * The assignee is the signed-in agent, never a payload value; a missing date is now.
+	 *
+	 * @param array<string,mixed> $data The worklog data (duration, description, date).
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function worklogPayload(array $data): array {
+		$user = $this->userSession->getUser();
+
+		$agentUid = '';
+		if ($user !== null) {
+			$agentUid = (string)$user->getUID();
+		}
+
+		$duration = $this->stringOrNull(value: ($data['duration'] ?? null));
+		$summary = $this->stringOrNull(value: ($data['description'] ?? null));
+		$date = $this->stringOrNull(value: ($data['date'] ?? null)) ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+
+		return [
+			'channel' => 'worklog',
+			// A worklog is a handler writing down what they did, not contact
+			// with the party, so it is internal by construction.
+			'direction' => 'internal',
+			'description' => $summary ?? '',
+			'duration' => $duration ?? '',
+			'occurredAt' => $date,
+			'assignee' => $agentUid,
+		];
+	}//end worklogPayload()
 
 	/**
 	 * Return paginated worklog entries (contactmomenten where channel='worklog')
