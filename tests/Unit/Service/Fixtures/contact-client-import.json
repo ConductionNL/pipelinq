@@ -1,0 +1,69 @@
+[
+    {
+        "name": "Jan de Vries",
+        "type": "person",
+        "email": "jan@example.nl",
+        "phone": "0612345678",
+        "emails": [
+            {
+                "kind": "other",
+                "value": "jan@example.nl",
+                "primary": true,
+                "verified": false
+            },
+            {
+                "kind": "work",
+                "value": "werk@example.nl",
+                "primary": false,
+                "verified": false
+            }
+        ],
+        "phones": [
+            {
+                "kind": "other",
+                "value": "0612345678",
+                "primary": true,
+                "verified": false
+            }
+        ],
+        "socialProfiles": [
+            {
+                "network": "x",
+                "handle": "",
+                "url": "https://x.com/jan",
+                "verified": false,
+                "followedByUs": false,
+                "followsUs": false
+            }
+        ],
+        "website": "https://jan.example",
+        "contactsUid": "uid-0",
+        "industry": [
+            "Bakkerij"
+        ]
+    },
+    {
+        "name": "Gemeente Voorbeeld",
+        "type": "organization",
+        "phone": "010-1234567",
+        "emails": [],
+        "phones": [
+            {
+                "kind": "other",
+                "value": "010-1234567",
+                "primary": true,
+                "verified": false
+            }
+        ],
+        "socialProfiles": [],
+        "contactsUid": "uid-1"
+    },
+    {
+        "name": "Unknown",
+        "type": "person",
+        "emails": [],
+        "phones": [],
+        "socialProfiles": [],
+        "contactsUid": "uid-2"
+    }
+]

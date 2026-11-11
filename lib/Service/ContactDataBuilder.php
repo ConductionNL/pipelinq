@@ -91,20 +91,9 @@ class ContactDataBuilder {
 			$industry = $org;
 		}
 
-		$emails = $this->extractTypedEntries(value: ($ncContact['EMAIL'] ?? null));
-		$phones = $this->extractTypedEntries(value: ($ncContact['TEL'] ?? null));
-
-		$data = [
-			'name' => $name,
-			'type' => $clientType,
-			'email' => $emails[0]['value'] ?? '',
-			'phone' => $phones[0]['value'] ?? '',
-			'emails' => $emails,
-			'phones' => $phones,
-			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
-			'website' => $this->extractFirstValue(value: ($ncContact['URL'] ?? '')),
-			'contactsUid' => $uid,
-		];
+		$data = ['name' => $name, 'type' => $clientType]
+			+ $this->clientChannels(ncContact: $ncContact)
+			+ ['contactsUid' => $uid];
 
 		// Scalar values are filtered out when empty; `emails`/`phones`/
 		// `socialProfiles` are arrays (never `''`) so array_filter's
@@ -127,6 +116,27 @@ class ContactDataBuilder {
 
 		return $data;
 	}//end buildClientImportData()
+
+	/**
+	 * A client's channels from the card: first email and phone, the typed lists, social profiles and website.
+	 *
+	 * @param array $ncContact The Nextcloud contact data.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function clientChannels(array $ncContact): array {
+		$emails = $this->extractTypedEntries(value: ($ncContact['EMAIL'] ?? null));
+		$phones = $this->extractTypedEntries(value: ($ncContact['TEL'] ?? null));
+
+		return [
+			'email' => $emails[0]['value'] ?? '',
+			'phone' => $phones[0]['value'] ?? '',
+			'emails' => $emails,
+			'phones' => $phones,
+			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
+			'website' => $this->extractFirstValue(value: ($ncContact['URL'] ?? '')),
+		];
+	}//end clientChannels()
 
 	/**
 	 * Build contact person data from a Nextcloud contact.
