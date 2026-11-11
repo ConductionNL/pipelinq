@@ -97,6 +97,18 @@ class SearchConsoleImportCommand extends Command {
 			)
 		);
 
+		return $this->import(output: $output, days: $days);
+	}//end execute()
+
+	/**
+	 * Run the import, print each property's error and the summary, and answer the exit code.
+	 *
+	 * @param OutputInterface $output The console output.
+	 * @param int             $days   How many days back to import.
+	 *
+	 * @return int `FAILURE` when the import failed or no property was imported.
+	 */
+	private function import(OutputInterface $output, int $days): int {
 		try {
 			$result = $this->importer->importRecent(days: $days);
 		} catch (Throwable $e) {
@@ -117,7 +129,7 @@ class SearchConsoleImportCommand extends Command {
 		}
 
 		return Command::SUCCESS;
-	}//end execute()
+	}//end import()
 
 	/**
 	 * "property" or "properties".
