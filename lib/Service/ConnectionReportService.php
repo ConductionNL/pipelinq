@@ -146,19 +146,7 @@ class ConnectionReportService {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function report(string $key, string $status, string $message = ''): bool {
-		if (in_array($key, self::KEYS, true) === false) {
-			$this->logger->warning(
-				'Pipelinq: refusing to report an undeclared connection key',
-				['key' => $key]
-			);
-			return false;
-		}
-
-		if (in_array($status, self::STATUSES, true) === false) {
-			$this->logger->warning(
-				'Pipelinq: refusing to report an unknown connection status',
-				['key' => $key, 'status' => $status]
-			);
+		if ($this->isUndeclared(key: $key, status: $status) === true) {
 			return false;
 		}
 
@@ -188,6 +176,36 @@ class ConnectionReportService {
 			return false;
 		}//end try
 	}//end report()
+
+	/**
+	 * Whether the key or the status is outside the contract; the refusal is logged.
+	 *
+	 * The key is checked first, so an undeclared key is reported as such whatever its status.
+	 *
+	 * @param string $key    The connection key.
+	 * @param string $status The status.
+	 *
+	 * @return bool True when the report must not be sent.
+	 */
+	private function isUndeclared(string $key, string $status): bool {
+		if (in_array($key, self::KEYS, true) === false) {
+			$this->logger->warning(
+				'Pipelinq: refusing to report an undeclared connection key',
+				['key' => $key]
+			);
+			return true;
+		}
+
+		if (in_array($status, self::STATUSES, true) === false) {
+			$this->logger->warning(
+				'Pipelinq: refusing to report an unknown connection status',
+				['key' => $key, 'status' => $status]
+			);
+			return true;
+		}
+
+		return false;
+	}//end isUndeclared()
 
 	/**
 	 * Report the outcome of the CTI Test connection for the `cti` row.
