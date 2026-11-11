@@ -39,7 +39,10 @@ function lookups(mod, values) {
 		'isValidPriority',
 	]
 	return Object.fromEntries(
-		names.map((name) => [name, Object.fromEntries(all.map((v) => [v, mod[name](v)]))]),
+		names.map((name) => [
+			name,
+			Object.fromEntries(all.map((v) => [v, mod[name](v)])),
+		]),
 	)
 }
 
@@ -51,7 +54,11 @@ function lookups(mod, values) {
  */
 function validPairs(mod) {
 	const all = [...Object.keys(mod.STATUS_TRANSITIONS), 'unknown']
-	return all.flatMap((from) => all.filter((to) => mod.isValidTransition(from, to)).map((to) => `${from}>${to}`))
+	return all.flatMap((from) =>
+		all
+			.filter((to) => mod.isValidTransition(from, to))
+			.map((to) => `${from}>${to}`),
+	)
 }
 
 describe('requestStatus', () => {
@@ -65,18 +72,25 @@ describe('requestStatus', () => {
 			converted: [],
 		})
 		expect(request.VALID_PRIORITIES).toEqual(['low', 'normal', 'high', 'urgent'])
-		expect(Object.keys(request.STATUS_LABELS)).toEqual(Object.keys(request.STATUS_TRANSITIONS))
+		expect(Object.keys(request.STATUS_LABELS)).toEqual(
+			Object.keys(request.STATUS_TRANSITIONS),
+		)
 		expect(request.PRIORITY_COLORS.high).toBe('var(--color-warning-text)')
 	})
 
 	it('answers every lookup as before', () => {
-		const values = [...Object.keys(request.STATUS_TRANSITIONS), ...request.VALID_PRIORITIES]
+		const values = [
+			...Object.keys(request.STATUS_TRANSITIONS),
+			...request.VALID_PRIORITIES,
+		]
 		const result = lookups(request, values)
 		expect(result.getAllowedTransitions.unknown).toEqual([])
 		expect(result.isTerminalStatus.completed).toBe(true)
 		expect(result.isTerminalStatus.new).toBe(false)
 		expect(result.isTerminalStatus.unknown).toBe(true)
-		expect(result.getStatusLabel.awaiting_customer).toBe('pipelinq:Waiting for customer')
+		expect(result.getStatusLabel.awaiting_customer).toBe(
+			'pipelinq:Waiting for customer',
+		)
 		expect(result.getStatusLabel.unknown).toBe('unknown')
 		expect(result.getStatusColor.converted).toBe('#745bca')
 		expect(result.getStatusColor.unknown).toBe('#999')
@@ -91,12 +105,24 @@ describe('requestStatus', () => {
 
 	it('validates transitions as before', () => {
 		expect(validPairs(request)).toEqual([
-			'new>new', 'new>in_progress', 'new>awaiting_customer', 'new>completed', 'new>rejected',
-			'in_progress>in_progress', 'in_progress>awaiting_customer', 'in_progress>completed',
-			'in_progress>rejected', 'in_progress>converted',
-			'awaiting_customer>in_progress', 'awaiting_customer>awaiting_customer',
-			'awaiting_customer>completed', 'awaiting_customer>rejected',
-			'completed>completed', 'rejected>rejected', 'converted>converted', 'unknown>unknown',
+			'new>new',
+			'new>in_progress',
+			'new>awaiting_customer',
+			'new>completed',
+			'new>rejected',
+			'in_progress>in_progress',
+			'in_progress>awaiting_customer',
+			'in_progress>completed',
+			'in_progress>rejected',
+			'in_progress>converted',
+			'awaiting_customer>in_progress',
+			'awaiting_customer>awaiting_customer',
+			'awaiting_customer>completed',
+			'awaiting_customer>rejected',
+			'completed>completed',
+			'rejected>rejected',
+			'converted>converted',
+			'unknown>unknown',
 		])
 	})
 })
@@ -109,14 +135,35 @@ describe('complaintStatus', () => {
 			resolved: [],
 			rejected: [],
 		})
-		expect(complaint.VALID_PRIORITIES).toEqual(['low', 'normal', 'high', 'urgent'])
-		expect(complaint.VALID_CATEGORIES).toEqual(['service', 'product', 'communication', 'billing', 'other'])
-		expect(complaint.VALID_CHANNELS).toEqual(['phone', 'email', 'web', 'counter', 'letter', 'other'])
+		expect(complaint.VALID_PRIORITIES).toEqual([
+			'low',
+			'normal',
+			'high',
+			'urgent',
+		])
+		expect(complaint.VALID_CATEGORIES).toEqual([
+			'service',
+			'product',
+			'communication',
+			'billing',
+			'other',
+		])
+		expect(complaint.VALID_CHANNELS).toEqual([
+			'phone',
+			'email',
+			'web',
+			'counter',
+			'letter',
+			'other',
+		])
 		expect(complaint.PRIORITY_COLORS.low).toBe('#999')
 	})
 
 	it('answers every lookup as before', () => {
-		const values = [...Object.keys(complaint.STATUS_TRANSITIONS), ...complaint.VALID_PRIORITIES]
+		const values = [
+			...Object.keys(complaint.STATUS_TRANSITIONS),
+			...complaint.VALID_PRIORITIES,
+		]
 		const result = lookups(complaint, values)
 		expect(result.getStatusColor.resolved).toBe('#46ba61')
 		expect(result.getStatusColor.unknown).toBe('#999')
@@ -128,9 +175,14 @@ describe('complaintStatus', () => {
 
 	it('validates transitions as before', () => {
 		expect(validPairs(complaint)).toEqual([
-			'new>new', 'new>in_progress',
-			'in_progress>in_progress', 'in_progress>resolved', 'in_progress>rejected',
-			'resolved>resolved', 'rejected>rejected', 'unknown>unknown',
+			'new>new',
+			'new>in_progress',
+			'in_progress>in_progress',
+			'in_progress>resolved',
+			'in_progress>rejected',
+			'resolved>resolved',
+			'rejected>rejected',
+			'unknown>unknown',
 		])
 	})
 
@@ -143,10 +195,24 @@ describe('complaintStatus', () => {
 		expect(complaint.getChannelLabel('counter')).toBe('pipelinq:Counter')
 		expect(complaint.getChannelLabel('x')).toBe('x')
 		expect(complaint.getSlaIndicator(null, 'new')).toBeNull()
-		expect(complaint.getSlaIndicator('2000-01-01T00:00:00Z', 'resolved')).toBe('met')
-		expect(complaint.getSlaIndicator('2000-01-01T00:00:00Z', 'new')).toBe('overdue')
-		expect(complaint.getSlaIndicator(new Date(Date.now() + 3600000).toISOString(), 'new')).toBe('approaching')
-		expect(complaint.getSlaIndicator(new Date(Date.now() + 86400000).toISOString(), 'new')).toBe('on_track')
+		expect(complaint.getSlaIndicator('2000-01-01T00:00:00Z', 'resolved')).toBe(
+			'met',
+		)
+		expect(complaint.getSlaIndicator('2000-01-01T00:00:00Z', 'new')).toBe(
+			'overdue',
+		)
+		expect(
+			complaint.getSlaIndicator(
+				new Date(Date.now() + 3600000).toISOString(),
+				'new',
+			),
+		).toBe('approaching')
+		expect(
+			complaint.getSlaIndicator(
+				new Date(Date.now() + 86400000).toISOString(),
+				'new',
+			),
+		).toBe('on_track')
 		expect(complaint.getSlaColor('met')).toBe('#46ba61')
 		expect(complaint.getSlaColor('approaching')).toBe('#e9a400')
 		expect(complaint.getSlaColor('overdue')).toBe('#e9322d')
