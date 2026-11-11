@@ -90,6 +90,18 @@ class ExportDataService extends AbstractExportService {
 	private const PAGE_SIZE = 500;
 
 	/**
+	 * Parquet envelope column type per PHP value type; anything else is a string.
+	 *
+	 * @var array<string, string>
+	 */
+	private const VALUE_TYPES = [
+		'boolean' => 'boolean',
+		'integer' => 'integer',
+		'double' => 'double',
+		'array' => 'object',
+	];
+
+	/**
 	 * Map a pipelinq schema slug to its app-config schema key.
 	 *
 	 * Only the schemas the export pipeline may read are mapped; an unknown slug
@@ -149,60 +161,107 @@ class ExportDataService extends AbstractExportService {
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006
 	 */
 	public function extractSchema(array $job, string $schemaSlug, ?string $watermarkFrom = null, ?int $rowCap = null): array {
-		$schemaKey = $this->schemaKeyForSlug(slug: $schemaSlug);
-		if ($schemaKey === null || $this->schemaExists(slug: $schemaSlug) === false) {
-			throw new OCSBadRequestException("Schema '{$schemaSlug}' does not exist.");
+		$schemaKey = $this->requireSchemaKey(slug: $schemaSlug);
+		$watermark = $this->watermarkColumnOf(job: $job);
+		$scan = ['mode' => (string)($job['mode'] ?? 'full'), 'watermarkColumn' => $watermark, 'watermarkFrom' => $watermarkFrom, 'rowCap' => $rowCap];
+		$run = new SchemaExtractRun(job: $job, rows: $this->fetchRows(schemaKey: $schemaKey, scan: $scan));
+		if ($run->isIncremental() === true) {
+			$run->watermarkTo = $this->maxWatermark(rows: $run->rows, watermarkColumn: $watermark);
+			$run->rows = $this->addTombstoneMarker(rows: $run->rows);
 		}
 
-		$mode = ($job['mode'] ?? 'full');
+		$this->narrowRows(run: $run);
+		return $this->describeFile(run: $run, schemaSlug: $schemaSlug);
+	}//end extractSchema()
+
+	/**
+	 * The schema key of a slug that is well-formed and configured in this register.
+	 *
+	 * @param string $slug The schema slug.
+	 *
+	 * @return string The schema key.
+	 *
+	 * @throws OCSBadRequestException When the schema does not exist.
+	 */
+	private function requireSchemaKey(string $slug): string {
+		$schemaKey = $this->schemaKeyForSlug(slug: $slug);
+		if ($schemaKey === null || $this->schemaExists(slug: $slug) === false) {
+			throw new OCSBadRequestException("Schema '{$slug}' does not exist.");
+		}
+
+		return $schemaKey;
+	}//end requireSchemaKey()
+
+	/**
+	 * The job's watermark column; an incremental job must name one.
+	 *
+	 * @param array<string, mixed> $job The export job configuration.
+	 *
+	 * @return string The watermark column, or '' for a full job without one.
+	 *
+	 * @throws OCSBadRequestException When an incremental job has no watermark column.
+	 */
+	private function watermarkColumnOf(array $job): string {
 		$watermark = (string)($job['incrementalWatermarkColumn'] ?? '');
-		if ($mode === 'incremental' && $watermark === '') {
+		if (($job['mode'] ?? 'full') === 'incremental' && $watermark === '') {
 			throw new OCSBadRequestException('Watermark column is required for incremental mode.');
 		}
 
-		$scan = ['mode' => (string)$mode, 'watermarkColumn' => $watermark, 'watermarkFrom' => $watermarkFrom, 'rowCap' => $rowCap];
-		$rows = $this->fetchRows(schemaKey: $schemaKey, scan: $scan);
+		return $watermark;
+	}//end watermarkColumnOf()
 
-		$watermarkTo = null;
-		if ($mode === 'incremental' && $watermark !== '') {
-			$watermarkTo = $this->maxWatermark(rows: $rows, watermarkColumn: $watermark);
-			$rows = $this->addTombstoneMarker(rows: $rows);
-		}
-
-		$filter = (string)($job['rowFilterExpression'] ?? '');
+	/**
+	 * Keep the rows the job's row filter matches, then drop the columns its allowlist does not name.
+	 *
+	 * @param SchemaExtractRun $run The extraction in progress.
+	 *
+	 * @return void
+	 */
+	private function narrowRows(SchemaExtractRun $run): void {
+		$filter = (string)($run->job['rowFilterExpression'] ?? '');
 		if ($filter !== '') {
-			$rows = $this->applyRowFilter(rows: $rows, expression: $filter);
+			$run->rows = $this->applyRowFilter(rows: $run->rows, expression: $filter);
 		}
 
-		$allowlist = $job['columnAllowlist'] ?? null;
-		$droppedColumns = [];
-		if (is_array($allowlist) === true && $allowlist !== []) {
-			// Always keep the tombstone marker on incremental exports.
-			$effective = $allowlist;
-			if ($mode === 'incremental') {
-				$effective[] = '_deleted';
-			}
-
-			[$rows, $droppedColumns] = $this->applyColumnAllowlist(rows: $rows, allowlist: $effective);
+		$allowlist = $run->job['columnAllowlist'] ?? null;
+		if (is_array($allowlist) === false || $allowlist === []) {
+			return;
 		}
 
-		$format = (string)($job['format'] ?? 'csv');
-		$compression = (string)($job['compression'] ?? 'none');
-		$contents = $this->format(rows: $rows, format: $format);
+		// Always keep the tombstone marker on incremental exports.
+		if ($run->isIncremental() === true) {
+			$allowlist[] = '_deleted';
+		}
+
+		[$rows, $droppedColumns] = $this->applyColumnAllowlist(rows: $run->rows, allowlist: $allowlist);
+		$run->rows = $rows;
+		$run->droppedColumns = $droppedColumns;
+	}//end narrowRows()
+
+	/**
+	 * Format and compress the extracted rows into the file descriptor.
+	 *
+	 * @param SchemaExtractRun $run        The finished extraction.
+	 * @param string           $schemaSlug The schema slug.
+	 *
+	 * @return array<string, mixed> The file descriptor.
+	 */
+	private function describeFile(SchemaExtractRun $run, string $schemaSlug): array {
+		$compression = (string)($run->job['compression'] ?? 'none');
+		$contents = $this->format(rows: $run->rows, format: (string)($run->job['format'] ?? 'csv'));
 		$contents = $this->compress(contents: $contents, compression: $compression);
-
 		return [
 			'schema' => $schemaSlug,
-			'rows' => count($rows),
+			'rows' => count($run->rows),
 			'contents' => $contents,
 			'size_bytes' => strlen($contents),
 			'sha256' => hash('sha256', $contents),
 			'compression_used' => $compression,
-			'watermark_to' => $watermarkTo,
-			'dropped_columns' => $droppedColumns,
-			'column_definitions' => $this->columnDefinitions(rows: $rows),
+			'watermark_to' => $run->watermarkTo,
+			'dropped_columns' => $run->droppedColumns,
+			'column_definitions' => $this->columnDefinitions(rows: $run->rows),
 		];
-	}//end extractSchema()
+	}//end describeFile()
 
 	/**
 	 * Format rows in the requested output format.
@@ -647,35 +706,36 @@ class ExportDataService extends AbstractExportService {
 				continue;
 			}
 
-			$value = $row[$column];
-			$current = 'string';
-			if (is_bool($value) === true) {
-				$current = 'boolean';
-			} elseif (is_int($value) === true) {
-				$current = 'integer';
-			} elseif (is_float($value) === true) {
-				$current = 'double';
-			} elseif (is_array($value) === true) {
-				$current = 'object';
-			}
-
-			if ($type === null) {
-				$type = $current;
-			} elseif ($type !== $current) {
-				$type = 'string';
-			}
-		}//end foreach
-
-		if ($type === null) {
-			$type = 'string';
+			$type = $this->widenType(type: $type, current: (self::VALUE_TYPES[gettype($row[$column])] ?? 'string'));
 		}
 
+		$type = ($type ?? 'string');
 		if ($nullable === true) {
 			return $type . '|null';
 		}
 
 		return $type;
 	}//end inferType()
+
+	/**
+	 * The column type after one more value: the first type seen, or string once types differ.
+	 *
+	 * @param string|null $type    The type so far, or null before the first value.
+	 * @param string      $current The type of the next value.
+	 *
+	 * @return string The combined type.
+	 */
+	private function widenType(?string $type, string $current): string {
+		if ($type === null) {
+			return $current;
+		}
+
+		if ($type !== $current) {
+			return 'string';
+		}
+
+		return $type;
+	}//end widenType()
 
 	/**
 	 * Encode one CSV record per RFC 4180 (quote when needed, double inner quotes).

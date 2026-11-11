@@ -318,10 +318,6 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @throws OCSBadRequestException On any validation failure.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) A flat list of independent
-	 *  required-field / enum / cron / watermark guards, each a single condition.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      See note — sequential guards only.
-	 *
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	private function validateJob(array $data): void {
@@ -329,6 +325,27 @@ class ExportJobService extends AbstractExportService {
 			throw new OCSBadRequestException('Job name is required.');
 		}
 
+		$this->requireSourceSchemas(data: $data);
+		$this->requireFormatAndMode(data: $data);
+		if ($this->cron->isValid(expression: (string)($data['scheduleCron'] ?? '')) === false) {
+			throw new OCSBadRequestException('Invalid cron expression.');
+		}
+
+		if (trim((string)($data['destinationId'] ?? '')) === '') {
+			throw new OCSBadRequestException('A destination is required.');
+		}
+	}//end validateJob()
+
+	/**
+	 * Require at least one source schema, each of which exists.
+	 *
+	 * @param array<string, mixed> $data The config.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSBadRequestException When there is none, or one does not exist.
+	 */
+	private function requireSourceSchemas(array $data): void {
 		$schemas = $data['sourceSchemas'] ?? [];
 		if (is_array($schemas) === false || $schemas === []) {
 			throw new OCSBadRequestException('At least one source schema is required.');
@@ -339,7 +356,18 @@ class ExportJobService extends AbstractExportService {
 				throw new OCSBadRequestException("Schema '{$schemaSlug}' does not exist.");
 			}
 		}
+	}//end requireSourceSchemas()
 
+	/**
+	 * Require a supported format and mode, and a watermark column for incremental mode.
+	 *
+	 * @param array<string, mixed> $data The config.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSBadRequestException On an unsupported format or mode, or a missing watermark column.
+	 */
+	private function requireFormatAndMode(array $data): void {
 		$format = (string)($data['format'] ?? '');
 		if (in_array($format, ['csv', 'parquet', 'jsonl'], true) === false) {
 			throw new OCSBadRequestException("Unsupported format '{$format}'.");
@@ -353,15 +381,7 @@ class ExportJobService extends AbstractExportService {
 		if ($mode === 'incremental' && trim((string)($data['incrementalWatermarkColumn'] ?? '')) === '') {
 			throw new OCSBadRequestException('Watermark column is required for incremental mode.');
 		}
-
-		if ($this->cron->isValid(expression: (string)($data['scheduleCron'] ?? '')) === false) {
-			throw new OCSBadRequestException('Invalid cron expression.');
-		}
-
-		if (trim((string)($data['destinationId'] ?? '')) === '') {
-			throw new OCSBadRequestException('A destination is required.');
-		}
-	}//end validateJob()
+	}//end requireFormatAndMode()
 
 	/**
 	 * Strip never-trusted fields from a job payload.
