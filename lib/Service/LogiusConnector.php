@@ -162,6 +162,24 @@ class LogiusConnector {
 			self::CONFIG_TOKEN_URL,
 			self::DEFAULT_BASE_URL . '/oauth/token'
 		);
+		$payload = $this->requestToken(tokenUrl: $tokenUrl, credentials: $this->clientCredentials());
+		if (isset($payload['access_token']) === false || is_string($payload['access_token']) === false) {
+			throw new RuntimeException('Logius OAuth response missing access_token.');
+		}
+
+		$expiresIn = (int)($payload['expires_in'] ?? 3600);
+		$this->tokenCache = [(string)$payload['access_token'], ($now + $expiresIn)];
+		return $this->tokenCache[0];
+	}//end authenticate()
+
+	/**
+	 * The configured OAuth client id and secret.
+	 *
+	 * @return array{0: string, 1: string} The client id and secret.
+	 *
+	 * @throws RuntimeException When either is not configured.
+	 */
+	private function clientCredentials(): array {
 		$clientId = $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_CLIENT_ID, '');
 		$clientSecret = $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_CLIENT_SECRET, '');
 
@@ -169,12 +187,26 @@ class LogiusConnector {
 			throw new RuntimeException('Logius client credentials are not configured.');
 		}
 
+		return [$clientId, $clientSecret];
+	}//end clientCredentials()
+
+	/**
+	 * POST the client-credentials grant and decode the token response.
+	 *
+	 * @param string                    $tokenUrl    The token endpoint.
+	 * @param array{0: string, 1: string} $credentials The client id and secret (basic auth).
+	 *
+	 * @return array<string, mixed> The decoded response.
+	 *
+	 * @throws RuntimeException When the request fails (logged).
+	 */
+	private function requestToken(string $tokenUrl, array $credentials): array {
 		$client = $this->clientService->newClient();
 		try {
 			$response = $client->post(
 				$tokenUrl,
 				[
-					'auth' => [$clientId, $clientSecret],
+					'auth' => $credentials,
 					'body' => ['grant_type' => 'client_credentials'],
 					'timeout' => 30,
 				]
@@ -187,15 +219,8 @@ class LogiusConnector {
 			throw new RuntimeException('Logius authentication failed: ' . $e->getMessage(), 0, $e);
 		}
 
-		$payload = $this->decodeJson(response: $response);
-		if (isset($payload['access_token']) === false || is_string($payload['access_token']) === false) {
-			throw new RuntimeException('Logius OAuth response missing access_token.');
-		}
-
-		$expiresIn = (int)($payload['expires_in'] ?? 3600);
-		$this->tokenCache = [(string)$payload['access_token'], ($now + $expiresIn)];
-		return $this->tokenCache[0];
-	}//end authenticate()
+		return $this->decodeJson(response: $response);
+	}//end requestToken()
 
 	/**
 	 * Validate and send a BerichtenboxMessage payload to Logius.
@@ -216,34 +241,66 @@ class LogiusConnector {
 	 */
 	public function sendMessage(array $message, string $tenantPkiCert, string $tenantPkiKey): array {
 		$this->validateOutboundPayload(message: $message);
-
-		$body = [
-			'messageId' => (string)($message['uuid'] ?? $message['id'] ?? $this->newUuidV4()),
-			'subject' => (string)$message['subject'],
-			'body' => (string)$message['body'],
-			'attachments' => array_map(
-				static function (array $att): array {
-					return [
-						'filename' => (string)($att['filename'] ?? 'attachment'),
-						'mimeType' => (string)($att['mime'] ?? 'application/pdf'),
-						'sizeBytes' => (int)($att['sizeBytes'] ?? 0),
-						'content' => (string)($att['contentBase64'] ?? ''),
-					];
-				},
-				($message['attachments'] ?? [])
-			),
-			'recipient' => ['bsn' => (string)($message['bsnPlain'] ?? '')],
-		];
+		$body = $this->outboundBody(message: $message);
 
 		$baseUrl = $this->appConfig->getValueString(
 			Application::APP_ID,
 			self::CONFIG_BASE_URL,
 			self::DEFAULT_BASE_URL
 		);
-		$endpoint = rtrim($baseUrl, '/') . '/messages';
+		$post = new LogiusPost(endpoint: rtrim($baseUrl, '/') . '/messages', body: $body);
 
 		$signature = $this->signRequest(body: $body, pkiCertPem: $tenantPkiCert, pkiKeyPem: $tenantPkiKey);
-		$headers = [
+		$response = $this->postMessage(post: $post, headers: $this->messageHeaders(body: $body, signature: $signature));
+		return $this->receiptOf(raw: $this->decodeJson(response: $response));
+	}//end sendMessage()
+
+	/**
+	 * The BBK 1.7 message body of a validated message.
+	 *
+	 * @param array<string, mixed> $message The message object.
+	 *
+	 * @return array<string, mixed> The request body.
+	 */
+	private function outboundBody(array $message): array {
+		return [
+			'messageId' => (string)($message['uuid'] ?? $message['id'] ?? $this->newUuidV4()),
+			'subject' => (string)$message['subject'],
+			'body' => (string)$message['body'],
+			'attachments' => array_map(
+				fn (array $att): array => $this->attachmentOf(att: $att),
+				($message['attachments'] ?? [])
+			),
+			'recipient' => ['bsn' => (string)($message['bsnPlain'] ?? '')],
+		];
+	}//end outboundBody()
+
+	/**
+	 * One attachment as Logius expects it.
+	 *
+	 * @param array<string, mixed> $att The message's attachment.
+	 *
+	 * @return array{filename: string, mimeType: string, sizeBytes: int, content: string} The attachment.
+	 */
+	private function attachmentOf(array $att): array {
+		return [
+			'filename' => (string)($att['filename'] ?? 'attachment'),
+			'mimeType' => (string)($att['mime'] ?? 'application/pdf'),
+			'sizeBytes' => (int)($att['sizeBytes'] ?? 0),
+			'content' => (string)($att['contentBase64'] ?? ''),
+		];
+	}//end attachmentOf()
+
+	/**
+	 * The headers of an outbound message: the bearer token, the message id, the time and the signature.
+	 *
+	 * @param array<string, mixed> $body      The request body.
+	 * @param string               $signature The base64 request signature.
+	 *
+	 * @return array<string, string> The headers.
+	 */
+	private function messageHeaders(array $body, string $signature): array {
+		return [
 			'Authorization' => 'Bearer ' . $this->authenticate(),
 			'Content-Type' => 'application/json',
 			'X-Message-ID' => $body['messageId'],
@@ -251,26 +308,48 @@ class LogiusConnector {
 			'X-Signature-Algorithm' => 'RSA-SHA256',
 			'X-Signature' => $signature,
 		];
+	}//end messageHeaders()
 
+	/**
+	 * POST the message; a transport failure is logged with the message id and refused.
+	 *
+	 * @param LogiusPost            $post    The endpoint and body.
+	 * @param array<string, string> $headers The request headers.
+	 *
+	 * @return IResponse The response.
+	 *
+	 * @throws RuntimeException When the request fails.
+	 */
+	private function postMessage(LogiusPost $post, array $headers): IResponse {
 		$client = $this->clientService->newClient();
 		try {
-			$response = $client->post(
-				$endpoint,
+			return $client->post(
+				$post->endpoint,
 				[
 					'headers' => $headers,
-					'body' => json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+					'body' => json_encode($post->body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
 					'timeout' => 60,
 				]
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Logius sendMessage transport failure.',
-				['exception' => $e->getMessage(), 'messageId' => $body['messageId']]
+				['exception' => $e->getMessage(), 'messageId' => $post->body['messageId']]
 			);
 			throw new RuntimeException('Logius sendMessage failed: ' . $e->getMessage(), 0, $e);
 		}
+	}//end postMessage()
 
-		$raw = $this->decodeJson(response: $response);
+	/**
+	 * The delivery receipt of a Logius response.
+	 *
+	 * @param array<string, mixed> $raw The decoded response.
+	 *
+	 * @return array{logiusMessageId: string, raw: array} The receipt.
+	 *
+	 * @throws RuntimeException When the response names no message id.
+	 */
+	private function receiptOf(array $raw): array {
 		$logiusMessageId = (string)($raw['logiusMessageId'] ?? $raw['messageId'] ?? '');
 		if ($logiusMessageId === '') {
 			throw new RuntimeException('Logius response missing logiusMessageId.');
@@ -280,7 +359,7 @@ class LogiusConnector {
 			'logiusMessageId' => $logiusMessageId,
 			'raw' => $raw,
 		];
-	}//end sendMessage()
+	}//end receiptOf()
 
 	/**
 	 * Validate that a message conforms to BBK 1.7 outbound rules.
