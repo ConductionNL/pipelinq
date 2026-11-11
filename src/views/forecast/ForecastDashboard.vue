@@ -428,11 +428,11 @@ export default {
 		},
 
 		atRisk() {
-			return isAtRisk(
-				this.summary.projected,
-				this.summary.quota,
-				this.daysRemaining,
-			)
+			return isAtRisk({
+				projected: this.summary.projected,
+				quota: this.summary.quota,
+				daysRemaining: this.daysRemaining,
+			})
 		},
 
 		atRiskMessage() {
