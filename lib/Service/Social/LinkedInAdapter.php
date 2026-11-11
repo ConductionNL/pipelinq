@@ -277,37 +277,46 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 */
 	public function readFollowers(array $payload): int {
 		$elements = ($payload['elements'] ?? []);
-		if (is_array($elements) === false || $elements === []) {
+		if (is_array($elements) === false) {
 			return 0;
 		}
 
 		$total = 0;
 		foreach ($elements as $element) {
-			if (is_array($element) === false) {
-				continue;
-			}
-
-			// LinkedIn answers in one of two shapes: a flat `followerCounts`
-			// on the element, or one entry per association type (organic,
-			// sponsored, employee) that has to be summed. Both are read, so a
-			// change of shape loses nothing and never double-counts, because
-			// only one of the two is ever present on an element.
-			$total += $this->readInt(payload: $element, path: ['followerCounts', 'organicFollowerCount']);
-
-			$byType = ($element['followerCountsByAssociationType'] ?? []);
-			if (is_array($byType) === false) {
-				continue;
-			}
-
-			foreach ($byType as $entry) {
-				if (is_array($entry) === true) {
-					$total += $this->readInt(payload: $entry, path: ['followerCounts', 'organicFollowerCount']);
-				}
+			if (is_array($element) === true) {
+				$total += $this->elementFollowers(element: $element);
 			}
 		}
 
 		return $total;
 	}//end readFollowers()
+
+	/**
+	 * One element's followers. LinkedIn answers in one of two shapes: a flat
+	 * `followerCounts` on the element, or one entry per association type
+	 * (organic, sponsored, employee) that has to be summed. Both are read, so
+	 * a change of shape loses nothing and never double-counts, because only
+	 * one of the two is ever present on an element.
+	 *
+	 * @param array<string, mixed> $element The element.
+	 *
+	 * @return int
+	 */
+	private function elementFollowers(array $element): int {
+		$total = $this->readInt(payload: $element, path: ['followerCounts', 'organicFollowerCount']);
+		$byType = ($element['followerCountsByAssociationType'] ?? []);
+		if (is_array($byType) === false) {
+			return $total;
+		}
+
+		foreach ($byType as $entry) {
+			if (is_array($entry) === true) {
+				$total += $this->readInt(payload: $entry, path: ['followerCounts', 'organicFollowerCount']);
+			}
+		}
+
+		return $total;
+	}//end elementFollowers()
 
 	/**
 	 * LinkedIn's own share intent.
