@@ -14,3 +14,13 @@
 export function sectionValues(ctx) {
 	return ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 }
+
+/**
+ * @param {unknown} ctx The injected section context.
+ * @return {string} The object id the page host resolved, or an empty string.
+ * @spec exclude id-resolution plumbing shared with every body section, no behaviour of its own.
+ */
+export function sectionObjectId(ctx) {
+	const bag = sectionValues(ctx)
+	return (bag && bag.objectId) || ''
+}

@@ -63,7 +63,7 @@ nobody has surveyed gets a sentence saying so.
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { fetchClientSatisfaction } from '../../services/satisfactionApi.js'
-import { sectionValues } from '../../utils/sectionContext.js'
+import { sectionObjectId } from '../../utils/sectionContext.js'
 
 export default {
 	name: 'ClientSatisfactionSection',
@@ -96,11 +96,7 @@ export default {
 		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		resolvedId() {
-			if (this.clientId) {
-				return this.clientId
-			}
-			const bag = sectionValues(this.cnSectionContext)
-			return (bag && bag.objectId) || ''
+			return this.clientId || sectionObjectId(this.cnSectionContext)
 		},
 
 		/**
