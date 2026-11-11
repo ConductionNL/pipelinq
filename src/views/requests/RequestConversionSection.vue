@@ -69,6 +69,31 @@ import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import ConvertToCaseDialog from '../../dialogs/ConvertToCaseDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
+/**
+ * @param {?{caseType: (string|undefined), keepOpen: (boolean|undefined), informCustomer: (boolean|undefined)}} choice What the dialog asked.
+ * @return {object} The conversion request: the case type when chosen, and the two choices.
+ */
+function conversionRequest(choice) {
+	return {
+		...(choice && choice.caseType ? { caseType: choice.caseType } : {}),
+		keepOpen: Boolean(choice && choice.keepOpen),
+		informCustomer: Boolean(choice && choice.informCustomer),
+	}
+}
+
+/**
+ * @param {object} body The refusal body.
+ * @return {string} Why the case could not be made: the handoff's reason, or that it failed.
+ */
+function conversionFailure(body) {
+	if (body.status === 'handoff-failed') {
+		return t('pipelinq', 'Could not create the case: {reason}', {
+			reason: body.reason || t('pipelinq', 'unknown error'),
+		})
+	}
+	return t('pipelinq', 'Could not convert this request to a case.')
+}
+
 const DEFAULT_AVAILABILITY = {
 	available: false,
 	status: '',
@@ -234,48 +259,57 @@ export default {
 						'/apps/pipelinq/api/handoff/request/{id}/convert-to-case',
 						{ id: this.resolvedId },
 					),
-					{
-						...(choice && choice.caseType ? { caseType: choice.caseType } : {}),
-						keepOpen: Boolean(choice && choice.keepOpen),
-						informCustomer: Boolean(choice && choice.informCustomer),
-					},
+					conversionRequest(choice),
 				)
-				this.availability = {
-					...this.availability,
-					status: 'converted',
-					canConvert: false,
-					caseReference: data.caseReference || '',
-				}
-				this.dialogOpen = false
-				showSuccess(t('pipelinq', 'Request converted to case.'))
-				this.$emit('converted', { caseReference: data.caseReference || '' })
+				this.showConverted(data.caseReference || '')
 			} catch (err) {
-				const body = (err && err.response && err.response.data) || {}
-				if (
-					body.status === 'invalid-status'
-					|| body.status === 'not-available'
-				) {
-					showError(
-						t(
-							'pipelinq',
-							'Conversion is no longer available for this request.',
-						),
-					)
-					await this.loadAvailability()
-				} else if (body.status === 'handoff-failed') {
-					showError(
-						t('pipelinq', 'Could not create the case: {reason}', {
-							reason: body.reason || t('pipelinq', 'unknown error'),
-						}),
-					)
-				} else {
-					showError(
-						t('pipelinq', 'Could not convert this request to a case.'),
-					)
-				}
+				await this.explainConversionFailure(err)
 			} finally {
 				this.busy = false
 			}
+		},
+
+		/**
+		 * The request is a case now: show the reference, close the dialog and say so.
+		 *
+		 * @param {string} caseReference The case's reference.
+		 * @return {void}
+		 */
+		showConverted(caseReference) {
+			this.availability = {
+				...this.availability,
+				status: 'converted',
+				canConvert: false,
+				caseReference,
+			}
+			this.dialogOpen = false
+			showSuccess(t('pipelinq', 'Request converted to case.'))
+			this.$emit('converted', { caseReference })
+		},
+
+		/**
+		 * Say why the conversion failed; when it is no longer available, read
+		 * the availability again.
+		 *
+		 * @param {?object} err The failure.
+		 * @return {Promise<void>}
+		 */
+		async explainConversionFailure(err) {
+			const body = (err && err.response && err.response.data) || {}
+			if (
+				body.status === 'invalid-status'
+				|| body.status === 'not-available'
+			) {
+				showError(
+					t(
+						'pipelinq',
+						'Conversion is no longer available for this request.',
+					),
+				)
+				await this.loadAvailability()
+				return
+			}
+			showError(conversionFailure(body))
 		},
 
 		/**

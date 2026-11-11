@@ -166,6 +166,80 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 
+/** How the server shows a KvK API key that is configured. */
+const MASKED_KEY = '***configured***'
+
+/**
+ * A request to the prospect settings endpoint.
+ *
+ * @param {object} init The method and body, if any.
+ * @return {Promise<Response>} The response.
+ */
+function settingsRequest(init) {
+	return fetch(
+		generateUrl('/apps/pipelinq/api/prospects/settings'),
+		{
+			...init,
+			headers: {
+				'Content-Type': 'application/json',
+				requesttoken: OC.requestToken,
+				'OCS-APIREQUEST': 'true',
+			},
+		},
+	)
+}
+
+/**
+ * The stored profile as the form edits it; a configured KvK key stays masked.
+ *
+ * @param {object} data The stored profile.
+ * @return {object} The form.
+ */
+function icpForm(data) {
+	return {
+		...icpFilters(data),
+		excludeInactive: data.excludeInactive !== false,
+		kvkApiKey:
+			data.kvkApiKey === MASKED_KEY
+				? MASKED_KEY
+				: '',
+
+		openCorporatesEnabled: data.openCorporatesEnabled || false,
+	}
+}
+
+/**
+ * @param {object} data The stored profile.
+ * @return {object} The company size, provinces and legal forms, empty when unset.
+ */
+function icpFilters(data) {
+	return {
+		employeeCountMin: data.employeeCountMin || 0,
+		employeeCountMax: data.employeeCountMax || 0,
+		provinces: data.provinces || [],
+		legalForms: data.legalForms || [],
+	}
+}
+
+/**
+ * @param {?Array<string>} list A stored list.
+ * @return {string} The list as the form types it.
+ */
+function listText(list) {
+	return (list || []).join(', ')
+}
+
+/**
+ * @param {string} text A comma-separated list as typed.
+ * @return {Array<string>} The entries, trimmed, empty ones left out.
+ */
+function textList(text) {
+	return text
+		.split(',')
+		.map((s) => s.trim())
+		.filter(Boolean)
+}
+
 export default {
 	name: 'ProspectSettings',
 	components: {
@@ -234,33 +308,12 @@ export default {
 		async fetchSettings() {
 			this.loading = true
 			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/prospects/settings'),
-					{
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
+				const response = await settingsRequest({})
 				if (response.ok) {
 					const data = await response.json()
-					this.form = {
-						employeeCountMin: data.employeeCountMin || 0,
-						employeeCountMax: data.employeeCountMax || 0,
-						provinces: data.provinces || [],
-						legalForms: data.legalForms || [],
-						excludeInactive: data.excludeInactive !== false,
-						kvkApiKey:
-							data.kvkApiKey === '***configured***'
-								? '***configured***'
-								: '',
-
-						openCorporatesEnabled: data.openCorporatesEnabled || false,
-					}
-					this.sbiCodesText = (data.sbiCodes || []).join(', ')
-					this.keywordsText = (data.keywords || []).join(', ')
+					this.form = icpForm(data)
+					this.sbiCodesText = listText(data.sbiCodes)
+					this.keywordsText = listText(data.keywords)
 				}
 			} catch {
 				// Settings may not exist yet
@@ -278,48 +331,40 @@ export default {
 
 			const payload = {
 				...this.form,
-				sbiCodes: this.sbiCodesText
-					.split(',')
-					.map((s) => s.trim())
-					.filter(Boolean),
+				sbiCodes: textList(this.sbiCodesText),
 
-				keywords: this.keywordsText
-					.split(',')
-					.map((s) => s.trim())
-					.filter(Boolean),
+				keywords: textList(this.keywordsText),
 			}
 
 			// Don't send masked API key
-			if (payload.kvkApiKey === '***configured***') {
+			if (payload.kvkApiKey === MASKED_KEY) {
 				delete payload.kvkApiKey
 			}
 
 			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/prospects/settings'),
-					{
-						method: 'PUT',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(payload),
-					},
-				)
-
-				if (response.ok) {
-					this.message = t('pipelinq', 'ICP settings saved successfully')
-					this.messageType = 'success'
-				} else {
-					this.message = t('pipelinq', 'Failed to save ICP settings')
-					this.messageType = 'error'
-				}
+				const response = await settingsRequest({
+					method: 'PUT',
+					body: JSON.stringify(payload),
+				})
+				this.showSaved(response.ok)
 			} catch {
-				this.message = t('pipelinq', 'Failed to save ICP settings')
-				this.messageType = 'error'
+				this.showSaved(false)
 			} finally {
 				this.saving = false
+			}
+		},
+
+		/**
+		 * @param {boolean} saved Whether the settings were saved.
+		 * @return {void}
+		 */
+		showSaved(saved) {
+			if (saved) {
+				this.message = t('pipelinq', 'ICP settings saved successfully')
+				this.messageType = 'success'
+			} else {
+				this.message = t('pipelinq', 'Failed to save ICP settings')
+				this.messageType = 'error'
 			}
 		},
 	},
