@@ -416,4 +416,36 @@ class OpenMailServiceTest extends TestCase {
 			}
 		}
 	}//end testAddingTheSenderRefusesWhatItCannotStandBehind()
+	/**
+	 * The edges of the summaries and the log: a client's own `client` field is
+	 * never looked up; a contact's non-string client is ignored; an
+	 * organisation suggestion the caller may not read is none; a logged mail
+	 * answers its id first and then exactly the payload it wrote.
+	 *
+	 * @return void
+	 */
+	public function testTheSummaryAndLogEdges(): void {
+		$service = $this->service();
+		$this->readable = [
+			'client/' . self::BAKKERIJ => ['name' => 'Bakkerij', 'email' => 'info@bakkerij.nl', 'client' => self::ANNA],
+			'contact/' . self::ANNA => ['name' => 'Anna', 'client' => ['nested']],
+		];
+		$this->matcher->method('matchEmailToEntities')->willReturnCallback(
+			static fn (string $address): array => ($address === 'info@bakkerij.nl' ? [['entityType' => 'client', 'entityId' => self::BAKKERIJ], ['entityType' => 'contact', 'entityId' => self::ANNA]] : [])
+		);
+		$this->matcher->method('matchDomainToOrganization')->willReturn(['entityId' => 'unreadable']);
+
+		$this->assertSame(
+			[
+				['entityType' => 'client', 'entityId' => self::BAKKERIJ, 'name' => 'Bakkerij', 'email' => 'info@bakkerij.nl'],
+				['entityType' => 'contact', 'entityId' => self::ANNA, 'name' => 'Anna', 'email' => ''],
+			],
+			$service->lookup('info@bakkerij.nl')['matches']
+		);
+		$this->assertSame(['matches' => [], 'organisation' => null], $service->lookup('iemand@elders.nl'));
+
+		$logged = $service->logMail('contact', ' ' . self::ANNA . ' ', 'Offerte', '2026-10-12T09:30:00Z', ' kort ');
+		$this->assertSame(['id', 'contact', 'title', 'channel', 'direction', 'occurredAt', 'description'], array_slice(array_keys($logged), 0, 7));
+		$this->assertSame(['cm-1', self::ANNA, 'Offerte', 'email', 'inbound', '2026-10-12T09:30:00+00:00', 'kort'], array_slice(array_values($logged), 0, 7));
+	}//end testTheSummaryAndLogEdges()
 }//end class

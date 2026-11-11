@@ -580,4 +580,55 @@ class PosPaymentControllerTest extends TestCase {
 		$this->assertSame('An unexpected error occurred', $response->getData()['error']);
 		$this->assertStringNotContainsString('SQLSTATE', (string)$response->getData()['error']);
 	}//end testRefundMaps500OnUnexpectedFailureWithoutLeakingInternals()
+
+	/**
+	 * Every service answer maps to exactly this status and body, and a crash logs exactly this.
+	 *
+	 * @return void
+	 */
+	public function testEveryWebhookAnswerIsExact(): void {
+		$answers = [
+			['status' => 'ok', 'id' => 'tr_1'],
+			['status' => 'duplicate'],
+			['status' => 'ignored'],
+			['status' => 'invalid', 'reason' => 'bad mac'],
+			['status' => 'unmatched', 'sessionId' => 's-1'],
+			['no' => 'status'],
+		];
+		$this->withBody(['id' => 'tr_1']);
+		$this->withHeaders([]);
+		$this->service->method('handleWebhook')->willReturnOnConsecutiveCalls(...$answers);
+		$seen = [];
+		foreach ($answers as $ignored) {
+			$response = $this->controller->webhook(provider: 'stripe');
+			$seen[] = [$response->getStatus(), $response->getData()];
+		}
+
+		$this->assertSame(
+			[
+				[200, ['status' => 'ok', 'id' => 'tr_1']],
+				[200, ['status' => 'duplicate']],
+				[200, ['status' => 'ignored']],
+				[400, ['error' => 'Invalid webhook signature']],
+				[503, ['status' => 'unmatched', 'sessionId' => 's-1']],
+				[200, ['no' => 'status']],
+			],
+			$seen
+		);
+
+		$logged = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			function (string $message, array $context = []) use (&$logged): void {
+				$logged[] = [$message, $context];
+			}
+		);
+		$service = $this->createMock(PosPaymentService::class);
+		$service->method('handleWebhook')->willThrowException(new \LogicException('secret detail'));
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		$response = (new PosPaymentController($this->request, $service, $this->session, $l10n, $logger))->webhook(provider: 'ccv');
+		$this->assertSame([500, ['status' => 'error', 'error' => 'Webhook processing failed']], [$response->getStatus(), $response->getData()]);
+		$this->assertSame([['PosPaymentController::webhook crashed', ['provider' => 'ccv', 'class' => 'LogicException']]], $logged);
+	}//end testEveryWebhookAnswerIsExact()
 }//end class

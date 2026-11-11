@@ -270,4 +270,35 @@ class ListTokenServiceTest extends TestCase {
 			$this->service->preferencesUrl(token: 'tok')
 		);
 	}//end testLinkBuildersNameTheirOwnRoutes()
+	/**
+	 * Every verdict on a well-signed token: a payload that is not an object,
+	 * or carries no expiry, or names no purpose, is refused; one at its very
+	 * expiry second still holds, one second later it does not; the payload
+	 * comes back exactly as signed.
+	 *
+	 * @return void
+	 */
+	public function testEveryVerdictOnAWellSignedToken(): void {
+		$this->service->signConfirmToken(subscriptionId: 'sub-1', nonce: 'n');
+		$key = '';
+		foreach ($this->config as $value) {
+			$key = $value;
+		}
+
+		$signed = static function (string $json) use ($key): string {
+			$encoded = rtrim(strtr(base64_encode($json), '+/', '-_'), '=');
+			$signature = rtrim(strtr(base64_encode(hash_hmac('sha256', $encoded, $key, true)), '+/', '-_'), '=');
+			return $encoded . '.' . $signature;
+		};
+
+		foreach (['"text"', '[]', '{"p":"confirm"}', '{"exp":' . ($this->now + 10) . '}'] as $json) {
+			$this->assertNull($this->service->verify(token: $signed($json), purpose: ListTokenService::PURPOSE_CONFIRM), $json);
+		}
+
+		$payload = ['p' => ListTokenService::PURPOSE_CONFIRM, 's' => 'sub-9', 'exp' => $this->now];
+		$this->assertSame($payload, $this->service->verify(token: $signed((string)json_encode($payload)), purpose: ListTokenService::PURPOSE_CONFIRM));
+		$payload['exp'] = ($this->now - 1);
+		$this->assertNull($this->service->verify(token: $signed((string)json_encode($payload)), purpose: ListTokenService::PURPOSE_CONFIRM));
+		$this->assertSame(['p' => '', 'exp' => $this->now], $this->service->verify(token: $signed('{"p":"","exp":' . $this->now . '}'), purpose: ''));
+	}//end testEveryVerdictOnAWellSignedToken()
 }//end class

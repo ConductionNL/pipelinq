@@ -344,4 +344,87 @@ class RecordDocumentControllerTest extends TestCase
     }//end testSlugTemplateRendersWithTheRecordsLists()
 
 
+
+    /**
+     * Every answer of the document action, the order of its reads and the exact render call.
+     *
+     * @return void
+     */
+    public function testEveryDocumentAnswerIsExact(): void
+    {
+        $calls     = [];
+        $available = null;
+        $failing   = false;
+        $this->map = '{"salesQuote":{"template":"tpl-quote","ownerField":"assignee","lists":[]},"order":{"template":"tpl-missing","ownerField":"owner"}}';
+        $this->reader = $this->createMock(originalClassName: CallerObjectReader::class);
+        $this->reader->method('register')->willReturn('pipelinq');
+        $this->reader->method('readFromSchema')->willReturnCallback(
+            static function (string $id, string $schema) use (&$calls): ?array {
+                $calls[] = ['read', $id, $schema];
+                return $id === 'gone' ? null : ['number' => 'OFF-1', 'title' => 'Hosting', 'assignee' => $id === 'theirs' ? 'jan' : 'pieter', 'owner' => 'pieter'];
+            }
+        );
+        $this->policy = $this->createMock(originalClassName: ObjectOwnerAccessPolicy::class);
+        $this->policy->method('mayAccess')->willReturnCallback(
+            static function (string $uid, array $record, string $ownerField) use (&$calls): bool {
+                $calls[] = ['access', $uid, $ownerField];
+                return ($record[$ownerField] ?? '') === $uid;
+            }
+        );
+        $this->documents = $this->createMock(originalClassName: FilinqLetterAdapter::class);
+        $this->documents->method('unavailableReason')->willReturnCallback(
+            static function () use (&$calls, &$available): ?string {
+                $calls[] = ['available'];
+                return $available;
+            }
+        );
+        $this->documents->method('findTemplate')->willReturnCallback(
+            static function (string $templateId) use (&$calls): ?array {
+                $calls[] = ['template', $templateId];
+                return self::template($templateId);
+            }
+        );
+        $this->documents->method('render')->willReturnCallback(
+            static function (string $templateId, array $dataRefs, string $filename, string $outputMode, array $listRefs = []) use (&$calls, &$failing): array {
+                $calls[] = ['render', $templateId, $dataRefs, $filename, $outputMode, $listRefs];
+                if ($failing === true) {
+                    throw new \RuntimeException('filinq down');
+                }
+
+                return ['content' => '%PDF', 'fileId' => null, 'path' => null, 'warnings' => []];
+            }
+        );
+        $answer = function (string $schema, string $id, bool $signedIn = true) use (&$calls): array {
+            $calls    = [];
+            $response = $this->controller(signedIn: $signedIn)->document(schema: $schema, id: $id);
+            if ($response instanceof DataDownloadResponse) {
+                return ['pdf', $response->render(), $calls];
+            }
+
+            return [$response->getStatus(), $response->getData(), $calls];
+        };
+
+        $this->assertSame([401, ['message' => 'Authentication required'], []], $answer('salesQuote', 'mine', false));
+        $this->assertSame([404, ['message' => 'This record has no document'], []], $answer('client', 'mine'));
+        $this->assertSame([404, ['message' => 'Record not found'], [['read', 'gone', 'salesQuote']]], $answer('salesQuote', 'gone'));
+        $this->assertSame([404, ['message' => 'Record not found'], [['read', 'theirs', 'salesQuote'], ['access', 'pieter', 'assignee']]], $answer('salesQuote', 'theirs'));
+        $available = 'not installed';
+        $this->assertSame(
+            [503, ['message' => 'filinq is not available, so no document can be made.', 'reason' => 'not installed'], [['read', 'mine', 'salesQuote'], ['access', 'pieter', 'assignee'], ['available']]],
+            $answer('salesQuote', 'mine')
+        );
+        $available = null;
+        $this->assertSame(
+            [404, ['message' => 'Template not found'], [['read', 'mine', 'order'], ['access', 'pieter', 'owner'], ['available'], ['template', 'tpl-missing']]],
+            $answer('order', 'mine')
+        );
+        $this->assertSame(404, $answer('order', 'mine')[0]);
+        $ok = $answer('salesQuote', 'mine');
+        $this->assertSame('pdf', $ok[0]);
+        $this->assertSame('%PDF', $ok[1]);
+        $this->assertSame(['render', 'tpl-quote', [['register' => 'pipelinq', 'schema' => 'salesQuote', 'id' => 'mine']]], array_slice($ok[2][4], 0, 3));
+        $this->assertSame(['return', []], array_slice($ok[2][4], 4, 2));
+        $failing = true;
+        $this->assertSame([502, ['message' => 'filinq could not make the document.', 'reason' => 'filinq down']], array_slice($answer('salesQuote', 'mine'), 0, 2));
+    }//end testEveryDocumentAnswerIsExact()
 }//end class

@@ -111,15 +111,7 @@ class EnquiryDrainCommand extends Command {
 			return 1;
 		}
 
-		$sources = [];
-		if ($enquiry !== '') {
-			$sources['enquiry'] = [$enquiry, ['status' => 'new']];
-		}
-
-		if ((bool)$input->getOption('include-intake-submissions') === true) {
-			$sources[self::INTAKE_SUBMISSION_SCHEMA] = [self::INTAKE_SUBMISSION_SCHEMA, []];
-		}
-
+		$sources = self::sources(input: $input, enquiry: $enquiry);
 		if ($sources === []) {
 			$output->writeln('No enquiry schema is configured on this instance: nothing to drain.');
 			return 0;
@@ -139,14 +131,47 @@ class EnquiryDrainCommand extends Command {
 			$this->print(label: $label, report: $report, apply: $apply, output: $output);
 		}
 
+		return self::pendingExit(output: $output, pending: $pending);
+
+	}//end execute()
+
+	/**
+	 * Print what is still pending and answer the exit code: 0 only when nothing is.
+	 *
+	 * @param OutputInterface $output  Console output.
+	 * @param int             $pending What is still held after this run.
+	 *
+	 * @return int
+	 */
+	private static function pendingExit(OutputInterface $output, int $pending): int {
 		$output->writeln(sprintf('Pending after this run: %d.', $pending));
 		if ($pending > 0) {
 			return 1;
 		}
 
 		return 0;
+	}//end pendingExit()
 
-	}//end execute()
+	/**
+	 * The held schemas to drain, by label: the open enquiries, then the intake submissions when asked for.
+	 *
+	 * @param InputInterface $input   Console input.
+	 * @param string         $enquiry The enquiry schema, or ''.
+	 *
+	 * @return array<string, array{0: string, 1: array<string, string>}> Label to schema and open filter.
+	 */
+	private static function sources(InputInterface $input, string $enquiry): array {
+		$sources = [];
+		if ($enquiry !== '') {
+			$sources['enquiry'] = [$enquiry, ['status' => 'new']];
+		}
+
+		if ((bool)$input->getOption('include-intake-submissions') === true) {
+			$sources[self::INTAKE_SUBMISSION_SCHEMA] = [self::INTAKE_SUBMISSION_SCHEMA, []];
+		}
+
+		return $sources;
+	}//end sources()
 
 	/**
 	 * Print one schema's report.

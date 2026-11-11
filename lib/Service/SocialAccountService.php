@@ -312,6 +312,35 @@ class SocialAccountService {
 	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function connectRequest(string $accountId, string $uid, string $returnUrl): array {
+		$found = $this->connectableAccount(accountId: $accountId, uid: $uid);
+		if (isset($found['error']) === true) {
+			return $found;
+		}
+
+		$account = $found['account'];
+		$network = (string)($account['network'] ?? '');
+		$readiness = $this->registry->readinessFor(network: $network);
+		if ($readiness['state'] === SocialBrokerGateway::NOT_CONFIGURED) {
+			// Refuse, and say what is missing. The account is left as it is: a
+			// row sitting in `pending` would read as a connection under way.
+			$this->stampStatus(accountId: $accountId, account: $account, status: self::STATUS_NOT_CONFIGURED, reason: $readiness['reason']);
+			return ['error' => $readiness['reason']];
+		}
+
+		$tail = ['returnUrl' => $returnUrl, 'readiness' => $readiness];
+		return ['connect' => array_merge($this->connectFor(account: $account, network: $network), $tail, $this->optionalConnectFields(account: $account))];
+	}//end connectRequest()
+
+	/**
+	 * The account the user may connect, or the refusal: it does not exist,
+	 * or the user may not act on it.
+	 *
+	 * @param string $accountId The account id.
+	 * @param string $uid       The acting user.
+	 *
+	 * @return array{account?: array<string, mixed>, error?: string}
+	 */
+	private function connectableAccount(string $accountId, string $uid): array {
 		$account = $this->getAccount(accountId: $accountId);
 		if ($account === null) {
 			return ['error' => 'That account does not exist.'];
@@ -321,37 +350,32 @@ class SocialAccountService {
 			return ['error' => 'You may not connect this account.'];
 		}
 
-		$network = (string)($account['network'] ?? '');
-		$readiness = $this->registry->readinessFor(network: $network);
-		if ($readiness['state'] === SocialBrokerGateway::NOT_CONFIGURED) {
-			// Refuse, and say what is missing. The account is left as it is: a
-			// row sitting in `pending` would read as a connection under way.
-			$this->stampStatus(
-				accountId: $accountId,
-				account: $account,
-				status: self::STATUS_NOT_CONFIGURED,
-				reason: $readiness['reason'],
-			);
+		return ['account' => $account];
+	}//end connectableAccount()
 
-			return ['error' => $readiness['reason']];
-		}
-
+	/**
+	 * The broker's connect parameters every account carries: provider,
+	 * scope (personal for a person, else the organisation's), the apps
+	 * allowed to use it, and its name.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 * @param string               $network The account's network.
+	 *
+	 * @return array{provider: string, scope: string, allowedApps: array<int, string>, name: string}
+	 */
+	private function connectFor(array $account, string $network): array {
 		$scope = 'organisation';
 		if ((string)($account['kind'] ?? '') === self::KIND_PERSON) {
 			$scope = 'personal';
 		}
 
-		$connect = [
+		return [
 			'provider' => $this->registry->providerFor(network: $network),
 			'scope' => $scope,
 			'allowedApps' => [SocialBrokerGateway::APP_ID],
 			'name' => trim((string)($account['displayName'] ?? $account['handle'] ?? $network)),
-			'returnUrl' => $returnUrl,
-			'readiness' => $readiness,
 		];
-
-		return ['connect' => array_merge($connect, $this->optionalConnectFields(account: $account))];
-	}//end connectRequest()
+	}//end connectFor()
 
 	/**
 	 * The connect parameters that are present only when the account carries
@@ -402,33 +426,72 @@ class SocialAccountService {
 	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function attachCredential(string $accountId, string $uid, array $payload): array {
-		$account = $this->getAccount(accountId: $accountId);
-		if ($account === null) {
-			return ['error' => 'That account does not exist.'];
+		$found = $this->connectableAccount(accountId: $accountId, uid: $uid);
+		if (isset($found['error']) === true) {
+			return $found;
 		}
 
-		if ($this->mayActOn(uid: $uid, account: $account) === false) {
-			return ['error' => 'You may not connect this account.'];
-		}
-
+		$account = $found['account'];
 		$provider = $this->registry->providerFor(network: (string)($account['network'] ?? ''));
 		$credential = $this->resolveCredential(payload: $payload, provider: $provider, uid: $uid);
-		if ($credential === null) {
-			return ['error' => 'No connection was found for this account. Start the connection again.'];
+		$refusal = $this->credentialRefusal(credential: $credential, uid: $uid);
+		if ($refusal !== null) {
+			return ['error' => $refusal];
 		}
 
-		if ((string)($credential['owner'] ?? '') !== $uid && $this->groupManager->isAdmin($uid) === false) {
-			return ['error' => 'That connection belongs to somebody else.'];
-		}
+		return $this->savedConnection(accountId: $accountId, update: $this->withCredential(account: $account, credential: $credential));
+	}//end attachCredential()
 
-		$update = $this->withCredential(account: $account, credential: $credential);
+	/**
+	 * Save the account with its credential; the saved account, or the refusal.
+	 *
+	 * @param string               $accountId The account id.
+	 * @param array<string, mixed> $update    The account with its credential.
+	 *
+	 * @return array{account?: array<string, mixed>, error?: string}
+	 */
+	private function savedConnection(string $accountId, array $update): array {
 		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $update, id: $accountId);
 		if ($saved === null) {
 			return ['error' => 'The connection could not be saved.'];
 		}
 
 		return ['account' => $saved];
-	}//end attachCredential()
+	}//end savedConnection()
+
+	/**
+	 * Why a resolved credential may not be attached: none was found, or it
+	 * belongs to somebody else and the user is no administrator; null when it may.
+	 *
+	 * @param array<string, mixed>|null $credential The resolved credential.
+	 * @param string                    $uid        The acting user.
+	 *
+	 * @return string|null
+	 */
+	private function credentialRefusal(?array $credential, string $uid): ?string {
+		if ($credential === null) {
+			return 'No connection was found for this account. Start the connection again.';
+		}
+
+		if ($this->isOwnerOrAdmin(credential: $credential, uid: $uid) === false) {
+			return 'That connection belongs to somebody else.';
+		}
+
+		return null;
+	}//end credentialRefusal()
+
+	/**
+	 * Whether the user owns the credential, or is an administrator (asked
+	 * only when the user is not the owner).
+	 *
+	 * @param array<string, mixed> $credential The credential.
+	 * @param string               $uid        The acting user.
+	 *
+	 * @return bool
+	 */
+	private function isOwnerOrAdmin(array $credential, string $uid): bool {
+		return (string)($credential['owner'] ?? '') === $uid || $this->groupManager->isAdmin($uid) === true;
+	}//end isOwnerOrAdmin()
 
 	/**
 	 * Revoke a connection: clear the reference, disable the row, keep the history.
@@ -494,13 +557,19 @@ class SocialAccountService {
 			return;
 		}
 
-		$this->stampStatus(
-			accountId: $accountId,
-			account: $account,
-			status: self::STATUS_RELINK_NEEDED,
-			reason: $reason,
-		);
+		$this->stampStatus(accountId: $accountId, account: $account, status: self::STATUS_RELINK_NEEDED, reason: $reason);
+		$this->notifyRelink(accountId: $accountId, account: $account);
+	}//end markRelinkNeeded()
 
+	/**
+	 * Tell the account's owner it needs a relink; nobody without an owner.
+	 *
+	 * @param string               $accountId The account id.
+	 * @param array<string, mixed> $account   The account.
+	 *
+	 * @return void
+	 */
+	private function notifyRelink(string $accountId, array $account): void {
 		$owner = trim((string)($account['ownerUserId'] ?? ''));
 		if ($owner === '') {
 			return;
@@ -509,15 +578,26 @@ class SocialAccountService {
 		$this->notifications->sendNotification(
 			userId: $owner,
 			subject: self::SUBJECT_RELINK_NEEDED,
-			parameters: [
-				'handle' => (string)($account['handle'] ?? ''),
-				'network' => (string)($account['network'] ?? ''),
-				'title' => (string)($account['displayName'] ?? $account['handle'] ?? ''),
-			],
+			parameters: $this->relinkParameters(account: $account),
 			objectType: 'socialAccount',
 			objectId: $accountId,
 		);
-	}//end markRelinkNeeded()
+	}//end notifyRelink()
+
+	/**
+	 * The relink notification's parameters: the account's handle, network and title.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 *
+	 * @return array{handle: string, network: string, title: string}
+	 */
+	private function relinkParameters(array $account): array {
+		return [
+			'handle' => (string)($account['handle'] ?? ''),
+			'network' => (string)($account['network'] ?? ''),
+			'title' => (string)($account['displayName'] ?? $account['handle'] ?? ''),
+		];
+	}//end relinkParameters()
 
 	/**
 	 * Record a freshly read follower count.
