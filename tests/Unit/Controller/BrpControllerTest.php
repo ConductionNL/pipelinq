@@ -126,6 +126,41 @@ class BrpControllerTest extends TestCase {
 
 	}//end testLookupIsRefusedForAnUnprivilegedCaller()
 
+	/**
+	 * Every refused lookup leaves one audit record naming the caller and the reason,
+	 * with the BSN only as a hash.
+	 *
+	 * @return void
+	 */
+	public function testEveryRefusedLookupIsAudited(): void {
+		$cases = [
+			'not privileged' => [['privileged' => false], 403, 'refused-unauthorised'],
+			'no purpose' => [['extraParams' => ['verzoekreden' => '', 'purposeBinding' => '']], 400, 'refused-missing-purpose'],
+			'invalid bsn' => [['bsnValid' => false], 400, 'refused-invalid-bsn'],
+		];
+
+		foreach ($cases as $label => [$options, $status, $outcome]) {
+			$records = new \ArrayObject();
+			$audit = $this->createMock(BsnAuditService::class);
+			$audit->method('recordLookup')->willReturnCallback(
+				static function (string $actor, LookupAudit $lookup) use ($records): string {
+					$records[] = [$actor, $lookup];
+					return 'audit-uuid';
+				}
+			);
+
+			$controller = $this->buildController(remotePerson: [], audit: $audit, ...$options);
+
+			$this->assertSame($status, $controller->lookup()->getStatus(), $label);
+			$this->assertCount(1, $records, $label);
+			[$actor, $lookup] = $records[0];
+			$this->assertSame('behandelaar1', $actor, $label);
+			$this->assertSame('brp-lookup-refused', $lookup->result->action, $label);
+			$this->assertSame($outcome, $lookup->result->outcome, $label);
+			$this->assertSame($status, $lookup->result->responseCode, $label);
+		}
+	}//end testEveryRefusedLookupIsAudited()
+
 	public function testLookupPersistsMetaIntoAuditRecord(): void {
 		$person = [
 			'givenNames' => 'Jan',
@@ -223,7 +258,7 @@ class BrpControllerTest extends TestCase {
 	 *
 	 * @return BrpController
 	 */
-	private function buildController(array $remotePerson, bool $privileged = true, array $extraParams = []): BrpController {
+	private function buildController(array $remotePerson, bool $privileged = true, array $extraParams = [], ?BsnAuditService $audit = null, bool $bsnValid = true): BrpController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
 			static function (string $key, $default = null) use ($extraParams) {
@@ -266,7 +301,7 @@ class BrpControllerTest extends TestCase {
 
 		$validation = $this->createMock(BsnValidationService::class);
 		$validation->method('validate')->willReturn(
-			['isFormalValid' => true, 'errorCode' => null, 'errorMessage' => null, 'maskedBsn' => '*****6782']
+			['isFormalValid' => $bsnValid, 'errorCode' => null, 'errorMessage' => null, 'maskedBsn' => '*****6782']
 		);
 
 		$cacheService = $this->createMock(BrpCacheService::class);
@@ -279,7 +314,7 @@ class BrpControllerTest extends TestCase {
 		$haalCentraal = $this->createMock(HaalCentraalClient::class);
 		$haalCentraal->method('lookupPersoon')->willReturn($remotePerson);
 
-		$audit = $this->createMock(BsnAuditService::class);
+		$audit ??= $this->createMock(BsnAuditService::class);
 		$optOut = $this->createMock(OptOutService::class);
 		$webhookListener = $this->createMock(BrpMutationWebhookListener::class);
 
