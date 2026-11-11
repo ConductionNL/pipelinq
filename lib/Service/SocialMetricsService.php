@@ -48,6 +48,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Social\MeteredRead;
+use OCA\Pipelinq\Service\Social\NetworkTotals;
 use OCA\Pipelinq\Service\Social\SocialAdapterCall;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
 use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
@@ -72,21 +74,6 @@ use OCP\IAppConfig;
  *  into every adapter, would add a collaborator that constructs a struct.
  */
 class SocialMetricsService {
-	/**
-	 * How each network is named on screen.
-	 *
-	 * @var array<string, string>
-	 */
-	private const NETWORK_LABELS = [
-		'mastodon' => 'Mastodon',
-		'bluesky' => 'Bluesky',
-		'linkedin' => 'LinkedIn',
-		'instagram' => 'Instagram',
-		'facebook' => 'Facebook',
-		'threads' => 'Threads',
-		'x' => 'X',
-	];
-
 	/**
 	 * Constructor.
 	 *
@@ -170,7 +157,7 @@ class SocialMetricsService {
 			return false;
 		}
 
-		$result = $this->read(call: $call, adapter: $adapter, account: $account);
+		$result = $this->read(read: new MeteredRead(call: $call, adapter: $adapter), account: $account);
 		if ($result->accepted === false) {
 			if ($result->failureCode === SocialGatewayResult::RELINK_NEEDED) {
 				$this->accounts->markRelinkNeeded(accountId: $accountId, reason: $result->failureReason);
@@ -206,7 +193,7 @@ class SocialMetricsService {
 				continue;
 			}
 
-			$result = $this->read(call: $call, adapter: $adapter, account: $account);
+			$result = $this->read(read: new MeteredRead(call: $call, adapter: $adapter), account: $account);
 			if ($result->accepted === false) {
 				continue;
 			}
@@ -283,101 +270,15 @@ class SocialMetricsService {
 	public function networkTotals(int $days = 30): array {
 		$since = (new DateTimeImmutable('-' . max(1, $days) . ' days'))->getTimestamp();
 
-		$totals = [];
+		$totals = new NetworkTotals(since: $since);
 		foreach ($this->publications->findAll() as $publication) {
-			$network = (string)($publication['network'] ?? '');
-			if ($network === '' || $this->publishedSince(publication: $publication, since: $since) === false) {
-				continue;
-			}
-
-			$totals[$network] = $this->addPublication(row: ($totals[$network] ?? $this->emptyTotal(network: $network)), publication: $publication);
+			$totals->add(publication: $publication);
 		}
 
-		foreach ($this->accounts->listAccounts()['data'] as $account) {
-			$network = (string)($account['network'] ?? '');
-			if (isset($totals[$network]) === true) {
-				$totals[$network]['followers'] += (int)($account['followerCount'] ?? 0);
-			}
-		}
+		$totals->addFollowers(accounts: $this->accounts->listAccounts()['data']);
 
-		$rows = [];
-		foreach ($totals as $row) {
-			$engagement = ($row['likes'] + $row['comments'] + $row['shares']);
-			$row['engagementPercent'] = null;
-			if ($row['views'] > 0) {
-				$row['engagementPercent'] = round((100 * $engagement / $row['views']), 1);
-			}
-
-			$rows[] = $row;
-		}
-
-		usort(
-			$rows,
-			static fn (array $left, array $right): int => ($right['published'] <=> $left['published'])
-		);
-
-		return $rows;
+		return $totals->rows();
 	}//end networkTotals()
-
-	/**
-	 * Whether a publication went out at or after a moment.
-	 *
-	 * @param array<string, mixed> $publication The publication.
-	 * @param int $since The moment, as a Unix timestamp.
-	 *
-	 * @return bool True when it is published and not older than `$since`.
-	 */
-	private function publishedSince(array $publication, int $since): bool {
-		if (($publication['status'] ?? '') !== SocialPublicationStore::PUBLISHED) {
-			return false;
-		}
-
-		$publishedAt = strtotime((string)($publication['publishedAt'] ?? ''));
-
-		return $publishedAt !== false && $publishedAt >= $since;
-	}//end publishedSince()
-
-	/**
-	 * A network's row before any publication is added.
-	 *
-	 * @param string $network The network.
-	 *
-	 * @return array<string, mixed> The empty row.
-	 */
-	private function emptyTotal(string $network): array {
-		return [
-			'network' => $network,
-			'label' => (self::NETWORK_LABELS[$network] ?? ucfirst($network)),
-			'published' => 0,
-			'views' => 0,
-			'likes' => 0,
-			'comments' => 0,
-			'shares' => 0,
-			'followers' => 0,
-		];
-	}//end emptyTotal()
-
-	/**
-	 * Add one publication's numbers to its network's row.
-	 *
-	 * @param array<string, mixed> $row The network's row so far.
-	 * @param array<string, mixed> $publication The publication.
-	 *
-	 * @return array<string, mixed> The row with the publication added.
-	 */
-	private function addPublication(array $row, array $publication): array {
-		$metrics = ($publication['metrics'] ?? []);
-		if (is_array($metrics) === false) {
-			$metrics = [];
-		}
-
-		$row['published']++;
-		foreach (['views', 'likes', 'comments', 'shares'] as $key) {
-			$row[$key] += (int)($metrics[$key] ?? 0);
-		}
-
-		return $row;
-	}//end addPublication()
 
 	/**
 	 * One ranking row: the publication, its engagement and its rate.
@@ -431,45 +332,22 @@ class SocialMetricsService {
 	 * read, so an exhausted hard stop costs nothing at all rather than one more
 	 * read than it should have.
 	 *
-	 * @param SocialAdapterCall $call The request.
-	 * @param SocialNetworkAdapter $adapter The adapter, for its read cost.
+	 * @param MeteredRead          $read    The request and the adapter, for its read cost.
 	 * @param array<string, mixed> $account The account, for its credential and owner.
 	 *
 	 * @return SocialGatewayResult What came back.
 	 *
 	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
-	private function read(SocialAdapterCall $call, SocialNetworkAdapter $adapter, array $account): SocialGatewayResult {
+	private function read(MeteredRead $read, array $account): SocialGatewayResult {
+		$adapter = $read->adapter;
 		$cost = $adapter->costPerRead();
-		if ($cost > 0.0) {
-			$allowed = $this->budget->canSend(
-				tenantId: $this->tenantId(),
-				providerId: $adapter->network(),
-				estimatedCostEur: $cost,
-			);
-			if ($allowed === false) {
-				return SocialGatewayResult::failed(
-					code: SocialGatewayResult::BUDGET_EXHAUSTED,
-					reason: 'The spend budget for ' . $adapter->network() . ' is reached, so nothing was read.',
-				);
-			}
+		$stop = $this->budgetStop(adapter: $adapter, cost: $cost);
+		if ($stop !== null) {
+			return $stop;
 		}
 
-		$owner = trim((string)($account['ownerUserId'] ?? ''));
-		$acting = null;
-		if ($owner !== '') {
-			$acting = $owner;
-		}
-
-		$result = $this->gateway->request(
-			credentialRef: (string)($account['credentialRef'] ?? ''),
-			method: $call->method,
-			path: $call->path,
-			headers: $call->requestHeaders(),
-			body: $call->body(),
-			actingUserId: $acting,
-		);
-
+		$result = $this->brokered(call: $read->call, account: $account);
 		if ($cost > 0.0 && $result->accepted === true) {
 			$this->budget->recordSend(
 				tenantId: $this->tenantId(),
@@ -480,6 +358,59 @@ class SocialMetricsService {
 
 		return $result;
 	}//end read()
+
+	/**
+	 * The refusal when a charged read would pass the spend budget; null when it may go.
+	 *
+	 * @param SocialNetworkAdapter $adapter The adapter.
+	 * @param float                $cost    What one read costs.
+	 *
+	 * @return SocialGatewayResult|null
+	 */
+	private function budgetStop(SocialNetworkAdapter $adapter, float $cost): ?SocialGatewayResult {
+		if ($cost <= 0.0) {
+			return null;
+		}
+
+		$allowed = $this->budget->canSend(
+			tenantId: $this->tenantId(),
+			providerId: $adapter->network(),
+			estimatedCostEur: $cost,
+		);
+		if ($allowed === true) {
+			return null;
+		}
+
+		return SocialGatewayResult::failed(
+			code: SocialGatewayResult::BUDGET_EXHAUSTED,
+			reason: 'The spend budget for ' . $adapter->network() . ' is reached, so nothing was read.',
+		);
+	}//end budgetStop()
+
+	/**
+	 * Hand the read to the broker as the account's owner, when it has one.
+	 *
+	 * @param SocialAdapterCall    $call    The request.
+	 * @param array<string, mixed> $account The account, for its credential and owner.
+	 *
+	 * @return SocialGatewayResult
+	 */
+	private function brokered(SocialAdapterCall $call, array $account): SocialGatewayResult {
+		$owner = trim((string)($account['ownerUserId'] ?? ''));
+		$acting = null;
+		if ($owner !== '') {
+			$acting = $owner;
+		}
+
+		return $this->gateway->request(
+			credentialRef: (string)($account['credentialRef'] ?? ''),
+			method: $call->method,
+			path: $call->path,
+			headers: $call->requestHeaders(),
+			body: $call->body(),
+			actingUserId: $acting,
+		);
+	}//end brokered()
 
 	/**
 	 * The tenant the spend budget is kept for, matching every other metered

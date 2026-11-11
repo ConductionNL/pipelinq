@@ -44,6 +44,7 @@ use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
 use OCA\Pipelinq\Service\Social\SocialGatewayResult;
 use OCA\Pipelinq\Service\Social\SocialNetworkAdapter;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
+use OCA\Pipelinq\Service\Social\XAdapter;
 use OCA\Pipelinq\Service\SocialAccountService;
 use OCA\Pipelinq\Service\SocialMetricsService;
 use OCA\Pipelinq\Tests\Unit\Service\Social\InMemoryObjectStore;
@@ -162,7 +163,7 @@ class SocialMetricsServiceTest extends TestCase {
 	 *
 	 * @return SocialMetricsService The service.
 	 */
-	private function service(?SocialBrokerGateway $gateway = null): SocialMetricsService {
+	private function service(?SocialBrokerGateway $gateway = null, ?BudgetService $budget = null): SocialMetricsService {
 		$gateway = ($gateway ?? $this->gateway());
 
 		$registry = $this->createMock(SocialAdapterRegistry::class);
@@ -174,6 +175,7 @@ class SocialMetricsServiceTest extends TestCase {
 					'bluesky' => new BlueskyAdapter($gateway),
 					'linkedin' => new LinkedInAdapter($gateway),
 					'facebook' => new FacebookPageAdapter($gateway),
+					'x' => new XAdapter($gateway),
 					default => null,
 				};
 			}
@@ -191,8 +193,10 @@ class SocialMetricsServiceTest extends TestCase {
 			$this->createMock(NotificationService::class),
 		);
 
-		$budget = $this->createMock(BudgetService::class);
-		$budget->method('canSend')->willReturn(true);
+		if ($budget === null) {
+			$budget = $this->createMock(BudgetService::class);
+			$budget->method('canSend')->willReturn(true);
+		}
 
 		return new SocialMetricsService(
 			$this->publications,
@@ -534,4 +538,25 @@ class SocialMetricsServiceTest extends TestCase {
 			followers: [$accountId => $followers],
 		);
 	}
+
+	/**
+	 * A charged read asks the spend budget first: refused, nothing is read and
+	 * nothing is charged; allowed, the accepted read is charged once.
+	 *
+	 * @return void
+	 */
+	public function testAChargedReadAsksTheBudgetFirstAndChargesOnce(): void {
+		$id = $this->seedPublished(network: 'x', externalId: 't-1');
+		$this->answers = ['/2/tweets/t-1' => SocialGatewayResult::succeeded(status: 200, body: ['data' => ['public_metrics' => ['like_count' => 2]]])];
+
+		$refusing = $this->createMock(BudgetService::class);
+		$refusing->expects($this->once())->method('canSend')->with('default', 'x', XAdapter::COST_PER_READ_EUR)->willReturn(false);
+		$refusing->expects($this->never())->method('recordSend');
+		$this->assertFalse($this->service(budget: $refusing)->pullOne(publication: $this->publications->find(publicationId: $id)));
+
+		$allowing = $this->createMock(BudgetService::class);
+		$allowing->method('canSend')->willReturn(true);
+		$allowing->expects($this->once())->method('recordSend')->with('default', 'x', XAdapter::COST_PER_READ_EUR);
+		$this->assertTrue($this->service(budget: $allowing)->pullOne(publication: $this->publications->find(publicationId: $id)));
+	}//end testAChargedReadAsksTheBudgetFirstAndChargesOnce()
 }//end class
