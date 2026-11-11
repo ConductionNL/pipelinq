@@ -308,6 +308,162 @@ class NaviServiceTest extends TestCase {
 	}
 
 	/**
+	 * Characterisation: a trend query buckets leads per ISO week (rows
+	 * without a parseable date are skipped) and returns the full chart
+	 * envelope with its follow-ups.
+	 *
+	 * @return void
+	 */
+	public function testProcessQueryTrendFullEnvelope(): void {
+		$service = $this->buildService(byCollection: [
+			'lead_schema' => [
+				['createdAt' => '2026-01-07T10:00:00+00:00'],
+				['created' => '2026-01-01T10:00:00+00:00'],
+				['createdAt' => '2026-01-08T10:00:00+00:00'],
+				['createdAt' => 'not a date'],
+				['status' => 'open'],
+			],
+		]);
+
+		$response = $service->processQuery(query: 'Show the lead trend', userId: 'alice');
+
+		$this->assertSame(
+			[
+				'query' => 'Show the lead trend',
+				'resultType' => 'chart',
+				'textResponse' => 'Found 5 leads in the dataset.',
+				'suggestedFollowUps' => [
+					'Which stage has the highest drop-off?',
+					'What is my conversion rate this quarter?',
+					'How many requests are open?',
+				],
+				'chartData' => [
+					'type' => 'line',
+					'labels' => ['2026-W01', '2026-W02'],
+					'series' => [['name' => 'Leads', 'data' => [1, 2]]],
+				],
+			],
+			$response
+		);
+	}
+
+	/**
+	 * Characterisation: the conversion table counts open / won / lost only,
+	 * rounds the rate to one decimal and reports 0.0 when nothing counts.
+	 *
+	 * @return void
+	 */
+	public function testProcessQueryConversionFullEnvelope(): void {
+		$rows = [['status' => 'won'], ['status' => 'lost'], ['status' => 'lost'], ['status' => 'other']];
+		$service = $this->buildService(byCollection: ['lead_schema' => $rows]);
+		$response = $service->processQuery(query: 'What is my conversion rate?', userId: 'alice');
+
+		$this->assertSame('Conversion rate: 33.3% across 3 leads.', $response['textResponse']);
+		$this->assertSame(
+			[
+				'columns' => ['Metric', 'Value'],
+				'rows' => [
+					['Open leads', 0],
+					['Won leads', 1],
+					['Lost leads', 2],
+					['Conversion rate (%)', 33.3],
+				],
+			],
+			$response['tableData']
+		);
+
+		$none = $this->buildService(byCollection: ['lead_schema' => [['status' => 'other']]]);
+		$empty = $none->processQuery(query: 'conversion', userId: 'alice');
+		$this->assertSame('Conversion rate: 0.0% across 0 leads.', $empty['textResponse']);
+		$this->assertSame(['Conversion rate (%)', 0.0], $empty['tableData']['rows'][3]);
+	}
+
+	/**
+	 * Characterisation: a blank query and a query with no data both answer
+	 * with the default follow-ups as a text envelope.
+	 *
+	 * @return void
+	 */
+	public function testProcessQueryTextFallbacksFullEnvelope(): void {
+		$defaults = ['How many leads are open?', 'What is my conversion rate?', 'Show the trend over time.'];
+		$service = $this->buildService(byCollection: ['lead_schema' => []]);
+
+		$this->assertSame(
+			['query' => ' ', 'resultType' => 'text', 'textResponse' => 'Please enter a question to get started.', 'suggestedFollowUps' => $defaults],
+			$service->processQuery(query: ' ', userId: 'alice')
+		);
+		$this->assertSame(
+			[
+				'query' => 'lead trend',
+				'resultType' => 'text',
+				'textResponse' => 'I could not find any matching data for that question.',
+				'suggestedFollowUps' => $defaults,
+			],
+			$service->processQuery(query: 'lead trend', userId: 'alice')
+		);
+	}
+
+	/**
+	 * Characterisation: a findAll() row is used as-is when it is an array,
+	 * else through jsonSerialize(), else through getObject(); a non-array
+	 * from jsonSerialize() falls through to getObject(), and anything else
+	 * is dropped.
+	 *
+	 * @return void
+	 */
+	public function testFindAllRowsAreNormalisedToArrays(): void {
+		$serialisable = new class () implements \JsonSerializable {
+			public function jsonSerialize(): mixed {
+				return ['via' => 'json'];
+			}
+		};
+		$wrapped = new class () {
+			public function getObject(): array {
+				return ['via' => 'object'];
+			}
+		};
+		$both = new class () {
+			public function jsonSerialize(): string {
+				return 'scalar';
+			}
+
+			public function getObject(): array {
+				return ['via' => 'fallback'];
+			}
+		};
+		$neither = new class () {
+			public function getObject(): string {
+				return 'scalar';
+			}
+		};
+
+		$method = new \ReflectionMethod(NaviService::class, 'normalizeFindObjectsResult');
+		$service = $this->buildService();
+		$outcomes = array_map(
+			static fn (mixed $row): ?array => $method->invoke($service, $row),
+			[['via' => 'array'], $serialisable, $wrapped, $both, $neither, 'text', 7]
+		);
+
+		$this->assertSame(
+			[['via' => 'array'], ['via' => 'json'], ['via' => 'object'], ['via' => 'fallback'], null, null, null],
+			$outcomes
+		);
+	}
+
+	/**
+	 * Characterisation: a schema that is not configured yields no rows; a
+	 * configured one yields its normalised findAll() rows.
+	 *
+	 * @return void
+	 */
+	public function testFindObjectsConfigAndFailurePaths(): void {
+		$method = new \ReflectionMethod(NaviService::class, 'findObjects');
+		$this->assertSame([], $method->invoke($this->buildService(configMissing: true), 'lead_schema'));
+		$configured = $this->buildService(byCollection: ['lead_schema' => [['status' => 'won'], 'dropped']]);
+		$this->assertSame([['status' => 'won']], $method->invoke($configured, 'lead_schema'));
+	}
+
+	/**
 	 * A breakdown query reads request TICKETS (ticketType: request on the
 	 * unified ticket schema) and groups them by category.
 	 *
