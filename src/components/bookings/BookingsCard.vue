@@ -179,34 +179,27 @@ export default {
 					),
 				),
 			]
-			for (const id of serviceIds) {
-				if (this.serviceLookup[id]) continue
+			await this.fillLookup('serviceLookup', { type: 'appointmentService', ids: serviceIds })
+			await this.fillLookup('resourceLookup', { type: 'appointmentResource', ids: resourceIds })
+		},
+
+		/**
+		 * Read the name of each id the lookup does not know yet, one at a
+		 * time; a failed read is tolerated.
+		 *
+		 * @param {string} lookup The lookup to fill: serviceLookup or resourceLookup.
+		 * @param {{type: string, ids: Array<string>}} names The object type and the ids to name.
+		 * @return {Promise<void>}
+		 */
+		async fillLookup(lookup, names) {
+			for (const id of names.ids) {
+				if (this[lookup][id]) continue
 				try {
-					const svc = await this.objectStore.fetchObject(
-						'appointmentService',
-						id,
-					)
-					if (svc?.name) {
-						this.serviceLookup = {
-							...this.serviceLookup,
-							[id]: svc.name,
-						}
-					}
-				} catch {
-					/* tolerated */
-				}
-			}
-			for (const id of resourceIds) {
-				if (this.resourceLookup[id]) continue
-				try {
-					const r = await this.objectStore.fetchObject(
-						'appointmentResource',
-						id,
-					)
-					if (r?.name) {
-						this.resourceLookup = {
-							...this.resourceLookup,
-							[id]: r.name,
+					const record = await this.objectStore.fetchObject(names.type, id)
+					if (record?.name) {
+						this[lookup] = {
+							...this[lookup],
+							[id]: record.name,
 						}
 					}
 				} catch {
