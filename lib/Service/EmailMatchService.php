@@ -393,11 +393,7 @@ class EmailMatchService {
 	 */
 	public function runForUser(string $userId): array {
 		$settings = $this->getSettings(userId: $userId);
-		if ($settings['enabled'] !== true || $settings['account'] <= 0) {
-			return ['linked' => 0, 'scanned' => 0];
-		}
-
-		if ($this->ownsAccount(userId: $userId, accountId: $settings['account']) === false) {
+		if ($this->mayScan(userId: $userId, settings: $settings) === false) {
 			return ['linked' => 0, 'scanned' => 0];
 		}
 
@@ -406,23 +402,16 @@ class EmailMatchService {
 		$lastId = (int)$settings['cursor'];
 		$maxId = $lastId;
 
+		$run = new EmailMatchRun(userId: $userId, accountId: $settings['account']);
 		$messages = $this->listInboundMessages(accountId: $settings['account'], sinceId: $lastId);
 		foreach ($messages as $msg) {
 			$scanned++;
-			try {
-				$linked += $this->matchAndLinkMessage(
-					mailAccountId: $settings['account'],
-					mailMessageId: $msg['id'],
-					userId: $userId
-				);
+			$links = $this->linkedFrom(run: $run, messageId: $msg['id']);
+			if ($links !== null) {
+				$linked += $links;
 				if ($msg['id'] > $maxId) {
 					$maxId = $msg['id'];
 				}
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'Pipelinq: email match per-message failure',
-					['messageId' => $msg['id']]
-				);
 			}
 		}
 
@@ -434,6 +423,48 @@ class EmailMatchService {
 
 		return ['linked' => $linked, 'scanned' => $scanned];
 	}//end runForUser()
+
+	/**
+	 * Whether matching is on, an account is chosen, and the user still owns it.
+	 *
+	 * The ownership lookup runs only when the first two hold.
+	 *
+	 * @param string                                                                         $userId   The user id.
+	 * @param array{account:int,enabled:bool,excludedAddresses:array<int,string>,cursor:int} $settings The user's settings.
+	 *
+	 * @return bool
+	 */
+	private function mayScan(string $userId, array $settings): bool {
+		if ($settings['enabled'] !== true || $settings['account'] <= 0) {
+			return false;
+		}
+
+		return $this->ownsAccount(userId: $userId, accountId: $settings['account']);
+	}//end mayScan()
+
+	/**
+	 * Match and link one message; a failure is logged and leaves the cursor behind it.
+	 *
+	 * @param EmailMatchRun $run       The user and their account.
+	 * @param int           $messageId The Mail message id.
+	 *
+	 * @return int|null The links made, or null when the message failed.
+	 */
+	private function linkedFrom(EmailMatchRun $run, int $messageId): ?int {
+		try {
+			return $this->matchAndLinkMessage(
+				mailAccountId: $run->accountId,
+				mailMessageId: $messageId,
+				userId: $run->userId
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: email match per-message failure',
+				['messageId' => $messageId]
+			);
+			return null;
+		}
+	}//end linkedFrom()
 
 	/**
 	 * Read the matching settings for a user.
