@@ -786,4 +786,47 @@ class ComplianceServiceTest extends TestCase {
 		$this->assertFalse($this->service->hasConsentForList('c-both', 'list-news', 'email'));
 		$this->assertTrue($this->service->hasConsentForChannel('c-both', 'email'));
 	}//end testWithdrawalScopedToAListLeavesTheChannelRecordAlone()
+
+	/**
+	 * A list-scoped send is gated by the list record, a channel send by the
+	 * channel record, and a suppressed contact is refused after consent.
+	 *
+	 * @return void
+	 */
+	public function testPermitsSendGatesOnTheScopeAskedFor(): void {
+		$this->seedConsent('c-l', 'email', 'consent', ['uuid' => 'c-l-list', 'listId' => 'list-1']);
+		$this->seedConsent('c-c', 'email', 'consent');
+		$this->dunning['c-c'] = 'overdue';
+
+		$this->assertSame(['allowed' => true, 'reason' => ''], $this->service->permitsSend('c-l', 'email', ComplianceService::INTENT_PROMOTIONAL, 'list-1'));
+		$this->assertSame(['allowed' => false, 'reason' => ComplianceService::REASON_NO_CONSENT], $this->service->permitsSend('c-l', 'email'));
+		$this->assertSame(['allowed' => false, 'reason' => ComplianceService::REASON_NO_CONSENT], $this->service->permitsSend('c-c', 'email', ComplianceService::INTENT_PROMOTIONAL, 'list-1'));
+		$this->assertSame(['allowed' => false, 'reason' => ComplianceService::REASON_SUPPRESSED], $this->service->permitsSend('c-c', 'email', ComplianceService::INTENT_PROMOTIONAL, ''));
+		$this->assertSame(['allowed' => true, 'reason' => ''], $this->service->permitsSend('c-c', 'email', ComplianceService::INTENT_SERVICE));
+	}//end testPermitsSendGatesOnTheScopeAskedFor()
+
+	/**
+	 * A segment check lists each missing and suppressed member once, a
+	 * member without a contact id as missing, and keeps the key order.
+	 *
+	 * @return void
+	 */
+	public function testASegmentCheckReportsEveryBucketOnce(): void {
+		$this->segmentService->method('getMembersForBlast')->willReturn([
+			['contactId' => 'c1'],
+			['contactId' => 'c2'],
+			['email' => 'no-id@example.test'],
+			['contactId' => 'c3'],
+			['contactId' => 'c2'],
+			['contactId' => 'c3'],
+		]);
+		$this->seedConsent('c1', 'email', 'consent');
+		$this->seedConsent('c3', 'email', 'consent');
+		$this->dunning['c3'] = 'overdue';
+
+		$this->assertSame(
+			['compliant' => false, 'missingConsent' => ['c2', ''], 'missingCount' => 2, 'suppressed' => ['c3'], 'suppressedCount' => 1],
+			$this->service->checkSegmentCompliance('seg-x', ' Email ')
+		);
+	}//end testASegmentCheckReportsEveryBucketOnce()
 }//end class
