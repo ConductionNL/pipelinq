@@ -209,6 +209,7 @@ class LoyaltyControllerTest extends TestCase {
 		$ledgerService = new PointsLedgerService($appConfig, $accountService, $logger,
 			objectService: $store,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 
 		return $this->buildController(
