@@ -164,12 +164,11 @@ export default {
 		 */
 		async recordDrop(payload) {
 			this.busy = true
-			const ok = await postShiftAction(
-				this.shiftId,
-				'drop',
-				payload,
-				t('pipelinq', 'Drop recorded.'),
-			)
+			const ok = await postShiftAction(this.shiftId, {
+				path: 'drop',
+				body: payload,
+				successMessage: t('pipelinq', 'Drop recorded.'),
+			})
 			this.busy = false
 			if (ok) {
 				this.showDrop = false

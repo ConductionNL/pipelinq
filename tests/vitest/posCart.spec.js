@@ -17,7 +17,7 @@ const { headerPayload, isStorable, linePayload, recalculateSale, storedTotals, w
 
 describe('what the till sends', () => {
 	it('stores a line without any figure the server works out', () => {
-		const payload = linePayload({ id: 'l1', description: 'Afvalpas', quantity: '2', unitPrice: '12.5', discount: '', taxRate: 21, taxAmount: 9, lineTotal: 9 }, 'tx-1', 3)
+		const payload = linePayload({ id: 'l1', description: 'Afvalpas', quantity: '2', unitPrice: '12.5', discount: '', taxRate: 21, taxAmount: 9, lineTotal: 9 }, { transactionId: 'tx-1', sortOrder: 3 })
 		expect(payload).toEqual({ id: 'l1', transaction: 'tx-1', product: null, description: 'Afvalpas', quantity: 2, unitPrice: 12.5, discount: 0, taxRate: 21, sortOrder: 3, notes: '' })
 	})
 
