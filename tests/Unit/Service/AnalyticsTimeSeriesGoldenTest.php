@@ -126,4 +126,57 @@ class AnalyticsTimeSeriesGoldenTest extends TestCase {
 		$this->assertSame(['metric' => $metric, 'period' => $period, 'series' => $series], $result);
 		$this->assertNotSame([], $series);
 	}//end testSeries()
+
+	/**
+	 * The revenue series from won leads only is dated and rounded like the reference.
+	 *
+	 * @return void
+	 */
+	public function testRevenueSeriesFromWonLeads(): void {
+		$now   = time();
+		$at    = static fn (float $daysAgo): string => date(DATE_ATOM, (int)($now - $daysAgo * 86400));
+		$leads = [
+			['status' => 'won', 'stageEnteredAt' => $at(1.5), 'value' => '10.005'],
+			['status' => 'won', 'expectedCloseDate' => $at(1.6), 'value' => 5],
+			['status' => 'open', 'stageEnteredAt' => $at(1.5), 'value' => 999],
+			['status' => 'won', 'created' => $at(10.5), 'value' => 2.5],
+			['status' => 'won', 'stageEnteredAt' => $at(45), 'value' => 999],
+		];
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $key === 'register' ? 'register-1' : $key
+		);
+		$objects = new class($leads) extends ObjectService {
+			/**
+			 * @param array<int, array<string, mixed>> $leads The lead rows.
+			 */
+			public function __construct(private array $leads) {
+			}
+
+			/**
+			 * @param array<string, mixed> $config        The query.
+			 * @param bool                 $_rbac         RBAC.
+			 * @param bool                 $_multitenancy Tenancy.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				return (($config['filters']['schema'] ?? '') === 'lead_schema') ? $this->leads : [];
+			}
+		};
+		$service = new AnalyticsService(
+			appConfig: $config,
+			logger: $this->createMock(LoggerInterface::class),
+			ticketService: $this->createMock(TicketService::class),
+			objectService: $objects,
+		);
+
+		$result  = $service->getTrends(metric: 'revenue', period: 'month');
+		$startTs = (new \DateTimeImmutable())->setTimestamp($now)->modify('-30 days')->getTimestamp();
+		$day     = static fn (float $daysAgo): string => date('Y-m-d', $startTs + ((int)floor(((int)($now - $daysAgo * 86400) - $startTs) / 86400)) * 86400);
+		$this->assertSame(
+			['metric' => 'revenue', 'period' => 'month', 'series' => [['date' => $day(10.5), 'value' => 2.5], ['date' => $day(1.5), 'value' => 15.01]]],
+			$result
+		);
+	}//end testRevenueSeriesFromWonLeads()
 }//end class

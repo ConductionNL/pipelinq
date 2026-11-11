@@ -494,17 +494,16 @@ class AnalyticsService {
 		$startTs = $start->getTimestamp();
 		$nowTs = $now->getTimestamp();
 
-		$bucketSize = self::bucketSize(period: $period);
+		$bucketSize = $this->bucketSizeForPeriod(period: $period);
 
 		$buckets = [];
 		foreach ($leads as $lead) {
 			$timestamp = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
-			if ($timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
+			$key = $this->bucketKey(timestamp: $timestamp, startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+			if ($key === null) {
 				continue;
 			}
 
-			$bucketTs = $startTs + ((int)floor(($timestamp - $startTs) / $bucketSize)) * $bucketSize;
-			$key = date('Y-m-d', $bucketTs);
 			if (isset($buckets[$key]) === false) {
 				$buckets[$key] = 0;
 			}
@@ -521,30 +520,10 @@ class AnalyticsService {
 	}//end buildTimeBucketSeries()
 
 	/**
-	 * The bucket width of a period: a day for week and month, a week for quarter, ~a month for year.
-	 *
-	 * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
-	 *
-	 * @return int Seconds.
-	 */
-	private static function bucketSize(string $period): int {
-		// Bucket granularity: day for week/month, week for quarter, month for year.
-		return match ($period) {
-			'week', 'month' => 86400,
-			// 1 day.
-			'quarter' => 86400 * 7,
-			// 1 week.
-			'year' => 86400 * 30,
-			// ~1 month.
-			default => 86400,
-		};
-	}//end bucketSize()
-
-	/**
-	 * The buckets as a dated series in date order: whole counts for leads, cents for values.
+	 * The buckets as a dated series in date order: whole counts for leads, cents for any other metric.
 	 *
 	 * @param array<string, int|float> $buckets The bucket totals by date.
-	 * @param string                   $metric  Either `leads` or `pipeline-value`.
+	 * @param string                   $metric  `leads`, `pipeline-value` or `revenue`.
 	 *
 	 * @return array<int, array{date: string, value: int|float}>
 	 */
@@ -1021,13 +1000,7 @@ class AnalyticsService {
 			}
 		}
 
-		ksort($buckets);
-		$series = [];
-		foreach ($buckets as $date => $value) {
-			$series[] = ['date' => $date, 'value' => round((float)$value, 2)];
-		}
-
-		return ['metric' => 'revenue', 'period' => $period, 'series' => $series];
+		return ['metric' => 'revenue', 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: 'revenue')];
 	}//end buildRevenueSeries()
 
 	/**
