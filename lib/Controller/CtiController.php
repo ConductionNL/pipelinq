@@ -273,36 +273,9 @@ class CtiController extends Controller {
 
 		$targetNumber = (string)$this->request->getParam('targetNumber', '');
 		$extension = (string)$this->request->getParam('extension', '');
-		if ($targetNumber === '' || $extension === '') {
-			return new JSONResponse(
-				['error' => 'targetNumber and extension are required'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		// 🔴 NON-EMPTY IS NOT DIALABLE.
-		//
-		// Both values were forwarded to the telephony adapter verbatim once
-		// they were non-empty, so anything at all reached the PBX --
-		// 'sip:attacker@evil.example' among them. What a dial string can make a
-		// PBX do is the adapter's business and varies per platform, which is
-		// exactly why the app must not hand it arbitrary text.
-		//
-		// A dialable target is E.164, optionally with the separators a person
-		// might paste from a contact card, and an extension is digits. Anything
-		// else is refused here rather than interpreted downstream.
-		if (preg_match('/^\+?[0-9][0-9 ()-]{1,20}$/', $targetNumber) !== 1) {
-			return new JSONResponse(
-				['error' => 'targetNumber is not a dialable number'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		if (preg_match('/^[0-9]{1,10}$/', $extension) !== 1) {
-			return new JSONResponse(
-				['error' => 'extension is not a dialable extension'],
-				Http::STATUS_BAD_REQUEST
-			);
+		$refusal = (new CtiDialRules())->refusal(targetNumber: $targetNumber, extension: $extension);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$result = $this->ctiService->originateCall(
@@ -348,14 +321,27 @@ class CtiController extends Controller {
 			);
 		}
 
-		try {
-			$result = $this->ctiService->processDisposition(
+		return $this->dispositionAnswer(
+			process: fn (): array => $this->ctiService->processDisposition(
 				interactionId: $id,
 				subject: $subject,
 				outcome: $outcome,
 				notes: $notes,
 				queue: $queue,
-			);
+			)
+		);
+	}//end disposition()
+
+	/**
+	 * Run the disposition and answer its outcome, a 400 for a refused value or a logged 500.
+	 *
+	 * @param callable(): array<string, mixed> $process The disposition call.
+	 *
+	 * @return JSONResponse
+	 */
+	private function dispositionAnswer(callable $process): JSONResponse {
+		try {
+			$result = $process();
 		} catch (\InvalidArgumentException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
@@ -367,7 +353,7 @@ class CtiController extends Controller {
 		}
 
 		return new JSONResponse($result);
-	}//end disposition()
+	}//end dispositionAnswer()
 
 	/**
 	 * Attach recording metadata to a contactmoment.
@@ -462,6 +448,27 @@ class CtiController extends Controller {
 			return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 
+		$payload = $this->configPayload();
+		$saved = $this->ctiService->saveConfig($payload);
+		$this->logger->info(
+			'CTI config updated',
+			['user' => $uid, 'fields' => array_keys($payload)]
+		);
+
+		if ($saved !== []) {
+			$this->connectionReports->reportCtiCheck(outcome: $this->ctiService->testConnection());
+		}
+
+		unset($saved['webhook_secret']);
+		return new JSONResponse($saved);
+	}//end updateConfig()
+
+	/**
+	 * The configuration fields the request carries, in the fixed field order; absent or null ones are left out.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function configPayload(): array {
 		$allowedFields = [
 			'platform',
 			'api_base_url',
@@ -483,19 +490,8 @@ class CtiController extends Controller {
 			}
 		}
 
-		$saved = $this->ctiService->saveConfig($payload);
-		$this->logger->info(
-			'CTI config updated',
-			['user' => $uid, 'fields' => array_keys($payload)]
-		);
-
-		if ($saved !== []) {
-			$this->connectionReports->reportCtiCheck(outcome: $this->ctiService->testConnection());
-		}
-
-		unset($saved['webhook_secret']);
-		return new JSONResponse($saved);
-	}//end updateConfig()
+		return $payload;
+	}//end configPayload()
 
 	/**
 	 * Test platform connectivity (admin only).
