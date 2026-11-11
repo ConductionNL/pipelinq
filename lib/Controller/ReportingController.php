@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use DateInterval;
 use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
@@ -332,7 +333,7 @@ class ReportingController extends Controller {
 	 */
 	private function mondayOf(DateTimeImmutable $day): DateTimeImmutable {
 		$dayNum = (int)$day->format('N');
-		return $day->modify('-' . ($dayNum - 1) . ' days');
+		return $day->sub(new DateInterval('P' . ($dayNum - 1) . 'D'));
 	}//end mondayOf()
 
 	/**
