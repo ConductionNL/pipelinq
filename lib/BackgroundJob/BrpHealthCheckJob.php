@@ -51,6 +51,16 @@ class BrpHealthCheckJob extends TimedJob {
 	private const DEFAULT_INTERVAL_SECONDS = 86400;
 
 	/**
+	 * Warn threshold in days.
+	 */
+	private const WARN_THRESHOLD_DAYS = 30;
+
+	/**
+	 * Critical threshold in days.
+	 */
+	private const CRITICAL_THRESHOLD_DAYS = 7;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
@@ -108,21 +118,41 @@ class BrpHealthCheckJob extends TimedJob {
 			return;
 		}
 
-		$health = CertificateHealth::at(expiry: $expiry, now: new DateTimeImmutable('now', new DateTimeZone('UTC')));
-		$status = $health->status();
+		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$daysLeft = (int)floor(($expiry->getTimestamp() - $now->getTimestamp()) / 86400);
+		$status = self::statusFor(daysLeft: $daysLeft);
+
 		$this->saveStatus(
 			status: [
 				'expiry' => $expiry->format(DATE_ATOM),
-				'daysLeft' => $health->daysLeft,
+				'daysLeft' => $daysLeft,
 				'status' => $status,
 				'checkedAt' => $this->nowIso(),
 			]
 		);
 
 		if ($status !== 'ok') {
-			$this->notifyAdmins(health: $health);
+			$this->notifyAdmins(daysLeft: $daysLeft, status: $status, expiry: $expiry);
 		}
 	}//end checkCertificate()
+
+	/**
+	 * The status for a number of days left: `critical` at 7 or fewer, `warning` at 30 or fewer, else `ok`.
+	 *
+	 * @param int $daysLeft Whole days left, rounded down.
+	 *
+	 * @return string
+	 */
+	private static function statusFor(int $daysLeft): string {
+		$status = 'ok';
+		if ($daysLeft <= self::CRITICAL_THRESHOLD_DAYS) {
+			$status = 'critical';
+		} elseif ($daysLeft <= self::WARN_THRESHOLD_DAYS) {
+			$status = 'warning';
+		}
+
+		return $status;
+	}//end statusFor()
 
 	/**
 	 * Persist the health-check snapshot for the admin tile.
@@ -142,12 +172,13 @@ class BrpHealthCheckJob extends TimedJob {
 	/**
 	 * Send an admin Nextcloud notification.
 	 *
-	 * @param CertificateHealth $health The certificate's health (warning or critical).
+	 * @param int $daysLeft Days remaining.
+	 * @param string $status warning|critical.
+	 * @param DateTimeImmutable $expiry Expiry date.
 	 *
 	 * @return void
 	 */
-	private function notifyAdmins(CertificateHealth $health): void {
-		$status = $health->status();
+	private function notifyAdmins(int $daysLeft, string $status, DateTimeImmutable $expiry): void {
 		$admins = $this->groupManager->get('admin');
 		if ($admins === null) {
 			return;
@@ -162,8 +193,8 @@ class BrpHealthCheckJob extends TimedJob {
 					->setSubject(
 						'brp_cert_' . $status,
 						[
-							'daysLeft' => $health->daysLeft,
-							'expiry' => $health->expiry->format('Y-m-d'),
+							'daysLeft' => $daysLeft,
+							'expiry' => $expiry->format('Y-m-d'),
 						]
 					)
 					->setDateTime(new DateTime());
