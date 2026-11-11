@@ -27,6 +27,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Cti;
 
 use OCA\Pipelinq\Service\Cti\AdapterRegistry;
+use OCA\Pipelinq\Service\Cti\CallAgent;
+use OCA\Pipelinq\Service\Cti\PendingCall;
 use OCA\Pipelinq\Service\CtiContactMatcher;
 use OCA\Pipelinq\Service\CtiDispositionService;
 use OCA\Pipelinq\Service\CtiService;
@@ -110,11 +112,12 @@ class PendingContactmomentTest extends TestCase {
 		$service = $this->service(configured: true, saveError: null);
 
 		$service->createPendingContactmoment(
-			direction: 'outbound',
-			fromNumber: '+31201234567',
-			toNumber: '0612345678',
-			userId: 'bob',
-			extension: '7',
+			call: new PendingCall(
+				direction: 'outbound',
+				fromNumber: '+31201234567',
+				toNumber: '0612345678',
+				agent: new CallAgent(userId: 'bob', extension: '7'),
+			),
 			extra: ['title' => 'Custom'],
 		);
 
@@ -153,11 +156,12 @@ class PendingContactmomentTest extends TestCase {
 	 */
 	private function createInbound(CtiService $service): ?string {
 		return $service->createPendingContactmoment(
-			direction: 'inbound',
-			fromNumber: '06 1234 5678',
-			toNumber: 'reception',
-			userId: 'ann',
-			extension: '201',
+			call: new PendingCall(
+				direction: 'inbound',
+				fromNumber: '06 1234 5678',
+				toNumber: 'reception',
+				agent: new CallAgent(userId: 'ann', extension: '201'),
+			),
 			extra: ['telephony_platform' => 'asterisk', 'assignee_note' => 'extra'],
 		);
 	}//end createInbound()
