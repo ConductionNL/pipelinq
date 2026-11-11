@@ -28,7 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Service\EmailLinkTarget;
 use OCA\Pipelinq\Service\EmailSyncService;
+use OCA\Pipelinq\Service\SyncedEmail;
 use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -249,16 +251,20 @@ class EmailSyncServiceTest extends TestCase {
 	 */
 	public function testBuildEmailLinkDataReturnsCorrectShape(): void {
 		$result = $this->service->buildEmailLinkData(
-			messageId: 'msg-1',
-			subject: 'Hello',
-			sender: 'sender@example.com',
-			recipients: ['r@example.com'],
-			date: '2026-01-01',
-			linkedEntityType: 'contact',
-			linkedEntityId: 'uuid-1',
-			direction: 'inbound',
-			threadId: 'thread-1',
-			syncSource: 'account-1',
+			email: new SyncedEmail(
+				messageId: 'msg-1',
+				subject: 'Hello',
+				sender: 'sender@example.com',
+				recipients: ['r@example.com'],
+				date: '2026-01-01',
+				threadId: 'thread-1',
+			),
+			target: new EmailLinkTarget(
+				entityType: 'contact',
+				entityId: 'uuid-1',
+				direction: 'inbound',
+				syncSource: 'account-1',
+			),
 		);
 
 		$this->assertSame(expected: 'msg-1', actual: $result['messageId']);
@@ -299,14 +305,18 @@ class EmailSyncServiceTest extends TestCase {
 	 */
 	public function testBuildEmailLinkDataHandlesNullOptionals(): void {
 		$result = $this->service->buildEmailLinkData(
-			messageId: 'msg-2',
-			subject: 'Test',
-			sender: 'a@b.com',
-			recipients: [],
-			date: '2026-01-02',
-			linkedEntityType: 'client',
-			linkedEntityId: 'uuid-2',
-			direction: 'outbound',
+			email: new SyncedEmail(
+				messageId: 'msg-2',
+				subject: 'Test',
+				sender: 'a@b.com',
+				recipients: [],
+				date: '2026-01-02',
+			),
+			target: new EmailLinkTarget(
+				entityType: 'client',
+				entityId: 'uuid-2',
+				direction: 'outbound',
+			),
 		);
 
 		$this->assertNull(actual: $result['threadId']);
