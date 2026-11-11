@@ -94,6 +94,7 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcCheckboxRadioSwitch, NcTextField } from '@nextcloud/vue'
+import { posRecordId } from '../services/posRecordId.js'
 
 export default {
 	name: 'PosTenderTypeFormDialog',
@@ -177,12 +178,7 @@ export default {
 			}
 		},
 
-		idOf(type) {
-			if (type?.['@self']?.id) {
-				return type['@self'].id
-			}
-			return type?.id || type?.uuid || ''
-		},
+		idOf: posRecordId,
 	},
 }
 </script>
