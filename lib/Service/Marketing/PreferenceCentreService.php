@@ -141,30 +141,55 @@ class PreferenceCentreService {
 		}
 
 		$existing = $this->queries->listSubscriptionsForContact(contactId: $contactId);
-		$selected = array_flip(array_map('strval', $selectedListIds));
+		$choice = new PreferenceChoice(contactId: $contactId, selected: array_flip(array_map('strval', $selectedListIds)));
 
-		// Every membership belongs to the same person, so any address on one
-		// of them is the address a newly ticked list is stored under. Without
-		// it a new membership cannot be written at all: `email` is required.
-		$email = '';
+		$unsubscribed = $this->closeUnticked(choice: $choice, existing: $existing);
+		$confirmed = $this->confirmTicked(choice: $choice, email: self::addressOf(existing: $existing));
+
+		return ['status' => 'saved', 'confirmed' => $confirmed, 'unsubscribed' => $unsubscribed];
+	}//end savePreferences()
+
+	/**
+	 * The address a newly ticked list is stored under.
+	 *
+	 * Every membership belongs to the same person, so any address on one
+	 * of them is the address a newly ticked list is stored under. Without
+	 * it a new membership cannot be written at all: `email` is required.
+	 *
+	 * @param array<int, array<string, mixed>> $existing The contact's memberships.
+	 *
+	 * @return string The first address on file, or ''.
+	 */
+	private static function addressOf(array $existing): string {
 		foreach ($existing as $subscription) {
 			$candidate = (string)($subscription['email'] ?? '');
 			if ($candidate !== '') {
-				$email = $candidate;
-				break;
+				return $candidate;
 			}
 		}
 
+		return '';
+	}//end addressOf()
+
+	/**
+	 * Close every membership whose list was not ticked.
+	 *
+	 * @param PreferenceChoice                 $choice   The contact and the ticked lists.
+	 * @param array<int, array<string, mixed>> $existing The contact's memberships.
+	 *
+	 * @return int How many were closed.
+	 */
+	private function closeUnticked(PreferenceChoice $choice, array $existing): int {
 		$unsubscribed = 0;
 		foreach ($existing as $subscription) {
 			$listId = (string)($subscription['listId'] ?? '');
-			if (isset($selected[$listId]) === true) {
+			if (isset($choice->selected[$listId]) === true) {
 				continue;
 			}
 
 			$closed = $this->subscriptions->unsubscribeFromList(
 				listId: $listId,
-				contactId: $contactId,
+				contactId: $choice->contactId,
 				reason: 'preference-centre',
 			);
 			if ($closed === true) {
@@ -172,11 +197,23 @@ class PreferenceCentreService {
 			}
 		}
 
+		return $unsubscribed;
+	}//end closeUnticked()
+
+	/**
+	 * Confirm the contact on every ticked list.
+	 *
+	 * @param PreferenceChoice $choice The contact and the ticked lists.
+	 * @param string           $email  The address to store a new membership under.
+	 *
+	 * @return int How many were confirmed.
+	 */
+	private function confirmTicked(PreferenceChoice $choice, string $email): int {
 		$confirmed = 0;
-		foreach (array_keys($selected) as $listId) {
+		foreach (array_keys($choice->selected) as $listId) {
 			$done = $this->subscriptions->confirmForContact(
 				listId: (string)$listId,
-				contactId: $contactId,
+				contactId: $choice->contactId,
 				email: $email,
 			);
 			if ($done === true) {
@@ -184,8 +221,8 @@ class PreferenceCentreService {
 			}
 		}
 
-		return ['status' => 'saved', 'confirmed' => $confirmed, 'unsubscribed' => $unsubscribed];
-	}//end savePreferences()
+		return $confirmed;
+	}//end confirmTicked()
 
 	/**
 	 * Resolve the contact a preferences token points at.
