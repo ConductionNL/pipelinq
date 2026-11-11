@@ -62,4 +62,26 @@ class PhysicalAddressRendererTest extends TestCase {
 		$this->assertSame('', $renderer->render('', 'Den Haag', 'text'));
 		$this->assertSame('<p>{{physical_address}}</p>', $renderer->render('<p>{{physical_address}}</p>', '  ', 'html'));
 	}//end testRenderAppendsOrLeavesAlone()
+	/**
+	 * Every render, exactly: a blank address or body leaves the body; HTML
+	 * escapes the address and breaks its lines; any one token makes every
+	 * token the address; an HTML body without a token gets a paragraph
+	 * inside its last body element, or at the end; plain text gets the
+	 * address after a blank line, trailing space trimmed.
+	 *
+	 * @return void
+	 */
+	public function testEveryRender(): void {
+		$renderer = new PhysicalAddressRenderer();
+		$this->assertSame('Hoi', $renderer->render(body: 'Hoi', footerOverride: ' ', format: 'html'));
+		$this->assertSame(' ', $renderer->render(body: ' ', footerOverride: 'Straat 1', format: 'text'));
+		$this->assertSame(
+			"<p>A&amp;B<br>\n1234 AB Ede</p><p>A&amp;B<br>\n1234 AB Ede</p>",
+			$renderer->render(body: '<p>{{address_block}}</p><p>{{sender_address}}</p>', footerOverride: " A&B\n1234 AB Ede ", format: 'html')
+		);
+		$this->assertSame('<html><BODY>x<p>Straat 1</p></BODY></html>', $renderer->render(body: '<html><BODY>x</BODY></html>', footerOverride: 'Straat 1', format: 'html'));
+		$this->assertSame('<b>x</b><p>Straat 1</p>', $renderer->render(body: '<b>x</b>', footerOverride: 'Straat 1', format: 'html'));
+		$this->assertSame("Hoi\n\nStraat & 1", $renderer->render(body: "Hoi  \n", footerOverride: 'Straat & 1', format: 'text'));
+		$this->assertSame('Aan: Straat 1', $renderer->render(body: 'Aan: {{physical_address}}', footerOverride: 'Straat 1', format: 'text'));
+	}//end testEveryRender()
 }//end class
