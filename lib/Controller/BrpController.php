@@ -662,7 +662,12 @@ class BrpController extends Controller {
 			);
 		}
 
-		$recorded = $this->optOut->recordLocalOptOut($rawBsn, $actor, $this->optOutNote(note: $note));
+		$noteValue = null;
+		if (is_string($note) === true) {
+			$noteValue = $note;
+		}
+
+		$recorded = $this->optOut->recordLocalOptOut($rawBsn, $actor, $noteValue);
 		if ($recorded === false) {
 			return new JSONResponse(
 				[
@@ -674,21 +679,6 @@ class BrpController extends Controller {
 
 		return new JSONResponse(['result' => 'ok'], Http::STATUS_CREATED);
 	}//end optOutCreate()
-
-	/**
-	 * The opt-out note when the request carries one as text.
-	 *
-	 * @param mixed $note The `note` request parameter.
-	 *
-	 * @return string|null
-	 */
-	private function optOutNote(mixed $note): ?string {
-		if (is_string($note) === true) {
-			return $note;
-		}
-
-		return null;
-	}//end optOutNote()
 
 	/**
 	 * POST /api/brp/mutations — external HaalCentraal mutation webhook.
