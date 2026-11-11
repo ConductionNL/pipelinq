@@ -86,28 +86,12 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * @spec openspec/specs/berichtenbox/spec.md
 	 */
 	public function dispatchMessage(array $message): BerichtenboxResult {
-		$sanitised = $message;
-		if (isset($sanitised['recipientBsn']) === true) {
-			$sanitised['recipientBsn'] = '[REDACTED]';
-		}
-
-		if (isset($sanitised['body']) === true) {
-			$sanitised['body'] = '[REDACTED-body-bytes=' . strlen((string)$sanitised['body']) . ']';
-		}
-
-		if (isset($sanitised['attachments']) === true && is_array($sanitised['attachments']) === true) {
-			$sanitised['attachments'] = [
-				'_redacted' => true,
-				'count' => count($sanitised['attachments']),
-			];
-		}
-
 		$reference = 'bbk-log-' . bin2hex(random_bytes(8));
 		$this->logger->info(
 			'Pipelinq Berichtenbox dispatch deferred (no outbound connector bound)',
 			[
 				'logiusKenmerk' => $reference,
-				'message' => $sanitised,
+				'message' => $this->redacted(message: $message),
 			]
 		);
 
@@ -122,6 +106,30 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 			],
 		);
 	}//end dispatchMessage()
+
+	/**
+	 * The message as it may be logged: the BSN replaced, the body by its
+	 * byte length, a list of attachments by its count.
+	 *
+	 * @param array<string, mixed> $message The message.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function redacted(array $message): array {
+		if (isset($message['recipientBsn']) === true) {
+			$message['recipientBsn'] = '[REDACTED]';
+		}
+
+		if (isset($message['body']) === true) {
+			$message['body'] = '[REDACTED-body-bytes=' . strlen((string)$message['body']) . ']';
+		}
+
+		if (isset($message['attachments']) === true && is_array($message['attachments']) === true) {
+			$message['attachments'] = ['_redacted' => true, 'count' => count($message['attachments'])];
+		}
+
+		return $message;
+	}//end redacted()
 
 	/**
 	 * Log the webhook-verify intent + synthesise a VERIFY_DEFERRED
