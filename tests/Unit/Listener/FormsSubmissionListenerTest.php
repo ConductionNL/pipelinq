@@ -74,11 +74,12 @@ class FormsSubmissionListenerTest extends TestCase {
 	/**
 	 * The listener over one binding of Forms form 5 into a ticket.
 	 *
-	 * @param Throwable|null $throw What the submit throws, when set.
+	 * @param Throwable|null $throw          What the submit throws, when set.
+	 * @param Throwable|null $questionsThrow What reading the form's questions throws, when set.
 	 *
 	 * @return FormsSubmissionListener The listener.
 	 */
-	private function listener(?Throwable $throw = null): FormsSubmissionListener {
+	private function listener(?Throwable $throw = null, ?Throwable $questionsThrow = null): FormsSubmissionListener {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => ['register' => '20', 'webForm_schema' => '40'][$key] ?? $default
@@ -97,7 +98,13 @@ class FormsSubmissionListenerTest extends TestCase {
 				'fixed' => ['ticketType' => 'request', 'channel' => 'forms'],
 			],
 		];
-		$questions = new class {
+		$questions = new class ($questionsThrow) {
+			/**
+			 * @param Throwable|null $throw What reading throws, when set.
+			 */
+			public function __construct(private ?Throwable $throw) {
+			}
+
 			/**
 			 * The form's questions.
 			 *
@@ -106,6 +113,10 @@ class FormsSubmissionListenerTest extends TestCase {
 			 * @return array<int, array<string, mixed>>
 			 */
 			public function findByForm(int $formId): array {
+				if ($this->throw !== null) {
+					throw $this->throw;
+				}
+
 				return [
 					['id' => 11, 'type' => 'short', 'text' => 'Email', 'isRequired' => true, 'extraSettings' => ['validationType' => 'email']],
 					['id' => 12, 'type' => 'short', 'text' => 'Subject', 'isRequired' => true, 'extraSettings' => []],
@@ -213,4 +224,65 @@ class FormsSubmissionListenerTest extends TestCase {
 
 		$listener->handle(new FormSubmittedEvent(['id' => 5], ['id' => 9]));
 	}//end testRefusalIsLoggedWithoutAnswers()
+
+	/**
+	 * Golden: a created answer logs its submission, reference and form.
+	 *
+	 * @return void
+	 */
+	public function testCreatedAnswerIsLogged(): void {
+		$listener = $this->listener();
+		$lines = [];
+		$this->logger->method('info')->willReturnCallback(
+			static function (string $message, array $context = []) use (&$lines): void {
+				$lines[] = [$message, $context];
+			}
+		);
+
+		$listener->handle(new FormSubmittedEvent(['id' => 5], ['id' => 9]));
+
+		$this->assertSame('Pipelinq: Nextcloud Forms answer {submission} created {reference}.', $lines[0][0]);
+		$this->assertSame(9, $lines[0][1]['submission']);
+		$this->assertSame(5, $lines[0][1]['form']);
+		$this->assertArrayHasKey('reference', $lines[0][1]);
+	}//end testCreatedAnswerIsLogged()
+
+	/**
+	 * Golden: an unexpected failure is logged with the ids and the exception, and nothing is thrown.
+	 *
+	 * @return void
+	 */
+	public function testUnexpectedFailureIsLogged(): void {
+		$failure = new \RuntimeException('store offline');
+		$listener = $this->listener(questionsThrow: $failure);
+		$errors = [];
+		$this->logger->method('error')->willReturnCallback(
+			static function (string $message, array $context = []) use (&$errors): void {
+				$errors[] = [$message, $context];
+			}
+		);
+
+		$listener->handle(new FormSubmittedEvent(['id' => 5], ['id' => 9]));
+
+		$this->assertSame(
+			[['Pipelinq: Nextcloud Forms answer {submission} on form {form} created nothing.', ['submission' => 9, 'form' => 5, 'exception' => $failure]]],
+			$errors
+		);
+	}//end testUnexpectedFailureIsLogged()
+
+	/**
+	 * Golden: an answer without a positive form or submission id creates nothing and logs nothing.
+	 *
+	 * @return void
+	 */
+	public function testAnswerWithoutIdsIsIgnored(): void {
+		foreach ([[['id' => 0], ['id' => 9]], [['id' => 5], ['id' => 0]], [[], ['id' => 9]], [['id' => 5], []]] as [$form, $submission]) {
+			$listener = $this->listener();
+			$this->logger->expects($this->never())->method($this->anything());
+
+			$listener->handle(new FormSubmittedEvent($form, $submission));
+
+			$this->assertSame([], $this->submitter->calls);
+		}
+	}//end testAnswerWithoutIdsIsIgnored()
 }//end class
