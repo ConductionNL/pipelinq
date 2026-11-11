@@ -140,6 +140,45 @@ import { createArticle, updateArticle } from '../services/articlesApi.js'
 
 import '@nextcloud/dialogs/style.css'
 
+/**
+ * The article's text fields in form order, each with its empty value.
+ */
+const ARTICLE_TEXT_DEFAULTS = {
+	title: '',
+	slug: '',
+	summary: '',
+	body: '',
+	heroImage: '',
+	language: 'nl',
+	portalPageRef: '',
+}
+
+/**
+ * The article's text fields, a missing one taking its empty value.
+ *
+ * @param {object} source The article, or an empty object for a new one.
+ * @return {object} The model.
+ * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+ */
+function articleModel(source) {
+	const model = {}
+	for (const [field, empty] of Object.entries(ARTICLE_TEXT_DEFAULTS)) {
+		model[field] = source[field] || empty
+	}
+	return model
+}
+
+/**
+ * A stored list, or an empty one for anything else.
+ *
+ * @param {unknown} value The stored value.
+ * @return {Array} The list.
+ * @spec exclude a type guard, no behaviour of its own.
+ */
+function listOf(value) {
+	return Array.isArray(value) ? value : []
+}
+
 const LANGUAGE_OPTIONS = [
 	{ value: 'nl', label: 'Nederlands' },
 	{ value: 'en', label: 'English' },
@@ -176,20 +215,10 @@ export default {
 		return {
 			saving: false,
 			error: '',
-			model: {
-				title: source.title || '',
-				slug: source.slug || '',
-				summary: source.summary || '',
-				body: source.body || '',
-				heroImage: source.heroImage || '',
-				language: source.language || 'nl',
-				portalPageRef: source.portalPageRef || '',
-			},
+			model: articleModel(source),
 
-			tags: Array.isArray(source.tags) ? [...source.tags] : [],
-			links: Array.isArray(source.links)
-				? source.links.map((link) => ({ ...link }))
-				: [],
+			tags: [...listOf(source.tags)],
+			links: listOf(source.links).map((link) => ({ ...link })),
 		}
 	},
 
