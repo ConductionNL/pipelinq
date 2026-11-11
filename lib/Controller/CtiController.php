@@ -305,14 +305,27 @@ class CtiController extends Controller {
 			);
 		}
 
-		try {
-			$result = $this->ctiService->processDisposition(
+		return $this->dispositionAnswer(
+			process: fn (): array => $this->ctiService->processDisposition(
 				interactionId: $id,
 				subject: $subject,
 				outcome: $outcome,
 				notes: $notes,
 				queue: $queue,
-			);
+			)
+		);
+	}//end disposition()
+
+	/**
+	 * Run the disposition and answer its outcome, a 400 for a refused value or a logged 500.
+	 *
+	 * @param callable(): array<string, mixed> $process The disposition call.
+	 *
+	 * @return JSONResponse
+	 */
+	private function dispositionAnswer(callable $process): JSONResponse {
+		try {
+			$result = $process();
 		} catch (\InvalidArgumentException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
@@ -324,7 +337,7 @@ class CtiController extends Controller {
 		}
 
 		return new JSONResponse($result);
-	}//end disposition()
+	}//end dispositionAnswer()
 
 	/**
 	 * Attach recording metadata to a contactmoment.
@@ -419,6 +432,27 @@ class CtiController extends Controller {
 			return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 
+		$payload = $this->configPayload();
+		$saved = $this->ctiService->saveConfig($payload);
+		$this->logger->info(
+			'CTI config updated',
+			['user' => $uid, 'fields' => array_keys($payload)]
+		);
+
+		if ($saved !== []) {
+			$this->connectionReports->reportCtiCheck(outcome: $this->ctiService->testConnection());
+		}
+
+		unset($saved['webhook_secret']);
+		return new JSONResponse($saved);
+	}//end updateConfig()
+
+	/**
+	 * The configuration fields the request carries, in the fixed field order; absent or null ones are left out.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function configPayload(): array {
 		$allowedFields = [
 			'platform',
 			'api_base_url',
@@ -440,19 +474,8 @@ class CtiController extends Controller {
 			}
 		}
 
-		$saved = $this->ctiService->saveConfig($payload);
-		$this->logger->info(
-			'CTI config updated',
-			['user' => $uid, 'fields' => array_keys($payload)]
-		);
-
-		if ($saved !== []) {
-			$this->connectionReports->reportCtiCheck(outcome: $this->ctiService->testConnection());
-		}
-
-		unset($saved['webhook_secret']);
-		return new JSONResponse($saved);
-	}//end updateConfig()
+		return $payload;
+	}//end configPayload()
 
 	/**
 	 * Test platform connectivity (admin only).
