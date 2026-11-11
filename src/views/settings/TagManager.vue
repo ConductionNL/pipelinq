@@ -223,16 +223,7 @@ export default {
 			const name = this.newName.trim()
 			if (!name) return
 
-			// Check for duplicate names.
-			const duplicate = this.tags.some(
-				(tag) => tag.name.toLowerCase() === name.toLowerCase(),
-			)
-			if (duplicate) {
-				this.error = t(
-					'pipelinq',
-					'An item with the name "{name}" already exists.',
-					{ name },
-				)
+			if (this.refuseTakenName(name, this.tags)) {
 				return
 			}
 
@@ -246,6 +237,28 @@ export default {
 			} catch (e) {
 				this.error = e.message
 			}
+		},
+
+		/**
+		 * Say so when another tag already has the name, in any case.
+		 *
+		 * @param {string} name The trimmed name.
+		 * @param {Array<object>} others The tags to compare with.
+		 * @return {boolean} Whether the name is taken.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-92
+		 */
+		refuseTakenName(name, others) {
+			const taken = others.some(
+				(tag) => tag.name.toLowerCase() === name.toLowerCase(),
+			)
+			if (taken) {
+				this.error = t(
+					'pipelinq',
+					'An item with the name "{name}" already exists.',
+					{ name },
+				)
+			}
+			return taken
 		},
 
 		/**
@@ -278,17 +291,9 @@ export default {
 			const name = this.editName.trim()
 			if (!name) return
 
-			// Check for duplicate names (excluding the item being renamed).
-			const duplicate = this.tags.some(
-				(tag) =>
-					tag.id !== id && tag.name.toLowerCase() === name.toLowerCase(),
-			)
-			if (duplicate) {
-				this.error = t(
-					'pipelinq',
-					'An item with the name "{name}" already exists.',
-					{ name },
-				)
+			// The item being renamed may keep its own name.
+			const others = this.tags.filter((tag) => tag.id !== id)
+			if (this.refuseTakenName(name, others)) {
 				return
 			}
 
