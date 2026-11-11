@@ -217,7 +217,7 @@ class SegmentService {
 		// stored one and would start reading a different value.
 		$properties = array_merge($this->signals->schemaProperties(), $properties);
 
-		return $this->validateNode(node: $rules, path: '$', properties: $properties);
+		return $this->validateNode(node: $rules, at: new SegmentRulePosition(path: '$', properties: $properties));
 	}//end validateRules()
 
 	/**
@@ -1533,22 +1533,21 @@ class SegmentService {
 	 * Recursively validate a node.
 	 *
 	 * @param array<string, mixed> $node Tree node.
-	 * @param string $path JSON-pointer-ish breadcrumb.
-	 * @param array<string, mixed> $properties Schema properties map.
+	 * @param SegmentRulePosition  $at   The node's path and the schema properties map.
 	 *
 	 * @return string|null Error string or null.
 	 */
-	private function validateNode(array $node, string $path, array $properties): ?string {
+	private function validateNode(array $node, SegmentRulePosition $at): ?string {
 		$type = $this->nodeType(node: $node);
 		if ($type === 'AND' || $type === 'OR') {
-			return $this->validateCompositeNode(node: $node, path: $path, properties: $properties, type: $type);
+			return $this->validateCompositeNode(node: $node, at: $at);
 		}
 
 		if ($type === 'NOT') {
-			return $this->validateNotNode(node: $node, path: $path, properties: $properties);
+			return $this->validateNotNode(node: $node, at: $at);
 		}
 
-		return $this->validateLeafNode(node: $node, path: $path, properties: $properties);
+		return $this->validateLeafNode(node: $node, at: $at);
 	}//end validateNode()
 
 	/**
@@ -1559,35 +1558,41 @@ class SegmentService {
 	 * complexity budget; behaviour is unchanged.
 	 *
 	 * @param array<string, mixed> $node Tree node.
-	 * @param string $path JSON-pointer-ish breadcrumb.
-	 * @param array<string, mixed> $properties Schema properties map.
-	 * @param string $type `AND` or `OR` (for the error message).
+	 * @param SegmentRulePosition  $at   The node's path and the schema properties map.
 	 *
 	 * @return string|null Error string or null.
 	 */
-	private function validateCompositeNode(array $node, string $path, array $properties, string $type): ?string {
+	private function validateCompositeNode(array $node, SegmentRulePosition $at): ?string {
 		$children = ($node['children'] ?? null);
 		if (is_array($children) === false || $children === []) {
-			return sprintf('%s: composite "%s" node requires non-empty "children".', $path, $type);
+			return sprintf('%s: composite "%s" node requires non-empty "children".', $at->path, $this->nodeType(node: $node));
 		}
 
+		return $this->validateChildren(children: $children, at: $at);
+	}//end validateCompositeNode()
+
+	/**
+	 * Validate the children of a composite node, in order; the first error wins.
+	 *
+	 * @param array<int|string, mixed> $children The node's children.
+	 * @param SegmentRulePosition      $at       The composite node's position.
+	 *
+	 * @return string|null Error string or null.
+	 */
+	private function validateChildren(array $children, SegmentRulePosition $at): ?string {
 		foreach ($children as $index => $child) {
 			if (is_array($child) === false) {
-				return sprintf('%s.children[%d]: child must be an object.', $path, $index);
+				return sprintf('%s.children[%d]: child must be an object.', $at->path, $index);
 			}
 
-			$childError = $this->validateNode(
-				node: $child,
-				path: $path . '.children[' . $index . ']',
-				properties: $properties
-			);
+			$childError = $this->validateNode(node: $child, at: $at->child(segment: '.children[' . $index . ']'));
 			if ($childError !== null) {
 				return $childError;
 			}
 		}
 
 		return null;
-	}//end validateCompositeNode()
+	}//end validateChildren()
 
 	/**
 	 * Validate a `NOT` node: exactly one child, which must be an object
@@ -1597,23 +1602,22 @@ class SegmentService {
 	 * complexity budget; behaviour is unchanged.
 	 *
 	 * @param array<string, mixed> $node Tree node.
-	 * @param string $path JSON-pointer-ish breadcrumb.
-	 * @param array<string, mixed> $properties Schema properties map.
+	 * @param SegmentRulePosition  $at   The node's path and the schema properties map.
 	 *
 	 * @return string|null Error string or null.
 	 */
-	private function validateNotNode(array $node, string $path, array $properties): ?string {
+	private function validateNotNode(array $node, SegmentRulePosition $at): ?string {
 		$children = ($node['children'] ?? null);
 		if (is_array($children) === false || count($children) !== 1) {
-			return sprintf('%s: NOT node requires exactly one child.', $path);
+			return sprintf('%s: NOT node requires exactly one child.', $at->path);
 		}
 
 		$child = $children[0];
 		if (is_array($child) === false) {
-			return sprintf('%s.children[0]: child must be an object.', $path);
+			return sprintf('%s.children[0]: child must be an object.', $at->path);
 		}
 
-		return $this->validateNode(node: $child, path: $path . '.children[0]', properties: $properties);
+		return $this->validateNode(node: $child, at: $at->child(segment: '.children[0]'));
 	}//end validateNotNode()
 
 	/**
@@ -1625,57 +1629,92 @@ class SegmentService {
 	 * complexity budget; behaviour is unchanged.
 	 *
 	 * @param array<string, mixed> $node Tree node.
-	 * @param string $path JSON-pointer-ish breadcrumb.
-	 * @param array<string, mixed> $properties Schema properties map.
+	 * @param SegmentRulePosition  $at   The node's path and the schema properties map.
 	 *
 	 * @return string|null Error string or null.
 	 */
-	private function validateLeafNode(array $node, string $path, array $properties): ?string {
+	private function validateLeafNode(array $node, SegmentRulePosition $at): ?string {
 		$field = ($node['field'] ?? null);
 		if (is_string($field) === false || $field === '') {
-			return sprintf('%s: leaf predicate requires non-empty "field".', $path);
+			return sprintf('%s: leaf predicate requires non-empty "field".', $at->path);
 		}
 
-		$fieldType = $this->resolveFieldType(field: $field, properties: $properties);
+		$fieldType = $this->resolveFieldType(field: $field, properties: $at->properties);
 		if ($fieldType === null) {
-			return sprintf('%s: field "%s" is not declared on the entity schema.', $path, $field);
+			return sprintf('%s: field "%s" is not declared on the entity schema.', $at->path, $field);
 		}
 
-		$operator = ($node['operator'] ?? null);
+		return $this->validateLeafOperator(
+			leaf: new SegmentRuleLeaf(node: $node, path: $at->path, field: $field, fieldType: $fieldType)
+		);
+	}//end validateLeafNode()
+
+	/**
+	 * Validate a declared leaf's operator: supported, valid for the field's
+	 * type, and then its value unless it is a null check.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf.
+	 *
+	 * @return string|null Error string or null.
+	 */
+	private function validateLeafOperator(SegmentRuleLeaf $leaf): ?string {
+		$operator = ($leaf->node['operator'] ?? null);
 		$allowedTypes = $this->resolveAllowedTypesForOperator(operator: $operator);
 		if ($allowedTypes === null) {
-			return sprintf('%s: operator "%s" is not supported.', $path, (string)$operator);
+			return sprintf('%s: operator "%s" is not supported.', $leaf->path, (string)$operator);
 		}
 
-		if (in_array($fieldType, $allowedTypes, true) === false) {
-			return sprintf(
-				'%s: operator "%s" is not valid for field "%s" of type "%s".',
-				$path,
-				(string)$operator,
-				$field,
-				$fieldType
-			);
+		if (in_array($leaf->fieldType, $allowedTypes, true) === false) {
+			return $this->operatorTypeError(leaf: $leaf);
 		}
 
 		if (in_array($operator, ['isNull', 'isNotNull'], true) === true) {
 			return null;
 		}
 
-		if (array_key_exists('value', $node) === false) {
-			return sprintf('%s: operator "%s" requires a "value".', $path, (string)$operator);
+		return $this->validateLeafValue(leaf: $leaf);
+	}//end validateLeafOperator()
+
+	/**
+	 * The error for an operator that is not valid for the field's type.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf.
+	 *
+	 * @return string
+	 */
+	private function operatorTypeError(SegmentRuleLeaf $leaf): string {
+		return sprintf(
+			'%s: operator "%s" is not valid for field "%s" of type "%s".',
+			$leaf->path,
+			(string)($leaf->node['operator'] ?? null),
+			$leaf->field,
+			$leaf->fieldType
+		);
+	}//end operatorTypeError()
+
+	/**
+	 * Validate a leaf's value: present, and coercible to the field's type.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf.
+	 *
+	 * @return string|null Error string or null.
+	 */
+	private function validateLeafValue(SegmentRuleLeaf $leaf): ?string {
+		if (array_key_exists('value', $leaf->node) === false) {
+			return sprintf('%s: operator "%s" requires a "value".', $leaf->path, (string)($leaf->node['operator'] ?? null));
 		}
 
-		if ($this->isValueCoercible(value: $node['value'], fieldType: $fieldType, operator: (string)$operator) === false) {
+		if ($this->isValueCoercible(leaf: $leaf) === false) {
 			return sprintf(
 				'%s: value for field "%s" is not coercible to type "%s".',
-				$path,
-				$field,
-				$fieldType
+				$leaf->path,
+				$leaf->field,
+				$leaf->fieldType
 			);
 		}
 
 		return null;
-	}//end validateLeafNode()
+	}//end validateLeafValue()
 
 	/**
 	 * Resolve the JSON-schema types an operator is valid for, or null when
@@ -1699,39 +1738,67 @@ class SegmentService {
 	}//end resolveAllowedTypesForOperator()
 
 	/**
-	 * Determine whether a value is coercible to the field's declared type.
+	 * Determine whether a leaf's value is coercible to the field's declared type.
 	 *
-	 * @param mixed $value The raw rule value.
-	 * @param string $fieldType JSON-schema type.
-	 * @param string $operator Operator (drives array-vs-scalar shape).
+	 * The operator drives the shape: a member for `contains` / `containsAny`
+	 * on an array field, a list for the list operators, a scalar otherwise.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf, carrying a `value`.
 	 *
 	 * @return bool True when coercion succeeds.
 	 */
-	private function isValueCoercible(mixed $value, string $fieldType, string $operator): bool {
-		if ($fieldType === 'array' && in_array($operator, ['contains', 'containsAny'], true) === true) {
+	private function isValueCoercible(SegmentRuleLeaf $leaf): bool {
+		$value = $leaf->node['value'];
+		$operator = (string)($leaf->node['operator'] ?? null);
+		if ($leaf->fieldType === 'array' && in_array($operator, ['contains', 'containsAny'], true) === true) {
 			return $this->isMembershipCoercible(value: $value);
 		}
 
 		if (in_array($operator, ['in', 'notIn', 'containsAny', 'between'], true) === true) {
-			if (is_array($value) === false) {
-				return false;
-			}
-
-			if ($operator === 'between' && count($value) !== 2) {
-				return false;
-			}
-
-			foreach ($value as $element) {
-				if ($this->isScalarCoercible(value: $element, fieldType: $fieldType) === false) {
-					return false;
-				}
-			}
-
-			return true;
+			return $this->isListCoercible(leaf: $leaf);
 		}
 
-		return $this->isScalarCoercible(value: $value, fieldType: $fieldType);
+		return $this->isScalarCoercible(value: $value, fieldType: $leaf->fieldType);
 	}//end isValueCoercible()
+
+	/**
+	 * Whether a list operator's value is a list of coercible scalars, and a
+	 * pair for `between`.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf, carrying a `value`.
+	 *
+	 * @return bool
+	 */
+	private function isListCoercible(SegmentRuleLeaf $leaf): bool {
+		$value = $leaf->node['value'];
+		if (is_array($value) === false) {
+			return false;
+		}
+
+		if (($leaf->node['operator'] ?? null) === 'between' && count($value) !== 2) {
+			return false;
+		}
+
+		return $this->allScalarCoercible(values: $value, fieldType: $leaf->fieldType);
+	}//end isListCoercible()
+
+	/**
+	 * Whether every element coerces to the field type.
+	 *
+	 * @param array<int|string, mixed> $values    The list value.
+	 * @param string                   $fieldType JSON-schema type.
+	 *
+	 * @return bool
+	 */
+	private function allScalarCoercible(array $values, string $fieldType): bool {
+		foreach ($values as $element) {
+			if ($this->isScalarCoercible(value: $element, fieldType: $fieldType) === false) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end allScalarCoercible()
 
 	/**
 	 * Whether a value can be a MEMBER of an array-typed field.
