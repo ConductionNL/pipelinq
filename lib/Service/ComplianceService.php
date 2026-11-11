@@ -31,10 +31,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Consent\SegmentConsentRun;
-use OCA\Pipelinq\Service\Consent\SendPermitRequest;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
+use OCA\Pipelinq\Service\Consent\SegmentConsentRun;
+use OCA\Pipelinq\Service\Consent\SendPermitRequest;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
