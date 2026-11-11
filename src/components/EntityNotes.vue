@@ -51,6 +51,7 @@
 <script>
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { jsonRequestHeaders } from '../services/requestHeaders.js'
 
 export default {
 	name: 'EntityNotes',
@@ -105,11 +106,7 @@ export default {
 						`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`,
 					),
 					{
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
+						headers: jsonRequestHeaders(),
 					},
 				)
 				if (response.ok) {
@@ -135,11 +132,7 @@ export default {
 					),
 					{
 						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
+						headers: jsonRequestHeaders(),
 						body: JSON.stringify({ message: this.newMessage }),
 					},
 				)
@@ -163,11 +156,7 @@ export default {
 					generateUrl(`/apps/pipelinq/api/notes/single/${noteId}`),
 					{
 						method: 'DELETE',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
+						headers: jsonRequestHeaders(),
 					},
 				)
 				if (response.ok) {
