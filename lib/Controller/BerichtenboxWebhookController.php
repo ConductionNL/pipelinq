@@ -90,21 +90,9 @@ class BerichtenboxWebhookController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function readReceipt(): JSONResponse {
-		$rawBody = $this->readRawBody();
-		if ($this->logius->handleWebhookSignature($this->request, $rawBody) === false) {
-			$this->logger->warning(
-				'Berichtenbox readReceipt webhook: invalid signature.',
-				['ip' => $this->request->getRemoteAddress()]
-			);
-			return new JSONResponse(
-				['error' => 'Invalid webhook signature'],
-				Http::STATUS_UNPROCESSABLE_ENTITY
-			);
-		}
-
-		$payload = json_decode($rawBody, true);
-		if (is_array($payload) === false) {
-			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		$payload = $this->signedPayload(webhook: 'readReceipt');
+		if ($payload instanceof JSONResponse) {
+			return $payload;
 		}
 
 		$logiusMessageId = (string)($payload['logiusMessageId'] ?? '');
@@ -148,10 +136,34 @@ class BerichtenboxWebhookController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function inboundReply(): JSONResponse {
+		$payload = $this->signedPayload(webhook: 'inboundReply');
+		if ($payload instanceof JSONResponse) {
+			return $payload;
+		}
+
+		$reply = self::replyFields(payload: $payload);
+		if ($reply === null) {
+			return new JSONResponse(
+				['error' => 'parentMessageId, logiusReplyId and bodyText are required'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return $this->handleReply(reply: $reply);
+	}//end inboundReply()
+
+	/**
+	 * The decoded body of a webhook call that carries a valid Logius signature.
+	 *
+	 * @param string $webhook The webhook name, for the refusal log.
+	 *
+	 * @return array<mixed>|JSONResponse The payload, or the 422 (unsigned) / 400 (not an object) refusal.
+	 */
+	private function signedPayload(string $webhook): array|JSONResponse {
 		$rawBody = $this->readRawBody();
 		if ($this->logius->handleWebhookSignature($this->request, $rawBody) === false) {
 			$this->logger->warning(
-				'Berichtenbox inboundReply webhook: invalid signature.',
+				'Berichtenbox ' . $webhook . ' webhook: invalid signature.',
 				['ip' => $this->request->getRemoteAddress()]
 			);
 			return new JSONResponse(
@@ -165,32 +177,54 @@ class BerichtenboxWebhookController extends Controller {
 			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$parentMessageId = (string)($payload['parentMessageId'] ?? '');
-		$logiusReplyId = (string)($payload['logiusReplyId'] ?? '');
-		$bodyText = (string)($payload['bodyText'] ?? '');
-		if ($parentMessageId === '' || $logiusReplyId === '' || $bodyText === '') {
-			return new JSONResponse(
-				['error' => 'parentMessageId, logiusReplyId and bodyText are required'],
-				Http::STATUS_BAD_REQUEST
-			);
+		return $payload;
+	}//end signedPayload()
+
+	/**
+	 * The fields of an inbound reply; attachments that are not a list become none.
+	 *
+	 * @param array<mixed> $payload The decoded body.
+	 *
+	 * @return array{parentMessageId: string, logiusReplyId: string, bodyText: string, attachments: array<mixed>}|null
+	 *         The fields, or null when a required one is missing.
+	 */
+	private static function replyFields(array $payload): ?array {
+		$reply = [
+			'parentMessageId' => (string)($payload['parentMessageId'] ?? ''),
+			'logiusReplyId' => (string)($payload['logiusReplyId'] ?? ''),
+			'bodyText' => (string)($payload['bodyText'] ?? ''),
+			'attachments' => ($payload['attachments'] ?? []),
+		];
+		if (in_array('', [$reply['parentMessageId'], $reply['logiusReplyId'], $reply['bodyText']], true) === true) {
+			return null;
 		}
 
-		$attachments = ($payload['attachments'] ?? []);
-		if (is_array($attachments) === false) {
-			$attachments = [];
+		if (is_array($reply['attachments']) === false) {
+			$reply['attachments'] = [];
 		}
 
+		return $reply;
+	}//end replyFields()
+
+	/**
+	 * Hand an inbound reply to the Berichtenbox service; a failure is logged and refused with its reason.
+	 *
+	 * @param array{parentMessageId: string, logiusReplyId: string, bodyText: string, attachments: array<mixed>} $reply The reply fields.
+	 *
+	 * @return JSONResponse The created contact moment and reply ids, or the 400.
+	 */
+	private function handleReply(array $reply): JSONResponse {
 		try {
-			$reply = $this->berichtenbox->handleInboundReply(
-				parentMessageId: $parentMessageId,
-				logiusReplyId: $logiusReplyId,
-				bodyText: $bodyText,
-				attachments: $attachments
+			$created = $this->berichtenbox->handleInboundReply(
+				parentMessageId: $reply['parentMessageId'],
+				logiusReplyId: $reply['logiusReplyId'],
+				bodyText: $reply['bodyText'],
+				attachments: $reply['attachments']
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Berichtenbox inboundReply handler failed.',
-				['exception' => $e->getMessage(), 'parentMessageId' => $parentMessageId]
+				['exception' => $e->getMessage(), 'parentMessageId' => $reply['parentMessageId']]
 			);
 			return new JSONResponse(
 				['error' => 'Reply processing failed: ' . $e->getMessage()],
@@ -201,11 +235,11 @@ class BerichtenboxWebhookController extends Controller {
 		return new JSONResponse(
 			[
 				'ok' => true,
-				'interactionId' => (string)($reply['createdInteractionId'] ?? ''),
-				'replyId' => (string)($reply['uuid'] ?? ''),
+				'interactionId' => (string)($created['createdInteractionId'] ?? ''),
+				'replyId' => (string)($created['uuid'] ?? ''),
 			]
 		);
-	}//end inboundReply()
+	}//end handleReply()
 
 	/**
 	 * Read the raw request body.
