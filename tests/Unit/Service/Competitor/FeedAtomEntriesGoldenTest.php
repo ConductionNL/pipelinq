@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
  * Whole entries for every fallback, and the entry cap.
  *
  * @covers \OCA\Pipelinq\Service\Competitor\FeedWatchReader
+ * @uses \OCA\Pipelinq\Service\Competitor\QuietXmlParser
  */
 class FeedAtomEntriesGoldenTest extends TestCase {
 
