@@ -74,6 +74,7 @@ import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
+import createWidgetMixin from './createWidgetMixin.js'
 import { createWidgetObject, optionValue, readWidgetObjects, widgetObjectsUrl } from './widgetObjects.js'
 
 /**
@@ -128,25 +129,10 @@ export default {
 		ClientAutocomplete,
 	},
 
-	props: {
-		/**
-		 * Widget heading, supplied by the manifest.
-		 *
-		 * Declared but not rendered here: the widget chrome draws the heading.
-		 * Declaring it is what stops Vue's attribute fallthrough painting
-		 * `title="…"` onto the component's root element, which would hover a
-		 * browser tooltip over the whole widget.
-		 */
-		// eslint-disable-next-line vue/no-unused-properties
-		title: {
-			type: String,
-			required: true,
-		},
-	},
+	mixins: [createWidgetMixin],
 
 	data() {
 		return {
-			config: null,
 			form: {
 				title: '',
 				category: null,
@@ -154,11 +140,6 @@ export default {
 				channel: null,
 			},
 
-			selectedClient: null,
-			submitted: false,
-			submitting: false,
-			success: false,
-			successLink: '',
 			recentRequests: [],
 			categoryOptions: [
 				{ id: 'general', label: t('pipelinq', 'General') },
@@ -199,14 +180,6 @@ export default {
 	methods: {
 		generateUrl,
 		toText,
-		/**
-		 * @param {object} client The client the user picked.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-54
-		 */
-		onClientSelected(client) {
-			this.selectedClient = client
-		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-55
 		 */
@@ -278,21 +251,11 @@ export default {
 }
 </script>
 
+<style scoped src="./createWidget.css"></style>
+
 <style scoped>
 .start-request-widget {
 	padding: 12px 16px;
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
-.widget-form {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
-.widget-success {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
