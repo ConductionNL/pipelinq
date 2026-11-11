@@ -213,7 +213,7 @@ class CtiController extends Controller {
 
 		$targetNumber = (string)$this->request->getParam('targetNumber', '');
 		$extension = (string)$this->request->getParam('extension', '');
-		$refusal = self::dialRefusal(targetNumber: $targetNumber, extension: $extension);
+		$refusal = (new CtiDialRules())->refusal(targetNumber: $targetNumber, extension: $extension);
 		if ($refusal !== null) {
 			return $refusal;
 		}
@@ -231,50 +231,6 @@ class CtiController extends Controller {
 
 		return new JSONResponse($result->toArray(), $status);
 	}//end clickToDial()
-
-	/**
-	 * The 400 for a missing or undialable target number or extension, or null when both may be dialled.
-	 *
-	 * @param string $targetNumber The number to dial.
-	 * @param string $extension    The agent's extension.
-	 *
-	 * @return JSONResponse|null
-	 */
-	private static function dialRefusal(string $targetNumber, string $extension): ?JSONResponse {
-		if ($targetNumber === '' || $extension === '') {
-			return new JSONResponse(
-				['error' => 'targetNumber and extension are required'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		// 🔴 NON-EMPTY IS NOT DIALABLE.
-		//
-		// Both values were forwarded to the telephony adapter verbatim once
-		// they were non-empty, so anything at all reached the PBX --
-		// 'sip:attacker@evil.example' among them. What a dial string can make a
-		// PBX do is the adapter's business and varies per platform, which is
-		// exactly why the app must not hand it arbitrary text.
-		//
-		// A dialable target is E.164, optionally with the separators a person
-		// might paste from a contact card, and an extension is digits. Anything
-		// else is refused here rather than interpreted downstream.
-		if (preg_match('/^\+?[0-9][0-9 ()-]{1,20}$/', $targetNumber) !== 1) {
-			return new JSONResponse(
-				['error' => 'targetNumber is not a dialable number'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		if (preg_match('/^[0-9]{1,10}$/', $extension) !== 1) {
-			return new JSONResponse(
-				['error' => 'extension is not a dialable extension'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		return null;
-	}//end dialRefusal()
 
 	/**
 	 * Submit a disposition form.
