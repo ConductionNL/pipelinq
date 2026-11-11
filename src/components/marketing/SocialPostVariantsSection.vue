@@ -101,11 +101,11 @@
 </template>
 
 <script>
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { fetchAccounts, fetchPost } from '../../services/socialApi.js'
 import { fitsForNetworks, resolveVariant } from '../../services/socialComposer.js'
 import { networkIcon } from '../../services/socialNetworkIcons.js'
+import socialPostSectionMixin from './socialPostSectionMixin.js'
 
 export default {
 	name: 'SocialPostVariantsSection',
@@ -115,17 +115,9 @@ export default {
 		NcNoteCard,
 	},
 
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [socialPostSectionMixin],
 
 	props: {
-		/** The post id, on the post detail page (`@objectId`). */
-		postId: {
-			type: String,
-			default: '',
-		},
-
 		/** Leaves the approvals list under the texts out, where the page has an Approvals card of its own. */
 		hideApprovals: {
 			type: Boolean,
@@ -178,37 +170,7 @@ export default {
 		},
 	},
 
-	/**
-	 * Load the post and follow page refreshes.
-	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
-	 */
-	mounted() {
-		this.load()
-		// The approval step lives in the page header, which bumps this after
-		// a move, so the status and the approvals list re-read here.
-		subscribe('cn:page:refresh', this.load)
-	},
-
-	beforeUnmount() {
-		unsubscribe('cn:page:refresh', this.load)
-	},
-
 	methods: {
-		/**
-		 * The id this section is bound to.
-		 *
-		 * @return {string} The post id.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
-		 */
-		effectiveId() {
-			if (this.postId) {
-				return this.postId
-			}
-			const context = this.cnSectionContext || {}
-			return context.objectId || context.id || ''
-		},
-
 		/**
 		 * The resolved text one network gets.
 		 *
