@@ -42,7 +42,6 @@ namespace OCA\Pipelinq\Service\Competitor;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
 use SimpleXMLElement;
-use Throwable;
 
 /**
  * New and changed locations out of a sitemap.
@@ -185,25 +184,7 @@ class SitemapWatchReader {
 	 * @return SimpleXMLElement|null The root, or null.
 	 */
 	private function load(string $document): ?SimpleXMLElement {
-		if (trim($document) === '') {
-			return null;
-		}
-
-		$previous = libxml_use_internal_errors(true);
-		try {
-			$xml = simplexml_load_string($document, SimpleXMLElement::class, (LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING));
-		} catch (Throwable) {
-			return null;
-		} finally {
-			libxml_clear_errors();
-			libxml_use_internal_errors($previous);
-		}
-
-		if ($xml === false) {
-			return null;
-		}
-
-		return $xml;
+		return (new QuietXmlParser())->parse(document: $document);
 	}//end load()
 
 	/**
