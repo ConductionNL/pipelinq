@@ -175,12 +175,6 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 *
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 * @spec openspec/specs/unify-client-contact/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Two structurally-identical resolve loops (clients,
-	 *   contacts) plus a conditional contactmoment re-key; each status tally is a flat guard, not
-	 *   nested logic.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Same rationale: the independent per-schema guards
-	 *   inflate the theoretical path count.
 	 */
 	public function migrate(object $objectService, string $register): array {
 		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
@@ -190,167 +184,172 @@ class UnifyClientContactIdentity implements IRepairStep {
 		// the `ticketType` discriminator (unify-ticket-supertype).
 		$momentSchema = $this->ticketService->getSchemaId();
 
-		$clientsLinked = 0;
-		$contactsLinked = 0;
-		$skipped = 0;
-		$unresolved = 0;
-		$momentsRekeyed = 0;
+		$clients = new IdentityCollection(objectService: $objectService, register: $register, schema: $clientSchema);
+		$contacts = new IdentityCollection(objectService: $objectService, register: $register, schema: $contactSchema);
+		$tally = new IdentityTally();
+		$this->resolveCollection(pass: new IdentityPass(collection: $clients, kind: IdentityKind::client()), tally: $tally);
+		$this->resolveCollection(pass: new IdentityPass(collection: $contacts, kind: IdentityKind::contact()), tally: $tally);
 
-		// Maps the client's own id/uuid/slug => its resolved contactsUid, so
-		// contactmoment.client (a client UUID back-reference) can be re-keyed.
-		$clientUidByRef = [];
-		$auditMap = [];
+		$moments = new IdentityCollection(objectService: $objectService, register: $register, schema: $momentSchema);
+		return $tally->summary(momentsRekeyed: $this->rekeyClientMoments(moments: $moments, tally: $tally));
+	}//end migrate()
 
-		if ($clientSchema !== '') {
-			foreach ($this->readAll(objectService: $objectService, register: $register, schema: $clientSchema) as $client) {
-				$outcome = $this->resolveObject(
-					objectService: $objectService,
-					register: $register,
-					schema: $clientSchema,
-					entityType: 'account',
-					objectType: 'client',
-					object: $client
-				);
-
-				$uid = $outcome['contactsUid'];
-				if ($uid !== null) {
-					foreach ($this->refsOf(object: $client) as $ref) {
-						$clientUidByRef[$ref] = $uid;
-					}
-
-					$auditMap[(string)($client['id'] ?? $client['uuid'] ?? '')] = $uid;
-				}
-
-				if ($outcome['status'] === 'linked') {
-					$clientsLinked++;
-					continue;
-				}
-
-				if ($outcome['status'] === 'skipped') {
-					$skipped++;
-					continue;
-				}
-
-				$unresolved++;
-			}//end foreach
-		}//end if
-
-		if ($contactSchema !== '') {
-			foreach ($this->readAll(objectService: $objectService, register: $register, schema: $contactSchema) as $contact) {
-				$outcome = $this->resolveObject(
-					objectService: $objectService,
-					register: $register,
-					schema: $contactSchema,
-					entityType: 'contact',
-					objectType: 'contact',
-					object: $contact
-				);
-
-				if ($outcome['contactsUid'] !== null) {
-					$auditMap[(string)($contact['id'] ?? $contact['uuid'] ?? '')] = $outcome['contactsUid'];
-				}
-
-				if ($outcome['status'] === 'linked') {
-					$contactsLinked++;
-					continue;
-				}
-
-				if ($outcome['status'] === 'skipped') {
-					$skipped++;
-					continue;
-				}
-
-				$unresolved++;
-			}//end foreach
-		}//end if
-
-		if ($momentSchema !== '' && $clientUidByRef !== []) {
-			$momentsRekeyed = $this->rekeyContactmomenten(
-				objectService: $objectService,
-				register: $register,
-				schema: $momentSchema,
-				clientUidByRef: $clientUidByRef
-			);
+	/**
+	 * Resolve every object of one collection and tally the outcomes; an
+	 * unconfigured collection is skipped.
+	 *
+	 * @param IdentityPass  $pass  The collection and the kind of identity in it.
+	 * @param IdentityTally $tally The tally of this migrate() call.
+	 *
+	 * @return void
+	 */
+	private function resolveCollection(IdentityPass $pass, IdentityTally $tally): void {
+		$collection = $pass->collection;
+		if ($collection->schema === '') {
+			return;
 		}
 
-		return [
-			'clientsLinked' => $clientsLinked,
-			'contactsLinked' => $contactsLinked,
-			'skipped' => $skipped,
-			'unresolved' => $unresolved,
-			'momentsRekeyed' => $momentsRekeyed,
-			'auditMap' => $auditMap,
-		];
-	}//end migrate()
+		foreach ($this->readAll(objectService: $collection->objectService, register: $collection->register, schema: $collection->schema) as $object) {
+			$outcome = $this->resolveObject(pass: $pass, object: $object);
+			$uid = $outcome['contactsUid'];
+			if ($uid !== null) {
+				$tally->mapClientRefs(refs: $this->clientRefsOf(pass: $pass, object: $object), contactsUid: $uid);
+				$tally->audit(object: $object, contactsUid: $uid);
+			}
+
+			$tally->count(status: $outcome['status'], kind: $pass->kind);
+		}
+	}//end resolveCollection()
+
+	/**
+	 * The references a contactmoment may use for a client object; none for
+	 * a contact, whose contactmomenten are not re-keyed.
+	 *
+	 * @param IdentityPass        $pass   The collection and its kind.
+	 * @param array<string,mixed> $object The object.
+	 *
+	 * @return array<int,string> The references.
+	 */
+	private function clientRefsOf(IdentityPass $pass, array $object): array {
+		if ($pass->kind->isClient() === false) {
+			return [];
+		}
+
+		return $this->refsOf(object: $object);
+	}//end clientRefsOf()
+
+	/**
+	 * Re-key the contactmomenten of the clients this pass linked; nothing
+	 * when there is no ticket schema or no client was linked.
+	 *
+	 * @param IdentityCollection $moments The ticket schema collection.
+	 * @param IdentityTally      $tally   The tally holding the linked client references.
+	 *
+	 * @return int The number of contactmomenten re-keyed.
+	 */
+	private function rekeyClientMoments(IdentityCollection $moments, IdentityTally $tally): int {
+		if ($moments->schema === '' || $tally->clientUidByRef() === []) {
+			return 0;
+		}
+
+		return $this->rekeyContactmomenten(
+			objectService: $moments->objectService,
+			register: $moments->register,
+			schema: $moments->schema,
+			clientUidByRef: $tally->clientUidByRef()
+		);
+	}//end rekeyClientMoments()
 
 	/**
 	 * Resolve (or create) the NC contact for one client/contact and persist its
 	 * contactsUid. Idempotent: a non-empty contactsUid is never overwritten.
 	 * Non-destructive: identity fields are kept as the mirror.
 	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param string $register The register id/slug.
-	 * @param string $schema The schema id/slug to save back to.
-	 * @param string $entityType MDM entityType ('account' or 'contact').
-	 * @param string $objectType ContactVcardService object type ('client' or 'contact').
+	 * @param IdentityPass        $pass   The collection to save back to and the kind of identity.
 	 * @param array<string,mixed> $object The pipelinq object.
 	 *
 	 * @return array{status:string, contactsUid:?string} status one of linked/skipped/unresolved.
 	 */
-	private function resolveObject(
-		object $objectService,
-		string $register,
-		string $schema,
-		string $entityType,
-		string $objectType,
-		array $object,
-	): array {
+	private function resolveObject(IdentityPass $pass, array $object): array {
 		$existingUid = (string)($object['contactsUid'] ?? '');
 		if ($existingUid !== '') {
 			// Already linked on a prior run — no-op (never overwrite).
 			return ['status' => 'skipped', 'contactsUid' => $existingUid];
 		}
 
-		$objectId = (string)($object['id'] ?? $object['uuid'] ?? '');
-		if ($objectId === '') {
+		if ($this->objectIdOf(object: $object) === '') {
 			return ['status' => 'unresolved', 'contactsUid' => null];
 		}
 
-		// 1) Try to match an EXISTING NC contact (email first, then KvK/ORG).
-		$contactsUid = $this->matchExistingContact(object: $object);
+		return $this->linkObject(pass: $pass, object: $object);
+	}//end resolveObject()
 
-		if ($contactsUid !== null) {
-			$this->persistContactsUid(
-				objectService: $objectService,
-				register: $register,
-				schema: $schema,
-				object: $object,
-				contactsUid: $contactsUid
-			);
-		}
-
-		if ($contactsUid === null) {
-			// 2) No match — create one from the existing identity fields via the
-			// EXISTING ContactVcardService::syncToContacts (reuse, no new engine).
-			// It writes the vCard AND stores contactsUid back on the object.
-			$contactsUid = $this->createContactViaSync(objectType: $objectType, objectId: $objectId);
-		}
-
+	/**
+	 * Link an object with an id to a Nextcloud contact and write its
+	 * provenance record.
+	 *
+	 * @param IdentityPass        $pass   The collection and the kind of identity.
+	 * @param array<string,mixed> $object The pipelinq object.
+	 *
+	 * @return array{status:string, contactsUid:?string} linked, or unresolved when no contact could be found or made.
+	 */
+	private function linkObject(IdentityPass $pass, array $object): array {
+		$contactsUid = $this->resolveContactsUid(pass: $pass, object: $object);
 		if ($contactsUid === null || $contactsUid === '') {
 			return ['status' => 'unresolved', 'contactsUid' => null];
 		}
 
 		$this->writeSourceRecord(
-			objectService: $objectService,
-			register: $register,
-			entityType: $entityType,
-			nativeId: $objectId,
+			objectService: $pass->collection->objectService,
+			register: $pass->collection->register,
+			entityType: $pass->kind->entityType,
+			nativeId: $this->objectIdOf(object: $object),
 			currentMasterEntity: $contactsUid,
 			object: $object
 		);
 
 		return ['status' => 'linked', 'contactsUid' => $contactsUid];
-	}//end resolveObject()
+	}//end linkObject()
+
+	/**
+	 * The contactsUid of an object: an existing NC contact, persisted on the
+	 * object, or else a new one made through ContactVcardService.
+	 *
+	 * @param IdentityPass        $pass   The collection and the kind of identity.
+	 * @param array<string,mixed> $object The pipelinq object.
+	 *
+	 * @return string|null The contactsUid, or null when none could be found or made.
+	 */
+	private function resolveContactsUid(IdentityPass $pass, array $object): ?string {
+		// 1) Try to match an EXISTING NC contact (email first, then KvK/ORG).
+		$contactsUid = $this->matchExistingContact(object: $object);
+		if ($contactsUid !== null) {
+			$this->persistContactsUid(
+				objectService: $pass->collection->objectService,
+				register: $pass->collection->register,
+				schema: $pass->collection->schema,
+				object: $object,
+				contactsUid: $contactsUid
+			);
+			return $contactsUid;
+		}
+
+		// 2) No match — create one from the existing identity fields via the
+		// EXISTING ContactVcardService::syncToContacts (reuse, no new engine).
+		// It writes the vCard AND stores contactsUid back on the object.
+		return $this->createContactViaSync(objectType: $pass->kind->objectType, objectId: $this->objectIdOf(object: $object));
+	}//end resolveContactsUid()
+
+	/**
+	 * The id of a pipelinq object: its id, else its uuid, else empty.
+	 *
+	 * @param array<string,mixed> $object The object.
+	 *
+	 * @return string The id.
+	 */
+	private function objectIdOf(array $object): string {
+		return (string)($object['id'] ?? $object['uuid'] ?? '');
+	}//end objectIdOf()
 
 	/**
 	 * Match an existing Nextcloud Contact for an object by email first, then by
