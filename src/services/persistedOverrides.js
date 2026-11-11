@@ -33,35 +33,71 @@ export async function loadPersistedOverrides(manifest) {
 			generateUrl('/apps/buildiq/api/app-overrides/pipelinq'),
 			{ timeout: 8000 },
 		)
-		if (
-			data !== null
-			&& typeof data === 'object'
-			&& !Array.isArray(data)
-			&& Object.keys(data).length > 0
-		) {
-			const { manifest: merged, orphanedDeltaPaths } = mergeManifestDelta(
-				manifest,
-				data,
-			)
-			if (orphanedDeltaPaths.length > 0) {
-				console.warn(
-					'[pipelinq] Manifest override has orphaned delta paths (base changed since the edit):',
-					orphanedDeltaPaths,
-				)
-			}
-			return merged
+		if (isNonEmptyDelta(data)) {
+			return mergeDelta(manifest, data)
 		}
 	} catch (error) {
-		// A 404 is the ordinary "buildiq is not installed" answer, not a fault —
-		// warning on it puts an AxiosError in every console on every boot.
-		if (error?.response?.status !== 404) {
-			console.warn(
-				'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
-				error,
-			)
-		}
+		warnLoadFailure(error)
 	}
 	return manifest
+}
+
+/**
+ * Whether the store answered with a delta that changes something: a plain
+ * object with at least one key.
+ *
+ * @param {unknown} data The answer.
+ * @return {boolean}
+ *
+ * @spec openspec/specs/declarative-view-system/spec.md
+ */
+function isNonEmptyDelta(data) {
+	return data !== null
+		&& typeof data === 'object'
+		&& !Array.isArray(data)
+		&& Object.keys(data).length > 0
+}
+
+/**
+ * Merge the delta over the manifest, warning about delta paths the base no
+ * longer has.
+ *
+ * @param {object} manifest The build-time merged manifest.
+ * @param {object} delta The persisted delta.
+ * @return {object} The merged manifest.
+ *
+ * @spec openspec/specs/declarative-view-system/spec.md
+ */
+function mergeDelta(manifest, delta) {
+	const { manifest: merged, orphanedDeltaPaths } = mergeManifestDelta(
+		manifest,
+		delta,
+	)
+	if (orphanedDeltaPaths.length > 0) {
+		console.warn(
+			'[pipelinq] Manifest override has orphaned delta paths (base changed since the edit):',
+			orphanedDeltaPaths,
+		)
+	}
+	return merged
+}
+
+/**
+ * Warn that the overrides could not be loaded, except for a 404.
+ *
+ * @param {unknown} error The failure.
+ *
+ * @spec openspec/specs/declarative-view-system/spec.md
+ */
+function warnLoadFailure(error) {
+	// A 404 is the ordinary "buildiq is not installed" answer, not a fault —
+	// warning on it puts an AxiosError in every console on every boot.
+	if (error?.response?.status !== 404) {
+		console.warn(
+			'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
+			error,
+		)
+	}
 }
 
 /**

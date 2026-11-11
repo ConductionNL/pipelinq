@@ -59,6 +59,21 @@ export function followUpDeadline(day) {
  */
 export function buildVisitPayloads(input) {
 	const note = String(input.note ?? '').trim()
+	const ticket = visitTicket(input, note)
+	const task = followUpTask(input, note)
+	return { ticket, task }
+}
+
+/**
+ * The contact moment the visit is logged as, linked to the user, client
+ * and lead given.
+ *
+ * @param {object} input The sheet's input.
+ * @param {string} note The trimmed note.
+ * @return {object} The ticket.
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ */
+function visitTicket(input, note) {
 	const ticket = {
 		ticketType: 'interaction',
 		title: input.title,
@@ -70,27 +85,49 @@ export function buildVisitPayloads(input) {
 	if (input.userId) ticket.assignee = input.userId
 	if (input.clientId) ticket.client = input.clientId
 	if (input.leadId) ticket.lead = input.leadId
+	return ticket
+}
 
+/**
+ * The follow-up task for the chosen day, or null without one.
+ *
+ * @param {object} input The sheet's input.
+ * @param {string} note The trimmed note.
+ * @return {object|null} The task.
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ */
+function followUpTask(input, note) {
 	const deadline = followUpDeadline(input.followUpDate)
-	let task = null
-	if (deadline) {
-		task = {
-			type: 'followUpTask',
-			subject: input.taskSubject,
-			description: note,
-			status: 'open',
-			priority: 'normal',
-			deadline,
-			contactMomentSummary: note,
-		}
-		if (input.userId) {
-			task.assigneeUserId = input.userId
-			task.createdBy = input.userId
-		}
-		if (input.clientId) task.clientId = input.clientId
-		if (input.leadId) task.lead = input.leadId
+	if (!deadline) {
+		return null
 	}
-	return { ticket, task }
+	const task = {
+		type: 'followUpTask',
+		subject: input.taskSubject,
+		description: note,
+		status: 'open',
+		priority: 'normal',
+		deadline,
+		contactMomentSummary: note,
+	}
+	linkTask(task, input)
+	return task
+}
+
+/**
+ * Link the follow-up task to the user, client and lead given.
+ *
+ * @param {object} task The task, linked in place.
+ * @param {object} input The sheet's input.
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ */
+function linkTask(task, input) {
+	if (input.userId) {
+		task.assigneeUserId = input.userId
+		task.createdBy = input.userId
+	}
+	if (input.clientId) task.clientId = input.clientId
+	if (input.leadId) task.lead = input.leadId
 }
 
 /**
