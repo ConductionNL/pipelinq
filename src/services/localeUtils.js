@@ -94,6 +94,25 @@ export function formatDateFull(dateStr) {
 }
 
 /**
+ * A stored moment as the browser's local date and time: a dash when there is
+ * none, and the stored text itself when it is not a date.
+ *
+ * @param {string|null} value The stored moment.
+ * @return {string} The date and time, the stored text, or '—'.
+ * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+ */
+export function formatLocalTimestamp(value) {
+	if (!value) {
+		return '—'
+	}
+	const parsed = new Date(value)
+	if (Number.isNaN(parsed.getTime())) {
+		return value
+	}
+	return parsed.toLocaleString()
+}
+
+/**
  * Parse a stored date string (ISO or YYYY-MM-DD) into a local Date for
  * NcDateTimePickerNative's `value` prop. Builds the Date from local parts so
  * the day doesn't shift across timezones (unlike `new Date('YYYY-MM-DD')`,

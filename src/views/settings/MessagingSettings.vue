@@ -556,6 +556,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import ServiceAccountPicker from '../../components/admin/ServiceAccountPicker.vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
+import { formatLocalTimestamp } from '../../services/localeUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const KIND_LABELS = {
@@ -783,20 +784,7 @@ export default {
 			return provider ? provider.displayName : providerId || '—'
 		},
 
-		/**
-		 * @param {string} value The stored date.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
-		 */
-		formatDate(value) {
-			if (!value) {
-				return '—'
-			}
-			const parsed = new Date(value)
-			if (Number.isNaN(parsed.getTime())) {
-				return value
-			}
-			return parsed.toLocaleString()
-		},
+		formatDate: formatLocalTimestamp,
 
 		webhookUrl(provider) {
 			const channel = provider.kind === 'sms' ? 'sms' : 'whatsapp'
