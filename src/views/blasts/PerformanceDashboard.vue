@@ -367,6 +367,152 @@ const AB_MIN_DELIVERED = 500
 const AB_MIN_ELAPSED_MS = 24 * 60 * 60 * 1000
 const P_VALUE_ALPHA = 0.05
 
+/**
+ * @param {object} blast A blast.
+ * @return {(string|undefined)} Its id, uuid or slug.
+ */
+function blastId(blast) {
+	return blast.id || blast.uuid || blast.slug
+}
+
+/**
+ * @param {number} count Opens or clicks.
+ * @param {number} delivered The delivered count.
+ * @return {number} The share of delivered; 0 without deliveries.
+ */
+function deliveryRate(count, delivered) {
+	return delivered > 0 ? count / delivered : 0
+}
+
+/**
+ * @param {object} totals A blast's totals.
+ * @param {string} key The count.
+ * @return {number} The count; 0 when missing.
+ */
+function countOf(totals, key) {
+	return totals[key] || 0
+}
+
+/**
+ * The overview counts of a blast, with the open and click rates over delivered.
+ *
+ * @param {object} totals The blast's totals.
+ * @return {object} The counts, in column order.
+ */
+function blastCounts(totals) {
+	const delivered = countOf(totals, 'delivered')
+	const opened = countOf(totals, 'opened')
+	const clicked = countOf(totals, 'clicked')
+	return {
+		sent: countOf(totals, 'sent'),
+		delivered,
+		opened,
+		clicked,
+		openRate: deliveryRate(opened, delivered),
+		clickRate: deliveryRate(clicked, delivered),
+		unsubscribed: countOf(totals, 'unsubscribed'),
+	}
+}
+
+/**
+ * @param {Array<object>} blasts The blasts.
+ * @return {object} The A/B variants per parent id, in blast order.
+ */
+function variantsByParent(blasts) {
+	const byParent = {}
+	for (const blast of blasts) {
+		const parentId = blast.abVariantOf
+		if (!parentId) {
+			continue
+		}
+		if (!byParent[parentId]) {
+			byParent[parentId] = []
+		}
+		byParent[parentId].push(blast)
+	}
+	return byParent
+}
+
+/**
+ * @param {object} a Variant A stats.
+ * @param {object} b Variant B stats.
+ * @return {boolean} Whether both variants were delivered often enough to compare.
+ */
+function hasAbSample(a, b) {
+	return a.delivered >= AB_MIN_DELIVERED && b.delivered >= AB_MIN_DELIVERED
+}
+
+/**
+ * The chi-square verdict of an eligible test; no p-value otherwise.
+ *
+ * @param {{a: object, b: object}} stats Variant A and B stats.
+ * @param {boolean} eligible Whether the test can be judged.
+ * @return {{pValue: (number|null), significant: boolean}} The verdict.
+ */
+function abSignificance(stats, eligible) {
+	if (!eligible) {
+		return { pValue: null, significant: false }
+	}
+	const { a, b } = stats
+	const pValue = chiSquarePValue(a.clicked, a.delivered, b.clicked, b.delivered)
+	const significant = pValue !== null && pValue < P_VALUE_ALPHA
+	return { pValue, significant }
+}
+
+/**
+ * @param {{parent: object, variant: object}} pair The two blasts of the test.
+ * @return {number} The recipients both were sent to.
+ */
+function abRecipients(pair) {
+	return (pair.parent.totals?.sent || 0) + (pair.variant.totals?.sent || 0)
+}
+
+/**
+ * @param {Array<object>} rows The segments.
+ * @return {object} The segment names by id; a segment without a name goes by its id.
+ */
+function segmentNames(rows) {
+	const map = {}
+	for (const s of rows) {
+		const id = blastId(s)
+		if (id) {
+			map[id] = s.name || id
+		}
+	}
+	return map
+}
+
+/**
+ * A blast's attribution, as a row when it brought deals or value.
+ *
+ * @param {{id: string, name: (string|undefined)}} entry The blast.
+ * @return {Promise<(object|null)>} The row, or null.
+ */
+async function readAttributionRow(entry) {
+	const url = generateUrl(
+		`/apps/pipelinq/api/blasts/${entry.id}/attribution`,
+	)
+	const { data } = await axios.get(url)
+	if (!hasAttribution(data)) {
+		return null
+	}
+	return {
+		id: entry.id,
+		name: entry.name || entry.id,
+		dealCount: data.dealCount || 0,
+		attributedValue: data.attributedValue || 0,
+	}
+}
+
+/**
+ * @param {?object} data A blast's attribution summary.
+ * @return {boolean} Whether it brought deals or value.
+ */
+function hasAttribution(data) {
+	return (data?.dealCount || 0) > 0
+		|| (data?.attributedValue || 0) > 0
+}
+
 export default {
 	name: 'PerformanceDashboard',
 	components: {
@@ -487,29 +633,13 @@ export default {
 		 * @return {Array<object>}
 		 */
 		overviewRows() {
-			return this.blasts.map((blast) => {
-				const totals = blast.totals || {}
-				const sent = totals.sent || 0
-				const delivered = totals.delivered || 0
-				const opened = totals.opened || 0
-				const clicked = totals.clicked || 0
-				const unsubscribed = totals.unsubscribed || 0
-				const openRate = delivered > 0 ? opened / delivered : 0
-				const clickRate = delivered > 0 ? clicked / delivered : 0
-				return {
-					id: blast.id || blast.uuid || blast.slug,
-					name: blast.name || '—',
-					segmentName: this.segmentNameFor(blast.segmentId),
-					status: blast.status || 'draft',
-					sent,
-					delivered,
-					opened,
-					clicked,
-					openRate,
-					clickRate,
-					unsubscribed,
-				}
-			})
+			return this.blasts.map((blast) => ({
+				id: blastId(blast),
+				name: blast.name || '—',
+				segmentName: this.segmentNameFor(blast.segmentId),
+				status: blast.status || 'draft',
+				...blastCounts(blast.totals || {}),
+			}))
 		},
 
 		/**
@@ -539,21 +669,10 @@ export default {
 		 * @return {Array<object>}
 		 */
 		abPairs() {
-			const byParent = {}
-			for (const blast of this.blasts) {
-				const parentId = blast.abVariantOf
-				if (!parentId) {
-					continue
-				}
-				if (!byParent[parentId]) {
-					byParent[parentId] = []
-				}
-				byParent[parentId].push(blast)
-			}
 			const pairs = []
-			for (const [parentId, variants] of Object.entries(byParent)) {
+			for (const [parentId, variants] of Object.entries(variantsByParent(this.blasts))) {
 				const parent = this.blasts.find(
-					(b) => (b.id || b.uuid || b.slug) === parentId,
+					(b) => blastId(b) === parentId,
 				)
 				if (!parent) {
 					continue
@@ -734,15 +853,7 @@ export default {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/segments')
 				const { data } = await axios.get(url, { params: { limit: 100 } })
-				const rows = data?.data || data?.results || []
-				const map = {}
-				for (const s of rows) {
-					const id = s.id || s.uuid || s.slug
-					if (id) {
-						map[id] = s.name || id
-					}
-				}
-				this.segments = map
+				this.segments = segmentNames(data?.data || data?.results || [])
 			} catch {
 				this.segments = {}
 			}
@@ -762,7 +873,7 @@ export default {
 			// could say anything; unbounded it would open fifty at once.
 			const ids = this.blasts
 				.map((blast) => ({
-					id: blast.id || blast.uuid || blast.slug,
+					id: blastId(blast),
 					name: blast.name,
 				}))
 				.filter((entry) => Boolean(entry.id))
@@ -775,20 +886,9 @@ export default {
 						return
 					}
 					try {
-						const url = generateUrl(
-							`/apps/pipelinq/api/blasts/${entry.id}/attribution`,
-						)
-						const { data } = await axios.get(url)
-						if (
-							(data?.dealCount || 0) > 0
-							|| (data?.attributedValue || 0) > 0
-						) {
-							found.set(entry.id, {
-								id: entry.id,
-								name: entry.name || entry.id,
-								dealCount: data.dealCount || 0,
-								attributedValue: data.attributedValue || 0,
-							})
+						const row = await readAttributionRow(entry)
+						if (row !== null) {
+							found.set(entry.id, row)
 						}
 					} catch {
 						// Skip; keep the queue draining.
@@ -892,20 +992,11 @@ export default {
 		buildAbPair(parent, variant) {
 			const a = variantStats(parent, this.templateSubjects)
 			const b = variantStats(variant, this.templateSubjects)
-			const elapsedOk = this.elapsedSinceSend(parent) >= AB_MIN_ELAPSED_MS
-				&& this.elapsedSinceSend(variant) >= AB_MIN_ELAPSED_MS
-			const nOk = a.delivered >= AB_MIN_DELIVERED && b.delivered >= AB_MIN_DELIVERED
-			const eligible = elapsedOk && nOk
-			let pValue = null
-			let significant = false
-			if (eligible) {
-				pValue = chiSquarePValue(a.clicked, a.delivered, b.clicked, b.delivered)
-				significant = pValue !== null && pValue < P_VALUE_ALPHA
-			}
+			const eligible = this.isAbEligible({ parent, variant }) && hasAbSample(a, b)
+			const verdict = abSignificance({ a, b }, eligible)
 			const winner = eligible ? higherVariant(a, b) : null
-			const sent = (parent.totals?.sent || 0) + (variant.totals?.sent || 0)
 			return {
-				id: parent.id || parent.uuid || parent.slug,
+				id: blastId(parent),
 				parentName: parent.name || '—',
 				a,
 				b,
@@ -915,12 +1006,21 @@ export default {
 				],
 
 				split: variantSplit(a, b),
-				recipients: sent || a.delivered + b.delivered,
+				recipients: abRecipients({ parent, variant }) || a.delivered + b.delivered,
 				eligible,
-				significant,
-				pValueLabel: pValue === null ? '—' : pValue.toFixed(2),
-				verdictLabel: this.abVerdictLabel(a, b, pValue, significant),
+				significant: verdict.significant,
+				pValueLabel: verdict.pValue === null ? '—' : verdict.pValue.toFixed(2),
+				verdictLabel: this.abVerdictLabel({ a, b }, verdict),
 			}
+		},
+
+		/**
+		 * @param {{parent: object, variant: object}} pair The two blasts of the test.
+		 * @return {boolean} Whether both were sent long enough ago to compare.
+		 */
+		isAbEligible(pair) {
+			return this.elapsedSinceSend(pair.parent) >= AB_MIN_ELAPSED_MS
+				&& this.elapsedSinceSend(pair.variant) >= AB_MIN_ELAPSED_MS
 		},
 
 		/**
@@ -972,17 +1072,16 @@ export default {
 		/**
 		 * Human-readable A/B verdict line.
 		 *
-		 * @param {object}      a           Variant A stats.
-		 * @param {object}      b           Variant B stats.
-		 * @param {number|null} pValue      Chi-square p-value.
-		 * @param {boolean}     significant Whether p < alpha.
+		 * @param {{a: object, b: object}} stats Variant A and B stats.
+		 * @param {{pValue: (number|null), significant: boolean}} verdict The chi-square p-value, and whether p < alpha.
 		 * @return {string}
 		 */
-		abVerdictLabel(a, b, pValue, significant) {
-			if (pValue === null) {
+		abVerdictLabel(stats, verdict) {
+			const { a, b } = stats
+			if (verdict.pValue === null) {
 				return this.t('pipelinq', 'Results not yet available.')
 			}
-			if (!significant) {
+			if (!verdict.significant) {
 				return this.t('pipelinq', 'Not significant (p>0.05).')
 			}
 			// sanitize:false — DOMPurify (t()'s default) encodes the literal
