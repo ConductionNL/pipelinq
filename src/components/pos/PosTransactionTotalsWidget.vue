@@ -188,33 +188,18 @@ import axios from '@nextcloud/axios'
 import { translatePlural as n } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { formatEur, rateLabel } from '../../services/posTotals.js'
+import posDetailWidgetMixin from './posDetailWidgetMixin.js'
 
 export default {
 	name: 'PosTransactionTotalsWidget',
 	components: { CnIcon, CnWidgetWrapper },
+	mixins: [posDetailWidgetMixin],
+
 	// The host also hands over register / schema / store and the widget
 	// content; none of them belong on the root element.
 	inheritAttrs: false,
 
 	props: {
-		/** The transaction, from the detail page. */
-		objectData: {
-			type: Object,
-			default: null,
-		},
-
-		/** The transaction id, from the detail page. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
-		},
-
 		/** The widget content; `layout: "summary"` draws the short list. */
 		content: {
 			type: Object,

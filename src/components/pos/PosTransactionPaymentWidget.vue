@@ -54,6 +54,7 @@ import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import TenderEntryPanel from './TenderEntryPanel.vue'
+import posDetailWidgetMixin from './posDetailWidgetMixin.js'
 
 export default {
 	name: 'PosTransactionPaymentWidget',
@@ -65,29 +66,11 @@ export default {
 		TenderEntryPanel,
 	},
 
+	mixins: [posDetailWidgetMixin],
+
 	// The host also hands over register / schema / store and the widget
 	// content; none of them belong on the root element.
 	inheritAttrs: false,
-
-	props: {
-		/** The transaction, from the detail page. */
-		objectData: {
-			type: Object,
-			default: null,
-		},
-
-		/** The transaction id, from the detail page. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
-		},
-	},
 
 	computed: {
 		/**
