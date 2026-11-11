@@ -182,44 +182,41 @@ class CallbackService {
 	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
 	 */
 	public function validateClaim(array $taskData): array {
-		$groupId = $taskData['assigneeGroupId'] ?? null;
+		$reason = $this->claimRefusal(taskData: $taskData);
+		return [
+			'eligible' => $reason === '',
+			'reason' => $reason,
+		];
+	}//end validateClaim()
 
+	/**
+	 * Why the current user may not claim the task, or '' when they may.
+	 *
+	 * @param array<string, mixed> $taskData The task data array.
+	 *
+	 * @return string The refusal reason.
+	 */
+	private function claimRefusal(array $taskData): string {
+		$groupId = $taskData['assigneeGroupId'] ?? null;
 		if (empty($groupId) === true) {
-			return [
-				'eligible' => false,
-				'reason' => 'Task is not assigned to a group',
-			];
+			return 'Task is not assigned to a group';
 		}
 
 		if (empty($taskData['assigneeUserId']) === false) {
-			return [
-				'eligible' => false,
-				'reason' => 'Task is already claimed by a user',
-			];
+			return 'Task is already claimed by a user';
 		}
 
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return [
-				'eligible' => false,
-				'reason' => 'No authenticated user',
-			];
+			return 'No authenticated user';
 		}
 
-		$isMember = $this->groupManager->isInGroup($user->getUID(), $groupId);
-
-		if ($isMember === false) {
-			return [
-				'eligible' => false,
-				'reason' => 'User is not a member of the assigned group',
-			];
+		if ($this->groupManager->isInGroup($user->getUID(), $groupId) === false) {
+			return 'User is not a member of the assigned group';
 		}
 
-		return [
-			'eligible' => true,
-			'reason' => '',
-		];
-	}//end validateClaim()
+		return '';
+	}//end claimRefusal()
 
 	/**
 	 * Validate whether a status transition is allowed.
