@@ -223,6 +223,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import RemoveRelationshipDialog from '../dialogs/RemoveRelationshipDialog.vue'
+import { editedRelationshipPair, linkedEntityName, newRelationshipPair, relationshipKind } from '../services/relationshipPayloads.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 const DEFAULT_RELATIONSHIP_TYPES = [
@@ -480,17 +481,8 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-10
 		 */
 		async loadEntityName(entityId, entityType) {
-			try {
-				const type = entityType === 'client' ? 'client' : 'contact'
-				const entity = await this.objectStore.fetchObject(type, entityId)
-				if (entity) {
-					this.entityNameCache[entityId] = entity.name || entityId
-				} else {
-					this.entityNameCache[entityId] = t('pipelinq', '[Deleted]')
-				}
-			} catch {
-				this.entityNameCache[entityId] = entityId
-			}
+			const type = entityType === 'client' ? 'client' : 'contact'
+			this.entityNameCache[entityId] = await linkedEntityName(this.objectStore, { id: entityId, type })
 		},
 
 		getEntityName(entityId) {
@@ -587,87 +579,14 @@ export default {
 				return
 			}
 
-			// Check for duplicate
-			if (!this.editingRelationship) {
-				const existing = this.relationships.find(
-					(r) =>
-						r.toContact === this.addForm.toContact
-						&& r.type === this.addForm.type,
-				)
-				if (existing) {
-					showError(t('pipelinq', 'This relationship already exists'))
-					return
-				}
+			if (this.isDuplicateRelationship()) {
+				showError(t('pipelinq', 'This relationship already exists'))
+				return
 			}
 
-			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(
-				(t) => t.value === this.addForm.type,
-			)
-			const inverseType = typeObj ? typeObj.inverse : this.addForm.type
-			const category = typeObj ? typeObj.category : ''
-			const toEntityOption = this.entityOptions.find(
-				(e) => e.id === this.addForm.toContact,
-			)
-			const toEntityType = toEntityOption
-				? toEntityOption.entityType
-				: 'contact'
-
 			try {
-				if (this.editingRelationship) {
-					// Update existing relationship
-					await this.objectStore.saveObject('relationship', {
-						id: this.editingRelationship.id,
-						type: this.addForm.type,
-						inverseType,
-						category,
-						notes: this.addForm.notes,
-						startDate: this.addForm.startDate || null,
-						endDate: this.addForm.endDate || null,
-						strength: this.addForm.strength,
-					})
-					// Update inverse if it exists
-					if (this.editingRelationship._inverseId) {
-						await this.objectStore.saveObject('relationship', {
-							id: this.editingRelationship._inverseId,
-							type: inverseType,
-							inverseType: this.addForm.type,
-							category,
-							notes: this.addForm.notes,
-							startDate: this.addForm.startDate || null,
-							endDate: this.addForm.endDate || null,
-							strength: this.addForm.strength,
-						})
-					}
-				} else {
-					// Create primary relationship
-					await this.objectStore.saveObject('relationship', {
-						fromContact: this.entityId,
-						toContact: this.addForm.toContact,
-						fromType: this.entityType,
-						toType: toEntityType,
-						type: this.addForm.type,
-						inverseType,
-						category,
-						notes: this.addForm.notes,
-						startDate: this.addForm.startDate || null,
-						endDate: this.addForm.endDate || null,
-						strength: this.addForm.strength,
-					})
-
-					// Create inverse relationship
-					await this.objectStore.saveObject('relationship', {
-						fromContact: this.addForm.toContact,
-						toContact: this.entityId,
-						fromType: toEntityType,
-						toType: this.entityType,
-						type: inverseType,
-						inverseType: this.addForm.type,
-						category,
-						notes: this.addForm.notes,
-						startDate: this.addForm.startDate || null,
-						endDate: this.addForm.endDate || null,
-						strength: this.addForm.strength,
-					})
+				for (const payload of this.relationshipPayloads()) {
+					await this.objectStore.saveObject('relationship', payload)
 				}
 
 				showSuccess(t('pipelinq', 'Relationship saved'))
@@ -676,6 +595,55 @@ export default {
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to save relationship'))
 			}
+		},
+
+		/**
+		 * A new relationship that this entity already has, to the same entity and of the same type.
+		 *
+		 * @return {boolean} Whether the form duplicates an existing relationship.
+		 */
+		isDuplicateRelationship() {
+			if (this.editingRelationship) {
+				return false
+			}
+			return this.relationships.some(
+				(r) =>
+					r.toContact === this.addForm.toContact
+					&& r.type === this.addForm.type,
+			)
+		},
+
+		/**
+		 * The relationship objects the form writes, in order: the edited
+		 * relationship and its inverse, or a new relationship and its inverse.
+		 *
+		 * @return {Array<object>} The objects to save.
+		 */
+		relationshipPayloads() {
+			const draft = {
+				form: this.addForm,
+				kind: relationshipKind(DEFAULT_RELATIONSHIP_TYPES, this.addForm.type),
+			}
+			if (this.editingRelationship) {
+				return editedRelationshipPair(this.editingRelationship, draft)
+			}
+			const link = {
+				from: { id: this.entityId, type: this.entityType },
+				to: { id: this.addForm.toContact, type: this.selectedEntityType() },
+			}
+			return newRelationshipPair(link, draft)
+		},
+
+		/**
+		 * @return {string} The type of the entity chosen in the form; a contact when it is not among the options.
+		 */
+		selectedEntityType() {
+			const toEntityOption = this.entityOptions.find(
+				(e) => e.id === this.addForm.toContact,
+			)
+			return toEntityOption
+				? toEntityOption.entityType
+				: 'contact'
 		},
 
 		/**
@@ -857,41 +825,8 @@ export default {
 	gap: 4px;
 }
 
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 8px 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
-	vertical-align: middle;
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
-}
-
 .viewTableRow {
 	cursor: pointer;
-	transition: background-color 0.2s ease;
-}
-
-.viewTableRow:hover {
-	background: var(--color-background-hover);
 }
 
 /* Dialog styles */
@@ -967,10 +902,6 @@ export default {
 	gap: 8px;
 	margin-top: 16px;
 }
-
-@media (prefers-reduced-motion: reduce) {
-	.viewTableRow {
-		transition: none;
-	}
-}
 </style>
+
+<style scoped src="./viewTable.css"></style>
