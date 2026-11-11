@@ -97,7 +97,23 @@ class RoutingController extends Controller {
 
 		$entityType = (string)$this->request->getParam('entityType', '');
 		$entityId = (string)$this->request->getParam('entityId', '');
+		$refusal = $this->entityRefusal(entityType: $entityType, entityId: $entityId);
+		if ($refusal !== null) {
+			return $refusal;
+		}
 
+		return $this->suggestionsFor(entityType: $entityType, entityId: $entityId);
+	}//end getSuggestions()
+
+	/**
+	 * The 400 for a missing entity or an entity type routing does not know, or null.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $entityId   The entity id.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function entityRefusal(string $entityType, string $entityId): ?JSONResponse {
 		if ($entityType === '' || $entityId === '') {
 			return new JSONResponse(
 				['message' => 'entityType and entityId are required'],
@@ -112,6 +128,18 @@ class RoutingController extends Controller {
 			);
 		}
 
+		return null;
+	}//end entityRefusal()
+
+	/**
+	 * The ranked agents for the entity, or a static 500 with the failure logged.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $entityId   The entity id.
+	 *
+	 * @return JSONResponse The suggestions, or the failure.
+	 */
+	private function suggestionsFor(string $entityType, string $entityId): JSONResponse {
 		try {
 			$result = $this->routingService->getSuggestedAgents(
 				entityType: $entityType,
@@ -134,5 +162,5 @@ class RoutingController extends Controller {
 		}
 
 		return new JSONResponse($result, Http::STATUS_OK);
-	}//end getSuggestions()
+	}//end suggestionsFor()
 }//end class
