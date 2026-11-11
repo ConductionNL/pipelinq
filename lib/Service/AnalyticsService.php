@@ -494,16 +494,7 @@ class AnalyticsService {
 		$startTs = $start->getTimestamp();
 		$nowTs = $now->getTimestamp();
 
-		// Bucket granularity: day for week/month, week for quarter, month for year.
-		$bucketSize = match ($period) {
-			'week', 'month' => 86400,
-			// 1 day.
-			'quarter' => 86400 * 7,
-			// 1 week.
-			'year' => 86400 * 30,
-			// ~1 month.
-			default => 86400,
-		};
+		$bucketSize = self::bucketSize(period: $period);
 
 		$buckets = [];
 		foreach ($leads as $lead) {
@@ -526,6 +517,38 @@ class AnalyticsService {
 			$buckets[$key] += (float)($lead['value'] ?? 0);
 		}
 
+		return ['metric' => $metric, 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: $metric)];
+	}//end buildTimeBucketSeries()
+
+	/**
+	 * The bucket width of a period: a day for week and month, a week for quarter, ~a month for year.
+	 *
+	 * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+	 *
+	 * @return int Seconds.
+	 */
+	private static function bucketSize(string $period): int {
+		// Bucket granularity: day for week/month, week for quarter, month for year.
+		return match ($period) {
+			'week', 'month' => 86400,
+			// 1 day.
+			'quarter' => 86400 * 7,
+			// 1 week.
+			'year' => 86400 * 30,
+			// ~1 month.
+			default => 86400,
+		};
+	}//end bucketSize()
+
+	/**
+	 * The buckets as a dated series in date order: whole counts for leads, cents for values.
+	 *
+	 * @param array<string, int|float> $buckets The bucket totals by date.
+	 * @param string                   $metric  Either `leads` or `pipeline-value`.
+	 *
+	 * @return array<int, array{date: string, value: int|float}>
+	 */
+	private static function bucketSeries(array $buckets, string $metric): array {
 		ksort($buckets);
 		$series = [];
 		foreach ($buckets as $date => $value) {
@@ -537,8 +560,8 @@ class AnalyticsService {
 			$series[] = ['date' => $date, 'value' => $bucketValue];
 		}
 
-		return ['metric' => $metric, 'period' => $period, 'series' => $series];
-	}//end buildTimeBucketSeries()
+		return $series;
+	}//end bucketSeries()
 
 	/**
 	 * Build the requests-by-category series. Categories with zero requests in
