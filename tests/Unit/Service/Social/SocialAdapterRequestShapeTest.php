@@ -427,4 +427,30 @@ class SocialAdapterRequestShapeTest extends TestCase {
 			}
 		}
 	}
+	/**
+	 * Every LinkedIn follower shape: no elements is zero; a flat count and
+	 * per-association counts are both summed; non-list elements, entries and
+	 * association lists are skipped; missing counts are zero.
+	 *
+	 * @return void
+	 */
+	public function testEveryLinkedInFollowerShape(): void {
+		$linkedin = new LinkedInAdapter($this->readyGateway());
+		$this->assertSame(0, $linkedin->readFollowers(payload: []));
+		$this->assertSame(0, $linkedin->readFollowers(payload: ['elements' => 'none']));
+		$this->assertSame(
+			10 + 3 + 4 + 5,
+			$linkedin->readFollowers(payload: ['elements' => [
+				'junk',
+				['followerCounts' => ['organicFollowerCount' => 10]],
+				['followerCountsByAssociationType' => [
+					['followerCounts' => ['organicFollowerCount' => 3]],
+					'junk',
+					['followerCounts' => ['organicFollowerCount' => '4']],
+					['followerCounts' => []],
+				]],
+				['followerCounts' => ['organicFollowerCount' => 5], 'followerCountsByAssociationType' => 'bad'],
+			]])
+		);
+	}//end testEveryLinkedInFollowerShape()
 }//end class
