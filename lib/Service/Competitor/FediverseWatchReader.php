@@ -110,6 +110,23 @@ class FediverseWatchReader {
 	 * @return WatchOutcome
 	 */
 	private function mastodon(string $handle, string $sourceId): WatchOutcome {
+		$account = $this->mastodonAccount(handle: $handle, sourceId: $sourceId);
+		if ($account instanceof WatchOutcome) {
+			return $account;
+		}
+
+		return $this->mastodonTimeline(account: $account, sourceId: $sourceId);
+	}//end mastodon()
+
+	/**
+	 * Look the account up on its instance.
+	 *
+	 * @param string $handle   `user@instance`.
+	 * @param string $sourceId The source to read through.
+	 *
+	 * @return MastodonAccount|WatchOutcome The account, or the failed outcome.
+	 */
+	private function mastodonAccount(string $handle, string $sourceId): MastodonAccount|WatchOutcome {
 		[$user, $instance] = explode('@', $handle, 2);
 		$base = ('https://' . $instance);
 		$lookup = $this->egress->readUrl(
@@ -131,9 +148,21 @@ class FediverseWatchReader {
 			);
 		}
 
+		return new MastodonAccount(handle: $handle, id: $accountId);
+	}//end mastodonAccount()
+
+	/**
+	 * The account's public statuses, replies left out.
+	 *
+	 * @param MastodonAccount $account  The account.
+	 * @param string          $sourceId The source to read through.
+	 *
+	 * @return WatchOutcome
+	 */
+	private function mastodonTimeline(MastodonAccount $account, string $sourceId): WatchOutcome {
 		$statuses = $this->egress->readUrl(
 			configKey: CompetitorWatchService::SOURCE_KEY,
-			url: ($base . '/api/v1/accounts/' . rawurlencode($accountId) . '/statuses'),
+			url: ($account->base() . '/api/v1/accounts/' . rawurlencode($account->id) . '/statuses'),
 			config: ['query' => ['limit' => (string)self::MAX_POSTS, 'exclude_replies' => 'true']],
 			sourceId: $sourceId
 		);
@@ -143,11 +172,11 @@ class FediverseWatchReader {
 
 		$rows = $statuses->json();
 		if ($rows === null) {
-			return WatchOutcome::failed(outcome: EgressResult::UNPARSABLE, reason: 'The timeline of ' . $handle . ' could not be read.');
+			return WatchOutcome::failed(outcome: EgressResult::UNPARSABLE, reason: 'The timeline of ' . $account->handle . ' could not be read.');
 		}
 
-		return WatchOutcome::seen(items: $this->fromMastodon(rows: $rows, handle: $handle));
-	}//end mastodon()
+		return WatchOutcome::seen(items: $this->fromMastodon(rows: $rows, handle: $account->handle));
+	}//end mastodonTimeline()
 
 	/**
 	 * A Bluesky account's public author feed.
