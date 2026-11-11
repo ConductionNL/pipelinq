@@ -148,22 +148,47 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 			return [];
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->debug('AppointmentDepositTimeoutJob: OR ObjectService unavailable, skipping');
+		$objectService = $this->objectServiceOrNull();
+		if ($objectService === null) {
 			return [];
 		}
 
+		return $this->pendingDepositRows(
+			objectService: $objectService,
+			config: [
+				'register' => $register,
+				'schema' => $schema,
+				'filters' => ['status' => 'pending-deposit'],
+				'limit' => self::MAX_RELEASES_PER_PASS,
+			]
+		);
+	}//end loadPendingDeposits()
+
+	/**
+	 * OpenRegister's ObjectService, or null when it is unavailable (logged).
+	 *
+	 * @return object|null The ObjectService.
+	 */
+	private function objectServiceOrNull(): ?object {
 		try {
-			$candidates = $objectService->findAll(
-				config: [
-					'register' => $register,
-					'schema' => $schema,
-					'filters' => ['status' => 'pending-deposit'],
-					'limit' => self::MAX_RELEASES_PER_PASS,
-				]
-			);
+			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+		} catch (Throwable $e) {
+			$this->logger->debug('AppointmentDepositTimeoutJob: OR ObjectService unavailable, skipping');
+			return null;
+		}
+	}//end objectServiceOrNull()
+
+	/**
+	 * The pending-deposit bookings the query answers, or [] when it fails (logged) or answers no list.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $config        The query.
+	 *
+	 * @return array<int, mixed> The candidates.
+	 */
+	private function pendingDepositRows(object $objectService, array $config): array {
+		try {
+			$candidates = $objectService->findAll(config: $config);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'AppointmentDepositTimeoutJob: pending-deposit query failed',
@@ -177,7 +202,7 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 		}
 
 		return $candidates;
-	}//end loadPendingDeposits()
+	}//end pendingDepositRows()
 
 	/**
 	 * Release a single candidate if its 15-minute window has elapsed.
@@ -225,21 +250,31 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 	 * @return string
 	 */
 	private function createdAt(array $data): string {
-		if (isset($data['@self']) === true && is_array($data['@self']) === true) {
-			if (isset($data['@self']['created']) === true) {
-				return (string)$data['@self']['created'];
-			}
+		$self = ($data['@self'] ?? null);
+		if (is_array($self) === true && isset($self['created']) === true) {
+			return (string)$self['created'];
 		}
 
 		if (isset($data['createdAt']) === true) {
 			return (string)$data['createdAt'];
 		}
 
+		return $this->firstStatusChange(data: $data);
+	}//end createdAt()
+
+	/**
+	 * When the first status change happened, or '' when there is none.
+	 *
+	 * @param array<string, mixed> $data The booking row.
+	 *
+	 * @return string The moment.
+	 */
+	private function firstStatusChange(array $data): string {
 		$history = ($data['statusHistory'] ?? []);
-		if (is_array($history) === true && isset($history[0]) === true && is_array($history[0]) === true) {
-			return (string)($history[0]['changedAt'] ?? '');
+		if (is_array($history) === false || is_array($history[0] ?? null) === false) {
+			return '';
 		}
 
-		return '';
-	}//end createdAt()
+		return (string)($history[0]['changedAt'] ?? '');
+	}//end firstStatusChange()
 }//end class
