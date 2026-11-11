@@ -175,7 +175,8 @@ class PortalProfileService {
 		$verified = $this->asVerified(account: $account);
 		$this->repository->save(self::SCHEMA, $verified, $accountId);
 
-		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'email-change', outcome: 'success', details: ['newValue' => $verified['email']]);
+		$details = ['newValue' => $verified['email']];
+		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'email-change', outcome: 'success', details: $details);
 		return true;
 	}//end verifyEmail()
 
