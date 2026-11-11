@@ -155,17 +155,19 @@ class BrpController extends Controller {
 		// Resolving a BSN against the BRP is a CRM capability, not an
 		// any-authenticated-user one: this guard decides whether this caller
 		// may look anyone up at all, before the role check below.
+		// Every refused lookup is audited (who, why, when), with the BSN hashed.
+		$query = $this->lookupQuery();
 		if ($this->accessPolicy->isPrivileged(uid: $actor) === false) {
+			$this->auditRefusal(actor: $actor, query: $query, outcome: 'refused-unauthorised', responseCode: Http::STATUS_FORBIDDEN);
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
 			);
 		}
 
-		$query = $this->lookupQuery();
-
 		// 1) Doelbinding presence (REQ-BSN-002-01).
 		if ($query->hasPurpose() === false) {
+			$this->auditRefusal(actor: $actor, query: $query, outcome: 'refused-missing-purpose', responseCode: Http::STATUS_BAD_REQUEST);
 			return $this->badLookupRequest(errorCode: 'doelbinding-missing', message: $this->l10n->t('Verzoekreden en doelbinding zijn verplicht.'));
 		}
 
@@ -179,6 +181,7 @@ class BrpController extends Controller {
 		// already validates, but a direct REST caller could skip the UI).
 		$validation = $this->validation->validate($query->rawBsn);
 		if ($validation['isFormalValid'] === false) {
+			$this->auditRefusal(actor: $actor, query: $query, outcome: 'refused-invalid-bsn', responseCode: Http::STATUS_BAD_REQUEST);
 			return $this->badLookupRequest(errorCode: 'invalid-bsn', message: $validation['errorMessage'] ?? $this->l10n->t('Ongeldig BSN.'));
 		}
 
@@ -230,14 +233,7 @@ class BrpController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function refuseLookup(string $actor, LookupQuery $query): JSONResponse {
-		$this->audit->recordLookup(
-			actor: $actor,
-			lookup: new LookupAudit(
-				subject: new LookupSubject(rawBsn: $query->rawBsn),
-				reason: $query->reason,
-				result: new LookupResult(outcome: 'refused-unauthorised', action: 'brp-lookup-refused', responseCode: 403),
-			),
-		);
+		$this->auditRefusal(actor: $actor, query: $query, outcome: 'refused-unauthorised', responseCode: Http::STATUS_FORBIDDEN);
 		return new JSONResponse(
 			[
 				'errorCode' => 'unauthorized',
@@ -246,6 +242,27 @@ class BrpController extends Controller {
 			Http::STATUS_FORBIDDEN
 		);
 	}//end refuseLookup()
+
+	/**
+	 * Write the audit record of a refused lookup.
+	 *
+	 * @param string      $actor        The session user.
+	 * @param LookupQuery $query        The lookup.
+	 * @param string      $outcome      Why the lookup was refused.
+	 * @param int         $responseCode The status the caller is answered with.
+	 *
+	 * @return void
+	 */
+	private function auditRefusal(string $actor, LookupQuery $query, string $outcome, int $responseCode): void {
+		$this->audit->recordLookup(
+			actor: $actor,
+			lookup: new LookupAudit(
+				subject: new LookupSubject(rawBsn: $query->rawBsn),
+				reason: $query->reason,
+				result: new LookupResult(outcome: $outcome, action: 'brp-lookup-refused', responseCode: $responseCode),
+			),
+		);
+	}//end auditRefusal()
 
 	/**
 	 * A 400 answer to a lookup.

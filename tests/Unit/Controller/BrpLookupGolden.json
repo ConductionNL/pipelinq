@@ -16,6 +16,24 @@
                 "ObjectOwnerAccessPolicy::isPrivileged": {
                     "uid": "behandelaar1"
                 }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-unauthorised",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 403,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
             }
         ]
     },
@@ -30,6 +48,24 @@
                 "ObjectOwnerAccessPolicy::isPrivileged": {
                     "uid": "behandelaar1"
                 }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-missing-purpose",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 400,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
             }
         ]
     },
@@ -43,6 +79,24 @@
             {
                 "ObjectOwnerAccessPolicy::isPrivileged": {
                     "uid": "behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-missing-purpose",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 400,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
                 }
             }
         ]
@@ -569,6 +623,24 @@
                 "BsnValidationService::validate": {
                     "bsnInput": "123456782"
                 }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-invalid-bsn",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 400,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
             }
         ]
     },
@@ -592,6 +664,24 @@
             {
                 "BsnValidationService::validate": {
                     "bsnInput": "123456782"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-invalid-bsn",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 400,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
                 }
             }
         ]

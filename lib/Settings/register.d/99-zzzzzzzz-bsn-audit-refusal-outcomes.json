@@ -1,0 +1,26 @@
+{
+    "$comment": "bsnAuditRecord: a lookup refused for a missing purpose or a BSN that fails the 11-proef is audited too, so outcome takes refused-missing-purpose and refused-invalid-bsn. bsnAuditRecord 1.0.0 -> 1.1.0.",
+    "components": {
+        "schemas": {
+            "bsnAuditRecord": {
+                "slug": "bsnAuditRecord",
+                "version": "1.1.0",
+                "properties": {
+                    "outcome": {
+                        "enum": [
+                            "succeeded",
+                            "not-found",
+                            "error",
+                            "refused-unauthorised",
+                            "refused-missing-purpose",
+                            "refused-invalid-bsn",
+                            "cache-invalidated",
+                            "address-revealed",
+                            "pseudonymised"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
