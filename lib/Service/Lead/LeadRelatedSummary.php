@@ -91,33 +91,52 @@ class LeadRelatedSummary {
 			return '';
 		}
 
-		$won  = 0;
-		$lost = 0;
-		foreach ($this->find(schemaKey: 'lead_schema', filters: ['client' => $clientId]) as $other) {
-			if ((string)($other['id'] ?? '') === (string)($lead['id'] ?? '')) {
-				continue;
-			}
-
-			$status = (string)($other['status'] ?? '');
-			if ($status === 'won') {
-				$won++;
-			} else if ($status === 'lost') {
-				$lost++;
-			}
-		}
-
-		$total = ($won + $lost);
+		$outcomes = $this->outcomes(lead: $lead, clientId: $clientId);
+		$total = ($outcomes['won'] + $outcomes['lost']);
 		if ($total === 0) {
 			return '';
 		}
 
-		$count = $this->l10n->n('%n earlier deal', '%n earlier deals', $total);
-		if ($won === 0 || $lost === 0) {
-			return $count . ', ' . $this->allEnded(total: $total, won: $lost === 0);
+		return $this->dealsSentence(outcomes: $outcomes, total: $total);
+	}//end earlierDeals()
+
+	/**
+	 * How many of the client's other deals were won and lost.
+	 *
+	 * @param array<string, mixed> $lead     The lead.
+	 * @param string               $clientId Its client.
+	 *
+	 * @return array{won: int, lost: int}
+	 */
+	private function outcomes(array $lead, string $clientId): array {
+		$outcomes = ['won' => 0, 'lost' => 0];
+		foreach ($this->find(schemaKey: 'lead_schema', filters: ['client' => $clientId]) as $other) {
+			$status = (string)($other['status'] ?? '');
+			if ((string)($other['id'] ?? '') !== (string)($lead['id'] ?? '') && isset($outcomes[$status]) === true) {
+				$outcomes[$status]++;
+			}
 		}
 
-		return $this->l10n->t('%1$s: %2$s won, %3$s lost', [$count, $won, $lost]);
-	}//end earlierDeals()
+		return $outcomes;
+	}//end outcomes()
+
+	/**
+	 * The earlier-deals sentence: the count, then one outcome for all of
+	 * them, or both counts.
+	 *
+	 * @param array{won: int, lost: int} $outcomes The outcomes.
+	 * @param int                        $total    Their sum, at least one.
+	 *
+	 * @return string
+	 */
+	private function dealsSentence(array $outcomes, int $total): string {
+		$count = $this->l10n->n('%n earlier deal', '%n earlier deals', $total);
+		if ($outcomes['won'] === 0 || $outcomes['lost'] === 0) {
+			return $count . ', ' . $this->allEnded(total: $total, won: $outcomes['lost'] === 0);
+		}
+
+		return $this->l10n->t('%1$s: %2$s won, %3$s lost', [$count, $outcomes['won'], $outcomes['lost']]);
+	}//end dealsSentence()
 
 	/**
 	 * How deals that all ended alike ended: "won", "both won", "all won".
