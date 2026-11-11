@@ -168,6 +168,29 @@ npm run build
 php occ app:enable pipelinq
 ```
 
+### Try it with Docker
+
+The repository builds an evaluation image: the official Nextcloud image with pipelinq and OpenRegister installed and enabled. It is meant for trying the app out and for test environments. For production, install the app from the Nextcloud App Store.
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+Open http://localhost:8080/apps/pipelinq/ and sign in as `admin` with password `admin`. The first start takes a minute or two. Set `NEXTCLOUD_ADMIN_PASSWORD` and `APP_PORT` to change the password and the port; `docker/docker-compose.yml` lists every setting. `docker compose -f docker/docker-compose.yml down -v` removes the stack and its data.
+
+Released versions are published as `ghcr.io/conductionnl/pipelinq`, so leaving out `--build` uses the published image.
+
+### Run it on Kubernetes
+
+`charts/pipelinq` wraps the official [Nextcloud Helm chart](https://github.com/nextcloud/helm) and runs the same image with PostgreSQL:
+
+```bash
+helm dependency build charts/pipelinq
+helm install pipelinq charts/pipelinq --set nextcloud.nextcloud.host=pipelinq.example.org
+```
+
+Change the passwords in `charts/pipelinq/values.yaml` before you install it anywhere that matters.
+
 ## Development
 
 ### Start the environment
@@ -213,6 +236,12 @@ are clean with no legacy-debt suppression sections, and PHPStan runs clean at
 level 5. The remaining `phpstan-baseline.neon` entries are intentional,
 documented tracked debt (unread forward-compat DI stubs and one nextcloud/ocp
 stub false-positive) — see the file header and issue #496 before regenerating.
+
+### Test coverage
+
+<!-- coverage:start -->
+Measured test coverage: 78.3% of statements (PHP 78.3% of 58,402 statements), at commit `f9ebace3b` on 2026-11-11. The JavaScript frontend is not in this figure, because it has no coverage measurement yet. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+<!-- coverage:end -->
 
 ## Tech Stack
 
