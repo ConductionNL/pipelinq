@@ -417,6 +417,33 @@ class WhatsAppAdapterTest extends TestCase {
 	}//end testInboundWebhookInvalidSignature()
 
 	/**
+	 * The inbound webhook refuses an unknown provider, logs and refuses a bad
+	 * signature, and refuses a payload without a sender; nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testTheInboundWebhookRefusals(): void {
+		$rows = [null, ['uuid' => 'prov-1'], ['uuid' => 'prov-1']];
+		$this->providerRepo->method('findByIdForWebhook')->willReturnCallback(static function () use (&$rows): ?array {
+			return array_shift($rows);
+		});
+		$verdicts = [false, true];
+		$this->providerClient->method('verifySignature')->willReturnCallback(static function () use (&$verdicts): bool {
+			return array_shift($verdicts);
+		});
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(static function (string $message, array $context = []) use (&$warnings): void {
+			$warnings[] = [$message, $context];
+		});
+
+		$this->assertSame(['status' => 'providerUnknown'], $this->adapter->handleInboundWebhook('{}', 's', 'prov-0'));
+		$this->assertSame(['status' => 'invalidSignature'], $this->adapter->handleInboundWebhook('{}', 'bad', 'prov-1'));
+		$this->assertSame(['status' => 'invalidPayload'], $this->adapter->handleInboundWebhook('{}', 'sha256=ok', 'prov-1'));
+		$this->assertSame([['WhatsAppAdapter.handleInboundWebhook: invalid signature', ['providerId' => 'prov-1']]], $warnings);
+		$this->assertSame([], $this->objectService->store);
+	}//end testTheInboundWebhookRefusals()
+
+	/**
 	 * A Meta `messages` callback from the given number with the given text.
 	 *
 	 * @param string $from Sender as Meta sends it (international, no '+').
