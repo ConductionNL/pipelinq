@@ -228,7 +228,7 @@ class PosPaymentService {
 	public function listPaymentMethods(): array {
 		$methods = [];
 		foreach (self::PROVIDERS as $name) {
-			if ($this->readBool(name: $name, key: 'isActive', default: false) === false) {
+			if ($this->readBool(setting: $this->settingKey(name: $name, key: 'isActive'), default: false) === false) {
 				continue;
 			}
 
@@ -285,20 +285,20 @@ class PosPaymentService {
 			'name' => $name,
 			'displayName' => $this->displayNameFor(name: $name),
 			'type' => $this->typeFor(name: $name),
-			'isActive' => $this->readBool(name: $name, key: 'isActive', default: false),
-			'environment' => $this->readString(name: $name, key: 'environment', default: 'sandbox'),
-			'testMode' => $this->readBool(name: $name, key: 'testMode', default: true),
+			'isActive' => $this->readBool(setting: $this->settingKey(name: $name, key: 'isActive'), default: false),
+			'environment' => $this->readString(setting: $this->settingKey(name: $name, key: 'environment'), default: 'sandbox'),
+			'testMode' => $this->readBool(setting: $this->settingKey(name: $name, key: 'testMode'), default: true),
 			'config' => $this->readObject(name: $name, key: 'config'),
-			'lastTestedAt' => $this->readString(name: $name, key: 'lastTestedAt', default: ''),
+			'lastTestedAt' => $this->readString(setting: $this->settingKey(name: $name, key: 'lastTestedAt'), default: ''),
 			'testResult' => $this->readObject(name: $name, key: 'testResult'),
 			// Not masked: a credential UUID is a reference, not a secret. The admin UI
 			// needs it back to show which credential is selected.
-			'credentialId' => $this->readString(name: $name, key: 'credentialId', default: ''),
+			'credentialId' => $this->readString(setting: $this->settingKey(name: $name, key: 'credentialId'), default: ''),
 		];
 
 		if ($includeMaskedSecrets === true) {
 			foreach (self::SENSITIVE_FIELDS as $field) {
-				$stored = $this->readString(name: $name, key: $field, default: '');
+				$stored = $this->readString(setting: $this->settingKey(name: $name, key: $field), default: '');
 				$config[$field] = '';
 				if ($stored !== '') {
 					$config[$field] = self::MASK;
@@ -344,29 +344,29 @@ class PosPaymentService {
 	 */
 	private function writeNonSensitiveFields(string $name, array $data): void {
 		if (array_key_exists('isActive', $data) === true) {
-			$this->writeBool(name: $name, key: 'isActive', value: (bool)$data['isActive']);
+			$this->writeBool(setting: $this->settingKey(name: $name, key: 'isActive'), value: (bool)$data['isActive']);
 		}
 
 		if (array_key_exists('environment', $data) === true) {
 			$env = (string)$data['environment'];
 			if ($env === 'live' || $env === 'sandbox') {
-				$this->writeString(name: $name, key: 'environment', value: $env);
+				$this->writeString(setting: $this->settingKey(name: $name, key: 'environment'), value: $env);
 			}
 		}
 
 		if (array_key_exists('testMode', $data) === true) {
-			$this->writeBool(name: $name, key: 'testMode', value: (bool)$data['testMode']);
+			$this->writeBool(setting: $this->settingKey(name: $name, key: 'testMode'), value: (bool)$data['testMode']);
 		}
 
 		if (array_key_exists('config', $data) === true && is_array($data['config']) === true) {
-			$this->writeObject(name: $name, key: 'config', value: $data['config']);
+			$this->writeObject(setting: $this->settingKey(name: $name, key: 'config'), value: $data['config']);
 		}
 
 		// The broker credential UUID is a REFERENCE, not a secret: the key behind it
 		// lives in the vault and is injected server-side, so this app cannot read it.
 		// It is therefore stored and returned in the clear, and is not masked.
 		if (array_key_exists('credentialId', $data) === true) {
-			$this->writeString(name: $name, key: 'credentialId', value: (string)$data['credentialId']);
+			$this->writeString(setting: $this->settingKey(name: $name, key: 'credentialId'), value: (string)$data['credentialId']);
 		}
 	}//end writeNonSensitiveFields()
 
@@ -409,7 +409,7 @@ class PosPaymentService {
 			}
 
 			$encrypted = $this->crypto->encrypt($raw);
-			$this->writeString(name: $name, key: $field, value: $encrypted);
+			$this->writeString(setting: $this->settingKey(name: $name, key: $field), value: $encrypted);
 			// Discard plaintext immediately (best-effort).
 			unset($raw);
 		}
@@ -439,7 +439,7 @@ class PosPaymentService {
 			);
 		}
 
-		$credentialId = $this->readString(name: $name, key: 'credentialId', default: '');
+		$credentialId = $this->readString(setting: $this->settingKey(name: $name, key: 'credentialId'), default: '');
 		if ($credentialId === '') {
 			throw new OCSNotFoundException(
 				'Payment provider ' . $name . ' has no credential. Select one from the credential broker in the '
@@ -452,8 +452,8 @@ class PosPaymentService {
 		$credentials = $this->resolveDecryptedCredentials(name: $name);
 
 		$config = [
-			'environment' => $this->readString(name: $name, key: 'environment', default: 'sandbox'),
-			'testMode' => $this->readBool(name: $name, key: 'testMode', default: true),
+			'environment' => $this->readString(setting: $this->settingKey(name: $name, key: 'environment'), default: 'sandbox'),
+			'testMode' => $this->readBool(setting: $this->settingKey(name: $name, key: 'testMode'), default: true),
 		];
 
 		$providerConfig = $this->readObject(name: $name, key: 'config');
@@ -884,8 +884,8 @@ class PosPaymentService {
 		}
 
 		$result = $provider->testConnection();
-		$this->writeString(name: $name, key: 'lastTestedAt', value: $this->nowIso());
-		$this->writeObject(name: $name, key: 'testResult', value: $result);
+		$this->writeString(setting: $this->settingKey(name: $name, key: 'lastTestedAt'), value: $this->nowIso());
+		$this->writeObject(setting: $this->settingKey(name: $name, key: 'testResult'), value: $result);
 
 		return $result;
 	}//end testConnection()
@@ -981,7 +981,7 @@ class PosPaymentService {
 		}
 
 		foreach (self::SENSITIVE_FIELDS as $field) {
-			$encrypted = $this->readString(name: $name, key: $field, default: '');
+			$encrypted = $this->readString(setting: $this->settingKey(name: $name, key: $field), default: '');
 			if ($encrypted === '') {
 				$out[$field] = '';
 				continue;
@@ -1045,18 +1045,29 @@ class PosPaymentService {
 	// ---------------------------------------------------------------------
 
 	/**
-	 * Read a scalar config value as string.
+	 * The app-config key of one provider setting.
 	 *
 	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $key  The field name.
+	 *
+	 * @return string The key.
+	 */
+	private function settingKey(string $name, string $key): string {
+		return self::CONFIG_PREFIX . $name . '.' . $key;
+	}//end settingKey()
+
+	/**
+	 * Read a scalar config value as string.
+	 *
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param string $default The default.
 	 *
 	 * @return string
 	 */
-	private function readString(string $name, string $key, string $default = ''): string {
+	private function readString(string $setting, string $default = ''): string {
 		return $this->appConfig->getValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			$default
 		);
 	}//end readString()
@@ -1064,18 +1075,17 @@ class PosPaymentService {
 	/**
 	 * Read a config boolean.
 	 *
-	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param bool $default The default.
 	 *
 	 * @return bool
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) generic config accessor — the default IS the value being requested, not a behavioural branch
 	 */
-	private function readBool(string $name, string $key, bool $default = false): bool {
+	private function readBool(string $setting, bool $default = false): bool {
 		$raw = $this->appConfig->getValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			''
 		);
 		if ($raw === '') {
@@ -1096,7 +1106,7 @@ class PosPaymentService {
 	private function readObject(string $name, string $key): array {
 		$raw = $this->appConfig->getValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$this->settingKey(name: $name, key: $key),
 			''
 		);
 		if ($raw === '') {
@@ -1114,16 +1124,15 @@ class PosPaymentService {
 	/**
 	 * Write a string config value.
 	 *
-	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param string $value The value.
 	 *
 	 * @return void
 	 */
-	private function writeString(string $name, string $key, string $value): void {
+	private function writeString(string $setting, string $value): void {
 		$this->appConfig->setValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			$value
 		);
 	}//end writeString()
@@ -1131,13 +1140,12 @@ class PosPaymentService {
 	/**
 	 * Write a boolean config value (as the string 'true'/'false').
 	 *
-	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param bool $value The value.
 	 *
 	 * @return void
 	 */
-	private function writeBool(string $name, string $key, bool $value): void {
+	private function writeBool(string $setting, bool $value): void {
 		$encoded = 'false';
 		if ($value === true) {
 			$encoded = 'true';
@@ -1145,7 +1153,7 @@ class PosPaymentService {
 
 		$this->appConfig->setValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			$encoded
 		);
 	}//end writeBool()
@@ -1153,13 +1161,12 @@ class PosPaymentService {
 	/**
 	 * Write a JSON-encoded object config value.
 	 *
-	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param array<string, mixed> $value The value.
 	 *
 	 * @return void
 	 */
-	private function writeObject(string $name, string $key, array $value): void {
+	private function writeObject(string $setting, array $value): void {
 		$encoded = json_encode($value);
 		if (is_string($encoded) === false) {
 			return;
@@ -1167,7 +1174,7 @@ class PosPaymentService {
 
 		$this->appConfig->setValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			$encoded
 		);
 	}//end writeObject()
