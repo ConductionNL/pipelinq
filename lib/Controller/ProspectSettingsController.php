@@ -41,13 +41,6 @@ class ProspectSettingsController extends Controller {
 	use OpenRegisterServiceLookup;
 
 	/**
-	 * The OpenRegister object service.
-	 *
-	 * @var \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister object service.
-	 */
-	private ?\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService = null;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.

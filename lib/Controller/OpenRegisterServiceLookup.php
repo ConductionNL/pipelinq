@@ -26,9 +26,16 @@ use RuntimeException;
 /**
  * The OpenRegister service getters shared by the settings controllers.
  *
- * The using class provides `$container`, `$appManager` and a nullable `$objectService` property.
+ * The using class provides `$container` and `$appManager`; the looked-up object service is kept here.
  */
 trait OpenRegisterServiceLookup {
+
+	/**
+	 * The OpenRegister object service.
+	 *
+	 * @var \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister object service.
+	 */
+	private ?\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService = null;
 
 	/**
 	 * Attempts to retrieve the OpenRegister service from the container.
