@@ -641,6 +641,58 @@ class WhatsAppAdapterTest extends TestCase {
 	}//end testAMessageFromAKnownContactIsNotLoggedAsUnknown()
 
 	/**
+	 * An opt-in keyword from a known contact records the opt-in, with the
+	 * body as evidence and the sender as the address.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInFromAKnownContactIsRecorded(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptOut');
+		$this->consentService->expects($this->once())
+			->method('recordOptIn')
+			->with(
+				'c-gert',
+				'whatsapp',
+				'chat-reply',
+				'Inbound WhatsApp body "START" matched opt-in keyword',
+				'consent',
+				'+31611119999'
+			);
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'START'), 'sha256=ok', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertFalse($result['unknownSender']);
+		$this->assertFalse($result['optOutRecorded']);
+		$this->assertArrayNotHasKey('contactMomentId', $result);
+	}//end testAnOptInFromAKnownContactIsRecorded()
+
+	/**
+	 * An opt-in keyword from an unknown number records no opt-in: it is
+	 * logged for a person like any other message from that number.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInFromAnUnknownNumberIsOnlyLogged(): void {
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptIn');
+		$this->contactmoments->expects($this->once())
+			->method('recordInboundFromUnknownNumber')
+			->willReturn('cm-7');
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31600000001', 'START'), 'sha256=ok', 'prov-1');
+
+		$this->assertTrue($result['unknownSender']);
+		$this->assertSame('cm-7', $result['contactMomentId']);
+	}//end testAnOptInFromAnUnknownNumberIsOnlyLogged()
+
+	/**
 	 * Seed the contact's inbound WhatsApp messages.
 	 *
 	 * @param array<string, array{0: string, 1: int}> $messages Message id => [body, seconds ago].
