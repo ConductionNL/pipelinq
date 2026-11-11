@@ -98,4 +98,23 @@ describe('the till customer lookup settings', () => {
 		const w = mountSettings()
 		expect(w.findAll('[data-stub="NcSettingsSection"]')[1].classes()).toContain('pos-customer-settings__note')
 	})
+
+	it('reads the stored settings into the form, with the defaults for what is missing or unknown', async () => {
+		const read = async (settings) => {
+			api.getCustomerSettings.mockResolvedValueOnce(settings)
+			const ctx = { form: null, loading: false, statusMessage: '', statusError: false }
+			await PosCustomerSettings.methods.load.call(ctx)
+			return ctx
+		}
+		expect((await read({ customerSearchFields: ['email'], customerHistoryDepth: '20', enablePipelinqSync: false, requireCustomerForOnAccount: true })).form)
+			.toEqual({ customerSearchFields: ['email'], customerHistoryDepth: 20, enablePipelinqSync: false, requireCustomerForOnAccount: true })
+		const defaults = await read({ customerSearchFields: [], customerHistoryDepth: 7 })
+		expect(defaults.form).toEqual({ customerSearchFields: ['name', 'email', 'phone'], customerHistoryDepth: 10, enablePipelinqSync: true, requireCustomerForOnAccount: true })
+		expect(defaults.loading).toBe(false)
+		expect((await read({ customerSearchFields: 'name' })).form.customerSearchFields).toEqual(['name', 'email', 'phone'])
+		api.getCustomerSettings.mockRejectedValueOnce(new Error('x'))
+		const failed = { form: 'kept', loading: false, statusMessage: '', statusError: false }
+		await PosCustomerSettings.methods.load.call(failed)
+		expect([failed.form, failed.statusMessage, failed.statusError, failed.loading]).toEqual(['kept', 'Could not load settings.', true, false])
+	})
 })
