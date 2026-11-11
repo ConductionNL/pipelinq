@@ -171,4 +171,41 @@ class MigrateConsentToIntegriqTest extends TestCase {
 
 		self::assertArrayNotHasKey('consent.store', $this->config);
 	}//end testARefusalKeepsTheFlagOnPipelinq()
+
+	private function migration(string $changeEvent = IntegriqConsentClient::CHANGE_EVENT): ConsentMigrationService {
+		$logger = new NullLogger();
+		$client = new IntegriqConsentClient($this->integriq, $this->appConfig, $this->createMock(IURLGenerator::class), $logger, IntegriqConsentClient::DECISION_EVENT, $changeEvent);
+		$addresses = new ContactAddressLookup($this->container, $this->appConfig, $logger);
+		$marketing = new IntegriqMarketingConsent($client, $addresses);
+		$consent = new ConsentService($this->container, $this->appConfig, $logger, $client, $addresses);
+		return new ConsentMigrationService($client, $consent, $this->container, $marketing, $addresses, $this->appConfig, $logger);
+	}//end migration()
+
+	public function testEveryRunResultIsExact(): void {
+		$this->seedPipelinq();
+		self::assertSame(
+			['status' => 'integriq-missing', 'migrated' => 0, 'skippedBounce' => 0, 'skippedNoAddress' => 0, 'refused' => 0, 'store' => 'pipelinq'],
+			$this->migration(changeEvent: 'Event\\NotInstalled')->run()
+		);
+		self::assertSame([], $this->config);
+
+		$this->integriq->changeMode = FakeIntegriq::MODE_UNHANDLED;
+		self::assertSame(
+			['status' => 'refusals', 'migrated' => 0, 'skippedBounce' => 1, 'skippedNoAddress' => 1, 'refused' => 2, 'store' => 'pipelinq'],
+			$this->migration()->run()
+		);
+		self::assertSame([], $this->config);
+
+		$this->integriq->changeMode = FakeIntegriq::MODE_ANSWER;
+		self::assertSame(
+			['status' => 'done', 'migrated' => 2, 'skippedBounce' => 1, 'skippedNoAddress' => 1, 'refused' => 0, 'store' => 'integriq'],
+			$this->migration()->run()
+		);
+		self::assertSame(['consent.cutover_at', 'consent.store'], array_keys($this->config));
+		self::assertSame(['8340e8aa-445c-4300-a2d0-59a4d37fbd65', '64d957c5-8362-4810-a2bd-9e59395bf50e:in'], array_column($this->integriq->rows, 'legacyRef'));
+
+		$cutoverAt = $this->config['consent.cutover_at'];
+		self::assertSame('done', $this->migration()->run()['status']);
+		self::assertSame($cutoverAt, $this->config['consent.cutover_at'], 'a second run keeps the first cut-over moment');
+	}//end testEveryRunResultIsExact()
 }//end class
