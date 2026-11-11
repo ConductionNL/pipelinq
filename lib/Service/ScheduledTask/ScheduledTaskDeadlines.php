@@ -135,6 +135,20 @@ class ScheduledTaskDeadlines {
 	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
 	 */
 	public function notifyExpired(array $task): void {
+		foreach ($this->expiryRecipients(task: $task) as $userId) {
+			$this->notifyExpiredTo(task: $task, userId: $userId);
+		}
+	}//end notifyExpired()
+
+	/**
+	 * Who hears of an expired task: its assignee first, then every member of
+	 * the escalation group not already named.
+	 *
+	 * @param array<string, mixed> $task The task.
+	 *
+	 * @return array<int, string>
+	 */
+	private function expiryRecipients(array $task): array {
 		$recipients = [];
 		$assignee   = (string)($task['assigneeUserId'] ?? '');
 		if ($assignee !== '') {
@@ -147,22 +161,30 @@ class ScheduledTaskDeadlines {
 			}
 		}
 
-		foreach ($recipients as $userId) {
-			try {
-				$this->notificationService->notifyTaskExpired(
-					title: (string)($task['subject'] ?? 'Scheduled task'),
-					userId: $userId,
-					objectId: (string)($task['id'] ?? ''),
-					deadline: (string)($task['deadline'] ?? '')
-				);
-			} catch (Throwable $e) {
-				$this->logger->error(
-					'ScheduledTaskService: expiry notification dispatch failed',
-					['exception' => $e]
-				);
-			}
+		return $recipients;
+	}//end expiryRecipients()
+
+	/**
+	 * Tell one user the task expired; a failure is logged and the next user
+	 * still hears of it.
+	 *
+	 * @param array<string, mixed> $task   The task.
+	 * @param string               $userId The user.
+	 *
+	 * @return void
+	 */
+	private function notifyExpiredTo(array $task, string $userId): void {
+		try {
+			$this->notificationService->notifyTaskExpired(
+				title: (string)($task['subject'] ?? 'Scheduled task'),
+				userId: $userId,
+				objectId: (string)($task['id'] ?? ''),
+				deadline: (string)($task['deadline'] ?? '')
+			);
+		} catch (Throwable $e) {
+			$this->logger->error('ScheduledTaskService: expiry notification dispatch failed', ['exception' => $e]);
 		}
-	}//end notifyExpired()
+	}//end notifyExpiredTo()
 
 	/**
 	 * The members of the escalation group (app config
