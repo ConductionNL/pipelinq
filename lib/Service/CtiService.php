@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Cti\AdapterRegistry;
+use OCA\Pipelinq\Service\Cti\CallRecording;
+use OCA\Pipelinq\Service\Cti\EventLogQuery;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
@@ -375,15 +377,23 @@ class CtiService {
 			return false;
 		}
 
+		return $this->saveRecording(
+			interactionId: $interactionId,
+			recording: new CallRecording(recordingUrl: $recordingUrl, expiresAt: $expiresAt)
+		);
+	}//end attachRecording()
+
+	/**
+	 * Write a recording on a contactmoment ticket; a failed write is logged.
+	 *
+	 * @param string        $interactionId Contactmoment ticket UUID.
+	 * @param CallRecording $recording     The recording URL and its retention expiry.
+	 *
+	 * @return bool True when the recording was written.
+	 */
+	private function saveRecording(string $interactionId, CallRecording $recording): bool {
 		try {
-			$this->ticketService->save(
-				ticketType: TicketService::TYPE_CONTACTMOMENT,
-				payload: [
-					'recording_url' => $recordingUrl,
-					'recording_retention_expires_at' => $expiresAt,
-				],
-				uuid: $interactionId,
-			);
+			$this->writeRecording(interactionId: $interactionId, recording: $recording);
 			return true;
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -392,7 +402,26 @@ class CtiService {
 			);
 			return false;
 		}
-	}//end attachRecording()
+	}//end saveRecording()
+
+	/**
+	 * Write the recording fields on a contactmoment ticket.
+	 *
+	 * @param string        $interactionId Contactmoment ticket UUID.
+	 * @param CallRecording $recording     The recording URL and its retention expiry.
+	 *
+	 * @return void
+	 */
+	private function writeRecording(string $interactionId, CallRecording $recording): void {
+		$this->ticketService->save(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			payload: [
+				'recording_url' => $recording->recordingUrl,
+				'recording_retention_expires_at' => $recording->expiresAt,
+			],
+			uuid: $interactionId,
+		);
+	}//end writeRecording()
 
 	/**
 	 * Originate an outbound call via the active adapter.
@@ -654,33 +683,22 @@ class CtiService {
 			return [];
 		}
 
+		$query = new EventLogQuery(filters: $filters, limit: $limit, offset: $offset);
+		return $this->readEventLog(config: $query->config(register: $register, schema: $schema));
+	}//end listEventLog()
+
+	/**
+	 * Read event log rows as plain arrays; a failed read is logged and a
+	 * non-list answer gives none.
+	 *
+	 * @param array<string,mixed> $config The findAll config.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function readEventLog(array $config): array {
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$result = $objectService->findAll(
-				[
-					'filters' => array_merge(
-						['register' => $register, 'schema' => $schema],
-						array_filter(
-							$filters,
-							static fn ($v): bool => ($v !== null && $v !== '')
-						)
-					),
-					'limit' => $limit,
-					'offset' => $offset,
-					'sort' => ['received_at' => 'desc'],
-				]
-			);
-
-			if (is_array($result) === false) {
-				return [];
-			}
-
-			return array_values(
-				array_map(
-					fn ($obj) => $this->toArray(value: $obj),
-					$result
-				)
-			);
+			return $this->rowsToArrays(rows: $objectService->findAll($config));
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'CTI listEventLog failed',
@@ -688,7 +706,27 @@ class CtiService {
 			);
 			return [];
 		}//end try
-	}//end listEventLog()
+	}//end readEventLog()
+
+	/**
+	 * Event log rows as a list of plain arrays; a non-list answer gives none.
+	 *
+	 * @param mixed $rows What findAll answered.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function rowsToArrays(mixed $rows): array {
+		if (is_array($rows) === false) {
+			return [];
+		}
+
+		return array_values(
+			array_map(
+				fn ($obj) => $this->toArray(value: $obj),
+				$rows
+			)
+		);
+	}//end rowsToArrays()
 
 	/**
 	 * Purge event-log entries older than 30 days.
