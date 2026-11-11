@@ -394,10 +394,7 @@ export default {
 			const templatesLoaded = this.loadTemplates()
 			try {
 				const store = useObjectStore()
-				if (!clientId && ticketId) {
-					const ticket = await store.fetchObject('ticket', ticketId)
-					this.resolvedClientId = ticket?.client || ''
-				}
+				await this.resolveTicketClient(store, { clientId, ticketId })
 				await templatesLoaded
 				if (!this.available) {
 					return
@@ -409,28 +406,64 @@ export default {
 					)
 					return
 				}
-				const client = await store.fetchObject('client', this.resolvedClientId).catch(() => null)
-				this.clientName = client?.name || ''
-				if (!ticketId) {
-					this.tickets = (await store.fetchCollection('ticket', {
-						client: this.resolvedClientId,
-						_limit: 50,
-					}).catch(() => [])) || []
-					if (this.tickets.length > 0) {
-						this.aboutTicketId = this.tickets[0].id
-					}
-				}
-				this.contacts =
-					(await store.fetchCollection('contact', {
-						client: this.resolvedClientId,
-						_limit: 100,
-					})) || []
-				await this.loadAppointment(store)
+				await this.loadClientContext(store, ticketId)
 			} catch {
 				this.error = t(
 					'pipelinq',
 					'The letter templates could not be loaded.',
 				)
+			}
+		},
+
+		/**
+		 * On a ticket page without a client of its own, write to the ticket's client.
+		 *
+		 * @param {object} store The object store.
+		 * @param {{clientId: string, ticketId: string}} ids The ids the page gives.
+		 * @return {Promise<void>}
+		 */
+		async resolveTicketClient(store, ids) {
+			if (!ids.clientId && ids.ticketId) {
+				const ticket = await store.fetchObject('ticket', ids.ticketId)
+				this.resolvedClientId = ticket?.client || ''
+			}
+		},
+
+		/**
+		 * The client's name, its tickets (when the page is not a ticket), its
+		 * contacts and its next appointment.
+		 *
+		 * @param {object} store The object store.
+		 * @param {string} ticketId The ticket the page is on, or ''.
+		 * @return {Promise<void>}
+		 */
+		async loadClientContext(store, ticketId) {
+			const client = await store.fetchObject('client', this.resolvedClientId).catch(() => null)
+			this.clientName = client?.name || ''
+			if (!ticketId) {
+				await this.loadClientTickets(store)
+			}
+			this.contacts =
+				(await store.fetchCollection('contact', {
+					client: this.resolvedClientId,
+					_limit: 100,
+				})) || []
+			await this.loadAppointment(store)
+		},
+
+		/**
+		 * The client's tickets the letter can be about; the first is chosen.
+		 *
+		 * @param {object} store The object store.
+		 * @return {Promise<void>}
+		 */
+		async loadClientTickets(store) {
+			this.tickets = (await store.fetchCollection('ticket', {
+				client: this.resolvedClientId,
+				_limit: 50,
+			}).catch(() => [])) || []
+			if (this.tickets.length > 0) {
+				this.aboutTicketId = this.tickets[0].id
 			}
 		},
 
@@ -500,7 +533,7 @@ export default {
 		 * @spec openspec/specs/client-letters/spec.md
 		 */
 		async loadPreview() {
-			if (!this.templateId || !this.resolvedClientId || !this.available) {
+			if (!this.canPreview()) {
 				this.previewHtml = ''
 				this.fields = []
 				return
@@ -509,12 +542,7 @@ export default {
 			this.previewing = true
 			this.previewError = ''
 			try {
-				const preview = await previewLetter(this.resolvedClientId, {
-					templateId: this.templateId,
-					contactId: this.contactId || undefined,
-					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
-					appointmentId: this.appointmentId || undefined,
-				})
+				const preview = await previewLetter(this.resolvedClientId, this.previewOptions())
 				if (request !== this.previewRequest) return
 				this.previewHtml = letterPreviewBody(preview.html)
 				this.fields = preview.fields
@@ -526,6 +554,25 @@ export default {
 				this.previewError = t('pipelinq', 'The preview could not be made. You can still make the letter.')
 			} finally {
 				if (request === this.previewRequest) this.previewing = false
+			}
+		},
+
+		/**
+		 * @return {boolean} Whether there is a template, a client and filinq to preview with.
+		 */
+		canPreview() {
+			return Boolean(this.templateId && this.resolvedClientId && this.available)
+		},
+
+		/**
+		 * @return {object} The template, contact, ticket and appointment the preview is made with.
+		 */
+		previewOptions() {
+			return {
+				templateId: this.templateId,
+				contactId: this.contactId || undefined,
+				ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
+				appointmentId: this.appointmentId || undefined,
 			}
 		},
 
