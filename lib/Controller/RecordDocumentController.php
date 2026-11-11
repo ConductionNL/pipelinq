@@ -165,23 +165,38 @@ class RecordDocumentController extends Controller
             return new JSONResponse(['message' => 'Record not found'], Http::STATUS_NOT_FOUND);
         }
 
-        return $this->documentOf(
-            request: new RecordDocumentRequest(record: new RecordRef(schema: $schema, id: $id), config: $config),
-            data: $record
-        );
+        $template = $this->documentTemplate(templateId: $config['template']);
+        if ($template instanceof JSONResponse) {
+            return $template;
+        }
+
+        $filename = $this->filename(templateName: $template['name'], record: $record);
+        try {
+            $register = $this->reader->register();
+            $document = $this->documents->render(
+                templateId: $template['id'],
+                dataRefs: [['register' => $register, 'schema' => $schema, 'id' => $id]],
+                filename: $filename,
+                outputMode: 'return',
+                listRefs: $this->listRefs(lists: $config['lists'], register: $register, id: $id)
+            );
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['message' => 'filinq could not make the document.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
+        }
+
+        return new DataDownloadResponse($document['content'], $filename.'.pdf', 'application/pdf');
 
     }//end document()
 
 
     /**
-     * Make the document of a record the caller may act on: filinq present, template found, then render.
+     * The template to make the document from, or the 503 without filinq or the 404 without the template.
      *
-     * @param RecordDocumentRequest $request The record and its schema's configuration.
-     * @param array<string, mixed>  $data    The record as read.
+     * @param string $templateId The configured template.
      *
-     * @return DataDownloadResponse|JSONResponse The PDF, or an error.
+     * @return array<string, mixed>|JSONResponse The template, or the refusal.
      */
-    private function documentOf(RecordDocumentRequest $request, array $data): DataDownloadResponse|JSONResponse
+    private function documentTemplate(string $templateId): array|JSONResponse
     {
         $reason = $this->documents->unavailableReason();
         if ($reason !== null) {
@@ -191,28 +206,14 @@ class RecordDocumentController extends Controller
             );
         }
 
-        $template = $this->documents->findTemplate(templateId: $request->config['template']);
+        $template = $this->documents->findTemplate(templateId: $templateId);
         if ($template === null) {
             return new JSONResponse(['message' => 'Template not found'], Http::STATUS_NOT_FOUND);
         }
 
-        $filename = $this->filename(templateName: $template['name'], record: $data);
-        try {
-            $register = $this->reader->register();
-            $document = $this->documents->render(
-                templateId: $template['id'],
-                dataRefs: [['register' => $register, 'schema' => $request->record->schema, 'id' => $request->record->id]],
-                filename: $filename,
-                outputMode: 'return',
-                listRefs: $this->listRefs(lists: $request->config['lists'], register: $register, id: $request->record->id)
-            );
-        } catch (RuntimeException $e) {
-            return new JSONResponse(['message' => 'filinq could not make the document.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
-        }
+        return $template;
 
-        return new DataDownloadResponse($document['content'], $filename.'.pdf', 'application/pdf');
-
-    }//end documentOf()
+    }//end documentTemplate()
 
 
     /**
