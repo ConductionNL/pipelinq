@@ -48,28 +48,6 @@ final class IdentityKind {
 	}//end __construct()
 
 	/**
-	 * The kind of a pipelinq client.
-	 *
-	 * @return self The client kind.
-	 *
-	 * @spec openspec/specs/unify-client-contact/spec.md
-	 */
-	public static function client(): self {
-		return new self(entityType: 'account', objectType: 'client');
-	}//end client()
-
-	/**
-	 * The kind of a pipelinq contact.
-	 *
-	 * @return self The contact kind.
-	 *
-	 * @spec openspec/specs/unify-client-contact/spec.md
-	 */
-	public static function contact(): self {
-		return new self(entityType: 'contact', objectType: 'contact');
-	}//end contact()
-
-	/**
 	 * Whether these identities are clients, whose contactmomenten are re-keyed.
 	 *
 	 * @return bool True for clients.

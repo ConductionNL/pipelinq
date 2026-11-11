@@ -186,9 +186,11 @@ class UnifyClientContactIdentity implements IRepairStep {
 
 		$clients = new IdentityCollection(objectService: $objectService, register: $register, schema: $clientSchema);
 		$contacts = new IdentityCollection(objectService: $objectService, register: $register, schema: $contactSchema);
+		$clientKind = new IdentityKind(entityType: 'account', objectType: 'client');
+		$contactKind = new IdentityKind(entityType: 'contact', objectType: 'contact');
 		$tally = new IdentityTally();
-		$this->resolveCollection(pass: new IdentityPass(collection: $clients, kind: IdentityKind::client()), tally: $tally);
-		$this->resolveCollection(pass: new IdentityPass(collection: $contacts, kind: IdentityKind::contact()), tally: $tally);
+		$this->resolveCollection(pass: new IdentityPass(collection: $clients, kind: $clientKind), tally: $tally);
+		$this->resolveCollection(pass: new IdentityPass(collection: $contacts, kind: $contactKind), tally: $tally);
 
 		$moments = new IdentityCollection(objectService: $objectService, register: $register, schema: $momentSchema);
 		return $tally->summary(momentsRekeyed: $this->rekeyClientMoments(moments: $moments, tally: $tally));
