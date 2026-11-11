@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Conduction B.V.
+# SPDX-License-Identifier: EUPL-1.2
+
 """Unit test for the deterministic @spec anchor repointer.
 
 Proves three properties on a synthetic fixture:

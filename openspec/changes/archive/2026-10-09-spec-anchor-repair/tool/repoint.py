@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Conduction B.V.
+# SPDX-License-Identifier: EUPL-1.2
+
 """Deterministic @spec anchor repointer (comment-only, gate-46-verifiable).
 
 Usage:

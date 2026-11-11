@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Conduction B.V.
+# SPDX-License-Identifier: EUPL-1.2
+
 """Statically validate an example-set fragment (openregister PR #4603 format) against
 the schema definitions in this app's register files, without an instance.
 
