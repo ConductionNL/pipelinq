@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
+use OCA\Pipelinq\Service\Provider\WhatsAppInbound;
 use OCA\Pipelinq\Service\Provider\WhatsAppMessage;
 use OCA\Pipelinq\Service\Provider\WhatsAppProviderAttempt;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
@@ -775,10 +776,7 @@ class WhatsAppAdapter {
 				'unknownSender' => ($contactId === ''),
 				'optOutRecorded' => false,
 			],
-			contactId: $contactId,
-			from: $from,
-			body: $body,
-			providerRow: $providerRow,
+			inbound: new WhatsAppInbound(contactId: $contactId, from: $from, body: $body, providerRow: $providerRow),
 		);
 	}//end ingestInbound()
 
@@ -788,55 +786,89 @@ class WhatsAppAdapter {
 	 * unknown number is logged for a person, an opt-in keyword from a known
 	 * contact opts them in.
 	 *
-	 * @param array<string, mixed> $result Outcome envelope so far.
-	 * @param string $contactId Contact UUID, or '' for an unknown number.
-	 * @param string $from Sender in E.164.
-	 * @param string $body Message text.
-	 * @param array<string, mixed> $providerRow Provider row.
+	 * @param array<string, mixed> $result  Outcome envelope so far.
+	 * @param WhatsAppInbound      $inbound The message; an empty contact id is an unknown number.
 	 *
 	 * @return array<string, mixed> The completed envelope.
 	 */
-	private function actOnInbound(array $result, string $contactId, string $from, string $body, array $providerRow): array {
-		if ($this->consentService->isOptOutKeyword(body: $body) === true) {
-			$result['optOutRecorded'] = $this->consentService->recordOptOut(
-				contactId: $contactId,
-				channel: 'whatsapp',
-				source: 'keyword-stop',
-				evidence: sprintf('Inbound WhatsApp body "%s" matched STOP keyword', $body),
-				address: $from,
-			) !== null;
-			if ($result['optOutRecorded'] === true) {
-				// Free-form acknowledgement is allowed under WhatsApp's
-				// utility-category rules within the session this very
-				// inbound message opened.
-				$this->sendOptOutAcknowledgement(phone: $from, providerRow: $providerRow);
-			}
-
-			return $result;
+	private function actOnInbound(array $result, WhatsAppInbound $inbound): array {
+		if ($this->consentService->isOptOutKeyword(body: $inbound->body) === true) {
+			return $this->recordInboundOptOut(result: $result, inbound: $inbound);
 		}
 
-		if ($contactId === '') {
-			$result['contactMomentId'] = (string)$this->contactmoments()?->recordInboundFromUnknownNumber(
-				platform: 'whatsapp',
-				phone: $from,
-				body: $body,
-				messageId: (string)$result['messageId'],
-			);
-			return $result;
+		if ($inbound->contactId === '') {
+			return $this->logUnknownSender(result: $result, inbound: $inbound);
 		}
 
-		if ($this->consentService->isOptInKeyword(body: $body) === true) {
-			$this->consentService->recordOptIn(
-				contactId: $contactId,
-				channel: 'whatsapp',
-				source: 'chat-reply',
-				evidence: sprintf('Inbound WhatsApp body "%s" matched opt-in keyword', $body),
-				address: $from,
-			);
-		}
+		$this->recordInboundOptIn(inbound: $inbound);
 
 		return $result;
 	}//end actOnInbound()
+
+	/**
+	 * Record the STOP of an inbound message and acknowledge it when it was recorded.
+	 *
+	 * @param array<string, mixed> $result  Outcome envelope so far.
+	 * @param WhatsAppInbound      $inbound The STOP message.
+	 *
+	 * @return array<string, mixed> The envelope with `optOutRecorded` set.
+	 */
+	private function recordInboundOptOut(array $result, WhatsAppInbound $inbound): array {
+		$result['optOutRecorded'] = $this->consentService->recordOptOut(
+			contactId: $inbound->contactId,
+			channel: 'whatsapp',
+			source: 'keyword-stop',
+			evidence: sprintf('Inbound WhatsApp body "%s" matched STOP keyword', $inbound->body),
+			address: $inbound->from,
+		) !== null;
+		if ($result['optOutRecorded'] === true) {
+			// Free-form acknowledgement is allowed under WhatsApp's
+			// utility-category rules within the session this very
+			// inbound message opened.
+			$this->sendOptOutAcknowledgement(phone: $inbound->from, providerRow: $inbound->providerRow);
+		}
+
+		return $result;
+	}//end recordInboundOptOut()
+
+	/**
+	 * Log a message from an unknown number as a contact moment for a person.
+	 *
+	 * @param array<string, mixed> $result  Outcome envelope so far.
+	 * @param WhatsAppInbound      $inbound The message.
+	 *
+	 * @return array<string, mixed> The envelope with `contactMomentId` set.
+	 */
+	private function logUnknownSender(array $result, WhatsAppInbound $inbound): array {
+		$result['contactMomentId'] = (string)$this->contactmoments()?->recordInboundFromUnknownNumber(
+			platform: 'whatsapp',
+			phone: $inbound->from,
+			body: $inbound->body,
+			messageId: (string)$result['messageId'],
+		);
+		return $result;
+	}//end logUnknownSender()
+
+	/**
+	 * Record an opt-in when a known contact's message is an opt-in keyword.
+	 *
+	 * @param WhatsAppInbound $inbound The message of a known contact.
+	 *
+	 * @return void
+	 */
+	private function recordInboundOptIn(WhatsAppInbound $inbound): void {
+		if ($this->consentService->isOptInKeyword(body: $inbound->body) === false) {
+			return;
+		}
+
+		$this->consentService->recordOptIn(
+			contactId: $inbound->contactId,
+			channel: 'whatsapp',
+			source: 'chat-reply',
+			evidence: sprintf('Inbound WhatsApp body "%s" matched opt-in keyword', $inbound->body),
+			address: $inbound->from,
+		);
+	}//end recordInboundOptIn()
 
 	/**
 	 * Count {{N}} placeholders in a template body.
