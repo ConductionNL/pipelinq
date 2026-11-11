@@ -265,49 +265,69 @@ class ContactDataBuilder {
 	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	private function extractSocialProfiles(mixed $value): array {
-		$items = $this->normaliseToList(value: $value);
-
 		$profiles = [];
-		foreach ($items as $item) {
-			$raw = self::itemValue(item: $item);
-
-			if ($raw === '') {
-				continue;
+		foreach ($this->normaliseToList(value: $value) as $item) {
+			$profile = $this->socialProfile(item: $item);
+			if ($profile !== null) {
+				$profiles[] = $profile;
 			}
-
-			$typeRaw = '';
-			if (is_array($item) === true) {
-				$typeRaw = (string)($item['type'] ?? '');
-			}
-
-			$typeRaw = strtolower($typeRaw);
-
-			$network = 'other';
-			if (in_array($typeRaw, self::SOCIAL_NETWORKS, true) === true) {
-				$network = $typeRaw;
-			}
-
-			$isUrl = (str_starts_with($raw, 'http://') === true || str_starts_with($raw, 'https://') === true);
-
-			$handle = $raw;
-			$url = '';
-			if ($isUrl === true) {
-				$handle = '';
-				$url = $raw;
-			}
-
-			$profiles[] = [
-				'network' => $network,
-				'handle' => $handle,
-				'url' => $url,
-				'verified' => false,
-				'followedByUs' => false,
-				'followsUs' => false,
-			];
 		}
 
 		return $profiles;
 	}//end extractSocialProfiles()
+
+	/**
+	 * One X-SOCIALPROFILE item as a profile, or null when it carries no value.
+	 *
+	 * @param mixed $item The vCard item: a value, or `{type, value}`.
+	 *
+	 * @return array{network:string,handle:string,url:string,verified:bool,followedByUs:bool,followsUs:bool}|null The profile.
+	 */
+	private function socialProfile(mixed $item): ?array {
+		$raw = self::itemValue(item: $item);
+		if ($raw === '') {
+			return null;
+		}
+
+		$isUrl = (str_starts_with($raw, 'http://') === true || str_starts_with($raw, 'https://') === true);
+
+		$handle = $raw;
+		$url = '';
+		if ($isUrl === true) {
+			$handle = '';
+			$url = $raw;
+		}
+
+		return [
+			'network' => $this->socialNetworkOf(item: $item),
+			'handle' => $handle,
+			'url' => $url,
+			'verified' => false,
+			'followedByUs' => false,
+			'followsUs' => false,
+		];
+	}//end socialProfile()
+
+	/**
+	 * The item's network: its TYPE when it names a known network (case-insensitive), else `other`.
+	 *
+	 * @param mixed $item The vCard item.
+	 *
+	 * @return string The network.
+	 */
+	private function socialNetworkOf(mixed $item): string {
+		$typeRaw = '';
+		if (is_array($item) === true) {
+			$typeRaw = (string)($item['type'] ?? '');
+		}
+
+		$typeRaw = strtolower($typeRaw);
+		if (in_array($typeRaw, self::SOCIAL_NETWORKS, true) === true) {
+			return $typeRaw;
+		}
+
+		return 'other';
+	}//end socialNetworkOf()
 
 	/**
 	 * Normalise a vCard property value (string, untyped array, single
