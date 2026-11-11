@@ -414,20 +414,7 @@ class PosPaymentController extends Controller {
 	 * @return string
 	 */
 	private function readRawBody(): string {
-		$body = file_get_contents('php://input');
-		if (is_string($body) === true && $body !== '') {
-			return $body;
-		}
-
-		$params = $this->request->getParams();
-		if (is_array($params) === true && $params !== []) {
-			$encoded = json_encode($params);
-			if (is_string($encoded) === true) {
-				return $encoded;
-			}
-		}
-
-		return '';
+		return (new RequestBody(request: $this->request))->raw();
 	}//end readRawBody()
 
 	/**
