@@ -162,6 +162,24 @@ class ContactVcardService {
 	 * @return ?string The matched contactsUid, or null when none matches.
 	 */
 	private function matchExistingContact(array $form): ?string {
+		foreach ($this->matchSearches(form: $form) as $search) {
+			$uid = $this->firstMatch(search: $search);
+			if ($uid !== null) {
+				return $uid;
+			}
+		}
+
+		return null;
+	}//end matchExistingContact()
+
+	/**
+	 * The contact searches for a create form: its email, then an organisation's name.
+	 *
+	 * @param array $form The raw create-form fields.
+	 *
+	 * @return array<int, array{term: string, props: array<int, string>}> The searches, in order.
+	 */
+	private function matchSearches(array $form): array {
 		$searchTerms = [];
 
 		$email = (string)($form['email'] ?? '');
@@ -169,32 +187,39 @@ class ContactVcardService {
 			$searchTerms[] = ['term' => $email, 'props' => ['EMAIL', 'UID']];
 		}
 
-		if ((string)($form['type'] ?? '') === 'organization') {
-			$name = (string)($form['name'] ?? '');
-			if ($name !== '') {
-				$searchTerms[] = ['term' => $name, 'props' => ['ORG', 'UID']];
-			}
+		$name = (string)($form['name'] ?? '');
+		if ((string)($form['type'] ?? '') === 'organization' && $name !== '') {
+			$searchTerms[] = ['term' => $name, 'props' => ['ORG', 'UID']];
 		}
 
-		foreach ($searchTerms as $search) {
-			try {
-				$results = $this->contactsManager->search($search['term'], $search['props'], ['limit' => 1]);
-			} catch (\Exception $e) {
-				$this->logger->warning(
-					'Pipelinq: contact match search failed',
-					['term' => $search['term'], 'exception' => $e->getMessage()]
-				);
-				continue;
-			}
+		return $searchTerms;
+	}//end matchSearches()
 
-			foreach ($results as $hit) {
-				$uid = (string)($hit['UID'] ?? '');
-				if ($uid !== '') {
-					return $uid;
-				}
+	/**
+	 * The uid of the first hit of one search, or null; a failing search is logged.
+	 *
+	 * @param array{term: string, props: array<int, string>} $search The search.
+	 *
+	 * @return string|null The contactsUid.
+	 */
+	private function firstMatch(array $search): ?string {
+		try {
+			$results = $this->contactsManager->search($search['term'], $search['props'], ['limit' => 1]);
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				'Pipelinq: contact match search failed',
+				['term' => $search['term'], 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		foreach ($results as $hit) {
+			$uid = (string)($hit['UID'] ?? '');
+			if ($uid !== '') {
+				return $uid;
 			}
 		}
 
 		return null;
-	}//end matchExistingContact()
+	}//end firstMatch()
 }//end class
