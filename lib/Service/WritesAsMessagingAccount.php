@@ -86,14 +86,7 @@ trait WritesAsMessagingAccount {
 
 		try {
 			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						// The contact schema stores the number under `phone`.
-						'phone' => $phone,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->resolveSchemaSlug(key: 'contact_schema', default: self::DEFAULT_CONTACT_SCHEMA_SLUG),
-					],
-				],
+				config: ['filters' => $this->contactPhoneFilters(phone: $phone)],
 				_rbac: self::LOOKUP_SCOPE['_rbac'],
 				_multitenancy: self::LOOKUP_SCOPE['_multitenancy'],
 			);
@@ -101,10 +94,37 @@ trait WritesAsMessagingAccount {
 			return '';
 		}
 
+		return $this->firstIdIn(rows: $rows);
+	}//end findContactByPhone()
+
+	/**
+	 * The filters that find a contact by number. The contact schema stores
+	 * the number under `phone`.
+	 *
+	 * @param string $phone The number.
+	 *
+	 * @return array<string, string>
+	 */
+	private function contactPhoneFilters(string $phone): array {
+		return [
+			'phone' => $phone,
+			'register' => $this->getRegisterSlug(),
+			'schema' => $this->resolveSchemaSlug(key: 'contact_schema', default: self::DEFAULT_CONTACT_SCHEMA_SLUG),
+		];
+	}//end contactPhoneFilters()
+
+	/**
+	 * The id of the first row read; '' when nothing was read.
+	 *
+	 * @param mixed $rows The rows read.
+	 *
+	 * @return string
+	 */
+	private function firstIdIn($rows): string {
 		if (is_array($rows) === false || $rows === []) {
 			return '';
 		}
 
 		return $this->extractId(payload: $this->toArray(value: $rows[0]));
-	}//end findContactByPhone()
+	}//end firstIdIn()
 }//end trait
