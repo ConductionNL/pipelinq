@@ -411,33 +411,77 @@ final class SchemaLifecycleGraph {
 	 * @return void
 	 */
 	private function mergeTransitionSpec(array &$graph, mixed $spec): void {
-		if (is_array($spec) === false) {
+		$edge = $this->edgeOf(spec: $spec);
+		if ($edge === null) {
 			return;
 		}
 
-		$to = ($spec['to'] ?? null);
-		if (is_string($to) === false || $to === '') {
-			return;
-		}
-
-		$from = ($spec['from'] ?? []);
-		if (is_string($from) === true) {
-			$from = [$from];
-		}
-
-		if (is_array($from) === false) {
-			return;
-		}
-
-		foreach ($from as $fromState) {
+		foreach ($edge['from'] as $fromState) {
 			$state = (string)$fromState;
-			if (isset($graph[$state]) === false) {
-				$graph[$state] = [];
-			}
-
-			if (in_array($to, $graph[$state], true) === false) {
-				$graph[$state][] = $to;
+			$graph[$state] = ($graph[$state] ?? []);
+			if (in_array($edge['to'], $graph[$state], true) === false) {
+				$graph[$state][] = $edge['to'];
 			}
 		}
 	}//end mergeTransitionSpec()
+
+	/**
+	 * A transition spec's target and sources; null for a spec that is not a
+	 * list, has no string target, or whose sources are neither a string nor
+	 * a list.
+	 *
+	 * @param mixed $spec The transition spec.
+	 *
+	 * @return array{to: string, from: array<mixed>}|null
+	 */
+	private function edgeOf(mixed $spec): ?array {
+		if (is_array($spec) === false) {
+			return null;
+		}
+
+		$to = $this->targetOf(spec: $spec);
+		$from = $this->sourcesOf(spec: $spec);
+		if ($to === '' || $from === null) {
+			return null;
+		}
+
+		return ['to' => $to, 'from' => $from];
+	}//end edgeOf()
+
+	/**
+	 * A spec's sources as a list: one string becomes a one-item list; null
+	 * when they are neither.
+	 *
+	 * @param array<string, mixed> $spec The transition spec.
+	 *
+	 * @return array<mixed>|null
+	 */
+	private function sourcesOf(array $spec): ?array {
+		$from = ($spec['from'] ?? []);
+		if (is_string($from) === true) {
+			return [$from];
+		}
+
+		if (is_array($from) === false) {
+			return null;
+		}
+
+		return $from;
+	}//end sourcesOf()
+
+	/**
+	 * A spec's target state; '' when it is not a string.
+	 *
+	 * @param array<string, mixed> $spec The transition spec.
+	 *
+	 * @return string
+	 */
+	private function targetOf(array $spec): string {
+		$to = ($spec['to'] ?? null);
+		if (is_string($to) === false) {
+			return '';
+		}
+
+		return $to;
+	}//end targetOf()
 }//end class
