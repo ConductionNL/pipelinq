@@ -98,6 +98,23 @@ class OpenMailService {
 			throw new InvalidArgumentException('email is not an email address');
 		}
 
+		$matches = $this->matchesFor(email: $email);
+		$organisation = null;
+		if ($matches === []) {
+			$organisation = $this->organisationFor(email: $email);
+		}
+
+		return ['matches' => $matches, 'organisation' => $organisation];
+	}//end lookup()
+
+	/**
+	 * The summaries of the records the address matches that the caller may read.
+	 *
+	 * @param string $email The normalised address.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private function matchesFor(string $email): array {
 		$matches = [];
 		foreach ($this->matcher->matchEmailToEntities(address: $email) as $match) {
 			$summary = $this->summary(entityType: (string)$match['entityType'], entityId: (string)$match['entityId']);
@@ -106,16 +123,25 @@ class OpenMailService {
 			}
 		}
 
-		$organisation = null;
-		if ($matches === []) {
-			$found = $this->matcher->matchDomainToOrganization(domain: substr($email, (strrpos($email, '@') + 1)));
-			if ($found !== null) {
-				$organisation = $this->summary(entityType: 'client', entityId: (string)$found['entityId']);
-			}
+		return $matches;
+	}//end matchesFor()
+
+	/**
+	 * The organisation the address's domain belongs to, as the caller may
+	 * read it; null when there is none.
+	 *
+	 * @param string $email The normalised address.
+	 *
+	 * @return array<string, string>|null
+	 */
+	private function organisationFor(string $email): ?array {
+		$found = $this->matcher->matchDomainToOrganization(domain: substr($email, (strrpos($email, '@') + 1)));
+		if ($found === null) {
+			return null;
 		}
 
-		return ['matches' => $matches, 'organisation' => $organisation];
-	}//end lookup()
+		return $this->summary(entityType: 'client', entityId: (string)$found['entityId']);
+	}//end organisationFor()
 
 	/**
 	 * Add a mail's sender as a contact person, the Nextcloud contact first.
@@ -174,41 +200,75 @@ class OpenMailService {
 	 */
 	public function logMail(string $entityType, string $entityId, string $subject, string $sentAt, string $preview): array {
 		$payload = $this->contactMomentFor(entityType: $entityType, entityId: $entityId);
+		$title = $this->required(value: $subject, field: 'subject');
+		$occurredAt = $this->occurredAt(sentAt: $sentAt);
 
-		$subject = trim($subject);
-		if ($subject === '') {
-			throw new InvalidArgumentException('subject is required');
-		}
-
-		$sentAt = trim($sentAt);
-		if ($sentAt === '') {
-			throw new InvalidArgumentException('sentAt is required');
-		}
-
-		try {
-			$instant = new DateTimeImmutable($sentAt);
-		} catch (Exception $e) {
-			throw new InvalidArgumentException('sentAt is not a date and time');
-		}
-
-		$payload['title'] = mb_substr($subject, 0, self::TITLE_MAX_CHARS);
+		$payload['title'] = mb_substr($title, 0, self::TITLE_MAX_CHARS);
 		$payload['channel'] = 'email';
 		$payload['direction'] = 'inbound';
-		$payload['occurredAt'] = $instant->format(DateTimeInterface::ATOM);
+		$payload['occurredAt'] = $occurredAt;
 		$preview = trim($preview);
 		if ($preview !== '') {
 			$payload['description'] = mb_substr($preview, 0, self::PREVIEW_MAX_CHARS);
 		}
 
 		$saved = $this->tickets->save(ticketType: TicketService::TYPE_CONTACTMOMENT, payload: $payload);
+		return (['id' => $this->uuidOf(saved: $saved)] + $payload);
+	}//end logMail()
 
-		$id = '';
-		if (method_exists($saved, 'getUuid') === true) {
-			$id = (string)$saved->getUuid();
+	/**
+	 * A required value, trimmed.
+	 *
+	 * @param string $value The value.
+	 * @param string $field Its name, for the refusal.
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException When it is empty once trimmed.
+	 */
+	private function required(string $value, string $field): string {
+		$value = trim($value);
+		if ($value === '') {
+			throw new InvalidArgumentException($field . ' is required');
 		}
 
-		return (['id' => $id] + $payload);
-	}//end logMail()
+		return $value;
+	}//end required()
+
+	/**
+	 * The moment a mail was sent, as an ATOM date and time.
+	 *
+	 * @param string $sentAt The sent-at text.
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException When it is empty or no date and time.
+	 */
+	private function occurredAt(string $sentAt): string {
+		$sentAt = $this->required(value: $sentAt, field: 'sentAt');
+		try {
+			$instant = new DateTimeImmutable($sentAt);
+		} catch (Exception $e) {
+			throw new InvalidArgumentException('sentAt is not a date and time');
+		}
+
+		return $instant->format(DateTimeInterface::ATOM);
+	}//end occurredAt()
+
+	/**
+	 * The saved object's uuid; '' when it has none.
+	 *
+	 * @param mixed $saved The saved object.
+	 *
+	 * @return string
+	 */
+	private function uuidOf($saved): string {
+		if (method_exists($saved, 'getUuid') === true) {
+			return (string)$saved->getUuid();
+		}
+
+		return '';
+	}//end uuidOf()
 
 	/**
 	 * The start of a contact moment on a record the caller may read.
@@ -267,24 +327,48 @@ class OpenMailService {
 			return null;
 		}
 
-		$summary = [
-			'entityType' => $entityType,
-			'entityId' => $entityId,
-			'name' => (string)($record['name'] ?? ''),
-			'email' => (string)($record['email'] ?? ''),
-		];
+		$summary = ['entityType' => $entityType, 'entityId' => $entityId];
+		$summary += ['name' => (string)($record['name'] ?? ''), 'email' => (string)($record['email'] ?? '')];
+		return $this->withClient(summary: $summary, clientId: $this->contactsClient(summary: $summary, record: $record));
+	}//end summary()
 
-		// A contact person is shown with the client they belong to, when the
-		// caller may read that client too.
+	/**
+	 * The client a contact belongs to; '' for a client, or a contact without one.
+	 *
+	 * @param array<string, string> $summary The summary so far.
+	 * @param array<string, mixed>  $record  The record read.
+	 *
+	 * @return string
+	 */
+	private function contactsClient(array $summary, array $record): string {
 		$clientId = ($record['client'] ?? null);
-		if ($entityType === 'contact' && is_string($clientId) === true && $clientId !== '') {
-			$client = $this->reader->read(id: $clientId, schemaKey: self::SCHEMA_KEYS['client']);
-			if ($client !== null) {
-				$summary['clientId'] = $clientId;
-				$summary['clientName'] = (string)($client['name'] ?? '');
-			}
+		if ($summary['entityType'] !== 'contact' || is_string($clientId) === false) {
+			return '';
+		}
+
+		return $clientId;
+	}//end contactsClient()
+
+	/**
+	 * A contact person is shown with the client they belong to, when the
+	 * caller may read that client too.
+	 *
+	 * @param array<string, string> $summary  The summary so far.
+	 * @param string                $clientId The contact's client, '' for none.
+	 *
+	 * @return array<string, string>
+	 */
+	private function withClient(array $summary, string $clientId): array {
+		if ($clientId === '') {
+			return $summary;
+		}
+
+		$client = $this->reader->read(id: $clientId, schemaKey: self::SCHEMA_KEYS['client']);
+		if ($client !== null) {
+			$summary['clientId'] = $clientId;
+			$summary['clientName'] = (string)($client['name'] ?? '');
 		}
 
 		return $summary;
-	}//end summary()
+	}//end withClient()
 }//end class
