@@ -204,4 +204,35 @@ class SchemaLifecycleGraphTest extends TestCase {
 		$graph = new SchemaLifecycleGraph(settingsDir: '/nonexistent/path/Settings');
 		$this->assertSame(expected: [], actual: $graph->adjacencyFor(schemaSlug: 'crmTask'));
 	}//end testUnreadableSettingsDirYieldsEmptyMap()
+	/**
+	 * Every transition spec shape, through the lifecycle normaliser: a spec
+	 * that is not a list, without a string target, or with a from that is
+	 * neither a string nor a list is skipped; one source as a string counts;
+	 * sources are read as strings; a repeated edge is kept once; the order
+	 * of first appearance is kept.
+	 *
+	 * @return void
+	 */
+	public function testEveryTransitionSpecShape(): void {
+		$graph = new SchemaLifecycleGraph(settingsDir: sys_get_temp_dir());
+		$normalise = new \ReflectionMethod(SchemaLifecycleGraph::class, 'normaliseTransitions');
+
+		$this->assertSame([], $normalise->invoke($graph, ['transitions' => 'none']));
+		$this->assertSame(
+			['new' => ['open', 'closed'], 'open' => ['closed'], '7' => ['open']],
+			$normalise->invoke(
+				$graph,
+				['transitions' => [
+					'junk',
+					['to' => '', 'from' => 'new'],
+					['to' => 5, 'from' => 'new'],
+					['to' => 'open', 'from' => 3],
+					['to' => 'open', 'from' => 'new'],
+					['to' => 'closed', 'from' => ['new', 'open']],
+					['to' => 'open', 'from' => ['new', 7]],
+					['to' => 'closed'],
+				]]
+			)
+		);
+	}//end testEveryTransitionSpecShape()
 }//end class
