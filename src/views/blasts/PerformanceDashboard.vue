@@ -358,6 +358,7 @@ import {
 	wholePercent,
 } from '../../services/abTest.js'
 import { readTrafficRows, trafficOutcome } from '../../services/campaignTraffic.js'
+import { downloadCsv } from '../../services/csvExport.js'
 
 const OVERVIEW_LIMIT = 50
 /** How many per-blast attribution or traffic reads may be in flight at once. */
@@ -589,17 +590,7 @@ export default {
 		 */
 		downloadOverview() {
 			const keys = ['name', 'segmentName', 'status', 'sent', 'openRate', 'clickRate', 'unsubscribed']
-			const cell = (value) => {
-				const text = value === null || value === undefined ? '' : String(value)
-				return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-			}
-			const lines = [keys.join(';'), ...this.sortedOverviewRows.map((row) => keys.map((key) => cell(row[key])).join(';'))]
-			const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-			const link = document.createElement('a')
-			link.href = URL.createObjectURL(blob)
-			link.download = 'blast-performance.csv'
-			link.click()
-			URL.revokeObjectURL(link.href)
+			downloadCsv('blast-performance.csv', this.sortedOverviewRows, keys)
 		},
 
 		/**
