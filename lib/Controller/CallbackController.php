@@ -32,6 +32,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -82,14 +83,12 @@ class CallbackController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function attempt(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		$user = $this->currentUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
-		$this->scheduledTaskService->applyAcceptLanguage(
-			acceptLanguage: $this->request->getHeader('Accept-Language')
-		);
+		$this->applyAcceptLanguage();
 
 		$result = $this->request->getParam('result', '');
 		$notes = $this->request->getParam('notes', '');
@@ -102,17 +101,9 @@ class CallbackController extends Controller {
 		}
 
 		try {
-			$taskData = $this->fetchTask(id: $id);
-			if ($taskData === null) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Task not found')],
-					Http::STATUS_NOT_FOUND
-				);
-			}
-
-			$authCheck = $this->checkTaskAuth(task: $taskData, userId: $user->getUID());
-			if ($authCheck !== null) {
-				return $authCheck;
+			$taskData = $this->authorizedTask(id: $id, userId: $user->getUID());
+			if ($taskData instanceof JSONResponse) {
+				return $taskData;
 			}
 
 			$taskData = $this->callbackService->addAttempt($taskData, $result, $notes);
@@ -127,11 +118,8 @@ class CallbackController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error('CallbackController::attempt failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Failed to log callback attempt')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
+			$this->logFailure(action: 'attempt', error: $e);
+			return $this->serverError(message: $this->l10n->t('Failed to log callback attempt'));
 		}//end try
 	}//end attempt()
 
@@ -146,22 +134,17 @@ class CallbackController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function claim(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		$user = $this->currentUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
-		$this->scheduledTaskService->applyAcceptLanguage(
-			acceptLanguage: $this->request->getHeader('Accept-Language')
-		);
+		$this->applyAcceptLanguage();
 
 		try {
-			$taskData = $this->fetchTask(id: $id);
-			if ($taskData === null) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Task not found')],
-					Http::STATUS_NOT_FOUND
-				);
+			$taskData = $this->taskOrNotFound(id: $id);
+			if ($taskData instanceof JSONResponse) {
+				return $taskData;
 			}
 
 			$validation = $this->callbackService->validateClaim($taskData);
@@ -177,11 +160,8 @@ class CallbackController extends Controller {
 
 			return new JSONResponse(['task' => $taskData]);
 		} catch (\Exception $e) {
-			$this->logger->error('CallbackController::claim failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Failed to claim task')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
+			$this->logFailure(action: 'claim', error: $e);
+			return $this->serverError(message: $this->l10n->t('Failed to claim task'));
 		}//end try
 	}//end claim()
 
@@ -196,41 +176,24 @@ class CallbackController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function complete(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		$user = $this->currentUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
-		$this->scheduledTaskService->applyAcceptLanguage(
-			acceptLanguage: $this->request->getHeader('Accept-Language')
-		);
+		$this->applyAcceptLanguage();
 
 		$resultText = $this->request->getParam('resultText', '');
 
 		try {
-			$taskData = $this->fetchTask(id: $id);
-			if ($taskData === null) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Task not found')],
-					Http::STATUS_NOT_FOUND
-				);
+			$taskData = $this->authorizedTask(id: $id, userId: $user->getUID());
+			if ($taskData instanceof JSONResponse) {
+				return $taskData;
 			}
 
-			$authCheck = $this->checkTaskAuth(task: $taskData, userId: $user->getUID());
-			if ($authCheck !== null) {
-				return $authCheck;
-			}
-
-			$transition = $this->callbackService->validateStatusTransition(
-				$taskData['status'] ?? 'open',
-				'completed'
-			);
-
-			if ($transition['valid'] === false) {
-				return new JSONResponse(
-					['error' => $this->l10n->t($transition['reason'])],
-					Http::STATUS_BAD_REQUEST
-				);
+			$refusal = $this->completionRefusal(taskData: $taskData);
+			if ($refusal !== null) {
+				return $refusal;
 			}
 
 			$taskData = $this->callbackService->applyCompletion($taskData, $resultText);
@@ -252,11 +215,8 @@ class CallbackController extends Controller {
 
 			return new JSONResponse(['task' => $taskData]);
 		} catch (\Exception $e) {
-			$this->logger->error('CallbackController::complete failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Failed to complete task')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
+			$this->logFailure(action: 'complete', error: $e);
+			return $this->serverError(message: $this->l10n->t('Failed to complete task'));
 		}//end try
 	}//end complete()
 
@@ -273,36 +233,23 @@ class CallbackController extends Controller {
 	 * @spec openspec/changes/callback-management/tasks.md#task-2.1
 	 */
 	public function reassign(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		$user = $this->currentUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$assignee = $this->request->getParam('assignee', '');
 		$assigneeType = $this->request->getParam('assigneeType', '');
 
-		if (empty($assignee) === true || in_array($assigneeType, ['user', 'group'], true) === false) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Assignee and valid assignee type are required')],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		// Reassign is a manager/admin-only operation.
-		if ($this->groupManager->isAdmin($user->getUID()) === false) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Only administrators may reassign tasks')],
-				Http::STATUS_FORBIDDEN
-			);
+		$refusal = $this->reassignRefusal(assignee: $assignee, assigneeType: $assigneeType) ?? $this->nonAdminRefusal(user: $user);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
-			$taskData = $this->fetchTask(id: $id);
-			if ($taskData === null) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Task not found')],
-					Http::STATUS_NOT_FOUND
-				);
+			$taskData = $this->taskOrNotFound(id: $id);
+			if ($taskData instanceof JSONResponse) {
+				return $taskData;
 			}
 
 			$taskData = $this->callbackService->applyReassignment($taskData, $assignee, $assigneeType);
@@ -326,11 +273,8 @@ class CallbackController extends Controller {
 
 			return new JSONResponse(['task' => $taskData]);
 		} catch (\Exception $e) {
-			$this->logger->error('CallbackController::reassign failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Failed to reassign task')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
+			$this->logFailure(action: 'reassign', error: $e);
+			return $this->serverError(message: $this->l10n->t('Failed to reassign task'));
 		}//end try
 	}//end reassign()
 
@@ -371,4 +315,154 @@ class CallbackController extends Controller {
 			);
 		}
 	}//end checkTaskAuth()
+
+	/**
+	 * The logged-in user, or the 401 refusal.
+	 *
+	 * @return IUser|JSONResponse The user, or the refusal.
+	 */
+	private function currentUser(): IUser|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		return $user;
+	}//end currentUser()
+
+	/**
+	 * Translate the task texts into the request's language.
+	 *
+	 * @return void
+	 */
+	private function applyAcceptLanguage(): void {
+		$this->scheduledTaskService->applyAcceptLanguage(
+			acceptLanguage: $this->request->getHeader('Accept-Language')
+		);
+	}//end applyAcceptLanguage()
+
+	/**
+	 * The task, or the 404 refusal.
+	 *
+	 * @param string $id The task object ID.
+	 *
+	 * @return array<string, mixed>|JSONResponse The task data, or the refusal.
+	 */
+	private function taskOrNotFound(string $id): array|JSONResponse {
+		$taskData = $this->fetchTask(id: $id);
+		if ($taskData === null) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Task not found')],
+				Http::STATUS_NOT_FOUND
+			);
+		}
+
+		return $taskData;
+	}//end taskOrNotFound()
+
+	/**
+	 * The task the user may change, or the 404 / 403 refusal.
+	 *
+	 * @param string $id     The task object ID.
+	 * @param string $userId The acting user ID.
+	 *
+	 * @return array<string, mixed>|JSONResponse The task data, or the refusal.
+	 */
+	private function authorizedTask(string $id, string $userId): array|JSONResponse {
+		$taskData = $this->taskOrNotFound(id: $id);
+		if ($taskData instanceof JSONResponse) {
+			return $taskData;
+		}
+
+		$authCheck = $this->checkTaskAuth(task: $taskData, userId: $userId);
+		if ($authCheck !== null) {
+			return $authCheck;
+		}
+
+		return $taskData;
+	}//end authorizedTask()
+
+	/**
+	 * Log a failed action.
+	 *
+	 * @param string     $action The action name.
+	 * @param \Exception $error  The failure.
+	 *
+	 * @return void
+	 */
+	private function logFailure(string $action, \Exception $error): void {
+		$this->logger->error('CallbackController::' . $action . ' failed', ['exception' => $error->getMessage()]);
+	}//end logFailure()
+
+	/**
+	 * A 500 answer with a translated message.
+	 *
+	 * @param string $message The translated message.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function serverError(string $message): JSONResponse {
+		return new JSONResponse(['error' => $message], Http::STATUS_INTERNAL_SERVER_ERROR);
+	}//end serverError()
+
+	/**
+	 * The 400 refusal when the task cannot move to completed.
+	 *
+	 * @param array<string, mixed> $taskData The task data.
+	 *
+	 * @return JSONResponse|null The refusal, or null when the transition is valid.
+	 */
+	private function completionRefusal(array $taskData): ?JSONResponse {
+		$transition = $this->callbackService->validateStatusTransition(
+			$taskData['status'] ?? 'open',
+			'completed'
+		);
+
+		if ($transition['valid'] === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t($transition['reason'])],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return null;
+	}//end completionRefusal()
+
+	/**
+	 * The 400 refusal for a missing assignee or an assignee type other than user or group.
+	 *
+	 * @param mixed $assignee     The requested assignee.
+	 * @param mixed $assigneeType The requested assignee type.
+	 *
+	 * @return JSONResponse|null The refusal, or null when both are valid.
+	 */
+	private function reassignRefusal(mixed $assignee, mixed $assigneeType): ?JSONResponse {
+		if (empty($assignee) === true || in_array($assigneeType, ['user', 'group'], true) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Assignee and valid assignee type are required')],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return null;
+	}//end reassignRefusal()
+
+	/**
+	 * The 403 refusal for a user who is not an administrator: reassigning is
+	 * a manager/admin-only operation.
+	 *
+	 * @param IUser $user The acting user.
+	 *
+	 * @return JSONResponse|null The refusal, or null for an administrator.
+	 */
+	private function nonAdminRefusal(IUser $user): ?JSONResponse {
+		if ($this->groupManager->isAdmin($user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Only administrators may reassign tasks')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
+
+		return null;
+	}//end nonAdminRefusal()
 }//end class
