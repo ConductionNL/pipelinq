@@ -516,33 +516,51 @@ class SlaEngineService {
 			return [];
 		}
 
+		$objectService = $this->policyObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		// Register/schema belong inside `filters`: prepareFindAllConfig()
+		// reads them from there and nowhere else, so a top-level pair
+		// resolves NO context and findAll() answers []. Found by grepping
+		// for the shape after fixing the same mistake twice in
+		// SlaAttainmentService — this third site loads the POLICIES, so an
+		// empty answer means every ticket is evaluated against no policy at
+		// all, silently.
+		$rows = $this->findPolicyRows(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema]);
+
+		return $this->activePolicies(rows: (array)$rows);
+	}//end loadActivePolicies()
+
+	/**
+	 * OpenRegister's ObjectService for the policy read; null when unavailable.
+	 *
+	 * @return object|null
+	 */
+	private function policyObjectService(): ?object {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: ObjectService not available',
 				['error' => $e->getMessage()]
 			);
-			return [];
+			return null;
 		}
+	}//end policyObjectService()
 
+	/**
+	 * Read up to 500 policy rows; none when the read fails.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $filters       The register and schema filters.
+	 *
+	 * @return mixed The rows as findAll() answers them.
+	 */
+	private function findPolicyRows(object $objectService, array $filters): mixed {
 		try {
-			// Register/schema belong inside `filters`: prepareFindAllConfig()
-			// reads them from there and nowhere else, so a top-level pair
-			// resolves NO context and findAll() answers []. Found by grepping
-			// for the shape after fixing the same mistake twice in
-			// SlaAttainmentService — this third site loads the POLICIES, so an
-			// empty answer means every ticket is evaluated against no policy at
-			// all, silently.
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 500,
-				]
-			);
+			return $objectService->findAll(config: ['filters' => $filters, 'limit' => 500]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: ObjectService::findAll failed',
@@ -550,9 +568,18 @@ class SlaEngineService {
 			);
 			return [];
 		}
+	}//end findPolicyRows()
 
+	/**
+	 * The policy rows that are neither archived nor switched off, normalised.
+	 *
+	 * @param array<int|string, mixed> $rows The stored policy rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function activePolicies(array $rows): array {
 		$policies = [];
-		foreach ((array)$rows as $row) {
+		foreach ($rows as $row) {
 			$array = $this->normaliseObject(row: $row);
 			if (($array['status'] ?? 'published') === 'archived') {
 				continue;
@@ -566,7 +593,7 @@ class SlaEngineService {
 		}
 
 		return $policies;
-	}//end loadActivePolicies()
+	}//end activePolicies()
 
 	/**
 	 * The policies that apply to the queried object, in register order.
@@ -869,41 +896,57 @@ class SlaEngineService {
 	 * @return array<string, mixed>|null The recipient row, or null.
 	 */
 	private function resolveCustomerContact(string $objectType, string $objectId): ?array {
-		$targetSchema = $this->appConfig->getValueString(Application::APP_ID, 'sla_target_schema_' . $objectType, '');
-		if ($targetSchema === '') {
-			$targetSchema = $objectType;
-		}
-
+		$targetSchema = $this->configuredSchema(key: 'sla_target_schema_' . $objectType, default: $objectType);
 		$target = $this->loadPipelinqObject(schema: $targetSchema, id: $objectId);
 		if ($target === null) {
 			return null;
 		}
 
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-		if ($contactSchema === '') {
-			$contactSchema = 'contact';
+		$contact = $this->linkedObject(target: $target, link: 'contact');
+		if ($contact !== null) {
+			return $contact;
 		}
 
-		$contactId = (string)($target['contact'] ?? '');
-		if ($contactId !== '') {
-			$contact = $this->loadPipelinqObject(schema: $contactSchema, id: $contactId);
-			if ($contact !== null) {
-				return $contact;
-			}
-		}
-
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
-		if ($clientSchema === '') {
-			$clientSchema = 'client';
-		}
-
-		$clientId = (string)($target['client'] ?? '');
-		if ($clientId !== '') {
-			return $this->loadPipelinqObject(schema: $clientSchema, id: $clientId);
-		}
-
-		return null;
+		return $this->linkedObject(target: $target, link: 'client');
 	}//end resolveCustomerContact()
+
+	/**
+	 * The object a tracked object links to under `contact` or `client`, read
+	 * from the schema configured as `<link>_schema` (default: the link name).
+	 *
+	 * @param array<string, mixed> $target The tracked object.
+	 * @param string               $link   `contact` or `client`.
+	 *
+	 * @return array<string, mixed>|null The linked object, or null when unset or not found.
+	 */
+	private function linkedObject(array $target, string $link): ?array {
+		$linkedId = (string)($target[$link] ?? '');
+		if ($linkedId === '') {
+			return null;
+		}
+
+		return $this->loadPipelinqObject(
+			schema: $this->configuredSchema(key: $link . '_schema', default: $link),
+			id: $linkedId
+		);
+	}//end linkedObject()
+
+	/**
+	 * A schema slug from app config, or the default when it is not set.
+	 *
+	 * @param string $key     The app-config key.
+	 * @param string $default The slug to fall back on.
+	 *
+	 * @return string
+	 */
+	private function configuredSchema(string $key, string $default): string {
+		$schema = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		if ($schema === '') {
+			return $default;
+		}
+
+		return $schema;
+	}//end configuredSchema()
 
 	/**
 	 * Load a pipelinq-register object by schema slug + id (best effort).
@@ -1164,28 +1207,56 @@ class SlaEngineService {
 			return $row;
 		}
 
-		if (is_object($row) === true) {
-			if (method_exists($row, 'getObject') === true) {
-				$object = $row->getObject();
-				if (is_array($object) === true) {
-					if (method_exists($row, 'getUuid') === true) {
-						$object['id'] = $object['id'] ?? (string)$row->getUuid();
-					}
-
-					return $object;
-				}
-			}
-
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$json = $row->jsonSerialize();
-				if (is_array($json) === true) {
-					return $json;
-				}
-			}
+		if (is_object($row) === false) {
+			return [];
 		}
 
-		return [];
+		return ($this->entityObject(row: $row) ?? $this->serialisedObject(row: $row) ?? []);
 	}//end normaliseObject()
+
+	/**
+	 * An entity's object array, with its uuid as `id` when it has none.
+	 *
+	 * @param object $row The entity.
+	 *
+	 * @return array<string, mixed>|null Null when it has no object array.
+	 */
+	private function entityObject(object $row): ?array {
+		if (method_exists($row, 'getObject') === false) {
+			return null;
+		}
+
+		$object = $row->getObject();
+		if (is_array($object) === false) {
+			return null;
+		}
+
+		if (method_exists($row, 'getUuid') === true) {
+			$object['id'] = $object['id'] ?? (string)$row->getUuid();
+		}
+
+		return $object;
+	}//end entityObject()
+
+	/**
+	 * An object's jsonSerialize() array.
+	 *
+	 * @param object $row The object.
+	 *
+	 * @return array<string, mixed>|null Null when it does not serialise to an array.
+	 */
+	private function serialisedObject(object $row): ?array {
+		if (method_exists($row, 'jsonSerialize') === false) {
+			return null;
+		}
+
+		$json = $row->jsonSerialize();
+		if (is_array($json) === false) {
+			return null;
+		}
+
+		return $json;
+	}//end serialisedObject()
 
 	/**
 	 * Wall-clock milliseconds between two instants.
