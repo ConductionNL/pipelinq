@@ -144,11 +144,36 @@ export function confirmPayload(proposal, choice, kind) {
 		term: String(proposal?.query || proposal?.term || '').trim(),
 		status,
 		proposalKind,
+		...choiceFields(proposal, choice),
+	}
+}
+
+/**
+ * What the marketer wrote for the target: the intent, the page (else the
+ * proposal's top page), the property and the notes, each as text.
+ *
+ * @param {object} proposal The proposal row.
+ * @param {object} choice What the marketer chose.
+ * @return {{intent: string, targetPageRef: string, property: string, notes: string}} The fields.
+ * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ */
+function choiceFields(proposal, choice) {
+	return {
 		intent: String(choice?.intent || ''),
-		targetPageRef: String(choice?.targetPageRef || proposal?.topPage || ''),
+		targetPageRef: targetPage(proposal, choice),
 		property: String(choice?.property || ''),
 		notes: String(choice?.notes || ''),
 	}
+}
+
+/**
+ * @param {object} proposal The proposal row.
+ * @param {object} choice What the marketer chose.
+ * @return {string} The page the marketer chose, else the proposal's top page.
+ * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ */
+function targetPage(proposal, choice) {
+	return String(choice?.targetPageRef || proposal?.topPage || '')
 }
 
 /**
