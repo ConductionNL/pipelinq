@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Letter;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\Service\Letter\LetterLog;
+use OCA\Pipelinq\Service\Letter\LoggedLetter;
 use OCA\Pipelinq\Service\TicketService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -46,11 +47,13 @@ class LetterLogTest extends TestCase
     public function testFullPayload(): void
     {
         $payload = LetterLog::contactMomentPayload(
-            clientId: 'client-1',
-            contactId: 'contact-1',
-            ticketId: 'ticket-1',
-            templateName: 'Appointment letter',
-            path: '/Letters/a.pdf',
+            letter: new LoggedLetter(
+                clientId: 'client-1',
+                contactId: 'contact-1',
+                ticketId: 'ticket-1',
+                templateName: 'Appointment letter',
+                path: '/Letters/a.pdf',
+            ),
             occurredAt: new DateTimeImmutable('2026-09-30T10:15:00+02:00')
         );
 
@@ -83,11 +86,13 @@ class LetterLogTest extends TestCase
         $name = str_repeat('é', 300);
         foreach ([null, ''] as $path) {
             $payload = LetterLog::contactMomentPayload(
-                clientId: 'client-2',
-                contactId: null,
-                ticketId: null,
-                templateName: $name,
-                path: $path,
+                letter: new LoggedLetter(
+                    clientId: 'client-2',
+                    contactId: null,
+                    ticketId: null,
+                    templateName: $name,
+                    path: $path,
+                ),
                 occurredAt: new DateTimeImmutable('2026-01-02T03:04:05+00:00')
             );
 

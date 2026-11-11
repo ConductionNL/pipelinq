@@ -81,14 +81,14 @@ class LetterLog
      */
     public function log(string $clientId, ?string $contactId, ?string $ticketId, string $templateName, ?string $path): ?string
     {
-        $payload = self::contactMomentPayload(
+        $letter  = new LoggedLetter(
             clientId: $clientId,
             contactId: $contactId,
             ticketId: $ticketId,
             templateName: $templateName,
             path: $path,
-            occurredAt: new DateTimeImmutable()
         );
+        $payload = self::contactMomentPayload(letter: $letter, occurredAt: new DateTimeImmutable());
 
         try {
             $saved = $this->tickets->save(ticketType: TicketService::TYPE_CONTACTMOMENT, payload: $payload);
@@ -119,51 +119,70 @@ class LetterLog
     /**
      * The contact moment a letter is logged as, before `ticketType` is forced.
      *
-     * @param string            $clientId     The client id.
-     * @param string|null       $contactId    The contact person, if one was chosen.
-     * @param string|null       $ticketId     The ticket the letter was made from, if any.
-     * @param string            $templateName The template's name.
-     * @param string|null       $path         Where filinq filed the copy.
-     * @param DateTimeImmutable $occurredAt   When the letter was made.
+     * @param LoggedLetter      $letter     The letter.
+     * @param DateTimeImmutable $occurredAt When the letter was made.
      *
      * @return array<string, string> The payload.
      *
      * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
      */
-    public static function contactMomentPayload(
-        string $clientId,
-        ?string $contactId,
-        ?string $ticketId,
-        string $templateName,
-        ?string $path,
-        DateTimeImmutable $occurredAt
-    ): array {
-        $description = 'Letter made from the filinq template "'.$templateName.'".';
-        if ($path !== null && $path !== '') {
-            $description .= ' A copy is filed at '.$path.'.';
-        }
-
+    public static function contactMomentPayload(LoggedLetter $letter, DateTimeImmutable $occurredAt): array
+    {
         $payload = [
-            'client'      => $clientId,
-            'title'       => mb_substr('Letter: '.$templateName, 0, 255),
+            'client'      => $letter->clientId,
+            'title'       => mb_substr('Letter: '.$letter->templateName, 0, 255),
             'direction'   => 'outbound',
             'channel'     => self::LETTER_CHANNEL,
             'outcome'     => 'handled',
-            'description' => $description,
+            'description' => self::description(letter: $letter),
             'occurredAt'  => $occurredAt->format('c'),
         ];
 
-        if ($contactId !== null) {
-            $payload['contact'] = $contactId;
+        return self::withLinks(payload: $payload, letter: $letter);
+
+    }//end contactMomentPayload()
+
+
+    /**
+     * The contact moment description: the template, and where the copy is filed.
+     *
+     * @param LoggedLetter $letter The letter.
+     *
+     * @return string The description.
+     */
+    private static function description(LoggedLetter $letter): string
+    {
+        $description = 'Letter made from the filinq template "'.$letter->templateName.'".';
+        if ($letter->path !== null && $letter->path !== '') {
+            $description .= ' A copy is filed at '.$letter->path.'.';
         }
 
-        if ($ticketId !== null) {
-            $payload['parentTicket'] = $ticketId;
+        return $description;
+
+    }//end description()
+
+
+    /**
+     * Add the contact person and the parent ticket, when the letter has them.
+     *
+     * @param array<string, string> $payload The contact moment payload.
+     * @param LoggedLetter          $letter  The letter.
+     *
+     * @return array<string, string> The payload with its links.
+     */
+    private static function withLinks(array $payload, LoggedLetter $letter): array
+    {
+        if ($letter->contactId !== null) {
+            $payload['contact'] = $letter->contactId;
+        }
+
+        if ($letter->ticketId !== null) {
+            $payload['parentTicket'] = $letter->ticketId;
         }
 
         return $payload;
 
-    }//end contactMomentPayload()
+    }//end withLinks()
 
 
 }//end class
