@@ -159,6 +159,68 @@ class SegmentSignalService {
 	private ?array $catalogue = null;
 
 	/**
+	 * The signal catalogue, in the order a builder lists it (see catalogue()).
+	 *
+	 * @var array<string, array{type: string, title: string, source: string, description: string}>
+	 */
+	private const CATALOGUE = [
+		self::FIELD_REVENUE => [
+			'type' => 'number',
+			'title' => 'Recognised revenue',
+			'source' => 'shillinq',
+			'description' => 'Paid invoices for this customer over the signal window.',
+		],
+		self::FIELD_VALUE_TIER => [
+			'type' => 'string',
+			'title' => 'Value tier',
+			'source' => 'shillinq',
+			'description' => 'top, mid, low or none, from recognised revenue against the tier thresholds.',
+		],
+		self::FIELD_MONTHS_SINCE_INVOICE => [
+			'type' => 'integer',
+			'title' => 'Months since the last invoice',
+			'source' => 'shillinq',
+			'description' => 'Whole months since the most recent invoice that left the draft stage.',
+		],
+		self::FIELD_PRODUCTS => [
+			'type' => 'array',
+			'title' => 'Purchased products',
+			'source' => 'shillinq',
+			'description' => 'Catalogue products named on this customer\'s invoice lines.',
+		],
+		self::FIELD_SERVICES => [
+			'type' => 'array',
+			'title' => 'Purchased services',
+			'source' => 'shillinq',
+			'description' => 'Catalogue services named on this customer\'s invoice lines.',
+		],
+		self::FIELD_DUNNING => [
+			'type' => 'string',
+			'title' => 'Dunning state',
+			'source' => 'shillinq',
+			'description' => 'current, overdue, disputed, written-off or unknown.',
+		],
+		self::FIELD_RENEWAL_DAYS => [
+			'type' => 'integer',
+			'title' => 'Days to contract renewal',
+			'source' => 'pipelinq',
+			'description' => 'Days until the nearest contract of this customer ends.',
+		],
+		self::FIELD_STALLED_DAYS => [
+			'type' => 'integer',
+			'title' => 'Days a lead has been stalled',
+			'source' => 'pipelinq',
+			'description' => 'Days the longest-waiting open lead has sat in its current stage.',
+		],
+		self::FIELD_LAST_CONTACT_AT => [
+			'type' => 'string',
+			'title' => 'Last contact',
+			'source' => 'pipelinq',
+			'description' => 'When the latest contact moment with this customer took place.',
+		],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ListObjectStore $store Register-scoped object plumbing.
@@ -187,62 +249,7 @@ class SegmentSignalService {
 	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function catalogue(): array {
-		return [
-			self::FIELD_REVENUE => [
-				'type' => 'number',
-				'title' => 'Recognised revenue',
-				'source' => 'shillinq',
-				'description' => 'Paid invoices for this customer over the signal window.',
-			],
-			self::FIELD_VALUE_TIER => [
-				'type' => 'string',
-				'title' => 'Value tier',
-				'source' => 'shillinq',
-				'description' => 'top, mid, low or none, from recognised revenue against the tier thresholds.',
-			],
-			self::FIELD_MONTHS_SINCE_INVOICE => [
-				'type' => 'integer',
-				'title' => 'Months since the last invoice',
-				'source' => 'shillinq',
-				'description' => 'Whole months since the most recent invoice that left the draft stage.',
-			],
-			self::FIELD_PRODUCTS => [
-				'type' => 'array',
-				'title' => 'Purchased products',
-				'source' => 'shillinq',
-				'description' => 'Catalogue products named on this customer\'s invoice lines.',
-			],
-			self::FIELD_SERVICES => [
-				'type' => 'array',
-				'title' => 'Purchased services',
-				'source' => 'shillinq',
-				'description' => 'Catalogue services named on this customer\'s invoice lines.',
-			],
-			self::FIELD_DUNNING => [
-				'type' => 'string',
-				'title' => 'Dunning state',
-				'source' => 'shillinq',
-				'description' => 'current, overdue, disputed, written-off or unknown.',
-			],
-			self::FIELD_RENEWAL_DAYS => [
-				'type' => 'integer',
-				'title' => 'Days to contract renewal',
-				'source' => 'pipelinq',
-				'description' => 'Days until the nearest contract of this customer ends.',
-			],
-			self::FIELD_STALLED_DAYS => [
-				'type' => 'integer',
-				'title' => 'Days a lead has been stalled',
-				'source' => 'pipelinq',
-				'description' => 'Days the longest-waiting open lead has sat in its current stage.',
-			],
-			self::FIELD_LAST_CONTACT_AT => [
-				'type' => 'string',
-				'title' => 'Last contact',
-				'source' => 'pipelinq',
-				'description' => 'When the latest contact moment with this customer took place.',
-			],
-		];
+		return self::CATALOGUE;
 	}//end catalogue()
 
 	/**
