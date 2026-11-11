@@ -309,7 +309,7 @@ class SchedulesController extends Controller {
 	/**
 	 * Assemble the scheduled-task payload from request params.
 	 *
-	 * Scopes the assignee to self and drops the assignee group for non-admins,
+	 * Assigns a non-admin's task to themselves and drops the assignee group,
 	 * and strips blank optional fields so they do not clobber schema defaults.
 	 *
 	 * @param array{type: string, subject: string, deadline: string} $required The validated type, subject and deadline.
@@ -320,8 +320,9 @@ class SchedulesController extends Controller {
 	private function buildScheduledTaskData(array $required, string $userId): array {
 		$isAdmin = $this->sessionUser->isAdmin($userId);
 		$requestedAssignee = (string)$this->request->getParam('assigneeUserId', '');
-		// Non-admins may not assign tasks to other users; silently scope to self.
-		if ($isAdmin === false && $requestedAssignee !== '' && $requestedAssignee !== $userId) {
+		// Non-admins may not assign tasks to others and cannot assign a group,
+		// so their task is always their own: a task keeps at least one assignee.
+		if ($isAdmin === false) {
 			$requestedAssignee = $userId;
 		}
 
