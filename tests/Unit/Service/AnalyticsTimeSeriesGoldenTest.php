@@ -179,4 +179,98 @@ class AnalyticsTimeSeriesGoldenTest extends TestCase {
 			$result
 		);
 	}//end testRevenueSeriesFromWonLeads()
+
+	/**
+	 * A service over lead rows and request tickets.
+	 *
+	 * @param array<int, array<string, mixed>> $leads    The lead rows.
+	 * @param array<int, array<string, mixed>> $requests The request tickets.
+	 *
+	 * @return AnalyticsService
+	 */
+	private function serviceOver(array $leads, array $requests): AnalyticsService {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $key === 'register' ? 'register-1' : $key
+		);
+		$objects = new class($leads) extends ObjectService {
+			/**
+			 * @param array<int, array<string, mixed>> $leads The lead rows.
+			 */
+			public function __construct(private array $leads) {
+			}
+
+			/**
+			 * @param array<string, mixed> $config        The query.
+			 * @param bool                 $_rbac         RBAC.
+			 * @param bool                 $_multitenancy Tenancy.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				return (($config['filters']['schema'] ?? '') === 'lead_schema') ? $this->leads : [];
+			}
+		};
+		$tickets = $this->createMock(TicketService::class);
+		$tickets->method('getRegisterId')->willReturn('register-1');
+		$tickets->method('getSchemaId')->willReturn('ticket_schema');
+		$tickets->method('isConfigured')->willReturn(true);
+		$tickets->method('findByType')->willReturnCallback(
+			static fn (string $type): array => $type === TicketService::TYPE_REQUEST ? $requests : []
+		);
+		return new AnalyticsService(appConfig: $config, logger: $this->createMock(LoggerInterface::class), ticketService: $tickets, objectService: $objects);
+	}//end serviceOver()
+
+	/**
+	 * Funnels, requests by category and pipeline by stage are exact.
+	 *
+	 * @return void
+	 */
+	public function testFunnelsCategoriesAndStages(): void {
+		$now  = time();
+		$at   = static fn (float $daysAgo): string => date(DATE_ATOM, (int)($now - $daysAgo * 86400));
+		$leads = [
+			['status' => 'open', 'stage' => 'Offerte', 'stageOrder' => 2, 'value' => '100.005'],
+			['status' => 'open', 'stage' => '', 'value' => 5],
+			['status' => 'open', 'stage' => 'Intake', 'stageOrder' => 1, 'value' => 10],
+			['status' => 'open', 'stage' => 'Offerte', 'stageOrder' => 9, 'value' => 1],
+			['status' => 'open', 'stage' => 'Contract', 'value' => 7],
+			['status' => 'won', 'stage' => 'Intake', 'value' => 999],
+			['status' => 'lost'],
+			['status' => 'archived'],
+			[],
+		];
+		$requests = [
+			['status' => 'new', 'category' => 'Parkeren', 'occurredAt' => $at(1)],
+			['status' => 'completed', 'category' => 'Afval', 'createdAt' => $at(2)],
+			['status' => 'completed', 'category' => 'Parkeren', 'occurredAt' => $at(3)],
+			['status' => 'rejected', 'category' => 'Afval', 'occurredAt' => $at(4)],
+			['status' => 'in_progress', 'category' => 'Groen', 'occurredAt' => $at(5)],
+			['status' => 'on_hold', 'category' => '', 'occurredAt' => $at(1)],
+			['status' => 'new', 'category' => 'Oud', 'occurredAt' => $at(40)],
+		];
+		$service = $this->serviceOver(leads: $leads, requests: $requests);
+
+		$this->assertSame(
+			[
+				'leadFunnel'    => ['open' => 5, 'won' => 1, 'lost' => 1, 'conversionRate' => 14.3],
+				'requestFunnel' => ['new' => 2, 'in_progress' => 1, 'completed' => 2, 'rejected' => 1, 'resolutionRate' => 33.3],
+			],
+			$service->getFunnels()
+		);
+		$this->assertSame(
+			['lead' => ['open' => 0, 'won' => 0, 'lost' => 0, 'conversionRate' => null], 'request' => ['new' => 0, 'in_progress' => 0, 'completed' => 0, 'rejected' => 0, 'resolutionRate' => null]],
+			(function (array $funnels): array {
+				return ['lead' => $funnels['leadFunnel'], 'request' => $funnels['requestFunnel']];
+			})($this->serviceOver(leads: [], requests: [])->getFunnels())
+		);
+		$this->assertSame(
+			['metric' => 'requests-by-category', 'period' => 'month', 'series' => [['date' => 'Parkeren', 'value' => 2], ['date' => 'Afval', 'value' => 2], ['date' => 'Groen', 'value' => 1]]],
+			$service->getTrends(metric: 'requests-by-category', period: 'month')
+		);
+		$this->assertSame(
+			['metric' => 'pipeline-by-stage', 'period' => 'week', 'series' => [['date' => 'Intake', 'value' => 10.0], ['date' => 'Offerte', 'value' => 101.01], ['date' => 'Unassigned', 'value' => 5.0], ['date' => 'Contract', 'value' => 7.0]]],
+			$service->getTrends(metric: 'pipeline-by-stage', period: 'week')
+		);
+	}//end testFunnelsCategoriesAndStages()
 }//end class
