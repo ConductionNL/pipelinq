@@ -149,7 +149,7 @@ class BrpControllerTest extends TestCase {
 				}
 			);
 
-			$controller = $this->buildController(remotePerson: [], audit: $audit, ...$options);
+			$controller = $this->buildController(...[...$options, 'remotePerson' => [], 'audit' => $audit]);
 
 			$this->assertSame($status, $controller->lookup()->getStatus(), $label);
 			$this->assertCount(1, $records, $label);
@@ -262,12 +262,12 @@ class BrpControllerTest extends TestCase {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
 			static function (string $key, $default = null) use ($extraParams) {
-				$params = [
+				$params = $extraParams + [
 					'bsn' => self::DEMO_BSN,
 					'verzoekreden' => 'Adresverificatie',
 					'purposeBinding' => 'Wet BRP',
 					'basis' => 'Wet BRP art. 1.4',
-				] + $extraParams;
+				];
 				return $params[$key] ?? $default;
 			}
 		);
