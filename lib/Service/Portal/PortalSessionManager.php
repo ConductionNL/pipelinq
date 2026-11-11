@@ -134,33 +134,55 @@ class PortalSessionManager {
 	 *   audit are all unspecified
 	 */
 	public function validateSession(?string $token, string $tenantId): ?array {
-		if ($token === null || $token === '') {
-			return null;
-		}
-
-		$session = $this->repository->findOneBy(self::SCHEMA, ['tokenHash' => $this->tokens->hash(plain: $token)]);
-		if ($session === null) {
-			return null;
-		}
-
-		if (($session['revoked'] ?? false) === true) {
-			return null;
-		}
-
-		if (($session['mfaPending'] ?? false) === true) {
-			return null;
-		}
-
-		if (($session['tenantId'] ?? null) !== $tenantId) {
-			return null;
-		}
-
-		if ($this->tokens->isUnexpired(expiresAt: ($session['expiresAt'] ?? null)) === false) {
+		$session = $this->storedSession(token: $token);
+		if ($session === null || $this->isUsable(session: $session, tenantId: $tenantId) === false) {
 			return null;
 		}
 
 		return $session;
 	}//end validateSession()
+
+	/**
+	 * The stored session the token's hash names; null for no token.
+	 *
+	 * @param string|null $token The plaintext token.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function storedSession(?string $token): ?array {
+		if ($token === null || $token === '') {
+			return null;
+		}
+
+		return $this->repository->findOneBy(self::SCHEMA, ['tokenHash' => $this->tokens->hash(plain: $token)]);
+	}//end storedSession()
+
+	/**
+	 * Whether a stored session may be used: open, of this tenant, and not
+	 * expired, checked in that order.
+	 *
+	 * @param array<string, mixed> $session  The stored session.
+	 * @param string               $tenantId The tenant asking.
+	 *
+	 * @return bool
+	 */
+	private function isUsable(array $session, string $tenantId): bool {
+		return $this->isOpen(session: $session) === true
+			&& ($session['tenantId'] ?? null) === $tenantId
+			&& $this->tokens->isUnexpired(expiresAt: ($session['expiresAt'] ?? null)) === true;
+	}//end isUsable()
+
+	/**
+	 * Whether a session is neither revoked nor waiting for its second factor
+	 * (only a literal true counts for either).
+	 *
+	 * @param array<string, mixed> $session The stored session.
+	 *
+	 * @return bool
+	 */
+	private function isOpen(array $session): bool {
+		return ($session['revoked'] ?? false) !== true && ($session['mfaPending'] ?? false) !== true;
+	}//end isOpen()
 
 	/*
 	 * NO MFA-PENDING CLEARER HERE, AND DELIBERATELY SO.
