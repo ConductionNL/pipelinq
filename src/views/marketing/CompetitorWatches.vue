@@ -282,11 +282,7 @@ export default {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/marketing/watch-events')
 				const { data } = await axios.get(url)
-				this.configured = Boolean(data?.configured)
-				this.reason = data?.reason || ''
-				this.competitors = data?.competitors || []
-				this.watches = data?.watches || []
-				this.events = data?.events || []
+				this.showWatchEvents(data)
 			} catch (e) {
 				this.error =
 					e?.response?.data?.error
@@ -294,6 +290,20 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Show what the watch events endpoint answered, empty where it sent
+		 * nothing.
+		 *
+		 * @param {object|null} data The answer.
+		 */
+		showWatchEvents(data) {
+			this.configured = Boolean(data?.configured)
+			this.reason = data?.reason || ''
+			this.competitors = data?.competitors || []
+			this.watches = data?.watches || []
+			this.events = data?.events || []
 		},
 
 		/**

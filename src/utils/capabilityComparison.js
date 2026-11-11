@@ -62,13 +62,26 @@ export function labelFor(entry, locale = 'en') {
 	if (!entry) {
 		return ''
 	}
-	const dutch = String(locale || '')
+	return dutchLabel(entry, locale) ?? entry.name ?? ''
+}
+
+/**
+ * @param {{name_nl?: string}} entry Labelled entry from the data file.
+ * @param {string} [locale] BCP 47 locale.
+ * @return {string|null} The Dutch label for a Dutch locale when it is filled in, else null.
+ */
+function dutchLabel(entry, locale) {
+	return isDutch(locale) && !isBlankText(entry.name_nl) ? entry.name_nl : null
+}
+
+/**
+ * @param {string} [locale] BCP 47 locale, e.g. `nl`, `nl_NL`, `en-GB`.
+ * @return {boolean} Whether it is a Dutch locale.
+ */
+function isDutch(locale) {
+	return String(locale || '')
 		.toLowerCase()
 		.startsWith('nl')
-	if (dutch && typeof entry.name_nl === 'string' && entry.name_nl.trim() !== '') {
-		return entry.name_nl
-	}
-	return entry.name ?? ''
 }
 
 /**
@@ -155,24 +168,45 @@ export function overallTallies(data) {
  * @spec openspec/specs/features-roadmap/spec.md#requirement-the-comparison-must-state-its-own-limits
  */
 export function formatComparedOn(iso, locale = 'en') {
-	if (typeof iso !== 'string' || iso.trim() === '') {
+	if (isBlankText(iso)) {
 		return ''
 	}
 	const parsed = new Date(`${iso}T00:00:00Z`)
 	if (Number.isNaN(parsed.getTime())) {
 		return iso
 	}
+	return longUtcDay(parsed, locale) ?? iso
+}
+
+/**
+ * @param {unknown} value A value.
+ * @return {boolean} Whether it is not text, or only whitespace.
+ */
+function isBlankText(value) {
+	return typeof value !== 'string' || value.trim() === ''
+}
+
+/**
+ * A UTC day written out in the locale, or null when this runtime has no
+ * Intl data for it.
+ *
+ * @param {Date} day The day, at midnight UTC.
+ * @param {string} locale The locale, `nl_NL` or `nl-NL`.
+ * @return {string|null} The day.
+ * @spec openspec/specs/features-roadmap/spec.md#requirement-the-comparison-must-state-its-own-limits
+ */
+function longUtcDay(day, locale) {
 	try {
 		return new Intl.DateTimeFormat(locale.replace('_', '-'), {
 			day: 'numeric',
 			month: 'long',
 			year: 'numeric',
 			timeZone: 'UTC',
-		}).format(parsed)
+		}).format(day)
 	} catch {
 		// No Intl data for this locale in this runtime. The ISO string is
 		// still a date a reader can act on, which is the whole job here.
-		return iso
+		return null
 	}
 }
 

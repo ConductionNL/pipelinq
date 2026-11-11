@@ -311,7 +311,9 @@ import MessageTextOutline from 'vue-material-design-icons/MessageTextOutline.vue
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
+import hostedFormMixin from '../../mixins/hostedFormMixin.js'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
+import pipelineStageMixin from '../../mixins/pipelineStageMixin.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import {
@@ -322,6 +324,21 @@ import {
 import { categoryOptions, fetchTicketCategories } from '../../services/ticketCategories.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
+import { fieldsOr, withoutEmptyFields } from '../../utils/formFields.js'
+
+/**
+ * An existing request as the form edits it.
+ *
+ * @param {object} request The stored request.
+ * @return {object} The form.
+ * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+ */
+function formFromRequest(request) {
+	return {
+		id: request.id,
+		...fieldsOr(request, { title: '', description: '', status: 'new', priority: 'normal', channel: null, category: '', occurredAt: null, client: null, contact: null, pipeline: null, stage: null }),
+	}
+}
 
 export default {
 	name: 'RequestForm',
@@ -340,7 +357,7 @@ export default {
 		NcTextField,
 	},
 
-	mixins: [linkedPartyCascadeMixin],
+	mixins: [hostedFormMixin, linkedPartyCascadeMixin, pipelineStageMixin],
 
 	props: {
 		request: {
@@ -351,21 +368,6 @@ export default {
 		preLinkedClient: {
 			type: String,
 			default: null,
-		},
-
-		/**
-		 * Render the built-in Cancel / Save buttons. Set to `false` when the
-		 * host supplies its own action buttons (e.g. a parent NcDialog driving
-		 * the form via a ref + the `update:valid` event).
-		 *
-		 * Defaults ON deliberately: a host that supplies its own action bar
-		 * opts OUT. Inverting the name would make every ordinary use pass a
-		 * negative prop just to get the normal form.
-		 */
-		showActions: {
-			type: Boolean,
-			// eslint-disable-next-line vue/no-boolean-default
-			default: true,
 		},
 
 		/**
@@ -580,24 +582,6 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-51
-		 */
-		selectedPipeline() {
-			if (!this.form.pipeline) return null
-			return this.pipelines.find((p) => p.id === this.form.pipeline) || null
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-52
-		 */
-		stageOptions() {
-			if (!this.selectedPipeline?.stages) return []
-			return [...this.selectedPipeline.stages]
-				.sort((a, b) => a.order - b.order)
-				.map((s) => s.name)
-		},
-
-		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
 		 */
 		errors() {
@@ -618,21 +602,6 @@ export default {
 		showTitleError() {
 			return this.titleTouched && !!this.errors.title
 		},
-
-		isValid() {
-			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
-		},
-	},
-
-	watch: {
-		// Surface validity so a host (e.g. a parent NcDialog) can enable or
-		// disable its own submit button.
-		isValid: {
-			immediate: true,
-			handler(val) {
-				this.$emit('update:valid', !!val)
-			},
-		},
 	},
 
 	/**
@@ -647,31 +616,10 @@ export default {
 		this.ticketCategories = categories
 
 		if (this.request) {
-			this.form = {
-				id: this.request.id,
-				title: this.request.title || '',
-				description: this.request.description || '',
-				status: this.request.status || 'new',
-				priority: this.request.priority || 'normal',
-				channel: this.request.channel || null,
-				category: this.request.category || '',
-				occurredAt: this.request.occurredAt || null,
-				client: this.request.client || null,
-				contact: this.request.contact || null,
-				pipeline: this.request.pipeline || null,
-				stage: this.request.stage || null,
-			}
-		} else {
-			if (this.preLinkedClient) {
-				this.form.client = this.preLinkedClient
-			}
-			if (this.boardLayout) {
-				this.loadPickedClient()
-				this.form.ticketType = 'request'
-				this.form.assignee = getCurrentUser()?.uid || null
-			}
-			this.autoAssignDefaultPipeline()
+			this.form = formFromRequest(this.request)
+			return
 		}
+		this.prepareNewRequest()
 	},
 
 	methods: {
@@ -764,35 +712,32 @@ export default {
 		},
 
 		/**
+		 * A new request: the client it was opened on; on the board, the
+		 * picked client, the request type and the current user as handler;
+		 * then the default pipeline.
+		 *
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+		 */
+		prepareNewRequest() {
+			if (this.preLinkedClient) {
+				this.form.client = this.preLinkedClient
+			}
+			if (this.boardLayout) {
+				this.loadPickedClient()
+				this.form.ticketType = 'request'
+				this.form.assignee = getCurrentUser()?.uid || null
+			}
+			this.autoAssignDefaultPipeline()
+		},
+
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-37
 		 */
 		autoAssignDefaultPipeline() {
 			const defaultPipeline = this.requestPipelines.find((p) => p.isDefault)
 			if (defaultPipeline) {
 				this.form.pipeline = defaultPipeline.id
-				const stages = [...(defaultPipeline.stages || [])].sort(
-					(a, b) => a.order - b.order,
-				)
-				const firstOpen = stages.find((s) => !s.isClosed)
-				if (firstOpen) {
-					this.form.stage = firstOpen.name
-				}
-			}
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-45
-		 */
-		onPipelineChange() {
-			this.form.stage = null
-			if (this.selectedPipeline) {
-				const stages = [...(this.selectedPipeline.stages || [])].sort(
-					(a, b) => a.order - b.order,
-				)
-				const firstOpen = stages.find((s) => !s.isClosed)
-				if (firstOpen) {
-					this.form.stage = firstOpen.name
-				}
+				this.placeOnFirstOpenStage(defaultPipeline)
 			}
 		},
 
@@ -820,16 +765,7 @@ export default {
 			this.titleTouched = true
 			if (!this.isValid) return
 
-			const data = { ...this.form }
-			if (!data.channel) delete data.channel
-			if (!data.occurredAt) delete data.occurredAt
-			if (!data.client) delete data.client
-			if (!data.contact) delete data.contact
-			if (!data.pipeline) delete data.pipeline
-			if (!data.stage) delete data.stage
-			if (!data.category) delete data.category
-			if (!data.assignee) delete data.assignee
-			if (!data.ticketType) delete data.ticketType
+			const data = withoutEmptyFields({ ...this.form }, ['channel', 'occurredAt', 'client', 'contact', 'pipeline', 'stage', 'category', 'assignee', 'ticketType'])
 
 			this.$emit('save', data)
 		},

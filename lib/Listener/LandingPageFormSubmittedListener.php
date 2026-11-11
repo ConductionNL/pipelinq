@@ -139,6 +139,36 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * @return void
 	 */
 	private function ingest(LandingPageFormSubmittedEvent $event): void {
+		if ($this->alreadyRecorded(event: $event) === true) {
+			return;
+		}
+
+		$campaignId = $this->campaignIdFor(event: $event);
+		$submission = new LandingSubmission(
+			event: $event,
+			campaign: new SubmissionCampaign(id: $campaignId, row: ($this->campaigns->find(id: $campaignId) ?? []))
+		);
+		$records = $this->recordsFor(submission: $submission);
+
+		$this->touchpoints->append(
+			touchpoint: $this->touchpointFor(submission: $submission, records: $records)
+		);
+
+		if ($records->leadId !== '') {
+			$event->setLeadId($records->leadId);
+		}
+
+		$event->setHandled(true);
+	}//end ingest()
+
+	/**
+	 * Acknowledge a redelivered submission whose nonce already has a touchpoint.
+	 *
+	 * @param LandingPageFormSubmittedEvent $event The submission.
+	 *
+	 * @return bool True when the submission was recorded before and is now acknowledged.
+	 */
+	private function alreadyRecorded(LandingPageFormSubmittedEvent $event): bool {
 		$nonce = trim($event->getNonce());
 		if ($nonce !== '' && $this->touchpoints->existsForNonce(nonce: $nonce) === true) {
 			$this->logger->info(
@@ -146,43 +176,32 @@ class LandingPageFormSubmittedListener implements IEventListener {
 				['form' => $event->getFormId()]
 			);
 			$event->setHandled(true);
-			return;
+			return true;
 		}
 
-		$campaignId = $this->campaignIdFor(event: $event);
-		$campaign = ($this->campaigns->find(id: $campaignId) ?? []);
-		$values = $event->getValues();
+		return false;
+	}//end alreadyRecorded()
+
+	/**
+	 * Match or create the contact and write the lead, both only when an address was given.
+	 *
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 *
+	 * @return SubmissionRecords The contact and lead ids, empty when not written.
+	 */
+	private function recordsFor(LandingSubmission $submission): SubmissionRecords {
+		$values = $submission->event->getValues();
 		$email = strtolower(trim((string)($values['email'] ?? '')));
 
 		$contactId = '';
 		$leadId = '';
 		if ($email !== '') {
 			$contactId = $this->matchOrCreateContact(email: $email, values: $values);
-			$leadId = $this->createLead(
-				event: $event,
-				campaignId: $campaignId,
-				campaign: $campaign,
-				contactId: $contactId,
-				values: $values
-			);
+			$leadId = $this->createLead(submission: $submission, contactId: $contactId);
 		}
 
-		$this->touchpoints->append(
-			touchpoint: $this->touchpointFor(
-				event: $event,
-				campaignId: $campaignId,
-				contactId: $contactId,
-				leadId: $leadId,
-				nonce: $nonce
-			)
-		);
-
-		if ($leadId !== '') {
-			$event->setLeadId($leadId);
-		}
-
-		$event->setHandled(true);
-	}//end ingest()
+		return new SubmissionRecords(contactId: $contactId, leadId: $leadId);
+	}//end recordsFor()
 
 	/**
 	 * The campaign this submission belongs to.
@@ -272,35 +291,19 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * account list that nobody asked for and that the shillinq lookup
 	 * would then try to match against an invoice.
 	 *
-	 * @param LandingPageFormSubmittedEvent $event The submission.
-	 * @param string $campaignId The campaign id.
-	 * @param array<string, mixed> $campaign The campaign row, may be empty.
-	 * @param string $contactId The contact id.
-	 * @param array<string, mixed> $values The submitted values.
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 * @param string            $contactId  The contact id.
 	 *
 	 * @return string The lead id, or an empty string when the write failed.
 	 */
-	private function createLead(
-		LandingPageFormSubmittedEvent $event,
-		string $campaignId,
-		array $campaign,
-		string $contactId,
-		array $values,
-	): string {
-		$title = trim((string)($campaign['name'] ?? ''));
-		if ($title === '') {
-			$title = trim($event->getPageRoute());
-		}
-
-		if ($title === '') {
-			$title = 'Landing page';
-		}
-
+	private function createLead(LandingSubmission $submission, string $contactId): string {
+		$event = $submission->event;
+		$values = $event->getValues();
 		$payload = [
-			'title' => ($title . ': ' . trim((string)($values['name'] ?? $event->getPortal()))),
+			'title' => ($this->leadTitle(submission: $submission) . ': ' . trim((string)($values['name'] ?? $event->getPortal()))),
 			'source' => self::SOURCE,
 			'status' => 'open',
-			'campaignId' => $campaignId,
+			'campaignId' => $submission->campaign->id,
 			'firstTouch' => $this->utmBlock(utm: $event->getUtmFirstTouch()),
 			'lastTouch' => $this->utmBlock(utm: $event->getUtmLastTouch()),
 			'description' => $this->describe(event: $event, values: $values),
@@ -317,6 +320,26 @@ class LandingPageFormSubmittedListener implements IEventListener {
 
 		return $this->store->idOf(payload: $this->store->save(schemaSlug: self::LEAD_SCHEMA_SLUG, payload: $payload));
 	}//end createLead()
+
+	/**
+	 * The lead's title prefix: the campaign name, else the page route, else 'Landing page'.
+	 *
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 *
+	 * @return string
+	 */
+	private function leadTitle(LandingSubmission $submission): string {
+		$title = trim((string)($submission->campaign->row['name'] ?? ''));
+		if ($title === '') {
+			$title = trim($submission->event->getPageRoute());
+		}
+
+		if ($title === '') {
+			$title = 'Landing page';
+		}
+
+		return $title;
+	}//end leadTitle()
 
 	/**
 	 * Find the client with this organisation name, or create one.
@@ -347,33 +370,25 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	/**
 	 * The touchpoint this submission appends.
 	 *
-	 * @param LandingPageFormSubmittedEvent $event The submission.
-	 * @param string $campaignId The campaign id.
-	 * @param string $contactId The contact id.
-	 * @param string $leadId The lead id.
-	 * @param string $nonce The submission's nonce.
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 * @param SubmissionRecords $records    The contact and lead it produced.
 	 *
 	 * @return array<string, mixed> The touchpoint row.
 	 */
-	private function touchpointFor(
-		LandingPageFormSubmittedEvent $event,
-		string $campaignId,
-		string $contactId,
-		string $leadId,
-		string $nonce,
-	): array {
+	private function touchpointFor(LandingSubmission $submission, SubmissionRecords $records): array {
+		$event = $submission->event;
 		$utm = $this->utmBlock(utm: $event->getUtmLastTouch());
 
 		return [
-			'campaignId' => $campaignId,
-			'contactId' => $contactId,
-			'leadId' => $leadId,
+			'campaignId' => $submission->campaign->id,
+			'contactId' => $records->contactId,
+			'leadId' => $records->leadId,
 			'kind' => 'submit',
 			'channel' => $this->touchpoints->channelForMedium(medium: (string)($utm['medium'] ?? '')),
 			'utm' => $utm,
 			'sourceRef' => $event->getPageId(),
 			'occurredAt' => $event->getSubmittedAt(),
-			'nonce' => $nonce,
+			'nonce' => trim($event->getNonce()),
 		];
 	}//end touchpointFor()
 

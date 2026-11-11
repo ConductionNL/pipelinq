@@ -315,6 +315,7 @@ import {
 	resolveSelectedArticles,
 	shouldWarnMissingMarker,
 } from '../services/templateArticlePicker.js'
+import hostedFormDialogMixin from './hostedFormDialogMixin.js'
 
 // Where the address goes in an email body. Must match PhysicalAddressRenderer::TOKENS,
 // whose render() places it the same way on send.
@@ -388,33 +389,7 @@ export default {
 		NcTextField,
 	},
 
-	inheritAttrs: false,
-
-	props: {
-		/** Whether the index page has the dialog open. */
-		show: {
-			type: Boolean,
-			default: false,
-		},
-
-		/** The row being edited, or null to create. */
-		item: {
-			type: Object,
-			default: null,
-		},
-
-		/** Closes the dialog. */
-		close: {
-			type: Function,
-			default: () => {},
-		},
-
-		/** Re-reads the index page's list. */
-		refresh: {
-			type: Function,
-			default: null,
-		},
-	},
+	mixins: [hostedFormDialogMixin],
 
 	data() {
 		return {
@@ -684,21 +659,6 @@ export default {
 	},
 
 	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Reset the form each time the dialog opens.
-			 *
-			 * @param {boolean} open Whether the dialog is open.
-			 *
-			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
-			 */
-			handler(open) {
-				if (open) {
-					this.reset()
-				}
-			},
-		},
 
 		// An error clears once the field it is about is edited.
 		'model.bodyHtml': function () {
@@ -750,6 +710,15 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Reset the form each time the dialog opens.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 */
+		prepareOnOpen() {
+			this.reset()
+		},
+
 		/**
 		 * Clear the form, load the articles, and read the template when editing one.
 		 *

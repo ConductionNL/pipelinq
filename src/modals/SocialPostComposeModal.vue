@@ -163,6 +163,17 @@ import {
 } from '../services/socialApi.js'
 import { canSubmit, fitsForNetworks } from '../services/socialComposer.js'
 
+/**
+ * The id of a stored post, or ''.
+ *
+ * @param {object|null} post The post.
+ * @return {string} Its id or uuid.
+ * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+ */
+function postId(post) {
+	return post?.id || post?.uuid || ''
+}
+
 export default {
 	name: 'SocialPostComposeModal',
 
@@ -326,6 +337,20 @@ export default {
 		},
 
 		/**
+		 * Update the post being edited, or create a new one.
+		 *
+		 * @param {object} payload The post to store.
+		 * @return {Promise<object>} The stored post.
+		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 */
+		storePost(payload) {
+			const existingId = postId(this.post)
+			return existingId
+				? updatePost(existingId, payload)
+				: createPost(payload)
+		},
+
+		/**
 		 * Save the post, and optionally put it up for approval.
 		 *
 		 * @param {boolean} submit Whether to submit it after saving.
@@ -338,12 +363,8 @@ export default {
 
 			const payload = { ...this.model, accountIds: this.chosenAccounts }
 			try {
-				const existingId = this.post?.id || this.post?.uuid || ''
-				let saved = existingId
-					? await updatePost(existingId, payload)
-					: await createPost(payload)
-
-				const id = saved?.id || saved?.uuid || ''
+				let saved = await this.storePost(payload)
+				const id = postId(saved)
 				if (submit && id) {
 					saved = await movePost(id, 'submit')
 				}

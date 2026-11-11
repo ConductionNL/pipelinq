@@ -133,6 +133,7 @@ class PointsLedgerGoldenTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			objectService: $objects,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 		$service->creditPoints(accountId: 'acc-1', amount: 40, ruleId: 'rule-1', sourceDocument: [], processedBy: 'alice');
 
@@ -248,6 +249,7 @@ class PointsLedgerGoldenTest extends TestCase {
 			logger: $logger,
 			objectService: $objects,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 
 		try {

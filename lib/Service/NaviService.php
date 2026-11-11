@@ -88,6 +88,46 @@ class NaviService {
 	public const INTENTS = ['trend', 'breakdown', 'count', 'conversion', 'unknown'];
 
 	/**
+	 * Series name per chart type.
+	 *
+	 * @var array<string, string>
+	 */
+	private const SERIES_NAMES = ['line' => 'Leads', 'bar' => 'Requests'];
+
+	/**
+	 * Follow-ups offered after a trend answer.
+	 *
+	 * @var array<int, string>
+	 */
+	private const TREND_FOLLOWUPS = [
+		'Which stage has the highest drop-off?',
+		'What is my conversion rate this quarter?',
+		'How many requests are open?',
+	];
+
+	/**
+	 * Follow-ups offered after a conversion answer.
+	 *
+	 * @var array<int, string>
+	 */
+	private const CONVERSION_FOLLOWUPS = [
+		'Show the trend of leads over time.',
+		'Which stage has the highest drop-off?',
+		'How many requests are open?',
+	];
+
+	/**
+	 * Follow-ups offered after a breakdown answer.
+	 *
+	 * @var array<int, string>
+	 */
+	private const BREAKDOWN_FOLLOWUPS = [
+		'Which channel performs best?',
+		'How many requests are open?',
+		'Show the lead conversion rate.',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig App configuration (register / schema IDs).
@@ -135,58 +175,90 @@ class NaviService {
 	 * @spec openspec/specs/dashboard/spec.md#conversational-follow-up
 	 */
 	public function processQuery(string $query, string $userId, ?string $conversationId = null): array {
-		$trimmed = trim($query);
-		if ($trimmed === '') {
-			return $this->formatResponse(
-				query: $query,
-				llmResponse: [
-					'resultType' => 'text',
-					'textResponse' => 'Please enter a question to get started.',
-					'suggestedFollowUps' => $this->defaultFollowUps(),
-				],
-				rawData: []
-			);
+		$run = new NaviQueryRun(asked: $query, userId: $userId);
+		if ($run->query === '') {
+			return $this->textAnswer(query: $query, text: 'Please enter a question to get started.');
 		}
 
-		$history = $this->conversationStore->read(userId: $userId, conversationId: $conversationId);
-		$carried = $this->conversationStore->carryForward(
-			detectedIntent: $this->detectIntent(query: $trimmed),
-			history: $history
-		);
-		$intent = $carried['intent'];
-		$context = $this->buildContext(
-			intent: $intent,
-			params: ['query' => $trimmed, 'previousQuery' => $carried['query']]
-		);
-
-		$this->conversationStore->append(
-			userId: $userId,
-			conversationId: $conversationId,
-			history: $history,
-			turn: ['query' => $trimmed, 'intent' => $intent]
-		);
+		$run->conversationId = $conversationId;
+		$context = $this->contextFor(run: $run);
+		$this->rememberTurn(run: $run);
 
 		// No data: degrade to a polite text response (REQ-DASH-001 empty result).
-		if ($context === [] && $intent !== 'unknown') {
-			return $this->formatResponse(
-				query: $query,
-				llmResponse: [
-					'resultType' => 'text',
-					'textResponse' => 'I could not find any matching data for that question.',
-					'suggestedFollowUps' => $this->defaultFollowUps(),
-				],
-				rawData: []
-			);
+		if ($context === [] && $run->intent !== 'unknown') {
+			return $this->textAnswer(query: $query, text: 'I could not find any matching data for that question.');
 		}
 
-		$llmResponse = $this->buildResponseForIntent(intent: $intent, query: $trimmed, context: $context);
+		return $this->answer(run: $run, context: $context);
+	}//end processQuery()
+
+	/**
+	 * Resolve the run's intent from the conversation and fetch its rows.
+	 *
+	 * @param NaviQueryRun $run The question being answered.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function contextFor(NaviQueryRun $run): array {
+		$run->history = $this->conversationStore->read(userId: $run->userId, conversationId: $run->conversationId);
+		$carried = $this->conversationStore->carryForward(
+			detectedIntent: $this->detectIntent(query: $run->query),
+			history: $run->history
+		);
+		$run->intent = $carried['intent'];
+
+		return $this->buildContext(intent: $run->intent, params: ['query' => $run->query, 'previousQuery' => $carried['query']]);
+	}//end contextFor()
+
+	/**
+	 * Append the run's question and intent to its conversation.
+	 *
+	 * @param NaviQueryRun $run The question being answered.
+	 *
+	 * @return void
+	 */
+	private function rememberTurn(NaviQueryRun $run): void {
+		$this->conversationStore->append(
+			userId: $run->userId,
+			conversationId: $run->conversationId,
+			history: $run->history,
+			turn: ['query' => $run->query, 'intent' => $run->intent]
+		);
+	}//end rememberTurn()
+
+	/**
+	 * Build, log and wrap the intent answer for rows that were found.
+	 *
+	 * @param NaviQueryRun $run The question being answered.
+	 * @param array<int, array<string, mixed>> $context Rows for the intent.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function answer(NaviQueryRun $run, array $context): array {
+		$llmResponse = $this->buildResponseForIntent(intent: $run->intent, query: $run->query, context: $context);
 		$this->logger->info(
 			message: '[NaviService] processed query',
-			context: ['userId' => $userId, 'intent' => $intent, 'queryLength' => strlen($trimmed)]
+			context: ['userId' => $run->userId, 'intent' => $run->intent, 'queryLength' => strlen($run->query)]
 		);
 
-		return $this->formatResponse(query: $query, llmResponse: $llmResponse, rawData: $context);
-	}//end processQuery()
+		return $this->formatResponse(query: $run->asked, llmResponse: $llmResponse, rawData: $context);
+	}//end answer()
+
+	/**
+	 * Plain text envelope with the default follow-ups.
+	 *
+	 * @param string $query The question as typed.
+	 * @param string $text  The answer text.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function textAnswer(string $query, string $text): array {
+		return $this->formatResponse(
+			query: $query,
+			llmResponse: ['resultType' => 'text', 'textResponse' => $text, 'suggestedFollowUps' => $this->defaultFollowUps()],
+			rawData: []
+		);
+	}//end textAnswer()
 
 	/**
 	 * Classify the query into one of the recognised intents.
@@ -339,41 +411,40 @@ class NaviService {
 	 * @return array<string, mixed>
 	 */
 	private function buildTrendResponse(array $rows): array {
-		$buckets = [];
-		foreach ($rows as $row) {
-			$created = (string)($row['createdAt'] ?? $row['created'] ?? '');
-			if ($created === '') {
-				continue;
-			}
-
-			$timestamp = strtotime($created);
-			if ($timestamp === false) {
-				continue;
-			}
-
-			$week = date('o-\WW', $timestamp);
-			$buckets[$week] = ($buckets[$week] ?? 0) + 1;
-		}
-
-		ksort($buckets);
-
 		return [
 			'resultType' => 'chart',
-			'chartData' => [
-				'type' => 'line',
-				'labels' => array_keys($buckets),
-				'series' => [
-					['name' => 'Leads', 'data' => array_values($buckets)],
-				],
-			],
+			'chartData' => $this->chartData(type: 'line', counts: $this->rowCounts()->weeklyCounts(rows: $rows)),
 			'textResponse' => sprintf('Found %d leads in the dataset.', count($rows)),
-			'suggestedFollowUps' => [
-				'Which stage has the highest drop-off?',
-				'What is my conversion rate this quarter?',
-				'How many requests are open?',
-			],
+			'suggestedFollowUps' => self::TREND_FOLLOWUPS,
 		];
 	}//end buildTrendResponse()
+
+	/**
+	 * Chart payload with one series of counts.
+	 *
+	 * @param string $type   Chart type: `line` (leads) or `bar` (requests).
+	 * @param array<string, int> $counts Count per label.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function chartData(string $type, array $counts): array {
+		return [
+			'type' => $type,
+			'labels' => array_keys($counts),
+			'series' => [
+				['name' => self::SERIES_NAMES[$type], 'data' => array_values($counts)],
+			],
+		];
+	}//end chartData()
+
+	/**
+	 * The stateless counters behind the chart and table answers.
+	 *
+	 * @return NaviRowCounts
+	 */
+	private function rowCounts(): NaviRowCounts {
+		return new NaviRowCounts();
+	}//end rowCounts()
 
 	/**
 	 * Compute won / lost / open counts and a percentage.
@@ -383,37 +454,17 @@ class NaviService {
 	 * @return array<string, mixed>
 	 */
 	private function buildConversionResponse(array $rows): array {
-		$counts = ['open' => 0, 'won' => 0, 'lost' => 0];
-		foreach ($rows as $row) {
-			$status = (string)($row['status'] ?? '');
-			if (isset($counts[$status]) === true) {
-				$counts[$status]++;
-			}
-		}
-
+		$counts = $this->rowCounts()->statusCounts(rows: $rows);
 		$total = array_sum($counts);
-		$rate = 0.0;
-		if ($total !== 0) {
-			$rate = round(($counts['won'] * 100.0) / $total, 1);
-		}
+		$rate = $this->rowCounts()->wonRate(won: $counts['won'], total: $total);
 
+		$tableRows = [['Open leads', $counts['open']], ['Won leads', $counts['won']], ['Lost leads', $counts['lost']]];
+		$tableRows[] = ['Conversion rate (%)', $rate];
 		return [
 			'resultType' => 'table',
-			'tableData' => [
-				'columns' => ['Metric', 'Value'],
-				'rows' => [
-					['Open leads', $counts['open']],
-					['Won leads', $counts['won']],
-					['Lost leads', $counts['lost']],
-					['Conversion rate (%)', $rate],
-				],
-			],
+			'tableData' => ['columns' => ['Metric', 'Value'], 'rows' => $tableRows],
 			'textResponse' => sprintf('Conversion rate: %.1f%% across %d leads.', $rate, $total),
-			'suggestedFollowUps' => [
-				'Show the trend of leads over time.',
-				'Which stage has the highest drop-off?',
-				'How many requests are open?',
-			],
+			'suggestedFollowUps' => self::CONVERSION_FOLLOWUPS,
 		];
 	}//end buildConversionResponse()
 
@@ -425,35 +476,12 @@ class NaviService {
 	 * @return array<string, mixed>
 	 */
 	private function buildBreakdownResponse(array $rows): array {
-		$counts = [];
-		foreach ($rows as $row) {
-			// The request's free-text `category` keeps its name on the ticket
-			// schema (the complaint's category became complaintCategory).
-			$cat = (string)($row['category'] ?? '');
-			if ($cat === '') {
-				continue;
-			}
-
-			$counts[$cat] = ($counts[$cat] ?? 0) + 1;
-		}
-
-		arsort($counts);
-
+		$counts = $this->rowCounts()->categoryCounts(rows: $rows);
 		return [
 			'resultType' => 'chart',
-			'chartData' => [
-				'type' => 'bar',
-				'labels' => array_keys($counts),
-				'series' => [
-					['name' => 'Requests', 'data' => array_values($counts)],
-				],
-			],
+			'chartData' => $this->chartData(type: 'bar', counts: $counts),
 			'textResponse' => sprintf('%d categories detected.', count($counts)),
-			'suggestedFollowUps' => [
-				'Which channel performs best?',
-				'How many requests are open?',
-				'Show the lead conversion rate.',
-			],
+			'suggestedFollowUps' => self::BREAKDOWN_FOLLOWUPS,
 		];
 	}//end buildBreakdownResponse()
 
@@ -543,6 +571,30 @@ class NaviService {
 	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
 	 */
 	private function findObjects(string $schemaKey): array {
+		$filters = $this->schemaFilters(schemaKey: $schemaKey);
+		if ($filters === []) {
+			return [];
+		}
+
+		$objects = [];
+		foreach ($this->fetchRows(filters: $filters, schemaKey: $schemaKey) as $result) {
+			$normalized = $this->normalizeFindObjectsResult(result: $result);
+			if ($normalized !== null) {
+				$objects[] = $normalized;
+			}
+		}
+
+		return $objects;
+	}//end findObjects()
+
+	/**
+	 * Register / schema filter for a configured schema; [] when either is unset.
+	 *
+	 * @param string $schemaKey App-config key holding the schema ID.
+	 *
+	 * @return array<string, string>
+	 */
+	private function schemaFilters(string $schemaKey): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
@@ -553,10 +605,24 @@ class NaviService {
 			return [];
 		}
 
+		return ['register' => $register, 'schema' => $schema];
+	}//end schemaFilters()
+
+	/**
+	 * Run findAll() for the filter; a failure is logged and rethrown.
+	 *
+	 * The findAll() contract returns a non-nullable array, so no `?? []`.
+	 *
+	 * @param array<string, string> $filters   Register / schema filter.
+	 * @param string                $schemaKey App-config key, for the log.
+	 *
+	 * @return array<int, mixed>
+	 *
+	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
+	 */
+	private function fetchRows(array $filters, string $schemaKey): array {
 		try {
-			$results = $this->objectService->findAll(
-				config: ['filters' => ['register' => $register, 'schema' => $schema]]
-			);
+			return $this->objectService->findAll(config: ['filters' => $filters]);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				message: '[NaviService] findAll failed',
@@ -564,19 +630,7 @@ class NaviService {
 			);
 			throw new RuntimeException(message: 'Navi query failed', code: 0, previous: $e);
 		}
-
-		$objects = [];
-		// The findAll() contract returns a non-nullable array, so the `?? []`
-		// that used to sit here was dead code (reported by phpstan).
-		foreach ($results as $result) {
-			$normalized = $this->normalizeFindObjectsResult(result: $result);
-			if ($normalized !== null) {
-				$objects[] = $normalized;
-			}
-		}
-
-		return $objects;
-	}//end findObjects()
+	}//end fetchRows()
 
 	/**
 	 * Normalize a single ObjectService::findAll() result row to a plain array.
@@ -595,20 +649,34 @@ class NaviService {
 			return $result;
 		}
 
-		if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-			$serialized = $result->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($result) === true && method_exists($result, 'getObject') === true) {
-			$data = $result->getObject();
-			if (is_array($data) === true) {
+		foreach (['jsonSerialize', 'getObject'] as $method) {
+			$data = $this->unwrapped(result: $result, method: $method);
+			if ($data !== null) {
 				return $data;
 			}
 		}
 
 		return null;
 	}//end normalizeFindObjectsResult()
+
+	/**
+	 * Array returned by the given method of an object row, if it has one.
+	 *
+	 * @param mixed  $result A single row from ObjectService::findAll().
+	 * @param string $method `jsonSerialize` or `getObject`.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function unwrapped(mixed $result, string $method): ?array {
+		if (is_object($result) === false || method_exists($result, $method) === false) {
+			return null;
+		}
+
+		$data = $result->$method();
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
+	}//end unwrapped()
 }//end class

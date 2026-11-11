@@ -20,6 +20,26 @@ import { generateUrl } from '@nextcloud/router'
 const base = (path) => generateUrl('/apps/pipelinq' + path)
 
 /**
+ * Ask the server to write a saved object back to its Nextcloud Contact.
+ *
+ * @param {{objectType: string, objectId: string}} target What to write back.
+ * @return {Promise<{uid: string|null, skipped: boolean}>} The contacts UID (null
+ *   on a failure) and whether the user turned write-back off.
+ * @spec openspec/changes/round4-contact-write-back/specs/contacts-sync/spec.md#requirement-a-failed-write-back-is-shown-to-the-user
+ */
+async function requestWriteBack(target) {
+	try {
+		const { data } = await axios.post(base('/api/contacts-sync/write-back'), {
+			objectType: target.objectType,
+			objectId: target.objectId,
+		})
+		return { uid: data?.contactsUid || null, skipped: data?.skipped === true }
+	} catch {
+		return { uid: null, skipped: false }
+	}
+}
+
+/**
  * Contact-FIRST create of a client or contact.
  *
  * @param {string} objectType The object type ('client' or 'contact').
@@ -50,18 +70,7 @@ export async function createWithContact(objectType, form) {
  * @spec openspec/changes/round4-contact-write-back/specs/contacts-sync/spec.md#requirement-a-failed-write-back-is-shown-to-the-user
  */
 export async function writeBack(objectType, objectId, notify = showError) {
-	let uid
-	let skipped = false
-	try {
-		const { data } = await axios.post(base('/api/contacts-sync/write-back'), {
-			objectType,
-			objectId,
-		})
-		uid = data?.contactsUid || null
-		skipped = data?.skipped === true
-	} catch {
-		uid = null
-	}
+	const { uid, skipped } = await requestWriteBack({ objectType, objectId })
 	// The user turned write-back off: nothing was meant to reach Contacts.
 	if (uid === null && !skipped) {
 		notify(

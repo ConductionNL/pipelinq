@@ -148,6 +148,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import { fetchCampaignVocabularies, saveCampaign } from '../services/campaignsApi.js'
+import hostedFormDialogMixin from './hostedFormDialogMixin.js'
 
 /**
  * @return {object} A blank campaign form.
@@ -175,33 +176,7 @@ export default {
 		NcTextField,
 	},
 
-	inheritAttrs: false,
-
-	props: {
-		/** Whether the host page has the dialog open. */
-		show: {
-			type: Boolean,
-			default: false,
-		},
-
-		/** The campaign being edited, or null to create one. */
-		item: {
-			type: Object,
-			default: null,
-		},
-
-		/** Closes the dialog. */
-		close: {
-			type: Function,
-			default: () => {},
-		},
-
-		/** Re-reads the index page's list; the detail page does not pass it. */
-		refresh: {
-			type: Function,
-			default: null,
-		},
-	},
+	mixins: [hostedFormDialogMixin],
 
 	data() {
 		return {
@@ -244,25 +219,16 @@ export default {
 		},
 	},
 
-	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Load the form each time the dialog opens.
-			 *
-			 * @param {boolean} open Whether the dialog is open.
-			 *
-			 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
-			 */
-			handler(open) {
-				if (open) {
-					this.load()
-				}
-			},
-		},
-	},
-
 	methods: {
+		/**
+		 * Read the record each time the dialog opens.
+		 *
+		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 */
+		prepareOnOpen() {
+			this.load()
+		},
+
 		/**
 		 * Reset the form, then read the vocabularies, and the campaign when editing one.
 		 *

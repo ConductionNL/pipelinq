@@ -247,20 +247,69 @@ class PortalRequestService {
 		array $attachments,
 		string $categoryId,
 	): array {
+		$message = $this->requireMessage(subject: $subject, body: $body);
+		$accountId = (string)$this->idOf(object: $account);
+		$this->assertWithinRateLimit(accountId: $accountId);
+		$this->assertAttachmentsWithinLimit(attachments: $attachments);
+		$this->assertCategoryExposed(categoryId: $categoryId);
+
+		$record = $this->ticketHead(message: $message, account: $account)
+			+ ['category' => $categoryId, 'status' => 'new', 'channel' => 'portal', 'reporterAccountId' => $accountId]
+			+ $this->receivedFields(attachments: $attachments);
+		$saved = $this->reader->save(self::SCHEMA, $record);
+		$requestId = (string)$this->idOf(object: $saved);
+
+		$this->dispatchSubmitted(requestId: $requestId, tenantId: $tenantId);
+		$this->auditSubmitted(actor: new PortalActor(accountId: $accountId, tenantId: $tenantId), requestId: $requestId);
+		return $this->submissionReceipt(saved: $saved, record: $record);
+	}//end submit()
+
+	/**
+	 * The trimmed subject and body; both are required.
+	 *
+	 * @param string $subject The request subject.
+	 * @param string $body    The request body.
+	 *
+	 * @return array{subject: string, body: string} The trimmed message.
+	 *
+	 * @throws PortalException 400 missingFields when either is empty.
+	 */
+	private function requireMessage(string $subject, string $body): array {
 		$subject = trim($subject);
 		$body = trim($body);
 		if ($subject === '' || $body === '') {
 			throw new PortalException(Http::STATUS_BAD_REQUEST, 'missingFields', 'Onderwerp en bericht zijn verplicht.');
 		}
 
-		$accountId = (string)$this->idOf(object: $account);
-		$this->assertWithinRateLimit(accountId: $accountId);
-		$this->assertAttachmentsWithinLimit(attachments: $attachments);
-		$this->assertCategoryExposed(categoryId: $categoryId);
+		return ['subject' => $subject, 'body' => $body];
+	}//end requireMessage()
 
-		$contactId = $this->firstId(value: ($account['linkedContactId'] ?? null));
-		$clientId = $this->firstId(value: ($account['linkedOrganisationId'] ?? null));
+	/**
+	 * The ticket's type, title and description, and the account's contact and client.
+	 *
+	 * @param array{subject: string, body: string} $message The trimmed message.
+	 * @param array<string, mixed>                 $account The authenticated account.
+	 *
+	 * @return array<string, mixed> The leading record fields.
+	 */
+	private function ticketHead(array $message, array $account): array {
+		return [
+			'ticketType' => self::TICKET_TYPE,
+			'title' => $message['subject'],
+			'description' => $message['body'],
+			'contact' => $this->firstId(value: ($account['linkedContactId'] ?? null)),
+			'client' => $this->firstId(value: ($account['linkedOrganisationId'] ?? null)),
+		];
+	}//end ticketHead()
 
+	/**
+	 * When the request was received and the ids of its attachments.
+	 *
+	 * @param array<int, array<string, mixed>> $attachments Attachment descriptors ({id, size}).
+	 *
+	 * @return array{occurredAt: string, attachmentIds: array<int, string>} The trailing record fields.
+	 */
+	private function receivedFields(array $attachments): array {
 		$attachmentIds = [];
 		foreach ($attachments as $attachment) {
 			if (isset($attachment['id']) === true) {
@@ -268,27 +317,24 @@ class PortalRequestService {
 			}
 		}
 
-		$record = [
-			'ticketType' => self::TICKET_TYPE,
-			'title' => $subject,
-			'description' => $body,
-			'contact' => $contactId,
-			'client' => $clientId,
-			'category' => $categoryId,
-			'status' => 'new',
-			'channel' => 'portal',
-			'reporterAccountId' => $accountId,
+		return [
 			'occurredAt' => $this->time->getDateTime()->format(DATE_ATOM),
 			'attachmentIds' => $attachmentIds,
 		];
+	}//end receivedFields()
 
-		$saved = $this->reader->save(self::SCHEMA, $record);
-		$requestId = (string)$this->idOf(object: $saved);
-
-		$this->dispatchSubmitted(requestId: $requestId, tenantId: $tenantId);
+	/**
+	 * Write the request-submit audit event.
+	 *
+	 * @param PortalActor $actor     The submitting account and its tenant.
+	 * @param string      $requestId The created request id.
+	 *
+	 * @return void
+	 */
+	private function auditSubmitted(PortalActor $actor, string $requestId): void {
 		$this->audit->log(
-			$accountId,
-			$tenantId,
+			$actor->accountId,
+			$actor->tenantId,
 			'request-submit',
 			'success',
 			[
@@ -296,11 +342,23 @@ class PortalRequestService {
 				'targetObjectId' => $requestId,
 			]
 		);
+	}//end auditSubmitted()
 
-		// The answer names the object a person works on by its human-readable
-		// reference and the moment it was received, not only by an id
-		// (website-forms-submit-into-tickets, task 1.2). A ticket without a case
-		// reference answers with its id, as OpenRegister's submit service does.
+	/**
+	 * The answer to a submission.
+	 *
+	 * The answer names the object a person works on by its human-readable
+	 * reference and the moment it was received, not only by an id
+	 * (website-forms-submit-into-tickets, task 1.2). A ticket without a case
+	 * reference answers with its id, as OpenRegister's submit service does.
+	 *
+	 * @param array<string, mixed> $saved  The saved ticket.
+	 * @param array<string, mixed> $record The record that was saved.
+	 *
+	 * @return array<string, mixed> The created request summary + ETA.
+	 */
+	private function submissionReceipt(array $saved, array $record): array {
+		$requestId = (string)$this->idOf(object: $saved);
 		$reference = trim((string)($saved['caseReference'] ?? $saved['reference'] ?? ''));
 		if ($reference === '') {
 			$reference = $requestId;
@@ -313,7 +371,7 @@ class PortalRequestService {
 			'status' => 'new',
 			'estimatedResponseTime' => '24 uur',
 		];
-	}//end submit()
+	}//end submissionReceipt()
 
 	/**
 	 * Add a customer reply note to a visible request, unpausing it when it was

@@ -294,4 +294,23 @@ class SemanticHandoffServiceTest extends TestCase {
 		$this->assertFalse($result['ok']);
 		$this->assertSame('engine-unavailable', $result['reason']);
 	}//end testHandoffFailsWhenEngineAbsent()
+
+	/**
+	 * The exact envelope of every engine answer.
+	 *
+	 * @return void
+	 */
+	public function testEveryEngineAnswerEnvelope(): void {
+		$cases = [
+			[['status' => 'executed', 'correlationId' => 'c-1', 'target' => 'not-a-map'], ['ok' => true, 'targetUuid' => '', 'correlationId' => 'c-1', 'reason' => '']],
+			[['status' => 'executed'], ['ok' => true, 'targetUuid' => '', 'correlationId' => '', 'reason' => '']],
+			[['status' => 'parked', 'correlationId' => 'c-2'], ['ok' => true, 'targetUuid' => '', 'correlationId' => 'c-2', 'reason' => 'queued']],
+			[['status' => 'rejected', 'correlationId' => 'c-3'], ['ok' => false, 'targetUuid' => '', 'correlationId' => '', 'reason' => 'rejected']],
+			[[], ['ok' => false, 'targetUuid' => '', 'correlationId' => '', 'reason' => 'handoff-failed']],
+		];
+		foreach ($cases as [$answer, $envelope]) {
+			$service = $this->make([self::ENGINE => $this->engineStub($answer)]);
+			$this->assertSame($envelope, $service->handoff('pipelinq', 'request', 'req-1', 'convert-to-case'));
+		}
+	}//end testEveryEngineAnswerEnvelope()
 }//end class

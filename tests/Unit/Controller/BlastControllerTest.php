@@ -255,9 +255,11 @@ class BlastControllerTest extends TestCase {
 	/**
 	 * Build the controller under test.
 	 *
+	 * @param bool $privileged Whether the caller holds CRM rights.
+	 *
 	 * @return BlastController
 	 */
-	private function buildController(): BlastController {
+	private function buildController(bool $privileged = true): BlastController {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			function (string $id): object {
@@ -313,7 +315,7 @@ class BlastControllerTest extends TestCase {
 			blastService: $blastService,
 			attributionService: $attributionService,
 			userSession: $this->userSession,
-			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged, 'mayAccess' => $privileged]),
 			performanceService: new CampaignPerformanceService(
 				time: $time,
 				blastService: $blastService,
@@ -378,6 +380,22 @@ class BlastControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 		$this->assertSame(['error' => 'Authentication required'], $response->getData());
 	}//end testDeliveriesRequiresAuthentication()
+
+	/**
+	 * A signed-in user without CRM rights cannot create a Blast, and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testCreateIsRefusedForAnUnprivilegedCaller(): void {
+		$this->signIn();
+		$before = $this->objects->store;
+
+		$response = $this->buildController(privileged: false)->create();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame(['error' => 'Forbidden'], $response->getData());
+		$this->assertSame($before, $this->objects->store);
+	}//end testCreateIsRefusedForAnUnprivilegedCaller()
 
 	/**
 	 * GET /api/blasts/{id}/deliveries returns the SEEDED rows for that Blast

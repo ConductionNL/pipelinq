@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
 use OCA\Pipelinq\Repair\RenameTimeEntrySchemaSlug;
+use OCP\DB\Exception as DbException;
 use OCP\DB\IResult;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
@@ -147,4 +148,160 @@ final class RenameTimeEntrySchemaSlugTest extends TestCase {
 
 		$this->step->run($output);
 	}//end testRefusesWhenTheOldSlugIsDuplicated()
+
+	/**
+	 * Golden: every outcome reports exactly the same output and log lines, in order.
+	 *
+	 * @return void
+	 */
+	public function testEveryOutcomeReportsExactly(): void {
+		$cases = [
+			'table unreadable' => [['timeEntry' => 'throw'], false, [
+				[
+					'log.warning',
+					'RenameTimeEntrySchemaSlug: could not read the schema table; skipping.',
+					[
+						'exception' => 'table gone',
+					],
+				],
+				[
+					'output.info',
+					'RenameTimeEntrySchemaSlug: schema table unreadable; leaving the slug alone.',
+				],
+			]],
+			'old slug absent' => [['billingTimeEntry' => [7]], false, [
+				[
+					'output.info',
+					'RenameTimeEntrySchemaSlug: no time-entry schema on this install; nothing to do.',
+				],
+			]],
+			'both slugs present' => [['timeEntry' => [4], 'billingTimeEntry' => [5]], false, [
+				[
+					'log.warning',
+					'RenameTimeEntrySchemaSlug: both slugs exist; refusing to merge them.',
+					[
+						'old' => [
+							4,
+						],
+						'new' => [
+							5,
+						],
+					],
+				],
+				[
+					'output.warning',
+					'RenameTimeEntrySchemaSlug: both `timeEntry` and `billingTimeEntry` exist; refusing to merge them. Resolve by hand.',
+				],
+			]],
+			'old slug duplicated' => [['timeEntry' => [4, 6]], false, [
+				[
+					'log.warning',
+					'RenameTimeEntrySchemaSlug: duplicate time-entry slugs; refusing to guess.',
+					[
+						'ids' => [
+							4,
+							6,
+						],
+					],
+				],
+				[
+					'output.warning',
+					'RenameTimeEntrySchemaSlug: duplicate `timeEntry` schemas; refusing to guess.',
+				],
+			]],
+			'rename fails' => [['timeEntry' => [4]], true, [
+				[
+					'statement',
+					[
+						'billingTimeEntry',
+						4,
+					],
+				],
+				[
+					'log.error',
+					'RenameTimeEntrySchemaSlug: slug rename failed; the import will create a second schema.',
+					[
+						'id' => 4,
+						'exception' => 'locked',
+					],
+				],
+				[
+					'output.warning',
+					'RenameTimeEntrySchemaSlug: slug rename failed; see the log.',
+				],
+			]],
+			'rename succeeds' => [['timeEntry' => [4]], false, [
+				[
+					'statement',
+					[
+						'billingTimeEntry',
+						4,
+					],
+				],
+				[
+					'output.info',
+					'RenameTimeEntrySchemaSlug: schema 4 renamed `timeEntry` -> `billingTimeEntry`; its objects stay attached.',
+				],
+			]],
+		];
+		foreach ($cases as $name => [$ids, $failUpdate, $expected]) {
+			$this->assertSame($expected, $this->recordOutcome($ids, $failUpdate), $name);
+		}
+	}//end testEveryOutcomeReportsExactly()
+
+	/**
+	 * Run the step against canned slug lookups and record what it reports.
+	 *
+	 * @param array<string, mixed> $ids        Ids per slug, or 'throw' to make that lookup fail.
+	 * @param bool                 $failUpdate Whether the rename statement fails.
+	 *
+	 * @return array<int, array<int, mixed>> The statements, log and output calls, in order.
+	 */
+	private function recordOutcome(array $ids, bool $failUpdate): array {
+		$calls = [];
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('executeQuery')->willReturnCallback(
+			function (string $sql, array $params) use ($ids): IResult {
+				$slugIds = ($ids[$params[0]] ?? []);
+				if ($slugIds === 'throw') {
+					throw new DbException('table gone');
+				}
+
+				$result = $this->createMock(IResult::class);
+				$result->method('fetchAll')->willReturn($slugIds);
+				return $result;
+			}
+		);
+		$db->method('executeStatement')->willReturnCallback(
+			function (string $sql, array $params) use ($failUpdate, &$calls): int {
+				$calls[] = ['statement', $params];
+				if ($failUpdate === true) {
+					throw new DbException('locked');
+				}
+
+				return 1;
+			}
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		foreach (['warning', 'error'] as $level) {
+			$logger->method($level)->willReturnCallback(
+				function (string $message, array $context = []) use ($level, &$calls): void {
+					$calls[] = ['log.'.$level, $message, $context];
+				}
+			);
+		}
+
+		$output = $this->createMock(IOutput::class);
+		foreach (['info', 'warning'] as $level) {
+			$output->method($level)->willReturnCallback(
+				function (string $message) use ($level, &$calls): void {
+					$calls[] = ['output.'.$level, $message];
+				}
+			);
+		}
+
+		(new RenameTimeEntrySchemaSlug($db, $logger))->run($output);
+		return $calls;
+	}//end recordOutcome()
+
 }//end class

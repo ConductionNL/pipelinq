@@ -131,6 +131,45 @@ import {
 const ALL_FIELDS = ['name', 'email', 'phone']
 const ALL_DEPTHS = [5, 10, 20, 50]
 
+/**
+ * The stored settings as the form edits them, with the defaults for what is
+ * missing or unknown.
+ *
+ * @param {object} settings The stored settings.
+ * @return {object} The form.
+ */
+function settingsForm(settings) {
+	return {
+		customerSearchFields: searchFieldsOf(settings),
+
+		customerHistoryDepth: historyDepthOf(settings),
+
+		enablePipelinqSync: settings.enablePipelinqSync !== false,
+		requireCustomerForOnAccount:
+			settings.requireCustomerForOnAccount !== false,
+	}
+}
+
+/**
+ * @param {object} settings The stored settings.
+ * @return {Array<string>} The stored search fields, or every field when none is stored.
+ */
+function searchFieldsOf(settings) {
+	return Array.isArray(settings.customerSearchFields)
+		&& settings.customerSearchFields.length
+		? settings.customerSearchFields
+		: [...ALL_FIELDS]
+}
+
+/**
+ * @param {object} settings The stored settings.
+ * @return {number} The stored history depth when it is one of the offered ones, else 10.
+ */
+function historyDepthOf(settings) {
+	const depth = Number(settings.customerHistoryDepth)
+	return ALL_DEPTHS.includes(depth) ? depth : 10
+}
+
 export default {
 	name: 'PosCustomerSettings',
 	components: {
@@ -205,23 +244,7 @@ export default {
 			this.loading = true
 			try {
 				const settings = await getCustomerSettings()
-				this.form = {
-					customerSearchFields:
-						Array.isArray(settings.customerSearchFields)
-						&& settings.customerSearchFields.length
-							? settings.customerSearchFields
-							: [...ALL_FIELDS],
-
-					customerHistoryDepth: ALL_DEPTHS.includes(
-						Number(settings.customerHistoryDepth),
-					)
-						? Number(settings.customerHistoryDepth)
-						: 10,
-
-					enablePipelinqSync: settings.enablePipelinqSync !== false,
-					requireCustomerForOnAccount:
-						settings.requireCustomerForOnAccount !== false,
-				}
+				this.form = settingsForm(settings)
 			} catch {
 				this.statusMessage = t('pipelinq', 'Could not load settings.')
 				this.statusError = true

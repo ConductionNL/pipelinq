@@ -84,15 +84,11 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Message templates carry customer-facing copy and compliance state —
 		// a CRM capability. Admins bypass via the policy.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$envelope = $this->complianceService->listTemplates(page: $page, limit: $limit);
@@ -108,9 +104,9 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$user = $this->requireUser();
-		if ($user === null) {
-			return $this->unauthorized();
+		$user = $this->crmGate()->privilegedUserId();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$payload = $this->collectTemplateBody();
@@ -129,15 +125,11 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Message templates carry customer-facing copy and compliance state —
 		// a CRM capability. Admins bypass via the policy.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$template = $this->complianceService->getTemplateById(templateId: $id);
@@ -159,15 +151,11 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Message templates carry customer-facing copy and compliance state —
 		// a CRM capability. Admins bypass via the policy.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$patch = $this->collectTemplateBody();
@@ -192,13 +180,9 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function preview(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$template = $this->complianceService->getTemplateById(templateId: $id);
@@ -257,13 +241,9 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function render(): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$blocks = $this->request->getParam('blocks');
@@ -324,13 +304,9 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function validate(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$template = $this->complianceService->getTemplateById(templateId: $id);
@@ -343,20 +319,6 @@ class TemplateController extends Controller {
 
 		return new JSONResponse(['valid' => ($error === null), 'error' => $error]);
 	}//end validate()
-
-	/**
-	 * Authenticated user id, or null.
-	 *
-	 * @return string|null UID or null.
-	 */
-	private function requireUser(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		return $user->getUID();
-	}//end requireUser()
 
 	/**
 	 * Collect a sanitised template body from the fields the request carries.
@@ -469,24 +431,6 @@ class TemplateController extends Controller {
 	}//end renderResult()
 
 	/**
-	 * Generic 401 response.
-	 *
-	 * @return JSONResponse
-	 */
-	private function unauthorized(): JSONResponse {
-		return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-	}//end unauthorized()
-
-	/**
-	 * Deny a caller who is authenticated but not a CRM user.
-	 *
-	 * @return JSONResponse The 403 response.
-	 */
-	private function forbidden(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end forbidden()
-
-	/**
 	 * Generic 404 response.
 	 *
 	 * @return JSONResponse
@@ -494,4 +438,13 @@ class TemplateController extends Controller {
 	private function notFound(): JSONResponse {
 		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 	}//end notFound()
+
+	/**
+	 * The caller check shared by the marketing controllers.
+	 *
+	 * @return CrmCallerGate The gate.
+	 */
+	private function crmGate(): CrmCallerGate {
+		return new CrmCallerGate(userSession: $this->userSession, policy: $this->policy);
+	}//end crmGate()
 }//end class

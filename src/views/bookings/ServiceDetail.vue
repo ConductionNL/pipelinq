@@ -298,7 +298,7 @@ import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import ServiceForm from './ServiceForm.vue'
-import { currencyOr } from '../../services/reportingCurrency.js'
+import { bookingCurrency } from '../../components/bookings/bookingFormat.js'
 import { stepAmount } from '../../services/serviceSteps.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import {
@@ -896,17 +896,7 @@ export default {
 		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 		 */
 		formatCurrency(value, currency) {
-			const code = currencyOr(currency)
-			const n = Number(value) || 0
-			try {
-				return new Intl.NumberFormat('nl-NL', {
-					style: 'currency',
-					currency: code,
-					maximumFractionDigits: 2,
-				}).format(n)
-			} catch {
-				return `${code} ${n}`
-			}
+			return bookingCurrency(value, currency)
 		},
 
 		statusLabel(status) {

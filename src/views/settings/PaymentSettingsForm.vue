@@ -235,6 +235,30 @@ const MASK = '***SET***'
  * provider to a base URL, so `checkout-live.adyen.com` and `checkout-test.adyen.com`
  * cannot share one entry (and the credentials differ anyway).
  */
+/**
+ * What a save sends for a provider. The webhook secret is the only secret
+ * left in this form: it verifies an HMAC on an inbound webhook, which the
+ * broker cannot do for us. It is sent only when the admin typed something.
+ *
+ * @param {object} provider The payment provider to save.
+ * @return {object} The payload.
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+ */
+function providerPayload(provider) {
+	const payload = {
+		isActive: provider.isActive,
+		environment: provider.environment,
+		testMode: provider.testMode,
+		config: provider.config || {},
+		// A broker credential UUID — a reference, not a secret.
+		credentialId: provider.credentialId || '',
+	}
+	if (provider.webhookSecret && provider.webhookSecret !== MASK) {
+		payload.webhookSecret = provider.webhookSecret
+	}
+	return payload
+}
+
 const BROKER_PROVIDERS = {
 	mollie: ['mollie'],
 	stripe: ['stripe'],
@@ -308,17 +332,8 @@ export default {
 			try {
 				const providers = await listProviders()
 				this.providers = providers.map((p) => this.normalizeProvider(p))
-				// Reflect the stored credentialId back into the picker.
-				for (const provider of this.providers) {
-					provider.credential =
-						this.credentialsFor(provider.name).find(
-							(o) => o.value === provider.credentialId,
-						) || null
-				}
-				if (!this.providers.some((p) => p.name === this.selectedName)) {
-					const first = this.providers.find((p) => p.isActive) || this.providers[0]
-					this.selectedName = first ? first.name : ''
-				}
+				this.showStoredCredentials()
+				this.keepSelectedProvider()
 			} catch (e) {
 				showError(
 					t('pipelinq', 'Could not load providers: {error}', {
@@ -328,6 +343,34 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Reflect each provider's stored credentialId back into its picker.
+		 *
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
+		showStoredCredentials() {
+			for (const provider of this.providers) {
+				provider.credential =
+					this.credentialsFor(provider.name).find(
+						(o) => o.value === provider.credentialId,
+					) || null
+			}
+		},
+
+		/**
+		 * Keep the selected provider when it is still listed, else select the
+		 * first active one, else the first.
+		 *
+		 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
+		keepSelectedProvider() {
+			if (this.providers.some((p) => p.name === this.selectedName)) {
+				return
+			}
+			const first = this.providers.find((p) => p.isActive) || this.providers[0]
+			this.selectedName = first ? first.name : ''
 		},
 
 		/**
@@ -467,21 +510,7 @@ export default {
 		async onSave(provider) {
 			this.savingProvider = provider.name
 			try {
-				const payload = {
-					isActive: provider.isActive,
-					environment: provider.environment,
-					testMode: provider.testMode,
-					config: provider.config || {},
-					// A broker credential UUID — a reference, not a secret.
-					credentialId: provider.credentialId || '',
-				}
-				// The webhook secret is the only secret left in this form: it verifies an
-				// HMAC on an inbound webhook, which the broker cannot do for us. Ship it
-				// only when the admin actually typed something.
-				if (provider.webhookSecret && provider.webhookSecret !== MASK) {
-					payload.webhookSecret = provider.webhookSecret
-				}
-				const saved = await updateProvider(provider.name, payload)
+				const saved = await updateProvider(provider.name, providerPayload(provider))
 				if (saved) {
 					Object.assign(provider, this.normalizeProvider(saved))
 				}

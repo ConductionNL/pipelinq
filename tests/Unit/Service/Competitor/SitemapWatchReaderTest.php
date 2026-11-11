@@ -29,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @covers \OCA\Pipelinq\Service\Competitor\SitemapWatchReader
  * @uses \OCA\Pipelinq\Service\Competitor\WatchOutcome
+ * @uses \OCA\Pipelinq\Service\Competitor\QuietXmlParser
  * @uses \OCA\Pipelinq\Service\Egress\EgressResult
  */
 class SitemapWatchReaderTest extends TestCase {

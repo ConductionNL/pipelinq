@@ -79,23 +79,31 @@ class RateOverrideStore {
 
 		$overrides = [];
 		foreach ($table as $code => $entry) {
-			if (is_array($entry) === false) {
-				continue;
-			}
-
-			$rate = ($entry['rate'] ?? null);
-			if (is_numeric($rate) === true && (float)$rate > 0) {
-				$overrides[strtoupper(trim((string)$code))] = [
-					'rate' => (float)$rate,
-					'reason' => (string)($entry['reason'] ?? ''),
-					'date' => $this->dateOrNull(value: $entry['date'] ?? null),
-				];
+			$override = $this->storedOverride(entry: $entry);
+			if ($override !== null) {
+				$overrides[strtoupper(trim((string)$code))] = $override;
 			}
 		}
 
 		ksort($overrides);
 		return $overrides;
 	}//end getOverrides()
+
+	/**
+	 * One stored entry as an override; null for an entry that is not a list
+	 * or has no positive numeric rate.
+	 *
+	 * @param mixed $entry The stored entry.
+	 *
+	 * @return array{rate: float, reason: string, date: string|null}|null
+	 */
+	private function storedOverride($entry): ?array {
+		if (is_array($entry) === false || is_numeric($entry['rate'] ?? null) === false || (float)$entry['rate'] <= 0) {
+			return null;
+		}
+
+		return ['rate' => (float)$entry['rate'], 'reason' => (string)($entry['reason'] ?? ''), 'date' => $this->dateOrNull(value: $entry['date'] ?? null)];
+	}//end storedOverride()
 
 	/**
 	 * Validate the overrides an administrator submits and stamp them with today.
@@ -116,21 +124,43 @@ class RateOverrideStore {
 		foreach ($input as $code => $entry) {
 			$currency = strtoupper(trim((string)$code));
 			$override = $this->validOverride(code: (string)$code, entry: (array)$entry);
-			$override['date'] = $this->today()->format('Y-m-d');
-
-			$previous = ($current[$currency] ?? null);
-			if ($previous !== null && $previous['date'] !== null
-				&& $previous['rate'] === $override['rate'] && $previous['reason'] === $override['reason']
-			) {
-				$override['date'] = $previous['date'];
-			}
-
-			$overrides[$currency] = $override;
+			$overrides[$currency] = $this->dated(override: $override, previous: ($current[$currency] ?? null));
 		}
 
 		ksort($overrides);
 		return $overrides;
 	}//end normaliseOverrides()
+
+	/**
+	 * The override with its day: the day it was first set when its rate and
+	 * reason did not change, today otherwise.
+	 *
+	 * @param array{rate: float, reason: string}                     $override The checked override.
+	 * @param array{rate: float, reason: string, date: ?string}|null $previous The stored one, if any.
+	 *
+	 * @return array{rate: float, reason: string, date: string}
+	 */
+	private function dated(array $override, ?array $previous): array {
+		$override['date'] = $this->today()->format('Y-m-d');
+		if ($this->isUnchanged(override: $override, previous: $previous) === true) {
+			$override['date'] = $previous['date'];
+		}
+
+		return $override;
+	}//end dated()
+
+	/**
+	 * Whether a dated stored override has the same rate and reason.
+	 *
+	 * @param array{rate: float, reason: string}                     $override The checked override.
+	 * @param array{rate: float, reason: string, date: ?string}|null $previous The stored one, if any.
+	 *
+	 * @return bool
+	 */
+	private function isUnchanged(array $override, ?array $previous): bool {
+		return $previous !== null && $previous['date'] !== null
+			&& $previous['rate'] === $override['rate'] && $previous['reason'] === $override['reason'];
+	}//end isUnchanged()
 
 	/**
 	 * The date each hand-kept rate was typed, updated for a newly saved table.

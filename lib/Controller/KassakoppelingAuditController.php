@@ -231,16 +231,9 @@ class KassakoppelingAuditController extends Controller {
 	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function export(): DataDownloadResponse|JSONResponse {
-		$uid = $this->requireUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		if ($this->groupManager->isAdmin($uid) === false) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Alleen administrators kunnen exporteren naar de Belastingdienst.')],
-				Http::STATUS_FORBIDDEN
-			);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$fromDate = (string)$this->request->getParam('from', '');
@@ -253,12 +246,46 @@ class KassakoppelingAuditController extends Controller {
 			);
 		}
 
-		try {
-			$payload = $this->service->exportForBelastingdienst(
+		return $this->exportDownload(
+			export: fn (): array => $this->service->exportForBelastingdienst(
 				fromDate: $fromDate,
 				toDate: $toDate,
 				format: $format
+			)
+		);
+	}//end export()
+
+	/**
+	 * The 401 without a session or the 403 for anyone but an administrator, else null.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function adminRefusal(): ?JSONResponse {
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		if ($this->groupManager->isAdmin($uid) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Alleen administrators kunnen exporteren naar de Belastingdienst.')],
+				Http::STATUS_FORBIDDEN
 			);
+		}
+
+		return null;
+	}//end adminRefusal()
+
+	/**
+	 * Build the export and stream it, or answer 422 / 500 when it cannot be built.
+	 *
+	 * @param callable(): array<string, mixed> $export Builds the export payload.
+	 *
+	 * @return DataDownloadResponse|JSONResponse The download, or the error.
+	 */
+	private function exportDownload(callable $export): DataDownloadResponse|JSONResponse {
+		try {
+			$payload = $export();
 		} catch (OCSBadRequestException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (\Throwable $e) {
@@ -274,7 +301,7 @@ class KassakoppelingAuditController extends Controller {
 			(string)$payload['filename'],
 			(string)$payload['contentType']
 		);
-	}//end export()
+	}//end exportDownload()
 
 	/**
 	 * Require an authenticated user, returning their UID.

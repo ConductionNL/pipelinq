@@ -83,6 +83,16 @@ class NotificationService {
 	];
 
 	/**
+	 * Assignment subject per entity type; any other type is a lead assignment.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ASSIGNMENT_SUBJECTS = [
+		'request' => 'request_assigned',
+		'task' => 'task_assigned',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IManager $notificationManager The notification manager.
@@ -116,28 +126,16 @@ class NotificationService {
 		string $objectId,
 		string $author,
 	): void {
-		if ($author === $assigneeUserId) {
-			return;
-		}
-
-		$subject = 'lead_assigned';
-		if ($entityType === 'request') {
-			$subject = 'request_assigned';
-		} elseif ($entityType === 'task') {
-			$subject = 'task_assigned';
-		}
-
-		$this->send(
-			subject: $subject,
+		$notice = new UserNotice(
+			subject: (self::ASSIGNMENT_SUBJECTS[$entityType] ?? 'lead_assigned'),
 			parameters: [
 				'title' => $title,
 				'entityType' => $entityType,
 				'author' => $author,
-			],
-			userId: $assigneeUserId,
-			objectType: $entityType,
-			objectId: $objectId
+			]
 		);
+		$about = new NoticedObject(objectType: $entityType, objectId: $objectId);
+		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyAssignment()
 
 	/**
@@ -160,21 +158,16 @@ class NotificationService {
 		string $objectId,
 		string $author,
 	): void {
-		if ($author === $userId) {
-			return;
-		}
-
-		$this->send(
+		$notice = new UserNotice(
 			subject: 'task_completed',
 			parameters: [
 				'title' => $title,
 				'resultText' => $resultText,
 				'author' => $author,
-			],
-			userId: $userId,
-			objectType: 'task',
-			objectId: $objectId
+			]
 		);
+		$about = new NoticedObject(objectType: 'task', objectId: $objectId);
+		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $userId, object: $about));
 	}//end notifyTaskCompleted()
 
 	/**
@@ -197,21 +190,16 @@ class NotificationService {
 		string $author,
 		string $deadline = '',
 	): void {
-		if ($author === $assigneeUserId) {
-			return;
-		}
-
-		$this->send(
+		$notice = new UserNotice(
 			subject: 'task_reassigned',
 			parameters: [
 				'title' => $title,
 				'author' => $author,
 				'deadline' => $deadline,
-			],
-			userId: $assigneeUserId,
-			objectType: 'task',
-			objectId: $objectId
+			]
 		);
+		$about = new NoticedObject(objectType: 'task', objectId: $objectId);
+		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyTaskReassigned()
 
 	/**
@@ -232,16 +220,15 @@ class NotificationService {
 		string $objectId,
 		string $deadline = '',
 	): void {
-		$this->send(
+		$notice = new UserNotice(
 			subject: 'task_expired',
 			parameters: [
 				'title' => $title,
 				'deadline' => $deadline,
-			],
-			userId: $userId,
-			objectType: 'task',
-			objectId: $objectId
+			]
 		);
+		$about = new NoticedObject(objectType: 'task', objectId: $objectId);
+		$this->send(notice: $notice, recipient: new NoticeRecipient(userId: $userId, object: $about));
 	}//end notifyTaskExpired()
 
 	/**
@@ -264,21 +251,16 @@ class NotificationService {
 		string $objectId,
 		string $author,
 	): void {
-		if ($author === $assigneeUserId) {
-			return;
-		}
-
-		$this->send(
+		$notice = new UserNotice(
 			subject: 'lead_stage_changed',
 			parameters: [
 				'title' => $title,
 				'stage' => $newStage,
 				'author' => $author,
-			],
-			userId: $assigneeUserId,
-			objectType: 'lead',
-			objectId: $objectId
+			]
 		);
+		$about = new NoticedObject(objectType: 'lead', objectId: $objectId);
+		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyStageChange()
 
 	/**
@@ -301,21 +283,16 @@ class NotificationService {
 		string $objectId,
 		string $author,
 	): void {
-		if ($author === $assigneeUserId) {
-			return;
-		}
-
-		$this->send(
+		$notice = new UserNotice(
 			subject: 'request_status_changed',
 			parameters: [
 				'title' => $title,
 				'status' => $newStatus,
 				'author' => $author,
-			],
-			userId: $assigneeUserId,
-			objectType: 'request',
-			objectId: $objectId
+			]
 		);
+		$about = new NoticedObject(objectType: 'request', objectId: $objectId);
+		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyStatusChange()
 
 	/**
@@ -338,21 +315,16 @@ class NotificationService {
 		string $objectId,
 		string $author,
 	): void {
-		if ($author === $assigneeUserId) {
-			return;
-		}
-
-		$this->send(
+		$notice = new UserNotice(
 			subject: 'note_added',
 			parameters: [
 				'title' => $entityTitle,
 				'entityType' => $entityType,
 				'author' => $author,
-			],
-			userId: $assigneeUserId,
-			objectType: $entityType,
-			objectId: $objectId
+			]
 		);
+		$about = new NoticedObject(objectType: $entityType, objectId: $objectId);
+		$this->notifyUnlessAuthor(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyNoteAdded()
 
 	/**
@@ -375,17 +347,16 @@ class NotificationService {
 		string $objectId,
 		string $author,
 	): void {
-		$this->send(
+		$notice = new UserNotice(
 			subject: 'lead_won',
 			parameters: [
 				'title' => $title,
 				'value' => $value,
 				'author' => $author,
-			],
-			userId: $assigneeUserId,
-			objectType: 'lead',
-			objectId: $objectId
+			]
 		);
+		$about = new NoticedObject(objectType: 'lead', objectId: $objectId);
+		$this->send(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyDealWon()
 
 	/**
@@ -406,16 +377,15 @@ class NotificationService {
 		string $objectId,
 		string $author,
 	): void {
-		$this->send(
+		$notice = new UserNotice(
 			subject: 'lead_lost',
 			parameters: [
 				'title' => $title,
 				'author' => $author,
-			],
-			userId: $assigneeUserId,
-			objectType: 'lead',
-			objectId: $objectId
+			]
 		);
+		$about = new NoticedObject(objectType: 'lead', objectId: $objectId);
+		$this->send(notice: $notice, recipient: new NoticeRecipient(userId: $assigneeUserId, object: $about));
 	}//end notifyDealLost()
 
 	/**
@@ -442,64 +412,82 @@ class NotificationService {
 		string $objectId = '',
 	): void {
 		$this->send(
-			subject: $subject,
-			parameters: $parameters,
-			userId: $userId,
-			objectType: $objectType,
-			objectId: $objectId
+			notice: new UserNotice(subject: $subject, parameters: $parameters),
+			recipient: new NoticeRecipient(userId: $userId, object: new NoticedObject(objectType: $objectType, objectId: $objectId))
 		);
 	}//end sendNotification()
 
 	/**
-	 * Send a notification to a user.
+	 * Send a notice unless its author is the recipient (no self-notifications).
 	 *
-	 * @param string $subject The notification subject.
-	 * @param array $parameters The notification parameters.
-	 * @param string $userId The target user ID.
-	 * @param string $objectType The object type.
-	 * @param string $objectId The object ID.
+	 * @param UserNotice      $notice    The notice; its `author` parameter names the actor.
+	 * @param NoticeRecipient $recipient The user to notify and the object it is about.
 	 *
 	 * @return void
 	 */
-	private function send(
-		string $subject,
-		array $parameters,
-		string $userId,
-		string $objectType,
-		string $objectId,
-	): void {
+	private function notifyUnlessAuthor(UserNotice $notice, NoticeRecipient $recipient): void {
+		if ($notice->isBy(userId: $recipient->userId) === true) {
+			return;
+		}
+
+		$this->send(notice: $notice, recipient: $recipient);
+	}//end notifyUnlessAuthor()
+
+	/**
+	 * Send a notification to a user, unless they switched its category off.
+	 *
+	 * @param UserNotice      $notice    The subject and parameters.
+	 * @param NoticeRecipient $recipient The user to notify and the object it is about.
+	 *
+	 * @return void
+	 */
+	private function send(UserNotice $notice, NoticeRecipient $recipient): void {
 		// Check user setting for this notification type.
-		$settingKey = self::SUBJECT_SETTING_MAP[$subject] ?? null;
-		if ($settingKey !== null) {
-			$enabled = $this->config->getUserValue(
-				userId: $userId,
-				appName: Application::APP_ID,
-				key: $settingKey,
-				default: 'true'
-			);
-			if ($enabled !== 'true') {
-				return;
-			}
+		if ($this->switchedOff(notice: $notice, userId: $recipient->userId) === true) {
+			return;
 		}
 
 		try {
 			$notification = $this->notificationManager->createNotification();
 			$notification->setApp(Application::APP_ID)
-				->setUser($userId)
+				->setUser($recipient->userId)
 				->setDateTime(new DateTime())
-				->setObject(type: $objectType, id: $objectId)
-				->setSubject(subject: $subject, parameters: $parameters);
+				->setObject(type: $recipient->object->objectType, id: $recipient->object->objectId)
+				->setSubject(subject: $notice->subject, parameters: $notice->parameters);
 
 			$this->notificationManager->notify($notification);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to send Pipelinq notification',
 				[
-					'subject' => $subject,
-					'userId' => $userId,
+					'subject' => $notice->subject,
+					'userId' => $recipient->userId,
 					'exception' => $e->getMessage(),
 				]
 			);
 		}
 	}//end send()
+
+	/**
+	 * Whether the user switched off the setting category of the notice's subject.
+	 *
+	 * @param UserNotice $notice The notice.
+	 * @param string     $userId The user.
+	 *
+	 * @return bool True when the user opted out; a subject without a category is never off.
+	 */
+	private function switchedOff(UserNotice $notice, string $userId): bool {
+		$settingKey = self::SUBJECT_SETTING_MAP[$notice->subject] ?? null;
+		if ($settingKey === null) {
+			return false;
+		}
+
+		$enabled = $this->config->getUserValue(
+			userId: $userId,
+			appName: Application::APP_ID,
+			key: $settingKey,
+			default: 'true'
+		);
+		return $enabled !== 'true';
+	}//end switchedOff()
 }//end class

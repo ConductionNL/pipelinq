@@ -156,9 +156,7 @@ class ContactMomentFilingService {
 		$set[] = $caseId;
 
 		return $this->write(
-			moment: $moment,
-			set: $set,
-			primary: $this->primaryOf(moment: $moment),
+			moment: $this->withCases(moment: $moment, cases: new ContactMomentCases(set: $set, primary: $this->primaryOf(moment: $moment))),
 			trail: ['case' => $caseId, 'act' => 'filed'],
 		);
 	}//end fileOnAlsoCase()
@@ -183,6 +181,39 @@ class ContactMomentFilingService {
 		}
 
 		$set = $this->caseSetOf(moment: $moment);
+		$refusal = self::unfilingRefusal(set: $set, caseId: $caseId);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$remaining = array_values(array_filter($set, static fn (string $r): bool => $r !== $caseId));
+		$primary = $this->primaryOf(moment: $moment);
+		$newPrimary = trim((string)$newPrimary);
+
+		if ($primary === $caseId) {
+			$refusal = self::newPrimaryRefusal(newPrimary: $newPrimary, remaining: $remaining);
+			if ($refusal !== null) {
+				return $refusal;
+			}
+
+			$primary = $newPrimary;
+		}
+
+		return $this->write(
+			moment: $this->withCases(moment: $moment, cases: new ContactMomentCases(set: $remaining, primary: $primary)),
+			trail: ['case' => $caseId, 'act' => 'unfiled'],
+		);
+	}//end unfileFromCase()
+
+	/**
+	 * The refusal to take a moment off a case it is not on (404) or off its last case (409), or null.
+	 *
+	 * @param array<int, string> $set    The current case set.
+	 * @param string             $caseId The case to take it off.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function unfilingRefusal(array $set, string $caseId): ?array {
 		if (in_array($caseId, $set, true) === false) {
 			return ['status' => 404, 'error' => "This contact moment is not filed on {$caseId}."];
 		}
@@ -194,35 +225,34 @@ class ContactMomentFilingService {
 			];
 		}
 
-		$remaining = array_values(array_filter($set, static fn (string $r): bool => $r !== $caseId));
-		$primary = $this->primaryOf(moment: $moment);
-		$newPrimary = trim((string)$newPrimary);
+		return null;
+	}//end unfilingRefusal()
 
-		if ($primary === $caseId) {
-			if ($newPrimary === '') {
-				return [
-					'status' => 409,
-					'error' => 'Removing the primary case needs the next primary named in the same act.',
-				];
-			}
-
-			if (in_array($newPrimary, $remaining, true) === false) {
-				return [
-					'status' => 409,
-					'error' => "The new primary has to be one of the remaining cases; {$newPrimary} is not.",
-				];
-			}
-
-			$primary = $newPrimary;
+	/**
+	 * The refusal when the primary is removed without naming a remaining case as the next one, or null.
+	 *
+	 * @param string             $newPrimary The trimmed next primary, or ''.
+	 * @param array<int, string> $remaining  The cases left after the removal.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function newPrimaryRefusal(string $newPrimary, array $remaining): ?array {
+		if ($newPrimary === '') {
+			return [
+				'status' => 409,
+				'error' => 'Removing the primary case needs the next primary named in the same act.',
+			];
 		}
 
-		return $this->write(
-			moment: $moment,
-			set: $remaining,
-			primary: $primary,
-			trail: ['case' => $caseId, 'act' => 'unfiled'],
-		);
-	}//end unfileFromCase()
+		if (in_array($newPrimary, $remaining, true) === false) {
+			return [
+				'status' => 409,
+				'error' => "The new primary has to be one of the remaining cases; {$newPrimary} is not.",
+			];
+		}
+
+		return null;
+	}//end newPrimaryRefusal()
 
 	/**
 	 * What to say about a contact moment that is on more than one case.
@@ -309,22 +339,31 @@ class ContactMomentFilingService {
 	}//end read()
 
 	/**
-	 * Write the set, the primary, the mirror and the trail in one save.
+	 * The moment with its new case set, primary and single-reference mirror.
 	 *
 	 * @param array<string, mixed> $moment The stored contact moment.
-	 * @param array<int, string> $set The new ordered set.
-	 * @param string $primary The new primary.
-	 * @param array{case: string, act: string} $trail The act to record.
+	 * @param ContactMomentCases   $cases  The set and primary the act leaves.
 	 *
-	 * @return array<string, mixed> `status` plus either `contactMoment` or `error`.
+	 * @return array<string, mixed>
 	 */
-	private function write(array $moment, array $set, string $primary, array $trail): array {
-		$moment['caseReferences'] = array_values($set);
-		$moment['primaryCaseReference'] = $primary;
+	private function withCases(array $moment, ContactMomentCases $cases): array {
+		$moment['caseReferences'] = array_values($cases->set);
+		$moment['primaryCaseReference'] = $cases->primary;
 		// The mirror: a reader that knows only the single-reference shape has
 		// to resolve the right case, and the primary is that case.
-		$moment['caseReference'] = $primary;
+		$moment['caseReference'] = $cases->primary;
+		return $moment;
+	}//end withCases()
 
+	/**
+	 * The moment with the act, its actor and its moment appended to the filing trail.
+	 *
+	 * @param array<string, mixed>             $moment The contact moment.
+	 * @param array{case: string, act: string} $trail  The act to record.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withTrail(array $moment, array $trail): array {
 		$filings = ($moment['caseFilings'] ?? []);
 		if (is_array($filings) === false) {
 			$filings = [];
@@ -337,6 +376,19 @@ class ContactMomentFilingService {
 			'at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
 		];
 		$moment['caseFilings'] = $filings;
+		return $moment;
+	}//end withTrail()
+
+	/**
+	 * Write the moment with the act appended to its trail, in one save.
+	 *
+	 * @param array<string, mixed>             $moment The contact moment with its new cases.
+	 * @param array{case: string, act: string} $trail  The act to record.
+	 *
+	 * @return array<string, mixed> `status` plus either `contactMoment` or `error`.
+	 */
+	private function write(array $moment, array $trail): array {
+		$moment = $this->withTrail(moment: $moment, trail: $trail);
 
 		try {
 			$saved = $this->ticketService->save(

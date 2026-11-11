@@ -381,23 +381,45 @@ export default {
 		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
 		 */
 		async applyDraftForm(kept) {
+			this.restoreDraftFields(kept)
+			if (typeof kept.client === 'string' && kept.client !== '' && kept.client !== this.client?.id) {
+				await this.restoreDraftClient(kept.client)
+			}
+		},
+
+		/**
+		 * Put back the draft's text fields.
+		 *
+		 * @param {object} kept The fields the draft holds.
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 */
+		restoreDraftFields(kept) {
 			for (const key of ['title', 'channel', 'direction', 'duration', 'notes']) {
 				if (typeof kept[key] === 'string') {
 					this.form[key] = kept[key]
 				}
 			}
-			if (typeof kept.client === 'string' && kept.client !== '' && kept.client !== this.client?.id) {
-				const known = this.clientResults.find((option) => option.id === kept.client)
-				if (known) {
-					this.client = known
-					return
-				}
-				try {
-					const client = await useObjectStore().fetchObject('client', kept.client)
-					this.client = { id: kept.client, label: client?.name || kept.client }
-				} catch {
-					this.client = { id: kept.client, label: kept.client }
-				}
+		},
+
+		/**
+		 * Pick the draft's customer: from the results shown, else read by id;
+		 * a customer that cannot be read keeps its id as its name.
+		 *
+		 * @param {string} clientId The draft's customer.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 */
+		async restoreDraftClient(clientId) {
+			const known = this.clientResults.find((option) => option.id === clientId)
+			if (known) {
+				this.client = known
+				return
+			}
+			try {
+				const client = await useObjectStore().fetchObject('client', clientId)
+				this.client = { id: clientId, label: client?.name || clientId }
+			} catch {
+				this.client = { id: clientId, label: clientId }
 			}
 		},
 
@@ -415,14 +437,26 @@ export default {
 			const store = useObjectStore()
 			try {
 				this.ticket = (await store.fetchObject('ticket', this.ticketId)) || null
-				const clientId = this.ticket?.client
-				if (typeof clientId === 'string' && clientId !== '' && this.client === null) {
-					const client = await store.fetchObject('client', clientId)
-					this.client = { id: clientId, label: client?.name || clientId }
-				}
+				await this.prefillTicketClient(store)
 			} catch {
 				this.ticket = null
 			}
+		},
+
+		/**
+		 * Pick the ticket's customer, named, when none was picked yet.
+		 *
+		 * @param {object} store The object store.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
+		 */
+		async prefillTicketClient(store) {
+			const clientId = this.ticket?.client
+			if (typeof clientId !== 'string' || clientId === '' || this.client !== null) {
+				return
+			}
+			const client = await store.fetchObject('client', clientId)
+			this.client = { id: clientId, label: client?.name || clientId }
 		},
 
 		/**

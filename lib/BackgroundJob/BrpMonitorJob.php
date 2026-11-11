@@ -95,85 +95,165 @@ class BrpMonitorJob extends TimedJob {
 	 */
 	protected function run(mixed $argument): void {
 		try {
-			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			$schema = $this->appConfig->getValueString(Application::APP_ID, 'bsnAuditRecord_schema', '');
-			if ($register === '' || $schema === '') {
-				$this->logger->info('BRP monitor: audit schema not configured; skipping');
-				return;
-			}
-
-			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-			$window = $now->modify('-24 hours');
-
-			$records = $this->objectService->findAll(
-				config: [
-					'filters' => [
-						'action' => 'brp-lookup-executed',
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
-
-			// The findAll() contract returns a non-nullable array, so the `?? []`
-		// that used to sit here was dead code (reported by phpstan).
-		$audit = $this->aggregateAuditRecords(records: $records, window: $window);
-			$total = $audit['total'];
-			$errors = $audit['errors'];
-			$hits = $audit['hits'];
-
-			// Cache-hit ratio is sourced from brpLookupVerzoek.responseInCache (more accurate).
-			$requestSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
-			$request = $this->aggregateVerzoeken(
-				register: $register,
-				requestSchema: $requestSchema,
-				window: $window
-			);
-			$totalRequest = $request['totalVerzoek'];
-			$cacheHits = $request['cacheHits'];
-			$durations = $request['durations'];
-
-			$errorRate = 0.0;
-			if ($total > 0) {
-				$errorRate = round($errors / $total, 4);
-			}
-
-			$cacheHitRatio = 0.0;
-			if ($totalRequest > 0) {
-				$cacheHitRatio = round($cacheHits / $totalRequest, 4);
-			}
-
-			$avgResponseMs = 0;
-			if (count($durations) > 0) {
-				$avgResponseMs = (int)round(array_sum($durations) / count($durations));
-			}
-
-			$report = [
-				'windowStart' => $window->format(DATE_ATOM),
-				'windowEnd' => $now->format(DATE_ATOM),
-				'totalLookups' => $total,
-				'successfulLookups' => $hits,
-				'errorCount' => $errors,
-				'errorRate' => $errorRate,
-				'cacheHits' => $cacheHits,
-				'cacheHitRatio' => $cacheHitRatio,
-				'avgResponseMs' => $avgResponseMs,
-				'generatedAt' => $now->format(DATE_ATOM),
-			];
-
-			$this->appConfig->setValueString(
-				Application::APP_ID,
-				'brp.monitor_report',
-				json_encode($report, JSON_THROW_ON_ERROR)
-			);
-
-			if ($report['errorRate'] >= self::ERROR_RATE_ALERT_THRESHOLD && $total > 0) {
-				$this->notifyAdmins(report: $report);
-			}
+			$this->monitor();
 		} catch (Throwable $e) {
 			$this->logger->error('BRP monitor job failed', ['error' => $e->getMessage()]);
-		}//end try
+		}
 	}//end run()
+
+	/**
+	 * Build, store and, when the error rate is too high, alert the 24-hour report.
+	 *
+	 * @return void
+	 */
+	private function monitor(): void {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, 'bsnAuditRecord_schema', '');
+		if ($this->isAuditConfigured(register: $register, schema: $schema) === false) {
+			return;
+		}
+
+		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$window = $now->modify('-24 hours');
+
+		$audit = $this->aggregateAuditRecords(records: $this->auditRecords(register: $register, schema: $schema), window: $window);
+		// Cache-hit ratio is sourced from brpLookupVerzoek.responseInCache (more accurate).
+		$requestSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
+		$request = $this->aggregateVerzoeken(verzoeken: $this->requestRecords(register: $register, requestSchema: $requestSchema), window: $window);
+
+		$report = ['windowStart' => $window->format(DATE_ATOM), 'windowEnd' => $now->format(DATE_ATOM)]
+			+ self::figures(audit: $audit, request: $request)
+			+ ['generatedAt' => $now->format(DATE_ATOM)];
+		$this->publishReport(report: $report);
+	}//end monitor()
+
+	/**
+	 * Whether the register and the audit schema are configured; a skip is noted in the log.
+	 *
+	 * @param string $register The register slug.
+	 * @param string $schema   The BSN audit record schema slug.
+	 *
+	 * @return bool True when both are configured.
+	 */
+	private function isAuditConfigured(string $register, string $schema): bool {
+		if ($register === '' || $schema === '') {
+			$this->logger->info('BRP monitor: audit schema not configured; skipping');
+			return false;
+		}
+
+		return true;
+	}//end isAuditConfigured()
+
+	/**
+	 * The executed-lookup audit records.
+	 *
+	 * The findAll() contract returns a non-nullable array, so no `?? []` is needed.
+	 *
+	 * @param string $register The register slug.
+	 * @param string $schema   The BSN audit record schema slug.
+	 *
+	 * @return array<int, mixed> The records.
+	 */
+	private function auditRecords(string $register, string $schema): array {
+		return $this->objectService->findAll(
+			config: [
+				'filters' => [
+					'action' => 'brp-lookup-executed',
+					'register' => $register,
+					'schema' => $schema,
+				],
+			]
+		);
+	}//end auditRecords()
+
+	/**
+	 * The brpLookupVerzoek records; none when that schema is not configured.
+	 *
+	 * @param string $register      The register slug.
+	 * @param string $requestSchema The brpLookupVerzoek schema slug (empty = skip).
+	 *
+	 * @return array<int, mixed> The records.
+	 */
+	private function requestRecords(string $register, string $requestSchema): array {
+		if ($requestSchema === '') {
+			return [];
+		}
+
+		return $this->objectService->findAll(
+			config: ['filters' => ['register' => $register, 'schema' => $requestSchema]]
+		);
+	}//end requestRecords()
+
+	/**
+	 * The report figures of the audit and request aggregates.
+	 *
+	 * @param array{total: int, errors: int, hits: int}                                $audit   The audit aggregate.
+	 * @param array{totalVerzoek: int, cacheHits: int, durations: array<int, int>}     $request The request aggregate.
+	 *
+	 * @return array<string, int|float> The figures, in report order.
+	 */
+	private static function figures(array $audit, array $request): array {
+		return [
+			'totalLookups' => $audit['total'],
+			'successfulLookups' => $audit['hits'],
+			'errorCount' => $audit['errors'],
+			'errorRate' => self::ratio(part: $audit['errors'], whole: $audit['total']),
+			'cacheHits' => $request['cacheHits'],
+			'cacheHitRatio' => self::ratio(part: $request['cacheHits'], whole: $request['totalVerzoek']),
+			'avgResponseMs' => self::average(values: $request['durations']),
+		];
+	}//end figures()
+
+	/**
+	 * A share rounded to four decimals, 0.0 of nothing.
+	 *
+	 * @param int $part  The part.
+	 * @param int $whole The whole.
+	 *
+	 * @return float The share.
+	 */
+	private static function ratio(int $part, int $whole): float {
+		if ($whole > 0) {
+			return round($part / $whole, 4);
+		}
+
+		return 0.0;
+	}//end ratio()
+
+	/**
+	 * The rounded average, 0 of nothing.
+	 *
+	 * @param array<int, int> $values The values.
+	 *
+	 * @return int The average.
+	 */
+	private static function average(array $values): int {
+		if (count($values) > 0) {
+			return (int)round(array_sum($values) / count($values));
+		}
+
+		return 0;
+	}//end average()
+
+	/**
+	 * Store the report and alert the admins when the error rate reaches the threshold.
+	 *
+	 * @param array<string, mixed> $report The report.
+	 *
+	 * @return void
+	 *
+	 */
+	private function publishReport(array $report): void {
+		$this->appConfig->setValueString(
+			Application::APP_ID,
+			'brp.monitor_report',
+			json_encode($report, JSON_THROW_ON_ERROR)
+		);
+
+		if ($report['errorRate'] >= self::ERROR_RATE_ALERT_THRESHOLD && $report['totalLookups'] > 0) {
+			$this->notifyAdmins(report: $report);
+		}
+	}//end publishReport()
 
 	/**
 	 * Coerce an OpenRegister record (array or entity) to a plain array.
@@ -209,86 +289,76 @@ class BrpMonitorJob extends TimedJob {
 		foreach ($records as $rec) {
 			$arr = $this->recordToArray(rec: $rec);
 			$moment = (string)($arr['moment'] ?? '');
-			if ($moment === '') {
-				continue;
-			}
-
-			try {
-				$timestamp = new DateTimeImmutable($moment);
-			} catch (Throwable $e) {
-				continue;
-			}
-
-			if ($timestamp < $window) {
+			if ($moment === '' || self::isAtOrAfter(moment: $moment, window: $window) === false) {
 				continue;
 			}
 
 			$total++;
 			$outcome = (string)($arr['outcome'] ?? '');
-			if ($outcome === 'error' || $outcome === 'timeout') {
-				$errors++;
-			}
-
-			if ($outcome === 'succeeded') {
-				$hits++;
-			}
-		}//end foreach
+			$errors += (int)in_array($outcome, ['error', 'timeout'], true);
+			$hits += (int)($outcome === 'succeeded');
+		}
 
 		return ['total' => $total, 'errors' => $errors, 'hits' => $hits];
 	}//end aggregateAuditRecords()
 
 	/**
+	 * Whether a record's moment is a date inside the window; an empty moment
+	 * reads as now.
+	 *
+	 * @param string            $moment The moment as the record wrote it.
+	 * @param DateTimeImmutable $window Lower time bound (inclusive).
+	 *
+	 * @return bool False for an unreadable moment, or one before the window.
+	 */
+	private static function isAtOrAfter(string $moment, DateTimeImmutable $window): bool {
+		try {
+			return new DateTimeImmutable($moment) >= $window;
+		} catch (Throwable $e) {
+			return false;
+		}
+	}//end isAtOrAfter()
+
+	/**
 	 * Aggregate brpLookupVerzoek records for cache-hit ratio and durations.
 	 *
-	 * @param string $register Register slug.
-	 * @param string $requestSchema brpLookupVerzoek schema slug (empty = skip).
-	 * @param DateTimeImmutable $window Lower time bound (inclusive).
+	 * @param iterable<mixed>   $verzoeken The brpLookupVerzoek records.
+	 * @param DateTimeImmutable $window    Lower time bound (inclusive).
 	 *
 	 * @return array{totalVerzoek: int, cacheHits: int, durations: array<int, int>}
 	 */
-	private function aggregateVerzoeken(string $register, string $requestSchema, DateTimeImmutable $window): array {
-		if ($requestSchema === '') {
-			return ['totalVerzoek' => 0, 'cacheHits' => 0, 'durations' => []];
-		}
-
-		$totalRequest = 0;
-		$cacheHits = 0;
-		$durations = [];
-		$verzoeken = $this->objectService->findAll(
-			config: [
-				'filters' => [
-					'register' => $register,
-					'schema' => $requestSchema,
-				],
-			]
-		);
-		// The findAll() contract returns a non-nullable array, so the `?? []`
-		// that used to sit here was dead code (reported by phpstan).
+	private function aggregateVerzoeken(iterable $verzoeken, DateTimeImmutable $window): array {
+		$aggregate = ['totalVerzoek' => 0, 'cacheHits' => 0, 'durations' => []];
 		foreach ($verzoeken as $rec) {
 			$arr = $this->recordToArray(rec: $rec);
-			$moment = (string)($arr['requestMoment'] ?? '');
-			try {
-				$timestamp = new DateTimeImmutable($moment);
-			} catch (Throwable $e) {
-				continue;
+			if (self::isAtOrAfter(moment: (string)($arr['requestMoment'] ?? ''), window: $window) === true) {
+				$aggregate = self::withVerzoek(aggregate: $aggregate, verzoek: $arr);
 			}
+		}
 
-			if ($timestamp < $window) {
-				continue;
-			}
-
-			$totalRequest++;
-			if (($arr['responseInCache'] ?? false) === true) {
-				$cacheHits++;
-			}
-
-			if (isset($arr['responseDurationMs']) === true) {
-				$durations[] = (int)$arr['responseDurationMs'];
-			}
-		}//end foreach
-
-		return ['totalVerzoek' => $totalRequest, 'cacheHits' => $cacheHits, 'durations' => $durations];
+		return $aggregate;
 	}//end aggregateVerzoeken()
+
+	/**
+	 * Count one in-window lookup request into the aggregate.
+	 *
+	 * @param array{totalVerzoek: int, cacheHits: int, durations: array<int, int>} $aggregate The aggregate so far.
+	 * @param array<string, mixed>                                                $verzoek   The request record.
+	 *
+	 * @return array{totalVerzoek: int, cacheHits: int, durations: array<int, int>} The aggregate with the request.
+	 */
+	private static function withVerzoek(array $aggregate, array $verzoek): array {
+		$aggregate['totalVerzoek']++;
+		if (($verzoek['responseInCache'] ?? false) === true) {
+			$aggregate['cacheHits']++;
+		}
+
+		if (isset($verzoek['responseDurationMs']) === true) {
+			$aggregate['durations'][] = (int)$verzoek['responseDurationMs'];
+		}
+
+		return $aggregate;
+	}//end withVerzoek()
 
 	/**
 	 * Send an admin notification when the error rate breaches the alert threshold.
@@ -304,24 +374,44 @@ class BrpMonitorJob extends TimedJob {
 		}
 
 		foreach ($admins->getUsers() as $admin) {
-			try {
-				$n = $this->notificationManager->createNotification();
-				$n->setApp(Application::APP_ID)
-					->setUser($admin->getUID())
-					->setObject('brp-monitor', 'error-rate')
-					->setSubject(
-						'brp_error_rate',
-						[
-							'errorRate' => (string)$report['errorRate'],
-							'totalLookups' => (string)$report['totalLookups'],
-							'errorCount' => (string)$report['errorCount'],
-						]
-					)
-					->setDateTime(new DateTime());
-				$this->notificationManager->notify($n);
-			} catch (Throwable $e) {
-				$this->logger->warning('BRP monitor notify failed', ['admin' => $admin->getUID(), 'error' => $e->getMessage()]);
-			}
+			$this->notifyAdmin(uid: $admin->getUID(), report: $report);
 		}
 	}//end notifyAdmins()
+
+	/**
+	 * Send one admin the error-rate notification; a failure is logged.
+	 *
+	 * @param string              $uid    The admin's user id.
+	 * @param array<string,mixed> $report Aggregated monitor report.
+	 *
+	 * @return void
+	 */
+	private function notifyAdmin(string $uid, array $report): void {
+		try {
+			$n = $this->notificationManager->createNotification();
+			$n->setApp(Application::APP_ID)
+				->setUser($uid)
+				->setObject('brp-monitor', 'error-rate')
+				->setSubject('brp_error_rate', self::alertParameters(report: $report))
+				->setDateTime(new DateTime());
+			$this->notificationManager->notify($n);
+		} catch (Throwable $e) {
+			$this->logger->warning('BRP monitor notify failed', ['admin' => $uid, 'error' => $e->getMessage()]);
+		}
+	}//end notifyAdmin()
+
+	/**
+	 * The subject parameters of the error-rate notification.
+	 *
+	 * @param array<string,mixed> $report Aggregated monitor report.
+	 *
+	 * @return array<string, string> The parameters.
+	 */
+	private static function alertParameters(array $report): array {
+		return [
+			'errorRate' => (string)$report['errorRate'],
+			'totalLookups' => (string)$report['totalLookups'],
+			'errorCount' => (string)$report['errorCount'],
+		];
+	}//end alertParameters()
 }//end class

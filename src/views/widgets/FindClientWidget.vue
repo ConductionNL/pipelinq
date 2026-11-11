@@ -192,12 +192,93 @@ import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
+import { fetchRegisteredObjects } from '../../services/objectFetch.js'
 import { resolveObjectType } from '../../services/pipelineUtils.js'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
 
 const RESULT_LIMIT = 20
 const SEARCH_DEBOUNCE_MS = 300
+
+/**
+ * Post a new object; a refused post throws the failure.
+ *
+ * @param {{register: string, schema: string}} typeConfig The object type's register and schema.
+ * @param {{body: object, failure: string}} creation The object and what a refusal says.
+ * @return {Promise<object>} The created object.
+ */
+async function postObject(typeConfig, creation) {
+	const url = generateUrl(
+		'/apps/openregister/api/objects/'
+			+ typeConfig.register
+			+ '/'
+			+ typeConfig.schema,
+	)
+
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			requesttoken: OC.requestToken,
+			'OCS-APIREQUEST': 'true',
+		},
+		body: JSON.stringify(creation.body),
+	})
+
+	if (!response.ok) throw new Error(creation.failure)
+	return response.json()
+}
+
+/**
+ * The request or lead an action starts for a client.
+ *
+ * @param {{type: string, ticketType: (string|null), title: string, clientId: string}} action The logical type, its ticket type, the title and the client.
+ * @return {object} The object to post.
+ */
+function actionBody(action) {
+	const body = {
+		title: action.title,
+		client: action.clientId,
+	}
+
+	if (action.ticketType) {
+		body.ticketType = action.ticketType
+	}
+	return { ...body, ...startingFields(action.type) }
+}
+
+/**
+ * @param {string} type The logical type.
+ * @return {object} A request's status, priority and moment, or a lead's open status.
+ */
+function startingFields(type) {
+	if (type === 'request') {
+		return {
+			status: 'new',
+			priority: 'normal',
+			occurredAt: new Date().toISOString(),
+		}
+	}
+	return { status: 'open' }
+}
+
+/**
+ * @param {{name: string, type: (object|string), email: string}} newClient The new client form.
+ * @return {object} The client to post: a person by default, the e-mail address when given.
+ */
+function clientBody(newClient) {
+	const body = {
+		name: newClient.name,
+		type:
+			typeof newClient.type === 'object'
+				? newClient.type.id
+				: newClient.type || 'person',
+	}
+	if (newClient.email) {
+		body.email = newClient.email
+	}
+	return body
+}
 
 export default {
 	name: 'FindClientWidget',
@@ -336,34 +417,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-39
 		 */
 		async fetchRaw(type, params = {}) {
-			const typeConfig = this.config[type]
-			if (!typeConfig) return []
-
-			const queryParams = new URLSearchParams()
-			for (const [key, value] of Object.entries(params)) {
-				if (value === undefined || value === null || value === '') continue
-				queryParams.set(key, value)
-			}
-
-			const url = generateUrl(
-				'/apps/openregister/api/objects/'
-					+ typeConfig.register
-					+ '/'
-					+ typeConfig.schema
-					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-			)
-
-			const response = await fetch(url, {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
-			})
-
-			if (!response.ok) throw new Error('Failed to fetch ' + type)
-			const data = await response.json()
-			return data.results || data || []
+			return fetchRegisteredObjects(this.config, { type, params })
 		},
 
 		/**
@@ -464,42 +518,10 @@ export default {
 				const typeConfig = this.config[objectType]
 				if (!typeConfig) throw new Error('Schema not configured for ' + type)
 
-				const body = {
-					title: this.actionTitle,
-					client: this.actionClient.id,
-				}
-
-				if (ticketType) {
-					body.ticketType = ticketType
-				}
-
-				if (type === 'request') {
-					body.status = 'new'
-					body.priority = 'normal'
-					body.occurredAt = new Date().toISOString()
-				} else {
-					body.status = 'open'
-				}
-
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema,
-				)
-
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-					body: JSON.stringify(body),
+				const created = await postObject(typeConfig, {
+					body: actionBody({ type, ticketType, title: this.actionTitle, clientId: this.actionClient.id }),
+					failure: 'Failed to create ' + type,
 				})
-
-				if (!response.ok) throw new Error('Failed to create ' + type)
-				const created = await response.json()
 				const id = created.id || created.uuid
 				// A request is a `ticket` with ticketType=request
 				// (unify-ticket-supertype) and opens on the unified /tickets page.
@@ -526,36 +548,10 @@ export default {
 				const typeConfig = this.config.client
 				if (!typeConfig) throw new Error('Client schema not configured')
 
-				const body = {
-					name: this.newClient.name,
-					type:
-						typeof this.newClient.type === 'object'
-							? this.newClient.type.id
-							: this.newClient.type || 'person',
-				}
-				if (this.newClient.email) {
-					body.email = this.newClient.email
-				}
-
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema,
-				)
-
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-					body: JSON.stringify(body),
+				const created = await postObject(typeConfig, {
+					body: clientBody(this.newClient),
+					failure: 'Failed to create client',
 				})
-
-				if (!response.ok) throw new Error('Failed to create client')
-				const created = await response.json()
 				this.clients.unshift(created)
 				this.newClient = { name: '', type: 'person', email: '' }
 				this.newClientSubmitted = false

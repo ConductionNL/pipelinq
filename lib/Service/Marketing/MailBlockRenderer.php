@@ -111,38 +111,43 @@ class MailBlockRenderer {
 		$kept   = [];
 		$footer = null;
 		foreach ($blocks as $index => $block) {
-			if (is_array($block) === false) {
+			$entry = $this->entryOf(block: $block, index: $index);
+			if ($entry !== null && $entry['type'] !== 'footer') {
+				$kept[] = $entry;
 				continue;
 			}
 
-			$type = (string)($block['type'] ?? '');
-			if (in_array($type, self::TYPES, true) === false) {
-				continue;
-			}
-
-			$props = [];
-			if (is_array($block['props'] ?? null) === true) {
-				$props = $block['props'];
-			}
-
-			$entry = [
-				'id'    => (string)($block['id'] ?? ($type.'-'.$index)),
-				'type'  => $type,
-				'props' => $props,
-			];
-
-			if ($type === 'footer') {
-				$footer = ($footer ?? $entry);
-				continue;
-			}
-
-			$kept[] = $entry;
-		}//end foreach
+			// The first footer wins; a dropped block (null) leaves it as it is.
+			$footer = ($footer ?? $entry);
+		}
 
 		$kept[] = ($footer ?? ['id' => 'footer', 'type' => 'footer', 'props' => []]);
 
 		return $kept;
 	}//end normalise()
+
+	/**
+	 * One stored block as an entry with its id, type and props; null for a
+	 * block that is not a list or of an unknown type.
+	 *
+	 * @param mixed      $block The stored block.
+	 * @param int|string $index Its position, for a missing id.
+	 *
+	 * @return array{id: string, type: string, props: array<string, mixed>}|null
+	 */
+	private function entryOf($block, int|string $index): ?array {
+		if (is_array($block) === false || in_array((string)($block['type'] ?? ''), self::TYPES, true) === false) {
+			return null;
+		}
+
+		$type = (string)$block['type'];
+		$props = [];
+		if (is_array($block['props'] ?? null) === true) {
+			$props = $block['props'];
+		}
+
+		return ['id' => (string)($block['id'] ?? ($type.'-'.$index)), 'type' => $type, 'props' => $props];
+	}//end entryOf()
 
 	/**
 	 * Render blocks to the HTML that is sent and its plain-text twin.
@@ -249,27 +254,56 @@ class MailBlockRenderer {
 		$html  = [];
 		$plain = [];
 		foreach (preg_split('/\n{2,}/', $markdown) as $paragraph) {
-			$lines = explode("\n", $paragraph);
-			$list  = $this->listKind(lines: $lines);
-			if ($list !== null) {
-				$items = [];
-				foreach ($lines as $line) {
-					$item    = preg_replace('/^\s*(?:[-*]|\d+\.)\s+/', '', $line);
-					$items[] = '<li style="margin:0 0 4px;">'.$this->inline(value: (string)$item).'</li>';
-					$plain[] = '- '.$this->plainInline(value: (string)$item);
-				}
-
-				$html[] = '<'.$list.' style="margin:0 0 12px;padding-left:24px;">'.implode('', $items).'</'.$list.'>';
-				continue;
-			}
-
-			$parts = array_map(fn (string $line): string => $this->inline(value: $line), $lines);
-			$html[]  = '<p style="margin:0 0 12px;">'.implode('<br>', $parts).'</p>';
-			$plain[] = implode("\n", array_map(fn (string $line): string => $this->plainInline(value: $line), $lines));
-		}//end foreach
+			$rendered = $this->paragraph(lines: explode("\n", $paragraph));
+			$html[] = $rendered['html'];
+			array_push($plain, ...$rendered['plain']);
+		}
 
 		return [implode('', $html), implode("\n\n", $plain)];
 	}//end text()
+
+	/**
+	 * One markdown paragraph: a list when its lines are all items, else a
+	 * paragraph with line breaks. A list's items are each their own plain
+	 * paragraph.
+	 *
+	 * @param array<int, string> $lines The paragraph's lines.
+	 *
+	 * @return array{html: string, plain: array<int, string>}
+	 */
+	private function paragraph(array $lines): array {
+		$list = $this->listKind(lines: $lines);
+		if ($list !== null) {
+			return $this->listParagraph(lines: $lines, list: $list);
+		}
+
+		$parts = array_map(fn (string $line): string => $this->inline(value: $line), $lines);
+		return [
+			'html' => '<p style="margin:0 0 12px;">'.implode('<br>', $parts).'</p>',
+			'plain' => [implode("\n", array_map(fn (string $line): string => $this->plainInline(value: $line), $lines))],
+		];
+	}//end paragraph()
+
+	/**
+	 * A list paragraph: its items without their markers, as list items and
+	 * as plain bullets.
+	 *
+	 * @param array<int, string> $lines The item lines.
+	 * @param string             $list  The list element, ul or ol.
+	 *
+	 * @return array{html: string, plain: array<int, string>}
+	 */
+	private function listParagraph(array $lines, string $list): array {
+		$items = [];
+		$plain = [];
+		foreach ($lines as $line) {
+			$item    = (string)preg_replace('/^\s*(?:[-*]|\d+\.)\s+/', '', $line);
+			$items[] = '<li style="margin:0 0 4px;">'.$this->inline(value: $item).'</li>';
+			$plain[] = '- '.$this->plainInline(value: $item);
+		}
+
+		return ['html' => '<'.$list.' style="margin:0 0 12px;padding-left:24px;">'.implode('', $items).'</'.$list.'>', 'plain' => $plain];
+	}//end listParagraph()
 
 	/**
 	 * Whether every line of a paragraph is a list item, and which kind.

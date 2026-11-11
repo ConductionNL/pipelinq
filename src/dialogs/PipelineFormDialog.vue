@@ -371,6 +371,81 @@ import {
 } from '../services/pipelinePayload.js'
 import { getViews } from '../services/viewService.js'
 
+/**
+ * @param {(string|number|null|undefined)} value A stage field.
+ * @return {boolean} Whether it is set: not null, undefined or ''.
+ */
+function isSet(value) {
+	return value != null && value !== ''
+}
+
+/**
+ * @param {object} stage A stage.
+ * @return {boolean} Whether it has no name.
+ */
+function hasNoName(stage) {
+	return !stage.name || !stage.name.trim()
+}
+
+/**
+ * @param {object} stage A stage.
+ * @return {boolean} Whether it is a Won stage that is not closed.
+ */
+function isOpenWon(stage) {
+	return stage.isWon && !stage.isClosed
+}
+
+/**
+ * @param {object} stage A stage.
+ * @return {boolean} Whether its probability is set and outside 0 to 100.
+ */
+function hasBadProbability(stage) {
+	return isSet(stage.probability)
+		&& (Number(stage.probability) < 0
+			|| Number(stage.probability) > 100)
+}
+
+/**
+ * @param {object} stage A stage.
+ * @return {boolean} Whether an open stage carries a limit that is not a whole number of 1 or more.
+ */
+function hasBadLimit(stage) {
+	return !stage.isClosed
+		&& isSet(stage.maxItems)
+		&& (!Number.isInteger(Number(stage.maxItems)) || Number(stage.maxItems) < 1)
+}
+
+/**
+ * The checks of one stage, in order: the field an error belongs to, the
+ * check that finds it, and the error.
+ */
+const STAGE_CHECKS = [
+	['name', hasNoName, () => t('pipelinq', 'Stage name is required')],
+	['isWon', isOpenWon, () => t(
+		'pipelinq',
+		'A Won stage must also be marked as Closed',
+	)],
+	['probability', hasBadProbability, () => t(
+		'pipelinq',
+		'Probability must be between 0 and 100',
+	)],
+	['maxItems', hasBadLimit, () => t('pipelinq', 'A limit is a whole number of 1 or more')],
+]
+
+/**
+ * @param {object} stage A stage.
+ * @return {(object|null)} The stage's errors by field, or null when it is fine.
+ */
+function stageErrorsOf(stage) {
+	const errors = {}
+	for (const [field, fails, message] of STAGE_CHECKS) {
+		if (fails(stage)) {
+			errors[field] = message()
+		}
+	}
+	return Object.keys(errors).length > 0 ? errors : null
+}
+
 export default {
 	name: 'PipelineFormDialog',
 	components: {
@@ -450,38 +525,7 @@ export default {
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-2.2
 		 */
 		stageErrors() {
-			return this.form.stages.map((stage) => {
-				const errors = {}
-				if (!stage.name || !stage.name.trim()) {
-					errors.name = t('pipelinq', 'Stage name is required')
-				}
-				if (stage.isWon && !stage.isClosed) {
-					errors.isWon = t(
-						'pipelinq',
-						'A Won stage must also be marked as Closed',
-					)
-				}
-				if (
-					stage.probability != null
-					&& stage.probability !== ''
-					&& (Number(stage.probability) < 0
-						|| Number(stage.probability) > 100)
-				) {
-					errors.probability = t(
-						'pipelinq',
-						'Probability must be between 0 and 100',
-					)
-				}
-				if (
-					!stage.isClosed
-					&& stage.maxItems != null
-					&& stage.maxItems !== ''
-					&& (!Number.isInteger(Number(stage.maxItems)) || Number(stage.maxItems) < 1)
-				) {
-					errors.maxItems = t('pipelinq', 'A limit is a whole number of 1 or more')
-				}
-				return Object.keys(errors).length > 0 ? errors : null
-			})
+			return this.form.stages.map(stageErrorsOf)
 		},
 
 		/**

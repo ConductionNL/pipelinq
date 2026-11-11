@@ -419,41 +419,9 @@ class ReceiptService {
 	 * @spec openspec/specs/pos-receipt-engine/spec.md
 	 */
 	public function buildContext(array $transaction): array {
-		$vatRows = $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? [];
-		$vatLines = [];
-		if (is_array($vatRows) === true) {
-			foreach ($vatRows as $row) {
-				if (is_array($row) === false) {
-					continue;
-				}
-
-				$rate = (float)($row['rate'] ?? 0);
-				$label = (string)($row['description'] ?? '');
-				if ($label === '') {
-					$label = rtrim(rtrim((string)$rate, '0'), '.') . '% ' . $this->l10n->t('VAT');
-				}
-
-				$vatLines[] = [
-					'rate' => $rate,
-					'base' => (float)($row['base'] ?? 0),
-					'tax' => (float)($row['tax'] ?? 0),
-					'label' => $label,
-				];
-			}//end foreach
-		}//end if
-
-		$lines = [];
-		foreach (($transaction['lines'] ?? []) as $line) {
-			if (is_array($line) === false) {
-				continue;
-			}
-
-			$lines[] = [
-				'description' => (string)($line['description'] ?? ''),
-				'quantity' => (float)($line['quantity'] ?? 0),
-				'lineTotal' => (float)($line['lineTotal'] ?? 0),
-			];
-		}
+		$receiptLines = new ReceiptLines(l10n: $this->l10n);
+		$vatLines = $receiptLines->vatLines(vatRows: $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? []);
+		$lines = $receiptLines->itemLines(lines: ($transaction['lines'] ?? []));
 
 		return [
 			'reference' => (string)($transaction['reference'] ?? ($transaction['id'] ?? '')),

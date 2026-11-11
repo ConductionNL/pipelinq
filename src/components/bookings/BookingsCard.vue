@@ -68,16 +68,9 @@
 import { CnDetailCard, openRowTarget } from '@conduction/nextcloud-vue'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { BOOKING_STATUS_LABELS, bookingDateTime } from './bookingFormat.js'
 
-const STATUS_LABELS = {
-	'pending-deposit': 'Awaiting deposit',
-	confirmed: 'Confirmed',
-	completed: 'Completed',
-	'no-show': 'No-show',
-	'cancelled-by-customer': 'Cancelled (customer)',
-	'cancelled-by-business': 'Cancelled (business)',
-	rescheduled: 'Rescheduled',
-}
+const STATUS_LABELS = BOOKING_STATUS_LABELS
 
 export default {
 	name: 'BookingsCard',
@@ -186,34 +179,27 @@ export default {
 					),
 				),
 			]
-			for (const id of serviceIds) {
-				if (this.serviceLookup[id]) continue
+			await this.fillLookup('serviceLookup', { type: 'appointmentService', ids: serviceIds })
+			await this.fillLookup('resourceLookup', { type: 'appointmentResource', ids: resourceIds })
+		},
+
+		/**
+		 * Read the name of each id the lookup does not know yet, one at a
+		 * time; a failed read is tolerated.
+		 *
+		 * @param {string} lookup The lookup to fill: serviceLookup or resourceLookup.
+		 * @param {{type: string, ids: Array<string>}} names The object type and the ids to name.
+		 * @return {Promise<void>}
+		 */
+		async fillLookup(lookup, names) {
+			for (const id of names.ids) {
+				if (this[lookup][id]) continue
 				try {
-					const svc = await this.objectStore.fetchObject(
-						'appointmentService',
-						id,
-					)
-					if (svc?.name) {
-						this.serviceLookup = {
-							...this.serviceLookup,
-							[id]: svc.name,
-						}
-					}
-				} catch {
-					/* tolerated */
-				}
-			}
-			for (const id of resourceIds) {
-				if (this.resourceLookup[id]) continue
-				try {
-					const r = await this.objectStore.fetchObject(
-						'appointmentResource',
-						id,
-					)
-					if (r?.name) {
-						this.resourceLookup = {
-							...this.resourceLookup,
-							[id]: r.name,
+					const record = await this.objectStore.fetchObject(names.type, id)
+					if (record?.name) {
+						this[lookup] = {
+							...this[lookup],
+							[id]: record.name,
 						}
 					}
 				} catch {
@@ -253,12 +239,7 @@ export default {
 		},
 
 		formatDateTime(iso) {
-			if (!iso) return '-'
-			try {
-				return new Date(iso).toLocaleString('nl-NL')
-			} catch {
-				return iso
-			}
+			return bookingDateTime(iso)
 		},
 	},
 }
@@ -273,32 +254,6 @@ export default {
 
 .bookings-card__state--error {
 	color: var(--color-error);
-}
-
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
 }
 
 .viewTableRow {
@@ -353,3 +308,5 @@ export default {
 	}
 }
 </style>
+
+<style scoped src="./bookingTable.css"></style>

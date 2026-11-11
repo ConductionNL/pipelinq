@@ -35,6 +35,60 @@ import { NcLoadingIcon } from '@nextcloud/vue'
 import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
 import { useObjectStore } from '../store/modules/object.js'
 
+/**
+ * @param {object} config The object-type registry.
+ * @return {(string|null)} The URL of every lead product, or null unless lead products and products are registered.
+ */
+function leadProductsUrl(config) {
+	if (!config.leadProduct || !config.product) {
+		return null
+	}
+	return generateUrl(
+		`/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`,
+	)
+}
+
+/**
+ * The three products with the highest line-item total, with the number of
+ * distinct leads that carry each.
+ *
+ * @param {Array<object>} lineItems The lead products.
+ * @return {Array<{productId: string, totalValue: number, leadCount: number}>} The top three, highest total first.
+ */
+function topProductTotals(lineItems) {
+	const productMap = {}
+	for (const item of lineItems) {
+		if (item.product) {
+			addLineItem(productMap, item)
+		}
+	}
+	return Object.values(productMap)
+		.map(({ leads, ...entry }) => ({ ...entry, leadCount: leads.size }))
+		.sort((a, b) => b.totalValue - a.totalValue)
+		.slice(0, 3)
+}
+
+/**
+ * @param {object} productMap The totals so far, by product id; changed in place.
+ * @param {object} item A line item with a product.
+ * @return {void}
+ */
+function addLineItem(productMap, item) {
+	const productId = item.product
+	if (!productMap[productId]) {
+		productMap[productId] = {
+			productId,
+			totalValue: 0,
+			leadCount: 0,
+			leads: new Set(),
+		}
+	}
+	productMap[productId].totalValue += Number(item.total) || 0
+	if (item.lead) {
+		productMap[productId].leads.add(item.lead)
+	}
+}
+
 export default {
 	name: 'ProductRevenue',
 	components: {
@@ -68,86 +122,61 @@ export default {
 		async fetchData() {
 			this.loading = true
 			try {
-				const config = this.objectStore.objectTypeRegistry
-				if (!config.leadProduct || !config.product) {
-					this.topProducts = []
-					return
-				}
-
-				// Fetch all lead products
-				const lpUrl = generateUrl(
-					`/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`,
-				)
-				const lpResponse = await fetch(lpUrl, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-				})
-				if (!lpResponse.ok) {
-					this.topProducts = []
-					return
-				}
-				const lpData = await lpResponse.json()
-				const lineItems = lpData.results || lpData || []
-
-				if (lineItems.length === 0) {
-					this.topProducts = []
-					return
-				}
-
-				// Aggregate by product
-				const productMap = {}
-				for (const item of lineItems) {
-					const productId = item.product
-					if (!productId) continue
-					const total = Number(item.total) || 0
-					if (!productMap[productId]) {
-						productMap[productId] = {
-							productId,
-							totalValue: 0,
-							leadCount: 0,
-							leads: new Set(),
-						}
-					}
-					productMap[productId].totalValue += total
-					if (item.lead) {
-						productMap[productId].leads.add(item.lead)
-					}
-				}
-
-				// Set lead counts
-				for (const entry of Object.values(productMap)) {
-					entry.leadCount = entry.leads.size
-					delete entry.leads
-				}
-
-				// Sort by total value descending, take top 3
-				const sorted = Object.values(productMap)
-					.sort((a, b) => b.totalValue - a.totalValue)
-					.slice(0, 3)
-
-				// Fetch product names
-				for (const entry of sorted) {
-					try {
-						const product = await this.objectStore.fetchObject(
-							'product',
-							entry.productId,
-						)
-						entry.name =
-							product?.name || t('pipelinq', 'Unknown Product')
-					} catch {
-						entry.name = t('pipelinq', 'Unknown Product')
-					}
-				}
-
-				this.topProducts = sorted
+				const lineItems = await this.fetchLineItems()
+				this.topProducts = lineItems.length === 0
+					? []
+					: await this.withProductNames(topProductTotals(lineItems))
 			} catch {
 				this.topProducts = []
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Every lead product (line item); none when the types are not registered or the server refuses.
+		 *
+		 * @return {Promise<Array<object>>} The line items.
+		 */
+		async fetchLineItems() {
+			const lpUrl = leadProductsUrl(this.objectStore.objectTypeRegistry)
+			if (lpUrl === null) {
+				return []
+			}
+			const lpResponse = await fetch(lpUrl, {
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+					'OCS-APIREQUEST': 'true',
+				},
+			})
+			if (!lpResponse.ok) {
+				return []
+			}
+			const lpData = await lpResponse.json()
+			return lpData.results || lpData || []
+		},
+
+		/**
+		 * Name each product entry, in turn; a product that cannot be read is unknown.
+		 *
+		 * @param {Array<object>} entries The product totals.
+		 * @return {Promise<Array<object>>} The same entries, named.
+		 */
+		async withProductNames(entries) {
+			for (const entry of entries) {
+				try {
+					const product = await this.objectStore.fetchObject(
+						'product',
+						entry.productId,
+					)
+					entry.name =
+						product?.name || t('pipelinq', 'Unknown Product')
+				} catch {
+					entry.name = t('pipelinq', 'Unknown Product')
+				}
+			}
+			return entries
 		},
 
 		/**

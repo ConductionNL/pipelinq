@@ -271,4 +271,58 @@ class MatomoReportServiceTest extends TestCase {
 			$this->assertStringNotContainsStringIgnoringCase('DataForSeo', $name);
 		}
 	}//end testNoGa4OrBingOrDataForSeoConnectorShips()
+	/**
+	 * Every refusal, exactly, and none for an active credential.
+	 *
+	 * @return void
+	 */
+	public function testEveryRefusal(): void {
+		$this->assertSame(
+			['connected' => false, 'failure' => EgressResult::NOT_CONFIGURED, 'reason' => 'No Matomo source is configured under ' . MatomoReportService::SOURCE_KEY . '.'],
+			$this->service(sourceConfigured: false, credentialRef: '', credentialStatus: '')->refusal()
+		);
+		$this->assertSame(
+			['connected' => false, 'failure' => EgressResult::NOT_CONFIGURED, 'reason' => 'No credential is referenced under ' . MatomoReportService::CREDENTIAL_KEY . '.'],
+			$this->service(sourceConfigured: true, credentialRef: '', credentialStatus: 'active')->refusal()
+		);
+		$this->assertSame(
+			['connected' => false, 'failure' => EgressResult::NOT_CONFIGURED, 'reason' => 'The referenced credential could not be read from the broker.'],
+			$this->service(sourceConfigured: true, credentialRef: 'c-1', credentialStatus: '')->refusal()
+		);
+		$this->assertSame(
+			['connected' => false, 'failure' => 'relink_needed', 'reason' => 'The Matomo credential is revoked. Reconnect it in the credential broker.'],
+			$this->service(sourceConfigured: true, credentialRef: 'c-1', credentialStatus: 'revoked')->refusal()
+		);
+		$this->assertNull($this->service(sourceConfigured: true, credentialRef: 'c-1', credentialStatus: 'active')->refusal());
+	}//end testEveryRefusal()
+
+	/**
+	 * Every matching rule: labels and utm values are trimmed and compared
+	 * case-insensitively; a campaign without a utm value is never matched; a
+	 * later campaign on the same value wins; the id falls back to @self;
+	 * non-list rows are skipped; missing counts are zero.
+	 *
+	 * @return void
+	 */
+	public function testEveryMatchingRule(): void {
+		$report = $this->service(
+			sourceConfigured: true,
+			credentialRef: 'c-1',
+			credentialStatus: 'active',
+			campaigns: [
+				['id' => 'old', 'name' => 'Old', 'utmCampaign' => 'Zomer'],
+				['@self' => ['id' => 'new'], 'name' => 'Nieuw', 'utmCampaign' => ' zomer '],
+				['id' => 'blank', 'name' => 'Blank', 'utmCampaign' => ' '],
+			],
+			body: '[{"label":" ZOMER ","nb_visits":"5"}, 7, {"label":""}]'
+		)->report(from: '2026-08-01', to: '2026-08-31');
+
+		$this->assertSame(
+			[
+				['campaign' => 'ZOMER', 'visits' => 5, 'actions' => 0, 'matched' => true, 'campaignId' => 'new', 'campaignName' => 'Nieuw'],
+				['campaign' => '', 'visits' => 0, 'actions' => 0, 'matched' => false, 'campaignId' => '', 'campaignName' => ''],
+			],
+			$report['campaigns']
+		);
+	}//end testEveryMatchingRule()
 }//end class

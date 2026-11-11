@@ -42,7 +42,6 @@ namespace OCA\Pipelinq\Service\Competitor;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
 use SimpleXMLElement;
-use Throwable;
 
 /**
  * New and changed locations out of a sitemap.
@@ -98,7 +97,7 @@ class SitemapWatchReader {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
 	 */
 	public function read(string $url, array $previous, string $sourceId = ''): WatchOutcome {
-		$current = $this->collect(url: $url, sourceId: $sourceId, depth: 0);
+		$current = $this->collect(url: $url, hop: new SitemapHop(sourceId: $sourceId, depth: 0));
 		if (is_array($current) === false) {
 			return WatchOutcome::failed(outcome: $current->outcome, reason: $current->reason);
 		}
@@ -185,25 +184,7 @@ class SitemapWatchReader {
 	 * @return SimpleXMLElement|null The root, or null.
 	 */
 	private function load(string $document): ?SimpleXMLElement {
-		if (trim($document) === '') {
-			return null;
-		}
-
-		$previous = libxml_use_internal_errors(true);
-		try {
-			$xml = simplexml_load_string($document, SimpleXMLElement::class, (LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING));
-		} catch (Throwable) {
-			return null;
-		} finally {
-			libxml_clear_errors();
-			libxml_use_internal_errors($previous);
-		}
-
-		if ($xml === false) {
-			return null;
-		}
-
-		return $xml;
+		return (new QuietXmlParser())->parse(document: $document);
 	}//end load()
 
 	/**
@@ -234,14 +215,13 @@ class SitemapWatchReader {
 	/**
 	 * Read a sitemap, following an index one level.
 	 *
-	 * @param string $url The sitemap URL.
-	 * @param string $sourceId The source to read through.
-	 * @param int $depth How deep we already are.
+	 * @param string     $url The sitemap URL.
+	 * @param SitemapHop $hop The source and how deep we already are.
 	 *
 	 * @return array<string, string>|WatchOutcome The locations, or the failure.
 	 */
-	private function collect(string $url, string $sourceId, int $depth): array|WatchOutcome {
-		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $url, sourceId: $sourceId);
+	private function collect(string $url, SitemapHop $hop): array|WatchOutcome {
+		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $url, sourceId: $hop->sourceId);
 		if ($result->succeeded === false) {
 			return WatchOutcome::failed(outcome: (string)$result->failure, reason: $result->reason);
 		}
@@ -258,16 +238,28 @@ class SitemapWatchReader {
 			return $parsed['locations'];
 		}
 
-		if ($depth >= self::MAX_DEPTH) {
+		if ($hop->depth >= self::MAX_DEPTH) {
 			return WatchOutcome::failed(
 				outcome: EgressResult::UNPARSABLE,
 				reason: 'The sitemap index at ' . $url . ' nests deeper than one level.'
 			);
 		}
 
+		return $this->collectIndex(children: array_keys($parsed['locations']), hop: $hop->deeper());
+	}//end collect()
+
+	/**
+	 * The locations of an index's child sitemaps, in order; a failing child is skipped.
+	 *
+	 * @param array<int, int|string> $children The child sitemap URLs.
+	 * @param SitemapHop             $hop      The source and the children's depth.
+	 *
+	 * @return array<string, string> The merged locations, the first stamp of a location kept.
+	 */
+	private function collectIndex(array $children, SitemapHop $hop): array {
 		$locations = [];
-		foreach (array_keys($parsed['locations']) as $child) {
-			$nested = $this->collect(url: (string)$child, sourceId: $sourceId, depth: ($depth + 1));
+		foreach ($children as $child) {
+			$nested = $this->collect(url: (string)$child, hop: $hop);
 			if (is_array($nested) === false) {
 				continue;
 			}
@@ -279,5 +271,5 @@ class SitemapWatchReader {
 		}
 
 		return $locations;
-	}//end collect()
+	}//end collectIndex()
 }//end class

@@ -140,4 +140,25 @@ class SchemaEvolutionServiceTest extends TestCase {
 		$this->assertArrayHasKey('id', $defs);
 		$this->assertArrayHasKey('name', $defs);
 	}//end testDeriveColumnDefinitions()
+	/**
+	 * Every column-type merge: the first type stands; a null later changes
+	 * nothing; a typed value after a null takes over; two different types
+	 * become string; keys are read as strings; every value type is named.
+	 *
+	 * @return void
+	 */
+	public function testEveryColumnTypeMerge(): void {
+		$rows = [
+			['a' => null, 'b' => 1, 'c' => 1, 'd' => 'x', 'e' => true, 0 => 1.5, 'f' => [1]],
+			['a' => 2, 'b' => null, 'c' => 1.5, 'd' => 'y', 'e' => false, 0 => 2.5, 'f' => null, 'g' => null],
+			['a' => 'x', 'b' => 3, 'c' => null, 'd' => null, 'e' => 'no', 'g' => null],
+		];
+
+		$this->assertSame(
+			['a' => 'string', 'b' => 'integer', 'c' => 'string', 'd' => 'string', 'e' => 'string', '0' => 'double', 'f' => 'object', 'g' => 'null'],
+			$this->service->deriveColumnDefinitions(rows: $rows)
+		);
+		$this->assertSame(['a' => 'integer'], $this->service->deriveColumnDefinitions(rows: [['a' => null], ['a' => 1], ['a' => null]]));
+		$this->assertSame([], $this->service->deriveColumnDefinitions(rows: []));
+	}//end testEveryColumnTypeMerge()
 }//end class

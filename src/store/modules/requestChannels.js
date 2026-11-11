@@ -1,18 +1,7 @@
-import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
+import { keepingError, loadSettingsTags, replaceTag, sendSettingsTagChange, settingsTagsUrl } from './settingsTags.js'
 
-const API_BASE = generateUrl('/apps/pipelinq/api/settings/request-channels')
-
-/**
- *
- */
-function headers() {
-	return {
-		'Content-Type': 'application/json',
-		requesttoken: OC.requestToken,
-		'OCS-APIREQUEST': 'true',
-	}
-}
+const API_BASE = settingsTagsUrl('request-channels')
 
 export const useRequestChannelsStore = defineStore('requestChannels', {
 	state: () => ({
@@ -28,24 +17,7 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-40
 		 */
 		async fetchChannels() {
-			this.loading = true
-			this.error = null
-
-			try {
-				const response = await fetch(API_BASE, { headers: headers() })
-				if (!response.ok) {
-					throw new Error(
-						`Failed to fetch request channels (${response.status})`,
-					)
-				}
-				const data = await response.json()
-				this.tags = data.tags || []
-			} catch (error) {
-				this.error = error.message
-				console.error('Error fetching request channels:', error)
-			} finally {
-				this.loading = false
-			}
+			await loadSettingsTags(this, { url: API_BASE, what: 'request channels' })
 		},
 
 		/**
@@ -55,27 +27,15 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-39
 		 */
 		async addChannel(name) {
-			try {
-				const response = await fetch(API_BASE, {
+			return keepingError(this, async () => {
+				const data = await sendSettingsTagChange(API_BASE, {
 					method: 'POST',
-					headers: headers(),
-					body: JSON.stringify({ name }),
+					body: { name },
+					failure: 'Failed to add channel',
 				})
-				if (!response.ok) {
-					throw new Error(`Failed to add channel (${response.status})`)
-				}
-				const data = await response.json()
-
-				if (!data.success) {
-					throw new Error(data.message || 'Failed to add channel')
-				}
-
 				this.tags.push(data.tag)
 				return data.tag
-			} catch (error) {
-				this.error = error.message
-				throw error
-			}
+			})
 		},
 
 		/**
@@ -83,25 +43,13 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-41
 		 */
 		async removeChannel(id) {
-			try {
-				const response = await fetch(`${API_BASE}/${id}`, {
+			await keepingError(this, async () => {
+				await sendSettingsTagChange(`${API_BASE}/${id}`, {
 					method: 'DELETE',
-					headers: headers(),
+					failure: 'Failed to remove channel',
 				})
-				if (!response.ok) {
-					throw new Error(`Failed to remove channel (${response.status})`)
-				}
-				const data = await response.json()
-
-				if (!data.success) {
-					throw new Error(data.message || 'Failed to remove channel')
-				}
-
 				this.tags = this.tags.filter((t) => t.id !== id)
-			} catch (error) {
-				this.error = error.message
-				throw error
-			}
+			})
 		},
 
 		/**
@@ -110,30 +58,15 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-42
 		 */
 		async renameChannel(id, name) {
-			try {
-				const response = await fetch(`${API_BASE}/${id}`, {
+			return keepingError(this, async () => {
+				const data = await sendSettingsTagChange(`${API_BASE}/${id}`, {
 					method: 'PUT',
-					headers: headers(),
-					body: JSON.stringify({ name }),
+					body: { name },
+					failure: 'Failed to rename channel',
 				})
-				if (!response.ok) {
-					throw new Error(`Failed to rename channel (${response.status})`)
-				}
-				const data = await response.json()
-
-				if (!data.success) {
-					throw new Error(data.message || 'Failed to rename channel')
-				}
-
-				const index = this.tags.findIndex((t) => t.id === id)
-				if (index !== -1) {
-					this.tags[index] = data.tag
-				}
+				replaceTag(this, { id, tag: data.tag })
 				return data.tag
-			} catch (error) {
-				this.error = error.message
-				throw error
-			}
+			})
 		},
 	},
 })

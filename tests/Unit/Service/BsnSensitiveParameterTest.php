@@ -22,12 +22,14 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\BrpCacheService;
+use OCA\Pipelinq\Service\BrpLeafResults;
 use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
 use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCA\Pipelinq\Service\EncryptionService;
 use OCA\Pipelinq\Service\External\Berichtenbox\BerichtenboxAdapterInterface;
 use OCA\Pipelinq\Service\External\Berichtenbox\LogBerichtenboxAdapter;
+use OCA\Pipelinq\Service\BsnLookup;
 use OCA\Pipelinq\Service\HaalCentraalClient;
 use OCA\Pipelinq\Service\LogiusConnector;
 use OCA\Pipelinq\Service\MailboxResolver;
@@ -93,8 +95,11 @@ class BsnSensitiveParameterTest extends TestCase {
 			[LogiusConnector::class, 'checkMailboxExists', 'bsn'],
 			[MailboxResolver::class, 'resolve', 'bsn'],
 			[HaalCentraalClient::class, 'lookupPersoon', 'bsn'],
-			[HaalCentraalClient::class, 'lookupViaOpenRegister', 'bsn'],
+			[BsnLookup::class, '__construct', 'bsn'],
+			[HaalCentraalClient::class, 'lookupRequestOptions', 'bsn'],
+			[BrpLeafResults::class, 'askedPerson', 'bsn'],
 			[BsnValidationService::class, 'validate', 'bsnInput'],
+			[BsnValidationService::class, 'elevenTestModulo', 'bsnInput'],
 			[BsnValidationService::class, 'mask', 'bsnInput'],
 			[BsnValidationService::class, 'hash', 'bsnInput'],
 			[BsnAuditService::class, 'resolveSubjectHash', 'rawBsn'],

@@ -85,6 +85,22 @@ class EntityActivityController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(string $entityType, string $entityId): JSONResponse {
+		$refusal = $this->refusal(entityType: $entityType);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->activity(entityType: $entityType, entityId: $entityId);
+	}//end index()
+
+	/**
+	 * Refuse an anonymous caller first, then an entity type outside the allowlist.
+	 *
+	 * @param string $entityType The entity type.
+	 *
+	 * @return JSONResponse|null The refusal, or null when the request may go on.
+	 */
+	private function refusal(string $entityType): ?JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(
@@ -94,12 +110,21 @@ class EntityActivityController extends Controller {
 		}
 
 		if ($this->service->isAllowedEntityType(entityType: $entityType) === false) {
-			return new JSONResponse(
-				['message' => 'Invalid entity type'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return $this->invalidEntityType();
 		}
 
+		return null;
+	}//end refusal()
+
+	/**
+	 * Load one page of the feed from the query string, mapping failures to static bodies.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $entityId   The OR object UUID.
+	 *
+	 * @return JSONResponse
+	 */
+	private function activity(string $entityType, string $entityId): JSONResponse {
 		$type = (string)$this->request->getParam('type', 'all');
 		$page = (int)$this->request->getParam('_page', 1);
 		$limit = (int)$this->request->getParam('_limit', 20);
@@ -121,10 +146,7 @@ class EntityActivityController extends Controller {
 			// helper below; the static `message` is the only thing the
 			// caller ever sees (ADR-015-common-patterns).
 			$this->logRejectedRequest(exception: $e);
-			return new JSONResponse(
-				['message' => 'Invalid entity type'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return $this->invalidEntityType();
 		} catch (Throwable $e) {
 			$this->logUnexpectedFailure(exception: $e);
 			return new JSONResponse(
@@ -132,7 +154,19 @@ class EntityActivityController extends Controller {
 				Http::STATUS_INTERNAL_SERVER_ERROR
 			);
 		}//end try
-	}//end index()
+	}//end activity()
+
+	/**
+	 * The static 400 body for an entity type the feed does not serve (REQ-ENT-003-D).
+	 *
+	 * @return JSONResponse
+	 */
+	private function invalidEntityType(): JSONResponse {
+		return new JSONResponse(
+			['message' => 'Invalid entity type'],
+			Http::STATUS_BAD_REQUEST
+		);
+	}//end invalidEntityType()
 
 	/**
 	 * Log a soft-rejected request (e.g. unknown entity type) at info level.

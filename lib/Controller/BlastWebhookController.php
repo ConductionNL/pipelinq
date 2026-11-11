@@ -665,57 +665,75 @@ class BlastWebhookController extends Controller {
 	 */
 	private function normaliseSesEvent(array $event): array {
 		$type = strtolower((string)($event['notificationType'] ?? $event['eventType'] ?? ''));
-		if ($type === 'bounce') {
-			$bounce = ($event['bounce'] ?? []);
-			$bounceArray = [];
-			if (is_array($bounce) === true) {
-				$bounceArray = $bounce;
-			}
-
-			$bType = strtolower((string)($bounceArray['bounceType'] ?? ''));
-			$bounceTypeOut = 'soft';
-			if ($bType === 'permanent') {
-				$bounceTypeOut = 'hard';
-			}
-
-			return [
-				'eventType' => 'bounce',
-				'bounceType' => $bounceTypeOut,
-				'providerId' => (string)($event['mail']['messageId'] ?? ''),
-				'email' => (string)($bounceArray['bouncedRecipients'][0]['emailAddress'] ?? ''),
-				'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
-				'reason' => (string)($bounceArray['bouncedRecipients'][0]['diagnosticCode'] ?? ''),
-			];
-		}//end if
-
-		if ($type === 'complaint') {
-			$complaint = ($event['complaint'] ?? []);
-			$complaintArray = [];
-			if (is_array($complaint) === true) {
-				$complaintArray = $complaint;
-			}
-
-			return [
-				'eventType' => 'complaint',
-				'providerId' => (string)($event['mail']['messageId'] ?? ''),
-				'email' => (string)($complaintArray['complainedRecipients'][0]['emailAddress'] ?? ''),
-				'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
-			];
-		}
-
-		if ($type === 'delivery') {
-			return [
+		return match ($type) {
+			'bounce' => $this->sesBounce(event: $event),
+			'complaint' => $this->sesComplaint(event: $event),
+			'delivery' => [
 				'eventType' => 'delivered',
 				'providerId' => (string)($event['mail']['messageId'] ?? ''),
 				'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
-			];
+			],
+			default => ['eventType' => $type, 'providerId' => (string)($event['mail']['messageId'] ?? '')],
+		};
+	}//end normaliseSesEvent()
+
+	/**
+	 * Normalise an SES bounce: `Permanent` is hard, anything else soft.
+	 *
+	 * @param array<string, mixed> $event SES event.
+	 *
+	 * @return array<string, mixed> Normalised event.
+	 */
+	private function sesBounce(array $event): array {
+		$bounce = $this->sesSection(event: $event, key: 'bounce');
+		$bounceTypeOut = 'soft';
+		if (strtolower((string)($bounce['bounceType'] ?? '')) === 'permanent') {
+			$bounceTypeOut = 'hard';
 		}
 
 		return [
-			'eventType' => $type,
+			'eventType' => 'bounce',
+			'bounceType' => $bounceTypeOut,
 			'providerId' => (string)($event['mail']['messageId'] ?? ''),
+			'email' => (string)($bounce['bouncedRecipients'][0]['emailAddress'] ?? ''),
+			'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
+			'reason' => (string)($bounce['bouncedRecipients'][0]['diagnosticCode'] ?? ''),
 		];
-	}//end normaliseSesEvent()
+	}//end sesBounce()
+
+	/**
+	 * Normalise an SES complaint.
+	 *
+	 * @param array<string, mixed> $event SES event.
+	 *
+	 * @return array<string, mixed> Normalised event.
+	 */
+	private function sesComplaint(array $event): array {
+		$complaint = $this->sesSection(event: $event, key: 'complaint');
+		return [
+			'eventType' => 'complaint',
+			'providerId' => (string)($event['mail']['messageId'] ?? ''),
+			'email' => (string)($complaint['complainedRecipients'][0]['emailAddress'] ?? ''),
+			'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
+		];
+	}//end sesComplaint()
+
+	/**
+	 * One section of an SES event, or [] when it is missing or not an array.
+	 *
+	 * @param array<string, mixed> $event SES event.
+	 * @param string               $key   Section key.
+	 *
+	 * @return array<string, mixed> The section.
+	 */
+	private function sesSection(array $event, string $key): array {
+		$section = ($event[$key] ?? []);
+		if (is_array($section) === false) {
+			return [];
+		}
+
+		return $section;
+	}//end sesSection()
 
 	/**
 	 * Normalise a Twilio SMS status callback into our event shape.

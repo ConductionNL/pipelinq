@@ -33,6 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use LogicException;
+
 /**
  * Shared behaviour for every network adapter.
  *
@@ -229,6 +231,69 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 			actingUserId: $request->actingUserId,
 		);
 	}//end send()
+
+	/**
+	 * Publish in two steps: create the container (`publishCall`), then publish
+	 * it (`publishContainerCall`). The publish step is never attempted when
+	 * the first one failed or named no container.
+	 *
+	 * @param SocialPublishRequest $request           The resolved post.
+	 * @param string               $noContainerReason Why a container without an id cannot be published.
+	 *
+	 * @return SocialPublishOutcome The outcome, with the published id and no address.
+	 *
+	 * @throws LogicException For a network that does not publish through a container.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 */
+	protected function publishContainer(SocialPublishRequest $request, string $noContainerReason): SocialPublishOutcome {
+		$containerId = $this->createContainer(request: $request, noContainerReason: $noContainerReason);
+		if ($containerId instanceof SocialPublishOutcome) {
+			return $containerId;
+		}
+
+		if (($this instanceof PublishesThroughContainer) === false) {
+			throw new LogicException($this->network() . ' publishes in one step and has no container to publish.');
+		}
+
+		$published = $this->send(
+			call: $this->publishContainerCall(request: $request, containerId: $containerId),
+			request: $request,
+		);
+		if ($published->accepted === false) {
+			return SocialPublishOutcome::fromGatewayFailure(result: $published);
+		}
+
+		return SocialPublishOutcome::published(externalId: $this->readPublishedId(payload: $published->body));
+	}//end publishContainer()
+
+	/**
+	 * The FIRST of the two calls: create the container and answer its id.
+	 *
+	 * @param SocialPublishRequest $request           The resolved post.
+	 * @param string               $noContainerReason Why a container without an id cannot be published.
+	 *
+	 * @return SocialPublishOutcome|string The container id, or the outcome that stops the publish.
+	 */
+	private function createContainer(SocialPublishRequest $request, string $noContainerReason): SocialPublishOutcome|string {
+		$container = $this->send(call: $this->publishCall(request: $request), request: $request);
+		if ($container->accepted === false) {
+			// The publish step is deliberately NOT attempted. Publishing a
+			// container that was never created would report the second call's
+			// error and hide the one that actually happened.
+			return SocialPublishOutcome::fromGatewayFailure(result: $container);
+		}
+
+		$containerId = (string)($container->body['id'] ?? '');
+		if ($containerId === '') {
+			return SocialPublishOutcome::refused(
+				code: SocialGatewayResult::REJECTED_BY_NETWORK,
+				reason: $noContainerReason,
+			);
+		}
+
+		return $containerId;
+	}//end createContainer()
 
 	/**
 	 * The network's own id for the item it just published.

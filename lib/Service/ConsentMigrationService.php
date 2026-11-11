@@ -86,11 +86,32 @@ class ConsentMigrationService {
 			return $this->result(status: 'integriq-missing');
 		}
 
+		$this->migrateMessagingRecords();
+		$this->migrateConsentRecords();
+
+		$result = $this->result(status: $this->cutOverWhenClean());
+		$this->logger->info('Pipelinq consent migration into integriq', $result);
+		return $result;
+	}//end run()
+
+	/**
+	 * Hand the latest messaging consent of every contact and channel to integriq.
+	 *
+	 * @return void
+	 */
+	private function migrateMessagingRecords(): void {
 		foreach ($this->messaging->latestPerPair(rows: $this->messaging->allRecords()) as $row) {
 			$address = $this->addresses->addressFor(contactId: (string)($row['contactId'] ?? ''), channel: (string)($row['channel'] ?? ''));
 			$this->hand(request: $this->messaging->changeRequestFor(row: $row, address: $address));
 		}
+	}//end migrateMessagingRecords()
 
+	/**
+	 * Hand every marketing consent record to integriq; a bounce is skipped and counted.
+	 *
+	 * @return void
+	 */
+	private function migrateConsentRecords(): void {
 		foreach ($this->consentRecords() as $row) {
 			$request = $this->marketing->changeRequestFor(row: $row, id: $this->uuidOf(row: $row));
 			if ($request === null) {
@@ -100,7 +121,14 @@ class ConsentMigrationService {
 
 			$this->hand(request: $request);
 		}
+	}//end migrateConsentRecords()
 
+	/**
+	 * Without refusals, stamp the first cut-over moment and switch the store to integriq.
+	 *
+	 * @return string `done`, or `refusals` when integriq refused a record.
+	 */
+	private function cutOverWhenClean(): string {
 		$status = 'done';
 		if ($this->counts['refused'] === 0) {
 			if ($this->integriq->isCutover() === false) {
@@ -114,10 +142,8 @@ class ConsentMigrationService {
 			$status = 'refusals';
 		}
 
-		$result = $this->result(status: $status);
-		$this->logger->info('Pipelinq consent migration into integriq', $result);
-		return $result;
-	}//end run()
+		return $status;
+	}//end cutOverWhenClean()
 
 	/**
 	 * Hand one request to integriq and count the outcome.

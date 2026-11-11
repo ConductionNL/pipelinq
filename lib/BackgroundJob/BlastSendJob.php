@@ -243,14 +243,31 @@ class BlastSendJob extends TimedJob {
 			return [];
 		}
 
+		return $this->payloadsOf(
+			rows: $this->sendingRows(
+				objectService: $objectService,
+				filters: [
+					'status' => 'sending',
+					'register' => $register,
+					'schema' => $schema,
+				]
+			)
+		);
+	}//end loadSendingBlasts()
+
+	/**
+	 * The blast rows matching the filters, or [] when the read fails (logged).
+	 *
+	 * @param object                $objectService OpenRegister's ObjectService.
+	 * @param array<string, string> $filters       The status, register and schema filters.
+	 *
+	 * @return iterable<mixed> The rows.
+	 */
+	private function sendingRows(object $objectService, array $filters): iterable {
 		try {
 			$rows = $objectService->findAll(
 				config: [
-					'filters' => [
-						'status' => 'sending',
-						'register' => $register,
-						'schema' => $schema,
-					],
+					'filters' => $filters,
 				]
 			);
 		} catch (Throwable $e) {
@@ -261,8 +278,19 @@ class BlastSendJob extends TimedJob {
 			return [];
 		}
 
+		return ($rows ?? []);
+	}//end sendingRows()
+
+	/**
+	 * The non-empty payloads of the rows.
+	 *
+	 * @param iterable<mixed> $rows The rows.
+	 *
+	 * @return array<int, array<string, mixed>> The payloads.
+	 */
+	private function payloadsOf(iterable $rows): array {
 		$out = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$payload = $this->toArray(value: $row);
 			if ($payload !== []) {
 				$out[] = $payload;
@@ -270,7 +298,7 @@ class BlastSendJob extends TimedJob {
 		}
 
 		return $out;
-	}//end loadSendingBlasts()
+	}//end payloadsOf()
 
 	/**
 	 * Read the webhook queue from app config.
@@ -329,24 +357,36 @@ class BlastSendJob extends TimedJob {
 	 * @return string Identifier or empty.
 	 */
 	private function extractBlastId(array $blast): string {
+		$identity = $this->firstIdentity(source: $blast);
+		if ($identity !== '') {
+			return $identity;
+		}
+
+		$self = ($blast['@self'] ?? null);
+		if (is_array($self) === true) {
+			return $this->firstIdentity(source: $self);
+		}
+
+		return '';
+	}//end extractBlastId()
+
+	/**
+	 * The first non-empty scalar of `uuid`, `id` and `slug`.
+	 *
+	 * @param array<string, mixed> $source The row or its `@self`.
+	 *
+	 * @return string The identity, or ''.
+	 */
+	private function firstIdentity(array $source): string {
 		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($blast[$key] ?? null);
+			$value = ($source[$key] ?? null);
 			if (is_scalar($value) === true && (string)$value !== '') {
 				return (string)$value;
 			}
 		}
 
-		if (isset($blast['@self']) === true && is_array($blast['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($blast['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
 		return '';
-	}//end extractBlastId()
+	}//end firstIdentity()
 
 	/**
 	 * Lazy-resolve OpenRegister's ObjectService.

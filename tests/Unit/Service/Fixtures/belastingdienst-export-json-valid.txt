@@ -1,0 +1,18 @@
+{
+    "exportMetadata": {
+        "exportDate": "2026-02-01T00:00:00+00:00",
+        "entryCount": 6,
+        "dateRange": {
+            "from": "2026-01-01",
+            "to": "2026-01-31"
+        },
+        "registerList": [
+            "R1",
+            "R2"
+        ],
+        "chainIntegrity": "valid",
+        "chainStatus": "",
+        "signatureAlgorithm": "HMAC-SHA256"
+    },
+    "entries": []
+}

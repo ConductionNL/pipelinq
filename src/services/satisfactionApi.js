@@ -21,6 +21,29 @@ import { generateUrl } from '@nextcloud/router'
  * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 export async function fetchResponseRate({ days = 0, surveyId = '' } = {}) {
+	const { data } = await axios.get(
+		generateUrl('/apps/pipelinq/api/satisfaction/response-rate'),
+		{ params: responseRateParams({ days, surveyId }) },
+	)
+	return objectOrEmpty(data)
+}
+
+/**
+ * @param {unknown} data An answer.
+ * @return {object} It when it is an object, else an empty one.
+ */
+function objectOrEmpty(data) {
+	return data && typeof data === 'object' ? data : {}
+}
+
+/**
+ * The filters to send: a window of days above zero, and a survey.
+ *
+ * @param {{days: number, surveyId: string}} filters The filters asked for.
+ * @return {object} The query parameters.
+ * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ */
+function responseRateParams({ days, surveyId }) {
 	const params = {}
 	if (days > 0) {
 		params.days = days
@@ -28,11 +51,7 @@ export async function fetchResponseRate({ days = 0, surveyId = '' } = {}) {
 	if (surveyId) {
 		params.surveyId = surveyId
 	}
-	const { data } = await axios.get(
-		generateUrl('/apps/pipelinq/api/satisfaction/response-rate'),
-		{ params },
-	)
-	return data && typeof data === 'object' ? data : {}
+	return params
 }
 
 /**

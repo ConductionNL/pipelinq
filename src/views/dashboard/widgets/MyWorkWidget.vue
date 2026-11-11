@@ -118,16 +118,29 @@ export default {
 			if (due.state === null) {
 				return item.stageOrStatus ? kind + ' · ' + item.stageOrStatus : kind
 			}
+			return kind + ' · ' + this.dueText(item, due)
+		},
+
+		/**
+		 * How the due date stands: days late, today, or the date it closes or
+		 * is due.
+		 *
+		 * @param {object} item The work item.
+		 * @param {{state: string, daysLate: number}} due Its due state.
+		 * @return {string} The text.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
+		 */
+		dueText(item, due) {
 			if (due.state === 'overdue') {
-				return kind + ' · ' + this.n('pipelinq', '%n day late', '%n days late', due.daysLate)
+				return this.n('pipelinq', '%n day late', '%n days late', due.daysLate)
 			}
 			if (due.state === 'today') {
-				return kind + ' · ' + this.t('pipelinq', 'today')
+				return this.t('pipelinq', 'today')
 			}
 			const date = formatDate(item.dueDate)
-			return kind + ' · ' + (item.entityType === 'lead'
+			return item.entityType === 'lead'
 				? this.t('pipelinq', 'closes {date}', { date })
-				: this.t('pipelinq', 'due {date}', { date }))
+				: this.t('pipelinq', 'due {date}', { date })
 		},
 
 		/**

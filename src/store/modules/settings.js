@@ -1,6 +1,29 @@
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
 
+/**
+ * Send one request to the settings endpoint and read its JSON answer; a
+ * refused request throws `Failed to <action> settings: <status text>`.
+ *
+ * @param {{method: string, body?: string}} init The method, and the body to send.
+ * @param {string} action What the request does, for the refusal: `fetch` or `save`.
+ * @return {Promise<object>} The answer.
+ */
+async function settingsRequest(init, action) {
+	const response = await fetch(generateUrl('/apps/pipelinq/api/settings'), {
+		...init,
+		headers: {
+			'Content-Type': 'application/json',
+			requesttoken: OC.requestToken,
+			'OCS-APIREQUEST': 'true',
+		},
+	})
+	if (!response.ok) {
+		throw new Error(`Failed to ${action} settings: ${response.statusText}`)
+	}
+	return response.json()
+}
+
 export const useSettingsStore = defineStore('settings', {
 	state: () => ({
 		config: null,
@@ -53,25 +76,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.error = null
 
 			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/settings'),
-					{
-						method: 'GET',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
-
-				if (!response.ok) {
-					throw new Error(
-						`Failed to fetch settings: ${response.statusText}`,
-					)
-				}
-
-				const data = await response.json()
+				const data = await settingsRequest({ method: 'GET' }, 'fetch')
 				this.config = data.config || data
 				this.openRegisters = data.openRegisters ?? false
 				this.isAdmin = data.isAdmin ?? false
@@ -96,26 +101,10 @@ export const useSettingsStore = defineStore('settings', {
 			this.error = null
 
 			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/settings'),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(settingsData),
-					},
+				const data = await settingsRequest(
+					{ method: 'POST', body: JSON.stringify(settingsData) },
+					'save',
 				)
-
-				if (!response.ok) {
-					throw new Error(
-						`Failed to save settings: ${response.statusText}`,
-					)
-				}
-
-				const data = await response.json()
 				this.config = data.config || data
 
 				return this.config

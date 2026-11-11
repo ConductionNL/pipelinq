@@ -219,6 +219,48 @@ class JourneyStepRunnerTest extends TestCase {
 	}//end testAMissingTemplateFailsTheStep()
 
 	/**
+	 * Each way a mailing step can fail short of sending names its reason,
+	 * and the gate is asked with the journey's channel, intent and list.
+	 *
+	 * @return void
+	 */
+	public function testEachMailingFailureNamesItsReason(): void {
+		$cases = [
+			'no_transport' => [null, true, 'anna@example.org'],
+			'no_email' => [['uuid' => 'transport-1'], true, '  '],
+			'transport_error' => [['uuid' => 'transport-1'], 'throw', 'anna@example.org'],
+			'transport_rejected' => [['uuid' => 'transport-1'], false, 'anna@example.org'],
+		];
+		foreach ($cases as $reason => [$transport, $accepted, $email]) {
+			$this->setUp();
+			$this->store->rows['contact']['contact-1']['email'] = $email;
+			$transports = $this->createMock(MailTransportService::class);
+			$transports->method('resolveTransport')->willReturn($transport);
+			if ($accepted === 'throw') {
+				$transports->method('sendOneDelivery')->willThrowException(new RuntimeException('smtp down'));
+			} else {
+				$transports->method('sendOneDelivery')->willReturn($accepted);
+			}
+
+			$compliance = $this->createMock(ComplianceService::class);
+			$compliance->expects($this->once())->method('permitsSend')
+				->with('contact-1', 'email', 'promotional', '')
+				->willReturn(['allowed' => true, 'reason' => '']);
+
+			$outcomes = $this->runner(gate: [], transports: $transports, compliance: $compliance)
+				->run(journeyId: 'journey-mail', subject: ['contact' => 'contact-1']);
+
+			$this->assertSame(['state' => 'failed', 'reason' => $reason, 'contactId' => 'contact-1'], $outcomes[0], $reason);
+			$queued = 0;
+			if ($reason === 'transport_error' || $reason === 'transport_rejected') {
+				$queued = 1;
+			}
+
+			$this->assertCount($queued, $this->store->findAll('blastDelivery'), $reason);
+		}//end foreach
+	}//end testEachMailingFailureNamesItsReason()
+
+	/**
 	 * A runner whose gate answers as instructed.
 	 *
 	 * @param array{allowed: bool, reason: string} $gate What the consent gate answers.

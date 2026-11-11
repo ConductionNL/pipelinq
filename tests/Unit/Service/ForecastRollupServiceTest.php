@@ -141,4 +141,30 @@ class ForecastRollupServiceTest extends TestCase {
 		$this->assertSame(0.0, $team['commit_amount']);
 		$this->assertSame(0.0, $team['closed_won_amount']);
 	}//end testSumChildTotalsEmpty()
+
+	/**
+	 * The whole bucket is exact: rounding to cents, unknown categories, deals without an id.
+	 *
+	 * @return void
+	 */
+	public function testBucketDealsIsExact(): void {
+		$this->assertSame(
+			[
+				'totals'   => ['commit_amount' => 0.66, 'best_case_amount' => 10.0, 'pipeline_amount' => 0.0, 'closed_won_amount' => 1.24],
+				'deal_ids' => ['a', 'c'],
+				'currency' => 'EUR',
+				'rates'    => [],
+			],
+			$this->service->bucketDeals(
+				[
+					['forecast_category' => 'commit', 'value' => 0.333, 'uuid' => 'a'],
+					['forecast_category' => 'commit', 'value' => '0.333'],
+					['forecast_category' => 'best_case', 'value' => 10, 'id' => 'c'],
+					['forecast_category' => 'closed_won', 'value' => 1.235],
+					['forecast_category' => 'upside', 'value' => 5, 'uuid' => 'x'],
+					['value' => 7, 'uuid' => 'y'],
+				]
+			)
+		);
+	}//end testBucketDealsIsExact()
 }//end class

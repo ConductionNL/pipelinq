@@ -204,6 +204,7 @@ import { currencyOr } from '../../services/reportingCurrency.js'
 import { createUserDisplayNameFormatter } from '../../services/userDisplayName.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { slotLabel, timeRange } from '../../utils/bookingTime.js'
+import { BOOKING_STATUS_LABELS, bookingCurrency, bookingDateTime } from './bookingFormat.js'
 
 const userName = createUserDisplayNameFormatter()
 
@@ -217,18 +218,23 @@ const TIMELINE_ICONS = {
 	status: ProgressCheck,
 }
 
+/**
+ * The booking's timestamp fields the timeline lists, each with its kind and its words.
+ */
+const TIMESTAMP_EVENTS = [
+	['startAt', 'start', () => t('pipelinq', 'Booking starts')],
+	['endAt', 'end', () => t('pipelinq', 'Booking ends')],
+	['confirmationSentAt', 'email', () => t('pipelinq', 'Confirmation email sent')],
+	['reminderSentAt', 'email', () => t('pipelinq', 'Reminder email sent')],
+	['depositPaidAt', 'deposit', () => t('pipelinq', 'Deposit cleared')],
+	['noShowFeeChargedAt', 'fee', () => t('pipelinq', 'No-show fee charged')],
+	['cancelledAt', 'cancel', () => t('pipelinq', 'Cancelled')],
+]
+
 /** The parts this section can render on its own. */
 const PARTS = ['all', 'context', 'assignments', 'timeline', 'customer', 'when']
 
-const STATUS_LABELS = {
-	'pending-deposit': 'Awaiting deposit',
-	confirmed: 'Confirmed',
-	completed: 'Completed',
-	'no-show': 'No-show',
-	'cancelled-by-customer': 'Cancelled (customer)',
-	'cancelled-by-business': 'Cancelled (business)',
-	rescheduled: 'Rescheduled',
-}
+const STATUS_LABELS = BOOKING_STATUS_LABELS
 
 export default {
 	name: 'BookingDetailSection',
@@ -418,56 +424,9 @@ export default {
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		timeline() {
-			const events = []
-			if (this.booking.startAt) {
-				events.push({
-					at: this.booking.startAt,
-					kind: 'start',
-					text: t('pipelinq', 'Booking starts'),
-				})
-			}
-			if (this.booking.endAt) {
-				events.push({
-					at: this.booking.endAt,
-					kind: 'end',
-					text: t('pipelinq', 'Booking ends'),
-				})
-			}
-			if (this.booking.confirmationSentAt) {
-				events.push({
-					at: this.booking.confirmationSentAt,
-					kind: 'email',
-					text: t('pipelinq', 'Confirmation email sent'),
-				})
-			}
-			if (this.booking.reminderSentAt) {
-				events.push({
-					at: this.booking.reminderSentAt,
-					kind: 'email',
-					text: t('pipelinq', 'Reminder email sent'),
-				})
-			}
-			if (this.booking.depositPaidAt) {
-				events.push({
-					at: this.booking.depositPaidAt,
-					kind: 'deposit',
-					text: t('pipelinq', 'Deposit cleared'),
-				})
-			}
-			if (this.booking.noShowFeeChargedAt) {
-				events.push({
-					at: this.booking.noShowFeeChargedAt,
-					kind: 'fee',
-					text: t('pipelinq', 'No-show fee charged'),
-				})
-			}
-			if (this.booking.cancelledAt) {
-				events.push({
-					at: this.booking.cancelledAt,
-					kind: 'cancel',
-					text: t('pipelinq', 'Cancelled'),
-				})
-			}
+			const events = TIMESTAMP_EVENTS
+				.filter(([field]) => this.booking[field])
+				.map(([field, kind, text]) => ({ at: this.booking[field], kind, text: text() }))
 			// Status changes, which the dropped audit table used to list.
 			for (const entry of this.statusHistory) {
 				events.push({
@@ -576,12 +535,7 @@ export default {
 		},
 
 		formatDateTime(iso) {
-			if (!iso) return '-'
-			try {
-				return new Date(iso).toLocaleString('nl-NL')
-			} catch {
-				return iso
-			}
+			return bookingDateTime(iso)
 		},
 
 		/**
@@ -593,17 +547,7 @@ export default {
 		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 		 */
 		formatCurrency(value, currency) {
-			const code = currencyOr(currency)
-			const n = Number(value) || 0
-			try {
-				return new Intl.NumberFormat('nl-NL', {
-					style: 'currency',
-					currency: code,
-					maximumFractionDigits: 2,
-				}).format(n)
-			} catch {
-				return `${code} ${n}`
-			}
+			return bookingCurrency(value, currency)
 		},
 
 		/**
@@ -695,57 +639,82 @@ export default {
 			if (this.contextLoading) return
 			this.contextLoading = true
 			try {
-				const booking = this.booking
-				if (booking.serviceId && !this.service) {
-					this.service = await this.objectStore.fetchObject(
-						'appointmentService',
-						booking.serviceId,
-					)
-				}
-				// Resolve the customer once per id. fetchObject returns null
-				// (it does not throw) on a 404, so fall back to `client` on a
-				// null contact rather than in a catch — and record the id so a
-				// genuinely missing customer is not refetched on every run.
-				if (
-					booking.customerId
-					&& this.loadedCustomerId !== booking.customerId
-				) {
-					this.loadedCustomerId = booking.customerId
-					const contact = await this.objectStore.fetchObject(
-						'contact',
-						booking.customerId,
-					)
-					this.customerIsContact = Boolean(contact)
-					this.customer =
-						contact
-						|| (await this.objectStore.fetchObject(
-							'client',
-							booking.customerId,
-						))
-				}
-				// De-duplicate resource ids: a booking has one assignment row
-				// per step/time-slot, so the same resource recurs across rows.
-				const resourceIds = [
-					...new Set(
-						(this.assignments || [])
-							.map((a) => a?.resourceId)
-							.filter(Boolean),
-					),
-				].filter((id) => !this.resourceLookup[id])
-				for (const id of resourceIds) {
-					const resource = await this.objectStore.fetchObject(
-						'appointmentResource',
-						id,
-					)
-					if (resource?.name) {
-						this.resourceLookup = {
-							...this.resourceLookup,
-							[id]: resource.name,
-						}
-					}
-				}
+				await this.loadService()
+				await this.loadCustomer()
+				await this.loadResourceNames()
 			} finally {
 				this.contextLoading = false
+			}
+		},
+
+		/**
+		 * The booking's service, once.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadService() {
+			if (this.booking.serviceId && !this.service) {
+				this.service = await this.objectStore.fetchObject(
+					'appointmentService',
+					this.booking.serviceId,
+				)
+			}
+		},
+
+		/**
+		 * The booking's customer, once per id: a contact, else a client.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadCustomer() {
+			const customerId = this.booking.customerId
+			// Resolve the customer once per id. fetchObject returns null
+			// (it does not throw) on a 404, so fall back to `client` on a
+			// null contact rather than in a catch — and record the id so a
+			// genuinely missing customer is not refetched on every run.
+			if (!customerId || this.loadedCustomerId === customerId) {
+				return
+			}
+			this.loadedCustomerId = customerId
+			const contact = await this.objectStore.fetchObject(
+				'contact',
+				customerId,
+			)
+			this.customerIsContact = Boolean(contact)
+			this.customer =
+				contact
+				|| (await this.objectStore.fetchObject(
+					'client',
+					customerId,
+				))
+		},
+
+		/**
+		 * The names of the assigned resources not yet known, one request each.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadResourceNames() {
+			// De-duplicate resource ids: a booking has one assignment row
+			// per step/time-slot, so the same resource recurs across rows.
+			const resourceIds = [
+				...new Set(
+					(this.assignments || [])
+						.map((a) => a?.resourceId)
+						.filter(Boolean),
+				),
+			].filter((id) => !this.resourceLookup[id])
+			for (const id of resourceIds) {
+				const resource = await this.objectStore.fetchObject(
+					'appointmentResource',
+					id,
+				)
+				if (resource?.name) {
+					this.resourceLookup = {
+						...this.resourceLookup,
+						[id]: resource.name,
+					}
+				}
 			}
 		},
 	},
@@ -848,32 +817,6 @@ export default {
 	margin-bottom: 2px;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
-}
-
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
 }
 
 .section-empty {
@@ -1000,3 +943,5 @@ export default {
 	letter-spacing: 0.04em;
 }
 </style>
+
+<style scoped src="./bookingTable.css"></style>

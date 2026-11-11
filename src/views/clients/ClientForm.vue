@@ -334,15 +334,55 @@ import LabelSelect from '../../components/LabelSelect.vue'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import { findClientDuplicate } from '../../services/clientDuplicates.js'
 import {
+	clientFormFrom,
 	defaultLanguage,
+	emptyClientForm,
 	INDUSTRY_SECTORS,
-	industryList,
 } from '../../utils/clientFormFields.js'
 import { CLIENT_TYPE_LABELS, enumOptions } from '../../utils/enumLabels.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
 const URL_REGEX = /^https?:\/\/.+\..+/
+
+/**
+ * The fields checked against a format once filled in, in form order.
+ */
+const FORMAT_CHECKS = [
+	{ field: 'email', pattern: EMAIL_REGEX, message: () => t('pipelinq', 'Invalid email format') },
+	{ field: 'phone', pattern: PHONE_REGEX, message: () => t('pipelinq', 'Invalid phone format') },
+	{ field: 'website', pattern: URL_REGEX, message: () => t('pipelinq', 'Invalid URL format') },
+]
+
+/**
+ * What is wrong with the name, if anything.
+ *
+ * @param {string} name The name typed in.
+ * @return {string} The error, or ''.
+ * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+ */
+function nameError(name) {
+	if (!name.trim()) {
+		return t('pipelinq', 'Name is required')
+	}
+	return name.length > 255 ? t('pipelinq', 'Name must be at most 255 characters') : ''
+}
+
+/**
+ * Add an error for each filled-in field that does not match its format.
+ *
+ * @param {object} errors The errors so far, added to in place.
+ * @param {object} form The form.
+ * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+ */
+function addFormatErrors(errors, form) {
+	for (const check of FORMAT_CHECKS) {
+		const value = form[check.field]
+		if (value && !check.pattern.test(value)) {
+			errors[check.field] = check.message()
+		}
+	}
+}
 
 /**
  * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
@@ -355,6 +395,29 @@ const URL_REGEX = /^https?:\/\/.+\..+/
  */
 function currentUser() {
 	return window.OC?.getCurrentUser?.() || null
+}
+
+/**
+ * The signed-in user as the account owner picker's only option, or none.
+ *
+ * @return {Array<{id: string, displayName: string}>} The options.
+ * @spec exclude reads the session user, no behaviour of its own.
+ */
+function currentUserOptions() {
+	const user = currentUser()
+	return user ? [{ id: user.uid, displayName: user.displayName || user.uid }] : []
+}
+
+/**
+ * The time zones this browser knows, or none when it cannot list them.
+ *
+ * @return {string[]} The zone names.
+ * @spec exclude reads the browser's Intl support, no behaviour of its own.
+ */
+function supportedTimezones() {
+	return typeof Intl.supportedValuesOf === 'function'
+		? Intl.supportedValuesOf('timeZone')
+		: []
 }
 
 const TYPE_MAPPING = {
@@ -418,18 +481,9 @@ export default {
 			duplicate: null,
 			duplicateTimer: null,
 			form: {
+				...emptyClientForm(),
 				name: this.initialName || '',
-				type: null,
-				email: '',
-				phone: '',
-				website: '',
-				address: '',
-				notes: '',
-				industry: [],
-				labels: [],
 				accountOwner: currentUser()?.uid || null,
-				correspondenceLanguage: '',
-				timezone: null,
 			},
 
 			typeOptions: enumOptions(CLIENT_TYPE_LABELS, (text) =>
@@ -438,21 +492,10 @@ export default {
 
 			industryOptions: INDUSTRY_SECTORS,
 			languages: [],
-			userOptions: currentUser()
-				? [
-						{
-							id: currentUser().uid,
-							displayName:
-								currentUser().displayName || currentUser().uid,
-						},
-					]
-				: [],
+			userOptions: currentUserOptions(),
 
 			searchingUsers: false,
-			timezoneOptions:
-				typeof Intl.supportedValuesOf === 'function'
-					? Intl.supportedValuesOf('timeZone')
-					: [],
+			timezoneOptions: supportedTimezones(),
 		}
 	},
 
@@ -470,23 +513,14 @@ export default {
 		 */
 		errors() {
 			const errors = {}
-			if (!this.form.name.trim()) {
-				errors.name = t('pipelinq', 'Name is required')
-			} else if (this.form.name.length > 255) {
-				errors.name = t('pipelinq', 'Name must be at most 255 characters')
+			const name = nameError(this.form.name)
+			if (name) {
+				errors.name = name
 			}
 			if (!this.form.type) {
 				errors.type = t('pipelinq', 'Type is required')
 			}
-			if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
-				errors.email = t('pipelinq', 'Invalid email format')
-			}
-			if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
-				errors.phone = t('pipelinq', 'Invalid phone format')
-			}
-			if (this.form.website && !URL_REGEX.test(this.form.website)) {
-				errors.website = t('pipelinq', 'Invalid URL format')
-			}
+			addFormatErrors(errors, this.form)
 			return errors
 		},
 
@@ -590,20 +624,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
 		 */
 		populateForm(data) {
-			this.form = {
-				name: data.name || '',
-				type: data.type || null,
-				email: data.email || '',
-				phone: data.phone || '',
-				website: data.website || '',
-				address: data.address || '',
-				notes: data.notes || '',
-				industry: industryList(data.industry),
-				labels: Array.isArray(data.labels) ? [...data.labels] : [],
-				accountOwner: data.accountOwner || null,
-				correspondenceLanguage: data.correspondenceLanguage || '',
-				timezone: data.timezone || null,
-			}
+			this.form = clientFormFrom(data)
 		},
 
 		/**

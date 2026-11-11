@@ -75,6 +75,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import AddContactRoleDialog from '../dialogs/AddContactRoleDialog.vue'
 import { crmRoleLabel, crmRoleOptions, sortByCrmRole } from '../services/crmRoles.js'
+import { linkedEntityName } from '../services/relationshipPayloads.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 
@@ -164,19 +165,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
 		 */
 		async loadEntityName(entityId) {
-			try {
-				const entity = await this.objectStore.fetchObject(
-					'contact',
-					entityId,
-				)
-				if (entity) {
-					this.entityNameCache[entityId] = entity.name || entityId
-				} else {
-					this.entityNameCache[entityId] = t('pipelinq', '[Deleted]')
-				}
-			} catch {
-				this.entityNameCache[entityId] = entityId
-			}
+			this.entityNameCache[entityId] = await linkedEntityName(this.objectStore, { id: entityId, type: 'contact' })
 		},
 
 		getEntityName(entityId) {
@@ -332,110 +321,6 @@ export default {
 	display: flex;
 	gap: 4px;
 }
-
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 8px 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
-	vertical-align: middle;
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
-}
-
-.viewTableRow {
-	transition: background-color 0.2s ease;
-}
-
-.viewTableRow:hover {
-	background: var(--color-background-hover);
-}
-
-/* Dialog styles */
-.create-overlay {
-	position: fixed;
-	top: 0;
-	inset-inline: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 10000;
-}
-
-.create-dialog {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius-large);
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-	width: 500px;
-	max-width: 90vw;
-	max-height: 85vh;
-	overflow-y: auto;
-}
-
-.create-dialog__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 16px 20px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.create-dialog__header h3 {
-	margin: 0;
-}
-
-.create-dialog__body {
-	padding: 20px;
-}
-
-.form-group {
-	margin-bottom: 12px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
-	font-size: 13px;
-}
-
-.form-group textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	resize: vertical;
-}
-
-.form-actions {
-	display: flex;
-	gap: 8px;
-	margin-top: 16px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.viewTableRow {
-		transition: none;
-	}
-}
 </style>
+
+<style scoped src="./viewTable.css"></style>

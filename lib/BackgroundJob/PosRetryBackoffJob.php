@@ -34,7 +34,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -129,47 +128,51 @@ class PosRetryBackoffJob extends TimedJob {
 	 * @return array<int, array<string, mixed>> The pending Z-reports.
 	 */
 	private function findPendingZReports(): array {
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			$schema = $this->appConfig->getValueString(Application::APP_ID, 'posZReport_schema', '');
-			if ($register === '' || $schema === '') {
-				return [];
+		$pending = [];
+		foreach ($this->zReportRows() as $row) {
+			$data = $this->toArray(object: $row);
+			if ($this->awaitsBookkeeping(data: $data) === true) {
+				$pending[] = $data;
 			}
+		}
 
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+		return $pending;
+	}//end findPendingZReports()
+
+	/**
+	 * Every posZReport, or [] when they cannot be read (logged).
+	 *
+	 * @return iterable<mixed> The Z-reports.
+	 */
+	private function zReportRows(): iterable {
+		try {
+			$rows = (new ConfiguredSchemaRows(container: $this->container, appConfig: $this->appConfig))
+				->rows(schemaKey: 'posZReport_schema');
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'PosRetryBackoffJob: failed to read pending Z-reports',
 				['exception' => $e->getMessage()]
 			);
 			return [];
-		}//end try
-
-		$pending = [];
-		foreach (($rows ?? []) as $row) {
-			$data = $this->toArray(object: $row);
-			$status = (string)($data['bookkeepingStatus'] ?? 'pending');
-			if ($status !== 'pending') {
-				continue;
-			}
-
-			// Only re-raise Z-reports that actually carry takings (a draft / empty
-			// day has no journal consequence).
-			if ((int)($data['transactionCount'] ?? 0) <= 0) {
-				continue;
-			}
-
-			$pending[] = $data;
 		}
 
-		return $pending;
-	}//end findPendingZReports()
+		return ($rows ?? []);
+	}//end zReportRows()
+
+	/**
+	 * Whether a Z-report still awaits its bookkeeping post.
+	 *
+	 * @param array<string, mixed> $data The Z-report.
+	 *
+	 * @return bool True when it is pending and carries takings.
+	 */
+	private function awaitsBookkeeping(array $data): bool {
+		if ((string)($data['bookkeepingStatus'] ?? 'pending') !== 'pending') {
+			return false;
+		}
+
+		// Only re-raise Z-reports that actually carry takings (a draft / empty
+		// day has no journal consequence).
+		return (int)($data['transactionCount'] ?? 0) > 0;
+	}//end awaitsBookkeeping()
 }//end class

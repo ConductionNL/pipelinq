@@ -141,67 +141,7 @@ class PortalDocumentController extends PortalApiController {
 	#[AnonRateLimit(limit: 60, period: 60)]
 	public function download(string $token) {
 		try {
-			$result = $this->signing->validateToken(token: $token);
-			if ($result === 'expired') {
-				return new JSONResponse(
-					['errorCode' => 'linkExpired', 'message' => 'Deze link is verlopen. Download het document opnieuw vanuit het portaal.'],
-					Http::STATUS_GONE
-				);
-			}
-
-			if (is_array($result) === false) {
-				return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
-			}
-
-			$accountId = (string)($result['accountId'] ?? '');
-			$objectId = (string)($result['objectId'] ?? '');
-			$objectType = (string)($result['objectType'] ?? '');
-			$account = $this->repository->find(self::ACCOUNT_SCHEMA, $accountId);
-
-			// Defence in depth: re-verify the bound account still has access.
-			if ($account === null
-				|| ($account['status'] ?? 'active') === 'closed'
-				|| ($objectType !== 'data-export' && $this->ensureAccess(account: $account, objectType: $objectType, objectId: $objectId) === false)
-			) {
-				return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
-			}
-
-			$this->audit->log(
-				$accountId,
-				(string)($account['tenantId'] ?? ''),
-				'document-download',
-				'success',
-				[
-					'targetObjectType' => $objectType,
-					'targetObjectId' => $objectId,
-				]
-			);
-
-			// The portal models documents as JSON descriptors over OR objects; an
-			// instance that stores a PDF file id streams the file here via
-			// IRootFolder instead. Streaming the bound file is deferred to a live
-			// instance (see DEPLOYMENT.md), the descriptor below is the canonical
-			// machine-readable representation in the meantime.
-			// 🔴 A DATA EXPORT HAS TO CONTAIN THE DATA.
-			//
-			// Every object type got the same three-key descriptor, so a
-			// data-export link -- the thing a customer is handed to exercise
-			// their AVG art. 15 right of access -- streamed
-			// {objectType, objectId, generatedAt} and nothing else.
-			// PortalExportService::buildExport() had been written for exactly
-			// this and was called by nothing in the tree.
-			//
-			// Other object types keep the descriptor: for those it IS the
-			// canonical machine-readable representation, as the note above says.
-			$payload = $this->documentPayload(objectType: $objectType, objectId: $objectId);
-			if ($objectType === 'data-export') {
-				$payload = $this->exports->buildExport(account: $account);
-			}
-			return new DataDownloadResponse(
-				(string)json_encode($payload),
-				$objectType . '-' . $objectId . '.json',
-				'application/json'
-			);
+			return $this->downloadFor(token: $token);
 		} catch (Throwable $e) {
 			// This endpoint is #[PublicPage]: it is reachable unauthenticated,
 			// so an uncaught throw would return a framework 500 with a stack
@@ -214,9 +154,137 @@ class PortalDocumentController extends PortalApiController {
 				'Portal document download failed',
 				['exception' => $e]
 			);
-			return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
-		}//end try
+			return $this->notFound();
+		}
 	}//end download()
+
+	/**
+	 * Validate the token, re-check the bound account, audit and stream the document.
+	 *
+	 * @param string $token The signed token.
+	 *
+	 * @return JSONResponse|DataDownloadResponse The document, or an error.
+	 */
+	private function downloadFor(string $token): JSONResponse|DataDownloadResponse {
+		$link = $this->signing->validateToken(token: $token);
+		if ($link === 'expired') {
+			return $this->linkExpired();
+		}
+
+		if (is_array($link) === false) {
+			return $this->notFound();
+		}
+
+		$account = $this->repository->find(self::ACCOUNT_SCHEMA, (string)($link['accountId'] ?? ''));
+		if ($account === null || $this->mayDownload(account: $account, link: $link) === false) {
+			return $this->notFound();
+		}
+
+		$this->auditDownload(account: $account, link: $link);
+		return $this->documentResponse(account: $account, link: $link);
+	}//end downloadFor()
+
+	/**
+	 * Defence in depth: whether the bound account is still open and may still see the object.
+	 *
+	 * A data-export link names the account itself, so only the account gate applies.
+	 *
+	 * @param array<string, mixed> $account The bound account.
+	 * @param array<string, mixed> $link    The validated token payload.
+	 *
+	 * @return bool True when the download may proceed.
+	 */
+	private function mayDownload(array $account, array $link): bool {
+		if (($account['status'] ?? 'active') === 'closed') {
+			return false;
+		}
+
+		$objectType = (string)($link['objectType'] ?? '');
+		if ($objectType === 'data-export') {
+			return true;
+		}
+
+		return $this->ensureAccess(account: $account, objectType: $objectType, objectId: (string)($link['objectId'] ?? ''));
+	}//end mayDownload()
+
+	/**
+	 * Audit a served download against the bound account.
+	 *
+	 * @param array<string, mixed> $account The bound account.
+	 * @param array<string, mixed> $link    The validated token payload.
+	 *
+	 * @return void
+	 */
+	private function auditDownload(array $account, array $link): void {
+		$this->audit->log(
+			(string)($link['accountId'] ?? ''),
+			(string)($account['tenantId'] ?? ''),
+			'document-download',
+			'success',
+			[
+				'targetObjectType' => (string)($link['objectType'] ?? ''),
+				'targetObjectId' => (string)($link['objectId'] ?? ''),
+			]
+		);
+	}//end auditDownload()
+
+	/**
+	 * The download of the linked document.
+	 *
+	 * The portal models documents as JSON descriptors over OR objects; an
+	 * instance that stores a PDF file id streams the file here via
+	 * IRootFolder instead. Streaming the bound file is deferred to a live
+	 * instance (see DEPLOYMENT.md), the descriptor below is the canonical
+	 * machine-readable representation in the meantime.
+	 *
+	 * 🔴 A DATA EXPORT HAS TO CONTAIN THE DATA.
+	 *
+	 * Every object type got the same three-key descriptor, so a
+	 * data-export link -- the thing a customer is handed to exercise
+	 * their AVG art. 15 right of access -- streamed
+	 * {objectType, objectId, generatedAt} and nothing else.
+	 * PortalExportService::buildExport() had been written for exactly
+	 * this and was called by nothing in the tree.
+	 *
+	 * Other object types keep the descriptor: for those it IS the
+	 * canonical machine-readable representation, as the note above says.
+	 *
+	 * @param array<string, mixed> $account The bound account.
+	 * @param array<string, mixed> $link    The validated token payload.
+	 *
+	 * @return DataDownloadResponse The download.
+	 */
+	private function documentResponse(array $account, array $link): DataDownloadResponse {
+		$objectType = (string)($link['objectType'] ?? '');
+		$objectId = (string)($link['objectId'] ?? '');
+		$payload = $this->documentPayload(objectType: $objectType, objectId: $objectId);
+		if ($objectType === 'data-export') {
+			$payload = $this->exports->buildExport(account: $account);
+		}
+
+		return new DataDownloadResponse((string)json_encode($payload), $objectType . '-' . $objectId . '.json', 'application/json');
+	}//end documentResponse()
+
+	/**
+	 * The 410 answer of a legitimately issued but stale link, with the re-download hint.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function linkExpired(): JSONResponse {
+		return new JSONResponse(
+			['errorCode' => 'linkExpired', 'message' => 'Deze link is verlopen. Download het document opnieuw vanuit het portaal.'],
+			Http::STATUS_GONE
+		);
+	}//end linkExpired()
+
+	/**
+	 * The opaque not-found answer every refusal shares.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function notFound(): JSONResponse {
+		return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
+	}//end notFound()
 
 	/**
 	 * Ensure an account can access an object of a given type (currently

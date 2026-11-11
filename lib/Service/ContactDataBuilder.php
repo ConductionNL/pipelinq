@@ -91,20 +91,9 @@ class ContactDataBuilder {
 			$industry = $org;
 		}
 
-		$emails = $this->extractTypedEntries(value: ($ncContact['EMAIL'] ?? null));
-		$phones = $this->extractTypedEntries(value: ($ncContact['TEL'] ?? null));
-
-		$data = [
-			'name' => $name,
-			'type' => $clientType,
-			'email' => $emails[0]['value'] ?? '',
-			'phone' => $phones[0]['value'] ?? '',
-			'emails' => $emails,
-			'phones' => $phones,
-			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
-			'website' => $this->extractFirstValue(value: ($ncContact['URL'] ?? '')),
-			'contactsUid' => $uid,
-		];
+		$data = ['name' => $name, 'type' => $clientType]
+			+ $this->clientChannels(ncContact: $ncContact)
+			+ ['contactsUid' => $uid];
 
 		// Scalar values are filtered out when empty; `emails`/`phones`/
 		// `socialProfiles` are arrays (never `''`) so array_filter's
@@ -127,6 +116,27 @@ class ContactDataBuilder {
 
 		return $data;
 	}//end buildClientImportData()
+
+	/**
+	 * A client's channels from the card: first email and phone, the typed lists, social profiles and website.
+	 *
+	 * @param array $ncContact The Nextcloud contact data.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function clientChannels(array $ncContact): array {
+		$emails = $this->extractTypedEntries(value: ($ncContact['EMAIL'] ?? null));
+		$phones = $this->extractTypedEntries(value: ($ncContact['TEL'] ?? null));
+
+		return [
+			'email' => $emails[0]['value'] ?? '',
+			'phone' => $phones[0]['value'] ?? '',
+			'emails' => $emails,
+			'phones' => $phones,
+			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
+			'website' => $this->extractFirstValue(value: ($ncContact['URL'] ?? '')),
+		];
+	}//end clientChannels()
 
 	/**
 	 * Build contact person data from a Nextcloud contact.
@@ -265,49 +275,69 @@ class ContactDataBuilder {
 	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	private function extractSocialProfiles(mixed $value): array {
-		$items = $this->normaliseToList(value: $value);
-
 		$profiles = [];
-		foreach ($items as $item) {
-			$raw = self::itemValue(item: $item);
-
-			if ($raw === '') {
-				continue;
+		foreach ($this->normaliseToList(value: $value) as $item) {
+			$profile = $this->socialProfile(item: $item);
+			if ($profile !== null) {
+				$profiles[] = $profile;
 			}
-
-			$typeRaw = '';
-			if (is_array($item) === true) {
-				$typeRaw = (string)($item['type'] ?? '');
-			}
-
-			$typeRaw = strtolower($typeRaw);
-
-			$network = 'other';
-			if (in_array($typeRaw, self::SOCIAL_NETWORKS, true) === true) {
-				$network = $typeRaw;
-			}
-
-			$isUrl = (str_starts_with($raw, 'http://') === true || str_starts_with($raw, 'https://') === true);
-
-			$handle = $raw;
-			$url = '';
-			if ($isUrl === true) {
-				$handle = '';
-				$url = $raw;
-			}
-
-			$profiles[] = [
-				'network' => $network,
-				'handle' => $handle,
-				'url' => $url,
-				'verified' => false,
-				'followedByUs' => false,
-				'followsUs' => false,
-			];
 		}
 
 		return $profiles;
 	}//end extractSocialProfiles()
+
+	/**
+	 * One X-SOCIALPROFILE item as a profile, or null when it carries no value.
+	 *
+	 * @param mixed $item The vCard item: a value, or `{type, value}`.
+	 *
+	 * @return array{network:string,handle:string,url:string,verified:bool,followedByUs:bool,followsUs:bool}|null The profile.
+	 */
+	private function socialProfile(mixed $item): ?array {
+		$raw = self::itemValue(item: $item);
+		if ($raw === '') {
+			return null;
+		}
+
+		$isUrl = (str_starts_with($raw, 'http://') === true || str_starts_with($raw, 'https://') === true);
+
+		$handle = $raw;
+		$url = '';
+		if ($isUrl === true) {
+			$handle = '';
+			$url = $raw;
+		}
+
+		return [
+			'network' => $this->socialNetworkOf(item: $item),
+			'handle' => $handle,
+			'url' => $url,
+			'verified' => false,
+			'followedByUs' => false,
+			'followsUs' => false,
+		];
+	}//end socialProfile()
+
+	/**
+	 * The item's network: its TYPE when it names a known network (case-insensitive), else `other`.
+	 *
+	 * @param mixed $item The vCard item.
+	 *
+	 * @return string The network.
+	 */
+	private function socialNetworkOf(mixed $item): string {
+		$typeRaw = '';
+		if (is_array($item) === true) {
+			$typeRaw = (string)($item['type'] ?? '');
+		}
+
+		$typeRaw = strtolower($typeRaw);
+		if (in_array($typeRaw, self::SOCIAL_NETWORKS, true) === true) {
+			return $typeRaw;
+		}
+
+		return 'other';
+	}//end socialNetworkOf()
 
 	/**
 	 * Normalise a vCard property value (string, untyped array, single

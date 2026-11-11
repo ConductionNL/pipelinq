@@ -275,4 +275,89 @@ final class RenameDutchColumnsTest extends TestCase {
 	public function testHasAHumanReadableName(): void {
 		self::assertNotSame('', trim($this->step->getName()));
 	}//end testHasAHumanReadableName()
+
+	/**
+	 * Golden: every statement, warning and the summary of a run over two shard tables.
+	 *
+	 * Table 42 holds a Dutch column alone (renamed), a Dutch column next to its
+	 * English one (back-filled), and an unmapped column; table 43 holds a Dutch
+	 * column whose rename fails. A mapped column that is absent is left alone.
+	 *
+	 * @return void
+	 */
+	public function testRunIssuesExactlyTheseStatements(): void {
+		$registers = $this->createMock(\OCP\DB\IResult::class);
+		$registers->method('fetchAll')->willReturn([7]);
+		$this->db->method('executeQuery')->willReturn($registers);
+
+		$tables = $this->createMock(\OCP\DB\IPreparedStatement::class);
+		$tables->method('fetch')->willReturnOnConsecutiveCalls(
+			['table_name' => 'oc_openregister_table_7_42'],
+			['table_name' => 'oc_openregister_table_7_43'],
+			['table_name' => 'oc_other_table'],
+			['table_name' => 'oc_openregister_table_7_42_archive'],
+			['table_name' => 'oc_openregister_table_8_1'],
+			['table_name' => 'oc_openregister_table_7_42'],
+			false
+		);
+		$columns42 = $this->createMock(\OCP\DB\IPreparedStatement::class);
+		$columns42->method('fetch')->willReturnOnConsecutiveCalls(
+			['column_name' => 'aangemaakt'],
+			['column_name' => 'aantal'],
+			['column_name' => 'count'],
+			['column_name' => 'uuid'],
+			false
+		);
+		$columns43 = $this->createMock(\OCP\DB\IPreparedStatement::class);
+		$columns43->method('fetch')->willReturnOnConsecutiveCalls(['column_name' => 'actie'], false);
+		$this->db->method('prepare')->willReturnOnConsecutiveCalls($tables, $columns42, $columns43);
+
+		$platform = $this->getMockBuilder(\stdClass::class)
+			->addMethods(['quoteSingleIdentifier'])->getMock();
+		$platform->method('quoteSingleIdentifier')->willReturnCallback(static fn (string $id): string => '"'.$id.'"');
+		$this->db->method('getDatabasePlatform')->willReturn($platform);
+
+		$statements = [];
+		$this->db->method('executeStatement')->willReturnCallback(
+			static function (string $sql) use (&$statements): int {
+				$statements[] = $sql;
+				if (str_contains($sql, '_43') === true) {
+					throw new \OCP\DB\Exception('locked');
+				}
+
+				return 1;
+			}
+		);
+		$warnings = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			static function (string $message, array $context = []) use (&$warnings): void {
+				$warnings[] = [$message, $context];
+			}
+		);
+		$infos = [];
+		$output = $this->createMock(IOutput::class);
+		$output->method('info')->willReturnCallback(
+			static function (string $message) use (&$infos): void {
+				$infos[] = $message;
+			}
+		);
+
+		(new RenameDutchColumns($this->db, $logger))->run($output);
+
+		$failed = 'ALTER TABLE "oc_openregister_table_7_43" RENAME COLUMN "actie" TO "action"';
+		self::assertSame(
+			[
+				'ALTER TABLE "oc_openregister_table_7_42" RENAME COLUMN "aangemaakt" TO "created"',
+				'UPDATE "oc_openregister_table_7_42" SET "count" = "aantal" WHERE "count" IS NULL AND "aantal" IS NOT NULL',
+				$failed,
+			],
+			$statements
+		);
+		self::assertSame(
+			[['RenameDutchColumns: statement failed; leaving the column as it was.', ['sql' => $failed, 'exception' => 'locked']]],
+			$warnings
+		);
+		self::assertSame(['RenameDutchColumns: 1 renamed, 1 back-filled, 0 refused, across 2 shard table(s).'], $infos);
+	}//end testRunIssuesExactlyTheseStatements()
 }//end class

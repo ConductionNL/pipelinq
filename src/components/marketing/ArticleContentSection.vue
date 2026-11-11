@@ -169,6 +169,7 @@ import {
 	transitionArticle,
 } from '../../services/articlesApi.js'
 import { chipForStatus, transitionsForStatus } from '../../services/articleStatus.js'
+import { sectionValues } from '../../utils/sectionContext.js'
 
 export default {
 	name: 'ArticleContentSection',
@@ -359,9 +360,7 @@ export default {
 		 * @return {string} The id, or an empty string.
 		 */
 		contextId() {
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+			const bag = sectionValues(this.cnSectionContext)
 			return (bag && (bag.objectId || bag.articleId)) || ''
 		},
 

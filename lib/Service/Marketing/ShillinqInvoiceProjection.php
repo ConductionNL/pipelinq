@@ -122,23 +122,38 @@ class ShillinqInvoiceProjection {
 
 		$lines = [];
 		foreach ($value as $line) {
-			if (is_array($line) === false) {
-				continue;
+			$projected = $this->lineOf(line: $line);
+			if ($projected !== null) {
+				$lines[] = $projected;
 			}
-
-			$itemName = trim((string)($line['itemName'] ?? ''));
-			if ($itemName === '') {
-				continue;
-			}
-
-			$lines[] = [
-				'itemName' => $itemName,
-				'netAmount' => (float)($line['netAmount'] ?? 0),
-				'quantity' => (float)($line['quantity'] ?? 0),
-				'unitCode' => (string)($line['unitCode'] ?? ''),
-			];
 		}
 
 		return $lines;
 	}//end lines()
+
+	/**
+	 * One invoice line with its trimmed name, amounts as numbers and unit;
+	 * null for a line that is not a list or has no name.
+	 *
+	 * @param mixed $line The invoice line.
+	 *
+	 * @return array{itemName: string, netAmount: float, quantity: float, unitCode: string}|null
+	 */
+	private function lineOf(mixed $line): ?array {
+		$itemName = '';
+		if (is_array($line) === true) {
+			$itemName = trim((string)($line['itemName'] ?? ''));
+		}
+
+		if ($itemName === '') {
+			return null;
+		}
+
+		return [
+			'itemName' => $itemName,
+			'netAmount' => (float)($line['netAmount'] ?? 0),
+			'quantity' => (float)($line['quantity'] ?? 0),
+			'unitCode' => (string)($line['unitCode'] ?? ''),
+		];
+	}//end lineOf()
 }//end class

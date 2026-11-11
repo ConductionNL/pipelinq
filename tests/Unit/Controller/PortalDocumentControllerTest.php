@@ -638,4 +638,53 @@ class PortalDocumentControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 		$this->assertSame('notFound', $response->getData()['errorCode']);
 	}//end testDownloadOfADataExportLinkStillRequiresALiveAccount()
+	/**
+	 * Golden: every refusal answers the exact status and body, and none of them is audited.
+	 *
+	 * @return void
+	 */
+	public function testDownloadRefusalsAnswerExactlyAndAreNotAudited(): void {
+		$notFound = [Http::STATUS_NOT_FOUND, ['errorCode' => 'notFound', 'message' => 'Niet gevonden.']];
+		$cases = [
+			'expired' => [self::ACCOUNT, self::OWN_INVOICE, $this->issueToken('inv-own', issuedAt: (self::NOW - 3600)),
+				[Http::STATUS_GONE, ['errorCode' => 'linkExpired', 'message' => 'Deze link is verlopen. Download het document opnieuw vanuit het portaal.']]],
+			'malformed' => [self::ACCOUNT, self::OWN_INVOICE, 'not-a-token', $notFound],
+			'unknown account' => [null, self::OWN_INVOICE, $this->issueToken('inv-own'), $notFound],
+			'closed account' => [array_merge(self::ACCOUNT, ['status' => 'closed']), self::OWN_INVOICE, $this->issueToken('inv-own'), $notFound],
+			'foreign document' => [self::ACCOUNT, self::FOREIGN_INVOICE, $this->issueToken('inv-foreign'), $notFound],
+			'empty object id' => [self::ACCOUNT, self::OWN_INVOICE, $this->issueToken(''), $notFound],
+			'closed account data export' => [array_merge(self::ACCOUNT, ['status' => 'closed']), null, $this->issueToken('acct-1', objectType: 'data-export'), $notFound],
+		];
+		foreach ($cases as $name => [$account, $document, $token, $expected]) {
+			$this->repository = $this->createMock(PortalObjectRepository::class);
+			$this->repository->method('find')->willReturn($account);
+			$this->reader = $this->createMock(MainRegisterReader::class);
+			$this->reader->method('find')->willReturn($document);
+			$this->audit = $this->createMock(PortalAuditService::class);
+			$this->audit->expects($this->never())->method('log');
+
+			$response = $this->build()->download($token);
+
+			$this->assertInstanceOf(JSONResponse::class, $response, $name);
+			$this->assertSame($expected, [$response->getStatus(), $response->getData()], $name);
+		}
+	}//end testDownloadRefusalsAnswerExactlyAndAreNotAudited()
+
+	/**
+	 * Golden: an account without a status counts as active; the file is named type-id.json.
+	 *
+	 * @return void
+	 */
+	public function testDownloadTreatsAMissingStatusAsActive(): void {
+		$account = self::ACCOUNT;
+		unset($account['status']);
+		$this->repository->method('find')->willReturn($account);
+		$this->reader->method('find')->willReturn(self::OWN_INVOICE);
+
+		$response = $this->build()->download($this->issueToken('inv-own'));
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertStringContainsString('invoice-inv-own.json', $this->ownHeaders($response)['Content-Disposition']);
+		$this->assertSame(['objectType', 'objectId', 'generatedAt'], array_keys(json_decode($response->render(), true)));
+	}//end testDownloadTreatsAMissingStatusAsActive()
 }//end class

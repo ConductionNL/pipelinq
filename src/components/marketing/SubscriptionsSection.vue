@@ -335,22 +335,14 @@ export default {
 		 * @return {Promise<void>} Resolves when the rows are in place.
 		 */
 		async load() {
-			const listId = this.listId || this.contextId('listId')
-			const contactId = this.contactId || this.contextId('contactId')
+			const { listId, contactId } = this.subscriptionsOf()
 			if (!listId && !contactId) {
 				return
 			}
 			this.loading = true
 			this.error = ''
 			try {
-				if (listId) {
-					const envelope = await fetchListSubscriptions(listId)
-					this.rows = envelope.data || []
-					this.counts = envelope.counts || countByState(this.rows)
-				} else {
-					this.rows = await fetchContactSubscriptions(contactId)
-					this.counts = countByState(this.rows)
-				}
+				await (listId ? this.loadListRows(listId) : this.loadContactRows(contactId))
 			} catch {
 				this.error = this.t(
 					'pipelinq',
@@ -428,13 +420,61 @@ export default {
 		 * @return {string} The id, or an empty string.
 		 */
 		contextId(key) {
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+			const bag = this.sectionBag()
 			if (!bag) {
 				return ''
 			}
 			return (key === 'listId' ? bag.listId : bag.contactId) || ''
+		},
+
+		/**
+		 * What the page host resolved, unwrapped when it is a ref.
+		 *
+		 * @return {object|null} The host's values.
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+		 */
+		sectionBag() {
+			const ctx = this.cnSectionContext
+			return ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+		},
+
+		/**
+		 * Whose subscriptions to show: the bound list or contact, else the one
+		 * the page host resolved.
+		 *
+		 * @return {{listId: string, contactId: string}} The ids.
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+		 */
+		subscriptionsOf() {
+			const listId = this.listId || this.contextId('listId')
+			const contactId = this.contactId || this.contextId('contactId')
+			return { listId, contactId }
+		},
+
+		/**
+		 * A contact's subscriptions, counted here.
+		 *
+		 * @param {string} contactId The contact.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 */
+		async loadContactRows(contactId) {
+			this.rows = await fetchContactSubscriptions(contactId)
+			this.counts = countByState(this.rows)
+		},
+
+		/**
+		 * A list's subscriptions, with the counts the server gave or else
+		 * counted here.
+		 *
+		 * @param {string} listId The list.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 */
+		async loadListRows(listId) {
+			const envelope = await fetchListSubscriptions(listId)
+			this.rows = envelope.data || []
+			this.counts = envelope.counts || countByState(this.rows)
 		},
 
 		/**

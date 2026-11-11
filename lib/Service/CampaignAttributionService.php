@@ -205,24 +205,9 @@ class CampaignAttributionService {
 		$customerRef = $this->customerRefFor(lead: $lead);
 		if ($customerRef !== '') {
 			$invoices = $this->invoices->paidInvoicesFor(customerRef: $customerRef, from: $from, to: $to);
-			$total = 0.0;
-			$ids = [];
-			foreach ($invoices as $invoice) {
-				if (isset($claimed[$invoice['id']]) === true) {
-					continue;
-				}
-
-				$total += $invoice['amount'];
-				$ids[] = $invoice['id'];
-			}
-
-			if ($ids !== []) {
-				return [
-					'basis' => self::BASIS_PAID_INVOICE,
-					'value' => $total,
-					'currency' => 'EUR',
-					'invoiceIds' => $ids,
-				];
+			$close = self::invoiceClose(invoices: $invoices, claimed: $claimed);
+			if ($close !== null) {
+				return $close;
 			}
 		}
 
@@ -237,6 +222,38 @@ class CampaignAttributionService {
 
 		return ['basis' => self::BASIS_OPEN, 'value' => 0.0, 'currency' => 'EUR', 'invoiceIds' => []];
 	}//end closeFor()
+
+	/**
+	 * The paid-invoice close over the invoices no other lead counted yet, or null when none is left.
+	 *
+	 * @param array<int, array<string, mixed>> $invoices The client's paid invoices in the window.
+	 * @param array<string, string>            $claimed  Invoice id to the lead that already counted it.
+	 *
+	 * @return array{basis: string, value: float, currency: string, invoiceIds: array<int, string>}|null
+	 */
+	private static function invoiceClose(array $invoices, array $claimed): ?array {
+		$total = 0.0;
+		$ids = [];
+		foreach ($invoices as $invoice) {
+			if (isset($claimed[$invoice['id']]) === true) {
+				continue;
+			}
+
+			$total += $invoice['amount'];
+			$ids[] = $invoice['id'];
+		}
+
+		if ($ids === []) {
+			return null;
+		}
+
+		return [
+			'basis' => self::BASIS_PAID_INVOICE,
+			'value' => $total,
+			'currency' => 'EUR',
+			'invoiceIds' => $ids,
+		];
+	}//end invoiceClose()
 
 	/**
 	 * Whether a lead counts as won.

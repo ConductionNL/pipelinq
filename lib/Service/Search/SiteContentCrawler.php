@@ -118,52 +118,74 @@ class SiteContentCrawler {
 	 */
 	public function crawl(array $rows, int $limit = self::DEFAULT_LIMIT): array {
 		if ($this->egress->isConfigured(configKey: self::SOURCE_KEY) === false) {
-			return [
-				'crawled' => false,
-				'failure' => EgressResult::NOT_CONFIGURED,
-				'reason' => 'No crawl source is configured, so the content gap check did not run.',
-				'pages' => [],
-			];
+			return self::notCrawled(failure: EgressResult::NOT_CONFIGURED, reason: 'No crawl source is configured, so the content gap check did not run.');
 		}
 
 		$urls = $this->pagesToCrawl(rows: $rows, limit: $limit);
 		if ($urls === []) {
-			return [
-				'crawled' => false,
-				'failure' => EgressResult::NOT_CONFIGURED,
-				'reason' => 'No page has been shown in search yet, so there is nothing to crawl.',
-				'pages' => [],
-			];
+			return self::notCrawled(failure: EgressResult::NOT_CONFIGURED, reason: 'No page has been shown in search yet, so there is nothing to crawl.');
 		}
 
-		$pages = [];
-		$lastFailure = null;
-		$lastReason = '';
+		$read = $this->readPages(urls: $urls);
+		if ($read['pages'] === []) {
+			return self::notCrawled(failure: ($read['failure'] ?? EgressResult::UNAVAILABLE), reason: self::unreadReason(lastReason: $read['reason']));
+		}
+
+		return ['crawled' => true, 'failure' => null, 'reason' => '', 'pages' => $read['pages']];
+	}//end crawl()
+
+	/**
+	 * Read every page through the egress plane, keeping the last failure.
+	 *
+	 * @param array<int, string> $urls The pages to read.
+	 *
+	 * @return array{pages: array<int, array{url: string, text: string}>, failure: string|null, reason: string}
+	 */
+	private function readPages(array $urls): array {
+		$read = ['pages' => [], 'failure' => null, 'reason' => ''];
 		foreach ($urls as $url) {
 			$result = $this->egress->readUrl(configKey: self::SOURCE_KEY, url: $url);
 			if ($result->succeeded === false) {
-				$lastFailure = $result->failure;
-				$lastReason = $result->reason;
+				$read['failure'] = $result->failure;
+				$read['reason'] = $result->reason;
 				continue;
 			}
 
-			$pages[] = ['url' => $url, 'text' => $this->extractor->headline(html: $result->body)];
+			$read['pages'][] = ['url' => $url, 'text' => $this->extractor->headline(html: $result->body)];
 		}
 
-		if ($pages === []) {
-			$reason = $lastReason;
-			if ($reason === '') {
-				$reason = 'No page could be read, so the content gap check did not run.';
-			}
+		return $read;
+	}//end readPages()
 
-			return [
-				'crawled' => false,
-				'failure' => ($lastFailure ?? EgressResult::UNAVAILABLE),
-				'reason' => $reason,
-				'pages' => [],
-			];
+	/**
+	 * Why no page could be read: the last failure's reason, or a general one.
+	 *
+	 * @param string $lastReason The reason of the last failed read.
+	 *
+	 * @return string
+	 */
+	private static function unreadReason(string $lastReason): string {
+		if ($lastReason === '') {
+			return 'No page could be read, so the content gap check did not run.';
 		}
 
-		return ['crawled' => true, 'failure' => null, 'reason' => '', 'pages' => $pages];
-	}//end crawl()
+		return $lastReason;
+	}//end unreadReason()
+
+	/**
+	 * A crawl that did not run or read nothing.
+	 *
+	 * @param string $failure The failure code.
+	 * @param string $reason  Why, in words.
+	 *
+	 * @return array{crawled: bool, reason: string, failure: string, pages: array<int, mixed>}
+	 */
+	private static function notCrawled(string $failure, string $reason): array {
+		return [
+			'crawled' => false,
+			'failure' => $failure,
+			'reason' => $reason,
+			'pages' => [],
+		];
+	}//end notCrawled()
 }//end class

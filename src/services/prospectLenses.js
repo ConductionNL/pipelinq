@@ -28,14 +28,26 @@ export function matchesProspectLens(prospect, lens, now) {
 		return Number(prospect.fitScore) > GOOD_FIT_SCORE
 	}
 	if (lens === 2) {
-		const registered = prospect.registrationDate ? new Date(prospect.registrationDate) : null
-		if (!registered || Number.isNaN(registered.getTime())) {
-			return false
-		}
-		const age = now.getTime() - registered.getTime()
-		return age >= 0 && age <= WEEK_MS
+		return registeredWithinWeek(prospect, now)
 	}
 	return true
+}
+
+/**
+ * Whether a company was registered in the seven days up to now.
+ *
+ * @param {object} prospect The company.
+ * @param {Date} now The current moment.
+ * @return {boolean}
+ * @spec openspec/specs/prospect-discovery/spec.md
+ */
+function registeredWithinWeek(prospect, now) {
+	const registered = prospect.registrationDate ? new Date(prospect.registrationDate) : null
+	if (!registered || Number.isNaN(registered.getTime())) {
+		return false
+	}
+	const age = now.getTime() - registered.getTime()
+	return age >= 0 && age <= WEEK_MS
 }
 
 /**
@@ -49,15 +61,57 @@ export function matchesProspectLens(prospect, lens, now) {
  * @spec openspec/specs/prospect-discovery/spec.md
  */
 export function prospectMatches(prospect, search, filters) {
+	if (!matchesFilters(prospect, filters)) {
+		return false
+	}
+	return matchesSearch(prospect, search)
+}
+
+/**
+ * Whether a company has one of the chosen values for every field with a
+ * choice.
+ *
+ * @param {object} prospect The company.
+ * @param {{[field: string]: string[]}} filters The chosen values per field.
+ * @return {boolean}
+ * @spec openspec/specs/prospect-discovery/spec.md
+ */
+function matchesFilters(prospect, filters) {
 	for (const [field, values] of Object.entries(filters || {})) {
-		if (!Array.isArray(values) || values.length === 0) {
-			continue
-		}
-		const value = field.split('.').reduce((obj, key) => (obj == null ? obj : obj[key]), prospect)
-		if (!values.includes(String(value ?? ''))) {
+		if (isChosen(values) && !values.includes(String(fieldValue(prospect, field) ?? ''))) {
 			return false
 		}
 	}
+	return true
+}
+
+/**
+ * @param {unknown} values A filter's chosen values.
+ * @return {boolean} Whether any value was chosen.
+ */
+function isChosen(values) {
+	return Array.isArray(values) && values.length > 0
+}
+
+/**
+ * @param {object} prospect The company.
+ * @param {string} field A dotted path, such as `address.city`.
+ * @return {unknown} The value at that path.
+ */
+function fieldValue(prospect, field) {
+	return field.split('.').reduce((obj, key) => (obj == null ? obj : obj[key]), prospect)
+}
+
+/**
+ * Whether the company, SBI code, SBI description or place contains the
+ * search text; an empty search matches every company.
+ *
+ * @param {object} prospect The company.
+ * @param {string} search The search text.
+ * @return {boolean}
+ * @spec openspec/specs/prospect-discovery/spec.md
+ */
+function matchesSearch(prospect, search) {
 	const query = (search || '').trim().toLowerCase()
 	if (query === '') {
 		return true

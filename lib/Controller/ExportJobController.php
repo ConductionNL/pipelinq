@@ -38,12 +38,8 @@ use OCA\Pipelinq\Service\Export\ExportAccessPolicy;
 use OCA\Pipelinq\Service\Export\ExportDestinationService;
 use OCA\Pipelinq\Service\Export\ExportJobService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -299,12 +295,7 @@ class ExportJobController extends Controller {
 	 * @return string The UID.
 	 */
 	private function actingUser(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
+		return $this->exportGate()->userId();
 	}//end actingUser()
 
 	/**
@@ -332,29 +323,21 @@ class ExportJobController extends Controller {
 	 * @return JSONResponse The response.
 	 */
 	private function requireExportAdmin(callable $action, string $label): JSONResponse {
-		$uid = $this->actingUser();
-		if ($uid === '') {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		$refusal = $this->exportGate()->refusal(l10n: $this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		if ($this->policy->isExportAdmin(userId: $uid) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Insufficient permissions')], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-		} catch (\Throwable $e) {
-			$this->logger->error('ExportJobController::' . $label . ' failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		$response = new ExportActionResponse(l10n: $this->l10n, logger: $this->logger);
+		return $response->respond(action: $action, label: 'ExportJobController::' . $label);
 	}//end requireExportAdmin()
+
+	/**
+	 * The export-admin gate over this request's session.
+	 *
+	 * @return ExportAdminGate The gate.
+	 */
+	private function exportGate(): ExportAdminGate {
+		return new ExportAdminGate(userSession: $this->userSession, policy: $this->policy);
+	}//end exportGate()
 }//end class

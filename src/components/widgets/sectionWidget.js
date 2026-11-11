@@ -53,7 +53,7 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 			return {
 				cnSectionContext: computed(() => ({
 					object: this.objectData,
-					objectId: String(this.objectId || this.objectData?.id || ''),
+					objectId: widgetObjectId(this),
 				})),
 			}
 		},
@@ -63,34 +63,73 @@ export function sectionWidget(name, section, mapProps, options = {}) {
 			objectData: { type: Object, default: null },
 			content: { type: Object, default: () => ({}) },
 		},
+		methods: {
+			/**
+			 * @param {string} objectId The page's object id.
+			 * @return {object} The section's props, with the onHeader relay.
+			 */
+			sectionProps(objectId) {
+				return {
+					...mapProps({
+						objectId,
+						objectData: this.objectData || {},
+						content: this.content || {},
+					}),
+					// The title row a section reports goes on to the card the detail host draws.
+					onHeader: (header) => this.$emit('header', header),
+				}
+			},
+
+			/**
+			 * @return {boolean} Whether the section is drawn without a card of its own.
+			 */
+			isBare() {
+				return !options.card || this.content?.card === false
+			},
+		},
 		render() {
-			const objectId = String(this.objectId || this.objectData?.id || '')
+			const objectId = widgetObjectId(this)
 			if (!objectId) {
 				return null
 			}
-			const inner = h(section, {
-				...mapProps({
-					objectId,
-					objectData: this.objectData || {},
-					content: this.content || {},
-				}),
-				// The title row a section reports goes on to the card the detail host draws.
-				onHeader: (header) => this.$emit('header', header),
-			})
-			if (!options.card || this.content?.card === false) {
+			const inner = h(section, this.sectionProps(objectId))
+			if (this.isBare()) {
 				return inner
 			}
-			const title = this.content?.title || ''
-			const translate =
-				typeof this.cnTranslate === 'function'
-					? this.cnTranslate
-					: (key) => key
-			const subtitle = this.content?.subtitle || ''
 			return h(
 				CnDetailCard,
-				{ title: title ? translate(title) : '', subtitle: subtitle ? translate(subtitle) : '' },
+				cardHeading(this.content, pageTranslate(this.cnTranslate)),
 				{ default: () => inner },
 			)
 		},
 	}
+}
+
+/**
+ * @param {{objectId: (string|number), objectData: ?object}} widget The widget.
+ * @return {string} The page's object id, from the prop or the object; '' without one.
+ */
+function widgetObjectId(widget) {
+	return String(widget.objectId || widget.objectData?.id || '')
+}
+
+/**
+ * @param {?((key: string) => string)} cnTranslate The page's translate, when it provides one.
+ * @return {(key: string) => string} The translate to use; the key itself without one.
+ */
+function pageTranslate(cnTranslate) {
+	return typeof cnTranslate === 'function'
+		? cnTranslate
+		: (key) => key
+}
+
+/**
+ * @param {?object} content The widget's content.
+ * @param {(key: string) => string} translate The page's translate.
+ * @return {{title: string, subtitle: string}} The card's title and the line beside it, translated.
+ */
+function cardHeading(content, translate) {
+	const title = content?.title || ''
+	const subtitle = content?.subtitle || ''
+	return { title: title ? translate(title) : '', subtitle: subtitle ? translate(subtitle) : '' }
 }

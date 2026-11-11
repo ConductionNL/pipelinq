@@ -181,20 +181,25 @@ class SocialBrokerGateway {
 	 */
 	public function readiness(string $brokerProvider): array {
 		if ($brokerProvider === '') {
-			return [
-				'state' => self::NOT_CONFIGURED,
-				'reason' => 'This network has no developer application yet, so an account cannot be connected.',
-			];
+			return self::notConfigured(reason: 'This network has no developer application yet, so an account cannot be connected.');
 		}
 
 		if (class_exists(self::CATALOGUE_CLASS) === false) {
-			return [
-				'state' => self::NOT_CONFIGURED,
-				'reason' => 'OpenRegister is not available, so no network can be connected.',
-			];
+			return self::notConfigured(reason: 'OpenRegister is not available, so no network can be connected.');
 		}
 
-		$entry = null;
+		return $this->catalogueReadiness(brokerProvider: $brokerProvider);
+	}//end readiness()
+
+	/**
+	 * The readiness the provider catalogue gives a provider; not configured
+	 * (logged) when the catalogue cannot be read.
+	 *
+	 * @param string $brokerProvider The catalogue provider identifier.
+	 *
+	 * @return array{state: string, reason: string}
+	 */
+	private function catalogueReadiness(string $brokerProvider): array {
 		try {
 			$catalogue = $this->container->get(self::CATALOGUE_CLASS);
 			$entry = $catalogue->get($brokerProvider);
@@ -204,17 +209,22 @@ class SocialBrokerGateway {
 				['provider' => $brokerProvider, 'exception' => $failure->getMessage()]
 			);
 
-			return [
-				'state' => self::NOT_CONFIGURED,
-				'reason' => 'The credential provider catalogue could not be read.',
-			];
+			return self::notConfigured(reason: 'The credential provider catalogue could not be read.');
 		}
 
+		return self::entryReadiness(entry: $entry);
+	}//end catalogueReadiness()
+
+	/**
+	 * The readiness of a catalogue entry: missing, preview or ready.
+	 *
+	 * @param mixed $entry The catalogue entry, or what the catalogue answered instead.
+	 *
+	 * @return array{state: string, reason: string}
+	 */
+	private static function entryReadiness($entry): array {
 		if (is_array($entry) === false) {
-			return [
-				'state' => self::NOT_CONFIGURED,
-				'reason' => 'No developer application is filed for this network yet, so an account cannot be connected.',
-			];
+			return self::notConfigured(reason: 'No developer application is filed for this network yet, so an account cannot be connected.');
 		}
 
 		if (($entry['preview'] ?? false) === true) {
@@ -225,7 +235,21 @@ class SocialBrokerGateway {
 		}
 
 		return ['state' => self::READY, 'reason' => ''];
-	}//end readiness()
+	}//end entryReadiness()
+
+	/**
+	 * A not-configured readiness with its reason.
+	 *
+	 * @param string $reason Why the network cannot be used.
+	 *
+	 * @return array{state: string, reason: string}
+	 */
+	private static function notConfigured(string $reason): array {
+		return [
+			'state' => self::NOT_CONFIGURED,
+			'reason' => $reason,
+		];
+	}//end notConfigured()
 
 	/**
 	 * Make one call to a network through the broker.
@@ -280,10 +304,10 @@ class SocialBrokerGateway {
 				$actingUserId
 			);
 		} catch (Throwable $failure) {
-			return $this->classify(failure: $failure, method: $method, path: $path);
+			return $this->classify(failure: $failure, call: new BrokeredCall(method: $method, path: $path));
 		}
 
-		return $this->interpret(response: $response, method: $method, path: $path);
+		return $this->interpret(response: $response, call: new BrokeredCall(method: $method, path: $path));
 	}//end request()
 
 	/**
@@ -294,18 +318,17 @@ class SocialBrokerGateway {
 	 * would answer true for both and every dead grant would be reported as a
 	 * permission problem, which is the one diagnosis a person cannot act on.
 	 *
-	 * @param Throwable $failure What the broker threw.
-	 * @param string $method The method that was attempted, for the log.
-	 * @param string $path The path that was attempted, for the log.
+	 * @param Throwable    $failure What the broker threw.
+	 * @param BrokeredCall $call    The method and path that were attempted, for the log.
 	 *
 	 * @return SocialGatewayResult The named failure.
 	 */
-	private function classify(Throwable $failure, string $method, string $path): SocialGatewayResult {
+	private function classify(Throwable $failure, BrokeredCall $call): SocialGatewayResult {
 		// Never the message, never the body, never the credential: the broker
 		// keeps secrets out of its own exceptions and so does this log line.
 		$this->logger->warning(
 			'SocialBrokerGateway: the brokered call failed',
-			['method' => strtoupper($method), 'path' => $path, 'type' => $failure::class]
+			['method' => strtoupper($call->method), 'path' => $call->path, 'type' => $failure::class]
 		);
 
 		if (is_a($failure, self::RELINK_EXCEPTION) === true) {
@@ -331,13 +354,12 @@ class SocialBrokerGateway {
 	/**
 	 * Turn the broker's answer into a result.
 	 *
-	 * @param mixed $response The broker's `{status, headers, body}` array.
-	 * @param string $method The method that was called, for the log.
-	 * @param string $path The path that was called, for the log.
+	 * @param mixed        $response The broker's `{status, headers, body}` array.
+	 * @param BrokeredCall $call     The method and path that were called, for the log.
 	 *
 	 * @return SocialGatewayResult The outcome.
 	 */
-	private function interpret(mixed $response, string $method, string $path): SocialGatewayResult {
+	private function interpret($response, BrokeredCall $call): SocialGatewayResult {
 		if (is_array($response) === false) {
 			return SocialGatewayResult::failed(
 				code: SocialGatewayResult::UNAVAILABLE,
@@ -346,8 +368,7 @@ class SocialBrokerGateway {
 		}
 
 		$status = (int)($response['status'] ?? 0);
-		$raw = (string)($response['body'] ?? '');
-		$decoded = json_decode($raw, true);
+		$decoded = json_decode((string)($response['body'] ?? ''), true);
 		if (is_array($decoded) === false) {
 			$decoded = [];
 		}
@@ -358,9 +379,22 @@ class SocialBrokerGateway {
 
 		$this->logger->warning(
 			'SocialBrokerGateway: the network refused the call',
-			['method' => strtoupper($method), 'path' => $path, 'status' => $status]
+			['method' => strtoupper($call->method), 'path' => $call->path, 'status' => $status]
 		);
 
+		return $this->refusal(status: $status, decoded: $decoded);
+	}//end interpret()
+
+	/**
+	 * The failure a refusing status names: a reconnect for 401/403, the
+	 * network's own words for another 4xx, a retryable error otherwise.
+	 *
+	 * @param int                  $status  The upstream status.
+	 * @param array<string, mixed> $decoded The decoded response body.
+	 *
+	 * @return SocialGatewayResult
+	 */
+	private function refusal(int $status, array $decoded): SocialGatewayResult {
 		if ($status === 401 || $status === 403) {
 			// A network answering 401 or 403 on a call the broker allowed means
 			// the grant no longer carries the scope it did, which a retry cannot
@@ -385,7 +419,7 @@ class SocialBrokerGateway {
 			reason: 'The network answered with an error of its own. This can be tried again.',
 			status: $status,
 		);
-	}//end interpret()
+	}//end refusal()
 
 	/**
 	 * The network's own refusal in one readable sentence.

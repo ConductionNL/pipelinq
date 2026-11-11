@@ -102,39 +102,53 @@ class PhoneNormaliser {
 		}
 
 		$country = $this->resolveDefaultCountry();
-
-		// Strip everything except digits and a single leading '+'.
-		$hasPlus = ($raw[0] === '+');
 		$digits = preg_replace('/[^0-9]/', '', $raw);
 		if ($digits === null || $digits === '') {
 			$this->logFailure(rawNumber: $rawNumber, reason: 'no digits in input');
 			return ['e164' => null, 'raw' => $rawNumber];
 		}
 
-		// Case 1: already prefixed with '+CC'.
-		if ($hasPlus === true) {
-			$e164 = '+' . $digits;
-			return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
-		}
-
-		// Case 2: international dialling via 00 prefix (e.g. 0031...).
-		if (str_starts_with($digits, '00') === true) {
-			$e164 = '+' . substr($digits, 2);
-			return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
-		}
-
-		// Case 3: national leading '0' -- replace with country prefix.
-		if (str_starts_with($digits, '0') === true) {
-			$countryCode = (self::COUNTRY_PREFIX[$country] ?? '31');
-			$e164 = '+' . $countryCode . substr($digits, 1);
-			return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
-		}
-
-		// Case 4: bare subscriber digits and we know the country -- still try.
-		$countryCode = (self::COUNTRY_PREFIX[$country] ?? '31');
-		$e164 = '+' . $countryCode . $digits;
-		return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
+		$candidate = $this->candidate(dialled: $this->dialled(raw: $raw, digits: $digits), countryCode: (self::COUNTRY_PREFIX[$country] ?? '31'));
+		return ['e164' => $this->validate(candidate: $candidate, rawNumber: $rawNumber), 'raw' => $rawNumber];
 	}//end normaliseForOrg()
+
+	/**
+	 * The digits as dialled: a leading '+' is the same as dialling 00.
+	 *
+	 * @param string $raw    The trimmed input.
+	 * @param string $digits Its digits.
+	 *
+	 * @return string
+	 */
+	private function dialled(string $raw, string $digits): string {
+		if ($raw[0] === '+') {
+			return '00' . $digits;
+		}
+
+		return $digits;
+	}//end dialled()
+
+	/**
+	 * The E.164 candidate of dialled digits: international (00) as it is,
+	 * national (leading 0) with the country code instead of the 0, bare
+	 * subscriber digits with the country code in front.
+	 *
+	 * @param string $dialled     The dialled digits.
+	 * @param string $countryCode The default country's code.
+	 *
+	 * @return string
+	 */
+	private function candidate(string $dialled, string $countryCode): string {
+		if (str_starts_with($dialled, '00') === true) {
+			return '+' . substr($dialled, 2);
+		}
+
+		if (str_starts_with($dialled, '0') === true) {
+			return '+' . $countryCode . substr($dialled, 1);
+		}
+
+		return '+' . $countryCode . $dialled;
+	}//end candidate()
 
 	/**
 	 * Normalise the sender of an inbound SMS or WhatsApp callback to E.164.

@@ -71,24 +71,45 @@ export function isDraftFormEmpty(form, context = {}) {
 	if (!form) {
 		return true
 	}
+	return !hasTypedText(form) && !hasChangedPick(form, context) && !hasOtherReference(form, context)
+}
+
+/**
+ * @param {object} form The quick log form.
+ * @return {boolean} Whether a text field holds more than whitespace.
+ */
+function hasTypedText(form) {
+	return ['title', 'description', 'duration', 'notes']
+		.some((key) => typeof form[key] === 'string' && form[key].trim() !== '')
+}
+
+/**
+ * @param {object} form The quick log form.
+ * @param {{defaults: (object|undefined)}} context The form's presets.
+ * @return {boolean} Whether a pick differs from its preset.
+ */
+function hasChangedPick(form, context) {
 	const defaults = context.defaults || {}
-	for (const key of ['title', 'description', 'duration', 'notes']) {
-		if (typeof form[key] === 'string' && form[key].trim() !== '') {
-			return false
-		}
-	}
-	for (const key of ['channel', 'direction', 'outcome', 'contact']) {
-		if (form[key] && form[key] !== defaults[key]) {
-			return false
-		}
-	}
-	if (form.client && form.client !== (context.clientId || null)) {
-		return false
-	}
-	if (form.parentTicket && form.parentTicket !== (context.requestId || null)) {
-		return false
-	}
-	return true
+	return ['channel', 'direction', 'outcome', 'contact']
+		.some((key) => form[key] && form[key] !== defaults[key])
+}
+
+/**
+ * @param {object} form The quick log form.
+ * @param {{clientId: (string|null), requestId: (string|null)}} context Where the quick log was opened.
+ * @return {boolean} Whether the client or the request is another than the one it was opened on.
+ */
+function hasOtherReference(form, context) {
+	return isOtherThan(form.client, context.clientId) || isOtherThan(form.parentTicket, context.requestId)
+}
+
+/**
+ * @param {(string|null|undefined)} value The form's reference.
+ * @param {(string|null|undefined)} preset The reference the form was opened on.
+ * @return {boolean} Whether a reference is set and differs from the preset.
+ */
+function isOtherThan(value, preset) {
+	return Boolean(value) && value !== (preset || null)
 }
 
 /**
@@ -196,32 +217,63 @@ export function draftFormFrom(draft) {
  */
 export function pickDraft(drafts, context) {
 	const now = (context.now || new Date()).getTime()
-	const matching = []
-	for (const draft of drafts || []) {
-		const self = draft?.['@self'] || {}
-		if (
-			!draft
-			|| self.status !== 'draft'
-			|| self.owner !== context.author
-			|| draft.ticketType !== CONTACT_MOMENT_TYPE
-		) {
-			continue
-		}
-		const changed = Date.parse(draftChangedAt(draft))
-		if (Number.isNaN(changed) || now - changed > DRAFT_MAX_AGE_MS) {
-			continue
-		}
-		if (
-			(context.clientId === undefined || (draft.client || null) === (context.clientId || null))
-			&& (draft.parentTicket || null) === (context.requestId || null)
-		) {
-			matching.push(draft)
-		}
-	}
+	const matching = (drafts || []).filter(
+		(draft) => isOwnContactDraft(draft, context.author) && isFreshDraft(draft, now) && isDraftHere(draft, context),
+	)
 	matching.sort(
 		(a, b) => Date.parse(draftChangedAt(b)) - Date.parse(draftChangedAt(a)),
 	)
 	return matching[0] || null
+}
+
+/**
+ * @param {?object} draft The draft ticket.
+ * @param {string} author The agent.
+ * @return {boolean} Whether it is the agent's own contact moment in status draft.
+ */
+function isOwnContactDraft(draft, author) {
+	const self = draft?.['@self'] || {}
+	return Boolean(draft)
+		&& self.status === 'draft'
+		&& self.owner === author
+		&& draft.ticketType === CONTACT_MOMENT_TYPE
+}
+
+/**
+ * @param {object} draft The draft ticket.
+ * @param {number} now The current time in milliseconds.
+ * @return {boolean} Whether it has a readable change date within the maximum age.
+ */
+function isFreshDraft(draft, now) {
+	const changed = Date.parse(draftChangedAt(draft))
+	return !Number.isNaN(changed) && now - changed <= DRAFT_MAX_AGE_MS
+}
+
+/**
+ * @param {object} draft The draft ticket.
+ * @param {{clientId: (string|null|undefined), requestId: (string|null)}} context Where the quick log is open.
+ * @return {boolean} Whether it was typed on this client (when the context names one) and this request.
+ */
+function isDraftHere(draft, context) {
+	return isOnClient(draft, context.clientId) && isSameReference(draft.parentTicket, context.requestId)
+}
+
+/**
+ * @param {object} draft The draft ticket.
+ * @param {(string|null|undefined)} clientId The client the quick log is open on; undefined matches any.
+ * @return {boolean} Whether the draft was typed on that client.
+ */
+function isOnClient(draft, clientId) {
+	return clientId === undefined || isSameReference(draft.client, clientId)
+}
+
+/**
+ * @param {(string|null|undefined)} a A reference.
+ * @param {(string|null|undefined)} b Another reference.
+ * @return {boolean} Whether both name the same object, an empty reference matching another empty one.
+ */
+function isSameReference(a, b) {
+	return (a || null) === (b || null)
 }
 
 /**

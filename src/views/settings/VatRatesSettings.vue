@@ -53,6 +53,38 @@ import {
 const DEFAULT_RATES = { high: 21, low: 9, zero: 0, exempt: 0 }
 
 /**
+ * @param {string} stored The stored JSON, or nothing.
+ * @return {object} What it holds, or an empty object when it cannot be read.
+ * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+ */
+function storedRates(stored) {
+	try {
+		return JSON.parse(stored || '{}') || {}
+	} catch {
+		return {}
+	}
+}
+
+/**
+ * The typed rates as numbers, or null when one is not a number from 0 to 100.
+ *
+ * @param {object} rates The rates per VAT class, as typed.
+ * @return {object|null} The rates to store.
+ * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+ */
+function checkedRates(rates) {
+	const out = {}
+	for (const cls of Object.keys(DEFAULT_RATES)) {
+		const value = Number(rates[cls])
+		if (!Number.isFinite(value) || value < 0 || value > 100) {
+			return null
+		}
+		out[cls] = value
+	}
+	return out
+}
+
+/**
  * Read the stored `vat_rates` JSON over the Dutch defaults.
  *
  * @param {string} stored The stored JSON, or ''.
@@ -60,12 +92,7 @@ const DEFAULT_RATES = { high: 21, low: 9, zero: 0, exempt: 0 }
  * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
  */
 export function parseVatRates(stored) {
-	let parsed
-	try {
-		parsed = JSON.parse(stored || '{}') || {}
-	} catch {
-		parsed = {}
-	}
+	const parsed = storedRates(stored)
 	const rates = { ...DEFAULT_RATES }
 	for (const cls of Object.keys(DEFAULT_RATES)) {
 		const value = Number(parsed[cls])
@@ -141,35 +168,31 @@ export default {
 		 */
 		async save() {
 			this.message = ''
-			const out = {}
-			for (const cls of Object.keys(DEFAULT_RATES)) {
-				const value = Number(this.rates[cls])
-				if (!Number.isFinite(value) || value < 0 || value > 100) {
-					this.message = t(
-						'pipelinq',
-						'Each rate must be a number from 0 to 100.',
-					)
-					this.messageType = 'error'
-					return
-				}
-				out[cls] = value
+			const out = checkedRates(this.rates)
+			if (out === null) {
+				this.showMessage(t('pipelinq', 'Each rate must be a number from 0 to 100.'), 'error')
+				return
 			}
 			this.saving = true
 			try {
 				await axios.post(generateUrl('/apps/pipelinq/api/settings'), {
 					vat_rates: JSON.stringify(out),
 				})
-				this.message = t(
-					'pipelinq',
-					'VAT rates saved. Reload the app to see the new labels.',
-				)
-				this.messageType = 'success'
+				this.showMessage(t('pipelinq', 'VAT rates saved. Reload the app to see the new labels.'), 'success')
 			} catch {
-				this.message = t('pipelinq', 'Could not save the VAT rates.')
-				this.messageType = 'error'
+				this.showMessage(t('pipelinq', 'Could not save the VAT rates.'), 'error')
 			} finally {
 				this.saving = false
 			}
+		},
+
+		/**
+		 * @param {string} message The message to show.
+		 * @param {string} type Its kind: `success` or `error`.
+		 */
+		showMessage(message, type) {
+			this.message = message
+			this.messageType = type
 		},
 	},
 }

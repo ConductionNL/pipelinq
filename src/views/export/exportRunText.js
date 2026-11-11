@@ -34,8 +34,8 @@ export function exportMoment(value, now = new Date(), locale = userLocale()) {
 	if (value === null || value === undefined || value === '') {
 		return ''
 	}
-	const date = new Date(String(value))
-	if (!/^\d{4}-\d{2}-\d{2}T/.test(String(value)) || Number.isNaN(date.getTime())) {
+	const date = momentDate(value)
+	if (date === null) {
 		return String(value)
 	}
 	const options = { day: 'numeric', month: 'short' }
@@ -43,9 +43,67 @@ export function exportMoment(value, now = new Date(), locale = userLocale()) {
 		options.year = 'numeric'
 	}
 	const day = new Intl.DateTimeFormat(locale, options).format(date).replace(/\./g, '')
-	const pad = (v) => String(v).padStart(2, '0')
-	return `${day}, ${pad(date.getHours())}:${pad(date.getMinutes())}`
+	return `${day}, ${clockTime(date)}`
 }
+
+/**
+ * @param {unknown} value A stored value.
+ * @return {(Date|null)} The moment, when the value is a readable ISO moment; else null.
+ */
+function momentDate(value) {
+	const date = new Date(String(value))
+	if (!/^\d{4}-\d{2}-\d{2}T/.test(String(value)) || Number.isNaN(date.getTime())) {
+		return null
+	}
+	return date
+}
+
+/**
+ * @param {Date} date A moment.
+ * @return {string} Its local time as HH:MM.
+ */
+function clockTime(date) {
+	const pad = (v) => String(v).padStart(2, '0')
+	return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+/**
+ * @param {object} job The job row.
+ * @return {string} Why the last run failed, or ''.
+ */
+function failedDetail(job) {
+	return job.lastRunError || ''
+}
+
+/**
+ * @param {object} job The job row.
+ * @return {string} The files a partial run wrote, against the files expected when known.
+ */
+function partialDetail(job) {
+	const files = Number(job.lastRunFiles) || 0
+	const expected = Number(job.lastRunFilesExpected) || 0
+	return expected > 0
+		? t('pipelinq', '{files} of {expected} files', { files, expected })
+		: n('pipelinq', '{count} file', '{count} files', files, { count: files })
+}
+
+/**
+ * @param {object} job The job row.
+ * @param {string} locale The locale, for the number.
+ * @return {string} The rows the last run wrote.
+ */
+function rowsDetail(job, locale) {
+	const rows = Number(job.lastRunRows) || 0
+	return n('pipelinq', '{count} row', '{count} rows', rows, { count: rows.toLocaleString(locale) })
+}
+
+/**
+ * The detail of a last run by its status; any other status reads its rows.
+ */
+const RUN_DETAILS = new Map([
+	['failed', failedDetail],
+	['partial', partialDetail],
+])
 
 /**
  * The line under the last run's status: when, then the rows it wrote, the
@@ -62,19 +120,7 @@ export function lastRunLine(job, now = new Date(), locale = userLocale()) {
 	if (when === '') {
 		return ''
 	}
-	let detail
-	if (job.lastRunStatus === 'failed') {
-		detail = job.lastRunError || ''
-	} else if (job.lastRunStatus === 'partial') {
-		const files = Number(job.lastRunFiles) || 0
-		const expected = Number(job.lastRunFilesExpected) || 0
-		detail = expected > 0
-			? t('pipelinq', '{files} of {expected} files', { files, expected })
-			: n('pipelinq', '{count} file', '{count} files', files, { count: files })
-	} else {
-		const rows = Number(job.lastRunRows) || 0
-		detail = n('pipelinq', '{count} row', '{count} rows', rows, { count: rows.toLocaleString(locale) })
-	}
+	const detail = (RUN_DETAILS.get(job.lastRunStatus) ?? rowsDetail)(job, locale)
 	return detail === '' ? when : t('pipelinq', '{when} · {detail}', { when, detail })
 }
 
@@ -98,7 +144,7 @@ const SHORTCUTS = {
  * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-reads-its-schedule-in-words
  */
 export function exportSchedule(value, locale = userLocale()) {
-	const written = typeof value === 'string' ? value.trim() : ''
+	const written = writtenSchedule(value)
 	if (written === '') {
 		return ''
 	}
@@ -106,29 +152,82 @@ export function exportSchedule(value, locale = userLocale()) {
 	if (fields.length !== 5) {
 		return written
 	}
-	const [minute, hour, day, month, weekday] = fields
-	const number = (field) => (/^\d+$/.test(field) ? Number(field) : null)
-	if (minute === '0' && hour === '*' && day === '*' && month === '*' && weekday === '*') {
+	return scheduleWords(fields, locale) ?? written
+}
+
+/**
+ * @param {unknown} value The schedule as stored.
+ * @return {string} The schedule as written, trimmed; '' for anything that is not text.
+ */
+function writtenSchedule(value) {
+	return typeof value === 'string' ? value.trim() : ''
+}
+
+/**
+ * @param {string} field A cron field.
+ * @return {(number|null)} The field as a number, or null when it is not a plain number.
+ */
+function cronNumber(field) {
+	return /^\d+$/.test(field) ? Number(field) : null
+}
+
+/**
+ * Five cron fields in words, when they have a shape people say.
+ *
+ * @param {Array<string>} fields Minute, hour, day, month and weekday.
+ * @param {string} locale The locale, for the weekday.
+ * @return {(string|null)} The schedule in words, or null.
+ */
+function scheduleWords(fields, locale) {
+	if (fields.join(' ') === '0 * * * *') {
 		return t('pipelinq', 'Every hour')
 	}
-	const m = number(minute)
-	const h = number(hour)
+	const [minute, hour, day, month, weekday] = fields
+	const m = cronNumber(minute)
+	const h = cronNumber(hour)
 	if (m === null || h === null || month !== '*') {
-		return written
+		return null
 	}
-	const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-	if (day === '*' && weekday === '*') {
-		return h < 6 ? t('pipelinq', 'Every night at {time}', { time }) : t('pipelinq', 'Every day at {time}', { time })
+	const at = { hour: h, time: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`, locale }
+	return dailyWords({ day, weekday }, at) ?? weeklyWords({ day, weekday }, at) ?? monthlyWords({ day, weekday }, at)
+}
+
+/**
+ * @param {{day: string, weekday: string}} date The day and weekday fields.
+ * @param {{hour: number, time: string}} at The time of day.
+ * @return {(string|null)} "Every night/day at …" for a schedule on every day, else null.
+ */
+function dailyWords(date, at) {
+	if (date.day !== '*' || date.weekday !== '*') {
+		return null
 	}
-	const w = number(weekday)
-	if (day === '*' && w !== null && w <= 7) {
-		// 4 January 1970 was a Sunday, so day 4 + w is that weekday.
-		const name = new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(1970, 0, 4 + (w % 7))))
-		return t('pipelinq', '{weekday} at {time}', { weekday: name.charAt(0).toLocaleUpperCase(locale) + name.slice(1), time })
+	return at.hour < 6 ? t('pipelinq', 'Every night at {time}', { time: at.time }) : t('pipelinq', 'Every day at {time}', { time: at.time })
+}
+
+/**
+ * @param {{day: string, weekday: string}} date The day and weekday fields.
+ * @param {{time: string, locale: string}} at The time of day and the locale.
+ * @return {(string|null)} "{weekday} at …" for a schedule on one weekday, else null.
+ */
+function weeklyWords(date, at) {
+	const w = cronNumber(date.weekday)
+	if (date.day !== '*' || w === null || w > 7) {
+		return null
 	}
-	const d = number(day)
-	if (d !== null && weekday === '*') {
-		return t('pipelinq', 'On day {day} of every month at {time}', { day: d, time })
+	// 4 January 1970 was a Sunday, so day 4 + w is that weekday.
+	const name = new Intl.DateTimeFormat(at.locale, { weekday: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(1970, 0, 4 + (w % 7))))
+	return t('pipelinq', '{weekday} at {time}', { weekday: name.charAt(0).toLocaleUpperCase(at.locale) + name.slice(1), time: at.time })
+}
+
+/**
+ * @param {{day: string, weekday: string}} date The day and weekday fields.
+ * @param {{time: string}} at The time of day.
+ * @return {(string|null)} "On day … of every month at …" for a schedule on one day of the month, else null.
+ */
+function monthlyWords(date, at) {
+	const d = cronNumber(date.day)
+	if (d === null || date.weekday !== '*') {
+		return null
 	}
-	return written
+	return t('pipelinq', 'On day {day} of every month at {time}', { day: d, time: at.time })
 }

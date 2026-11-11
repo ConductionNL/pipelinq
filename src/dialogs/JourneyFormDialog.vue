@@ -216,6 +216,7 @@ import {
 } from '@nextcloud/vue'
 import { flowStatusMessage } from '../services/journeyLabels.js'
 import { fetchJourney, saveJourney } from '../services/journeysApi.js'
+import hostedFormDialogMixin from './hostedFormDialogMixin.js'
 
 /**
  * @return {object} A blank journey form.
@@ -256,33 +257,7 @@ export default {
 		NcTextField,
 	},
 
-	inheritAttrs: false,
-
-	props: {
-		/** Whether the host page has the dialog open. */
-		show: {
-			type: Boolean,
-			default: false,
-		},
-
-		/** The journey being edited, or null to create one. */
-		item: {
-			type: Object,
-			default: null,
-		},
-
-		/** Closes the dialog. */
-		close: {
-			type: Function,
-			default: () => {},
-		},
-
-		/** Re-reads the index page's list; the detail page does not pass it. */
-		refresh: {
-			type: Function,
-			default: null,
-		},
-	},
+	mixins: [hostedFormDialogMixin],
 
 	data() {
 		return {
@@ -396,25 +371,16 @@ export default {
 		},
 	},
 
-	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Load the form each time the dialog opens.
-			 *
-			 * @param {boolean} open Whether the dialog is open.
-			 *
-			 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
-			 */
-			handler(open) {
-				if (open) {
-					this.load()
-				}
-			},
-		},
-	},
-
 	methods: {
+		/**
+		 * Read the record each time the dialog opens.
+		 *
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 */
+		prepareOnOpen() {
+			this.load()
+		},
+
 		/**
 		 * Reset the form, seed the pickers, and read the journey when editing one.
 		 *

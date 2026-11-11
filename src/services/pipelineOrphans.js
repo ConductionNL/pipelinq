@@ -110,15 +110,40 @@ export function findOrphanedLeads(leads, pipelines) {
 	)
 	const out = []
 	for (const lead of leads || []) {
-		if (!lead || !lead.pipeline) continue
-		const pipeline = byId.get(lead.pipeline)
-		if (!pipeline) {
-			out.push({ lead, reason: 'pipeline' })
-			continue
-		}
-		if (lead.stage && !stageNames(pipeline).has(lead.stage)) {
-			out.push({ lead, reason: 'stage' })
+		const reason = orphanReason(lead, byId)
+		if (reason !== null) {
+			out.push({ lead, reason })
 		}
 	}
 	return out
+}
+
+/**
+ * Why no board column shows a lead, or null when one does (or it has no
+ * pipeline, which the board handles itself).
+ *
+ * @param {object|null} lead The lead.
+ * @param {Map<string, object>} byId The pipelines by id.
+ * @return {'pipeline'|'stage'|null} The reason.
+ *
+ * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-names-leads-that-are-on-no-board-req-raf-020
+ */
+function orphanReason(lead, byId) {
+	if (!lead || !lead.pipeline) {
+		return null
+	}
+	const pipeline = byId.get(lead.pipeline)
+	if (!pipeline) {
+		return 'pipeline'
+	}
+	return isUnknownStage(lead, pipeline) ? 'stage' : null
+}
+
+/**
+ * @param {object} lead The lead.
+ * @param {object} pipeline Its pipeline.
+ * @return {boolean} Whether the lead names a stage the pipeline does not have.
+ */
+function isUnknownStage(lead, pipeline) {
+	return Boolean(lead.stage) && !stageNames(pipeline).has(lead.stage)
 }

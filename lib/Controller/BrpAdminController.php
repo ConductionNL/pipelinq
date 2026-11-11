@@ -47,6 +47,24 @@ use Throwable;
  */
 class BrpAdminController extends Controller {
 	/**
+	 * App-config key => request parameter of every plain BRP setting.
+	 *
+	 * @var array<string, string>
+	 */
+	private const SETTING_PARAMS = [
+		'brp.base_url' => 'baseUrl',
+		'brp.oauth_endpoint' => 'oauthEndpoint',
+		'brp.client_id' => 'clientId',
+		'brp.cert_path' => 'certPath',
+		'brp.key_path' => 'keyPath',
+		'brp.ca_bundle' => 'caBundle',
+		'brp.cache_ttl_hours' => 'cacheTtlHours',
+		'brp.retention_days' => 'retentionDays',
+		'brp.health_timezone' => 'healthTimezone',
+		'brp.allowed_groups' => 'allowedGroups',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
@@ -109,19 +127,26 @@ class BrpAdminController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
 	public function save(): JSONResponse {
-		$params = [
-			'brp.base_url' => 'baseUrl',
-			'brp.oauth_endpoint' => 'oauthEndpoint',
-			'brp.client_id' => 'clientId',
-			'brp.cert_path' => 'certPath',
-			'brp.key_path' => 'keyPath',
-			'brp.ca_bundle' => 'caBundle',
-			'brp.cache_ttl_hours' => 'cacheTtlHours',
-			'brp.retention_days' => 'retentionDays',
-			'brp.health_timezone' => 'healthTimezone',
-			'brp.allowed_groups' => 'allowedGroups',
-		];
-		foreach ($params as $configKey => $paramName) {
+		$this->storeGivenSettings();
+
+		// Client secret — encrypt on save.
+		$refusal = $this->storeNewClientSecret();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		// Pseudonym secret (for RTBF) — rotated only on explicit request.
+		$this->rotatePseudonymSecretWhenAsked();
+		return new JSONResponse(['result' => 'ok'], Http::STATUS_OK);
+	}//end save()
+
+	/**
+	 * Store every setting the request carries, as a string; absent ones keep their value.
+	 *
+	 * @return void
+	 */
+	private function storeGivenSettings(): void {
+		foreach (self::SETTING_PARAMS as $configKey => $paramName) {
 			$value = $this->request->getParam($paramName);
 			if ($value === null) {
 				continue;
@@ -129,26 +154,42 @@ class BrpAdminController extends Controller {
 
 			$this->appConfig->setValueString(Application::APP_ID, $configKey, (string)$value);
 		}
+	}//end storeGivenSettings()
 
-		// Client secret — encrypt on save.
+	/**
+	 * Store a new client secret encrypted; an empty one keeps the stored secret.
+	 *
+	 * @return JSONResponse|null The 500 when it cannot be encrypted, else null.
+	 */
+	private function storeNewClientSecret(): ?JSONResponse {
 		$clientSecret = $this->request->getParam('clientSecret');
-		if (is_string($clientSecret) === true && $clientSecret !== '') {
-			try {
-				$encrypted = $this->crypto->encrypt($clientSecret);
-				$this->appConfig->setValueString(Application::APP_ID, 'brp.client_secret_encrypted', $encrypted);
-			} catch (Throwable $e) {
-				$this->logger->error('Failed to encrypt BRP client secret', ['error' => $e->getMessage()]);
-				return new JSONResponse(
-					[
-						'errorCode' => 'crypto-failed',
-						'errorMessage' => $this->l10n->t('Kon BRP client-secret niet versleutelen.'),
-					],
-					Http::STATUS_INTERNAL_SERVER_ERROR
-				);
-			}
+		if (is_string($clientSecret) === false || $clientSecret === '') {
+			return null;
 		}
 
-		// Pseudonym secret (for RTBF) — rotated only on explicit request.
+		try {
+			$encrypted = $this->crypto->encrypt($clientSecret);
+			$this->appConfig->setValueString(Application::APP_ID, 'brp.client_secret_encrypted', $encrypted);
+		} catch (Throwable $e) {
+			$this->logger->error('Failed to encrypt BRP client secret', ['error' => $e->getMessage()]);
+			return new JSONResponse(
+				[
+					'errorCode' => 'crypto-failed',
+					'errorMessage' => $this->l10n->t('Kon BRP client-secret niet versleutelen.'),
+				],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+
+		return null;
+	}//end storeNewClientSecret()
+
+	/**
+	 * Rotate the pseudonym secret when the request explicitly asks for it.
+	 *
+	 * @return void
+	 */
+	private function rotatePseudonymSecretWhenAsked(): void {
 		$rotatePseudonym = $this->request->getParam('rotatePseudonymSecret');
 		if ($rotatePseudonym === true || $rotatePseudonym === 'true') {
 			$this->appConfig->setValueString(
@@ -157,9 +198,7 @@ class BrpAdminController extends Controller {
 				$this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC)
 			);
 		}
-
-		return new JSONResponse(['result' => 'ok'], Http::STATUS_OK);
-	}//end save()
+	}//end rotatePseudonymSecretWhenAsked()
 
 	/**
 	 * POST /api/brp/settings/webhook-secret — rotate the inbound mutation webhook secret.

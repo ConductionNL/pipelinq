@@ -38,17 +38,40 @@ export async function fetchUserDisplayName(uid) {
 			import('@nextcloud/axios'),
 			import('@nextcloud/router'),
 		])
-	let me
-	try {
-		me = getCurrentUser()
-	} catch {
-		me = null
-	}
+	const me = signedInUser(getCurrentUser)
 	if (me && String(me.uid) === uid) {
 		return me.displayName || uid
 	}
+	return autocompleteName({ axios, generateOcsUrl }, uid)
+}
+
+/**
+ * The signed-in user, or null when the session cannot be read.
+ *
+ * @param {() => object|null} getCurrentUser Reads the session user.
+ * @return {object|null} The user.
+ * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ */
+function signedInUser(getCurrentUser) {
 	try {
-		const response = await axios.get(generateOcsUrl('core/autocomplete/get'), {
+		return getCurrentUser()
+	} catch {
+		return null
+	}
+}
+
+/**
+ * Another user's display name from core autocomplete, on an exact uid
+ * match only; the uid when there is none or the lookup fails.
+ *
+ * @param {{axios: object, generateOcsUrl: (path: string) => string}} http The HTTP client and URL builder.
+ * @param {string} uid The user id.
+ * @return {Promise<string>} The name.
+ * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ */
+async function autocompleteName(http, uid) {
+	try {
+		const response = await http.axios.get(http.generateOcsUrl('core/autocomplete/get'), {
 			headers: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
 			params: {
 				search: uid,
@@ -58,14 +81,23 @@ export async function fetchUserDisplayName(uid) {
 				limit: 10,
 			},
 		})
-		const list = response?.data?.ocs?.data
-		const match = (Array.isArray(list) ? list : []).find(
-			(entry) => entry && String(entry.id) === uid,
-		)
-		return (match && match.label) || uid
+		return matchingLabel(response?.data?.ocs?.data, uid)
 	} catch {
 		return uid
 	}
+}
+
+/**
+ * @param {unknown} list The autocomplete entries.
+ * @param {string} uid The user id.
+ * @return {string} The label of the entry with that exact id, or the uid.
+ * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ */
+function matchingLabel(list, uid) {
+	const match = (Array.isArray(list) ? list : []).find(
+		(entry) => entry && String(entry.id) === uid,
+	)
+	return (match && match.label) || uid
 }
 
 /**

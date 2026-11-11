@@ -99,39 +99,60 @@ class BrpHealthCheckJob extends TimedJob {
 	 */
 	protected function run(mixed $argument): void {
 		try {
-			$expiry = $this->client->getCertificateExpiry();
-			if ($expiry === null) {
-				$this->logger->info('BRP cert health check: cert not configured');
-				$this->saveStatus(status: ['expiry' => null, 'status' => 'unconfigured', 'checkedAt' => $this->nowIso()]);
-				return;
-			}
-
-			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-			$daysLeft = (int)floor(($expiry->getTimestamp() - $now->getTimestamp()) / 86400);
-
-			$status = 'ok';
-			if ($daysLeft <= self::CRITICAL_THRESHOLD_DAYS) {
-				$status = 'critical';
-			} elseif ($daysLeft <= self::WARN_THRESHOLD_DAYS) {
-				$status = 'warning';
-			}
-
-			$this->saveStatus(
-				status: [
-					'expiry' => $expiry->format(DATE_ATOM),
-					'daysLeft' => $daysLeft,
-					'status' => $status,
-					'checkedAt' => $this->nowIso(),
-				]
-			);
-
-			if ($status !== 'ok') {
-				$this->notifyAdmins(daysLeft: $daysLeft, status: $status, expiry: $expiry);
-			}
+			$this->checkCertificate();
 		} catch (Throwable $e) {
 			$this->logger->error('BRP health check failed', ['error' => $e->getMessage()]);
-		}//end try
+		}
 	}//end run()
+
+	/**
+	 * Record the certificate's health, and tell the admins when it is not ok.
+	 *
+	 * @return void
+	 */
+	private function checkCertificate(): void {
+		$expiry = $this->client->getCertificateExpiry();
+		if ($expiry === null) {
+			$this->logger->info('BRP cert health check: cert not configured');
+			$this->saveStatus(status: ['expiry' => null, 'status' => 'unconfigured', 'checkedAt' => $this->nowIso()]);
+			return;
+		}
+
+		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$daysLeft = (int)floor(($expiry->getTimestamp() - $now->getTimestamp()) / 86400);
+		$status = self::statusFor(daysLeft: $daysLeft);
+
+		$this->saveStatus(
+			status: [
+				'expiry' => $expiry->format(DATE_ATOM),
+				'daysLeft' => $daysLeft,
+				'status' => $status,
+				'checkedAt' => $this->nowIso(),
+			]
+		);
+
+		if ($status !== 'ok') {
+			$this->notifyAdmins(daysLeft: $daysLeft, status: $status, expiry: $expiry);
+		}
+	}//end checkCertificate()
+
+	/**
+	 * The status for a number of days left: `critical` at 7 or fewer, `warning` at 30 or fewer, else `ok`.
+	 *
+	 * @param int $daysLeft Whole days left, rounded down.
+	 *
+	 * @return string
+	 */
+	private static function statusFor(int $daysLeft): string {
+		$status = 'ok';
+		if ($daysLeft <= self::CRITICAL_THRESHOLD_DAYS) {
+			$status = 'critical';
+		} elseif ($daysLeft <= self::WARN_THRESHOLD_DAYS) {
+			$status = 'warning';
+		}
+
+		return $status;
+	}//end statusFor()
 
 	/**
 	 * Persist the health-check snapshot for the admin tile.

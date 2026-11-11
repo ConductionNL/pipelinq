@@ -71,6 +71,20 @@ class SatisfactionAggregationService {
 	private const LIMIT = 500;
 
 	/**
+	 * The panel when there are no responses.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const EMPTY_PANEL = [
+		'empty' => true,
+		'responseCount' => 0,
+		'nps' => null,
+		'averageRating' => null,
+		'trend' => 'unknown',
+		'verbatims' => [],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
@@ -95,22 +109,13 @@ class SatisfactionAggregationService {
 	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	public function npsOf(array $responses): ?float {
-		$promoters = 0;
-		$detractors = 0;
+		$net = 0;
 		$answered = 0;
-
 		foreach ($responses as $response) {
 			$score = ($response['npsScore'] ?? null);
-			if (is_numeric($score) === false) {
-				continue;
-			}
-
-			$answered++;
-			$score = (int)$score;
-			if ($score >= DetractorFollowUpService::NPS_PROMOTER_FLOOR) {
-				$promoters++;
-			} elseif ($score <= DetractorFollowUpService::NPS_DETRACTOR_CEILING) {
-				$detractors++;
+			if (is_numeric($score) === true) {
+				$answered++;
+				$net += $this->npsBand(score: (int)$score);
 			}
 		}
 
@@ -120,8 +125,27 @@ class SatisfactionAggregationService {
 			return null;
 		}
 
-		return round(((($promoters - $detractors) / $answered) * 100), 1);
+		return round((($net / $answered) * 100), 1);
 	}//end npsOf()
+
+	/**
+	 * Whether a score promotes (+1), detracts (-1) or is passive (0).
+	 *
+	 * @param int $score The 0-10 score.
+	 *
+	 * @return int
+	 */
+	private function npsBand(int $score): int {
+		if ($score >= DetractorFollowUpService::NPS_PROMOTER_FLOOR) {
+			return 1;
+		}
+
+		if ($score <= DetractorFollowUpService::NPS_DETRACTOR_CEILING) {
+			return -1;
+		}
+
+		return 0;
+	}//end npsBand()
 
 	/**
 	 * The panel for one client.
@@ -153,40 +177,76 @@ class SatisfactionAggregationService {
 	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	public function summarise(array $responses, ?DateTimeImmutable $now = null): array {
-		$now = ($now ?? new DateTimeImmutable());
-
 		if ($responses === []) {
-			return [
-				'empty' => true,
-				'responseCount' => 0,
-				'nps' => null,
-				'averageRating' => null,
-				'trend' => 'unknown',
-				'verbatims' => [],
-			];
+			return self::EMPTY_PANEL;
 		}
 
-		$current = [];
-		$previous = [];
-		$currentFloor = $now->modify('-' . self::WINDOW_DAYS . ' days');
-		$previousFloor = $now->modify('-' . (self::WINDOW_DAYS * 2) . ' days');
+		[$current, $previous] = $this->windows(responses: $responses, now: ($now ?? new DateTimeImmutable()));
+		return [
+			'empty' => false,
+			'responseCount' => count($responses),
+			'nps' => $this->npsOf(responses: $responses),
+			'averageRating' => $this->averageRating(responses: $responses),
+			'trend' => $this->trend(current: $current, previous: $previous),
+			'verbatims' => $this->verbatims(responses: $responses),
+		];
+	}//end summarise()
 
+	/**
+	 * Split responses into the last window and the window before it.
+	 *
+	 * @param array<int, array<string, mixed>> $responses The responses.
+	 * @param DateTimeImmutable $now The moment the windows are measured from.
+	 *
+	 * @return array{0: array<int, array<string, mixed>>, 1: array<int, array<string, mixed>>}
+	 */
+	private function windows(array $responses, DateTimeImmutable $now): array {
+		$windows = [[], []];
 		foreach ($responses as $response) {
-			$submitted = $this->submittedAt(response: $response);
-			if ($submitted === null) {
-				continue;
-			}
-
-			if ($submitted >= $currentFloor) {
-				$current[] = $response;
-				continue;
-			}
-
-			if ($submitted >= $previousFloor) {
-				$previous[] = $response;
+			$window = $this->windowOf(response: $response, now: $now);
+			if ($window !== null) {
+				$windows[$window][] = $response;
 			}
 		}
 
+		return $windows;
+	}//end windows()
+
+	/**
+	 * 0 for the last window, 1 for the one before it, null when older or undated.
+	 *
+	 * @param array<string, mixed> $response The response.
+	 * @param DateTimeImmutable $now The moment the windows are measured from.
+	 *
+	 * @return integer|null
+	 */
+	private function windowOf(array $response, DateTimeImmutable $now): ?int {
+		$submitted = $this->submittedAt(response: $response);
+		if ($submitted === null) {
+			return null;
+		}
+
+		if ($submitted >= $now->modify('-' . self::WINDOW_DAYS . ' days')) {
+			return 0;
+		}
+
+		if ($submitted >= $now->modify('-' . (self::WINDOW_DAYS * 2) . ' days')) {
+			return 1;
+		}
+
+		return null;
+	}//end windowOf()
+
+	/**
+	 * Mean of the numeric ratings, two decimals.
+	 *
+	 * Null, not 0: nobody rated is not the same as everybody rated zero.
+	 *
+	 * @param array<int, array<string, mixed>> $responses The responses.
+	 *
+	 * @return float|null
+	 */
+	private function averageRating(array $responses): ?float {
 		$ratings = [];
 		foreach ($responses as $response) {
 			$rating = ($response['averageRating'] ?? null);
@@ -195,21 +255,12 @@ class SatisfactionAggregationService {
 			}
 		}
 
-		// Null, not 0: nobody rated is not the same as everybody rated zero.
-		$averageRating = null;
-		if ($ratings !== []) {
-			$averageRating = round((array_sum($ratings) / count($ratings)), 2);
+		if ($ratings === []) {
+			return null;
 		}
 
-		return [
-			'empty' => false,
-			'responseCount' => count($responses),
-			'nps' => $this->npsOf(responses: $responses),
-			'averageRating' => $averageRating,
-			'trend' => $this->trend(current: $current, previous: $previous),
-			'verbatims' => $this->verbatims(responses: $responses),
-		];
-	}//end summarise()
+		return round((array_sum($ratings) / count($ratings)), 2);
+	}//end averageRating()
 
 	/**
 	 * Which way the score is moving between the two windows.
@@ -248,23 +299,8 @@ class SatisfactionAggregationService {
 	 * @return array<int, array<string, string>> The verbatims.
 	 */
 	private function verbatims(array $responses): array {
-		$withText = array_values(
-			array_filter(
-				$responses,
-				static fn (array $response): bool => trim((string)($response['verbatim'] ?? '')) !== ''
-			)
-		);
-
-		usort(
-			$withText,
-			static fn (array $a, array $b): int => strcmp(
-				(string)($b['submittedAt'] ?? ''),
-				(string)($a['submittedAt'] ?? '')
-			)
-		);
-
 		$verbatims = [];
-		foreach (array_slice($withText, 0, self::VERBATIM_COUNT) as $response) {
+		foreach (array_slice($this->newestWithText(responses: $responses), 0, self::VERBATIM_COUNT) as $response) {
 			$verbatims[] = [
 				'text' => (string)$response['verbatim'],
 				'submittedAt' => (string)($response['submittedAt'] ?? ''),
@@ -274,6 +310,28 @@ class SatisfactionAggregationService {
 
 		return $verbatims;
 	}//end verbatims()
+
+	/**
+	 * The responses carrying a non-blank verbatim, newest first.
+	 *
+	 * @param array<int, array<string, mixed>> $responses The responses.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function newestWithText(array $responses): array {
+		$withText = array_values(
+			array_filter(
+				$responses,
+				static fn (array $response): bool => trim((string)($response['verbatim'] ?? '')) !== ''
+			)
+		);
+		usort(
+			$withText,
+			static fn (array $a, array $b): int => strcmp((string)($b['submittedAt'] ?? ''), (string)($a['submittedAt'] ?? ''))
+		);
+
+		return $withText;
+	}//end newestWithText()
 
 	/**
 	 * When a response was submitted.
@@ -303,44 +361,70 @@ class SatisfactionAggregationService {
 	 * @return array<int, array<string, mixed>> The responses.
 	 */
 	private function responsesFor(string $clientId): array {
-		$clientId = trim($clientId);
+		$filters = $this->clientFilters(clientId: trim($clientId));
+		if ($filters === []) {
+			return [];
+		}
+
+		return $this->plainRows(rows: $this->readRows(filters: $filters));
+	}//end responsesFor()
+
+	/**
+	 * Run the read; a failure is logged and reads as no rows.
+	 *
+	 * @param array<string, string> $filters The client filter.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function readRows(array $filters): array {
+		try {
+			return $this->objectService->findAll(config: ['filters' => $filters, 'limit' => self::LIMIT]);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: 'SatisfactionAggregationService: the response read failed',
+				context: ['client' => $filters['clientRef'], 'exception' => $e->getMessage()]
+			);
+
+			return [];
+		}
+	}//end readRows()
+
+	/**
+	 * The findAll() filter for a client's responses; [] when any part is unset.
+	 *
+	 * @param string $clientId The trimmed client uuid.
+	 *
+	 * @return array<string, string>
+	 */
+	private function clientFilters(string $clientId): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'surveyResponse_schema', '');
 		if ($clientId === '' || $register === '' || $schema === '') {
 			return [];
 		}
 
-		try {
-			$rows = $this->objectService->findAll(
-				[
-					'filters' => ['register' => $register, 'schema' => $schema, 'clientRef' => $clientId],
-					'limit' => self::LIMIT,
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SatisfactionAggregationService: the response read failed',
-				['client' => $clientId, 'exception' => $e->getMessage()]
-			);
+		return ['register' => $register, 'schema' => $schema, 'clientRef' => $clientId];
+	}//end clientFilters()
 
-			return [];
-		}
-
+	/**
+	 * Keep array rows and the array form of serialisable rows; drop the rest.
+	 *
+	 * @param array<int, mixed> $rows The findAll() rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function plainRows(array $rows): array {
 		$out = [];
 		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
+			if (($row instanceof \JsonSerializable) === true) {
+				$row = $row->jsonSerialize();
 			}
 
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$out[] = $data;
-				}
+			if (is_array($row) === true) {
+				$out[] = $row;
 			}
 		}
 
 		return $out;
-	}//end responsesFor()
+	}//end plainRows()
 }//end class

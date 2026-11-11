@@ -140,4 +140,99 @@ class LeadStageCreatingListenerTest extends TestCase {
 
 		$this->assertSame([], $event->getModifiedData());
 	}//end testOtherSchemasAreIgnored()
+
+	/**
+	 * Golden: the pipeline read — its exact query and RBAC flags, the rows it keeps, and when it reads nothing.
+	 *
+	 * @return void
+	 */
+	public function testPipelinesAreReadExactly(): void {
+		$calls = [];
+		$rows = [
+			['id' => 'p-1'],
+			new class implements \JsonSerializable {
+				/**
+				 * @return array<string, string> The pipeline.
+				 */
+				public function jsonSerialize(): array {
+					return ['id' => 'p-2'];
+				}
+			},
+			new class implements \JsonSerializable {
+				/**
+				 * @return string Not a pipeline.
+				 */
+				public function jsonSerialize(): string {
+					return 'p-3';
+				}
+			},
+			new \stdClass(),
+			'p-4',
+		];
+		$objectService = new class ($rows, $calls) {
+			/**
+			 * @param array<int, mixed>             $rows  The rows.
+			 * @param array<int, array<int, mixed>> $calls The call log.
+			 */
+			public function __construct(private array $rows, private array &$calls) {
+			}
+
+			/**
+			 * @param array<string, mixed> $config        The query.
+			 * @param bool                 $_rbac         RBAC flag.
+			 * @param bool                 $_multitenancy Multitenancy flag.
+			 *
+			 * @return array<int, mixed> The rows.
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->calls[] = [$config, $_rbac, $_multitenancy];
+				if ($this->rows === []) {
+					throw new \RuntimeException('register offline');
+				}
+
+				return $this->rows;
+			}
+		};
+		$read = function (string $pipelineSchema, object $objects, LoggerInterface $logger, string $register): array {
+			$config = $this->createMock(IAppConfig::class);
+			$config->method('getValueString')->willReturn($pipelineSchema);
+			$container = $this->createMock(ContainerInterface::class);
+			$container->method('get')->willReturn($objects);
+			$listener = new LeadStageCreatingListener($config, $container, new LeadStagePlacer(), $logger);
+			return (new \ReflectionMethod($listener, 'readPipelines'))->invoke($listener, $register);
+		};
+
+		$this->assertSame([['id' => 'p-1'], ['id' => 'p-2']], $read('31', $objectService, $this->createMock(LoggerInterface::class), '20'));
+		$this->assertSame([[['filters' => ['register' => '20', 'schema' => '31'], 'limit' => 200], false, false]], $calls);
+
+		$calls = [];
+		$this->assertSame([], $read('', $objectService, $this->createMock(LoggerInterface::class), '20'));
+		$this->assertSame([], $read('31', $objectService, $this->createMock(LoggerInterface::class), ''));
+		$this->assertSame([], $calls);
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')
+			->with('Pipelinq: could not read pipelines to place a new lead in a stage', ['exception' => 'register offline']);
+		$empty = [];
+		$failing = new class ($empty, $calls) {
+			/**
+			 * @param array<int, mixed>             $rows  The rows.
+			 * @param array<int, array<int, mixed>> $calls The call log.
+			 */
+			public function __construct(private array $rows, private array &$calls) {
+			}
+
+			/**
+			 * @param array<string, mixed> $config        The query.
+			 * @param bool                 $_rbac         RBAC flag.
+			 * @param bool                 $_multitenancy Multitenancy flag.
+			 *
+			 * @return array<int, mixed> Never.
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				throw new \RuntimeException('register offline');
+			}
+		};
+		$this->assertSame([], $read('31', $failing, $logger, '20'));
+	}//end testPipelinesAreReadExactly()
 }//end class

@@ -41,7 +41,6 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\IL10N;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * SubscriptionService — subscribe, confirm, unsubscribe and preferences.
@@ -187,36 +186,24 @@ class SubscriptionService {
 			return ['status' => 'not-found'];
 		}
 
-		$email = strtolower(trim($email));
-		if ($this->mailer->validateMailAddress($email) === false) {
+		$run = new ListSignupRun(listId: $listId, email: strtolower(trim($email)));
+		if ($this->mailer->validateMailAddress($run->email) === false) {
 			return ['status' => 'invalid'];
 		}
 
 		if (trim($honeypot) !== '') {
 			$this->logger->info(
 				'SubscriptionService.subscribe: honeypot filled, discarding',
-				['listId' => $listId, 'emailHash' => $this->tokens->hashAddress(address: $email)]
+				['listId' => $listId, 'emailHash' => $this->tokens->hashAddress(address: $run->email)]
 			);
 			return ['status' => 'accepted'];
 		}
 
-		$existing = $this->findSubscription(listId: $listId, email: $email);
-		if ($existing !== null && (string)($existing['state'] ?? '') === self::STATE_CONFIRMED) {
-			// Already on the list. Say nothing about it and send nothing:
-			// a confirmed subscriber who submits the form again should not
-			// receive a link that could be forwarded to someone else.
-			return ['status' => 'accepted'];
-		}
-
-		$this->startConfirmation(
-			existing: $existing,
-			list: (array)$list,
-			listId: $listId,
-			email: $email,
-			contactId: $contactId,
-			source: 'public-signup',
-		);
-
+		$run->existing = $this->findSubscription(listId: $listId, email: $run->email);
+		$run->list = (array)$list;
+		$run->contactId = $contactId;
+		$run->source = 'public-signup';
+		$this->startConfirmation(run: $run);
 		return ['status' => 'accepted'];
 	}//end subscribe()
 
@@ -243,50 +230,19 @@ class SubscriptionService {
 		}
 
 		$subscriptionId = (string)($payload['s'] ?? '');
-		$nonce = (string)($payload['n'] ?? '');
-		$subscription = $this->loadSubscription(id: $subscriptionId);
-		if ($subscription === null || $nonce === '') {
+		$subscription = $this->spendableSubscription(subscriptionId: $subscriptionId, nonce: (string)($payload['n'] ?? ''));
+		if ($subscription === null) {
 			return ['status' => 'invalid'];
 		}
 
-		$storedDigest = (string)($subscription['confirmTokenHash'] ?? '');
-		if ($storedDigest === '' || hash_equals($storedDigest, $this->tokens->digest(nonce: $nonce)) === false) {
+		$records = new SubscriptionRecords();
+		$confirmed = $records->confirmed(subscription: $subscription, ipHash: $this->tokens->hashAddress(address: $ipAddress));
+		if ($this->save(payload: $confirmed, id: $subscriptionId) === null) {
 			return ['status' => 'invalid'];
 		}
 
-		if ($this->canTransition(from: (string)($subscription['state'] ?? ''), action: 'confirm') === false) {
-			return ['status' => 'invalid'];
-		}
-
-		$now = $this->nowIso();
-		$subscription['state'] = self::STATE_CONFIRMED;
-		$subscription['confirmedAt'] = $now;
-		$subscription['confirmIpHash'] = $this->tokens->hashAddress(address: $ipAddress);
-		$subscription['confirmTokenHash'] = '';
-		$subscription['lawfulBasis'] = 'consent';
-
-		$saved = $this->save(payload: $subscription, id: $subscriptionId);
-		if ($saved === null) {
-			return ['status' => 'invalid'];
-		}
-
-		$listId = (string)($subscription['listId'] ?? '');
-		$this->compliance->recordListConsent(
-			contactId: $this->contactKeyFor(subscription: $subscription),
-			listId: $listId,
-			channel: self::CHANNEL,
-			lawfulBasis: 'consent',
-			consentSource: 'double-opt-in',
-			evidence: [
-				'mechanism' => 'double-opt-in',
-				'reference' => $subscriptionId,
-				'objectionOffered' => true,
-				'objectionOfferedAt' => (string)($subscription['createdAt'] ?? $now),
-				'ipHash' => $this->tokens->hashAddress(address: $ipAddress),
-				'recordedAt' => $now,
-			],
-		);
-
+		$listId = (string)($confirmed['listId'] ?? '');
+		$this->recordConsent(confirmed: $confirmed, evidence: $records->doubleOptInEvidence(confirmed: $confirmed, reference: $subscriptionId));
 		$list = $this->lists->getMailingListById(listId: $listId);
 		if ($list === null) {
 			return ['status' => 'confirmed'];
@@ -294,6 +250,56 @@ class SubscriptionService {
 
 		return ['status' => 'confirmed', 'list' => $this->lists->publicProjection(list: $list)];
 	}//end confirm()
+
+	/**
+	 * The membership a confirmation link may confirm, or null.
+	 *
+	 * Both checks must pass: the signature (already verified) proves the link
+	 * came from this instance unedited, and the nonce digest proves it is the
+	 * link minted for this subscription and has not been spent. The
+	 * membership must also still be able to move to confirmed.
+	 *
+	 * @param string $subscriptionId The subscription id the link names.
+	 * @param string $nonce          The nonce the link carries.
+	 *
+	 * @return array<string, mixed>|null The pending membership.
+	 */
+	private function spendableSubscription(string $subscriptionId, string $nonce): ?array {
+		$subscription = $this->loadSubscription(id: $subscriptionId);
+		if ($subscription === null || $nonce === '') {
+			return null;
+		}
+
+		$storedDigest = (string)($subscription['confirmTokenHash'] ?? '');
+		if ($storedDigest === '' || hash_equals($storedDigest, $this->tokens->digest(nonce: $nonce)) === false) {
+			return null;
+		}
+
+		if ($this->canTransition(from: (string)($subscription['state'] ?? ''), action: 'confirm') === false) {
+			return null;
+		}
+
+		return $subscription;
+	}//end spendableSubscription()
+
+	/**
+	 * Record the list consent of a membership confirmed from its link.
+	 *
+	 * @param array<string, mixed> $confirmed The confirmed record.
+	 * @param array<string, mixed> $evidence  The double opt-in evidence.
+	 *
+	 * @return void
+	 */
+	private function recordConsent(array $confirmed, array $evidence): void {
+		$this->compliance->recordListConsent(
+			contactId: $this->contactKeyFor(subscription: $confirmed),
+			listId: (string)($confirmed['listId'] ?? ''),
+			channel: self::CHANNEL,
+			lawfulBasis: 'consent',
+			consentSource: 'double-opt-in',
+			evidence: $evidence,
+		);
+	}//end recordConsent()
 
 	/**
 	 * Read what an unsubscribe link points at, without changing anything.
@@ -433,46 +439,17 @@ class SubscriptionService {
 	 */
 	public function importSoftOptIn(string $listId, string $contactId, string $email, array $evidence): array {
 		$list = $this->lists->getMailingListById(listId: $listId);
-		if ($list === null) {
-			return ['status' => 'refused', 'error' => 'Not found'];
+		$run = new ListSignupRun(listId: $listId, email: strtolower(trim($email)));
+		$check = new SoftOptInCheck(mailer: $this->mailer);
+		$refusal = ($check->listRefusal(list: $list) ?? $check->importRefusal(email: $run->email, evidence: $evidence));
+		if ($refusal !== null) {
+			return ['status' => 'refused', 'error' => $refusal];
 		}
 
-		if ((string)($list['optInMode'] ?? '') !== MailingListService::OPT_IN_SOFT) {
-			return [
-				'status' => 'refused',
-				'error' => 'This list uses double opt-in, so a subscriber has to confirm the link themselves',
-			];
-		}
-
-		$email = strtolower(trim($email));
-		if ($this->mailer->validateMailAddress($email) === false) {
-			return ['status' => 'refused', 'error' => 'That is not a valid email address'];
-		}
-
-		if ((bool)($evidence['objectionOffered'] ?? false) === false) {
-			return [
-				'status' => 'refused',
-				'error' => 'A soft opt-in needs a record that the customer was offered the chance to object',
-			];
-		}
-
-		$now = $this->nowIso();
-		$existing = $this->findSubscription(listId: $listId, email: $email);
-		$record = ($existing ?? []);
-		$record['listId'] = $listId;
-		$record['contactId'] = $contactId;
-		$record['email'] = $email;
-		$record['state'] = self::STATE_CONFIRMED;
-		$record['source'] = 'soft-opt-in-import';
-		$record['lawfulBasis'] = 'soft-opt-in';
-		$record['confirmedAt'] = $now;
-		$record['confirmTokenHash'] = '';
-		if (isset($record['createdAt']) === false) {
-			$record['createdAt'] = $now;
-		}
-
-		$saved = $this->save(payload: $record, id: $this->idOf(payload: $existing));
-		if ($saved === null) {
+		$run->existing = $this->findSubscription(listId: $listId, email: $run->email);
+		$run->contactId = $contactId;
+		$record = (new SubscriptionRecords())->softOptIn(run: $run);
+		if ($this->save(payload: $record, id: $this->idOf(payload: $run->existing)) === null) {
 			return ['status' => 'refused', 'error' => 'The subscription could not be saved'];
 		}
 
@@ -482,10 +459,7 @@ class SubscriptionService {
 			channel: self::CHANNEL,
 			lawfulBasis: 'soft-opt-in',
 			consentSource: 'soft-opt-in-import',
-			evidence: array_merge(
-				['mechanism' => 'soft-opt-in-import', 'recordedAt' => $now],
-				$evidence,
-			),
+			evidence: array_merge(['mechanism' => 'soft-opt-in-import', 'recordedAt' => $record['confirmedAt']], $evidence),
 		);
 
 		return ['status' => 'imported'];
@@ -520,34 +494,12 @@ class SubscriptionService {
 			return false;
 		}
 
-		$subscription = null;
-		foreach ($this->loadSubscriptions(filters: ['listId' => $listId, 'contactId' => $contactId]) as $row) {
-			$subscription = $row;
-			break;
-		}
-
-		if ($subscription === null && $email === '') {
-			// Nothing to store the membership under. Refusing is the only
-			// honest answer: a row with no address would show the person as
-			// subscribed to a list that can never mail them.
-			return false;
-		}
-
-		$now = $this->nowIso();
-		$record = ($subscription ?? ['createdAt' => $now, 'email' => $email]);
-		if ((string)($record['state'] ?? '') === self::STATE_CONFIRMED) {
-			return false;
-		}
-
-		$record['listId'] = $listId;
-		$record['contactId'] = $contactId;
-		$record['state'] = self::STATE_CONFIRMED;
-		$record['source'] = $source;
-		$record['lawfulBasis'] = 'consent';
-		$record['confirmedAt'] = $now;
-		$record['confirmTokenHash'] = '';
-
-		if ($this->save(payload: $record, id: $this->idOf(payload: $subscription)) === null) {
+		$run = new ListSignupRun(listId: $listId, email: $email);
+		$run->contactId = $contactId;
+		$run->source = $source;
+		$run->existing = (array_values($this->loadSubscriptions(filters: ['listId' => $listId, 'contactId' => $contactId]))[0] ?? null);
+		$record = (new SubscriptionRecords())->forContact(run: $run);
+		if ($record === null || $this->save(payload: $record, id: $this->idOf(payload: $run->existing)) === null) {
 			return false;
 		}
 
@@ -557,12 +509,7 @@ class SubscriptionService {
 			channel: self::CHANNEL,
 			lawfulBasis: 'consent',
 			consentSource: $source,
-			evidence: [
-				'mechanism' => $source,
-				'objectionOffered' => true,
-				'objectionOfferedAt' => $now,
-				'recordedAt' => $now,
-			],
+			evidence: (new SubscriptionRecords())->contactEvidence(confirmed: $record),
 		);
 
 		return true;
@@ -607,50 +554,26 @@ class SubscriptionService {
 	/**
 	 * Create or refresh a pending membership and mail its link.
 	 *
-	 * A membership that is `unsubscribed` goes back to `pending` rather than
-	 * straight to `confirmed`: a past opt-in is not revived, it is asked for
-	 * again.
+	 * An address that is already confirmed is left alone and sent nothing: a
+	 * confirmed subscriber who submits the form again should not receive a link
+	 * that could be forwarded to someone else.
 	 *
-	 * @param array<string, mixed>|null $existing The membership, when one exists.
-	 * @param array<string, mixed> $list The list being joined.
-	 * @param string $listId MailingList UUID or slug.
-	 * @param string $email The subscriber's address.
-	 * @param string|null $contactId Known contact, when the caller has one.
-	 * @param string $source How the membership started.
+	 * @param ListSignupRun $run The membership being started.
 	 *
 	 * @return void
 	 */
-	private function startConfirmation(
-		?array $existing,
-		array $list,
-		string $listId,
-		string $email,
-		?string $contactId,
-		string $source,
-	): void {
+	private function startConfirmation(ListSignupRun $run): void {
+		if ($run->existing !== null && (string)($run->existing['state'] ?? '') === self::STATE_CONFIRMED) {
+			return;
+		}
+
 		$nonce = $this->tokens->mintNonce();
-		$now = $this->nowIso();
-
-		$record = ($existing ?? []);
-		$record['listId'] = $listId;
-		$record['email'] = $email;
-		$record['state'] = self::STATE_PENDING;
-		$record['source'] = $source;
-		$record['lawfulBasis'] = 'consent';
-		$record['confirmTokenHash'] = $this->tokens->digest(nonce: $nonce);
-		if ($contactId !== null && $contactId !== '') {
-			$record['contactId'] = $contactId;
-		}
-
-		if (isset($record['createdAt']) === false) {
-			$record['createdAt'] = $now;
-		}
-
-		$saved = $this->save(payload: $record, id: $this->idOf(payload: $existing));
+		$record = (new SubscriptionRecords())->pending(run: $run, digest: $this->tokens->digest(nonce: $nonce));
+		$saved = $this->save(payload: $record, id: $this->idOf(payload: $run->existing));
 		if ($saved === null) {
 			$this->logger->warning(
 				'SubscriptionService.startConfirmation: subscription could not be saved',
-				['listId' => $listId, 'emailHash' => $this->tokens->hashAddress(address: $email)]
+				['listId' => $run->listId, 'emailHash' => $this->tokens->hashAddress(address: $run->email)]
 			);
 			return;
 		}
@@ -660,11 +583,7 @@ class SubscriptionService {
 			return;
 		}
 
-		$this->sendConfirmationMail(
-			list: $list,
-			email: $email,
-			token: $this->tokens->signConfirmToken(subscriptionId: $subscriptionId, nonce: $nonce),
-		);
+		$this->sendConfirmationMail(run: $run, token: $this->tokens->signConfirmToken(subscriptionId: $subscriptionId, nonce: $nonce));
 	}//end startConfirmation()
 
 	/**
@@ -674,46 +593,19 @@ class SubscriptionService {
 	 * the endpoint answers exactly as it would have, because answering
 	 * differently would say whether the address exists.
 	 *
-	 * @param array<string, mixed> $list The list being joined.
-	 * @param string $email The recipient.
-	 * @param string $token The signed confirmation token.
+	 * @param ListSignupRun $run   The pending membership.
+	 * @param string        $token The signed confirmation token.
 	 *
 	 * @return void
 	 */
-	private function sendConfirmationMail(array $list, string $email, string $token): void {
-		$listName = (string)($list['name'] ?? '');
-		$subject = $this->l10n->t('Confirm your subscription to %s', [$listName]);
-		$template = "You asked to receive %1\$s.\n\n"
-			. "Open this link to confirm. If you did not ask for this, "
-			. "ignore this message and nothing happens.\n\n%2\$s\n\n%3\$s";
-		$body = $this->l10n->t(
-			$template,
-			[$listName, $this->tokens->confirmUrl(token: $token), (string)($list['footerAddress'] ?? '')]
-		);
-
-		try {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$email]);
-			$message->setSubject($subject);
-			$message->setPlainBody($body);
-
-			$sender = trim((string)($list['senderEmail'] ?? ''));
-			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
-				$message->setFrom([$sender => (string)($list['senderName'] ?? $sender)]);
-			}
-
-			$replyTo = trim((string)($list['replyTo'] ?? ''));
-			if ($replyTo !== '' && $this->mailer->validateMailAddress($replyTo) === true) {
-				$message->setReplyTo([$replyTo]);
-			}
-
-			$this->mailer->send($message);
-		} catch (Throwable $e) {
+	private function sendConfirmationMail(ListSignupRun $run, string $token): void {
+		$error = (new ConfirmationMail(mailer: $this->mailer, l10n: $this->l10n))->send(run: $run, confirmUrl: $this->tokens->confirmUrl(token: $token));
+		if ($error !== null) {
 			$this->logger->warning(
 				'SubscriptionService.sendConfirmationMail: dispatch failed',
-				['listName' => $listName, 'exception' => $e->getMessage()]
+				['listName' => (string)($run->list['name'] ?? ''), 'exception' => $error]
 			);
-		}//end try
+		}
 	}//end sendConfirmationMail()
 
 

@@ -332,31 +332,15 @@ export default {
 			try {
 				const store = useObjectStore()
 				const current = await store.fetchObject('ticket', this.objectId)
-				if (!current) {
-					this.fail()
-					return
-				}
-				const next = {
-					...current,
-					id: this.objectId,
-					customerMessage: this.message.trim(),
-					portalAnswers: this.answersAfter(current, this.message.trim()),
-				}
-				if (wait) {
-					next.status = 'awaiting_customer'
-				}
-				const saved = await store.saveObject('ticket', next)
+				// A ticket that is gone is not saved again.
+				const saved = current
+					? await store.saveObject('ticket', this.answeredTicket(current, wait))
+					: null
 				if (!saved) {
 					this.fail()
 					return
 				}
-				this.ticket = saved
-				this.$emit('saved', saved)
-				this.notice = t(
-					'pipelinq',
-					'The answer is saved. The customer can read it on the portal.',
-				)
-				this.noticeType = 'success'
+				this.showSaved(saved)
 			} finally {
 				this.busy = false
 			}
@@ -390,6 +374,42 @@ export default {
 		 *
 		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-answers-from-the-ticket-req-qcd-007
 		 */
+		/**
+		 * The ticket with this answer for the customer, waiting for the
+		 * customer when asked.
+		 *
+		 * @param {object} current The ticket as stored.
+		 * @param {boolean} wait Whether to wait for the customer.
+		 * @return {object} The ticket to save.
+		 */
+		answeredTicket(current, wait) {
+			const next = {
+				...current,
+				id: this.objectId,
+				customerMessage: this.message.trim(),
+				portalAnswers: this.answersAfter(current, this.message.trim()),
+			}
+			if (wait) {
+				next.status = 'awaiting_customer'
+			}
+			return next
+		},
+
+		/**
+		 * Keep the saved ticket, tell the host and say the customer can read it.
+		 *
+		 * @param {object} saved The saved ticket.
+		 */
+		showSaved(saved) {
+			this.ticket = saved
+			this.$emit('saved', saved)
+			this.notice = t(
+				'pipelinq',
+				'The answer is saved. The customer can read it on the portal.',
+			)
+			this.noticeType = 'success'
+		},
+
 		fail() {
 			this.notice = t('pipelinq', 'Could not save the answer.')
 			this.noticeType = 'error'

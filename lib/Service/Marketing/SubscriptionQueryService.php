@@ -97,43 +97,60 @@ class SubscriptionQueryService {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
 	 */
 	public function getBlastAudienceForList(string $listId): array {
-		if ($listId === '') {
-			return ['members' => [], 'skipped' => []];
-		}
-
 		$members = [];
 		$skipped = [];
 		foreach ($this->rowsForList(listId: $listId) as $subscription) {
 			$contactId = $this->contactKeyFor(subscription: $subscription);
-			if ((string)($subscription['state'] ?? '') !== SubscriptionService::STATE_CONFIRMED) {
+			if ($this->mayReceive(subscription: $subscription, listId: $listId) === false) {
 				$skipped[] = $contactId;
 				continue;
 			}
 
-			$permitted = $this->compliance->hasConsentForList(
-				contactId: $contactId,
-				listId: $listId,
-				channel: self::CHANNEL,
-			);
-			if ($permitted === false) {
-				$skipped[] = $contactId;
-				continue;
-			}
-
-			$subscriptionId = $this->store->idOf(payload: $subscription);
-			$members[] = [
-				'contactId' => $contactId,
-				'email' => (string)($subscription['email'] ?? ''),
-				'subscriptionId' => $subscriptionId,
-				'unsubscribeUrl' => $this->unsubscribeUrlFor(
-					subscriptionId: $subscriptionId,
-					contactId: $contactId,
-				),
-			];
+			$members[] = $this->memberFor(subscription: $subscription, contactId: $contactId);
 		}
 
 		return ['members' => $members, 'skipped' => $skipped];
 	}//end getBlastAudienceForList()
+
+	/**
+	 * Whether a membership may receive a blast on its list: it is confirmed
+	 * and the consent ledger holds the list open for its contact. The ledger
+	 * is only asked about a confirmed membership.
+	 *
+	 * @param array<string, mixed> $subscription The membership.
+	 * @param string               $listId       MailingList UUID or slug.
+	 *
+	 * @return bool
+	 */
+	private function mayReceive(array $subscription, string $listId): bool {
+		if ((string)($subscription['state'] ?? '') !== SubscriptionService::STATE_CONFIRMED) {
+			return false;
+		}
+
+		return $this->compliance->hasConsentForList(
+			contactId: $this->contactKeyFor(subscription: $subscription),
+			listId: $listId,
+			channel: self::CHANNEL,
+		);
+	}//end mayReceive()
+
+	/**
+	 * One queued audience member, with its own unsubscribe link.
+	 *
+	 * @param array<string, mixed> $subscription The membership.
+	 * @param string               $contactId    The membership's contact key.
+	 *
+	 * @return array{contactId: string, email: string, subscriptionId: string, unsubscribeUrl: string}
+	 */
+	private function memberFor(array $subscription, string $contactId): array {
+		$subscriptionId = $this->store->idOf(payload: $subscription);
+		return [
+			'contactId' => $contactId,
+			'email' => (string)($subscription['email'] ?? ''),
+			'subscriptionId' => $subscriptionId,
+			'unsubscribeUrl' => $this->unsubscribeUrlFor(subscriptionId: $subscriptionId, contactId: $contactId),
+		];
+	}//end memberFor()
 
 	/**
 	 * The first-party unsubscribe link for one membership.

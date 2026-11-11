@@ -112,51 +112,87 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	protected function run(mixed $argument): void {
+		$resources = $this->activeResourcesOrNull();
+		if ($resources === null || $resources === []) {
+			return;
+		}
+
+		$tally = $this->invalidateHorizon(resources: $resources);
+		$this->logger->info(
+			'Pipelinq: availability cache refresh complete',
+			[
+				'resources' => count($resources),
+				'invalidated' => $tally['invalidated'],
+				'errors' => $tally['errors'],
+				'horizon_days' => self::HORIZON_DAYS,
+			]
+		);
+	}//end run()
+
+	/**
+	 * The active resource ids, or null when they could not be loaded (logged).
+	 *
+	 * @return array<int, string>|null The ids.
+	 */
+	private function activeResourcesOrNull(): ?array {
 		try {
-			$resources = $this->loadActiveResources();
+			return $this->loadActiveResources();
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'Pipelinq: availability cache refresh failed to load resources',
 				['exception' => $e->getMessage()]
 			);
-			return;
+			return null;
 		}
+	}//end activeResourcesOrNull()
 
-		if ($resources === []) {
-			return;
-		}
-
+	/**
+	 * Invalidate every resource's cache for every horizon date.
+	 *
+	 * @param array<int, string> $resources The resource ids.
+	 *
+	 * @return array{invalidated: int, errors: int} How many invalidations succeeded and failed.
+	 */
+	private function invalidateHorizon(array $resources): array {
 		$dates = $this->horizonDates();
-		$count = 0;
-		$errors = 0;
+		$tally = ['invalidated' => 0, 'errors' => 0];
 		foreach ($resources as $resourceId) {
 			foreach ($dates as $date) {
-				try {
-					$this->availabilityService->invalidateCache(
-						resourceId: $resourceId,
-						date: $date
-					);
-					$count++;
-				} catch (Throwable $e) {
-					$errors++;
-					$this->logger->warning(
-						'Pipelinq: availability cache invalidation failed',
-						['resource' => $resourceId, 'date' => $date]
-					);
+				$outcome = 'errors';
+				if ($this->invalidated(resourceId: $resourceId, date: $date) === true) {
+					$outcome = 'invalidated';
 				}
-			}
-		}//end foreach
 
-		$this->logger->info(
-			'Pipelinq: availability cache refresh complete',
-			[
-				'resources' => count($resources),
-				'invalidated' => $count,
-				'errors' => $errors,
-				'horizon_days' => self::HORIZON_DAYS,
-			]
-		);
-	}//end run()
+				$tally[$outcome]++;
+			}
+		}
+
+		return $tally;
+	}//end invalidateHorizon()
+
+	/**
+	 * Invalidate one resource's cache for one date; a failure is logged.
+	 *
+	 * @param string $resourceId The resource.
+	 * @param string $date       The date (Y-m-d).
+	 *
+	 * @return bool Whether it was invalidated.
+	 */
+	private function invalidated(string $resourceId, string $date): bool {
+		try {
+			$this->availabilityService->invalidateCache(
+				resourceId: $resourceId,
+				date: $date
+			);
+			return true;
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: availability cache invalidation failed',
+				['resource' => $resourceId, 'date' => $date]
+			);
+			return false;
+		}
+	}//end invalidated()
 
 	/**
 	 * Resolve the active-resource id list from OpenRegister.
@@ -174,14 +210,29 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 			return [];
 		}
 
+		return $this->resourceIds(
+			rows: $this->activeResourceRows(
+				filters: [
+					'register' => $register,
+					'schema' => $schema,
+					'status' => 'active',
+				]
+			)
+		);
+	}//end loadActiveResources()
+
+	/**
+	 * The active resource rows, or [] when OpenRegister cannot answer (logged).
+	 *
+	 * @param array<string, string> $filters The register, schema and status filters.
+	 *
+	 * @return array<int, mixed> The rows.
+	 */
+	private function activeResourceRows(array $filters): array {
 		try {
 			$rows = $this->getObjectService()->findAll(
 				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'status' => 'active',
-					],
+					'filters' => $filters,
 				]
 			);
 		} catch (Throwable $e) {
@@ -196,6 +247,17 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 			return [];
 		}
 
+		return $rows;
+	}//end activeResourceRows()
+
+	/**
+	 * The ids of the rows that carry one.
+	 *
+	 * @param array<int, mixed> $rows The rows.
+	 *
+	 * @return array<int, string> The ids.
+	 */
+	private function resourceIds(array $rows): array {
 		$ids = [];
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
@@ -204,15 +266,13 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 			}
 
 			$id = $this->idOf(object: $data);
-			if ($id === '') {
-				continue;
+			if ($id !== '') {
+				$ids[] = $id;
 			}
-
-			$ids[] = $id;
 		}
 
 		return $ids;
-	}//end loadActiveResources()
+	}//end resourceIds()
 
 	/**
 	 * Build the date horizon: today + HORIZON_DAYS (UTC).

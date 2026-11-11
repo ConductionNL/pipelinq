@@ -146,19 +146,7 @@ class ConnectionReportService {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function report(string $key, string $status, string $message = ''): bool {
-		if (in_array($key, self::KEYS, true) === false) {
-			$this->logger->warning(
-				'Pipelinq: refusing to report an undeclared connection key',
-				['key' => $key]
-			);
-			return false;
-		}
-
-		if (in_array($status, self::STATUSES, true) === false) {
-			$this->logger->warning(
-				'Pipelinq: refusing to report an unknown connection status',
-				['key' => $key, 'status' => $status]
-			);
+		if ($this->isUndeclared(key: $key, status: $status) === true) {
 			return false;
 		}
 
@@ -188,6 +176,36 @@ class ConnectionReportService {
 			return false;
 		}//end try
 	}//end report()
+
+	/**
+	 * Whether the key or the status is outside the contract; the refusal is logged.
+	 *
+	 * The key is checked first, so an undeclared key is reported as such whatever its status.
+	 *
+	 * @param string $key    The connection key.
+	 * @param string $status The status.
+	 *
+	 * @return bool True when the report must not be sent.
+	 */
+	private function isUndeclared(string $key, string $status): bool {
+		if (in_array($key, self::KEYS, true) === false) {
+			$this->logger->warning(
+				'Pipelinq: refusing to report an undeclared connection key',
+				['key' => $key]
+			);
+			return true;
+		}
+
+		if (in_array($status, self::STATUSES, true) === false) {
+			$this->logger->warning(
+				'Pipelinq: refusing to report an unknown connection status',
+				['key' => $key, 'status' => $status]
+			);
+			return true;
+		}
+
+		return false;
+	}//end isUndeclared()
 
 	/**
 	 * Report the outcome of the CTI Test connection for the `cti` row.
@@ -236,32 +254,52 @@ class ConnectionReportService {
 	public function reportSocialReadiness(array $readiness): array {
 		$sent = [];
 		foreach ($readiness as $network => $entry) {
-			if (is_array($entry) === false) {
-				continue;
-			}
-
-			$key    = 'social-' . (string)$network;
-			$status = (self::READINESS_STATUS[(string)($entry['state'] ?? '')] ?? null);
-			if ($status === null || in_array($key, self::KEYS, true) === false) {
-				continue;
-			}
-
-			$message = trim((string)($entry['reason'] ?? ''));
-			if ($status === 'limited') {
-				$message = self::PREVIEW_MESSAGE;
-			}
-
-			if ($message === '' && $status === 'configured') {
-				$message = 'A developer application is filed for this network in the credential broker.';
-			}
-
-			if ($this->report(key: $key, status: $status, message: $message) === true) {
+			$key = 'social-' . (string)$network;
+			if (is_array($entry) === true && $this->reportedNetwork(key: $key, entry: $entry) === true) {
 				$sent[] = $key;
 			}
 		}
 
 		return $sent;
 	}//end reportSocialReadiness()
+
+	/**
+	 * Report one declared network's readiness; an unknown state or undeclared network sends nothing.
+	 *
+	 * @param string               $key   The `social-*` connection key.
+	 * @param array<string, mixed> $entry The network's `{state, reason}`.
+	 *
+	 * @return bool Whether a report was dispatched.
+	 */
+	private function reportedNetwork(string $key, array $entry): bool {
+		$status = (self::READINESS_STATUS[(string)($entry['state'] ?? '')] ?? null);
+		if ($status === null || in_array($key, self::KEYS, true) === false) {
+			return false;
+		}
+
+		return $this->report(key: $key, status: $status, message: $this->readinessMessage(status: $status, entry: $entry));
+	}//end reportedNetwork()
+
+	/**
+	 * The message for a network's readiness: the preview notice, its own reason, or the filed-application note.
+	 *
+	 * @param string               $status The registry status.
+	 * @param array<string, mixed> $entry  The network's `{state, reason}`.
+	 *
+	 * @return string The message.
+	 */
+	private function readinessMessage(string $status, array $entry): string {
+		if ($status === 'limited') {
+			return self::PREVIEW_MESSAGE;
+		}
+
+		$message = trim((string)($entry['reason'] ?? ''));
+		if ($message === '' && $status === 'configured') {
+			return 'A developer application is filed for this network in the credential broker.';
+		}
+
+		return $message;
+	}//end readinessMessage()
 
 	/**
 	 * The event class to instantiate, or null when integriq does not ship it.

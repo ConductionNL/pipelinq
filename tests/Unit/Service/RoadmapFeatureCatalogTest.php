@@ -191,4 +191,77 @@ class RoadmapFeatureCatalogTest extends TestCase {
 		$features = (new RoadmapFeatureCatalog(appManager: $appManager, cacheFactory: $factory))->load();
 		$this->assertCount(expectedCount: 36, haystack: $features);
 	}//end testStaleListUnderTheBareVersionKeyIsNotServed()
+	/**
+	 * Every spec shape: only a `done` status (quoted, any case) is listed;
+	 * no frontmatter or no status is skipped; the title drops a trailing
+	 * "Specification" and falls back to the slug; the summary is the first
+	 * Purpose paragraph, collapsed; the list is sorted by slug.
+	 *
+	 * @return void
+	 */
+	public function testEverySpecShape(): void {
+		$dir = sys_get_temp_dir().'/roadmap-specs-'.uniqid();
+		$specs = [
+			'zeta'    => "---\nstatus: \"Done\"\n---\n# Zeta  Specification \n\n## Purpose\n\nFirst  line\nsecond line.\n\nNext para.\n\n## Other\nx\n",
+			'alpha'   => "---\ntitle: x\nstatus: done\n---\nNo heading here.\n## Purpose\nOnly para\n",
+			'beta'    => "---\nstatus: draft\n---\n# Beta\n",
+			'gamma'   => "# Gamma without frontmatter\n",
+			'delta'   => "---\nowner: me\n---\n# Delta\n",
+			'epsilon' => "---\nstatus: 'DONE'\n---\n# Epsilon\n\n## Purpose\n",
+		];
+		foreach ($specs as $slug => $text) {
+			mkdir($dir.'/'.$slug, 0777, true);
+			file_put_contents($dir.'/'.$slug.'/spec.md', $text);
+		}
+
+		$features = $this->catalog(cached: null)->extractFeaturesFromSpecs(specsDir: $dir);
+		array_map('unlink', glob($dir.'/*/spec.md'));
+		array_map('rmdir', glob($dir.'/*'));
+		rmdir($dir);
+
+		$this->assertSame(
+			[
+				['slug' => 'alpha', 'title' => 'alpha', 'summary' => 'Only para', 'docsUrl' => 'openspec/specs/alpha/spec.md'],
+				['slug' => 'epsilon', 'title' => 'Epsilon', 'summary' => '', 'docsUrl' => 'openspec/specs/epsilon/spec.md'],
+				['slug' => 'zeta', 'title' => 'Zeta', 'summary' => 'First line second line.', 'docsUrl' => 'openspec/specs/zeta/spec.md'],
+			],
+			$features
+		);
+	}//end testEverySpecShape()
+
+	/**
+	 * Every curated entry shape: a non-list document or features is null; an
+	 * entry without a string slug is skipped; missing fields are ''; the docs
+	 * link is set only for a non-empty spec name.
+	 *
+	 * @return void
+	 */
+	public function testEveryCuratedEntryShape(): void {
+		$path = tempnam(sys_get_temp_dir(), 'roadmap');
+		$catalog = $this->catalog(cached: null);
+
+		file_put_contents($path, '"text"');
+		$this->assertNull($catalog->curatedFeatures(path: $path));
+		file_put_contents($path, '{"features": "none"}');
+		$this->assertNull($catalog->curatedFeatures(path: $path));
+
+		file_put_contents($path, json_encode(['features' => [
+			'loose',
+			['title' => 'No slug'],
+			['slug' => 7],
+			['slug' => 'a', 'spec' => 'spec-a', 'title' => 'A', 'status' => 3, 'extra' => 'x'],
+			['slug' => 'b', 'spec' => ''],
+			['slug' => 'c', 'spec' => ['x']],
+		]]));
+		$empty = ['category' => '', 'status' => '', 'title' => '', 'title_nl' => '', 'summary' => '', 'summary_nl' => ''];
+		$this->assertSame(
+			[
+				['slug' => 'a', 'docsUrl' => 'openspec/specs/spec-a/spec.md'] + ['category' => '', 'status' => '3', 'title' => 'A'] + $empty,
+				['slug' => 'b', 'docsUrl' => ''] + $empty,
+				['slug' => 'c', 'docsUrl' => ''] + $empty,
+			],
+			$catalog->curatedFeatures(path: $path)
+		);
+		unlink($path);
+	}//end testEveryCuratedEntryShape()
 }//end class

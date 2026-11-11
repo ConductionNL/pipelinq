@@ -144,14 +144,21 @@ class WebFormFinder {
 			return array_values(array_filter($form['writes'], 'is_array'));
 		}
 
+		return $this->destinationWrites(form: $form);
+
+	}//end writesOf()
+
+	/**
+	 * The single write a form's `destination` names; none without a schema.
+	 *
+	 * @param array<string, mixed> $form The form body.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function destinationWrites(array $form): array {
 		$destination = ($form['destination'] ?? null);
 		if (is_array($destination) === false || trim((string)($destination['schema'] ?? '')) === '') {
 			return [];
-		}
-
-		$mapping = null;
-		if (is_array($form['mapping'] ?? null) === true) {
-			$mapping = $form['mapping'];
 		}
 
 		return [
@@ -159,11 +166,27 @@ class WebFormFinder {
 				'as' => 'destination',
 				'register' => ($destination['register'] ?? null),
 				'schema' => $destination['schema'],
-				'mapping' => $mapping,
+				'mapping' => $this->mappingOf(form: $form),
 			],
 		];
 
-	}//end writesOf()
+	}//end destinationWrites()
+
+	/**
+	 * The form's mapping, or null when it has none.
+	 *
+	 * @param array<string, mixed> $form The form body.
+	 *
+	 * @return array<mixed>|null
+	 */
+	private function mappingOf(array $form): ?array {
+		if (is_array($form['mapping'] ?? null) === true) {
+			return $form['mapping'];
+		}
+
+		return null;
+
+	}//end mappingOf()
 
 	/**
 	 * The configured webForm schema id, or an empty string.
@@ -187,41 +210,10 @@ class WebFormFinder {
 	 * @throws RuntimeException When the register or webForm schema is not configured.
 	 */
 	private function published(array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->schemaId();
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('Pipelinq: the webForm register or schema is not configured.');
-		}
-
-		$rows = $this->objectService->findAll(
-			config: [
-				'filters' => array_merge(
-					['register' => $register, 'schema' => $schema, 'status' => self::PUBLISHED],
-					$filters
-				),
-				'limit' => self::LOOKUP_LIMIT,
-			],
-			_rbac: false,
-			_multitenancy: false,
-		);
-
 		$forms = [];
-		foreach ((array)$rows as $row) {
+		foreach ($this->publishedRows(filters: $filters) as $row) {
 			$form = $this->bodyOf(row: $row);
-			// The store's filter is trusted for narrowing, not for the decision:
-			// a form is only taken when its own body says published and matches.
-			if ($form === null || ($form['status'] ?? null) !== self::PUBLISHED) {
-				continue;
-			}
-
-			$matches = true;
-			foreach ($filters as $name => $value) {
-				if ((string)($form[$name] ?? '') !== (string)$value) {
-					$matches = false;
-				}
-			}
-
-			if ($matches === true) {
+			if ($this->isPublishedMatch(form: $form, filters: $filters) === true) {
 				$forms[] = $form;
 			}
 		}
@@ -231,6 +223,86 @@ class WebFormFinder {
 	}//end published()
 
 	/**
+	 * The stored rows the store hands back for the filters, published only,
+	 * read with RBAC and multitenancy off.
+	 *
+	 * @param array<string, mixed> $filters Property filters.
+	 *
+	 * @return array<mixed>
+	 *
+	 * @throws RuntimeException When the register or webForm schema is not configured.
+	 */
+	private function publishedRows(array $filters): array {
+		$rows = $this->objectService->findAll(
+			config: [
+				'filters' => array_merge($this->scope(), ['status' => self::PUBLISHED], $filters),
+				'limit' => self::LOOKUP_LIMIT,
+			],
+			_rbac: false,
+			_multitenancy: false,
+		);
+
+		return (array)$rows;
+
+	}//end publishedRows()
+
+	/**
+	 * The configured register and webForm schema.
+	 *
+	 * @return array{register: string, schema: string}
+	 *
+	 * @throws RuntimeException When either is not configured.
+	 */
+	private function scope(): array {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->schemaId();
+		if ($register === '' || $schema === '') {
+			throw new RuntimeException('Pipelinq: the webForm register or schema is not configured.');
+		}
+
+		return ['register' => $register, 'schema' => $schema];
+
+	}//end scope()
+
+	/**
+	 * Whether a body is published and matches every filter. The store's filter
+	 * is trusted for narrowing, not for the decision: a form is only taken
+	 * when its own body says published and matches.
+	 *
+	 * @param array<string, mixed>|null $form    The body, null for a row without one.
+	 * @param array<string, mixed>      $filters Property filters.
+	 *
+	 * @return bool
+	 */
+	private function isPublishedMatch(?array $form, array $filters): bool {
+		if ($form === null || ($form['status'] ?? null) !== self::PUBLISHED) {
+			return false;
+		}
+
+		return $this->matchesAll(form: $form, filters: $filters);
+
+	}//end isPublishedMatch()
+
+	/**
+	 * Whether a body carries every filter's value, compared as strings.
+	 *
+	 * @param array<string, mixed> $form    The body.
+	 * @param array<string, mixed> $filters Property filters.
+	 *
+	 * @return bool
+	 */
+	private function matchesAll(array $form, array $filters): bool {
+		foreach ($filters as $name => $value) {
+			if ((string)($form[$name] ?? '') !== (string)$value) {
+				return false;
+			}
+		}
+
+		return true;
+
+	}//end matchesAll()
+
+	/**
 	 * A stored row as a form body with its id.
 	 *
 	 * @param mixed $row An ObjectEntity or an array.
@@ -238,25 +310,69 @@ class WebFormFinder {
 	 * @return array<string, mixed>|null The body, or null for a row without one.
 	 */
 	private function bodyOf(mixed $row): ?array {
-		$data = null;
-		if (is_array($row) === true) {
-			$data = $row;
-		} else if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
+		$data = $this->dataOf(row: $row);
 		if (is_array($data) === false) {
 			return null;
 		}
 
-		$id = ($data['@self']['id'] ?? $data['id'] ?? $data['uuid'] ?? '');
-		if (is_object($row) === true && method_exists($row, 'getUuid') === true && (string)$row->getUuid() !== '') {
-			$id = (string)$row->getUuid();
-		}
-
-		$data['id'] = (string)$id;
+		$data['id'] = $this->idOf(row: $row, data: $data);
 
 		return $data;
 
 	}//end bodyOf()
+
+	/**
+	 * A row's data: the array itself, or an entity's serialised form.
+	 *
+	 * @param mixed $row An ObjectEntity or an array.
+	 *
+	 * @return mixed The data, null when the row has none.
+	 */
+	private function dataOf(mixed $row): mixed {
+		if (is_array($row) === true) {
+			return $row;
+		}
+
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			return $row->jsonSerialize();
+		}
+
+		return null;
+
+	}//end dataOf()
+
+	/**
+	 * A row's id: an entity's own uuid when set, else the @self id, the id
+	 * or the uuid in its data.
+	 *
+	 * @param mixed                $row  An ObjectEntity or an array.
+	 * @param array<string, mixed> $data The row's data.
+	 *
+	 * @return string
+	 */
+	private function idOf(mixed $row, array $data): string {
+		$uuid = $this->entityUuid(row: $row);
+		if ($uuid !== '') {
+			return $uuid;
+		}
+
+		return (string)($data['@self']['id'] ?? $data['id'] ?? $data['uuid'] ?? '');
+
+	}//end idOf()
+
+	/**
+	 * An entity row's own uuid; '' for an array or an entity without one.
+	 *
+	 * @param mixed $row An ObjectEntity or an array.
+	 *
+	 * @return string
+	 */
+	private function entityUuid(mixed $row): string {
+		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
+			return (string)$row->getUuid();
+		}
+
+		return '';
+
+	}//end entityUuid()
 }//end class

@@ -91,12 +91,7 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(string $status = ''): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse($this->posts->listPosts(status: $status));
+		return $this->crmUserGuard()->respond(action: fn (): JSONResponse => new JSONResponse($this->posts->listPosts(status: $status)));
 	}//end index()
 
 	/**
@@ -110,17 +105,14 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
+			$post = $this->posts->getPost(postId: $id);
+			if ($post === null) {
+				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+			}
 
-		$post = $this->posts->getPost(postId: $id);
-		if ($post === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse(['post' => $post]);
+			return new JSONResponse(['post' => $post]);
+		});
 	}//end show()
 
 	/**
@@ -132,17 +124,14 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function (string $uid): JSONResponse {
+			$result = $this->posts->createPost(payload: $this->collectBody(), uid: $uid);
+			if (isset($result['error']) === true) {
+				return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
+			}
 
-		$result = $this->posts->createPost(payload: $this->collectBody(), uid: $uid);
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result, Http::STATUS_CREATED);
+			return new JSONResponse($result, Http::STATUS_CREATED);
+		});
 	}//end create()
 
 	/**
@@ -156,12 +145,9 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->answer(result: $this->posts->updatePost(postId: $id, payload: $this->collectBody(), uid: $uid));
+		return $this->crmUserGuard()->respond(
+			action: fn (string $uid): JSONResponse => $this->answer(result: $this->posts->updatePost(postId: $id, payload: $this->collectBody(), uid: $uid))
+		);
 	}//end update()
 
 	/**
@@ -175,12 +161,9 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function submit(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->answer(result: $this->posts->submitForApproval(postId: $id));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => $this->answer(result: $this->posts->submitForApproval(postId: $id))
+		);
 	}//end submit()
 
 	/**
@@ -194,15 +177,12 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function approve(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		// The approver is the session. No field of the body says who decided.
-		return $this->answer(
-			result: $this->posts->approve(postId: $id, uid: $uid, note: (string)$this->request->getParam('note', '')),
-		);
+		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+			// The approver is the session. No field of the body says who decided.
+			return $this->answer(
+				result: $this->posts->approve(postId: $id, uid: $uid, note: (string)$this->request->getParam('note', '')),
+			);
+		});
 	}//end approve()
 
 	/**
@@ -216,14 +196,11 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function reject(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->answer(
-			result: $this->posts->reject(postId: $id, uid: $uid, note: (string)$this->request->getParam('note', '')),
-		);
+		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+			return $this->answer(
+				result: $this->posts->reject(postId: $id, uid: $uid, note: (string)$this->request->getParam('note', '')),
+			);
+		});
 	}//end reject()
 
 	/**
@@ -237,12 +214,9 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function publications(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse(['data' => $this->publications->forPost(postId: $id)]);
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse(['data' => $this->publications->forPost(postId: $id)])
+		);
 	}//end publications()
 
 	/**
@@ -256,14 +230,11 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function retry(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
 		// The per-object guard lives in the service, which loads the account
 		// this publication went to and refuses a caller who may not act on it.
-		return $this->answer(result: $this->posts->retryPublication(publicationId: $id, uid: $uid));
+		return $this->crmUserGuard()->respondToUser(
+			action: fn (string $uid): JSONResponse => $this->answer(result: $this->posts->retryPublication(publicationId: $id, uid: $uid))
+		);
 	}//end retry()
 
 	/**
@@ -278,12 +249,9 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function performance(string $network = '', int $limit = 50): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse(['data' => $this->metrics->ranking(network: $network, limit: $limit)]);
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse(['data' => $this->metrics->ranking(network: $network, limit: $limit)])
+		);
 	}//end performance()
 
 	/**
@@ -297,12 +265,9 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function networkPerformance(int $days = 30): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse(['data' => $this->metrics->networkTotals(days: max(1, min(365, $days)))]);
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse(['data' => $this->metrics->networkTotals(days: max(1, min(365, $days)))])
+		);
 	}//end networkPerformance()
 
 	/**
@@ -321,36 +286,13 @@ class SocialPostController extends Controller {
 	}//end answer()
 
 	/**
-	 * The session's user id, or null.
+	 * The CRM-user gate over this request's session.
 	 *
-	 * @return string|null The user id, or null.
+	 * @return CrmUserGuard The gate.
 	 */
-	private function requireUser(): ?string {
-		return $this->userSession->getUser()?->getUID();
-	}//end requireUser()
-
-	/**
-	 * The session's user id when they may use the marketing section.
-	 *
-	 * @return string|null The user id, or null.
-	 */
-	private function requireCrmUser(): ?string {
-		$uid = $this->requireUser();
-		if ($uid === null || $this->policy->isPrivileged(uid: $uid) === false) {
-			return null;
-		}
-
-		return $uid;
-	}//end requireCrmUser()
-
-	/**
-	 * The single refusal.
-	 *
-	 * @return JSONResponse A 403.
-	 */
-	private function refuse(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end refuse()
+	private function crmUserGuard(): CrmUserGuard {
+		return new CrmUserGuard(userSession: $this->userSession, policy: $this->policy);
+	}//end crmUserGuard()
 
 	/**
 	 * The post fields a client may send.

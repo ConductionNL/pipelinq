@@ -51,12 +51,23 @@ export async function createCampaignLandingPage(campaignId, options = {}) {
 		)
 		return data
 	} catch (error) {
-		const body = error?.response?.data
-		if (body && typeof body === 'object' && body.error) {
-			return body
-		}
-		throw error
+		return refusalOf(error)
 	}
+}
+
+/**
+ * The server's refusal (`{error}`) a failed write answered with; any other
+ * failure is thrown on.
+ *
+ * @param {unknown} error The failure.
+ * @return {object} The refusal.
+ */
+function refusalOf(error) {
+	const body = error?.response?.data
+	if (body && typeof body === 'object' && body.error) {
+		return body
+	}
+	throw error
 }
 
 /**
@@ -115,10 +126,6 @@ export async function saveCampaign(payload, id = '') {
 			: await axios.post(url, payload)
 		return { campaign: data }
 	} catch (error) {
-		const body = error?.response?.data
-		if (body && typeof body === 'object' && body.error) {
-			return body
-		}
-		throw error
+		return refusalOf(error)
 	}
 }

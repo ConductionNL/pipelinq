@@ -28,7 +28,7 @@
 			variant="secondary"
 			:disabled="busy || !canConfirmDeposit"
 			data-testid="booking-action-confirm-deposit"
-			@click="run('confirm-deposit', {}, t('pipelinq', 'Deposit confirmed.'))">
+			@click="run({ path: 'confirm-deposit', body: {}, successMessage: t('pipelinq', 'Deposit confirmed.') })">
 			<template #icon>
 				<CashCheck :size="20" />
 			</template>
@@ -38,7 +38,7 @@
 			variant="secondary"
 			:disabled="busy || !canMarkCompleted"
 			data-testid="booking-action-complete"
-			@click="run('complete', {}, t('pipelinq', 'Booking marked completed.'))">
+			@click="run({ path: 'complete', body: {}, successMessage: t('pipelinq', 'Booking marked completed.') })">
 			<template #icon>
 				<CheckCircleOutline :size="20" />
 			</template>
@@ -48,7 +48,7 @@
 			variant="secondary"
 			:disabled="busy || !canMarkNoShow"
 			data-testid="booking-action-no-show"
-			@click="run('no-show', {}, t('pipelinq', 'Booking marked as no-show.'))">
+			@click="run({ path: 'no-show', body: {}, successMessage: t('pipelinq', 'Booking marked as no-show.') })">
 			<template #icon>
 				<AccountCancelOutline :size="20" />
 			</template>
@@ -92,7 +92,6 @@
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
@@ -103,6 +102,7 @@ import CashCheck from 'vue-material-design-icons/CashCheck.vue'
 import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import CancelBookingDialog from '../../dialogs/CancelBookingDialog.vue'
 import RescheduleBookingDialog from '../../dialogs/RescheduleBookingDialog.vue'
+import { postAction } from '../../services/postedAction.js'
 
 export default {
 	name: 'BookingHeaderActions',
@@ -249,51 +249,43 @@ export default {
 		 * POST a booking-admin action, then refresh the page, or open the new
 		 * booking when the action minted one (Reschedule).
 		 *
-		 * @param {string} action The path segment (e.g. 'complete').
-		 * @param {object} body Optional JSON body.
-		 * @param {string} okMsg Success toast message.
+		 * @param {{path: string, body: ?object, successMessage: string}} action The path segment (e.g. 'complete'), the optional JSON body and the success toast.
 		 * @return {Promise<void>}
 		 *
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
-		async run(action, body, okMsg) {
+		async run(action) {
 			const id = this.objectId || this.booking.id
 			if (!id) {
 				return
 			}
 			this.busy = true
 			try {
-				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/bookings/${id}/${action}`),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(body || {}),
-					},
-				)
-				const data = await response.json().catch(() => ({}))
-				if (!response.ok) {
-					showError(data.error || t('pipelinq', 'Action failed.'))
-					return
-				}
-				showSuccess(okMsg)
-				if (data.bookingId && data.bookingId !== id) {
-					this.$router.push({
-						name: 'BookingDetail',
-						params: { id: data.bookingId },
-					})
-					return
-				}
-				emit('cn:page:refresh', {})
-			} catch {
-				showError(t('pipelinq', 'Action failed.'))
+				await postAction(generateUrl(`/apps/pipelinq/api/bookings/${id}/${action.path}`), {
+					body: action.body,
+					successMessage: action.successMessage,
+					then: (data) => this.followBooking({ id, data }),
+				})
 			} finally {
 				this.busy = false
 			}
+		},
+
+		/**
+		 * After an action: open the booking it minted (Reschedule), or re-read this one.
+		 *
+		 * @param {{id: string, data: object}} done The booking the action ran on, and the server's answer.
+		 * @return {void}
+		 */
+		followBooking(done) {
+			if (done.data.bookingId && done.data.bookingId !== done.id) {
+				this.$router.push({
+					name: 'BookingDetail',
+					params: { id: done.data.bookingId },
+				})
+				return
+			}
+			emit('cn:page:refresh', {})
 		},
 
 		/**
@@ -305,11 +297,11 @@ export default {
 		 */
 		onReschedule(newStartAt) {
 			this.showReschedule = false
-			this.run(
-				'reschedule',
-				{ newStartAt },
-				t('pipelinq', 'Booking rescheduled.'),
-			)
+			this.run({
+				path: 'reschedule',
+				body: { newStartAt },
+				successMessage: t('pipelinq', 'Booking rescheduled.'),
+			})
 		},
 
 		/**
@@ -321,11 +313,11 @@ export default {
 		 */
 		onCancel(reason) {
 			this.showCancel = false
-			this.run(
-				'cancel',
-				{ reason: reason || '' },
-				t('pipelinq', 'Booking cancelled.'),
-			)
+			this.run({
+				path: 'cancel',
+				body: { reason: reason || '' },
+				successMessage: t('pipelinq', 'Booking cancelled.'),
+			})
 		},
 	},
 }

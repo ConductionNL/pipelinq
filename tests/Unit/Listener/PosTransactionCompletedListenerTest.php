@@ -248,4 +248,52 @@ class PosTransactionCompletedListenerTest extends TestCase {
 
 	}//end testAnUnrelatedSchemaIsIgnored()
 
+	/**
+	 * Golden: the exact context handed to the loyalty engine, for current and legacy payloads.
+	 *
+	 * @return void
+	 */
+	public function testTheEngineGetsExactlyThisContext(): void {
+		$cases = [
+			'current' => [
+				['status' => 'settled', 'customer' => 'c-1', 'total' => '87.5', 'category' => 'food', 'channel' => 'online', 'segment' => 'gold', 'settledAt' => 'T1', 'reference' => 'R-1', 'terminalId' => 'POS-1', 'klantId' => 'old'],
+				['c-1', ['amount' => 87.5, 'category' => 'food', 'channel' => 'online', 'segment' => 'gold', 'timestamp' => 'T1', 'posTransactionId' => 'R-1', 'posTerminalId' => 'POS-1', 'trigger' => 'purchase']],
+			],
+			'legacy dutch' => [
+				['status' => 'completed', 'klantId' => 'c-2', 'totaalbedrag' => 12, 'voltooidOp' => 'T2', 'transactieId' => 'R-2', 'posTerminalId' => 'POS-2'],
+				['c-2', ['amount' => 12.0, 'category' => '', 'channel' => 'offline', 'segment' => '', 'timestamp' => 'T2', 'posTransactionId' => 'R-2', 'posTerminalId' => 'POS-2', 'trigger' => 'purchase']],
+			],
+			'legacy english' => [
+				['status' => 'paid', 'customerId' => 'c-3', 'amount' => 3, 'timestamp' => 'T3', 'transactionId' => 'R-3'],
+				['c-3', ['amount' => 3.0, 'category' => '', 'channel' => 'offline', 'segment' => '', 'timestamp' => 'T3', 'posTransactionId' => 'R-3', 'posTerminalId' => '', 'trigger' => 'purchase']],
+			],
+			'contact uid and uuid fallback' => [
+				['uuid' => 'txn-4', 'status' => 'settled', 'contactUid' => 'c-4'],
+				['c-4', ['amount' => 0.0, 'category' => '', 'channel' => 'offline', 'segment' => '', 'timestamp' => '', 'posTransactionId' => 'txn-4', 'posTerminalId' => '', 'trigger' => 'purchase']],
+			],
+		];
+		foreach ($cases as $name => [$data, $expected]) {
+			$listener = $this->listener();
+			$listener->handle(new ObjectCreatedEvent($this->entity('schema-pos', $data)));
+			$this->assertSame([['klantId' => $expected[0], 'transaction' => $expected[1]]], $this->calls, $name);
+		}
+	}//end testTheEngineGetsExactlyThisContext()
+
+	/**
+	 * Golden: an engine failure is logged and never reaches the POS flow.
+	 *
+	 * @return void
+	 */
+	public function testAnEngineFailureIsLoggedAndSwallowed(): void {
+		$engine = $this->createMock(LoyaltyEngineService::class);
+		$engine->method('processPosTransaction')->willThrowException(new \RuntimeException('ledger offline'));
+		$schemaMap = $this->createMock(SchemaMapService::class);
+		$schemaMap->method('resolveEntityType')->willReturn('posTransaction');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')
+			->with('Pipelinq: loyalty listener failed; POS flow unaffected', ['exception' => 'ledger offline']);
+		$listener = new PosTransactionCompletedListener($engine, $schemaMap, $this->createMock(IAppConfig::class), $logger);
+
+		$listener->handle(new ObjectCreatedEvent($this->entity('schema-pos', ['status' => 'settled', 'customer' => 'c-1'])));
+	}//end testAnEngineFailureIsLoggedAndSwallowed()
 }//end class

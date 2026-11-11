@@ -176,12 +176,7 @@ export async function fetchUserGroups() {
 export async function searchAssignees(query) {
 	if (!query || query.length < 1) return []
 	try {
-		const url =
-			'/ocs/v2.php/apps/files_sharing/api/v1/sharees'
-			+ '?search='
-			+ encodeURIComponent(query)
-			+ '&itemType=file&perPage=20&format=json'
-		const response = await fetch(url, {
+		const response = await fetch(shareeSearchUrl(query), {
 			headers: {
 				Accept: 'application/json',
 				'OCS-APIREQUEST': 'true',
@@ -190,33 +185,48 @@ export async function searchAssignees(query) {
 		})
 		if (!response.ok) return []
 		const data = await response.json()
-		const results = []
-
-		// Users (shareType 0)
-		const users =
-			data?.ocs?.data?.exact?.users?.concat(data?.ocs?.data?.users || []) || []
-		for (const u of users) {
-			results.push({
-				id: u.value?.shareWith || u.label,
-				label: u.label || u.value?.shareWith,
-				type: 'user',
-			})
-		}
-
-		// Groups (shareType 1)
-		const groups =
-			data?.ocs?.data?.exact?.groups?.concat(data?.ocs?.data?.groups || [])
-			|| []
-		for (const g of groups) {
-			results.push({
-				id: g.value?.shareWith || g.label,
-				label: g.label || g.value?.shareWith,
-				type: 'group',
-			})
-		}
-
-		return results
+		const sharees = data?.ocs?.data
+		// Users (shareType 0), then groups (shareType 1).
+		return [
+			...asAssignees(shareesOf(sharees, 'users'), 'user'),
+			...asAssignees(shareesOf(sharees, 'groups'), 'group'),
+		]
 	} catch {
 		return []
 	}
+}
+
+/**
+ * @param {string} query The search query.
+ * @return {string} The sharee search URL.
+ */
+function shareeSearchUrl(query) {
+	return '/ocs/v2.php/apps/files_sharing/api/v1/sharees'
+		+ '?search='
+		+ encodeURIComponent(query)
+		+ '&itemType=file&perPage=20&format=json'
+}
+
+/**
+ * The exact matches of a kind, then the other matches; none without exact matches.
+ *
+ * @param {(object|undefined)} sharees The `ocs.data` of the answer.
+ * @param {string} kind `users` or `groups`.
+ * @return {Array<object>} The sharees.
+ */
+function shareesOf(sharees, kind) {
+	return sharees?.exact?.[kind]?.concat(sharees?.[kind] || []) || []
+}
+
+/**
+ * @param {Array<object>} sharees The sharees.
+ * @param {string} type `user` or `group`.
+ * @return {Array<{id: string, label: string, type: string}>} The assignee options.
+ */
+function asAssignees(sharees, type) {
+	return sharees.map((sharee) => ({
+		id: sharee.value?.shareWith || sharee.label,
+		label: sharee.label || sharee.value?.shareWith,
+		type,
+	}))
 }

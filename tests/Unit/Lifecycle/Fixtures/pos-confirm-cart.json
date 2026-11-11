@@ -1,0 +1,1698 @@
+{
+    "allowed no id configured lines": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id configured empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id configured null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id configured throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id by slug lines": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id by slug empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id by slug null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id by slug throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id no slug lines": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id no slug empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id no slug null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id no slug throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id no register lines": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id no register empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id no register null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed no id no register throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed uuid configured lines": {
+        "allowed": true,
+        "message": null,
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "9"
+                    },
+                    "transaction": "tx-u"
+                }
+            }
+        ]
+    },
+    "allowed uuid configured empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "9"
+                    },
+                    "transaction": "tx-u"
+                }
+            }
+        ]
+    },
+    "allowed uuid configured null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "9"
+                    },
+                    "transaction": "tx-u"
+                }
+            }
+        ]
+    },
+    "allowed uuid configured throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not verify cart contents (fail closed)",
+                {
+                    "exception": "or down",
+                    "transaction": "tx-u"
+                }
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "9"
+                    },
+                    "transaction": "tx-u"
+                }
+            }
+        ]
+    },
+    "allowed uuid by slug lines": {
+        "allowed": true,
+        "message": null,
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "12"
+                    },
+                    "transaction": "tx-u"
+                }
+            }
+        ]
+    },
+    "allowed uuid by slug empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "12"
+                    },
+                    "transaction": "tx-u"
+                }
+            }
+        ]
+    },
+    "allowed uuid by slug null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "12"
+                    },
+                    "transaction": "tx-u"
+                }
+            }
+        ]
+    },
+    "allowed uuid by slug throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not verify cart contents (fail closed)",
+                {
+                    "exception": "or down",
+                    "transaction": "tx-u"
+                }
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "12"
+                    },
+                    "transaction": "tx-u"
+                }
+            }
+        ]
+    },
+    "allowed uuid no slug lines": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not resolve line schema slug (fail closed)",
+                {
+                    "slug": "posTransactionLine",
+                    "exception": "unknown slug posTransactionLine"
+                }
+            ]
+        ],
+        "queries": []
+    },
+    "allowed uuid no slug empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not resolve line schema slug (fail closed)",
+                {
+                    "slug": "posTransactionLine",
+                    "exception": "unknown slug posTransactionLine"
+                }
+            ]
+        ],
+        "queries": []
+    },
+    "allowed uuid no slug null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not resolve line schema slug (fail closed)",
+                {
+                    "slug": "posTransactionLine",
+                    "exception": "unknown slug posTransactionLine"
+                }
+            ]
+        ],
+        "queries": []
+    },
+    "allowed uuid no slug throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not resolve line schema slug (fail closed)",
+                {
+                    "slug": "posTransactionLine",
+                    "exception": "unknown slug posTransactionLine"
+                }
+            ]
+        ],
+        "queries": []
+    },
+    "allowed uuid no register lines": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed uuid no register empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed uuid no register null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed uuid no register throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed id configured lines": {
+        "allowed": true,
+        "message": null,
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "9"
+                    },
+                    "transaction": "tx-i"
+                }
+            }
+        ]
+    },
+    "allowed id configured empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "9"
+                    },
+                    "transaction": "tx-i"
+                }
+            }
+        ]
+    },
+    "allowed id configured null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "9"
+                    },
+                    "transaction": "tx-i"
+                }
+            }
+        ]
+    },
+    "allowed id configured throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not verify cart contents (fail closed)",
+                {
+                    "exception": "or down",
+                    "transaction": "tx-i"
+                }
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "9"
+                    },
+                    "transaction": "tx-i"
+                }
+            }
+        ]
+    },
+    "allowed id by slug lines": {
+        "allowed": true,
+        "message": null,
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "12"
+                    },
+                    "transaction": "tx-i"
+                }
+            }
+        ]
+    },
+    "allowed id by slug empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "12"
+                    },
+                    "transaction": "tx-i"
+                }
+            }
+        ]
+    },
+    "allowed id by slug null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "12"
+                    },
+                    "transaction": "tx-i"
+                }
+            }
+        ]
+    },
+    "allowed id by slug throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not verify cart contents (fail closed)",
+                {
+                    "exception": "or down",
+                    "transaction": "tx-i"
+                }
+            ]
+        ],
+        "queries": [
+            {
+                "filters": {
+                    "@self": {
+                        "register": "5",
+                        "schema": "12"
+                    },
+                    "transaction": "tx-i"
+                }
+            }
+        ]
+    },
+    "allowed id no slug lines": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not resolve line schema slug (fail closed)",
+                {
+                    "slug": "posTransactionLine",
+                    "exception": "unknown slug posTransactionLine"
+                }
+            ]
+        ],
+        "queries": []
+    },
+    "allowed id no slug empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not resolve line schema slug (fail closed)",
+                {
+                    "slug": "posTransactionLine",
+                    "exception": "unknown slug posTransactionLine"
+                }
+            ]
+        ],
+        "queries": []
+    },
+    "allowed id no slug null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not resolve line schema slug (fail closed)",
+                {
+                    "slug": "posTransactionLine",
+                    "exception": "unknown slug posTransactionLine"
+                }
+            ]
+        ],
+        "queries": []
+    },
+    "allowed id no slug throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ],
+            [
+                "container",
+                "OCA\\OpenRegister\\Db\\SchemaMapper"
+            ],
+            [
+                "warning",
+                "Pipelinq: confirm guard could not resolve line schema slug (fail closed)",
+                {
+                    "slug": "posTransactionLine",
+                    "exception": "unknown slug posTransactionLine"
+                }
+            ]
+        ],
+        "queries": []
+    },
+    "allowed id no register lines": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed id no register empty": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed id no register null": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ]
+        ],
+        "queries": []
+    },
+    "allowed id no register throws": {
+        "allowed": false,
+        "message": "Voeg minimaal één artikel toe.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ],
+            [
+                "config",
+                "register"
+            ],
+            [
+                "config",
+                "posTransactionLine_schema"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id configured lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id configured empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id configured null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id configured throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id by slug lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id by slug empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id by slug null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id by slug throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id no slug lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id no slug empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id no slug null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id no slug throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id no register lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id no register empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id no register null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied no id no register throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid configured lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid configured empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid configured null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid configured throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid by slug lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid by slug empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid by slug null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid by slug throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid no slug lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid no slug empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid no slug null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid no slug throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid no register lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid no register empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid no register null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied uuid no register throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id configured lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id configured empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id configured null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id configured throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id by slug lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id by slug empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id by slug null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id by slug throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id no slug lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id no slug empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id no slug null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id no slug throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id no register lines": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id no register empty": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id no register null": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    },
+    "denied id no register throws": {
+        "allowed": false,
+        "message": "U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, een lid van de POS-groep of een beheerder is gemachtigd.",
+        "calls": [
+            [
+                "access",
+                "kassa-1"
+            ]
+        ],
+        "queries": []
+    }
+}

@@ -12,6 +12,16 @@
 const REVENUE_STATUSES = ['active', 'expiring']
 
 /**
+ * Per recurring billing interval, how a value per interval becomes a value
+ * per month. A one-off or unknown interval adds nothing.
+ */
+const TO_MONTHLY = {
+	monthly: (value) => value,
+	quarterly: (value) => value / 3,
+	annual: (value) => value / 12,
+}
+
+/**
  * Normalize a single contract's interval value to a monthly figure.
  *
  * @param {string} billingInterval  - The billing interval ('monthly', 'quarterly', 'annual', 'one-off').
@@ -19,17 +29,10 @@ const REVENUE_STATUSES = ['active', 'expiring']
  * @return {number} The normalized monthly recurring revenue (0 for one-off).
  */
 export function normalizeToMonthly(billingInterval, valuePerInterval) {
-	switch (billingInterval) {
-		case 'monthly':
-			return valuePerInterval
-		case 'quarterly':
-			return valuePerInterval / 3
-		case 'annual':
-			return valuePerInterval / 12
-		case 'one-off':
-		default:
-			return 0
-	}
+	const toMonthly = typeof billingInterval === 'string' && Object.hasOwn(TO_MONTHLY, billingInterval)
+		? TO_MONTHLY[billingInterval]
+		: null
+	return toMonthly ? toMonthly(valuePerInterval) : 0
 }
 
 /**

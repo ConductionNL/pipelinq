@@ -389,4 +389,139 @@ class CommercialAnalyticsServiceTest extends TestCase {
 		$this->assertNull(actual: $met['pipelineCover']);
 		$this->assertSame(expected: 0.0, actual: $met['targetRemaining']);
 	}
+
+	/**
+	 * The previous period counts only what closed or settled in the window
+	 * before the current one; a row without any timestamp counts nowhere,
+	 * and a window without closed deals has no win rate or deal size.
+	 *
+	 * @return void
+	 */
+	public function testPreviousPeriodAggregatesItsOwnWindow(): void {
+		$data = [
+			'lead_schema' => [
+				['id' => 'P1', 'status' => 'won', 'value' => 700.555, 'stageEnteredAt' => $this->daysAgo(40)],
+				['id' => 'P2', 'status' => 'won', 'value' => 300, 'stageEnteredAt' => $this->daysAgo(50)],
+				['id' => 'P3', 'status' => 'lost', 'value' => 100, 'stageEnteredAt' => $this->daysAgo(45)],
+				['id' => 'P4', 'status' => 'lost', 'value' => 100, 'stageEnteredAt' => $this->daysAgo(70)],
+				['id' => 'P5', 'status' => 'open', 'value' => 100, 'stageEnteredAt' => $this->daysAgo(40)],
+				['id' => 'P6', 'status' => 'won', 'value' => 100],
+			],
+			'posTransaction_schema' => [
+				['id' => 't1', 'status' => 'settled', 'total' => 80.2, 'settledAt' => $this->daysAgo(35)],
+				['id' => 't2', 'status' => 'confirmed', 'total' => 20, 'confirmedAt' => $this->daysAgo(65)],
+				['id' => 't3', 'status' => 'settled', 'total' => 50],
+				['id' => 't4', 'status' => 'refunded', 'total' => 999, 'settledAt' => $this->daysAgo(40)],
+			],
+		];
+
+		$overview = $this->buildService(byCollection: $data)->getCommercialOverview(period: 'month');
+
+		$this->assertSame(0.0, $overview['revenue']);
+		$this->assertSame(0.0, $overview['wonValue']);
+		$this->assertNull($overview['winRate']);
+		$this->assertNull($overview['avgDealSize']);
+		$this->assertSame(0, $overview['wonCount']);
+		$this->assertSame(0, $overview['lostCount']);
+		$this->assertSame(
+			[
+				'revenue' => 1080.76,
+				'wonValue' => 1000.56,
+				'winRate' => 66.7,
+				'avgDealSize' => 500.28,
+				'wonCount' => 2,
+				'lostCount' => 1,
+			],
+			$overview['previousPeriod']
+		);
+	}//end testPreviousPeriodAggregatesItsOwnWindow()
+
+	/**
+	 * Top customers keep the limit, skip the client-less total without
+	 * spending a place on it, fall back to the id for an unknown client and
+	 * to `customer` on a POS row, and leave out what closed outside the window.
+	 *
+	 * @return void
+	 */
+	public function testTopCustomersLimitAndFallbacks(): void {
+		$leads = [
+			['id' => 'L0', 'status' => 'won', 'value' => 99999, 'client' => '', 'stageEnteredAt' => $this->daysAgo(1)],
+			['id' => 'Lx', 'status' => 'won', 'value' => 50000, 'client' => 'old', 'stageEnteredAt' => $this->daysAgo(60)],
+			['id' => 'Ly', 'status' => 'lost', 'value' => 50000, 'client' => 'lost', 'stageEnteredAt' => $this->daysAgo(1)],
+		];
+		for ($i = 1; $i <= 9; $i++) {
+			$leads[] = ['id' => 'L' . $i, 'status' => 'won', 'value' => 100 * $i, 'client' => 'k' . $i, 'stageEnteredAt' => $this->daysAgo(2)];
+		}
+
+		$data = [
+			'lead_schema' => $leads,
+			'posTransaction_schema' => [
+				['id' => 't1', 'status' => 'settled', 'total' => 1000, 'customer' => 'k1', 'settledAt' => $this->daysAgo(3)],
+				['id' => 't2', 'status' => 'settled', 'total' => 1000, 'client' => 'k2', 'settledAt' => $this->daysAgo(90)],
+			],
+			'client_schema' => [
+				['id' => 'k1', 'name' => 'One'],
+				['id' => 'k9'],
+			],
+		];
+
+		$result = $this->buildService(byCollection: $data)->getTrends(metric: 'top-customers', period: 'month');
+
+		$this->assertSame(
+			[
+				['date' => 'One', 'value' => 1100.0],
+				['date' => 'k9', 'value' => 900.0],
+				['date' => 'k8', 'value' => 800.0],
+				['date' => 'k7', 'value' => 700.0],
+				['date' => 'k6', 'value' => 600.0],
+				['date' => 'k5', 'value' => 500.0],
+				['date' => 'k4', 'value' => 400.0],
+				['date' => 'k3', 'value' => 300.0],
+			],
+			$result['series']
+		);
+	}//end testTopCustomersLimitAndFallbacks()
+
+	/**
+	 * Category revenue resolves a category reference to its name, keeps a
+	 * free-text category as written, sorts by value and leaves out lines of
+	 * transactions settled outside the window or without an id.
+	 *
+	 * @return void
+	 */
+	public function testRevenueByCategoryResolvesNamesAndSorts(): void {
+		$data = [
+			'posTransaction_schema' => [
+				['id' => 't1', 'status' => 'settled', 'total' => 1, 'settledAt' => $this->daysAgo(1)],
+				['id' => 't2', 'status' => 'settled', 'total' => 1, 'settledAt' => $this->daysAgo(45)],
+				['status' => 'settled', 'total' => 1, 'settledAt' => $this->daysAgo(1)],
+			],
+			'posTransactionLine_schema' => [
+				['transaction' => 't1', 'product' => 'p1', 'lineTotal' => 10],
+				['transaction' => 't1', 'product' => 'p2', 'lineTotal' => 30.333],
+				['transaction' => 't1', 'product' => 'p1', 'lineTotal' => 5],
+				['transaction' => 't2', 'product' => 'p1', 'lineTotal' => 500],
+				['transaction' => '', 'product' => 'p1', 'lineTotal' => 700],
+				['product' => 'p2', 'lineTotal' => 700],
+			],
+			'product_schema' => [
+				['id' => 'p1', 'category' => 'cat-uuid'],
+				['id' => 'p2', 'category' => 'Legacy text'],
+			],
+			'productCategory_schema' => [
+				['id' => 'cat-uuid', 'name' => 'Coffee'],
+			],
+		];
+
+		$result = $this->buildService(byCollection: $data)->getTrends(metric: 'revenue-by-product-category', period: 'month');
+
+		$this->assertSame(
+			[
+				['date' => 'Legacy text', 'value' => 30.33],
+				['date' => 'Coffee', 'value' => 15.0],
+			],
+			$result['series']
+		);
+		$this->assertSame('month', $result['period']);
+	}//end testRevenueByCategoryResolvesNamesAndSorts()
 }

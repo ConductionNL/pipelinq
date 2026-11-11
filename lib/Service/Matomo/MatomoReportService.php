@@ -152,29 +152,40 @@ class MatomoReportService {
 	 */
 	public function refusal(): ?array {
 		if ($this->egress->isConfigured(configKey: self::SOURCE_KEY) === false) {
-			return [
-				'connected' => false,
-				'failure' => EgressResult::NOT_CONFIGURED,
-				'reason' => 'No Matomo source is configured under ' . self::SOURCE_KEY . '.',
-			];
+			return $this->notConfigured(reason: 'No Matomo source is configured under ' . self::SOURCE_KEY . '.');
 		}
 
 		$credentialRef = $this->credentialRef();
 		if ($credentialRef === '') {
-			return [
-				'connected' => false,
-				'failure' => EgressResult::NOT_CONFIGURED,
-				'reason' => 'No credential is referenced under ' . self::CREDENTIAL_KEY . '.',
-			];
+			return $this->notConfigured(reason: 'No credential is referenced under ' . self::CREDENTIAL_KEY . '.');
 		}
 
-		$status = $this->credentials->status(credentialRef: $credentialRef);
+		return $this->credentialRefusal(status: $this->credentials->status(credentialRef: $credentialRef));
+	}//end refusal()
+
+	/**
+	 * A not-configured refusal with its reason.
+	 *
+	 * @param string $reason Why.
+	 *
+	 * @return array{connected: false, failure: string, reason: string}
+	 */
+	private function notConfigured(string $reason): array {
+		return ['connected' => false, 'failure' => EgressResult::NOT_CONFIGURED, 'reason' => $reason];
+	}//end notConfigured()
+
+	/**
+	 * The refusal the broker's credential status calls for: not configured
+	 * when it could not be read, relink needed when it is not active, none
+	 * when it is.
+	 *
+	 * @param string $status The broker's status, '' when unreadable.
+	 *
+	 * @return array{connected: false, failure: string, reason: string}|null
+	 */
+	private function credentialRefusal(string $status): ?array {
 		if ($status === '') {
-			return [
-				'connected' => false,
-				'failure' => EgressResult::NOT_CONFIGURED,
-				'reason' => 'The referenced credential could not be read from the broker.',
-			];
+			return $this->notConfigured(reason: 'The referenced credential could not be read from the broker.');
 		}
 
 		if ($status !== 'active') {
@@ -186,7 +197,7 @@ class MatomoReportService {
 		}
 
 		return null;
-	}//end refusal()
+	}//end credentialRefusal()
 
 	/**
 	 * The configured credential reference.
@@ -258,6 +269,24 @@ class MatomoReportService {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-three-matomo-reports-matched-to-the-campaigns-we-already-mint
 	 */
 	private function matchCampaigns(array $rows): array {
+		$ours = $this->campaignsByUtm();
+		$out = [];
+		foreach ($rows as $row) {
+			if (is_array($row) === true) {
+				$out[] = $this->campaignRow(row: $row, ours: $ours);
+			}
+		}
+
+		return $out;
+	}//end matchCampaigns()
+
+	/**
+	 * Our campaigns keyed on their trimmed, lower-cased utm value; a later
+	 * campaign on the same value wins, one without a value is left out.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function campaignsByUtm(): array {
 		$ours = [];
 		foreach ($this->campaigns->all() as $campaign) {
 			$value = mb_strtolower(trim((string)($campaign['utmCampaign'] ?? '')), 'UTF-8');
@@ -266,27 +295,29 @@ class MatomoReportService {
 			}
 		}
 
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_array($row) === false) {
-				continue;
-			}
+		return $ours;
+	}//end campaignsByUtm()
 
-			$label = trim((string)($row['label'] ?? ''));
-			$key = mb_strtolower($label, 'UTF-8');
-			$match = ($ours[$key] ?? null);
-			$out[] = [
-				'campaign' => $label,
-				'visits' => (int)($row['nb_visits'] ?? 0),
-				'actions' => (int)($row['nb_actions'] ?? 0),
-				'matched' => ($match !== null),
-				'campaignId' => (string)($match['id'] ?? ($match['@self']['id'] ?? '')),
-				'campaignName' => (string)($match['name'] ?? ''),
-			];
-		}
-
-		return $out;
-	}//end matchCampaigns()
+	/**
+	 * One Matomo row with the campaign of ours it names, if any.
+	 *
+	 * @param array<string, mixed>                $row  The Matomo row.
+	 * @param array<string, array<string, mixed>> $ours Our campaigns by utm value.
+	 *
+	 * @return array{campaign: string, visits: int, actions: int, matched: bool, campaignId: string, campaignName: string}
+	 */
+	private function campaignRow(array $row, array $ours): array {
+		$label = trim((string)($row['label'] ?? ''));
+		$match = ($ours[mb_strtolower($label, 'UTF-8')] ?? null);
+		return [
+			'campaign' => $label,
+			'visits' => (int)($row['nb_visits'] ?? 0),
+			'actions' => (int)($row['nb_actions'] ?? 0),
+			'matched' => ($match !== null),
+			'campaignId' => (string)($match['id'] ?? ($match['@self']['id'] ?? '')),
+			'campaignName' => (string)($match['name'] ?? ''),
+		];
+	}//end campaignRow()
 
 	/**
 	 * The configured Matomo site id, defaulting to the first site.

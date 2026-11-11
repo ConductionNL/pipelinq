@@ -35,20 +35,19 @@ export function isStorable(line) {
  * The posTransactionLine to store for a till line: what the cashier entered, never a figure.
  *
  * @param {object} line The till line.
- * @param {string} transactionId The sale.
- * @param {number} sortOrder The line's place on the sale.
+ * @param {{transactionId: string, sortOrder: number}} placement The sale, and the line's place on it.
  * @return {object} The object to save.
  */
-export function linePayload(line, transactionId, sortOrder) {
+export function linePayload(line, placement) {
 	const payload = {
-		transaction: transactionId,
+		transaction: placement.transactionId,
 		product: line.product || null,
 		description: line.description,
 		quantity: Number(line.quantity) || 0,
 		unitPrice: Number(line.unitPrice) || 0,
 		discount: Number(line.discount) || 0,
 		taxRate: Number(line.taxRate) || 0,
-		sortOrder,
+		sortOrder: placement.sortOrder,
 		notes: line.notes || '',
 	}
 	if (line.id) {

@@ -78,6 +78,60 @@ class ReceiptServiceTest extends TestCase {
 	}//end setUp()
 
 	/**
+	 * The render context: totals, the BTW lines from the persisted breakdown
+	 * (labelled by rate when they carry no description, non-rows skipped), the
+	 * item lines and the company.
+	 *
+	 * @return void
+	 */
+	public function testBuildContextCarriesThePersistedFigures(): void {
+		$context = $this->service->buildContext(
+			transaction: [
+				'id' => 'tx-1',
+				'createdAt' => '',
+				'subtotal' => '100',
+				'totalTax' => 21,
+				'total' => 121,
+				'taxBreakdown' => [
+					['rate' => 21.0, 'base' => 100, 'tax' => 21, 'description' => 'Hoog'],
+					['rate' => 9.5, 'base' => 10, 'tax' => 0.95],
+					['rate' => 0, 'base' => 5],
+					'not a row',
+				],
+				'lines' => [['description' => 'Koffie', 'quantity' => 2, 'lineTotal' => '7.5'], 'x', []],
+			]
+		);
+
+		$this->assertSame('tx-1', $context['reference']);
+		$this->assertSame(100.0, $context['subtotal']);
+		$this->assertSame(0.0, $context['discountTotal']);
+		$this->assertSame(21.0, $context['totalTax']);
+		$this->assertSame(121.0, $context['total']);
+		$this->assertSame(
+			[
+				['rate' => 21.0, 'base' => 100.0, 'tax' => 21.0, 'label' => 'Hoog'],
+				['rate' => 9.5, 'base' => 10.0, 'tax' => 0.95, 'label' => '9.5% VAT'],
+				['rate' => 0.0, 'base' => 5.0, 'tax' => 0.0, 'label' => '% VAT'],
+			],
+			$context['btwLines']
+		);
+		$this->assertSame(
+			[
+				['description' => 'Koffie', 'quantity' => 2.0, 'lineTotal' => 7.5],
+				['description' => '', 'quantity' => 0.0, 'lineTotal' => 0.0],
+			],
+			$context['lines']
+		);
+		$this->assertSame('Test Winkel B.V.', $context['company']['name']);
+		$this->assertSame('', $context['invoiceNumber']);
+		$this->assertSame(
+			['reference', 'date', 'subtotal', 'discountTotal', 'totalTax', 'total', 'btwLines', 'lines', 'company', 'invoiceNumber'],
+			array_keys($context)
+		);
+		$this->assertSame([], $this->service->buildContext(transaction: ['invoiceBreakdown' => 'none'])['btwLines']);
+	}//end testBuildContextCarriesThePersistedFigures()
+
+	/**
 	 * A small transaction (< EUR 100) renders a simple receipt: RECEIPT heading,
 	 * an aggregate VAT line, no per-rate breakdown and no compliance footer.
 	 *

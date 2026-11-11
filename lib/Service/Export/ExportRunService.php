@@ -45,6 +45,13 @@ class ExportRunService extends AbstractExportService {
 	private const RUN_SCHEMA_KEY = 'exportRun_schema';
 
 	/**
+	 * Run list filters passed on to the store: request name => stored name.
+	 *
+	 * @var array<string, string>
+	 */
+	private const RUN_FILTERS = ['job_id' => 'jobId', 'status' => 'status'];
+
+	/**
 	 * The exportSchemaSnapshot schema config key.
 	 *
 	 * @var string
@@ -108,16 +115,7 @@ class ExportRunService extends AbstractExportService {
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
 	 */
 	public function listRuns(array $filters = []): array {
-		$objectFilters = [];
-		if (isset($filters['job_id']) === true && (string)$filters['job_id'] !== '') {
-			$objectFilters['jobId'] = (string)$filters['job_id'];
-		}
-
-		if (isset($filters['status']) === true && (string)$filters['status'] !== '') {
-			$objectFilters['status'] = (string)$filters['status'];
-		}
-
-		$runs = $this->findAllObjects(schemaKey: self::RUN_SCHEMA_KEY, filters: $objectFilters);
+		$runs = $this->findAllObjects(schemaKey: self::RUN_SCHEMA_KEY, filters: $this->runFilters(filters: $filters));
 
 		$dateFrom = (string)($filters['date_from'] ?? '');
 		$dateTo = (string)($filters['date_to'] ?? '');
@@ -125,15 +123,29 @@ class ExportRunService extends AbstractExportService {
 			$runs = $this->filterByDate(runs: $runs, dateFrom: $dateFrom, dateTo: $dateTo);
 		}
 
-		usort(
-			$runs,
-			static function (array $a, array $b): int {
-				return strcmp((string)($b['startedAt'] ?? ''), (string)($a['startedAt'] ?? ''));
-			}
-		);
+		usort($runs, static fn (array $a, array $b): int => strcmp((string)($b['startedAt'] ?? ''), (string)($a['startedAt'] ?? '')));
 
 		return $runs;
 	}//end listRuns()
+
+	/**
+	 * The stored-object filters of a run list request: the job and the
+	 * status, each under its stored name and only when not blank.
+	 *
+	 * @param array<string, mixed> $filters The request's filters.
+	 *
+	 * @return array<string, string>
+	 */
+	private function runFilters(array $filters): array {
+		$objectFilters = [];
+		foreach (self::RUN_FILTERS as $requested => $stored) {
+			if (isset($filters[$requested]) === true && (string)$filters[$requested] !== '') {
+				$objectFilters[$stored] = (string)$filters[$requested];
+			}
+		}
+
+		return $objectFilters;
+	}//end runFilters()
 
 	/**
 	 * Mark a run as running and stamp startedAt.

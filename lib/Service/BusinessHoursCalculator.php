@@ -100,10 +100,8 @@ class BusinessHoursCalculator {
 		}
 
 		return $this->advanceWithinWindow(
-			calendarType: $calendarType,
-			start: $start,
-			minutesNeeded: $minutes,
-			holidayCalendar: $holidayCalendar
+			calendar: new BusinessCalendar(type: $calendarType, holidayCalendar: $holidayCalendar),
+			work: new RemainingMinutes(from: $start, minutes: $minutes)
 		);
 	}//end addDuration()
 
@@ -175,100 +173,140 @@ class BusinessHoursCalculator {
 			return 0;
 		}
 
+		$calendar = new BusinessCalendar(type: $calendarType, holidayCalendar: $holidayCalendar);
 		$cursor = DateTimeImmutable::createFromInterface($start);
 		$endStamp = $end->getTimestamp();
 		$total = 0;
 
 		// Step forward day-by-day, capping each window contribution.
 		while ($cursor->getTimestamp() < $endStamp) {
-			[$winStart, $winEnd] = $this->dayWindow(
-				calendarType: $calendarType,
-				day: $cursor,
-				holidayCalendar: $holidayCalendar
-			);
-			if ($winStart === null || $winEnd === null) {
-				$cursor = $cursor->modify('+1 day')->setTime(0, 0);
-				continue;
-			}
-
-			$segmentStart = max($cursor->getTimestamp(), $winStart->getTimestamp());
-			$segmentEnd = min($endStamp, $winEnd->getTimestamp());
-
-			if ($segmentEnd > $segmentStart) {
-				$total += (int)floor(($segmentEnd - $segmentStart) / 60);
-			}
-
-			$cursor = $cursor->modify('+1 day')->setTime(0, 0);
+			$total += $this->minutesOpenOn(calendar: $calendar, span: new DaySpan(from: $cursor, untilStamp: $endStamp));
+			$cursor = $this->nextDayStart(day: $cursor);
 		}
 
 		return $total;
 	}//end elapsedBusinessMinutes()
 
 	/**
+	 * The open minutes of one day within the span counted.
+	 *
+	 * @param BusinessCalendar $calendar The calendar.
+	 * @param DaySpan          $span     From an instant on the day up to the end of the count.
+	 *
+	 * @return int The open minutes (floored).
+	 */
+	private function minutesOpenOn(BusinessCalendar $calendar, DaySpan $span): int {
+		[$winStart, $winEnd] = $this->dayWindow(calendar: $calendar, day: $span->from);
+		if ($winStart === null || $winEnd === null) {
+			return 0;
+		}
+
+		$segmentStart = max($span->from->getTimestamp(), $winStart->getTimestamp());
+		$segmentEnd = min($span->untilStamp, $winEnd->getTimestamp());
+		if ($segmentEnd > $segmentStart) {
+			return (int)floor(($segmentEnd - $segmentStart) / 60);
+		}
+
+		return 0;
+	}//end minutesOpenOn()
+
+	/**
 	 * Walk forward through business-hours windows until the requested
 	 * minute count has been consumed.
 	 *
-	 * @param string $calendarType Calendar mode.
-	 * @param DateTimeImmutable $start Start instant.
-	 * @param int $minutesNeeded Minutes left to consume.
-	 * @param string $holidayCalendar Holiday calendar slug.
+	 * @param BusinessCalendar $calendar The calendar.
+	 * @param RemainingMinutes $work     The start instant and the minutes to consume.
 	 *
 	 * @return DateTimeImmutable End instant.
 	 */
-	private function advanceWithinWindow(
-		string $calendarType,
-		DateTimeImmutable $start,
-		int $minutesNeeded,
-		string $holidayCalendar,
-	): DateTimeImmutable {
-		$cursor = $start;
+	private function advanceWithinWindow(BusinessCalendar $calendar, RemainingMinutes $work): DateTimeImmutable {
 		// Safety: bound at 365 day iterations to prevent infinite loop on
 		// misconfiguration (e.g. all-holiday calendar).
 		$maxLoops = 365 * 2;
 
-		while ($minutesNeeded > 0 && $maxLoops-- > 0) {
-			[$winStart, $winEnd] = $this->dayWindow(
-				calendarType: $calendarType,
-				day: $cursor,
-				holidayCalendar: $holidayCalendar
-			);
-			if ($winStart === null || $winEnd === null) {
-				// Non-business day; jump to next day start.
-				$cursor = $cursor->modify('+1 day')->setTime(0, 0);
-				continue;
+		while ($work->minutes > 0 && $maxLoops-- > 0) {
+			$next = $this->advanceOneDay(calendar: $calendar, work: $work);
+			if ($next instanceof DateTimeImmutable) {
+				return $next;
 			}
 
-			// Position cursor at max(cursor, winStart).
-			if ($cursor < $winStart) {
-				$cursor = $winStart;
-			}
-
-			if ($cursor >= $winEnd) {
-				// Past the window end; skip to next day.
-				$cursor = $cursor->modify('+1 day')->setTime(0, 0);
-				continue;
-			}
-
-			$availMinutes = (int)floor(($winEnd->getTimestamp() - $cursor->getTimestamp()) / 60);
-			if ($availMinutes >= $minutesNeeded) {
-				$advanced = $cursor->modify('+' . $minutesNeeded . ' minutes');
-				assert($advanced !== false);
-				return $advanced;
-			}
-
-			$minutesNeeded -= $availMinutes;
-			$cursor = $winEnd;
-		}//end while
+			$work = $next;
+		}
 
 		if ($maxLoops <= 0) {
 			$this->logger->error(
 				'BusinessHoursCalculator: hit safety bound advancing deadline; calendar likely misconfigured',
-				['calendarType' => $calendarType, 'holidayCalendar' => $holidayCalendar]
+				['calendarType' => $calendar->type, 'holidayCalendar' => $calendar->holidayCalendar]
 			);
 		}
 
-		return $cursor;
+		return $work->from;
 	}//end advanceWithinWindow()
+
+	/**
+	 * Consume one day's window: the deadline when it fits, else what is left from the window end.
+	 *
+	 * @param BusinessCalendar $calendar The calendar.
+	 * @param RemainingMinutes $work     Where the walk stands.
+	 *
+	 * @return DateTimeImmutable|RemainingMinutes The deadline, or the walk's next position.
+	 */
+	private function advanceOneDay(BusinessCalendar $calendar, RemainingMinutes $work): DateTimeImmutable|RemainingMinutes {
+		$window = $this->dayWindow(calendar: $calendar, day: $work->from);
+		$cursor = $this->openCursor(cursor: $work->from, window: $window);
+		if ($cursor === null) {
+			// Non-business day, or past the window end; jump to next day start.
+			return new RemainingMinutes(from: $this->nextDayStart(day: $work->from), minutes: $work->minutes);
+		}
+
+		$winEnd = $window[1];
+		$availMinutes = (int)floor(($winEnd->getTimestamp() - $cursor->getTimestamp()) / 60);
+		if ($availMinutes >= $work->minutes) {
+			$advanced = $cursor->modify('+' . $work->minutes . ' minutes');
+			assert($advanced !== false);
+			return $advanced;
+		}
+
+		return new RemainingMinutes(from: $winEnd, minutes: ($work->minutes - $availMinutes));
+	}//end advanceOneDay()
+
+	/**
+	 * Where the walk can start consuming a day's window: the later of the cursor
+	 * and the window start, or null on a closed day or past the window end.
+	 *
+	 * @param DateTimeImmutable                                        $cursor The walk's instant.
+	 * @param array{0: ?DateTimeImmutable, 1: ?DateTimeImmutable} $window The day's window.
+	 *
+	 * @return DateTimeImmutable|null The instant to consume from.
+	 */
+	private function openCursor(DateTimeImmutable $cursor, array $window): ?DateTimeImmutable {
+		if (in_array(null, $window, true) === true) {
+			return null;
+		}
+
+		[$winStart, $winEnd] = $window;
+		// Position cursor at max(cursor, winStart).
+		if ($cursor < $winStart) {
+			$cursor = $winStart;
+		}
+
+		if ($cursor >= $winEnd) {
+			return null;
+		}
+
+		return $cursor;
+	}//end openCursor()
+
+	/**
+	 * Midnight at the start of the next day.
+	 *
+	 * @param DateTimeImmutable $day The day.
+	 *
+	 * @return DateTimeImmutable The next day's start.
+	 */
+	private function nextDayStart(DateTimeImmutable $day): DateTimeImmutable {
+		return $day->modify('+1 day')->setTime(0, 0);
+	}//end nextDayStart()
 
 	/**
 	 * Compute the business-hours window for a given calendar day.
@@ -277,63 +315,70 @@ class BusinessHoursCalculator {
 	 * business-hours mode, or full-Sunday in extended mode, or a
 	 * holiday).
 	 *
-	 * @param string $calendarType Calendar mode.
-	 * @param DateTimeImmutable $day Day cursor.
-	 * @param string $holidayCalendar Holiday calendar slug.
+	 * @param BusinessCalendar  $calendar The calendar.
+	 * @param DateTimeImmutable $day      Day cursor.
 	 *
 	 * @return array{0: ?DateTimeImmutable, 1: ?DateTimeImmutable} Window start, end.
 	 */
-	private function dayWindow(
-		string $calendarType,
-		DateTimeImmutable $day,
-		string $holidayCalendar,
-	): array {
+	private function dayWindow(BusinessCalendar $calendar, DateTimeImmutable $day): array {
 		$dow = (int)$day->format('N');
 		// 1=Mon..7=Sun.
-		if ($this->holidays->isHoliday($holidayCalendar, $day) === true) {
+		if ($this->holidays->isHoliday($calendar->holidayCalendar, $day) === true) {
 			return [null, null];
 		}
 
-		$win = $this->getBusinessHoursWindow();
-		if ($calendarType === self::CALENDAR_BUSINESS) {
-			if ($dow >= 6) {
-				return [null, null];
-			}
-
-			return [
-				$this->withTime(day: $day, time: $win['start']),
-				$this->withTime(day: $day, time: $win['end']),
-			];
-		}
-
-		if ($calendarType === self::CALENDAR_EXT_BUSINESS) {
-			if ($dow <= 5) {
-				return [
-					$this->withTime(day: $day, time: '08:00'),
-					$this->withTime(day: $day, time: '18:00'),
-				];
-			}
-
-			if ($dow === 6) {
-				return [
-					$this->withTime(day: $day, time: '09:00'),
-					$this->withTime(day: $day, time: '13:00'),
-				];
-			}
-
-			return [null, null];
-		}
-
-		// Fall through: treat unknown calendar type as business-hours.
-		if ($dow >= 6) {
+		$hours = $this->openingHours(calendarType: $calendar->type, dow: $dow);
+		if ($hours === null) {
 			return [null, null];
 		}
 
 		return [
-			$this->withTime(day: $day, time: $win['start']),
-			$this->withTime(day: $day, time: $win['end']),
+			$this->withTime(day: $day, time: $hours[0]),
+			$this->withTime(day: $day, time: $hours[1]),
 		];
 	}//end dayWindow()
+
+	/**
+	 * The HH:MM opening hours of a weekday in a calendar mode, or null when closed.
+	 *
+	 * An unknown calendar type is treated as business-hours.
+	 *
+	 * @param string $calendarType Calendar mode.
+	 * @param int    $dow          ISO weekday, 1=Mon..7=Sun.
+	 *
+	 * @return array{0: string, 1: string}|null Opening and closing time.
+	 */
+	private function openingHours(string $calendarType, int $dow): ?array {
+		$win = $this->getBusinessHoursWindow();
+		if ($calendarType === self::CALENDAR_EXT_BUSINESS) {
+			return $this->extendedOpeningHours(dow: $dow);
+		}
+
+		if ($dow >= 6) {
+			return null;
+		}
+
+		return [$win['start'], $win['end']];
+	}//end openingHours()
+
+	/**
+	 * The extended-business-hours opening hours: Mon-Fri 08:00-18:00, Sat 09:00-13:00.
+	 *
+	 * @param int $dow ISO weekday, 1=Mon..7=Sun.
+	 *
+	 * @return array{0: string, 1: string}|null Opening and closing time, or null on Sunday.
+	 */
+	private function extendedOpeningHours(int $dow): ?array {
+		if ($dow <= 5) {
+			return ['08:00', '18:00'];
+		}
+
+		if ($dow === 6) {
+			return ['09:00', '13:00'];
+		}
+
+		return null;
+	}//end extendedOpeningHours()
 
 	/**
 	 * Build a new DateTimeImmutable on the same date with the given HH:MM.

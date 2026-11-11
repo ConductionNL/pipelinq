@@ -21,16 +21,40 @@
 export function currentTariffs(tariffs, today) {
 	const byLabel = new Map()
 	for (const tariff of Array.isArray(tariffs) ? tariffs : []) {
-		const from = tariff?.validFrom || ''
-		if (!tariff || from > today) {
-			continue
-		}
-		const held = byLabel.get(tariff.label)
-		if (!held || from >= (held.validFrom || '')) {
+		if (isInForce(tariff, today) && replaces(tariff, byLabel.get(tariff.label))) {
 			byLabel.set(tariff.label, tariff)
 		}
 	}
 	return [...byLabel.values()]
+}
+
+/**
+ * Whether a tariff is in force on a day: it has no valid-from, or one on
+ * or before the day.
+ *
+ * @param {object|null} tariff The tariff.
+ * @param {string} today The day, `YYYY-MM-DD`.
+ * @return {boolean}
+ * @spec openspec/specs/product-catalog/spec.md
+ */
+function isInForce(tariff, today) {
+	if (!tariff) {
+		return false
+	}
+	return !((tariff.validFrom || '') > today)
+}
+
+/**
+ * Whether a tariff replaces the one held for its label: there is none, or
+ * it is valid from the same day or later.
+ *
+ * @param {object} tariff The tariff.
+ * @param {object|undefined} held The tariff held so far.
+ * @return {boolean}
+ * @spec openspec/specs/product-catalog/spec.md
+ */
+function replaces(tariff, held) {
+	return !held || (tariff.validFrom || '') >= (held.validFrom || '')
 }
 
 /**
@@ -58,20 +82,38 @@ export function nextTariffDate(tariffs, today) {
  * @spec openspec/specs/product-catalog/spec.md
  */
 export function productWeight(product) {
-	let grams = null
-	if (Number.isFinite(product?.weightGrams)) {
-		grams = product.weightGrams
-	} else if (Number.isFinite(product?.weight)) {
-		grams = product.weight * 1000
-	}
+	const grams = weightInGrams(product)
 	if (grams === null) {
 		return ''
 	}
-	const locale =
-		typeof OC !== 'undefined' && OC.getLocale
-			? OC.getLocale().replace('_', '-')
-			: undefined
+	const locale = userLocale()
 	const number = (value) =>
 		new Intl.NumberFormat(locale, { maximumFractionDigits: 3 }).format(value)
 	return grams < 1000 ? `${number(Math.round(grams))} g` : `${number(grams / 1000)} kg`
+}
+
+/**
+ * The product's weight in grams, from grams or else kilograms, or null.
+ *
+ * @param {object|null} product The product.
+ * @return {number|null} The grams.
+ * @spec openspec/specs/product-catalog/spec.md
+ */
+function weightInGrams(product) {
+	if (Number.isFinite(product?.weightGrams)) {
+		return product.weightGrams
+	}
+	return Number.isFinite(product?.weight) ? product.weight * 1000 : null
+}
+
+/**
+ * The user's locale as a BCP 47 tag, or undefined outside Nextcloud.
+ *
+ * @return {string|undefined} The locale.
+ * @spec exclude reads the Nextcloud locale, no behaviour of its own.
+ */
+function userLocale() {
+	return typeof OC !== 'undefined' && OC.getLocale
+		? OC.getLocale().replace('_', '-')
+		: undefined
 }
