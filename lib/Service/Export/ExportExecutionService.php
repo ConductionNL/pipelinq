@@ -91,8 +91,9 @@ class ExportExecutionService {
 	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-03
 	 */
 	public function executeRun(array $run): array {
-		$runId = (string)($run['id'] ?? $run['uuid'] ?? '');
-		$jobId = (string)($run['jobId'] ?? '');
+		$pending = new PendingExportRun(run: $run);
+		$runId = $pending->runId();
+		$jobId = $pending->jobId();
 
 		if ($this->acquireLock(jobId: $jobId) === false) {
 			$this->logger->info('Pipelinq: export run skipped (overlap)', ['runId' => $runId, 'jobId' => $jobId]);
@@ -100,96 +101,179 @@ class ExportExecutionService {
 		}
 
 		try {
-			return $this->runLocked(runId: $runId, jobId: $jobId, run: $run);
+			return $this->runLocked(pending: $pending);
 		} catch (\Throwable $e) {
-			$this->logger->error('Pipelinq: export run failed', ['runId' => $runId, 'error' => $e->getMessage()]);
-			return $this->recordOnJob(
-				jobId: $jobId,
-				run: $this->runs->completeRun(
-					runId: $runId,
-					outcome: ['status' => 'failed', 'errorMessage' => $e->getMessage()]
-				)
-			);
+			return $this->failRun(pending: $pending, error: $e);
 		} finally {
 			$this->releaseLock(jobId: $jobId);
 		}//end try
 	}//end executeRun()
 
 	/**
-	 * Execute the locked body of a run.
+	 * Complete a run that threw as failed, and keep it on its job.
 	 *
-	 * @param string $runId The run UUID.
-	 * @param string $jobId The job UUID.
-	 * @param array<string, mixed> $run The pending run.
+	 * @param PendingExportRun $pending The run.
+	 * @param \Throwable       $error   What went wrong.
 	 *
 	 * @return array<string, mixed> The completed run.
 	 */
-	private function runLocked(string $runId, string $jobId, array $run): array {
-		$job = $this->jobs->getJob(id: $jobId);
-		$this->runs->markRunning(runId: $runId);
+	private function failRun(PendingExportRun $pending, \Throwable $error): array {
+		$runId = $pending->runId();
+		$this->logger->error('Pipelinq: export run failed', ['runId' => $runId, 'error' => $error->getMessage()]);
+		return $this->recordOnJob(
+			jobId: $pending->jobId(),
+			run: $this->runs->completeRun(
+				runId: $runId,
+				outcome: ['status' => 'failed', 'errorMessage' => $error->getMessage()]
+			)
+		);
+	}//end failRun()
 
+	/**
+	 * Execute the locked body of a run.
+	 *
+	 * @param PendingExportRun $pending The pending run.
+	 *
+	 * @return array<string, mixed> The completed run.
+	 */
+	private function runLocked(PendingExportRun $pending): array {
+		$job = $this->jobs->getJob(id: $pending->jobId());
+		$this->runs->markRunning(runId: $pending->runId());
+		$destination = $this->destinationOf(job: $job);
+
+		// Thread the destination compression onto the job for extraction.
+		$extraction = new ExportExtraction(
+			pending: $pending,
+			job: array_merge($job, ['compression' => $destination['compression']])
+		);
+		$this->extractSources(extraction: $extraction);
+
+		$upload = $this->uploads->uploadFiles(
+			destination: $destination,
+			files: $extraction->files,
+			context: self::uploadContext(pending: $pending, job: $job)
+		);
+		$completed = $this->runs->completeRun(
+			runId: $pending->runId(),
+			outcome: $this->outcomeOf(extraction: $extraction, upload: $upload)
+		);
+
+		return $this->recordOnJob(jobId: $pending->jobId(), run: $completed);
+	}//end runLocked()
+
+	/**
+	 * The job's destination, with its compression defaulted to 'none'.
+	 *
+	 * @param array<string, mixed> $job The export job.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function destinationOf(array $job): array {
 		$destination = $this->destinations->getDestination(id: (string)($job['destinationId'] ?? ''));
 		$destination['compression'] = ($destination['compression'] ?? 'none');
 
-		$watermarkFrom = (string)($run['watermarkFrom'] ?? '');
-		$files = [];
-		$totalRows = 0;
-		$watermarkTo = null;
+		return $destination;
+	}//end destinationOf()
 
-		foreach (($job['sourceSchemas'] ?? []) as $schemaSlug) {
-			$slug = (string)$schemaSlug;
+	/**
+	 * Extract every source schema of the job, snapshotting each one.
+	 *
+	 * @param ExportExtraction $extraction The extraction to fill.
+	 *
+	 * @return void
+	 */
+	private function extractSources(ExportExtraction $extraction): void {
+		foreach (($extraction->job['sourceSchemas'] ?? []) as $schemaSlug) {
+			$this->extractSource(extraction: $extraction, slug: (string)$schemaSlug);
+		}
+	}//end extractSources()
 
-			// Thread the destination compression onto the job for extraction.
-			$jobForExtract = array_merge($job, ['compression' => $destination['compression']]);
+	/**
+	 * Extract one source schema, add its file and snapshot its structure.
+	 *
+	 * @param ExportExtraction $extraction The extraction to fill.
+	 * @param string           $slug       The schema slug.
+	 *
+	 * @return void
+	 */
+	private function extractSource(ExportExtraction $extraction, string $slug): void {
+		$pending = $extraction->pending;
+		$file = $this->data->extractSchema(
+			job: $extraction->job,
+			schemaSlug: $slug,
+			watermarkFrom: $pending->watermarkFrom(),
+			rowCap: null
+		);
 
-			$extractWatermark = null;
-			if ($watermarkFrom !== '') {
-				$extractWatermark = $watermarkFrom;
-			}
+		self::addFile(extraction: $extraction, file: $file);
+		$this->snapshotSchema(runId: $pending->runId(), jobId: $pending->jobId(), slug: $slug, file: $file);
+	}//end extractSource()
 
-			$file = $this->data->extractSchema(
-				job: $jobForExtract,
-				schemaSlug: $slug,
-				watermarkFrom: $extractWatermark,
-				rowCap: null
-			);
+	/**
+	 * Add an extracted file: its rows to the total and a newer watermark.
+	 *
+	 * @param ExportExtraction     $extraction The extraction to fill.
+	 * @param array<string, mixed> $file       The extracted file descriptor.
+	 *
+	 * @return void
+	 */
+	private static function addFile(ExportExtraction $extraction, array $file): void {
+		$extraction->files[] = $file;
+		$extraction->totalRows += (int)$file['rows'];
+		if (self::isNewerWatermark(candidate: $file['watermark_to'], current: $extraction->watermarkTo) === true) {
+			$extraction->watermarkTo = $file['watermark_to'];
+		}
+	}//end addFile()
 
-			$files[] = $file;
-			$totalRows += (int)$file['rows'];
-			if ($file['watermark_to'] !== null
-				&& ($watermarkTo === null || strcmp((string)$file['watermark_to'], (string)$watermarkTo) > 0)
-			) {
-				$watermarkTo = $file['watermark_to'];
-			}
+	/**
+	 * Whether a file's watermark is set and newer than the newest so far.
+	 *
+	 * @param mixed $candidate The file's watermark_to.
+	 * @param mixed $current   The newest watermark so far, or null.
+	 *
+	 * @return bool
+	 */
+	private static function isNewerWatermark(mixed $candidate, mixed $current): bool {
+		return $candidate !== null
+			&& ($current === null || strcmp((string)$candidate, (string)$current) > 0);
+	}//end isNewerWatermark()
 
-			$this->snapshotSchema(runId: $runId, jobId: $jobId, slug: $slug, file: $file);
-		}//end foreach
-
-		$context = [
-			'run_id' => $runId,
+	/**
+	 * The upload context: run id, timestamp and the job's partitioning.
+	 *
+	 * @param PendingExportRun     $pending The run.
+	 * @param array<string, mixed> $job     The export job.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function uploadContext(PendingExportRun $pending, array $job): array {
+		return [
+			'run_id' => $pending->runId(),
 			'timestamp' => gmdate('Ymd\THis\Z'),
 			'partition' => (string)($job['partitionBy'] ?? ''),
 		];
+	}//end uploadContext()
 
-		$upload = $this->uploads->uploadFiles(destination: $destination, files: $files, context: $context);
-		$status = $this->mapUploadStatus(uploadStatus: (string)$upload['status']);
-
-		$completed = $this->runs->completeRun(
-			runId: $runId,
-			outcome: [
-				'status' => $status,
-				'rowCount' => $totalRows,
-				'byteCount' => (int)$upload['byte_count'],
-				'fileCount' => (int)$upload['file_count'],
-				'manifest' => $upload['manifest'],
-				'watermarkTo' => $watermarkTo,
-				'destinationAck' => $upload['destination_ack'],
-				'errorMessage' => $upload['error_message'],
-			]
-		);
-
-		return $this->recordOnJob(jobId: $jobId, run: $completed);
-	}//end runLocked()
+	/**
+	 * The run outcome from the extraction and the upload result.
+	 *
+	 * @param ExportExtraction     $extraction The finished extraction.
+	 * @param array<string, mixed> $upload     The upload result.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function outcomeOf(ExportExtraction $extraction, array $upload): array {
+		return [
+			'status' => $this->mapUploadStatus(uploadStatus: (string)$upload['status']),
+			'rowCount' => $extraction->totalRows,
+			'byteCount' => (int)$upload['byte_count'],
+			'fileCount' => (int)$upload['file_count'],
+			'manifest' => $upload['manifest'],
+			'watermarkTo' => $extraction->watermarkTo,
+			'destinationAck' => $upload['destination_ack'],
+			'errorMessage' => $upload['error_message'],
+		];
+	}//end outcomeOf()
 
 	/**
 	 * Keep a finished run's summary and the next run on its job. A failure
