@@ -195,38 +195,80 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	protected function seriesByName(array $payload): array {
-		$out = [];
 		$data = ($payload['data'] ?? []);
 		if (is_array($data) === false) {
-			return $out;
+			return [];
 		}
 
+		$out = [];
 		foreach ($data as $entry) {
-			if (is_array($entry) === false) {
-				continue;
+			$series = $this->namedSeries(entry: $entry);
+			if ($series !== null) {
+				$out[$series[0]] = $series[1];
 			}
-
-			$name = (string)($entry['name'] ?? '');
-			$values = ($entry['values'] ?? []);
-			if ($name === '' || is_array($values) === false || $values === []) {
-				continue;
-			}
-
-			$first = $values[0];
-			$value = 0;
-			if (is_array($first) === true) {
-				$value = ($first['value'] ?? 0);
-			}
-
-			if (is_array($value) === true) {
-				$value = array_sum(array_map('intval', $value));
-			}
-
-			$out[$name] = (int)$value;
 		}
 
 		return $out;
 	}//end seriesByName()
+
+	/**
+	 * One insights entry as its name and value; null for an entry that is
+	 * not a list or has no name or no values.
+	 *
+	 * @param mixed $entry The insights entry.
+	 *
+	 * @return array{0: string, 1: int}|null
+	 */
+	private function namedSeries($entry): ?array {
+		if (is_array($entry) === false) {
+			return null;
+		}
+
+		$name = (string)($entry['name'] ?? '');
+		$values = $this->seriesValues(entry: $entry);
+		if ($name === '' || $values === []) {
+			return null;
+		}
+
+		return [$name, $this->firstValue(first: $values[0])];
+	}//end namedSeries()
+
+	/**
+	 * An entry's values; none when they are not a list.
+	 *
+	 * @param array<string, mixed> $entry The insights entry.
+	 *
+	 * @return array<mixed>
+	 */
+	private function seriesValues(array $entry): array {
+		$values = ($entry['values'] ?? []);
+		if (is_array($values) === false) {
+			return [];
+		}
+
+		return $values;
+	}//end seriesValues()
+
+	/**
+	 * The first value of a series as a whole number: a by-type value is
+	 * summed, a missing one is zero.
+	 *
+	 * @param mixed $first The first value entry.
+	 *
+	 * @return int
+	 */
+	private function firstValue($first): int {
+		$value = 0;
+		if (is_array($first) === true) {
+			$value = ($first['value'] ?? 0);
+		}
+
+		if (is_array($value) === true) {
+			$value = array_sum(array_map('intval', $value));
+		}
+
+		return (int)$value;
+	}//end firstValue()
 
 	/**
 	 * Meta's allow-rules reach no page follower count, so this reports none
