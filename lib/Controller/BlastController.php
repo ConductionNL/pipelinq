@@ -104,9 +104,9 @@ class BlastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$user = $this->crmGate()->userId();
-		if ($user === null) {
-			return $this->crmGate()->unauthorized();
+		$user = $this->crmGate()->privilegedUserId();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$payload = $this->collectBlastBody();
