@@ -45,6 +45,37 @@ import { initializeStores } from '../../store/store.js'
 
 const UNCATEGORIZED_KEY = '__uncategorized__'
 
+/**
+ * @param {{register: string, schema: string}} type The time entry type.
+ * @return {string} The URL of up to 500 of its objects.
+ */
+function timeEntriesUrl(type) {
+	return generateUrl(
+		'/apps/openregister/api/objects/'
+			+ type.register
+			+ '/'
+			+ type.schema
+			+ '?_limit=500',
+	)
+}
+
+/**
+ * The hours per billing category, in the order each category first
+ * appears; an entry without one counts as uncategorised.
+ *
+ * @param {Array<object>} timeEntries The time entries.
+ * @return {Map<string, number>} The hours per category key.
+ */
+function hoursByCategory(timeEntries) {
+	const totals = new Map()
+	for (const te of timeEntries) {
+		const key = te.billingCategory || UNCATEGORIZED_KEY
+		const hours = Number(te.hours) || 0
+		totals.set(key, (totals.get(key) || 0) + hours)
+	}
+	return totals
+}
+
 export default {
 	name: 'BillingCategoryWidget',
 	components: { CnChartWidget, NcEmptyContent },
@@ -83,14 +114,8 @@ export default {
 		 * @return {Array<object>} [{key, label, hours, color}, …]
 		 */
 		buckets() {
-			const totals = new Map()
-			for (const te of this.timeEntries) {
-				const key = te.billingCategory || UNCATEGORIZED_KEY
-				const hours = Number(te.hours) || 0
-				totals.set(key, (totals.get(key) || 0) + hours)
-			}
 			const result = []
-			for (const [key, hours] of totals.entries()) {
+			for (const [key, hours] of hoursByCategory(this.timeEntries).entries()) {
 				const cat =
 					key !== UNCATEGORIZED_KEY ? this.categoryIndex[key] : null
 				result.push({
@@ -137,29 +162,33 @@ export default {
 				const { objectStore } = await initializeStores()
 				const config = objectStore.objectTypeRegistry
 				if (config.timeEntry) {
-					const url = generateUrl(
-						'/apps/openregister/api/objects/'
-							+ config.timeEntry.register
-							+ '/'
-							+ config.timeEntry.schema
-							+ '?_limit=500',
-					)
-					const response = await fetch(url, {
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					})
-					if (response.ok) {
-						const data = await response.json()
-						this.timeEntries = data.results || data || []
-					}
+					await this.loadTimeEntries(config.timeEntry)
 				}
 			} catch (err) {
 				console.error('BillingCategoryWidget load error:', err)
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * Read up to 500 time entries of the registered type; a refused
+		 * request keeps the entries there were.
+		 *
+		 * @param {{register: string, schema: string}} type The time entry type.
+		 * @return {Promise<void>}
+		 */
+		async loadTimeEntries(type) {
+			const response = await fetch(timeEntriesUrl(type), {
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+					'OCS-APIREQUEST': 'true',
+				},
+			})
+			if (response.ok) {
+				const data = await response.json()
+				this.timeEntries = data.results || data || []
 			}
 		},
 
