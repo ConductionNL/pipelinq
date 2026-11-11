@@ -28,7 +28,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
-use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\NotificationService;
@@ -97,7 +96,7 @@ class PointsExpiryBatchJob extends TimedJob {
 	 */
 	protected function run($argument): void {
 		$programmes = $this->getActiveProgrammes();
-		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$now = new DateTimeImmutable('now UTC');
 
 		foreach ($programmes as $programme) {
 			$programmeId = $this->extractUuid(object: $programme);
