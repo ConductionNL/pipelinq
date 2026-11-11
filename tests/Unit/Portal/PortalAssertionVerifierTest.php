@@ -40,6 +40,7 @@ use OCA\Pipelinq\Portal\PortalAssertionVerifier;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for PortalAssertionVerifier.
@@ -406,4 +407,68 @@ class PortalAssertionVerifierTest extends TestCase {
 		$this->assertNull($noSource->verify($this->mintAssertion(secret: self::SECRET)));
 
 	}//end testUnusableSecretFailsClosed()
+	/**
+	 * Each rejection logs exactly one debug line naming the failed check, in
+	 * the check order verify() applies (pins the reasons before the split).
+	 *
+	 * @return void
+	 */
+	public function testEachRejectionLogsItsReason(): void {
+		$now   = time();
+		$valid = $this->mintAssertion(secret: self::SECRET);
+		$hPart = explode('.', $valid)[0];
+		$badClaims = $hPart.'.'.$this->b64UrlEncode(bytes: 'not-json');
+		$badClaims .= '.'.$this->b64UrlEncode(bytes: hash_hmac('sha256', $badClaims, self::SECRET, true));
+
+		$cases = [
+			'malformed structure'    => 'a.b',
+			'unexpected algorithm'   => $this->mintAssertion(secret: self::SECRET, alg: 'none'),
+			'signature mismatch'     => $this->mintAssertion(secret: self::OTHER_SECRET),
+			'malformed claims'       => $badClaims,
+			'not an assertion'       => $this->mintAssertion(secret: self::SECRET, overrides: ['use' => 'session', 'iss' => 'x']),
+			'unexpected issuer'      => $this->mintAssertion(secret: self::SECRET, overrides: ['iss' => 'x', 'exp' => null]),
+			'expired or missing exp' => $this->mintAssertion(secret: self::SECRET, overrides: ['exp' => ($now - 1), 'sub' => '']),
+			'implausible iat'        => $this->mintAssertion(secret: self::SECRET, overrides: ['iat' => ($now + 600), 'exp' => ($now + 900), 'sub' => '']),
+			'missing subject'        => $this->mintAssertion(secret: self::SECRET, overrides: ['sub' => '']),
+		];
+
+		foreach ($cases as $reason => $jwt) {
+			$this->assertSame([$reason], $this->loggedReasons(secret: self::SECRET, jwt: $jwt), $reason);
+		}
+
+		$this->assertSame(['no usable signing secret'], $this->loggedReasons(secret: 'short', jwt: $valid));
+		$this->assertSame([], $this->loggedReasons(secret: self::SECRET, jwt: $valid));
+		$this->assertSame(self::SUBJECT, (new PortalAssertionVerifier(secretOverride: self::SECRET))->verify($valid)['sub']);
+
+	}//end testEachRejectionLogsItsReason()
+
+	/**
+	 * The rejection reasons a verifier with a capturing logger logs for one token.
+	 *
+	 * @param string $secret The secret override.
+	 * @param string $jwt    The token to verify.
+	 *
+	 * @return array<int, string>
+	 */
+	private function loggedReasons(string $secret, string $jwt): array {
+		$lines  = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('debug')->willReturnCallback(
+			static function (string $message, array $context) use (&$lines): void {
+				$lines[] = [$message, $context];
+			}
+		);
+
+		$result  = (new PortalAssertionVerifier(secretOverride: $secret, logger: $logger))->verify($jwt);
+		$reasons = [];
+		foreach ($lines as [$message, $context]) {
+			$this->assertSame('Pipelinq: portal assertion rejected', $message);
+			$this->assertSame(['reason'], array_keys($context));
+			$this->assertNull($result);
+			$reasons[] = $context['reason'];
+		}
+
+		return $reasons;
+
+	}//end loggedReasons()
 }//end class
