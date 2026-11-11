@@ -273,6 +273,23 @@ class EmailSyncServiceTest extends TestCase {
 		$this->assertSame(expected: 'account-1', actual: $result['syncSource']);
 		$this->assertFalse(condition: $result['excluded']);
 		$this->assertFalse(condition: $result['deleted']);
+		$this->assertSame(
+			expected: [
+				'messageId',
+				'subject',
+				'sender',
+				'recipients',
+				'date',
+				'threadId',
+				'linkedEntityType',
+				'linkedEntityId',
+				'direction',
+				'syncSource',
+				'excluded',
+				'deleted',
+			],
+			actual: array_keys($result)
+		);
 	}//end testBuildEmailLinkDataReturnsCorrectShape()
 
 	/**
