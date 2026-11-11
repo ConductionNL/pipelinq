@@ -76,15 +76,11 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A segment is a saved query over
 		// the customer base; listing or evaluating one exposes who is in it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$envelope = $this->segmentService->listSegments(page: $page, limit: $limit);
@@ -105,13 +101,9 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function signals(): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		return new JSONResponse([
@@ -129,13 +121,9 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$user = $this->requireUser();
-		if ($user === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $user) === false) {
-			return $this->forbidden();
+		$user = $this->crmGate()->privilegedUserId();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$payload = $this->collectSegmentBody();
@@ -154,15 +142,11 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A segment is a saved query over
 		// the customer base; listing or evaluating one exposes who is in it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$segment = $this->segmentService->getSegmentById(segmentId: $id);
@@ -186,15 +170,11 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function members(string $id, int $limit = 50): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A segment is a saved query over
 		// the customer base; listing or evaluating one exposes who is in it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$rows = $this->segmentService->previewSegmentMembers(segmentId: $id, limit: $limit);
@@ -214,13 +194,9 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function compliance(string $id, string $channel = 'email'): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$result = $this->complianceService->checkSegmentCompliance(segmentId: $id, channel: $channel);
@@ -265,15 +241,11 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function preview(): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A rule-tree preview reveals a
 		// count over the customer base; only privileged CRM users may run it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$entityType = strtolower((string)$this->request->getParam('entityType', ''));
@@ -297,13 +269,9 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$payload = $this->collectSegmentBody();
@@ -322,15 +290,11 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function refreshSize(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A segment is a saved query over
 		// the customer base; listing or evaluating one exposes who is in it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		try {
@@ -349,29 +313,6 @@ class SegmentController extends Controller {
 
 		return new JSONResponse(['estimatedSize' => $size]);
 	}//end refreshSize()
-
-	/**
-	 * Resolve the authenticated user id.
-	 *
-	 * @return string|null UID or null.
-	 */
-	private function requireUser(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		return $user->getUID();
-	}//end requireUser()
-
-	/**
-	 * Deny a caller who is authenticated but not a CRM user.
-	 *
-	 * @return JSONResponse The 403 response.
-	 */
-	private function forbidden(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end forbidden()
 
 	/**
 	 * Collect a sanitised Segment create body.
@@ -466,15 +407,6 @@ class SegmentController extends Controller {
 	}//end renderCreate()
 
 	/**
-	 * Generic 401 response.
-	 *
-	 * @return JSONResponse
-	 */
-	private function unauthorized(): JSONResponse {
-		return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-	}//end unauthorized()
-
-	/**
 	 * Generic 404 response.
 	 *
 	 * @return JSONResponse
@@ -482,4 +414,13 @@ class SegmentController extends Controller {
 	private function notFound(): JSONResponse {
 		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 	}//end notFound()
+
+	/**
+	 * The caller check shared by the marketing controllers.
+	 *
+	 * @return CrmCallerGate The gate.
+	 */
+	private function crmGate(): CrmCallerGate {
+		return new CrmCallerGate(userSession: $this->userSession, policy: $this->policy);
+	}//end crmGate()
 }//end class
