@@ -83,27 +83,16 @@ class DispatchQueuedMessagesJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 */
 	protected function run(mixed $argument): void {
-		try {
-			$service = $this->container->get(BerichtenboxService::class);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'DispatchQueuedMessagesJob: BerichtenboxService unavailable.',
-				['exception' => $e->getMessage()]
-			);
-			return;
-		}
-
-		try {
-			$count = $service->dispatchQueuedMessages(self::BATCH_LIMIT);
-			$this->logger->info(
-				'DispatchQueuedMessagesJob processed messages.',
-				['count' => $count]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'DispatchQueuedMessagesJob run failed.',
-				['exception' => $e->getMessage()]
-			);
-		}
+		$pass = new BerichtenboxJobPass(container: $this->container, logger: $this->logger);
+		$pass->run(
+			job: 'DispatchQueuedMessagesJob',
+			work: function (BerichtenboxService $service): void {
+				$count = $service->dispatchQueuedMessages(self::BATCH_LIMIT);
+				$this->logger->info(
+					'DispatchQueuedMessagesJob processed messages.',
+					['count' => $count]
+				);
+			}
+		);
 	}//end run()
 }//end class
