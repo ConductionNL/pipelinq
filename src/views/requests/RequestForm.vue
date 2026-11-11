@@ -773,30 +773,11 @@ export default {
 }
 </script>
 
+<style scoped src="../formLayout.css"></style>
+
 <style scoped>
 .request-form {
 	max-width: 600px;
-}
-
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	font-weight: bold;
-	margin-bottom: 4px;
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .request-form--board {
@@ -875,11 +856,5 @@ export default {
 	margin: 4px 0 0;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
-}
-
-.form-actions {
-	display: flex;
-	gap: 8px;
-	margin-top: 20px;
 }
 </style>
