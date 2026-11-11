@@ -89,7 +89,7 @@ class TicketWooRequestController extends Controller {
 		}
 
 		try {
-			$ticket = $this->tickets->find(schemaKey: self::TICKET, id: $id);
+			$ticket = $this->tickets->findAsCaller(schemaKey: self::TICKET, id: $id);
 			if ($ticket === null) {
 				return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 			}
@@ -120,7 +120,7 @@ class TicketWooRequestController extends Controller {
 		}
 
 		try {
-			$ticket = $this->tickets->find(schemaKey: self::TICKET, id: $id);
+			$ticket = $this->tickets->findAsCaller(schemaKey: self::TICKET, id: $id);
 			if ($ticket === null) {
 				return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 			}
