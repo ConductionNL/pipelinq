@@ -83,6 +83,28 @@ class WebFormBindingCheck {
 	public const FORMS_MISSING = 'forms-not-installed';
 
 	/**
+	 * The finding of a published form that names no destination.
+	 *
+	 * @var array{property: string, code: string, message: string}
+	 */
+	private const MISSING_DESTINATION_FINDING = [
+		'property' => '',
+		'code' => self::DESTINATION_MISSING,
+		'message' => 'A published form must name the object a submit creates.',
+	];
+
+	/**
+	 * The finding of a form bound to Nextcloud Forms while Forms is not installed.
+	 *
+	 * @var array{property: string, code: string, message: string}
+	 */
+	private const FORMS_MISSING_FINDING = [
+		'property' => '',
+		'code' => self::FORMS_MISSING,
+		'message' => 'This form is bound to Nextcloud Forms, which is not installed.',
+	];
+
+	/**
 	 * OpenRegister's validator, resolved by name: pipelinq boots without OpenRegister.
 	 *
 	 * @var string
@@ -132,38 +154,39 @@ class WebFormBindingCheck {
 
 		$writes = $this->finder->writesOf(form: $form);
 		if ($writes === []) {
-			return [
-				[
-					'property' => '',
-					'code' => self::DESTINATION_MISSING,
-					'message' => 'A published form must name the object a submit creates.',
-				],
-			];
+			return [self::MISSING_DESTINATION_FINDING];
 		}
 
 		$findings = $this->keyFindings(form: $form);
-		$questions = null;
 		$formsFormId = (int)($form['formsFormId'] ?? 0);
-		if ($formsFormId > 0) {
-			if ($this->questions->available() === false) {
-				$findings[] = [
-					'property' => '',
-					'code' => self::FORMS_MISSING,
-					'message' => 'This form is bound to Nextcloud Forms, which is not installed.',
-				];
-				return $findings;
-			}
-
-			$questions = $this->questions->questions(formId: $formsFormId);
+		if ($formsFormId > 0 && $this->questions->available() === false) {
+			$findings[] = self::FORMS_MISSING_FINDING;
+			return $findings;
 		}
 
+		$check = new WriteCheck(questions: $this->boundQuestions(formsFormId: $formsFormId), named: count($writes) > 1);
 		foreach ($writes as $write) {
-			array_push($findings, ...$this->writeFindings(write: $write, questions: $questions, named: count($writes) > 1));
+			array_push($findings, ...$this->writeFindings(check: $check, write: $write));
 		}
 
 		return $findings;
 
 	}//end findings()
+
+	/**
+	 * The questions of the bound Nextcloud Forms form, or null for an unbound form.
+	 *
+	 * @param int $formsFormId The bound form id, 0 when unbound.
+	 *
+	 * @return array<string, array<string, mixed>>|null
+	 */
+	private function boundQuestions(int $formsFormId): ?array {
+		if ($formsFormId <= 0) {
+			return null;
+		}
+
+		return $this->questions->questions(formId: $formsFormId);
+	}//end boundQuestions()
 
 	/**
 	 * A finding when another published form already answers to this key.
@@ -193,45 +216,14 @@ class WebFormBindingCheck {
 	/**
 	 * Findings for one write.
 	 *
-	 * @param array<string, mixed>                     $write     The write.
-	 * @param array<string, array<string, mixed>>|null $questions The bound form's questions, or null.
-	 * @param bool                                     $named     Whether to name the write in each finding.
+	 * @param WriteCheck           $check The bound questions and whether to name the write in each finding.
+	 * @param array<string, mixed> $write The write.
 	 *
 	 * @return array<int, array<string, mixed>> The findings.
 	 */
-	private function writeFindings(array $write, ?array $questions, bool $named): array {
-		$schemaRef = (string)($write['schema'] ?? '');
-		try {
-			$schema = $this->container->get(self::SCHEMA_MAPPER)->find($schemaRef, _multitenancy: false);
-		} catch (Throwable) {
-			$schema = null;
-		}
-
-		$findings = [
-			[
-				'property' => '',
-				'code' => self::DESTINATION_UNKNOWN,
-				'message' => sprintf('The destination "%s" does not exist.', $schemaRef),
-			],
-		];
-		if ($schema !== null) {
-			$findings = [];
-			$mapping = (array)($write['mapping'] ?? []);
-			if ($questions !== null) {
-				[$mapping, $findings] = $this->fromQuestions(mapping: $mapping, questions: $questions);
-			}
-
-			array_push(
-				$findings,
-				...$this->container->get(self::VALIDATOR)->validate(
-					mapping: $mapping,
-					schema: $schema,
-					options: ['audience' => 'authenticated']
-				)
-			);
-		}
-
-		if ($named === false) {
+	private function writeFindings(WriteCheck $check, array $write): array {
+		$findings = $this->destinationFindings(check: $check, write: $write);
+		if ($check->named === false) {
 			return $findings;
 		}
 
@@ -241,6 +233,60 @@ class WebFormBindingCheck {
 		);
 
 	}//end writeFindings()
+
+	/**
+	 * Findings on one write's destination: unknown, or what the mapping validator says.
+	 *
+	 * @param WriteCheck           $check The bound questions.
+	 * @param array<string, mixed> $write The write.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function destinationFindings(WriteCheck $check, array $write): array {
+		$schemaRef = (string)($write['schema'] ?? '');
+		$schema = $this->schemaOf(schemaRef: $schemaRef);
+		if ($schema === null) {
+			return [
+				[
+					'property' => '',
+					'code' => self::DESTINATION_UNKNOWN,
+					'message' => sprintf('The destination "%s" does not exist.', $schemaRef),
+				],
+			];
+		}
+
+		$findings = [];
+		$mapping = (array)($write['mapping'] ?? []);
+		if ($check->questions !== null) {
+			[$mapping, $findings] = $this->fromQuestions(mapping: $mapping, questions: $check->questions);
+		}
+
+		array_push(
+			$findings,
+			...$this->container->get(self::VALIDATOR)->validate(
+				mapping: $mapping,
+				schema: $schema,
+				options: ['audience' => 'authenticated']
+			)
+		);
+
+		return $findings;
+	}//end destinationFindings()
+
+	/**
+	 * The destination schema, or null when it does not resolve.
+	 *
+	 * @param string $schemaRef The write's schema reference.
+	 *
+	 * @return object|null
+	 */
+	private function schemaOf(string $schemaRef): ?object {
+		try {
+			return $this->container->get(self::SCHEMA_MAPPER)->find($schemaRef, _multitenancy: false);
+		} catch (Throwable) {
+			return null;
+		}
+	}//end schemaOf()
 
 	/**
 	 * The mapping with each field's type and options taken from its Forms question.
