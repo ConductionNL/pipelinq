@@ -107,33 +107,6 @@ class PartyLeafProvider {
 		}
 
 		$kind = trim((string)($party['partyKind'] ?? $party['type'] ?? ''));
-		$values = ($party['fieldValues'] ?? []);
-		if (is_array($values) === false) {
-			$values = [];
-		}
-
-		$fields = [];
-		foreach ($this->declaredFields(kind: $kind) as $declared) {
-			$key = (string)($declared['key'] ?? '');
-			if ($key === '') {
-				continue;
-			}
-
-			$fields[] = [
-				'key' => $key,
-				'label' => (string)($declared['label'] ?? $key),
-				'fieldKind' => (string)($declared['fieldKind'] ?? 'text'),
-				'required' => (bool)($declared['required'] ?? false),
-				'order' => (int)($declared['order'] ?? 0),
-				'choices' => (array)($declared['choices'] ?? []),
-				// Unset is rendered as unset. A field with no value must not
-				// come back looking like one somebody filled in.
-				'value' => ($values[$key] ?? null),
-			];
-		}
-
-		usort($fields, static fn (array $a, array $b): int => ($a['order'] <=> $b['order']));
-
 		return [
 			'status' => 200,
 			'party' => [
@@ -142,10 +115,63 @@ class PartyLeafProvider {
 				'parentOrganisation' => (string)($party['parentOrganisation'] ?? ''),
 				'organisationPath' => (string)($party['organisationPath'] ?? ''),
 			],
-			'fields' => $fields,
+			'fields' => $this->fieldsOf(party: $party, kind: $kind),
 			'indicators' => $this->indicatorService->resolve(partyId: $partyId),
 		];
 	}//end describe()
+
+	/**
+	 * The party kind's declared fields with the party's values, in declared order.
+	 *
+	 * @param array<string, mixed> $party The party.
+	 * @param string               $kind  Its kind code.
+	 *
+	 * @return array<int, array<string, mixed>> The fields.
+	 */
+	private function fieldsOf(array $party, string $kind): array {
+		$values = ($party['fieldValues'] ?? []);
+		if (is_array($values) === false) {
+			$values = [];
+		}
+
+		$fields = [];
+		foreach ($this->declaredFields(kind: $kind) as $declared) {
+			$field = $this->fieldRow(declared: $declared, values: $values);
+			if ($field !== null) {
+				$fields[] = $field;
+			}
+		}
+
+		usort($fields, static fn (array $a, array $b): int => ($a['order'] <=> $b['order']));
+		return $fields;
+	}//end fieldsOf()
+
+	/**
+	 * One declared field with its value, or null for a field without a key.
+	 *
+	 * @param array<string, mixed> $declared The declared field.
+	 * @param array<string, mixed> $values   The party's field values.
+	 *
+	 * @return array<string, mixed>|null The field.
+	 */
+	private function fieldRow(array $declared, array $values): ?array {
+		$key = (string)($declared['key'] ?? '');
+		if ($key === '') {
+			return null;
+		}
+
+		return [
+			'key' => $key,
+			'label' => (string)($declared['label'] ?? $key),
+			'fieldKind' => (string)($declared['fieldKind'] ?? 'text'),
+			'required' => (bool)($declared['required'] ?? false),
+			'order' => (int)($declared['order'] ?? 0),
+			'choices' => (array)($declared['choices'] ?? []),
+			// Unset is rendered as unset. A field with no value must not
+			// come back looking like one somebody filled in.
+			'value' => ($values[$key] ?? null),
+		];
+	}//end fieldRow()
 
 	/**
 	 * The fields declared for one party kind.
@@ -166,8 +192,20 @@ class PartyLeafProvider {
 			$filters['partyKind'] = $kind;
 		}
 
+		return $this->rowsAsArrays(rows: $this->fieldSetRows(filters: $filters, kind: $kind));
+	}//end declaredFields()
+
+	/**
+	 * The field-set rows matching the filters, or [] when the read fails (logged).
+	 *
+	 * @param array<string, string> $filters The register, schema and kind filters.
+	 * @param string                $kind    The party kind, for the log.
+	 *
+	 * @return iterable<mixed> The rows.
+	 */
+	private function fieldSetRows(array $filters, string $kind): iterable {
 		try {
-			$rows = $this->objectService->findAll(['filters' => $filters, 'limit' => self::FIELD_LIMIT]);
+			return $this->objectService->findAll(['filters' => $filters, 'limit' => self::FIELD_LIMIT]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'PartyLeafProvider: the field set read failed',
@@ -176,24 +214,29 @@ class PartyLeafProvider {
 
 			return [];
 		}
+	}//end fieldSetRows()
 
+	/**
+	 * The rows that are arrays, or serialise to one.
+	 *
+	 * @param iterable<mixed> $rows The rows.
+	 *
+	 * @return array<int, array<string, mixed>> The rows as arrays.
+	 */
+	private function rowsAsArrays(iterable $rows): array {
 		$fields = [];
 		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$fields[] = $row;
-				continue;
+			if (($row instanceof \JsonSerializable) === true) {
+				$row = $row->jsonSerialize();
 			}
 
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$fields[] = $data;
-				}
+			if (is_array($row) === true) {
+				$fields[] = $row;
 			}
 		}
 
 		return $fields;
-	}//end declaredFields()
+	}//end rowsAsArrays()
 
 	/**
 	 * Read the party, with RBAC on.
