@@ -437,4 +437,51 @@ class ContactMomentLeafProviderTest extends TestCase {
 		$this->assertSame(201, $result['status']);
 		$this->assertTrue($saved);
 	}//end testAnInboundAppendAgainstTheSameIndicatorIsAccepted()
+
+	/**
+	 * Every refusal of create and list is exact, and a refused call writes and lists nothing.
+	 *
+	 * @return void
+	 */
+	public function testRefusalsAndSaveFailuresAreExact(): void {
+		$finds = [];
+		$this->objectService->method('find')->willReturnCallback(
+			function (string $id) use (&$finds): ?ObjectEntityInterface {
+				$finds[] = $id;
+				if ($id === 'boom') {
+					throw new \RuntimeException('or down');
+				}
+
+				return $id === 'case-1' ? $this->createMock(ObjectEntityInterface::class) : null;
+			}
+		);
+		$this->ticketService->expects($this->never())->method('findByType');
+		$saves = [];
+		$this->ticketService->method('save')->willReturnCallback(
+			function (string $ticketType, array $payload) use (&$saves): array {
+				$saves[] = $payload['title'];
+				if ($payload['title'] === 'Facet') {
+					throw new \InvalidArgumentException('channel is not a facet value');
+				}
+
+				throw new \RuntimeException('db down');
+			}
+		);
+		$provider = $this->provider();
+		$call = ['subject' => 'Call', 'channel' => 'phone', 'direction' => 'inbound'];
+		$blank = ['status' => 400, 'error' => 'A host object id is required.'];
+		$hidden = ['status' => 403, 'error' => 'You may not read this object.'];
+
+		$this->assertSame($blank, $provider->create(hostId: '  ', payload: $call));
+		$this->assertSame($blank, $provider->list(hostId: ''));
+		$this->assertSame($hidden, $provider->create(hostId: ' case-2 ', payload: []));
+		$this->assertSame($hidden, $provider->list(hostId: 'boom'));
+		$this->assertSame($hidden, $provider->create(hostId: 'boom', payload: $call));
+		$this->assertSame(['status' => 400, 'error' => 'A contact moment requires a subject.'], $provider->create(hostId: 'case-1', payload: ['channel' => 'phone']));
+		$this->assertSame(['status' => 400, 'error' => 'A contact moment requires a channel.'], $provider->create(hostId: 'case-1', payload: ['subject' => 'Call']));
+		$this->assertSame(['status' => 400, 'error' => 'channel is not a facet value'], $provider->create(hostId: 'case-1', payload: ['subject' => 'Facet'] + $call));
+		$this->assertSame(['status' => 500, 'error' => 'The contact moment could not be saved.'], $provider->create(hostId: 'case-1', payload: $call));
+		$this->assertSame(['case-2', 'boom', 'boom', 'case-1', 'case-1', 'case-1', 'case-1'], $finds);
+		$this->assertSame(['Facet', 'Call'], $saves);
+	}//end testRefusalsAndSaveFailuresAreExact()
 }//end class
