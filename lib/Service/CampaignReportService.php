@@ -134,34 +134,8 @@ class CampaignReportService {
 	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	public function channels(array $blasts, array $touchpoints): array {
-		$rows = [];
-		foreach ($blasts as $blast) {
-			$channel = (string)($blast['channel'] ?? 'email');
-			$totals = (array)($blast['totals'] ?? []);
-			$row = ($rows[$channel] ?? $this->emptyChannel(channel: $channel));
-			$row['reach'] = ((int)($row['reach'] ?? 0) + (int)($totals['delivered'] ?? 0));
-			$row['sent'] = ($row['sent'] + (int)($totals['sent'] ?? 0));
-			$row['opened'] = ($row['opened'] + (int)($totals['opened'] ?? 0));
-			$row['reported'] = true;
-			$rows[$channel] = $row;
-		}
-
-		$leadsPerChannel = [];
-		foreach ($touchpoints as $touchpoint) {
-			$channel = (string)($touchpoint['channel'] ?? 'direct');
-			$row = ($rows[$channel] ?? $this->emptyChannel(channel: $channel));
-			$kind = (string)($touchpoint['kind'] ?? '');
-			if (isset($row[$kind]) === true) {
-				$row[$kind]++;
-			}
-
-			$leadId = trim((string)($touchpoint['leadId'] ?? ''));
-			if ($leadId !== '') {
-				$leadsPerChannel[$channel][$leadId] = true;
-			}
-
-			$rows[$channel] = $row;
-		}
+		$rows = $this->withTouchpoints(rows: $this->blastChannels(blasts: $blasts), touchpoints: $touchpoints);
+		$leadsPerChannel = $this->leadsPerChannel(touchpoints: $touchpoints);
 
 		foreach ($rows as $channel => $row) {
 			if ($row['reported'] === false) {
@@ -176,6 +150,72 @@ class CampaignReportService {
 
 		return array_values($rows);
 	}//end channels()
+
+	/**
+	 * One row per blast channel, with the blasts' delivered, sent and opened totals summed.
+	 *
+	 * @param array<int, array<string, mixed>> $blasts The campaign's blasts.
+	 *
+	 * @return array<string, array<string, mixed>> The rows by channel.
+	 */
+	private function blastChannels(array $blasts): array {
+		$rows = [];
+		foreach ($blasts as $blast) {
+			$channel = (string)($blast['channel'] ?? 'email');
+			$totals = (array)($blast['totals'] ?? []);
+			$row = ($rows[$channel] ?? $this->emptyChannel(channel: $channel));
+			$row['reach'] = ((int)($row['reach'] ?? 0) + (int)($totals['delivered'] ?? 0));
+			$row['sent'] = ($row['sent'] + (int)($totals['sent'] ?? 0));
+			$row['opened'] = ($row['opened'] + (int)($totals['opened'] ?? 0));
+			$row['reported'] = true;
+			$rows[$channel] = $row;
+		}
+
+		return $rows;
+	}//end blastChannels()
+
+	/**
+	 * The rows with every touchpoint counted under its kind, adding a row for a new channel.
+	 *
+	 * @param array<string, array<string, mixed>> $rows        The rows by channel.
+	 * @param array<int, array<string, mixed>>    $touchpoints The campaign's touchpoints.
+	 *
+	 * @return array<string, array<string, mixed>> The rows by channel.
+	 */
+	private function withTouchpoints(array $rows, array $touchpoints): array {
+		foreach ($touchpoints as $touchpoint) {
+			$channel = (string)($touchpoint['channel'] ?? 'direct');
+			$row = ($rows[$channel] ?? $this->emptyChannel(channel: $channel));
+			$kind = (string)($touchpoint['kind'] ?? '');
+			if (isset($row[$kind]) === true) {
+				$row[$kind]++;
+			}
+
+			$rows[$channel] = $row;
+		}
+
+		return $rows;
+	}//end withTouchpoints()
+
+	/**
+	 * The distinct lead ids the touchpoints carry, per channel.
+	 *
+	 * @param array<int, array<string, mixed>> $touchpoints The campaign's touchpoints.
+	 *
+	 * @return array<string, array<string, true>> Lead ids per channel.
+	 */
+	private function leadsPerChannel(array $touchpoints): array {
+		$leadsPerChannel = [];
+		foreach ($touchpoints as $touchpoint) {
+			$channel = (string)($touchpoint['channel'] ?? 'direct');
+			$leadId = trim((string)($touchpoint['leadId'] ?? ''));
+			if ($leadId !== '') {
+				$leadsPerChannel[$channel][$leadId] = true;
+			}
+		}
+
+		return $leadsPerChannel;
+	}//end leadsPerChannel()
 
 	/**
 	 * The campaign's clicks, visits, submissions and replies.
