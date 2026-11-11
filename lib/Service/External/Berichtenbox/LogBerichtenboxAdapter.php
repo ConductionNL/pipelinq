@@ -63,6 +63,30 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/berichtenbox/spec.md
  */
 class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
+
+	/**
+	 * What to bind for real transport.
+	 *
+	 * @var string
+	 */
+	private const NOTE_DISPATCH = 'Bind LogiusConnector (or an openconnector source slug `logius-berichtenbox`) by overriding '
+		. 'BerichtenboxAdapterInterface in Application::register() to enable real transport.';
+
+	/**
+	 * What to bind for real webhook verification.
+	 *
+	 * @var string
+	 */
+	private const NOTE_VERIFY = 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
+		. 'to enable real webhook HMAC verification.';
+
+	/**
+	 * What to bind for real mailbox checks.
+	 *
+	 * @var string
+	 */
+	private const NOTE_MAILBOX = 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
+		. 'to enable real mailbox reachability checks. NEVER log BSN values.';
 	/**
 	 * Construct the log-backed Berichtenbox adapter.
 	 *
@@ -95,16 +119,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 			]
 		);
 
-		return new BerichtenboxResult(
-			outcome: 'DISPATCH_DEFERRED',
-			logiusReference: $reference,
-			dormant: true,
-			extras: [
-				'reason' => 'no-outbound-connector-bound',
-				'note' => 'Bind LogiusConnector (or an openconnector source slug `logius-berichtenbox`) by overriding '
-					. 'BerichtenboxAdapterInterface in Application::register() to enable real transport.',
-			],
-		);
+		return $this->deferred(outcome: 'DISPATCH_DEFERRED', trail: ['reference' => $reference, 'note' => self::NOTE_DISPATCH]);
 	}//end dispatchMessage()
 
 	/**
@@ -130,6 +145,24 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 
 		return $message;
 	}//end redacted()
+
+	/**
+	 * A deferred result: dormant, under the logged reference, saying no
+	 * outbound connector is bound and what to bind.
+	 *
+	 * @param string                                $outcome The deferred outcome.
+	 * @param array{reference: string, note: string} $trail   The logged reference and the note.
+	 *
+	 * @return BerichtenboxResult
+	 */
+	private function deferred(string $outcome, array $trail): BerichtenboxResult {
+		return new BerichtenboxResult(
+			outcome: $outcome,
+			logiusReference: $trail['reference'],
+			dormant: true,
+			extras: ['reason' => 'no-outbound-connector-bound', 'note' => $trail['note']],
+		);
+	}//end deferred()
 
 	/**
 	 * Log the webhook-verify intent + synthesise a VERIFY_DEFERRED
@@ -160,16 +193,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 			]
 		);
 
-		return new BerichtenboxResult(
-			outcome: 'VERIFY_DEFERRED',
-			logiusReference: $reference,
-			dormant: true,
-			extras: [
-				'reason' => 'no-outbound-connector-bound',
-				'note' => 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
-					. 'to enable real webhook HMAC verification.',
-			],
-		);
+		return $this->deferred(outcome: 'VERIFY_DEFERRED', trail: ['reference' => $reference, 'note' => self::NOTE_VERIFY]);
 	}//end verifyDeliveryWebhook()
 
 	/**
@@ -203,16 +227,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 			]
 		);
 
-		return new BerichtenboxResult(
-			outcome: 'MAILBOX_DEFERRED',
-			logiusReference: $reference,
-			dormant: true,
-			extras: [
-				'reason' => 'no-outbound-connector-bound',
-				'note' => 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
-					. 'to enable real mailbox reachability checks. NEVER log BSN values.',
-			],
-		);
+		return $this->deferred(outcome: 'MAILBOX_DEFERRED', trail: ['reference' => $reference, 'note' => self::NOTE_MAILBOX]);
 	}//end checkMailbox()
 
 	/**
