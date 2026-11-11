@@ -243,21 +243,61 @@ class BookingService {
 	 * @throws InvalidArgumentException If validation fails.
 	 * @throws RuntimeException If OpenRegister is unavailable.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation guards; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation guards; extraction adds no clarity.
-	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function createBooking(array $data, string $source): string {
-		$customerId = trim((string)($data['customerId'] ?? ''));
-		$serviceId = trim((string)($data['serviceId'] ?? ''));
-		$startAt = trim((string)($data['startAt'] ?? ''));
-		$endAt = trim((string)($data['endAt'] ?? ''));
+		$fields = $this->requiredBookingFields(data: $data);
+		$draft = array_merge($data, $fields, ['source' => $this->normaliseSource(source: $source)]);
 
-		if ($customerId === '' || $serviceId === '' || $startAt === '' || $endAt === '') {
+		$payload = $this->newBookingPayload(draft: $draft, service: $this->loadService(serviceId: $fields['serviceId']));
+		$uuid = $this->saveNewBooking(payload: $payload, failure: 'Booking save returned no id');
+
+		$this->invalidateAvailability(payload: $payload);
+
+		if ($payload['status'] === 'confirmed') {
+			$this->dispatchConfirmationEmail(bookingId: $uuid);
+			$this->pushCalendarEvent(bookingId: $uuid);
+		}
+
+		return $uuid;
+	}//end createBooking()
+
+	/**
+	 * The trimmed required fields of a new booking, refused unless all are
+	 * present and form a valid time window.
+	 *
+	 * @param array<string, mixed> $data The booking request.
+	 *
+	 * @return array{customerId: string, serviceId: string, startAt: string, endAt: string}
+	 *
+	 * @throws InvalidArgumentException If a field is missing or the window is invalid.
+	 */
+	private function requiredBookingFields(array $data): array {
+		$fields = [];
+		foreach (['customerId', 'serviceId', 'startAt', 'endAt'] as $key) {
+			$fields[$key] = trim((string)($data[$key] ?? ''));
+		}
+
+		if (in_array('', $fields, true) === true) {
 			throw new InvalidArgumentException('customerId, serviceId, startAt and endAt are required');
 		}
 
+		$this->assertBookingWindow(startAt: $fields['startAt'], endAt: $fields['endAt']);
+
+		return $fields;
+	}//end requiredBookingFields()
+
+	/**
+	 * Refuse a booking window that is not two ISO-8601 moments in order.
+	 *
+	 * @param string $startAt The start.
+	 * @param string $endAt   The end.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException If the window is invalid.
+	 */
+	private function assertBookingWindow(string $startAt, string $endAt): void {
 		if ($this->isValidIso(value: $startAt) === false || $this->isValidIso(value: $endAt) === false) {
 			throw new InvalidArgumentException('startAt and endAt must be ISO-8601 timestamps');
 		}
@@ -265,56 +305,99 @@ class BookingService {
 		if (strtotime($startAt) >= strtotime($endAt)) {
 			throw new InvalidArgumentException('startAt must be earlier than endAt');
 		}
+	}//end assertBookingWindow()
 
-		$normalisedSource = $this->normaliseSource(source: $source);
+	/**
+	 * The payload of a new booking: its slot, initial status and history,
+	 * notes, source and the deposit snapshotted from the Service.
+	 *
+	 * @param array<string, mixed> $draft   The request with its trimmed fields and normalised source.
+	 * @param array<string, mixed> $service The booked Service.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function newBookingPayload(array $draft, array $service): array {
+		$status = $this->initialStatus(service: $service);
 
-		$service = $this->loadService(serviceId: $serviceId);
-		$requireDeposit = (bool)($service['requiresDeposit'] ?? false);
-		$depositAmount = (float)($service['depositAmount'] ?? 0.0);
-		$initialStatus = 'confirmed';
-		if ($requireDeposit === true && $depositAmount > 0.0) {
-			$initialStatus = 'pending-deposit';
-		}
+		$payload = $this->bookingSlot(draft: $draft);
+		$payload['status'] = $status;
+		$payload['statusHistory'] = $this->creationHistory(status: $status, source: $draft['source']);
+		$payload['notes'] = (string)($draft['notes'] ?? '');
+		$payload['internalNotes'] = (string)($draft['internalNotes'] ?? '');
+		$payload['source'] = $draft['source'];
+		$payload['depositAmount'] = max(0.0, (float)($service['depositAmount'] ?? 0.0));
 
-		$nowIso = $this->nowIso();
-		$changer = $this->actorUid();
+		return $payload;
+	}//end newBookingPayload()
 
-		$payload = [
-			'customerId' => $customerId,
-			'serviceId' => $serviceId,
-			'resourceAssignments' => $this->normaliseAssignments(value: ($data['resourceAssignments'] ?? [])),
-			'startAt' => $startAt,
-			'endAt' => $endAt,
-			'status' => $initialStatus,
-			'statusHistory' => [
-				[
-					'status' => $initialStatus,
-					'changedAt' => $nowIso,
-					'changedBy' => $changer,
-					'reason' => sprintf('Booking created via %s', $normalisedSource),
-				],
-			],
-			'notes' => (string)($data['notes'] ?? ''),
-			'internalNotes' => (string)($data['internalNotes'] ?? ''),
-			'source' => $normalisedSource,
-			'depositAmount' => max(0.0, $depositAmount),
+	/**
+	 * Who, what, with which resources and when a new booking is for.
+	 *
+	 * @param array<string, mixed> $draft The request with its trimmed fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function bookingSlot(array $draft): array {
+		return [
+			'customerId' => $draft['customerId'],
+			'serviceId' => $draft['serviceId'],
+			'resourceAssignments' => $this->normaliseAssignments(value: ($draft['resourceAssignments'] ?? [])),
+			'startAt' => $draft['startAt'],
+			'endAt' => $draft['endAt'],
 		];
+	}//end bookingSlot()
 
-		$saved = $this->saveBooking(payload: $payload, uuid: null);
-		$uuid = $this->idOf(object: $saved);
-		if ($uuid === '') {
-			throw new RuntimeException('Booking save returned no id');
+	/**
+	 * The status a new booking starts in: pending-deposit when the Service
+	 * requires a positive deposit, otherwise confirmed.
+	 *
+	 * @param array<string, mixed> $service The booked Service.
+	 *
+	 * @return string
+	 */
+	private function initialStatus(array $service): string {
+		if ((bool)($service['requiresDeposit'] ?? false) === true && (float)($service['depositAmount'] ?? 0.0) > 0.0) {
+			return 'pending-deposit';
 		}
 
-		$this->invalidateAvailability(payload: $payload);
+		return 'confirmed';
+	}//end initialStatus()
 
-		if ($initialStatus === 'confirmed') {
-			$this->dispatchConfirmationEmail(bookingId: $uuid);
-			$this->pushCalendarEvent(bookingId: $uuid);
+	/**
+	 * The first statusHistory entry of a new booking.
+	 *
+	 * @param string $status The initial status.
+	 * @param string $source The normalised source.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private function creationHistory(string $status, string $source): array {
+		return $this->appendHistory(
+			history: [],
+			status: $status,
+			changedAt: $this->nowIso(),
+			reason: sprintf('Booking created via %s', $source)
+		);
+	}//end creationHistory()
+
+	/**
+	 * Save a new booking and answer its id.
+	 *
+	 * @param array<string, mixed> $payload The booking payload.
+	 * @param string               $failure The message when the save answers no id.
+	 *
+	 * @return string The new Booking UUID.
+	 *
+	 * @throws RuntimeException When the save answers no id.
+	 */
+	private function saveNewBooking(array $payload, string $failure): string {
+		$uuid = $this->idOf(object: $this->saveBooking(payload: $payload, uuid: null));
+		if ($uuid === '') {
+			throw new RuntimeException($failure);
 		}
 
 		return $uuid;
-	}//end createBooking()
+	}//end saveNewBooking()
 
 	/**
 	 * Compute available slots for a service on a date.
@@ -336,6 +419,23 @@ class BookingService {
 			return [];
 		}
 
+		$service = $this->onlineService(serviceId: $serviceId, date: $date);
+		if ($service === null || (int)($service['durationMinutes'] ?? 0) <= 0) {
+			return [];
+		}
+
+		return $this->slotsForResources(service: $service, date: $date);
+	}//end getAvailableSlots()
+
+	/**
+	 * The Service, when it exists and is offered online.
+	 *
+	 * @param string $serviceId Service UUID/slug.
+	 * @param string $date      ISO date, for the log line.
+	 *
+	 * @return array<string, mixed>|null The Service, or null when it has no public availability.
+	 */
+	private function onlineService(string $serviceId, string $date): ?array {
 		try {
 			$service = $this->loadService(serviceId: $serviceId);
 		} catch (\Throwable $e) {
@@ -343,7 +443,7 @@ class BookingService {
 				'Pipelinq: service lookup failed in getAvailableSlots',
 				['service' => $serviceId, 'date' => $date]
 			);
-			return [];
+			return null;
 		}
 
 		// A service that is not offered online has no public availability to
@@ -354,34 +454,56 @@ class BookingService {
 		// of a service the portal never offers. Same check its two siblings
 		// make, applied here.
 		if (($service['bookableOnline'] ?? false) !== true) {
-			return [];
+			return null;
 		}
 
+		return $service;
+	}//end onlineService()
+
+	/**
+	 * The free slots of every candidate resource for a Service on a date.
+	 *
+	 * @param array<string, mixed> $service The Service.
+	 * @param string               $date    ISO date `YYYY-MM-DD`.
+	 *
+	 * @return array<int, array{startTime: string, endTime: string, durationMinutes: int, resourceId: string}>
+	 */
+	private function slotsForResources(array $service, string $date): array {
 		$duration = (int)($service['durationMinutes'] ?? 0);
-		if ($duration <= 0) {
-			return [];
-		}
-
-		$candidates = $this->loadCandidateResources(service: $service);
 		$merged = [];
-		foreach ($candidates as $resourceId) {
+		foreach ($this->loadCandidateResources(service: $service) as $resourceId) {
 			$slots = $this->availabilityService->computeAvailability(
 				resourceId: $resourceId,
 				date: $date,
 				serviceDurationMinutes: $duration
 			);
-			foreach ($slots as $slot) {
-				$merged[] = [
-					'startTime' => $slot['startTime'],
-					'endTime' => $slot['endTime'],
-					'durationMinutes' => $slot['durationMinutes'],
-					'resourceId' => $resourceId,
-				];
-			}
+			$merged = array_merge($merged, $this->tagSlots(slots: $slots, resourceId: $resourceId));
 		}
 
 		return $merged;
-	}//end getAvailableSlots()
+	}//end slotsForResources()
+
+	/**
+	 * Tag a resource's slots with its id.
+	 *
+	 * @param array<int, array<string, mixed>> $slots      The resource's slots.
+	 * @param string                           $resourceId The resource id.
+	 *
+	 * @return array<int, array{startTime: string, endTime: string, durationMinutes: int, resourceId: string}>
+	 */
+	private function tagSlots(array $slots, string $resourceId): array {
+		$tagged = [];
+		foreach ($slots as $slot) {
+			$tagged[] = [
+				'startTime' => $slot['startTime'],
+				'endTime' => $slot['endTime'],
+				'durationMinutes' => $slot['durationMinutes'],
+				'resourceId' => $resourceId,
+			];
+		}
+
+		return $tagged;
+	}//end tagSlots()
 
 	/**
 	 * Confirm a pending-deposit booking.
@@ -446,75 +568,12 @@ class BookingService {
 			throw new InvalidArgumentException('newStartAt must be an ISO-8601 timestamp');
 		}
 
-		$original = $this->loadBooking(bookingId: $bookingId);
-		$current = (string)($original['status'] ?? '');
-		$this->assertTransitionAllowed(from: $current, to: 'rescheduled');
-
-		$originalStart = (string)($original['startAt'] ?? '');
-		$originalEnd = (string)($original['endAt'] ?? '');
-		if ($originalStart === '' || $originalEnd === '') {
-			throw new InvalidArgumentException('original booking is missing startAt/endAt');
-		}
-
-		$deltaSeconds = (strtotime($newStartAt) - strtotime($originalStart));
-		if ($deltaSeconds === 0) {
-			throw new InvalidArgumentException('newStartAt must differ from current startAt');
-		}
-
-		$newEnd = $this->shiftIso(iso: $originalEnd, seconds: $deltaSeconds);
-		$nowIso = $this->nowIso();
-
-		$newAssignments = [];
-		foreach (($original['resourceAssignments'] ?? []) as $assignment) {
-			if (is_array($assignment) === false) {
-				continue;
-			}
-
-			$newAssignments[] = [
-				'stepIndex' => (int)($assignment['stepIndex'] ?? 0),
-				'resourceId' => (string)($assignment['resourceId'] ?? ''),
-				'startAt' => $this->shiftIso(iso: (string)($assignment['startAt'] ?? ''), seconds: $deltaSeconds),
-				'endAt' => $this->shiftIso(iso: (string)($assignment['endAt'] ?? ''), seconds: $deltaSeconds),
-			];
-		}
-
-		$newPayload = [
-			'customerId' => (string)($original['customerId'] ?? ''),
-			'serviceId' => (string)($original['serviceId'] ?? ''),
-			'resourceAssignments' => $newAssignments,
-			'startAt' => $newStartAt,
-			'endAt' => $newEnd,
-			'status' => 'confirmed',
-			'statusHistory' => [
-				[
-					'status' => 'confirmed',
-					'changedAt' => $nowIso,
-					'changedBy' => $this->actorUid(),
-					'reason' => sprintf('Rescheduled from %s', $bookingId),
-				],
-			],
-			'notes' => (string)($original['notes'] ?? ''),
-			'internalNotes' => (string)($original['internalNotes'] ?? ''),
-			'source' => (string)($original['source'] ?? 'portal'),
-			'depositAmount' => (float)($original['depositAmount'] ?? 0.0),
-			'previousBookingId' => $bookingId,
-		];
-
-		$saved = $this->saveBooking(payload: $newPayload, uuid: null);
-		$newUuid = $this->idOf(object: $saved);
-		if ($newUuid === '') {
-			throw new RuntimeException('Reschedule save returned no id');
-		}
+		$move = $this->planReschedule(bookingId: $bookingId, newStartAt: $newStartAt);
+		$newPayload = $this->rescheduledPayload(move: $move);
+		$newUuid = $this->saveNewBooking(payload: $newPayload, failure: 'Reschedule save returned no id');
 
 		// Transition the original to `rescheduled` (terminal branch).
-		$original['status'] = 'rescheduled';
-		$original['statusHistory'] = $this->appendHistory(
-			history: ($original['statusHistory'] ?? []),
-			status: 'rescheduled',
-			changedAt: $nowIso,
-			reason: sprintf('Rescheduled to booking %s', $newUuid)
-		);
-		$this->saveBooking(payload: $this->stripSelf(payload: $original), uuid: $bookingId);
+		$original = $this->markRescheduled(move: $move, newUuid: $newUuid);
 
 		// Free the old slot AND warm-bust the new slot.
 		$this->invalidateAvailability(payload: $original);
@@ -527,6 +586,157 @@ class BookingService {
 
 		return $newUuid;
 	}//end rescheduleBooking()
+
+	/**
+	 * Load the original booking and work out how far it moves.
+	 *
+	 * @param string $bookingId  Original Booking UUID.
+	 * @param string $newStartAt New ISO-8601 start timestamp.
+	 *
+	 * @return BookingReschedule
+	 *
+	 * @throws InvalidArgumentException If the original may not move, has no window, or does not move.
+	 */
+	private function planReschedule(string $bookingId, string $newStartAt): BookingReschedule {
+		$original = $this->loadBooking(bookingId: $bookingId);
+		$this->assertTransitionAllowed(from: (string)($original['status'] ?? ''), to: 'rescheduled');
+
+		return new BookingReschedule(
+			bookingId: $bookingId,
+			original: $original,
+			newStartAt: $newStartAt,
+			deltaSeconds: $this->rescheduleDelta(original: $original, newStartAt: $newStartAt),
+			changedAt: $this->nowIso()
+		);
+	}//end planReschedule()
+
+	/**
+	 * How many seconds a booking moves to start at a new moment.
+	 *
+	 * @param array<string, mixed> $original   The original booking.
+	 * @param string               $newStartAt New ISO-8601 start timestamp.
+	 *
+	 * @return int
+	 *
+	 * @throws InvalidArgumentException If the original has no window or would not move.
+	 */
+	private function rescheduleDelta(array $original, string $newStartAt): int {
+		$originalStart = (string)($original['startAt'] ?? '');
+		if ($originalStart === '' || (string)($original['endAt'] ?? '') === '') {
+			throw new InvalidArgumentException('original booking is missing startAt/endAt');
+		}
+
+		$deltaSeconds = (strtotime($newStartAt) - strtotime($originalStart));
+		if ($deltaSeconds === 0) {
+			throw new InvalidArgumentException('newStartAt must differ from current startAt');
+		}
+
+		return $deltaSeconds;
+	}//end rescheduleDelta()
+
+	/**
+	 * The payload of the booking a reschedule creates.
+	 *
+	 * @param BookingReschedule $move The reschedule.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function rescheduledPayload(BookingReschedule $move): array {
+		$original = $move->original;
+
+		$payload = $this->rescheduledSlot(move: $move);
+		$payload['status'] = 'confirmed';
+		$payload['statusHistory'] = $this->rescheduledHistory(move: $move);
+		$payload['notes'] = (string)($original['notes'] ?? '');
+		$payload['internalNotes'] = (string)($original['internalNotes'] ?? '');
+		$payload['source'] = (string)($original['source'] ?? 'portal');
+		$payload['depositAmount'] = (float)($original['depositAmount'] ?? 0.0);
+		$payload['previousBookingId'] = $move->bookingId;
+
+		return $payload;
+	}//end rescheduledPayload()
+
+	/**
+	 * The first statusHistory entry of the booking a reschedule creates.
+	 *
+	 * @param BookingReschedule $move The reschedule.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private function rescheduledHistory(BookingReschedule $move): array {
+		return $this->appendHistory(
+			history: [],
+			status: 'confirmed',
+			changedAt: $move->changedAt,
+			reason: sprintf('Rescheduled from %s', $move->bookingId)
+		);
+	}//end rescheduledHistory()
+
+	/**
+	 * The original's customer, Service and resources, moved to the new start.
+	 *
+	 * @param BookingReschedule $move The reschedule.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function rescheduledSlot(BookingReschedule $move): array {
+		$original = $move->original;
+
+		return [
+			'customerId' => (string)($original['customerId'] ?? ''),
+			'serviceId' => (string)($original['serviceId'] ?? ''),
+			'resourceAssignments' => $this->shiftedAssignments(move: $move),
+			'startAt' => $move->newStartAt,
+			'endAt' => $this->shiftIso(iso: (string)($original['endAt'] ?? ''), seconds: $move->deltaSeconds),
+		];
+	}//end rescheduledSlot()
+
+	/**
+	 * The original's resource assignments, shifted by the move.
+	 *
+	 * @param BookingReschedule $move The reschedule.
+	 *
+	 * @return array<int, array{stepIndex: int, resourceId: string, startAt: string, endAt: string}>
+	 */
+	private function shiftedAssignments(BookingReschedule $move): array {
+		$shifted = [];
+		foreach (($move->original['resourceAssignments'] ?? []) as $assignment) {
+			if (is_array($assignment) === false) {
+				continue;
+			}
+
+			$shifted[] = [
+				'stepIndex' => (int)($assignment['stepIndex'] ?? 0),
+				'resourceId' => (string)($assignment['resourceId'] ?? ''),
+				'startAt' => $this->shiftIso(iso: (string)($assignment['startAt'] ?? ''), seconds: $move->deltaSeconds),
+				'endAt' => $this->shiftIso(iso: (string)($assignment['endAt'] ?? ''), seconds: $move->deltaSeconds),
+			];
+		}
+
+		return $shifted;
+	}//end shiftedAssignments()
+
+	/**
+	 * Transition the original booking to `rescheduled` and save it.
+	 *
+	 * @param BookingReschedule $move    The reschedule.
+	 * @param string            $newUuid The booking that replaces it.
+	 *
+	 * @return array<string, mixed> The original as transitioned.
+	 */
+	private function markRescheduled(BookingReschedule $move, string $newUuid): array {
+		$original = $move->original;
+		$original['status'] = 'rescheduled';
+		$original['statusHistory'] = $this->appendHistory(
+			history: ($original['statusHistory'] ?? []),
+			status: 'rescheduled',
+			changedAt: $move->changedAt,
+			reason: sprintf('Rescheduled to booking %s', $newUuid)
+		);
+		$this->saveBooking(payload: $this->stripSelf(payload: $original), uuid: $move->bookingId);
+
+		return $original;
+	}//end markRescheduled()
 
 	/**
 	 * Cancel a booking with policy enforcement.
@@ -1041,9 +1251,6 @@ class BookingService {
 	 * @param array<string, mixed> $service Service entity.
 	 *
 	 * @return array<int, string>
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential filtering guards; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential filtering guards; extraction adds no clarity.
 	 */
 	private function loadCandidateResources(array $service): array {
 		$serviceId = $this->idOf(object: $service);
@@ -1051,8 +1258,42 @@ class BookingService {
 			return [];
 		}
 
+		return $this->candidateIds(
+			resources: $this->eligibleResources(serviceId: $serviceId),
+			requiredTypes: $this->requiredResourceTypes(service: $service)
+		);
+	}//end loadCandidateResources()
+
+	/**
+	 * The ids of the eligible resources that may take the booking, in order.
+	 *
+	 * @param array<int|string, mixed> $resources     The eligible resources.
+	 * @param array<int|string, mixed> $requiredTypes The required resource types.
+	 *
+	 * @return array<int, string>
+	 */
+	private function candidateIds(array $resources, array $requiredTypes): array {
+		$candidates = [];
+		foreach ($resources as $resource) {
+			$id = $this->candidateId(resource: $resource, requiredTypes: $requiredTypes);
+			if ($id !== '') {
+				$candidates[] = $id;
+			}
+		}
+
+		return $candidates;
+	}//end candidateIds()
+
+	/**
+	 * The resources eligible for a Service; none when the lookup fails.
+	 *
+	 * @param string $serviceId The Service id.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	private function eligibleResources(string $serviceId): array {
 		try {
-			$eligible = $this->eligibilityService->getEligibleResources(serviceId: $serviceId);
+			return $this->eligibilityService->getEligibleResources(serviceId: $serviceId);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: eligibility lookup failed',
@@ -1060,38 +1301,55 @@ class BookingService {
 			);
 			return [];
 		}
+	}//end eligibleResources()
 
+	/**
+	 * The resource types a Service requires; empty means any type.
+	 *
+	 * @param array<string, mixed> $service The Service.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	private function requiredResourceTypes(array $service): array {
 		$requiredTypes = ($service['requiredResourceTypes'] ?? []);
 		if (is_array($requiredTypes) === false) {
-			$requiredTypes = [];
+			return [];
 		}
 
-		$candidates = [];
-		foreach ($eligible as $resource) {
-			if (($resource['bookable'] ?? true) === false) {
-				continue;
-			}
+		return $requiredTypes;
+	}//end requiredResourceTypes()
 
-			$status = (string)($resource['status'] ?? 'active');
-			if ($status !== 'active') {
-				continue;
-			}
+	/**
+	 * The id of a resource that may take the booking, or '' when it may not.
+	 *
+	 * @param mixed                    $resource      An eligible resource.
+	 * @param array<int|string, mixed> $requiredTypes The required resource types.
+	 *
+	 * @return string
+	 */
+	private function candidateId(mixed $resource, array $requiredTypes): string {
+		if ($this->isOfferable(resource: $resource, requiredTypes: $requiredTypes) === false) {
+			return '';
+		}
 
-			if ($requiredTypes !== []) {
-				$type = (string)($resource['type'] ?? '');
-				if (in_array($type, $requiredTypes, true) === false) {
-					continue;
-				}
-			}
+		return $this->idOf(object: $resource);
+	}//end candidateId()
 
-			$id = $this->idOf(object: $resource);
-			if ($id !== '') {
-				$candidates[] = $id;
-			}
-		}//end foreach
+	/**
+	 * Whether a resource is bookable, active and of a required type.
+	 *
+	 * @param mixed                    $resource      An eligible resource.
+	 * @param array<int|string, mixed> $requiredTypes The required resource types.
+	 *
+	 * @return bool
+	 */
+	private function isOfferable(mixed $resource, array $requiredTypes): bool {
+		if (($resource['bookable'] ?? true) === false || (string)($resource['status'] ?? 'active') !== 'active') {
+			return false;
+		}
 
-		return $candidates;
-	}//end loadCandidateResources()
+		return $requiredTypes === [] || in_array((string)($resource['type'] ?? ''), $requiredTypes, true) === true;
+	}//end isOfferable()
 
 	/**
 	 * Increment the customer's lifetime no-show count.
@@ -1186,40 +1444,76 @@ class BookingService {
 	 * @return void
 	 */
 	private function invalidateAvailability(array $payload): void {
+		foreach ($this->invalidationTargets(payload: $payload) as [$resourceId, $date]) {
+			$this->invalidateDay(resourceId: $resourceId, date: $date);
+		}
+	}//end invalidateAvailability()
+
+	/**
+	 * The distinct resource and day pairs a booking touches, in assignment order.
+	 *
+	 * @param array<string, mixed> $payload Booking payload.
+	 *
+	 * @return array<string, array{0: string, 1: string}>
+	 */
+	private function invalidationTargets(array $payload): array {
 		$assignments = ($payload['resourceAssignments'] ?? []);
 		if (is_array($assignments) === false) {
-			return;
+			return [];
 		}
 
-		$seen = [];
+		$targets = [];
 		foreach ($assignments as $assignment) {
-			if (is_array($assignment) === false) {
-				continue;
+			$day = $this->assignmentDay(assignment: $assignment);
+			if ($day !== null) {
+				$targets[$day[0] . '|' . $day[1]] = $day;
 			}
+		}
 
-			$resourceId = (string)($assignment['resourceId'] ?? '');
-			$startAt = (string)($assignment['startAt'] ?? '');
-			if ($resourceId === '' || $startAt === '') {
-				continue;
-			}
+		return $targets;
+	}//end invalidationTargets()
 
-			$date = substr($startAt, 0, 10);
-			$key = ($resourceId . '|' . $date);
-			if (isset($seen[$key]) === true) {
-				continue;
-			}
+	/**
+	 * The resource and day of one assignment, or null when it has neither.
+	 *
+	 * @param mixed $assignment A resource assignment.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function assignmentDay(mixed $assignment): ?array {
+		if (is_array($assignment) === false) {
+			return null;
+		}
 
-			$seen[$key] = true;
-			try {
-				$this->availabilityService->invalidateCache(resourceId: $resourceId, date: $date);
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Pipelinq: availability invalidation failed',
-					['resource' => $resourceId, 'date' => $date]
-				);
-			}
-		}//end foreach
-	}//end invalidateAvailability()
+		$resourceId = (string)($assignment['resourceId'] ?? '');
+		$startAt = (string)($assignment['startAt'] ?? '');
+		if ($resourceId === '' || $startAt === '') {
+			return null;
+		}
+
+		return [$resourceId, substr($startAt, 0, 10)];
+	}//end assignmentDay()
+
+	/**
+	 * Invalidate one resource's cached availability for one day.
+	 *
+	 * Errors are swallowed: the cache is a regenerable read-side optimisation.
+	 *
+	 * @param string $resourceId The resource id.
+	 * @param string $date       The day, `YYYY-MM-DD`.
+	 *
+	 * @return void
+	 */
+	private function invalidateDay(string $resourceId, string $date): void {
+		try {
+			$this->availabilityService->invalidateCache(resourceId: $resourceId, date: $date);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: availability invalidation failed',
+				['resource' => $resourceId, 'date' => $date]
+			);
+		}
+	}//end invalidateDay()
 
 	/**
 	 * Dispatch a confirmation email via the optional seam (member 07).
