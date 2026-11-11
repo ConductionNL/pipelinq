@@ -177,17 +177,40 @@ class QuestionDetailService {
 			return [];
 		}
 
-		$items = [];
+		return array_merge($this->wooRequestItems(ticket: $ticket), $this->snapshotItems(ticket: $ticket));
+	}//end dossierItems()
+
+	/**
+	 * The Woo request the question became, when it was converted under a case id.
+	 *
+	 * @param array<string, mixed> $ticket The question.
+	 *
+	 * @return array<int, array{id: string, title: string, url: string, note: string}>
+	 */
+	private function wooRequestItems(array $ticket): array {
 		$case = $this->text(value: ($ticket['caseReference'] ?? ''));
-		if ($case !== '' && $this->isConverted(ticket: $ticket) === true) {
-			$items[] = [
-				'id' => $case,
-				'title' => $this->l10n->t('Your Woo request'),
-				'url' => self::WOO_REQUEST_LINK.rawurlencode($case),
-				'note' => $this->l10n->t('Your question is now this Woo request. Follow it under your cases.'),
-			];
+		if ($case === '' || $this->isConverted(ticket: $ticket) === false) {
+			return [];
 		}
 
+		return [[
+			'id' => $case,
+			'title' => $this->l10n->t('Your Woo request'),
+			'url' => self::WOO_REQUEST_LINK.rawurlencode($case),
+			'note' => $this->l10n->t('Your question is now this Woo request. Follow it under your cases.'),
+		]];
+	}//end wooRequestItems()
+
+	/**
+	 * The dossier's items as they were when the question was asked; an item
+	 * without a text title is left out.
+	 *
+	 * @param array<string, mixed> $ticket The question.
+	 *
+	 * @return array<int, array{id: string, title: string, url: string, note: string}>
+	 */
+	private function snapshotItems(array $ticket): array {
+		$items = [];
 		$reference = ($ticket['subjectReference'] ?? []);
 		foreach ($this->listOf(value: ($reference['items'] ?? null)) as $item) {
 			$title = $this->text(value: ($item['title'] ?? ''));
@@ -197,7 +220,7 @@ class QuestionDetailService {
 		}
 
 		return $items;
-	}//end dossierItems()
+	}//end snapshotItems()
 
 	/**
 	 * The ticket when it is a question a resident asked on the portal, else null.

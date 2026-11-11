@@ -137,14 +137,24 @@ class TeamLoadService {
 		}
 
 		try {
-			$profiles = $this->objectService->findAll(
-				config: ['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 999]
-			);
+			$profiles = $this->objectService->findAll(config: ['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 999]);
 		} catch (Throwable $e) {
 			$this->logger->error('TeamLoadService: failed to load agent profiles', ['exception' => $e->getMessage()]);
 			return [];
 		}
 
+		return $this->profileRows(profiles: $profiles);
+	}//end loadProfiles()
+
+	/**
+	 * The profiles as arrays, in order: an entity through its serialised
+	 * form, an array as it is, anything else dropped.
+	 *
+	 * @param iterable<mixed> $profiles The profiles read.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function profileRows(iterable $profiles): array {
 		$rows = [];
 		foreach ($profiles as $profile) {
 			if (is_object($profile) === true && method_exists($profile, 'jsonSerialize') === true) {
@@ -157,5 +167,5 @@ class TeamLoadService {
 		}
 
 		return $rows;
-	}//end loadProfiles()
+	}//end profileRows()
 }//end class

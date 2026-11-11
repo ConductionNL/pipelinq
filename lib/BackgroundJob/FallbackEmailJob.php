@@ -77,27 +77,16 @@ class FallbackEmailJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 */
 	protected function run(mixed $argument): void {
-		try {
-			$service = $this->container->get(BerichtenboxService::class);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'FallbackEmailJob: BerichtenboxService unavailable.',
-				['exception' => $e->getMessage()]
-			);
-			return;
-		}
-
-		try {
-			$sent = $service->processFallbackQueue();
-			$this->logger->info(
-				'FallbackEmailJob: processed fallbacks.',
-				['sent' => $sent]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'FallbackEmailJob run failed.',
-				['exception' => $e->getMessage()]
-			);
-		}
+		$pass = new BerichtenboxJobPass(container: $this->container, logger: $this->logger);
+		$pass->run(
+			job: 'FallbackEmailJob',
+			work: function (BerichtenboxService $service): void {
+				$sent = $service->processFallbackQueue();
+				$this->logger->info(
+					'FallbackEmailJob: processed fallbacks.',
+					['sent' => $sent]
+				);
+			}
+		);
 	}//end run()
 }//end class

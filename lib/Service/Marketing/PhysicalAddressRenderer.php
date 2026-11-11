@@ -69,28 +69,66 @@ class PhysicalAddressRenderer {
 			return $body;
 		}
 
-		$rendered = $address;
-		if ($format === 'html') {
-			$rendered = nl2br(htmlspecialchars($address, ENT_QUOTES | ENT_HTML5, 'UTF-8'), false);
-		}
-
-		foreach (self::TOKENS as $token) {
-			if (str_contains($body, $token) === true) {
-				return strtr($body, array_fill_keys(self::TOKENS, $rendered));
-			}
+		$rendered = $this->formatted(address: $address, format: $format);
+		if ($this->hasToken(body: $body) === true) {
+			return strtr($body, array_fill_keys(self::TOKENS, $rendered));
 		}
 
 		if ($format === 'html') {
-			// A full document keeps the address inside its <body>.
-			$paragraph = '<p>' . $rendered . '</p>';
-			$close = strripos($body, '</body>');
-			if ($close !== false) {
-				return substr($body, 0, $close) . $paragraph . substr($body, $close);
-			}
-
-			return $body . $paragraph;
+			return $this->withParagraph(body: $body, paragraph: '<p>' . $rendered . '</p>');
 		}
 
 		return rtrim($body) . "\n\n" . $rendered;
 	}//end render()
+
+	/**
+	 * The address as it goes into the body: escaped with line breaks for HTML.
+	 *
+	 * @param string $address The trimmed address.
+	 * @param string $format  html or text.
+	 *
+	 * @return string
+	 */
+	private function formatted(string $address, string $format): string {
+		if ($format === 'html') {
+			return nl2br(htmlspecialchars($address, ENT_QUOTES | ENT_HTML5, 'UTF-8'), false);
+		}
+
+		return $address;
+	}//end formatted()
+
+	/**
+	 * Whether the body carries any of the address tokens.
+	 *
+	 * @param string $body The body.
+	 *
+	 * @return bool
+	 */
+	private function hasToken(string $body): bool {
+		foreach (self::TOKENS as $token) {
+			if (str_contains($body, $token) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end hasToken()
+
+	/**
+	 * An HTML body with the address paragraph: a full document keeps it
+	 * inside its last body element, anything else gets it at the end.
+	 *
+	 * @param string $body      The HTML body.
+	 * @param string $paragraph The address paragraph.
+	 *
+	 * @return string
+	 */
+	private function withParagraph(string $body, string $paragraph): string {
+		$close = strripos($body, '</body>');
+		if ($close === false) {
+			return $body . $paragraph;
+		}
+
+		return substr($body, 0, $close) . $paragraph . substr($body, $close);
+	}//end withParagraph()
 }//end class

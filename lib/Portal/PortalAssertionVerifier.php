@@ -168,12 +168,6 @@ class PortalAssertionVerifier {
 	 * @return array<string, mixed>|null The verified claims, or null.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) -- one fail-closed guard
-	 * per attack surface on an auth boundary (ADR-005); collapsing them would
-	 * trade auditability for a score.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      -- same rationale: the
-	 * guards are sequential early-returns, not combinatorial paths.
 	 */
 	public function verify(string $jwt): ?array {
 		$secret = $this->secret();
@@ -181,54 +175,158 @@ class PortalAssertionVerifier {
 			return $this->reject(reason: 'no usable signing secret');
 		}
 
-		$parts = explode('.', $jwt);
-		if (count($parts) !== 3 || in_array('', $parts, true) === true) {
-			return $this->reject(reason: 'malformed structure');
-		}
-
-		[$hPart, $cPart, $sPart] = $parts;
-
-		$header = json_decode($this->b64UrlDecode(encoded: $hPart), true);
-		if (is_array($header) === false || ($header['alg'] ?? '') !== self::ALG) {
-			return $this->reject(reason: 'unexpected algorithm');
-		}
-
-		$expected = $this->b64UrlEncode(bytes: hash_hmac(self::HASH_FN, $hPart.'.'.$cPart, $secret, true));
-		if (hash_equals($expected, $sPart) === false) {
-			return $this->reject(reason: 'signature mismatch');
-		}
-
-		$claims = json_decode($this->b64UrlDecode(encoded: $cPart), true);
-		if (is_array($claims) === false) {
-			return $this->reject(reason: 'malformed claims');
-		}
-
-		if (($claims['use'] ?? '') !== self::USE_ASSERTION) {
-			return $this->reject(reason: 'not an assertion');
-		}
-
-		if (($claims['iss'] ?? '') !== self::ISSUER) {
-			return $this->reject(reason: 'unexpected issuer');
-		}
-
-		$now = time();
-		$exp = ($claims['exp'] ?? null);
-		if (is_int($exp) === false || $exp <= $now) {
-			return $this->reject(reason: 'expired or missing exp');
-		}
-
-		$iat = ($claims['iat'] ?? null);
-		if (is_int($iat) === false || $iat > ($now + self::IAT_LEEWAY) || $iat > $exp) {
-			return $this->reject(reason: 'implausible iat');
-		}
-
-		$sub = ($claims['sub'] ?? null);
-		if (is_string($sub) === false || $sub === '') {
-			return $this->reject(reason: 'missing subject');
+		$claims = $this->verifiedClaims(jwt: $jwt, secret: $secret);
+		if (is_string($claims) === true) {
+			return $this->reject(reason: $claims);
 		}
 
 		return $claims;
 	}//end verify()
+
+	/**
+	 * Checks 1 to 9 of verify(), in order: the verified claims, or the
+	 * reason of the first check that fails.
+	 *
+	 * @param string $jwt    The raw compact JWT.
+	 * @param string $secret The usable signing secret.
+	 *
+	 * @return array<string, mixed>|string The claims, or the rejection reason.
+	 */
+	private function verifiedClaims(string $jwt, string $secret): array|string {
+		$parts = explode('.', $jwt);
+		if (count($parts) !== 3 || in_array('', $parts, true) === true) {
+			return 'malformed structure';
+		}
+
+		$fault = $this->signatureFault(parts: $parts, secret: $secret);
+		if ($fault !== null) {
+			return $fault;
+		}
+
+		return $this->decodedClaims(encoded: $parts[1]);
+	}//end verifiedClaims()
+
+	/**
+	 * Checks 2 and 3: the header names HS256 and the HMAC signature matches
+	 * (constant-time comparison).
+	 *
+	 * @param array<int, string> $parts  The three non-empty JWS segments.
+	 * @param string             $secret The usable signing secret.
+	 *
+	 * @return string|null The rejection reason, or null when both hold.
+	 */
+	private function signatureFault(array $parts, string $secret): ?string {
+		[$hPart, $cPart, $sPart] = $parts;
+
+		$header = json_decode($this->b64UrlDecode(encoded: $hPart), true);
+		if (is_array($header) === false || ($header['alg'] ?? '') !== self::ALG) {
+			return 'unexpected algorithm';
+		}
+
+		$expected = $this->b64UrlEncode(bytes: hash_hmac(self::HASH_FN, $hPart.'.'.$cPart, $secret, true));
+		if (hash_equals($expected, $sPart) === false) {
+			return 'signature mismatch';
+		}
+
+		return null;
+	}//end signatureFault()
+
+	/**
+	 * Check 4, then the claim checks: the claims object, or the rejection reason.
+	 *
+	 * @param string $encoded The base64url claims segment.
+	 *
+	 * @return array<string, mixed>|string The claims, or the rejection reason.
+	 */
+	private function decodedClaims(string $encoded): array|string {
+		$claims = json_decode($this->b64UrlDecode(encoded: $encoded), true);
+		if (is_array($claims) === false) {
+			return 'malformed claims';
+		}
+
+		$fault = $this->claimFault(claims: $claims);
+		if ($fault !== null) {
+			return $fault;
+		}
+
+		return $claims;
+	}//end decodedClaims()
+
+	/**
+	 * Checks 5 to 9: use, issuer, lifetime and subject, in that order.
+	 *
+	 * @param array<string, mixed> $claims The decoded claims.
+	 *
+	 * @return string|null The rejection reason, or null when all hold.
+	 */
+	private function claimFault(array $claims): ?string {
+		if (($claims['use'] ?? '') !== self::USE_ASSERTION) {
+			return 'not an assertion';
+		}
+
+		if (($claims['iss'] ?? '') !== self::ISSUER) {
+			return 'unexpected issuer';
+		}
+
+		$fault = $this->lifetimeFault(claims: $claims);
+		if ($fault !== null) {
+			return $fault;
+		}
+
+		return $this->subjectFault(claims: $claims);
+	}//end claimFault()
+
+	/**
+	 * Checks 7 and 8: `exp` is an integer in the future, `iat` a plausible
+	 * integer.
+	 *
+	 * @param array<string, mixed> $claims The decoded claims.
+	 *
+	 * @return string|null The rejection reason, or null when both hold.
+	 */
+	private function lifetimeFault(array $claims): ?string {
+		$now = time();
+		$exp = ($claims['exp'] ?? null);
+		if (is_int($exp) === false || $exp <= $now) {
+			return 'expired or missing exp';
+		}
+
+		return $this->issuedAtFault(claims: $claims, now: $now);
+	}//end lifetimeFault()
+
+	/**
+	 * Check 8: `iat` is an integer, not later than now plus the leeway and
+	 * not later than `exp` (which check 7 has already proven an integer).
+	 *
+	 * @param array<string, mixed> $claims The decoded claims.
+	 * @param int                  $now    The time check 7 compared `exp` against.
+	 *
+	 * @return string|null The rejection reason, or null when it holds.
+	 */
+	private function issuedAtFault(array $claims, int $now): ?string {
+		$iat = ($claims['iat'] ?? null);
+		if (is_int($iat) === false || $iat > ($now + self::IAT_LEEWAY) || $iat > $claims['exp']) {
+			return 'implausible iat';
+		}
+
+		return null;
+	}//end issuedAtFault()
+
+	/**
+	 * Check 9: `sub` is a non-empty string.
+	 *
+	 * @param array<string, mixed> $claims The decoded claims.
+	 *
+	 * @return string|null The rejection reason, or null when it holds.
+	 */
+	private function subjectFault(array $claims): ?string {
+		$sub = ($claims['sub'] ?? null);
+		if (is_string($sub) === false || $sub === '') {
+			return 'missing subject';
+		}
+
+		return null;
+	}//end subjectFault()
 
 	/**
 	 * Derive the signing secret — EXACT copy of portaliq's derivation (see

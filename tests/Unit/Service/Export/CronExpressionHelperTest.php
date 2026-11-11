@@ -171,4 +171,25 @@ class CronExpressionHelperTest extends TestCase {
 		$this->assertNull(actual: $this->cron->nextRunAfter(expression: 'not a cron', from: $from));
 		$this->assertNull(actual: $this->cron->nextRunAfter(expression: '0 0 31 2 *', from: $from));
 	}//end testNextRunAfterNone()
+	/**
+	 * Every next run: an invalid expression has none; minutes, hours, days
+	 * of the month and weekdays each move the search; a step and a list are
+	 * honoured; the time zone of the start is kept; nothing inside the
+	 * horizon is none.
+	 *
+	 * @return void
+	 */
+	public function testEveryNextRun(): void {
+		$from = new DateTimeImmutable('2026-10-07 10:17:42', new \DateTimeZone('Europe/Amsterdam'));
+		$next = fn (string $expression, int $horizon = 400): ?string => $this->cron->nextRunAfter(expression: $expression, from: $from, horizonDays: $horizon)?->format('Y-m-d H:i T');
+
+		$this->assertNull($next('not a cron'));
+		$this->assertSame('2026-10-07 10:18 CEST', $next('* * * * *'));
+		$this->assertSame('2026-10-07 10:30 CEST', $next('*/15 * * * *'));
+		$this->assertSame('2026-10-07 14:05 CEST', $next('5 14,16 * * *'));
+		$this->assertSame('2026-10-31 00:00 CET', $next('0 0 31 * *'));
+		$this->assertSame('2026-10-11 09:00 CEST', $next('0 9 * * 0'));
+		$this->assertSame('2027-02-01 00:00 CET', $next('0 0 1 2 *'));
+		$this->assertNull($next('0 0 1 2 *', 30));
+	}//end testEveryNextRun()
 }//end class

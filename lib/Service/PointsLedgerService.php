@@ -36,6 +36,8 @@ use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
 use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -73,6 +75,7 @@ class PointsLedgerService {
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-084).
 	 * @param AggregationRunner $aggregationRunner Runs the balance aggregations.
+	 * @param ILockingProvider $locking Serialises the movements on one account.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -80,6 +83,7 @@ class PointsLedgerService {
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly AggregationRunner $aggregationRunner,
+		private readonly ILockingProvider $locking,
 	) {
 	}//end __construct()
 
@@ -161,25 +165,28 @@ class PointsLedgerService {
 		}
 
 		$movement = new LedgerMovement(accountId: $accountId, type: 'debit', signedCount: -$amount, lifetimeDelta: 0);
-		$first    = $this->firstEntryOf(movement: $movement);
-		if ($first !== null) {
-			return $first;
-		}
-
-		$account = $this->accountService->getAccount(accountId: $accountId);
-		if ($account === null) {
-			throw new RuntimeException('Account not found.');
-		}
-
-		if ((int)($account['currentBalance'] ?? 0) < $amount) {
-			throw new RuntimeException('Insufficient balance.');
-		}
-
 		$sourceDocument['redemptionId'] = $redemptionId;
+		$origin = new LedgerOrigin(ruleId: null, sourceDocument: $sourceDocument, processedBy: $processedBy);
 
-		return $this->appendAndUpdate(
-			movement: $movement,
-			origin: new LedgerOrigin(ruleId: null, sourceDocument: $sourceDocument, processedBy: $processedBy)
+		return $this->underAccountLock(
+			accountId: $accountId,
+			write: function () use ($movement, $origin, $amount): array {
+				$first = $this->firstEntryOf(movement: $movement);
+				if ($first !== null) {
+					return $first;
+				}
+
+				$account = $this->accountService->getAccount(accountId: $movement->accountId);
+				if ($account === null) {
+					throw new RuntimeException('Account not found.');
+				}
+
+				if ((int)($account['currentBalance'] ?? 0) < $amount) {
+					throw new RuntimeException('Insufficient balance.');
+				}
+
+				return $this->appendAndUpdate(movement: $movement, origin: $origin);
+			}
 		);
 	}//end debitPoints()
 
@@ -424,13 +431,43 @@ class PointsLedgerService {
 	 * @return array<string, mixed> The ledger entry.
 	 */
 	private function appendOnce(LedgerMovement $movement, LedgerOrigin $origin): array {
-		$first = $this->firstEntryOf(movement: $movement);
-		if ($first !== null) {
-			return $first;
+		return $this->underAccountLock(
+			accountId: $movement->accountId,
+			write: function () use ($movement, $origin): array {
+				$first = $this->firstEntryOf(movement: $movement);
+				if ($first !== null) {
+					return $first;
+				}
+
+				return $this->appendAndUpdate(movement: $movement, origin: $origin);
+			}
+		);
+	}//end appendOnce()
+
+	/**
+	 * Run one read-check-write of an account's balance while holding that account's exclusive lock.
+	 *
+	 * @param string                        $accountId The account UUID.
+	 * @param callable(): array<string, mixed> $write  The read, check and write.
+	 *
+	 * @return array<string, mixed> What the write returns.
+	 *
+	 * @throws RuntimeException When another movement on the account holds the lock.
+	 */
+	private function underAccountLock(string $accountId, callable $write): array {
+		$key = Application::APP_ID . '/loyalty-account/' . $accountId;
+		try {
+			$this->locking->acquireLock($key, ILockingProvider::LOCK_EXCLUSIVE);
+		} catch (LockedException $e) {
+			throw new RuntimeException('Another points movement on this account is in progress; try again.', 0, $e);
 		}
 
-		return $this->appendAndUpdate(movement: $movement, origin: $origin);
-	}//end appendOnce()
+		try {
+			return $write();
+		} finally {
+			$this->locking->releaseLock($key, ILockingProvider::LOCK_EXCLUSIVE);
+		}
+	}//end underAccountLock()
 
 	/**
 	 * The account's entry with this service's operation id, or null.

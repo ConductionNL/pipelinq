@@ -104,6 +104,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
 			aggregationRunner: $runner,
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 
 		self::assertSame(120, $phpBalance);
@@ -124,6 +125,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
 			aggregationRunner: $runner,
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 
 		self::assertSame(0, $service->getAccountBalance(accountId: 'nobody'));
