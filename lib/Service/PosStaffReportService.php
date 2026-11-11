@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -49,6 +48,28 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  */
 class PosStaffReportService {
 	use CastingPayloadToArray;
+
+	/**
+	 * The fiscally-final statuses that count toward the report.
+	 *
+	 * @var array<int, string>
+	 */
+	private const FINAL_STATUSES = ['confirmed', 'settled', 'refunded'];
+
+	/**
+	 * The five grouped aggregations, in the order they run: each a sum field (null for a
+	 * count) and a status filter. A single grouped SUM cannot apply the per-row refund
+	 * sign, so the netting is reconstructed from the positive and the refunded sums.
+	 *
+	 * @var array<string, array{0: string|null, 1: array<string, mixed>}>
+	 */
+	private const STAFF_METRICS = [
+		'transactionCount' => [null, ['status' => ['in' => ['confirmed', 'settled', 'refunded']]]],
+		'positiveTotal' => ['total', ['status' => ['in' => ['confirmed', 'settled']]]],
+		'refundedTotal' => ['total', ['status' => 'refunded']],
+		'positiveTax' => ['totalTax', ['status' => ['in' => ['confirmed', 'settled']]]],
+		'refundedTax' => ['totalTax', ['status' => 'refunded']],
+	];
 
 	/**
 	 * Constructor.
@@ -88,8 +109,18 @@ class PosStaffReportService {
 			$byStaff = $this->aggregateStaffTotalsPhp(rows: $this->fetchFinalTransactions());
 		}
 
-		// Resolve display names from posStaff. Failures fall back to the UUID.
-		foreach ($byStaff as $staffId => $_row) {
+		return array_values($this->roundedToCents(byStaff: $this->withDisplayNames(byStaff: $byStaff)));
+	}//end staffSalesReport()
+
+	/**
+	 * Resolve display names from posStaff. Failures fall back to the UUID.
+	 *
+	 * @param array<string, array<string, mixed>> $byStaff The per-staff rows.
+	 *
+	 * @return array<string, array<string, mixed>> The rows with their display names.
+	 */
+	private function withDisplayNames(array $byStaff): array {
+		foreach (array_keys($byStaff) as $staffId) {
 			try {
 				$staff = $this->posStaffService->getStaff(id: $staffId);
 				$byStaff[$staffId]['displayName'] = (string)($staff['displayName'] ?? $staffId);
@@ -98,14 +129,24 @@ class PosStaffReportService {
 			}
 		}
 
-		// Round monetary values to cents (server-authoritative).
-		foreach ($byStaff as $staffId => $_row) {
+		return $byStaff;
+	}//end withDisplayNames()
+
+	/**
+	 * Round monetary values to cents (server-authoritative).
+	 *
+	 * @param array<string, array<string, mixed>> $byStaff The per-staff rows.
+	 *
+	 * @return array<string, array<string, mixed>> The rounded rows.
+	 */
+	private function roundedToCents(array $byStaff): array {
+		foreach (array_keys($byStaff) as $staffId) {
 			$byStaff[$staffId]['total'] = round($byStaff[$staffId]['total'], 2);
 			$byStaff[$staffId]['totalTax'] = round($byStaff[$staffId]['totalTax'], 2);
 		}
 
-		return array_values($byStaff);
-	}//end staffSalesReport()
+		return $byStaff;
+	}//end roundedToCents()
 
 	/**
 	 * Compute the per-staff totals by pushing five grouped aggregations down
@@ -133,121 +174,63 @@ class PosStaffReportService {
 	 */
 	private function aggregateStaffTotals(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
-		$runner = $this->getAggregationRunner();
-
-		$finalStatuses = ['confirmed', 'settled', 'refunded'];
-		$positive = ['confirmed', 'settled'];
-
-		$counts = $this->groupedAgg(
-			runner: $runner,
-			register: $register,
-			schema: $schema,
-			metric: 'count',
-			field: null,
-			filter: ['status' => ['in' => $finalStatuses]]
-		);
-		$posTotal = $this->groupedAgg(
-			runner: $runner,
-			register: $register,
-			schema: $schema,
-			metric: 'sum',
-			field: 'total',
-			filter: ['status' => ['in' => $positive]]
-		);
-		$refTotal = $this->groupedAgg(
-			runner: $runner,
-			register: $register,
-			schema: $schema,
-			metric: 'sum',
-			field: 'total',
-			filter: ['status' => 'refunded']
-		);
-		$posTotalTax = $this->groupedAgg(
-			runner: $runner,
-			register: $register,
-			schema: $schema,
-			metric: 'sum',
-			field: 'totalTax',
-			filter: ['status' => ['in' => $positive]]
-		);
-		$refTotalTax = $this->groupedAgg(
-			runner: $runner,
-			register: $register,
-			schema: $schema,
-			metric: 'sum',
-			field: 'totalTax',
-			filter: ['status' => 'refunded']
+		$groups = new StaffGroupTotals(
+			runner: $this->getAggregationRunner(),
+			table: new PosTransactionTable(register: $register, schema: $schema)
 		);
 
-		$staffIds = array_keys(
-			($counts + $posTotal + $refTotal + $posTotalTax + $refTotalTax)
-		);
+		$maps = [];
+		foreach (self::STAFF_METRICS as $name => [$sumField, $filter]) {
+			$maps[$name] = $groups->valuesFor(sumField: $sumField, filter: $filter);
+		}
+
+		return $this->staffRows(maps: $maps);
+	}//end aggregateStaffTotals()
+
+	/**
+	 * Combine the grouped aggregations into one row per staff member.
+	 *
+	 * @param array<string, array<string, float|int>> $maps Each metric's staffMemberId => value map, keyed as STAFF_METRICS.
+	 *
+	 * @return array<string, array{staffMemberId: string, displayName: string, transactionCount: int, total: float, totalTax: float}>
+	 */
+	private function staffRows(array $maps): array {
+		$all = [];
+		foreach ($maps as $map) {
+			$all += $map;
+		}
 
 		$byStaff = [];
-		foreach ($staffIds as $staffId) {
+		foreach (array_keys($all) as $staffId) {
 			// Drop the empty-staffMemberId bucket — the prior PHP path skipped
 			// rows with an empty staff id.
 			if ((string)$staffId === '') {
 				continue;
 			}
 
-			$byStaff[(string)$staffId] = [
-				'staffMemberId' => (string)$staffId,
-				'displayName' => '',
-				'transactionCount' => (int)($counts[$staffId] ?? 0),
-				'total' => ((float)($posTotal[$staffId] ?? 0.0) - (float)($refTotal[$staffId] ?? 0.0)),
-				'totalTax' => ((float)($posTotalTax[$staffId] ?? 0.0) - (float)($refTotalTax[$staffId] ?? 0.0)),
-			];
+			$byStaff[(string)$staffId] = $this->staffRow(staffId: (string)$staffId, maps: $maps);
 		}
 
 		return $byStaff;
-	}//end aggregateStaffTotals()
+	}//end staffRows()
 
 	/**
-	 * Run one grouped aggregation and flatten its groups into a
-	 * `staffMemberId => value` map.
+	 * One staff member's row: the transaction count and the refund-netted totals.
 	 *
-	 * @param object $runner The OpenRegister aggregation runner.
-	 * @param string $register The register ref.
-	 * @param string $schema The schema ref.
-	 * @param string $metric count|sum.
-	 * @param string|null $field The metric field (null for count).
-	 * @param array<string, mixed> $filter The filter map.
+	 * @param string                                  $staffId The staff member id.
+	 * @param array<string, array<string, float|int>> $maps    Each metric's staffMemberId => value map.
 	 *
-	 * @return array<string, float|int> Map of staffMemberId to the aggregated value.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create() is
-	 *  OpenRegister's documented static query-builder factory; there is no
-	 *  instance to inject.
+	 * @return array{staffMemberId: string, displayName: string, transactionCount: int, total: float, totalTax: float}
 	 */
-	private function groupedAgg(
-		object $runner,
-		string $register,
-		string $schema,
-		string $metric,
-		?string $field,
-		array $filter,
-	): array {
-		$query = AggregationQuery::create(
-			metric: $metric,
-			field: $field,
-			filter: $filter,
-			groupBy: ['field' => 'staffMemberId'],
-		);
-		$result = $runner->runAdhocByRef(registerRef: $register, schemaRef: $schema, query: $query);
-
-		$map = [];
-		foreach (($result['groups'] ?? []) as $group) {
-			$key = $group['key'] ?? null;
-			if ($key === null) {
-				continue;
-			}
-
-			$map[(string)$key] = ($group['value'] ?? 0);
-		}
-
-		return $map;
-	}//end groupedAgg()
+	private function staffRow(string $staffId, array $maps): array {
+		return [
+			'staffMemberId' => $staffId,
+			'displayName' => '',
+			'transactionCount' => (int)($maps['transactionCount'][$staffId] ?? 0),
+			'total' => ((float)($maps['positiveTotal'][$staffId] ?? 0.0) - (float)($maps['refundedTotal'][$staffId] ?? 0.0)),
+			'totalTax' => ((float)($maps['positiveTax'][$staffId] ?? 0.0) - (float)($maps['refundedTax'][$staffId] ?? 0.0)),
+		];
+	}//end staffRow()
 
 	/**
 	 * PHP fallback reduce — the original hydrate-and-sum implementation, applied
@@ -267,28 +250,47 @@ class PosStaffReportService {
 				continue;
 			}
 
-			if (isset($byStaff[$staffId]) === false) {
-				$byStaff[$staffId] = [
-					'staffMemberId' => $staffId,
-					'displayName' => '',
-					'transactionCount' => 0,
-					'total' => 0.0,
-					'totalTax' => 0.0,
-				];
-			}
-
-			$sign = 1.0;
-			if (($tx['status'] ?? '') === 'refunded') {
-				$sign = -1.0;
-			}
-
+			$byStaff[$staffId] = ($byStaff[$staffId] ?? $this->emptyStaffRow(staffId: $staffId));
+			$sign = $this->signOf(transaction: $tx);
 			$byStaff[$staffId]['transactionCount']++;
 			$byStaff[$staffId]['total'] += ($sign * (float)($tx['total'] ?? 0));
 			$byStaff[$staffId]['totalTax'] += ($sign * (float)($tx['totalTax'] ?? 0));
-		}//end foreach
+		}
 
 		return $byStaff;
 	}//end aggregateStaffTotalsPhp()
+
+	/**
+	 * A staff member's row before any transaction is counted.
+	 *
+	 * @param string $staffId The staff member id.
+	 *
+	 * @return array{staffMemberId: string, displayName: string, transactionCount: int, total: float, totalTax: float}
+	 */
+	private function emptyStaffRow(string $staffId): array {
+		return [
+			'staffMemberId' => $staffId,
+			'displayName' => '',
+			'transactionCount' => 0,
+			'total' => 0.0,
+			'totalTax' => 0.0,
+		];
+	}//end emptyStaffRow()
+
+	/**
+	 * The sign a transaction counts with: -1 for a refund, +1 otherwise.
+	 *
+	 * @param array<string, mixed> $transaction The transaction.
+	 *
+	 * @return float The sign.
+	 */
+	private function signOf(array $transaction): float {
+		if (($transaction['status'] ?? '') === 'refunded') {
+			return -1.0;
+		}
+
+		return 1.0;
+	}//end signOf()
 
 	/**
 	 * Read posTransaction objects that count toward the report (final statuses).
@@ -316,11 +318,21 @@ class PosStaffReportService {
 			return [];
 		}
 
-		$allowed = ['confirmed', 'settled', 'refunded'];
+		return $this->finalOnly(results: $results);
+	}//end fetchFinalTransactions()
+
+	/**
+	 * The results with a final status, as flat arrays.
+	 *
+	 * @param iterable<mixed> $results The fetched objects.
+	 *
+	 * @return array<int, array<string, mixed>> The final-status transactions.
+	 */
+	private function finalOnly(iterable $results): array {
 		$out = [];
 		foreach ($results as $result) {
 			$transaction = $this->toArray(object: $result);
-			if (in_array((string)($transaction['status'] ?? ''), $allowed, true) === false) {
+			if (in_array((string)($transaction['status'] ?? ''), self::FINAL_STATUSES, true) === false) {
 				continue;
 			}
 
@@ -328,7 +340,7 @@ class PosStaffReportService {
 		}
 
 		return $out;
-	}//end fetchFinalTransactions()
+	}//end finalOnly()
 
 	/**
 	 * Resolve the register + schema config key into stored IDs.
