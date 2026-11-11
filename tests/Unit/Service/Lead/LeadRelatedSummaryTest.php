@@ -80,4 +80,24 @@ class LeadRelatedSummaryTest extends TestCase {
 		self::assertSame('2 earlier deals: 1 won, 1 lost', $mixed->forLead(lead: ['id' => 'l1', 'client' => 'c1'])['earlier']);
 		self::assertSame(['earlier' => '', 'hours' => ''], $mixed->forLead(lead: ['id' => 'l1']));
 	}//end testMixedOutcomesAndNothingToSay()
+	/**
+	 * Every earlier-deal sentence: the lead itself never counts, open deals
+	 * never count, one deal, all lost, more than two of one outcome, and
+	 * nothing to say without closed deals.
+	 *
+	 * @return void
+	 */
+	public function testEveryEarlierDealSentence(): void {
+		$lead = ['id' => 'l1', 'client' => 'c1'];
+		$cases = [
+			'1 earlier deal, won' => [['id' => 'l1', 'status' => 'lost'], ['id' => 'l2', 'status' => 'won']],
+			'3 earlier deals, all lost' => [['id' => 'l2', 'status' => 'lost'], ['id' => 'l3', 'status' => 'lost'], ['id' => 'l4', 'status' => 'lost'], ['status' => 'open']],
+			'4 earlier deals, all won' => [['id' => 'l2', 'status' => 'won'], ['id' => 'l3', 'status' => 'won'], ['id' => 'l4', 'status' => 'won'], ['id' => 'l5', 'status' => 'won']],
+			'3 earlier deals: 2 won, 1 lost' => [['id' => 'l2', 'status' => 'won'], ['id' => 'l3', 'status' => 'lost'], ['id' => 'l4', 'status' => 'won']],
+			'' => [['id' => 'l1', 'status' => 'won'], ['id' => 'l2', 'status' => 'open']],
+		];
+		foreach ($cases as $sentence => $leads) {
+			self::assertSame($sentence, $this->summary($leads, [])->forLead(lead: $lead)['earlier'], $sentence);
+		}
+	}//end testEveryEarlierDealSentence()
 }//end class
