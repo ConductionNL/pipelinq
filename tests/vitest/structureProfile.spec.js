@@ -987,6 +987,44 @@ describe('a page overlay', () => {
 		expect(out.slots).toEqual({ keep: 'K', added: 'A' })
 	})
 
+	it('replaces the title only with a non-empty string', () => {
+		const page = { id: 'P', title: 'Old' }
+		expect(applyPageOverlay(page, { id: 'P', title: 'New' })).toEqual({ id: 'P', title: 'New', config: {} })
+		expect(applyPageOverlay(page, { id: 'P', title: '' })).toEqual({ id: 'P', title: 'Old', config: {} })
+		expect(applyPageOverlay(page, { id: 'P', title: 7 })).toEqual({ id: 'P', title: 'Old', config: {} })
+	})
+
+	it('reads lists that are not arrays as empty, and keeps bare items it cannot merge into', () => {
+		const page = { id: 'P', config: { text: 'x', list: ['a', { id: 'b' }] } }
+		const out = applyPageOverlay(page, {
+			id: 'P',
+			configPatch: { text: { x: { n: 1 } }, list: { a: { n: 1 }, b: { n: 2 } }, none: null },
+			configAppend: { more: 'nope', list: null },
+			configOrder: { list: 'b', other: ['ghost'] },
+		})
+		expect(out.config).toEqual({
+			text: [],
+			list: ['a', { id: 'b', n: 2 }],
+			none: [],
+			more: [],
+			other: [],
+		})
+	})
+
+	it('orders the named items first, skipping names it does not find', () => {
+		const out = applyPageOverlay(
+			{ id: 'P', config: { list: [{ id: 'a' }, { id: 'b' }, { id: 'c' }] } },
+			{ id: 'P', configOrder: { list: ['c', 'ghost', 'a'] } },
+		)
+		expect(out.config.list).toEqual([{ id: 'c' }, { id: 'a' }, { id: 'b' }])
+	})
+
+	it('ignores slots that are not an object, and adds slots to a page without any', () => {
+		const page = { id: 'P', config: {}, slots: { keep: 'K' } }
+		expect(applyPageOverlay(page, { id: 'P', slots: 'nope' })).toEqual({ id: 'P', config: {}, slots: { keep: 'K' } })
+		expect(applyPageOverlay({ id: 'P' }, { id: 'P', slots: { s: 'S', gone: null } })).toEqual({ id: 'P', config: {}, slots: { s: 'S' } })
+	})
+
 	it('is skipped and reported when it names a page the manifest does not have', () => {
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 		const out = build({

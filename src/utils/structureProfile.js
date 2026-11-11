@@ -93,53 +93,131 @@ export function resolveStructureProfile(raw) {
  * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-102
  */
 export function applyPageOverlay(pageIn, overlay) {
+	const page = titledPage(pageIn, overlay)
+	const config = mergedConfig(page, overlay)
+	patchConfigItems(config, overlay)
+	appendConfigItems(config, overlay)
+	orderConfigItems(config, overlay)
+	if (overlay.slots && typeof overlay.slots === 'object') {
+		return { ...page, config, slots: overlaySlots(page, overlay) }
+	}
+	return { ...page, config }
+}
+
+/**
+ * The page with the overlay's title, when it gives one.
+ *
+ * @param {object} page The built page.
+ * @param {object} overlay The overlay.
+ * @return {object} The page, or a copy with the new title.
+ */
+function titledPage(page, overlay) {
 	// `title` replaces the page's title (the English source text; the library
 	// translates it), so a page can read as its board does without a new page.
-	const page =
-		typeof overlay.title === 'string' && overlay.title !== ''
-			? { ...pageIn, title: overlay.title }
-			: pageIn
-	const config = { ...(page.config || {}), ...(overlay.config || {}) }
+	return typeof overlay.title === 'string' && overlay.title !== ''
+		? { ...page, title: overlay.title }
+		: page
+}
+
+/**
+ * The page's config with the overlay's keys replaced.
+ *
+ * @param {object} page The page.
+ * @param {object} overlay The overlay.
+ * @return {object} A new config object.
+ */
+function mergedConfig(page, overlay) {
+	return { ...(page.config || {}), ...(overlay.config || {}) }
+}
+
+/**
+ * The list under a config key; anything that is not an array reads as empty.
+ *
+ * @param {object} holder The object holding the list.
+ * @param {string} key The key.
+ * @return {Array} The list.
+ */
+function listAt(holder, key) {
+	return Array.isArray(holder[key]) ? holder[key] : []
+}
+
+/**
+ * Patch list items by name: null removes the item, an object merges into it.
+ *
+ * @param {object} config The config, changed in place.
+ * @param {object} overlay The overlay.
+ * @return {void}
+ */
+function patchConfigItems(config, overlay) {
 	const patch = overlay.configPatch || {}
 	for (const key of Object.keys(patch)) {
 		const byName = patch[key] || {}
-		const current = Array.isArray(config[key]) ? config[key] : []
-		config[key] = current
+		config[key] = listAt(config, key)
 			.filter((item) => byName[overlayItemName(item)] !== null)
-			.map((item) => {
-				const change = byName[overlayItemName(item)]
-				return change === undefined || typeof item !== 'object'
-					? item
-					: { ...item, ...change }
-			})
+			.map((item) => patchedItem(item, byName[overlayItemName(item)]))
 	}
+}
+
+/**
+ * @param {(object|string)} item The list item.
+ * @param {(object|undefined)} change The overlay's change for it.
+ * @return {(object|string)} The item, merged with the change when both are objects.
+ */
+function patchedItem(item, change) {
+	return change === undefined || typeof item !== 'object'
+		? item
+		: { ...item, ...change }
+}
+
+/**
+ * Append the overlay's items to the lists.
+ *
+ * @param {object} config The config, changed in place.
+ * @param {object} overlay The overlay.
+ * @return {void}
+ */
+function appendConfigItems(config, overlay) {
 	const append = overlay.configAppend || {}
 	for (const key of Object.keys(append)) {
-		const current = Array.isArray(config[key]) ? config[key] : []
-		const extra = Array.isArray(append[key]) ? append[key] : []
-		config[key] = [...current, ...extra]
+		config[key] = [...listAt(config, key), ...listAt(append, key)]
 	}
+}
+
+/**
+ * Put the named items first in their lists, in the overlay's order.
+ *
+ * @param {object} config The config, changed in place.
+ * @param {object} overlay The overlay.
+ * @return {void}
+ */
+function orderConfigItems(config, overlay) {
 	const order = overlay.configOrder || {}
 	for (const key of Object.keys(order)) {
-		const current = Array.isArray(config[key]) ? config[key] : []
-		const first = Array.isArray(order[key]) ? order[key] : []
-		const lead = first
+		const current = listAt(config, key)
+		const lead = listAt(order, key)
 			.map((name) => current.find((item) => overlayItemName(item) === name))
 			.filter((item) => item !== undefined)
 		config[key] = [...lead, ...current.filter((item) => !lead.includes(item))]
 	}
-	if (overlay.slots && typeof overlay.slots === 'object') {
-		// A `custom` widget resolves through the page's own top-level `slots`
-		// map, so a page that gains one needs its slot beside it.
-		const slots = { ...(page.slots || {}), ...overlay.slots }
-		for (const name of Object.keys(slots)) {
-			if (slots[name] === null) {
-				delete slots[name]
-			}
+}
+
+/**
+ * The page's slots with the overlay's merged in; a null slot is taken out.
+ *
+ * @param {object} page The page.
+ * @param {object} overlay The overlay.
+ * @return {object} The slots.
+ */
+function overlaySlots(page, overlay) {
+	// A `custom` widget resolves through the page's own top-level `slots`
+	// map, so a page that gains one needs its slot beside it.
+	const slots = { ...(page.slots || {}), ...overlay.slots }
+	for (const name of Object.keys(slots)) {
+		if (slots[name] === null) {
+			delete slots[name]
 		}
-		return { ...page, config, slots }
 	}
-	return { ...page, config }
+	return slots
 }
 
 /**
