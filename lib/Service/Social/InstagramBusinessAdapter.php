@@ -54,7 +54,7 @@ namespace OCA\Pipelinq\Service\Social;
  *  definition, and the alternative PHPMD is asking for, a factory injected
  *  into every adapter, would add a collaborator that constructs a struct.
  */
-class InstagramBusinessAdapter extends FacebookPageAdapter {
+class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesThroughContainer {
 	/**
 	 * The network name, matching the schema enum.
 	 *
@@ -143,53 +143,11 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 			);
 		}
 
-		$container = $this->send(call: $this->publishCall(request: $request), request: $request);
-		if ($container->accepted === false) {
-			// The publish step is deliberately NOT attempted. Publishing a
-			// container that was never created would report the second call's
-			// error and hide the one that actually happened.
-			return SocialPublishOutcome::fromGatewayFailure(result: $container);
-		}
-
-		$containerId = (string)($container->body['id'] ?? '');
-		if ($containerId === '') {
-			return SocialPublishOutcome::refused(
-				code: SocialGatewayResult::REJECTED_BY_NETWORK,
-				reason: 'Instagram accepted the media but named no container, so there is nothing to publish.',
-			);
-		}
-
-		$published = $this->send(
-			call: $this->publishContainerCall(request: $request, containerId: $containerId),
+		return $this->publishContainer(
 			request: $request,
-		);
-		if ($published->accepted === false) {
-			return SocialPublishOutcome::fromGatewayFailure(result: $published);
-		}
-
-		return SocialPublishOutcome::published(
-			externalId: $this->readPublishedId(payload: $published->body),
-			url: $this->readPublishedUrl(payload: $published->body, request: $request),
+			noContainerReason: 'Instagram accepted the media but named no container, so there is nothing to publish.',
 		);
 	}//end publish()
-
-	/**
-	 * Instagram answers with a media id and no address, so none is built.
-	 *
-	 * @param array<string, mixed> $payload The response body.
-	 * @param SocialPublishRequest $request The post, unused here.
-	 *
-	 * @return string Always an empty string.
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Instagram publishes no
-	 *  permalink on this response, and guessing one would be wrong more often
-	 *  than right.
-	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
-	 */
-	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
-		return '';
-	}//end readPublishedUrl()
 
 	/**
 	 * GET /{version}/{media-id}/insights, for the metrics Instagram still
