@@ -396,6 +396,36 @@ class PosPaymentServiceTest extends TestCase {
 	}//end testListProvidersReturnsFourMaskedProviders()
 
 	/**
+	 * Provider settings are stored as strings: booleans as 'true'/'false'
+	 * (read back true only for 'true' or '1'), objects as JSON (unreadable
+	 * JSON reads as empty), and an unset setting reads as its default.
+	 *
+	 * @return void
+	 */
+	public function testProviderSettingsAreStoredAndReadInTheirEncodings(): void {
+		$service = $this->buildService();
+		$service->updateProvider(
+			name: 'ccv',
+			data: ['isActive' => 1, 'testMode' => 0, 'environment' => 'staging', 'config' => ['methods' => ['ideal']]]
+		);
+
+		$this->assertSame(
+			['true', 'false', '{"methods":["ideal"]}'],
+			[$this->configStore['payment_provider.ccv.isActive'], $this->configStore['payment_provider.ccv.testMode'], $this->configStore['payment_provider.ccv.config']]
+		);
+		$this->assertArrayNotHasKey('payment_provider.ccv.environment', $this->configStore);
+
+		$this->configStore['payment_provider.adyen.isActive'] = '1';
+		$this->configStore['payment_provider.adyen.testMode'] = 'yes';
+		$this->configStore['payment_provider.adyen.config'] = '{not json';
+		$config = $service->getProviderConfig(name: 'adyen');
+		$this->assertSame([true, false, [], 'sandbox', ''], [$config['isActive'], $config['testMode'], $config['config'], $config['environment'], $config['lastTestedAt']]);
+
+		$defaults = $service->getProviderConfig(name: 'stripe');
+		$this->assertSame([false, true, []], [$defaults['isActive'], $defaults['testMode'], $defaults['testResult']]);
+	}//end testProviderSettingsAreStoredAndReadInTheirEncodings()
+
+	/**
 	 * A cashier's methods list: only active providers, their configured
 	 * methods else the defaults, and names only, no config or secret.
 	 *
