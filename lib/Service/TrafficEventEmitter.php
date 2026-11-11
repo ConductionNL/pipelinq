@@ -65,6 +65,13 @@ class TrafficEventEmitter {
 	public const INGEST_SERVICE_CLASS = 'OCA\\Portaliq\\Service\\TrafficIngestService';
 
 	/**
+	 * The context every report hands the ingest service.
+	 *
+	 * @var array{serverSide: bool, consent: bool}
+	 */
+	private const INGEST_CONTEXT = ['serverSide' => true, 'consent' => true];
+
+	/**
 	 * Event name and sequence per kind, per contract section 6.
 	 *
 	 * @var array<string, array{name: string, sequence: int}>
@@ -116,39 +123,80 @@ class TrafficEventEmitter {
 	 * @spec openspec/specs/marketing-email-tracking/spec.md#requirement-opens-and-clicks-are-reported-to-portaliq-as-email-traffic-events
 	 */
 	public function emitEmailEvent(string $kind, array $delivery, array $blast, ?string $clickedUrl = null): void {
+		$portalSlug = $this->reportingPortal(kind: $kind);
+		if ($portalSlug === '') {
+			return;
+		}
+
+		try {
+			$ingest = $this->ingestService();
+			if ($ingest === null) {
+				return;
+			}
+
+			$event = $this->buildEvent(kind: $kind, delivery: $delivery, blast: $blast, clickedUrl: $clickedUrl);
+			$this->logAccepted(kind: $kind, portalSlug: $portalSlug, result: $ingest->ingest($portalSlug, [$event], self::INGEST_CONTEXT));
+		} catch (Throwable $e) {
+			$context = ['kind' => $kind, 'portal' => $portalSlug, 'exception' => $e->getMessage()];
+			$this->logger->warning('TrafficEventEmitter: reporting to Portaliq failed', $context);
+		}
+	}//end emitEmailEvent()
+
+	/**
+	 * The portal to report to; '' (logged) for an unknown kind, no
+	 * configured portal, or no installed ingest service, checked in that order.
+	 *
+	 * @param string $kind The event kind.
+	 *
+	 * @return string
+	 */
+	private function reportingPortal(string $kind): string {
 		if (isset(self::KINDS[$kind]) === false) {
 			$this->logger->warning('TrafficEventEmitter: unknown event kind', ['kind' => $kind]);
-			return;
+			return '';
 		}
 
 		$portalSlug = trim($this->appConfig->getValueString(Application::APP_ID, self::PORTAL_CONFIG_KEY, ''));
 		if ($portalSlug === '') {
 			$this->logger->debug('TrafficEventEmitter: no traffic portal configured, skipping');
-			return;
+			return '';
 		}
 
-		if ($this->isIngestServiceAvailable() === false) {
+		if ($this->ingestInstalled() === false) {
+			return '';
+		}
+
+		return $portalSlug;
+	}//end reportingPortal()
+
+	/**
+	 * Whether Portaliq's ingest service is installed; logged when it is not.
+	 *
+	 * @return bool
+	 */
+	private function ingestInstalled(): bool {
+		$installed = $this->isIngestServiceAvailable();
+		if ($installed === false) {
 			$this->logger->debug('TrafficEventEmitter: Portaliq ingest service not installed, skipping');
-			return;
 		}
 
-		try {
-			$ingest = $this->container->get(self::INGEST_SERVICE_CLASS);
-			if (is_object($ingest) === false || method_exists($ingest, 'ingest') === false) {
-				$this->logger->warning('TrafficEventEmitter: ingest service has no ingest() method');
-				return;
-			}
+		return $installed;
+	}//end ingestInstalled()
 
-			$event = $this->buildEvent(kind: $kind, delivery: $delivery, blast: $blast, clickedUrl: $clickedUrl);
-			$result = $ingest->ingest($portalSlug, [$event], ['serverSide' => true, 'consent' => true]);
-			$this->logAccepted(kind: $kind, portalSlug: $portalSlug, result: $result);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'TrafficEventEmitter: reporting to Portaliq failed',
-				['kind' => $kind, 'portal' => $portalSlug, 'exception' => $e->getMessage()]
-			);
+	/**
+	 * Portaliq's ingest service; null (logged) when it has no ingest().
+	 *
+	 * @return object|null
+	 */
+	private function ingestService(): ?object {
+		$ingest = $this->container->get(self::INGEST_SERVICE_CLASS);
+		if (is_object($ingest) === false || method_exists($ingest, 'ingest') === false) {
+			$this->logger->warning('TrafficEventEmitter: ingest service has no ingest() method');
+			return null;
 		}
-	}//end emitEmailEvent()
+
+		return $ingest;
+	}//end ingestService()
 
 	/**
 	 * Whether Portaliq's ingest service class is loadable in this instance.
