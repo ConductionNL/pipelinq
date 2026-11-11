@@ -427,4 +427,32 @@ class SocialAdapterRequestShapeTest extends TestCase {
 			}
 		}
 	}
+	/**
+	 * Every insights shape: entries that are not lists, have no name or no
+	 * values are skipped; the first value counts, a by-type value is
+	 * summed, a missing value is zero; a later entry with the same name
+	 * wins; a payload without a data list reads nothing.
+	 *
+	 * @return void
+	 */
+	public function testEveryInsightsShape(): void {
+		$facebook = new FacebookPageAdapter($this->readyGateway());
+		$payload = ['data' => [
+			'junk',
+			['name' => '', 'values' => [['value' => 9]]],
+			['name' => 'post_clicks', 'values' => []],
+			['name' => 'post_clicks', 'values' => 'x'],
+			['name' => 'post_video_views', 'values' => [['value' => '12'], ['value' => 99]]],
+			['name' => 'post_reactions_by_type_total', 'values' => [['value' => ['like' => 3, 'love' => '2']]]],
+			['name' => 'post_clicks', 'values' => ['flat']],
+		]];
+		$this->assertSame(['views' => 12, 'likes' => 5, 'comments' => 0, 'shares' => 0, 'clicks' => 0], $facebook->normaliseMetrics(payload: $payload));
+		$this->assertSame(['views' => 0, 'likes' => 0, 'comments' => 0, 'shares' => 0, 'clicks' => 0], $facebook->normaliseMetrics(payload: ['data' => 'none']));
+
+		$instagram = new InstagramBusinessAdapter($this->readyGateway());
+		$this->assertSame(
+			['views' => 7, 'likes' => 2, 'comments' => 0, 'shares' => 1, 'clicks' => 0],
+			$instagram->normaliseMetrics(payload: ['data' => [['name' => 'views', 'values' => [['value' => 7]]], ['name' => 'likes', 'values' => [['value' => 1]]], ['name' => 'likes', 'values' => [['value' => 2]]], ['name' => 'shares', 'values' => [['value' => 1.9]]]]])
+		);
+	}//end testEveryInsightsShape()
 }//end class
