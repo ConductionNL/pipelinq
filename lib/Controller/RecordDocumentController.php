@@ -165,17 +165,9 @@ class RecordDocumentController extends Controller
             return new JSONResponse(['message' => 'Record not found'], Http::STATUS_NOT_FOUND);
         }
 
-        $reason = $this->documents->unavailableReason();
-        if ($reason !== null) {
-            return new JSONResponse(
-                ['message' => 'filinq is not available, so no document can be made.', 'reason' => $reason],
-                Http::STATUS_SERVICE_UNAVAILABLE
-            );
-        }
-
-        $template = $this->documents->findTemplate(templateId: $config['template']);
-        if ($template === null) {
-            return new JSONResponse(['message' => 'Template not found'], Http::STATUS_NOT_FOUND);
+        $template = $this->documentTemplate(templateId: $config['template']);
+        if ($template instanceof JSONResponse) {
+            return $template;
         }
 
         $filename = $this->filename(templateName: $template['name'], record: $record);
@@ -195,6 +187,33 @@ class RecordDocumentController extends Controller
         return new DataDownloadResponse($document['content'], $filename.'.pdf', 'application/pdf');
 
     }//end document()
+
+
+    /**
+     * The template to make the document from, or the 503 without filinq or the 404 without the template.
+     *
+     * @param string $templateId The configured template.
+     *
+     * @return array<string, mixed>|JSONResponse The template, or the refusal.
+     */
+    private function documentTemplate(string $templateId): array|JSONResponse
+    {
+        $reason = $this->documents->unavailableReason();
+        if ($reason !== null) {
+            return new JSONResponse(
+                ['message' => 'filinq is not available, so no document can be made.', 'reason' => $reason],
+                Http::STATUS_SERVICE_UNAVAILABLE
+            );
+        }
+
+        $template = $this->documents->findTemplate(templateId: $templateId);
+        if ($template === null) {
+            return new JSONResponse(['message' => 'Template not found'], Http::STATUS_NOT_FOUND);
+        }
+
+        return $template;
+
+    }//end documentTemplate()
 
 
     /**
