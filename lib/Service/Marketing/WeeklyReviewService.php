@@ -202,8 +202,7 @@ class WeeklyReviewService {
 	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	private function directionsOf(array $current, string $monday): array {
-		$from = date('Y-m-d', (strtotime($monday) - (7 * 86400)));
-		$to = date('Y-m-d', (strtotime($monday) - 86400));
+		$week = [date('Y-m-d', (strtotime($monday) - (7 * 86400))), date('Y-m-d', (strtotime($monday) - 86400))];
 		$measures = ['mail' => 'clicks', 'social' => 'views', 'search' => 'clicks', 'watch' => 'moves'];
 
 		$directions = [];
@@ -212,26 +211,51 @@ class WeeklyReviewService {
 				continue;
 			}
 
-			$before = match ($source) {
-				'mail' => $this->numbers->mail(from: $from, to: $to),
-				'social' => $this->numbers->social(from: $from, to: $to),
-				'search' => $this->numbers->search(from: $from, to: $to),
-				default => $this->numbers->watch(from: $from, to: $to),
-			};
-			$now = (int)$current[$source][$measure];
-			$was = (int)$before[$measure];
-			$direction = 'flat';
-			if ($now > $was) {
-				$direction = 'up';
-			} else if ($now < $was) {
-				$direction = 'down';
-			}
-
+			$before = $this->numbersOf(source: $source, week: $week);
+			$direction = $this->directionOf(now: (int)$current[$source][$measure], was: (int)$before[$measure]);
 			$directions = array_merge($directions, array_fill(0, count($current[$source]['highlights']), $direction));
 		}
 
 		return $directions;
 	}//end directionsOf()
+
+	/**
+	 * One source's numbers for a week.
+	 *
+	 * @param string                      $source mail, social, search or watch.
+	 * @param array{0: string, 1: string} $week   Its first and last day.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function numbersOf(string $source, array $week): array {
+		[$from, $to] = $week;
+		return match ($source) {
+			'mail' => $this->numbers->mail(from: $from, to: $to),
+			'social' => $this->numbers->social(from: $from, to: $to),
+			'search' => $this->numbers->search(from: $from, to: $to),
+			default => $this->numbers->watch(from: $from, to: $to),
+		};
+	}//end numbersOf()
+
+	/**
+	 * Up, down or flat against the week before.
+	 *
+	 * @param int $now This week's number.
+	 * @param int $was Last week's number.
+	 *
+	 * @return string
+	 */
+	private function directionOf(int $now, int $was): string {
+		if ($now > $was) {
+			return 'up';
+		}
+
+		if ($now < $was) {
+			return 'down';
+		}
+
+		return 'flat';
+	}//end directionOf()
 
 	/**
 	 * What to try next week.
