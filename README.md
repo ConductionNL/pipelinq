@@ -214,6 +214,12 @@ level 5. The remaining `phpstan-baseline.neon` entries are intentional,
 documented tracked debt (unread forward-compat DI stubs and one nextcloud/ocp
 stub false-positive) — see the file header and issue #496 before regenerating.
 
+### Test coverage
+
+<!-- coverage:start -->
+Measured test coverage: 78.3% of statements (PHP 78.3% of 58,402 statements), at commit `f9ebace3b` on 2026-11-11. The JavaScript frontend is not in this figure, because it has no coverage measurement yet. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+<!-- coverage:end -->
+
 ## Tech Stack
 
 | Layer | Technology |
