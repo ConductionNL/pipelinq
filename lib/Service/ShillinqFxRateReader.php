@@ -122,7 +122,7 @@ class ShillinqFxRateReader {
 	public function rateFor(string $from, string $to): ?array {
 		$from = strtoupper(trim($from));
 		$to = strtoupper(trim($to));
-		if ($from === '' || $to === '' || $from === $to || $this->probe() === false) {
+		if ($this->isAskable(from: $from, to: $to) === false) {
 			return null;
 		}
 
@@ -131,6 +131,32 @@ class ShillinqFxRateReader {
 			return $direct;
 		}
 
+		return $this->crossRate(from: $from, to: $to);
+	}//end rateFor()
+
+	/**
+	 * Whether a pair can be asked at all: two different, non-empty
+	 * currencies, with shillinq installed (asked last).
+	 *
+	 * @param string $from The upper-cased transaction currency.
+	 * @param string $to   The upper-cased base currency.
+	 *
+	 * @return bool
+	 */
+	private function isAskable(string $from, string $to): bool {
+		return $from !== '' && $to !== '' && $from !== $to && $this->probe() === true;
+	}//end isAskable()
+
+	/**
+	 * The rate through the euro: both legs either way, the older of their
+	 * dates, and the from leg's origin; null when a leg is missing.
+	 *
+	 * @param string $from The transaction currency.
+	 * @param string $to   The base currency.
+	 *
+	 * @return array{rate: float, date: string, origin: string}|null
+	 */
+	private function crossRate(string $from, string $to): ?array {
 		$fromEur = $this->eitherWay(from: $from, to: self::CROSS_CURRENCY);
 		$toEur = $this->eitherWay(from: $to, to: self::CROSS_CURRENCY);
 		if ($fromEur === null || $toEur === null) {
@@ -142,7 +168,7 @@ class ShillinqFxRateReader {
 			'date' => min($fromEur['date'], $toEur['date']),
 			'origin' => $fromEur['origin'],
 		];
-	}//end rateFor()
+	}//end crossRate()
 
 	/**
 	 * Whether shillinq's application class is loadable. Protected so a test
@@ -197,17 +223,36 @@ class ShillinqFxRateReader {
 			return $this->pairs[$key];
 		}
 
-		$best = null;
+		$candidates = [];
 		foreach ($this->rows(from: $from, to: $to) as $row) {
 			$candidate = $this->normalise(row: $row, from: $from, to: $to);
-			if ($candidate !== null && ($best === null || $this->beats(candidate: $candidate, best: $best) === true)) {
+			if ($candidate !== null) {
+				$candidates[] = $candidate;
+			}
+		}
+
+		$this->pairs[$key] = $this->bestOf(candidates: $candidates);
+		return $this->pairs[$key];
+	}//end pair()
+
+	/**
+	 * The best of the usable rates, in reading order: a later candidate
+	 * replaces the best only when it beats it.
+	 *
+	 * @param array<int, array{rate: float, date: string, origin: string}> $candidates The usable rates.
+	 *
+	 * @return array{rate: float, date: string, origin: string}|null
+	 */
+	private function bestOf(array $candidates): ?array {
+		$best = null;
+		foreach ($candidates as $candidate) {
+			if ($best === null || $this->beats(candidate: $candidate, best: $best) === true) {
 				$best = $candidate;
 			}
 		}
 
-		$this->pairs[$key] = $best;
 		return $best;
-	}//end pair()
+	}//end bestOf()
 
 	/**
 	 * Whether a candidate rate is better than the best so far.
@@ -255,12 +300,35 @@ class ShillinqFxRateReader {
 	 * @return array{rate: float, date: string, origin: string}|null The rate, or null when unusable.
 	 */
 	private function normalise(array $row, string $from, string $to): ?array {
-		if (strtoupper((string)($row['transactionCurrency'] ?? '')) !== $from
-			|| strtoupper((string)($row['baseCurrency'] ?? '')) !== $to
-		) {
+		if ($this->isOfPair(row: $row, pair: [$from, $to]) === false) {
 			return null;
 		}
 
+		return $this->usableRate(row: $row);
+	}//end normalise()
+
+	/**
+	 * Whether a row is of the pair, compared case-insensitively.
+	 *
+	 * @param array<string, mixed>        $row  The row.
+	 * @param array{0: string, 1: string} $pair The upper-cased from and to currency.
+	 *
+	 * @return bool
+	 */
+	private function isOfPair(array $row, array $pair): bool {
+		return strtoupper((string)($row['transactionCurrency'] ?? '')) === $pair[0]
+			&& strtoupper((string)($row['baseCurrency'] ?? '')) === $pair[1];
+	}//end isOfPair()
+
+	/**
+	 * A row's rate, day and origin; null without a positive numeric rate or
+	 * a YYYY-MM-DD date in its first ten characters.
+	 *
+	 * @param array<string, mixed> $row The row.
+	 *
+	 * @return array{rate: float, date: string, origin: string}|null
+	 */
+	private function usableRate(array $row): ?array {
 		$rate = $row['rate'] ?? null;
 		$date = substr((string)($row['date'] ?? ''), 0, 10);
 		if (is_numeric($rate) === false || (float)$rate <= 0 || preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
@@ -272,7 +340,7 @@ class ShillinqFxRateReader {
 			'date' => $date,
 			'origin' => (string)($row['source'] ?? ''),
 		];
-	}//end normalise()
+	}//end usableRate()
 
 	/**
 	 * Read the FxRate rows of one pair.
@@ -283,29 +351,7 @@ class ShillinqFxRateReader {
 	 * @return array<int, array<string, mixed>> Plain rows.
 	 */
 	private function rows(string $from, string $to): array {
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$page = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => self::SHILLINQ_REGISTER,
-						'schema' => self::FX_RATE_SCHEMA,
-						'transactionCurrency' => $from,
-						'baseCurrency' => $to,
-					],
-					'limit' => self::LIMIT,
-				],
-				_rbac: false,
-				_multitenancy: false
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ShillinqFxRateReader: reading exchange rates failed',
-				['pair' => $from.'>'.$to, 'exception' => $e->getMessage()]
-			);
-			return [];
-		}
-
+		$page = $this->page(pair: ['transactionCurrency' => $from, 'baseCurrency' => $to]);
 		if (is_iterable($page) === false) {
 			return [];
 		}
@@ -317,4 +363,28 @@ class ShillinqFxRateReader {
 
 		return $rows;
 	}//end rows()
+
+	/**
+	 * One read of shillinq's rates for a pair, with access off; null when the
+	 * read fails (logged).
+	 *
+	 * @param array{transactionCurrency: string, baseCurrency: string} $pair The pair filters.
+	 *
+	 * @return mixed The page read.
+	 */
+	private function page(array $pair): mixed {
+		try {
+			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+			return $objectService->findAll(
+				config: ['filters' => ['register' => self::SHILLINQ_REGISTER, 'schema' => self::FX_RATE_SCHEMA, ...$pair], 'limit' => self::LIMIT],
+				_rbac: false, _multitenancy: false
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'ShillinqFxRateReader: reading exchange rates failed',
+				['pair' => $pair['transactionCurrency'].'>'.$pair['baseCurrency'], 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end page()
 }//end class
