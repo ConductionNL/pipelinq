@@ -150,15 +150,26 @@ class KeywordTargetService {
 		$record = [
 			'term' => $term,
 			'status' => $this->oneOf(value: (string)($payload['status'] ?? 'watch'), allowed: self::STATUSES, field: 'status'),
-			'proposalKind' => $this->oneOf(
-				value: (string)($payload['proposalKind'] ?? 'manual'),
-				allowed: self::PROPOSAL_KINDS,
-				field: 'proposalKind'
-			),
+			'proposalKind' => $this->oneOf(value: (string)($payload['proposalKind'] ?? 'manual'), allowed: self::PROPOSAL_KINDS, field: 'proposalKind'),
 			'createdBy' => $uid,
 			'createdAt' => gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime()),
 		];
 
+		return $this->store->save(schemaSlug: $this->schemaSlug(), payload: $this->withOptional(record: $record, payload: $payload));
+	}//end confirm()
+
+	/**
+	 * The record with the confirmation's intent (when given, and known) and
+	 * its page, property and notes (each when not blank, trimmed).
+	 *
+	 * @param array<string, mixed> $record  The record so far.
+	 * @param array<string, mixed> $payload The confirmation.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws UnexpectedValueException When the intent is unknown.
+	 */
+	private function withOptional(array $record, array $payload): array {
 		$intent = trim((string)($payload['intent'] ?? ''));
 		if ($intent !== '') {
 			$record['intent'] = $this->oneOf(value: $intent, allowed: self::INTENTS, field: 'intent');
@@ -171,8 +182,8 @@ class KeywordTargetService {
 			}
 		}
 
-		return $this->store->save(schemaSlug: $this->schemaSlug(), payload: $record);
-	}//end confirm()
+		return $record;
+	}//end withOptional()
 
 	/**
 	 * The schema slug in use.
