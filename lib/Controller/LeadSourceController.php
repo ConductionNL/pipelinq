@@ -26,7 +26,6 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SystemTagService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -68,17 +67,7 @@ class LeadSourceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		return new JSONResponse(
-			[
-				'success' => true,
-				'tags' => $this->systemTagService->getTags(self::OBJECT_TYPE),
-			]
-		);
+		return $this->tagActions()->index(user: $this->userSession->getUser());
 	}//end index()
 
 	/**
@@ -90,17 +79,7 @@ class LeadSourceController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function create(): JSONResponse {
-		$name = $this->request->getParam('name', '');
-
-		try {
-			$tag = $this->systemTagService->addTag(
-				objectType: self::OBJECT_TYPE,
-				name: $name
-			);
-			return new JSONResponse(['success' => true, 'tag' => $tag]);
-		} catch (\InvalidArgumentException|\RuntimeException $e) {
-			return new JSONResponse(['success' => false, 'message' => $e->getMessage()], 400);
-		}
+		return $this->tagActions()->create(name: $this->request->getParam('name', ''));
 	}//end create()
 
 	/**
@@ -114,18 +93,7 @@ class LeadSourceController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function update(string $id): JSONResponse {
-		$name = $this->request->getParam('name', '');
-
-		try {
-			$tag = $this->systemTagService->renameTag(
-				objectType: self::OBJECT_TYPE,
-				tagId: (int)$id,
-				newName: $name
-			);
-			return new JSONResponse(['success' => true, 'tag' => $tag]);
-		} catch (\InvalidArgumentException|\RuntimeException $e) {
-			return new JSONResponse(['success' => false, 'message' => $e->getMessage()], 400);
-		}
+		return $this->tagActions()->rename(id: $id, name: $this->request->getParam('name', ''));
 	}//end update()
 
 	/**
@@ -139,17 +107,18 @@ class LeadSourceController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function destroy(string $id): JSONResponse {
-		try {
-			$objectType = self::OBJECT_TYPE;
-			$tagId = (int)$id;
-			$this->systemTagService->removeTag(
-				objectType: $objectType,
-				tagId: $tagId
-			);
-			return new JSONResponse(['success' => true]);
-		} catch (\Exception $e) {
-			$this->logger->error('LeadSourceController::destroy failed', ['exception' => $e]);
-			return new JSONResponse(['success' => false, 'message' => 'An unexpected error occurred'], 500);
-		}
+		return $this->tagActions()->delete(id: $id, logger: $this->logger);
 	}//end destroy()
+
+	/**
+	 * The actions on this controller's kind of tag.
+	 *
+	 * @return SystemTagActions The actions.
+	 */
+	private function tagActions(): SystemTagActions {
+		return new SystemTagActions(
+			systemTagService: $this->systemTagService,
+			kind: new SystemTagKind(objectType: self::OBJECT_TYPE, logLabel: 'LeadSourceController')
+		);
+	}//end tagActions()
 }//end class
