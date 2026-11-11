@@ -145,15 +145,47 @@ class PasswordResetService {
 	 */
 	public function resetPassword(string $token, string $newPassword, string $tenantId): void {
 		$this->repository->requireWritable();
+		$this->requireStrong(password: $newPassword);
+		$account = $this->accountForResetToken(token: $token, tenantId: $tenantId);
 
-		if (strlen($newPassword) < self::MIN_PASSWORD_LENGTH) {
+		$accountId = (string)$this->repository->idOf(object: $account);
+		$this->repository->save(self::SCHEMA, $this->withPassword(account: $account, password: $newPassword), $accountId);
+
+		// A password reset invalidates every existing session.
+		$this->sessions->revokeAllForAccount(accountId: $accountId, reason: 'password-reset');
+		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'password-reset', outcome: 'success');
+	}//end resetPassword()
+
+	/**
+	 * Refuse a password shorter than the minimum.
+	 *
+	 * @param string $password The new password.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException When it is too short.
+	 */
+	private function requireStrong(string $password): void {
+		if (strlen($password) < self::MIN_PASSWORD_LENGTH) {
 			throw new PortalException(
 				Http::STATUS_UNPROCESSABLE_ENTITY,
 				'weakPassword',
 				'Wachtwoord moet minimaal 10 tekens bevatten.'
 			);
 		}
+	}//end requireStrong()
 
+	/**
+	 * The tenant's account the reset token belongs to, when it is valid and unexpired.
+	 *
+	 * @param string $token    The plaintext reset token.
+	 * @param string $tenantId The tenant.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws PortalException When no account holds a valid token.
+	 */
+	private function accountForResetToken(string $token, string $tenantId): array {
 		$account = $this->findByResetToken(token: $token, tenantId: $tenantId);
 		if ($account === null) {
 			throw new PortalException(
@@ -163,18 +195,27 @@ class PasswordResetService {
 			);
 		}
 
-		$accountId = (string)$this->repository->idOf(object: $account);
-		$account['passwordHash'] = $this->hasher->hash($newPassword);
+		return $account;
+	}//end accountForResetToken()
+
+	/**
+	 * The account with its new password, its reset token cleared and its
+	 * lock lifted.
+	 *
+	 * @param array<string, mixed> $account  The account.
+	 * @param string               $password The new password.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withPassword(array $account, string $password): array {
+		$account['passwordHash'] = $this->hasher->hash($password);
 		$account['passwordResetTokenHash'] = null;
 		$account['passwordResetExpiresAt'] = null;
 		$account['failedLoginAttempts'] = 0;
 		$account['lockedUntil'] = null;
-		$this->repository->save(self::SCHEMA, $account, $accountId);
 
-		// A password reset invalidates every existing session.
-		$this->sessions->revokeAllForAccount(accountId: $accountId, reason: 'password-reset');
-		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'password-reset', outcome: 'success');
-	}//end resetPassword()
+		return $account;
+	}//end withPassword()
 
 	/**
 	 * Find the account whose stored reset-token hash matches and is unexpired.
@@ -193,12 +234,7 @@ class PasswordResetService {
 			return null;
 		}
 
-		if ($this->tokens->verify(
-			$token,
-			($candidate['passwordResetTokenHash'] ?? null),
-			($candidate['passwordResetExpiresAt'] ?? null)
-		) === false
-		) {
+		if ($this->tokens->verify($token, ($candidate['passwordResetTokenHash'] ?? null), ($candidate['passwordResetExpiresAt'] ?? null)) === false) {
 			return null;
 		}
 
