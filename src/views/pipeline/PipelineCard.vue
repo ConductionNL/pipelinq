@@ -172,6 +172,78 @@ import { cachedUserDisplayName, initialsOf, listAssignableUserIds } from '../../
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 
+/**
+ * Whether a value is missing: null, undefined or ''.
+ *
+ * @param {unknown} value The value.
+ * @return {boolean}
+ */
+function isBlankValue(value) {
+	return value === null || value === undefined || value === ''
+}
+
+/**
+ * A value as a whole number, or null when it is not a finite number.
+ *
+ * @param {unknown} value The value.
+ * @return {number|null} The rounded number.
+ */
+function roundedFinite(value) {
+	const number = Number(value)
+	return Number.isFinite(number) ? Math.round(number) : null
+}
+
+/**
+ * Whether a lead is won, lost or in a closed stage.
+ *
+ * @param {object} lead The lead.
+ * @param {Array<object>} stages The pipeline's stages.
+ * @return {boolean}
+ * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ */
+function isSettledLead(lead, stages) {
+	if (lead.status === 'won' || lead.status === 'lost') {
+		return true
+	}
+	// Cards in stages flagged isClosed never show overdue
+	const currentStage = stages.find((s) => s.name === lead.stage)
+	return Boolean(currentStage && currentStage.isClosed)
+}
+
+/**
+ * Whether an open lead is past its expected close date.
+ *
+ * @param {object} lead The lead.
+ * @param {Array<object>} stages The pipeline's stages.
+ * @return {boolean}
+ * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ */
+function isLeadOverdue(lead, stages) {
+	if (!lead.expectedCloseDate || isSettledLead(lead, stages)) {
+		return false
+	}
+	return new Date(lead.expectedCloseDate) < new Date()
+}
+
+/**
+ * Whether a request is more than 30 days old.
+ *
+ * @param {object} request The request.
+ * @return {boolean}
+ * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ */
+function isRequestOverdue(request) {
+	// `requestedAt` became `occurredAt` on the ticket supertype.
+	if (!request.occurredAt) {
+		return false
+	}
+	const daysSince = Math.floor(
+		(Date.now() - new Date(request.occurredAt).getTime())
+			/ 86400000,
+	)
+	return daysSince > 30
+}
+
 export default {
 	name: 'PipelineCard',
 	components: {
@@ -251,12 +323,11 @@ export default {
 		 */
 		chance() {
 			if (this.entityType !== 'lead') return null
-			const own = Number(this.item.probability)
-			if (this.item.probability !== null && this.item.probability !== undefined && this.item.probability !== '' && Number.isFinite(own)) {
-				return Math.round(own)
+			const own = isBlankValue(this.item.probability) ? null : roundedFinite(this.item.probability)
+			if (own !== null) {
+				return own
 			}
-			const fromStage = Number(this.cardStage?.probability)
-			return this.cardStage && Number.isFinite(fromStage) ? Math.round(fromStage) : null
+			return this.cardStage ? roundedFinite(this.cardStage.probability) : null
 		},
 
 		/**
@@ -345,24 +416,10 @@ export default {
 		 */
 		isOverdue() {
 			if (this.entityType === 'lead') {
-				if (!this.item.expectedCloseDate) return false
-				if (this.item.status === 'won' || this.item.status === 'lost')
-					return false
-				// Cards in stages flagged isClosed never show overdue
-				const currentStage = this.stages.find(
-					(s) => s.name === this.item.stage,
-				)
-				if (currentStage && currentStage.isClosed) return false
-				return new Date(this.item.expectedCloseDate) < new Date()
+				return isLeadOverdue(this.item, this.stages)
 			}
 			if (this.entityType === 'request') {
-				// `requestedAt` became `occurredAt` on the ticket supertype.
-				if (!this.item.occurredAt) return false
-				const daysSince = Math.floor(
-					(Date.now() - new Date(this.item.occurredAt).getTime())
-						/ 86400000,
-				)
-				return daysSince > 30
+				return isRequestOverdue(this.item)
 			}
 			return false
 		},
@@ -525,16 +582,7 @@ export default {
 		async onStageChange(newStage) {
 			if (!newStage || newStage === this.currentColumnValue) return
 			try {
-				const updated = this.buildSavePayload()
-				updated[this.columnProperty] = newStage
-				const targetStage = this.stages.find((s) => s.name === newStage)
-				if (
-					targetStage
-					&& typeof targetStage.order === 'number'
-					&& this.columnProperty === 'stage'
-				) {
-					updated.stageOrder = targetStage.order
-				}
+				const updated = this.stageMovePayload(newStage)
 				await this.objectStore.saveObject(
 					this.resolvedType.objectType,
 					updated,
@@ -547,6 +595,28 @@ export default {
 				this.selectedStage = this.currentColumnValue
 				showError(t('pipelinq', 'Failed to move lead. Please try again.'))
 			}
+		},
+
+		/**
+		 * The card moved to another stage, with that stage's order when the
+		 * board columns are stages and the stage has one.
+		 *
+		 * @param {string} newStage The stage moved to.
+		 * @return {object} The object to save.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 */
+		stageMovePayload(newStage) {
+			const updated = this.buildSavePayload()
+			updated[this.columnProperty] = newStage
+			const targetStage = this.stages.find((s) => s.name === newStage)
+			if (
+				targetStage
+				&& typeof targetStage.order === 'number'
+				&& this.columnProperty === 'stage'
+			) {
+				updated.stageOrder = targetStage.order
+			}
+			return updated
 		},
 
 		/**
@@ -647,7 +717,7 @@ export default {
 
 		/**
 		 * @param {string} dateStr The stored date.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
 		 */
 		formatDate(dateStr) {
 			return formatLocaleDate(dateStr)
