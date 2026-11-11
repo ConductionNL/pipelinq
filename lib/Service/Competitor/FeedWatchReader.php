@@ -179,32 +179,12 @@ class FeedWatchReader {
 
 		$out = [];
 		foreach ($xml->entry as $entry) {
-			$link = trim((string)($entry->link['href'] ?? ''));
-			if ($link === '') {
-				$link = trim((string)$entry->id);
-			}
-
-			if ($link === '') {
+			$item = $this->atomEntry(entry: $entry);
+			if ($item === null) {
 				continue;
 			}
 
-			$stamp = trim((string)$entry->id);
-			if ($stamp === '') {
-				$stamp = trim((string)$entry->updated);
-			}
-
-			$published = trim((string)$entry->published);
-			if ($published === '') {
-				$published = trim((string)$entry->updated);
-			}
-
-			$out[] = [
-				'url' => $link,
-				'title' => trim((string)$entry->title),
-				'summary' => $this->shorten(value: trim((string)$entry->summary)),
-				'stamp' => $stamp,
-				'publishedAt' => $this->instant(value: $published),
-			];
+			$out[] = $item;
 			if (count($out) >= self::MAX_ENTRIES) {
 				break;
 			}
@@ -212,6 +192,42 @@ class FeedWatchReader {
 
 		return $out;
 	}//end atomEntries()
+
+	/**
+	 * One Atom entry: its link (else its id), stamp (id, else updated) and date (published, else updated).
+	 *
+	 * @param SimpleXMLElement $entry The `<entry>` element.
+	 *
+	 * @return array<string, mixed>|null The entry, or null when it has neither link nor id.
+	 */
+	private function atomEntry(SimpleXMLElement $entry): ?array {
+		$link = trim((string)($entry->link['href'] ?? ''));
+		if ($link === '') {
+			$link = trim((string)$entry->id);
+		}
+
+		if ($link === '') {
+			return null;
+		}
+
+		$stamp = trim((string)$entry->id);
+		if ($stamp === '') {
+			$stamp = trim((string)$entry->updated);
+		}
+
+		$published = trim((string)$entry->published);
+		if ($published === '') {
+			$published = trim((string)$entry->updated);
+		}
+
+		return [
+			'url' => $link,
+			'title' => trim((string)$entry->title),
+			'summary' => $this->shorten(value: trim((string)$entry->summary)),
+			'stamp' => $stamp,
+			'publishedAt' => $this->instant(value: $published),
+		];
+	}//end atomEntry()
 
 	/**
 	 * Parse the document as XML with libxml's own errors collected, never
