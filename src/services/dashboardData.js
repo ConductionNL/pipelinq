@@ -16,6 +16,7 @@ import { subscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import { initializeStores } from '../store/store.js'
+import { fetchRegisteredObjects } from './objectFetch.js'
 
 const CACHE_TTL_MS = 5 * 60 * 1000
 const cache = new Map()
@@ -38,28 +39,6 @@ export function getDashboardRefreshSignal() {
 }
 
 /**
- * Build the OR query URL for a registered object type.
- *
- * @param {object} typeConfig - { register, schema } from objectTypeRegistry.
- * @param {object} params - Query parameters.
- * @return {string} Fully-qualified path.
- */
-function buildUrl(typeConfig, params = {}) {
-	const queryParams = new URLSearchParams()
-	for (const [key, value] of Object.entries(params)) {
-		if (value === undefined || value === null || value === '') continue
-		queryParams.set(key, value)
-	}
-	return generateUrl(
-		'/apps/openregister/api/objects/'
-			+ typeConfig.register
-			+ '/'
-			+ typeConfig.schema
-			+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-	)
-}
-
-/**
  * Raw fetch helper — identical to the per-widget fetchRaw the legacy
  * widgets defined locally. Returns `[]` when the object type is not
  * registered in the app's settings (graceful no-op).
@@ -71,20 +50,7 @@ function buildUrl(typeConfig, params = {}) {
  */
 async function fetchRaw(type, params = {}) {
 	const { objectStore } = await initializeStores()
-	const typeConfig = objectStore.objectTypeRegistry[type]
-	if (!typeConfig) return []
-
-	const response = await fetch(buildUrl(typeConfig, params), {
-		headers: {
-			'Content-Type': 'application/json',
-			requesttoken: OC.requestToken,
-			'OCS-APIREQUEST': 'true',
-		},
-	})
-
-	if (!response.ok) throw new Error('Failed to fetch ' + type)
-	const data = await response.json()
-	return data.results || data || []
+	return fetchRegisteredObjects(objectStore.objectTypeRegistry, { type, params })
 }
 
 /**

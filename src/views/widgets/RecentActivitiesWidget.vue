@@ -15,9 +15,81 @@
 import { CnDataTable } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import { formatDate } from '../../services/localeUtils.js'
-import { initializeStores } from '../../store/store.js'
+import { fetchRegisteredObjects } from '../../services/objectFetch.js'
 import { toText } from '../../utils/widgetText.js'
-import { LIST_COLUMNS, navigateTo } from './listTable.js'
+import { navigateTo } from './listTable.js'
+import listWidgetMixin from './listWidgetMixin.js'
+
+/**
+ * The recent objects the widget lists, in request order. A request is a
+ * `ticket` narrowed by ticketType (unify-ticket-supertype); the row's
+ * `entityType` stays 'request' so the LABEL keeps reading "Request", while
+ * navigation goes to the unified /tickets route (see onShow).
+ */
+const RECENT_QUERIES = [
+	{
+		type: 'lead',
+		entityType: 'lead',
+		params: {
+			_limit: 10,
+			_order: 'updated:desc',
+		},
+	},
+	{
+		type: 'ticket',
+		entityType: 'request',
+		params: {
+			ticketType: 'request',
+			_limit: 10,
+			_order: 'updated:desc',
+		},
+	},
+]
+
+/**
+ * One request per registered type, each answering its objects as activities.
+ *
+ * @param {object} config The object-type registry.
+ * @return {Array<Promise<Array<object>>>} The requests.
+ */
+function recentActivityRequests(config) {
+	return RECENT_QUERIES
+		.filter((query) => config[query.type])
+		.map((query) => fetchRegisteredObjects(config, query).then((items) =>
+			items.map((item) => asActivity(item, query.entityType)),
+		))
+}
+
+/**
+ * @param {object} item An object.
+ * @param {string} entityType The row's entity type.
+ * @return {object} The object as an activity, with its last change as `modified`.
+ */
+function asActivity(item, entityType) {
+	return {
+		...item,
+		entityType,
+		modified:
+			item.updated
+			|| item.dateModified
+			|| item.created,
+	}
+}
+
+/**
+ * Sort activities by modified date, newest first, in place.
+ *
+ * @param {Array<object>} activities The activities.
+ * @return {Array<object>} The same list.
+ */
+function newestFirst(activities) {
+	activities.sort((a, b) => {
+		const dateA = a.modified ? new Date(a.modified) : new Date(0)
+		const dateB = b.modified ? new Date(b.modified) : new Date(0)
+		return dateB - dateA
+	})
+	return activities
+}
 
 export default {
 	name: 'RecentActivitiesWidget',
@@ -25,27 +97,11 @@ export default {
 		CnDataTable,
 	},
 
-	props: {
-		/**
-		 * Widget heading, supplied by the manifest.
-		 *
-		 * Declared but not rendered here: the widget chrome draws the heading.
-		 * Declaring it is what stops Vue's attribute fallthrough painting
-		 * `title="…"` onto the component's root element, which would hover a
-		 * browser tooltip over the whole widget.
-		 */
-		// eslint-disable-next-line vue/no-unused-properties
-		title: {
-			type: String,
-			required: true,
-		},
-	},
+	mixins: [listWidgetMixin],
 
 	data() {
 		return {
-			loading: false,
 			activities: [],
-			columns: LIST_COLUMNS,
 		}
 	},
 
@@ -67,10 +123,6 @@ export default {
 				}
 			})
 		},
-	},
-
-	async mounted() {
-		await this.fetchData()
 	},
 
 	methods: {
@@ -123,108 +175,12 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-47
 		 */
 		async fetchData() {
-			this.loading = true
-			try {
-				const { objectStore } = await initializeStores()
-				const config = objectStore.objectTypeRegistry
-
-				const promises = []
-
-				if (config.lead) {
-					promises.push(
-						this.fetchRaw(config, 'lead', {
-							_limit: 10,
-							_order: 'updated:desc',
-						}).then((items) =>
-							items.map((item) => ({
-								...item,
-								entityType: 'lead',
-								modified:
-									item.updated
-									|| item.dateModified
-									|| item.created,
-							})),
-						),
-					)
-				}
-
-				if (config.ticket) {
-					// A request is a `ticket` narrowed by ticketType
-					// (unify-ticket-supertype); the row's `entityType` stays 'request'
-					// so the LABEL keeps reading "Request", while navigation goes
-					// to the unified /tickets route (see onShow).
-					promises.push(
-						this.fetchRaw(config, 'ticket', {
-							ticketType: 'request',
-							_limit: 10,
-							_order: 'updated:desc',
-						}).then((items) =>
-							items.map((item) => ({
-								...item,
-								entityType: 'request',
-								modified:
-									item.updated
-									|| item.dateModified
-									|| item.created,
-							})),
-						),
-					)
-				}
-
-				const results = await Promise.all(promises)
-				const combined = results.flat()
-
-				// Sort by modified date descending
-				combined.sort((a, b) => {
-					const dateA = a.modified ? new Date(a.modified) : new Date(0)
-					const dateB = b.modified ? new Date(b.modified) : new Date(0)
-					return dateB - dateA
-				})
-
-				this.activities = combined.slice(0, 15)
-			} catch (err) {
-				console.error('RecentActivitiesWidget fetch error:', err)
-			} finally {
-				this.loading = false
-			}
-		},
-
-		/**
-		 * @param {object} config The object-type registry (register/schema per type).
-		 * @param {string} type The object type to fetch.
-		 * @param {object} params Query parameters.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-48
-		 */
-		async fetchRaw(config, type, params = {}) {
-			const typeConfig = config[type]
-			if (!typeConfig) return []
-
-			const queryParams = new URLSearchParams()
-			for (const [key, value] of Object.entries(params)) {
-				if (value === undefined || value === null || value === '') continue
-				queryParams.set(key, value)
-			}
-
-			const url = generateUrl(
-				'/apps/openregister/api/objects/'
-					+ typeConfig.register
-					+ '/'
-					+ typeConfig.schema
-					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-			)
-
-			const response = await fetch(url, {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
+			await this.loadWidget('RecentActivitiesWidget', async (config) => {
+				const results = await Promise.all(recentActivityRequests(config))
+				this.activities = newestFirst(results.flat()).slice(0, 15)
 			})
-
-			if (!response.ok) throw new Error('Failed to fetch ' + type)
-			const data = await response.json()
-			return data.results || data || []
 		},
+
 	},
 }
 </script>

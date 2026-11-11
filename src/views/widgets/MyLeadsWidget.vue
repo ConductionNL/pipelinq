@@ -21,9 +21,10 @@
 import { CnDataTable } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import { formatDate } from '../../services/localeUtils.js'
-import { initializeStores } from '../../store/store.js'
+import { fetchRegisteredObjects } from '../../services/objectFetch.js'
 import { toText } from '../../utils/widgetText.js'
-import { LIST_COLUMNS, navigateTo } from './listTable.js'
+import { navigateTo } from './listTable.js'
+import listWidgetMixin from './listWidgetMixin.js'
 
 export default {
 	name: 'MyLeadsWidget',
@@ -31,27 +32,11 @@ export default {
 		CnDataTable,
 	},
 
-	props: {
-		/**
-		 * Widget heading, supplied by the manifest.
-		 *
-		 * Declared but not rendered here: the widget chrome draws the heading.
-		 * Declaring it is what stops Vue's attribute fallthrough painting
-		 * `title="…"` onto the component's root element, which would hover a
-		 * browser tooltip over the whole widget.
-		 */
-		// eslint-disable-next-line vue/no-unused-properties
-		title: {
-			type: String,
-			required: true,
-		},
-	},
+	mixins: [listWidgetMixin],
 
 	data() {
 		return {
-			loading: false,
 			leads: [],
-			columns: LIST_COLUMNS,
 			leadsUrl: generateUrl('/apps/pipelinq/leads'),
 		}
 	},
@@ -86,10 +71,6 @@ export default {
 		},
 	},
 
-	async mounted() {
-		await this.fetchData()
-	},
-
 	methods: {
 		/**
 		 * Navigate to the clicked lead.
@@ -106,60 +87,19 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-43
 		 */
 		async fetchData() {
-			this.loading = true
-			try {
-				const { objectStore } = await initializeStores()
-				const config = objectStore.objectTypeRegistry
-
+			await this.loadWidget('MyLeadsWidget', async (config) => {
 				if (config.lead && window.OC?.getCurrentUser?.()?.uid) {
-					this.leads = await this.fetchRaw(config, 'lead', {
-						assignee: window.OC?.getCurrentUser?.()?.uid,
-						_limit: 20,
+					this.leads = await fetchRegisteredObjects(config, {
+						type: 'lead',
+						params: {
+							assignee: window.OC?.getCurrentUser?.()?.uid,
+							_limit: 20,
+						},
 					})
 				}
-			} catch (err) {
-				console.error('MyLeadsWidget fetch error:', err)
-			} finally {
-				this.loading = false
-			}
-		},
-
-		/**
-		 * @param {object} config The object-type registry (register/schema per type).
-		 * @param {string} type The object type to fetch.
-		 * @param {object} params Query parameters.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-44
-		 */
-		async fetchRaw(config, type, params = {}) {
-			const typeConfig = config[type]
-			if (!typeConfig) return []
-
-			const queryParams = new URLSearchParams()
-			for (const [key, value] of Object.entries(params)) {
-				if (value === undefined || value === null || value === '') continue
-				queryParams.set(key, value)
-			}
-
-			const url = generateUrl(
-				'/apps/openregister/api/objects/'
-					+ typeConfig.register
-					+ '/'
-					+ typeConfig.schema
-					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-			)
-
-			const response = await fetch(url, {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
 			})
-
-			if (!response.ok) throw new Error('Failed to fetch ' + type)
-			const data = await response.json()
-			return data.results || data || []
 		},
+
 	},
 }
 </script>
