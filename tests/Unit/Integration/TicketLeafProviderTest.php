@@ -264,4 +264,28 @@ class TicketLeafProviderTest extends TestCase {
 		$refs = array_map(static fn (int $i): string => 'm-'.$i, range(1, TicketLeafProvider::MAX_REFS + 1));
 		$this->assertSame(400, $this->provider()->openByMasterEntity(refs: $refs)['status']);
 	}//end testTooManyReferencesAreRefused()
+
+	/**
+	 * Every refusal and the reference clean-up are exact, and the refusals read nothing.
+	 *
+	 * @return void
+	 */
+	public function testRefusalsAndReferenceCleanUpAreExact(): void {
+		$this->assertSame(['status' => 400, 'error' => 'Unknown ticket status filter.'], $this->provider()->byMasterEntity(refs: [5], status: 'deleted'));
+		$this->assertSame(['status' => 200, 'tickets' => []], $this->provider()->byMasterEntity(refs: [' ', 7, null, '']));
+		$this->assertSame(['status' => 503, 'error' => 'The ticket surface is not configured.'], $this->provider(configured: false)->byMasterEntity(refs: ['m-cloud']));
+		$many = array_map(static fn (int $i): string => ' m-'.$i, range(1, TicketLeafProvider::MAX_REFS + 1));
+		$this->assertSame(['status' => 400, 'error' => 'Too many master entities in one read.'], $this->provider()->byMasterEntity(refs: $many));
+		$this->assertSame([], $this->queries);
+
+		$atCap = array_merge(array_slice($many, 0, TicketLeafProvider::MAX_REFS), ['m-1', ' m-1 ']);
+		$this->assertCount(TicketLeafProvider::MAX_REFS, $this->provider()->byMasterEntity(refs: $atCap, status: 'all')['tickets']);
+
+		$this->queries = [];
+		$answer = $this->provider()->byMasterEntity(refs: [' m-cloud ', 'm-unknown', 3, 'm-cloud', 'm-slagerij'], status: 'all');
+		$this->assertSame(['m-cloud', 'm-unknown', 'm-slagerij'], array_keys($answer['tickets']));
+		$this->assertSame(['m-cloud', 'm-unknown', 'm-slagerij'], $this->queries[0]['filters']['masterEntityRef']['in']);
+		$this->assertSame(['register' => 'reg-1', 'schema' => 'sch-client'], array_intersect_key($this->queries[0]['filters'], ['register' => 1, 'schema' => 1]));
+		$this->assertSame(['register' => 'reg-1', 'schema' => 'sch-ticket'], array_intersect_key($this->queries[1]['filters'], ['register' => 1, 'schema' => 1]));
+	}//end testRefusalsAndReferenceCleanUpAreExact()
 }//end class
