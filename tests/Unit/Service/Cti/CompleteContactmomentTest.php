@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Cti;
 
 use OCA\Pipelinq\Service\Cti\AdapterRegistry;
+use OCA\Pipelinq\Service\Cti\CallCompletion;
 use OCA\Pipelinq\Service\CtiContactMatcher;
 use OCA\Pipelinq\Service\CtiDispositionService;
 use OCA\Pipelinq\Service\CtiService;
@@ -118,7 +119,7 @@ class CompleteContactmomentTest extends TestCase {
 	 * @return void
 	 */
 	private function complete(CtiService $service, string $interactionId, string $outcome): void {
-		$service->completeContactmoment($interactionId, 95, $outcome, 'Billing', 'Paid');
+		$service->completeContactmoment($interactionId, new CallCompletion(durationSeconds: 95, outcome: $outcome, subject: 'Billing', notes: 'Paid'));
 	}//end complete()
 
 	/**
