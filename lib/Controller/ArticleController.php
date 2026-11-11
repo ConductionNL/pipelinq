@@ -80,12 +80,9 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse($this->articles->listArticles(page: $page, limit: $limit));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse($this->articles->listArticles(page: $page, limit: $limit))
+		);
 	}//end index()
 
 	/**
@@ -99,17 +96,14 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
+			$article = $this->articles->getArticleById(articleId: $id);
+			if ($article === null) {
+				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+			}
 
-		$article = $this->articles->getArticleById(articleId: $id);
-		if ($article === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse(['article' => $article]);
+			return new JSONResponse(['article' => $article]);
+		});
 	}//end show()
 
 	/**
@@ -121,17 +115,14 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function (string $uid): JSONResponse {
+			$result = $this->articles->createArticle(payload: $this->collectBody(), authorUid: $uid);
+			if (isset($result['error']) === true) {
+				return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
+			}
 
-		$result = $this->articles->createArticle(payload: $this->collectBody(), authorUid: $uid);
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse(['article' => ($result['article'] ?? null)], Http::STATUS_CREATED);
+			return new JSONResponse(['article' => ($result['article'] ?? null)], Http::STATUS_CREATED);
+		});
 	}//end create()
 
 	/**
@@ -145,12 +136,9 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->render(result: $this->articles->updateArticle(articleId: $id, patch: $this->collectBody()));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => $this->render(result: $this->articles->updateArticle(articleId: $id, patch: $this->collectBody()))
+		);
 	}//end update()
 
 	/**
@@ -164,12 +152,9 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function publish(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->render(result: $this->articles->publishArticle(articleId: $id));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => $this->render(result: $this->articles->publishArticle(articleId: $id))
+		);
 	}//end publish()
 
 	/**
@@ -183,12 +168,9 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function archive(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->render(result: $this->articles->archiveArticle(articleId: $id));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => $this->render(result: $this->articles->archiveArticle(articleId: $id))
+		);
 	}//end archive()
 
 	/**
@@ -206,16 +188,13 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function transition(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
+			$transition = (string)$this->request->getParam('transition', '');
 
-		$transition = (string)$this->request->getParam('transition', '');
-
-		return $this->render(
-			result: $this->articles->applyTransition(articleId: $id, transition: $transition),
-		);
+			return $this->render(
+				result: $this->articles->applyTransition(articleId: $id, transition: $transition),
+			);
+		});
 	}//end transition()
 
 	/**
@@ -229,12 +208,9 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function usages(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse($this->articles->listUsages(articleId: $id));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse($this->articles->listUsages(articleId: $id))
+		);
 	}//end usages()
 
 	/**
@@ -257,37 +233,13 @@ class ArticleController extends Controller {
 	}//end render()
 
 	/**
-	 * Resolve the caller, refusing anyone who is not a CRM user.
+	 * The CRM-user gate over this request's session.
 	 *
-	 * Authentication is not authorization: an unpublished article is the
-	 * tenant's unreleased copy, so reading one is gated on the same policy a
-	 * segment and a mailing list are.
-	 *
-	 * @return string|null The uid, or null when the caller may not proceed.
+	 * @return CrmUserGuard The gate.
 	 */
-	private function requireCrmUser(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		$uid = $user->getUID();
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return null;
-		}
-
-		return $uid;
-	}//end requireCrmUser()
-
-	/**
-	 * The single refusal, so an unauthenticated and an unprivileged caller
-	 * cannot tell each other apart.
-	 *
-	 * @return JSONResponse A 403.
-	 */
-	private function refuse(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end refuse()
+	private function crmUserGuard(): CrmUserGuard {
+		return new CrmUserGuard(userSession: $this->userSession, policy: $this->policy);
+	}//end crmUserGuard()
 
 	/**
 	 * Collect a sanitised article body.
