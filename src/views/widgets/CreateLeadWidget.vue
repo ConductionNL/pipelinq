@@ -69,6 +69,7 @@ import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
+import { createWidgetObject, optionValue, readWidgetObjects, widgetObjectsUrl } from './widgetObjects.js'
 
 export default {
 	name: 'CreateLeadWidget',
@@ -164,26 +165,9 @@ export default {
 		async fetchPipelines() {
 			if (!this.config?.pipeline) return
 			try {
-				const typeConfig = this.config.pipeline
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema
-						+ '?_limit=50',
-				)
-
-				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-				})
-
-				if (!response.ok) return
-				const data = await response.json()
-				this.pipelines = data.results || data || []
+				const pipelines = await readWidgetObjects(widgetObjectsUrl(this.config.pipeline, '?_limit=50'))
+				if (pipelines === null) return
+				this.pipelines = pipelines
 
 				// Pre-select first pipeline
 				if (this.pipelines.length > 0 && !this.form.pipeline) {
@@ -231,53 +215,10 @@ export default {
 
 			this.submitting = true
 			try {
-				const typeConfig = this.config.lead
-				const selectedPipeline = this.form.pipeline
-				const firstStage = this.getFirstStage(selectedPipeline)
-
-				const body = {
-					title: this.form.title,
-					status: 'open',
-					stage: firstStage.name,
-					stageOrder: firstStage.order || 1,
-				}
-
-				if (selectedPipeline) {
-					body.pipeline = selectedPipeline.id
-				}
-				if (this.selectedClient) {
-					body.client = this.selectedClient.id
-				}
-				if (this.form.value) {
-					body.value = parseFloat(this.form.value) || 0
-				}
-				if (this.form.source) {
-					body.source =
-						typeof this.form.source === 'object'
-							? this.form.source.id
-							: this.form.source
-				}
-
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema,
-				)
-
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-					body: JSON.stringify(body),
+				const id = await createWidgetObject(this.config.lead, {
+					body: this.leadBody(),
+					failure: 'Failed to create lead',
 				})
-
-				if (!response.ok) throw new Error('Failed to create lead')
-				const created = await response.json()
-				const id = created.id || created.uuid
 				this.successLink = generateUrl('/apps/pipelinq/leads/' + id)
 				this.success = true
 			} catch (err) {
@@ -285,6 +226,46 @@ export default {
 			} finally {
 				this.submitting = false
 			}
+		},
+
+		/**
+		 * The lead to post: on the first stage of the chosen pipeline, with
+		 * the client, value and source when given.
+		 *
+		 * @return {object} The lead.
+		 */
+		leadBody() {
+			const selectedPipeline = this.form.pipeline
+			const firstStage = this.getFirstStage(selectedPipeline)
+
+			const body = {
+				title: this.form.title,
+				status: 'open',
+				stage: firstStage.name,
+				stageOrder: firstStage.order || 1,
+			}
+
+			if (selectedPipeline) {
+				body.pipeline = selectedPipeline.id
+			}
+			return { ...body, ...this.leadExtras() }
+		},
+
+		/**
+		 * @return {object} The client, value and source of the lead, each only when given.
+		 */
+		leadExtras() {
+			const extras = {}
+			if (this.selectedClient) {
+				extras.client = this.selectedClient.id
+			}
+			if (this.form.value) {
+				extras.value = parseFloat(this.form.value) || 0
+			}
+			if (this.form.source) {
+				extras.source = optionValue(this.form.source)
+			}
+			return extras
 		},
 
 		/**
