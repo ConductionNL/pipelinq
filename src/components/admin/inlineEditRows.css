@@ -1,0 +1,25 @@
+/*
+ * SPDX-License-Identifier: EUPL-1.2
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ *
+ * The in-place row form of the skills and agent profiles admin sections: a
+ * labelled field and the Cancel / Save bar. Each section loads it as a scoped
+ * style before its own.
+ */
+
+.edit-field {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.edit-field label {
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.edit-actions {
+	display: flex;
+	gap: 4px;
+	justify-content: flex-end;
+}
