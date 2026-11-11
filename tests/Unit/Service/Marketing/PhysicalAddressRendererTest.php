@@ -76,7 +76,7 @@ class PhysicalAddressRendererTest extends TestCase {
 		$this->assertSame('Hoi', $renderer->render(body: 'Hoi', footerOverride: ' ', format: 'html'));
 		$this->assertSame(' ', $renderer->render(body: ' ', footerOverride: 'Straat 1', format: 'text'));
 		$this->assertSame(
-			'<p>A&amp;B<br>1234 AB Ede</p><p>A&amp;B<br>1234 AB Ede</p>',
+			"<p>A&amp;B<br>\n1234 AB Ede</p><p>A&amp;B<br>\n1234 AB Ede</p>",
 			$renderer->render(body: '<p>{{address_block}}</p><p>{{sender_address}}</p>', footerOverride: " A&B\n1234 AB Ede ", format: 'html')
 		);
 		$this->assertSame('<html><BODY>x<p>Straat 1</p></BODY></html>', $renderer->render(body: '<html><BODY>x</BODY></html>', footerOverride: 'Straat 1', format: 'html'));
