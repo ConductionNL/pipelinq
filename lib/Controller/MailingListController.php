@@ -79,7 +79,7 @@ class MailingListController extends Controller {
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => new JSONResponse($this->lists->listMailingLists(page: $page, limit: $limit))
+			action: fn (): JSONResponse => new JSONResponse($this->lists->listMailingLists(page: $page, limit: $limit))
 		);
 	}//end index()
 
@@ -94,7 +94,7 @@ class MailingListController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
 			$list = $this->lists->getMailingListById(listId: $id);
 			if ($list === null) {
 				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
@@ -137,7 +137,7 @@ class MailingListController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
 			$result = $this->lists->updateMailingList(listId: $id, patch: $this->collectBody());
 			if (($result['error'] ?? '') === 'Not found') {
 				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
@@ -164,7 +164,7 @@ class MailingListController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function subscriptions(string $id, int $page = 1, int $limit = 25): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id, $page, $limit): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function () use ($id, $page, $limit): JSONResponse {
 			$envelope = $this->queries->listSubscriptionsForList(listId: $id, page: $page, limit: $limit);
 			$envelope['counts'] = $this->queries->countsForList(listId: $id);
 			return new JSONResponse($envelope);

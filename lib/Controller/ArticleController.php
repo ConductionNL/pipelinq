@@ -81,7 +81,7 @@ class ArticleController extends Controller {
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => new JSONResponse($this->articles->listArticles(page: $page, limit: $limit))
+			action: fn (): JSONResponse => new JSONResponse($this->articles->listArticles(page: $page, limit: $limit))
 		);
 	}//end index()
 
@@ -96,7 +96,7 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
 			$article = $this->articles->getArticleById(articleId: $id);
 			if ($article === null) {
 				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
@@ -137,7 +137,7 @@ class ArticleController extends Controller {
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => $this->render(result: $this->articles->updateArticle(articleId: $id, patch: $this->collectBody()))
+			action: fn (): JSONResponse => $this->render(result: $this->articles->updateArticle(articleId: $id, patch: $this->collectBody()))
 		);
 	}//end update()
 
@@ -153,7 +153,7 @@ class ArticleController extends Controller {
 	#[NoAdminRequired]
 	public function publish(string $id): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => $this->render(result: $this->articles->publishArticle(articleId: $id))
+			action: fn (): JSONResponse => $this->render(result: $this->articles->publishArticle(articleId: $id))
 		);
 	}//end publish()
 
@@ -169,7 +169,7 @@ class ArticleController extends Controller {
 	#[NoAdminRequired]
 	public function archive(string $id): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => $this->render(result: $this->articles->archiveArticle(articleId: $id))
+			action: fn (): JSONResponse => $this->render(result: $this->articles->archiveArticle(articleId: $id))
 		);
 	}//end archive()
 
@@ -188,7 +188,7 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function transition(string $id): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
 			$transition = (string)$this->request->getParam('transition', '');
 
 			return $this->render(
@@ -209,7 +209,7 @@ class ArticleController extends Controller {
 	#[NoAdminRequired]
 	public function usages(string $id): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => new JSONResponse($this->articles->listUsages(articleId: $id))
+			action: fn (): JSONResponse => new JSONResponse($this->articles->listUsages(articleId: $id))
 		);
 	}//end usages()
 

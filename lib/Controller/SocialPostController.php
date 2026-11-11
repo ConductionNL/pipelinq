@@ -91,7 +91,7 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(string $status = ''): JSONResponse {
-		return $this->crmUserGuard()->respond(action: fn (string $uid): JSONResponse => new JSONResponse($this->posts->listPosts(status: $status)));
+		return $this->crmUserGuard()->respond(action: fn (): JSONResponse => new JSONResponse($this->posts->listPosts(status: $status)));
 	}//end index()
 
 	/**
@@ -105,7 +105,7 @@ class SocialPostController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
 			$post = $this->posts->getPost(postId: $id);
 			if ($post === null) {
 				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
@@ -162,7 +162,7 @@ class SocialPostController extends Controller {
 	#[NoAdminRequired]
 	public function submit(string $id): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => $this->answer(result: $this->posts->submitForApproval(postId: $id))
+			action: fn (): JSONResponse => $this->answer(result: $this->posts->submitForApproval(postId: $id))
 		);
 	}//end submit()
 
@@ -215,7 +215,7 @@ class SocialPostController extends Controller {
 	#[NoAdminRequired]
 	public function publications(string $id): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => new JSONResponse(['data' => $this->publications->forPost(postId: $id)])
+			action: fn (): JSONResponse => new JSONResponse(['data' => $this->publications->forPost(postId: $id)])
 		);
 	}//end publications()
 
@@ -250,7 +250,7 @@ class SocialPostController extends Controller {
 	#[NoAdminRequired]
 	public function performance(string $network = '', int $limit = 50): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => new JSONResponse(['data' => $this->metrics->ranking(network: $network, limit: $limit)])
+			action: fn (): JSONResponse => new JSONResponse(['data' => $this->metrics->ranking(network: $network, limit: $limit)])
 		);
 	}//end performance()
 
@@ -266,7 +266,7 @@ class SocialPostController extends Controller {
 	#[NoAdminRequired]
 	public function networkPerformance(int $days = 30): JSONResponse {
 		return $this->crmUserGuard()->respond(
-			action: fn (string $uid): JSONResponse => new JSONResponse(['data' => $this->metrics->networkTotals(days: max(1, min(365, $days)))])
+			action: fn (): JSONResponse => new JSONResponse(['data' => $this->metrics->networkTotals(days: max(1, min(365, $days)))])
 		);
 	}//end networkPerformance()
 

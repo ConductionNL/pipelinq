@@ -81,7 +81,7 @@ class SubscriptionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function forContact(string $contactId): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid) use ($contactId): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function () use ($contactId): JSONResponse {
 			return new JSONResponse([
 				'subscriptions' => $this->queries->listSubscriptionsForContact(contactId: $contactId),
 			]);
@@ -102,7 +102,7 @@ class SubscriptionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function softOptIn(): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function (): JSONResponse {
 			$offered = $this->request->getParam('objectionOffered');
 			$result = $this->subscriptions->importSoftOptIn(
 				listId: (string)$this->request->getParam('listId', ''),
@@ -141,7 +141,7 @@ class SubscriptionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function unsubscribe(): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function (): JSONResponse {
 			$contactId = (string)$this->request->getParam('contactId', '');
 			$listId = (string)$this->request->getParam('listId', '');
 			$reason = (string)$this->request->getParam('reason', '');
@@ -182,7 +182,7 @@ class SubscriptionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function preferenceLink(string $contactId): JSONResponse {
-		return $this->crmUserGuard()->respond(action: function (string $uid) use ($contactId): JSONResponse {
+		return $this->crmUserGuard()->respond(action: function () use ($contactId): JSONResponse {
 			if ($contactId === '') {
 				return new JSONResponse(['error' => 'Name the contact'], Http::STATUS_BAD_REQUEST);
 			}
