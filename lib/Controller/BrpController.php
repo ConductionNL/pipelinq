@@ -328,8 +328,8 @@ class BrpController extends Controller {
 	/**
 	 * Fetch a person from the BRP, store it in the cache and record its opt-out flag.
 	 *
-	 * A failure after the BRP answered keeps what was already known: the
-	 * correlation id, the duration and, once cached, the person.
+	 * A failure after the BRP answered keeps the correlation id and the
+	 * duration, and no person: the lookup answers an error.
 	 *
 	 * @param LookupQuery $query The lookup.
 	 *
@@ -343,14 +343,16 @@ class BrpController extends Controller {
 				return new PersonFetch(person: null, result: new LookupResult(outcome: 'not-found', responseCode: 404), fromCache: false, durationMs: null);
 			}
 
-			$fetch = $this->remoteMeta(remote: $remote);
-			$fetch = $fetch->succeeded(person: $this->cacheService->set($this->remotePerson(remote: $remote, query: $query)));
+			$fetch  = $this->remoteMeta(remote: $remote);
+			$person = $this->remotePerson(remote: $remote, query: $query);
 
+			// The opt-out flag is written before the person is cached, so a failed
+			// write leaves no cached person behind a lookup that answered an error.
 			$this->optOut->recordFromBrpResponse(
 				$query->rawBsn,
-				(string)($fetch->person['indicationSecret'] ?? '0')
+				(string)($person['indicationSecret'] ?? '0')
 			);
-			return $fetch;
+			return $fetch->succeeded(person: $this->cacheService->set($person));
 		} catch (HaalCentraalException $e) {
 			$outcome = 'error';
 			if ($e->getStatusCode() === 0) {
@@ -472,8 +474,7 @@ class BrpController extends Controller {
 	 * @return void
 	 */
 	private function stampVerifiedLinks(LookupRun $run): void {
-		$person = $run->fetch->person;
-		if ($person === null) {
+		if ($run->fetch->person === null || $run->fetch->result->outcome !== 'succeeded') {
 			return;
 		}
 

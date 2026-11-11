@@ -332,6 +332,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -341,12 +347,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": ""
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -476,6 +476,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -485,12 +491,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": ""
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -730,6 +730,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -739,12 +745,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": ""
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -853,6 +853,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -862,12 +868,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -1020,6 +1020,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "1"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Piet",
@@ -1028,12 +1034,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "1"
                 }
             },
             {
@@ -1183,6 +1183,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -1192,12 +1198,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -1307,6 +1307,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -1316,12 +1322,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -1481,6 +1481,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -1490,12 +1496,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -1629,6 +1629,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -1638,12 +1644,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -1777,6 +1777,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -1786,12 +1792,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -1902,6 +1902,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -1911,12 +1917,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -2050,6 +2050,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -2059,12 +2065,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -2189,6 +2189,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -2198,12 +2204,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -2346,6 +2346,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -2355,12 +2361,6 @@
                         "lookupRequestId": "",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -2511,6 +2511,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
@@ -2518,12 +2524,6 @@
                         "givenNames": "Kees",
                         "gekoppeldContact": "contact-3"
                     }
-                }
-            },
-            {
-                "OptOutService::recordFromBrpResponse": {
-                    "rawBsn": "123456782",
-                    "indicationSecret": "0"
                 }
             },
             {
@@ -2663,6 +2663,12 @@
                 }
             },
             {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
                 "BrpCacheService::set": {
                     "person": {
                         "givenNames": "Jan",
@@ -2761,18 +2767,6 @@
                 }
             },
             {
-                "BrpCacheService::set": {
-                    "person": {
-                        "givenNames": "Jan",
-                        "indicationSecret": "0",
-                        "bsn": "123456782",
-                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
-                        "lookupRequestId": "",
-                        "gekoppeldContact": "contact-3"
-                    }
-                }
-            },
-            {
                 "OptOutService::recordFromBrpResponse": {
                     "rawBsn": "123456782",
                     "indicationSecret": "0"
@@ -2803,30 +2797,10 @@
                         "responseDurationMs": 41,
                         "haalcentraalCorrelationId": "corr-9",
                         "responseContainsSecrecy": false,
-                        "responseInCache": false,
-                        "cacheExpiresOn": "<time>"
+                        "responseInCache": false
                     },
                     "register": "reg-1",
                     "schema": "schema-verzoek"
-                }
-            },
-            {
-                "ObjectServiceInterface::saveObject": {
-                    "object": {
-                        "givenNames": "Jan",
-                        "indicationSecret": "0",
-                        "bsn": "123456782",
-                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
-                        "lookupRequestId": "saved-schema-verzoek",
-                        "gekoppeldContact": "contact-3",
-                        "@self": {
-                            "id": "person-1"
-                        },
-                        "retentionTo": "<time>"
-                    },
-                    "register": "reg-1",
-                    "schema": "schema-persoon",
-                    "uuid": "person-1"
                 }
             },
             {
@@ -2845,48 +2819,6 @@
                         "correlationId": "corr-9",
                         "actorRole": "beheerder"
                     }
-                }
-            },
-            {
-                "ObjectServiceInterface::find": {
-                    "id": "contact-3",
-                    "register": "reg-1",
-                    "schema": "schema-contact"
-                }
-            },
-            {
-                "ObjectServiceInterface::saveObject": {
-                    "object": {
-                        "uuid": "existing",
-                        "name": "Bestaand",
-                        "verifiedBSN": true,
-                        "brpPersonId": "person-1",
-                        "secrecy": false
-                    },
-                    "register": "reg-1",
-                    "schema": "schema-contact",
-                    "uuid": "contact-3"
-                }
-            },
-            {
-                "ObjectServiceInterface::find": {
-                    "id": "client-5",
-                    "register": "reg-1",
-                    "schema": "schema-client"
-                }
-            },
-            {
-                "ObjectServiceInterface::saveObject": {
-                    "object": {
-                        "uuid": "existing",
-                        "name": "Bestaand",
-                        "identityVerifiedAt": "<time>",
-                        "identityVerifiedVia": "BRP",
-                        "identityCheck": "paspoort"
-                    },
-                    "register": "reg-1",
-                    "schema": "schema-client",
-                    "uuid": "client-5"
                 }
             }
         ]
@@ -2927,18 +2859,6 @@
                 }
             },
             {
-                "BrpCacheService::set": {
-                    "person": {
-                        "givenNames": "Jan",
-                        "indicationSecret": "0",
-                        "bsn": "123456782",
-                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
-                        "lookupRequestId": "",
-                        "gekoppeldContact": "contact-3"
-                    }
-                }
-            },
-            {
                 "OptOutService::recordFromBrpResponse": {
                     "rawBsn": "123456782",
                     "indicationSecret": "0"
@@ -2961,30 +2881,10 @@
                         "responseDurationMs": 41,
                         "haalcentraalCorrelationId": "corr-t",
                         "responseContainsSecrecy": false,
-                        "responseInCache": false,
-                        "cacheExpiresOn": "<time>"
+                        "responseInCache": false
                     },
                     "register": "reg-1",
                     "schema": "schema-verzoek"
-                }
-            },
-            {
-                "ObjectServiceInterface::saveObject": {
-                    "object": {
-                        "givenNames": "Jan",
-                        "indicationSecret": "0",
-                        "bsn": "123456782",
-                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
-                        "lookupRequestId": "saved-schema-verzoek",
-                        "gekoppeldContact": "contact-3",
-                        "@self": {
-                            "id": "person-1"
-                        },
-                        "retentionTo": "<time>"
-                    },
-                    "register": "reg-1",
-                    "schema": "schema-persoon",
-                    "uuid": "person-1"
                 }
             },
             {
@@ -3003,48 +2903,6 @@
                         "correlationId": "corr-t",
                         "actorRole": "beheerder"
                     }
-                }
-            },
-            {
-                "ObjectServiceInterface::find": {
-                    "id": "contact-3",
-                    "register": "reg-1",
-                    "schema": "schema-contact"
-                }
-            },
-            {
-                "ObjectServiceInterface::saveObject": {
-                    "object": {
-                        "uuid": "existing",
-                        "name": "Bestaand",
-                        "verifiedBSN": true,
-                        "brpPersonId": "person-1",
-                        "secrecy": false
-                    },
-                    "register": "reg-1",
-                    "schema": "schema-contact",
-                    "uuid": "contact-3"
-                }
-            },
-            {
-                "ObjectServiceInterface::find": {
-                    "id": "client-5",
-                    "register": "reg-1",
-                    "schema": "schema-client"
-                }
-            },
-            {
-                "ObjectServiceInterface::saveObject": {
-                    "object": {
-                        "uuid": "existing",
-                        "name": "Bestaand",
-                        "identityVerifiedAt": "<time>",
-                        "identityVerifiedVia": "BRP",
-                        "identityCheck": "paspoort"
-                    },
-                    "register": "reg-1",
-                    "schema": "schema-client",
-                    "uuid": "client-5"
                 }
             }
         ]
