@@ -84,32 +84,46 @@ class ProgrammeEstimationService {
 			return ['allowed' => false, 'reason' => 'A scale needs a scope.'];
 		}
 
-		$id = trim((string)($scale['id'] ?? $scale['uuid'] ?? ''));
-
+		$candidate = ['scope' => $scope, 'id' => $this->idOf(object: $scale)];
 		foreach ($existingScales as $existing) {
-			if (($existing['active'] ?? false) !== true) {
-				continue;
+			if ($this->blocks(existing: $existing, candidate: $candidate) === true) {
+				$name = (string)($existing['name'] ?? $this->idOf(object: $existing));
+				return ['allowed' => false, 'reason' => "Scope {$scope} already has an active scale: {$name}."];
 			}
-
-			if (trim((string)($existing['scope'] ?? '')) !== $scope) {
-				continue;
-			}
-
-			$existingId = trim((string)($existing['id'] ?? $existing['uuid'] ?? ''));
-			if ($existingId !== '' && $existingId === $id) {
-				continue;
-			}
-
-			$name = (string)($existing['name'] ?? $existingId);
-
-			return [
-				'allowed' => false,
-				'reason' => "Scope {$scope} already has an active scale: {$name}.",
-			];
 		}
 
 		return ['allowed' => true, 'reason' => ''];
 	}//end mayActivate()
+
+	/**
+	 * Whether an existing scale blocks the candidate: it is active, in the
+	 * same scope, and not the candidate itself (an existing scale without an
+	 * id always blocks).
+	 *
+	 * @param array<string, mixed>              $existing  An existing scale.
+	 * @param array{scope: string, id: string} $candidate The scale to activate.
+	 *
+	 * @return bool
+	 */
+	private function blocks(array $existing, array $candidate): bool {
+		if (($existing['active'] ?? false) !== true || trim((string)($existing['scope'] ?? '')) !== $candidate['scope']) {
+			return false;
+		}
+
+		$existingId = $this->idOf(object: $existing);
+		return $existingId === '' || $existingId !== $candidate['id'];
+	}//end blocks()
+
+	/**
+	 * An object's trimmed id, else its uuid.
+	 *
+	 * @param array<string, mixed> $object The object.
+	 *
+	 * @return string
+	 */
+	private function idOf(array $object): string {
+		return trim((string)($object['id'] ?? $object['uuid'] ?? ''));
+	}//end idOf()
 
 	/**
 	 * The weight of one point on one scale.
@@ -148,16 +162,8 @@ class ProgrammeEstimationService {
 	public function totalFor(array $estimates, array $scales): array {
 		$perRole = [];
 		$unresolved = [];
-
-		foreach ($estimates as $estimate) {
-			$role = trim((string)($estimate['role'] ?? ''));
-			if ($role === '') {
-				continue;
-			}
-
-			$scale = ($scales[trim((string)($estimate['scale'] ?? ''))] ?? []);
-			$weight = $this->weightOf(scale: $scale, point: (string)($estimate['point'] ?? ''));
-
+		foreach ($this->roleEstimates(estimates: $estimates) as [$role, $estimate]) {
+			$weight = $this->estimateWeight(estimate: $estimate, scales: $scales);
 			if ($weight === null) {
 				// Reported rather than counted as zero: an estimate whose
 				// point nobody can resolve is a question, not a nil.
@@ -170,12 +176,41 @@ class ProgrammeEstimationService {
 			$perRole[$role] = $weight;
 		}
 
-		return [
-			'perRole' => $perRole,
-			'total' => array_sum($perRole),
-			'unresolved' => $unresolved,
-		];
+		return ['perRole' => $perRole, 'total' => array_sum($perRole), 'unresolved' => $unresolved];
 	}//end totalFor()
+
+	/**
+	 * The estimates that name a role, each with its trimmed role, in order.
+	 *
+	 * @param array<int, array<string, mixed>> $estimates The estimates.
+	 *
+	 * @return array<int, array{0: string, 1: array<string, mixed>}>
+	 */
+	private function roleEstimates(array $estimates): array {
+		$pairs = [];
+		foreach ($estimates as $estimate) {
+			$role = trim((string)($estimate['role'] ?? ''));
+			if ($role !== '') {
+				$pairs[] = [$role, $estimate];
+			}
+		}
+
+		return $pairs;
+	}//end roleEstimates()
+
+	/**
+	 * The weight of an estimate's point on its (trimmed) scale; null when
+	 * the scale or the point is unknown.
+	 *
+	 * @param array<string, mixed>                $estimate The estimate.
+	 * @param array<string, array<string, mixed>> $scales   Scales by id.
+	 *
+	 * @return float|null
+	 */
+	private function estimateWeight(array $estimate, array $scales): ?float {
+		$scale = ($scales[trim((string)($estimate['scale'] ?? ''))] ?? []);
+		return $this->weightOf(scale: $scale, point: (string)($estimate['point'] ?? ''));
+	}//end estimateWeight()
 
 	/**
 	 * The snapshot a close writes, given the cycle as it stands.
@@ -191,13 +226,9 @@ class ProgrammeEstimationService {
 	 */
 	public function snapshotFor(array $cycle, int $done, int $total, ?DateTimeImmutable $now = null): array {
 		$now = ($now ?? new DateTimeImmutable());
-		$existing = ($cycle['snapshots'] ?? []);
-		if (is_array($existing) === false) {
-			$existing = [];
-		}
 
 		return [
-			'version' => (count($existing) + 1),
+			'version' => (count($this->snapshotsOf(cycle: $cycle)) + 1),
 			'closedAt' => $now->format(DateTimeInterface::ATOM),
 			'closedBy' => ($this->userSession->getUser()?->getUID() ?? ''),
 			'done' => $done,
@@ -216,30 +247,17 @@ class ProgrammeEstimationService {
 	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
 	 */
 	public function closeCycle(array $cycle, array $tasks): array {
-		$done = count(
-			array_filter($tasks, static fn (array $task): bool => ($task['status'] ?? '') === 'closed')
-		);
-
-		$snapshot = $this->snapshotFor(cycle: $cycle, done: $done, total: count($tasks));
-
-		$snapshots = ($cycle['snapshots'] ?? []);
-		if (is_array($snapshots) === false) {
-			$snapshots = [];
-		}
+		$snapshot = $this->snapshotFor(cycle: $cycle, done: $this->doneCount(tasks: $tasks), total: count($tasks));
 
 		// APPENDED. Overwriting would mean closing, reopening and closing
 		// again leaves one snapshot, and the first chart is gone.
+		$snapshots = $this->snapshotsOf(cycle: $cycle);
 		$snapshots[] = $snapshot;
 
 		$cycle['snapshots'] = $snapshots;
 		$cycle['status'] = 'closed';
 
-		$saved = $this->portfolio->write(
-			schemaKey: 'programmeCycle_schema',
-			object: $cycle,
-			uuid: (string)($cycle['id'] ?? $cycle['uuid'] ?? ''),
-		);
-
+		$saved = $this->portfolio->write(schemaKey: 'programmeCycle_schema', object: $cycle, uuid: (string)($cycle['id'] ?? $cycle['uuid'] ?? ''));
 		if ($saved === false) {
 			return ['status' => 500, 'error' => 'The cycle could not be closed.'];
 		}
@@ -262,18 +280,8 @@ class ProgrammeEstimationService {
 	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
 	 */
 	public function chartFor(array $cycle, array $tasks): array {
-		$live = [
-			'done' => count(
-				array_filter($tasks, static fn (array $task): bool => ($task['status'] ?? '') === 'closed')
-			),
-			'total' => count($tasks),
-		];
-
-		$snapshots = ($cycle['snapshots'] ?? []);
-		if (is_array($snapshots) === false) {
-			$snapshots = [];
-		}
-
+		$live = ['done' => $this->doneCount(tasks: $tasks), 'total' => count($tasks)];
+		$snapshots = $this->snapshotsOf(cycle: $cycle);
 		if ((string)($cycle['status'] ?? '') !== 'closed' || $snapshots === []) {
 			return ['chart' => $live, 'live' => $live, 'source' => 'live'];
 		}
@@ -284,6 +292,33 @@ class ProgrammeEstimationService {
 			'source' => 'snapshot',
 		];
 	}//end chartFor()
+
+	/**
+	 * A cycle's snapshots; none when they are not a list.
+	 *
+	 * @param array<string, mixed> $cycle The cycle.
+	 *
+	 * @return array<mixed>
+	 */
+	private function snapshotsOf(array $cycle): array {
+		$snapshots = ($cycle['snapshots'] ?? []);
+		if (is_array($snapshots) === false) {
+			return [];
+		}
+
+		return $snapshots;
+	}//end snapshotsOf()
+
+	/**
+	 * How many of the tasks are closed.
+	 *
+	 * @param array<int, array<string, mixed>> $tasks The tasks.
+	 *
+	 * @return int
+	 */
+	private function doneCount(array $tasks): int {
+		return count(array_filter($tasks, static fn (array $task): bool => ($task['status'] ?? '') === 'closed'));
+	}//end doneCount()
 
 	/**
 	 * Carry the unfinished work of one cycle into the next, in one act.
@@ -303,36 +338,52 @@ class ProgrammeEstimationService {
 
 		$moved = [];
 		foreach ($tasks as $task) {
-			if (($task['status'] ?? '') === 'closed') {
-				// Finished work stays where it was finished, or the closed
-				// cycle's own chart stops matching its snapshot.
-				continue;
+			$entry = $this->carried(task: $task, targetCycleId: $targetCycleId);
+			if ($entry !== null) {
+				$moved[] = $entry;
 			}
-
-			$sourceCycle = (string)($task['cycle'] ?? '');
-			$task['cycle'] = $targetCycleId;
-
-			$written = $this->portfolio->write(
-				schemaKey: 'programmeTask_schema',
-				object: $task,
-				uuid: (string)($task['id'] ?? $task['uuid'] ?? ''),
-			);
-
-			if ($written === false) {
-				$this->logger->error(
-					'ProgrammeEstimationService: a task could not be carried over',
-					['task' => ($task['id'] ?? '')]
-				);
-				continue;
-			}
-
-			$moved[] = [
-				'task' => (string)($task['id'] ?? $task['uuid'] ?? ''),
-				'from' => $sourceCycle,
-				'to' => $targetCycleId,
-			];
 		}
 
 		return ['status' => 200, 'moved' => count($moved), 'trail' => $moved];
 	}//end carryOver()
+
+	/**
+	 * Move one task into the target cycle; its trail entry, or null when it
+	 * is closed (finished work stays where it was finished, or the closed
+	 * cycle's own chart stops matching its snapshot) or its write failed.
+	 *
+	 * @param array<string, mixed> $task          The task.
+	 * @param string               $targetCycleId The trimmed target cycle.
+	 *
+	 * @return array{task: string, from: string, to: string}|null
+	 */
+	private function carried(array $task, string $targetCycleId): ?array {
+		if (($task['status'] ?? '') === 'closed') {
+			return null;
+		}
+
+		$sourceCycle = (string)($task['cycle'] ?? '');
+		$task['cycle'] = $targetCycleId;
+		if ($this->written(task: $task) === false) {
+			return null;
+		}
+
+		return ['task' => (string)($task['id'] ?? $task['uuid'] ?? ''), 'from' => $sourceCycle, 'to' => $targetCycleId];
+	}//end carried()
+
+	/**
+	 * Write one task under its id or uuid; false (logged) when the write fails.
+	 *
+	 * @param array<string, mixed> $task The task.
+	 *
+	 * @return bool
+	 */
+	private function written(array $task): bool {
+		$written = $this->portfolio->write(schemaKey: 'programmeTask_schema', object: $task, uuid: (string)($task['id'] ?? $task['uuid'] ?? ''));
+		if ($written === false) {
+			$this->logger->error('ProgrammeEstimationService: a task could not be carried over', ['task' => ($task['id'] ?? '')]);
+		}
+
+		return $written;
+	}//end written()
 }//end class
