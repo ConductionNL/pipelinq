@@ -105,15 +105,12 @@ class PointsExpiryBatchJob extends TimedJob {
 				continue;
 			}
 
-			$policy = ExpiryPolicy::fromProgramme(programme: $programme);
-			if ($policy === null) {
+			$window = new ExpiryWindow(programme: $programme, now: $now);
+			if ($window->applies === false) {
 				continue;
 			}
 
-			$this->processProgramme(
-				programmeId: $programmeId,
-				window: new ExpiryWindow(policy: $policy, now: $now)
-			);
+			$this->processProgramme(programmeId: $programmeId, window: $window);
 		}
 	}//end run()
 
@@ -164,7 +161,7 @@ class PointsExpiryBatchJob extends TimedJob {
 		}
 
 		if ($lastActivity < $window->cutoff->format('c')) {
-			$this->expire(points: new AccountPoints(accountId: $accountId, balance: $balance), cutoff: $window->cutoff);
+			$this->expire(account: $account, window: $window);
 			return;
 		}
 
@@ -183,20 +180,22 @@ class PointsExpiryBatchJob extends TimedJob {
 	/**
 	 * Expire the whole balance of an inactive account.
 	 *
-	 * @param AccountPoints     $points The account and its balance.
-	 * @param DateTimeImmutable $cutoff Cutoff for expiry.
+	 * @param array<string, mixed> $account The account, already known to have an id and a balance.
+	 * @param ExpiryWindow         $window  The programme's cutoffs for this run.
 	 *
 	 * @return void
 	 */
-	private function expire(AccountPoints $points, DateTimeImmutable $cutoff): void {
-		$this->ledgerService->forOperation(operationId: 'expiry:'.$cutoff->format('Y-m-d'))->expirePoints(
-			accountId: $points->accountId,
-			amount: $points->balance,
+	private function expire(array $account, ExpiryWindow $window): void {
+		$accountId = (string)$this->extractUuid(object: $account);
+		$balance = (int)($account['currentBalance'] ?? 0);
+		$this->ledgerService->forOperation(operationId: 'expiry:'.$window->cutoff->format('Y-m-d'))->expirePoints(
+			accountId: $accountId,
+			amount: $balance,
 			reason: 'inactivity-expiry'
 		);
 		$this->logger->info(
 			'Pipelinq: expired points for inactive account',
-			['accountId' => $points->accountId, 'points' => $points->balance]
+			['accountId' => $accountId, 'points' => $balance]
 		);
 	}//end expire()
 
