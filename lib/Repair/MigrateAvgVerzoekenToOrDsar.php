@@ -298,9 +298,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			objectService: $objectService,
 			work: function () use ($objectService, $registerId, $requestSchema, $output): void {
 				$this->runInner(
-					objectService: $objectService,
-					registerId: $registerId,
-					requestSchema: $requestSchema,
+					source: new DsarMigrationSource(objectService: $objectService, registerId: $registerId, requestSchema: $requestSchema),
 					output: $output,
 				);
 			}
@@ -310,41 +308,79 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	/**
 	 * The migration itself.
 	 *
-	 * @param object $objectService OpenRegister's ObjectService.
-	 * @param string $registerId The register id.
-	 * @param string $requestSchema The avgVerzoek schema id.
-	 * @param IOutput $output Progress reporting.
+	 * @param DsarMigrationSource $source Where the avgVerzoek objects are read from.
+	 * @param IOutput             $output Progress reporting.
 	 *
 	 * @return void
 	 */
-	private function runInner(
-		object $objectService,
-		string $registerId,
-		string $requestSchema,
-		IOutput $output,
-	): void {
+	private function runInner(DsarMigrationSource $source, IOutput $output): void {
+		$verzoeken = $this->readRequests(source: $source, output: $output);
+		if ($verzoeken === []) {
+			return;
+		}
+
+		$run = new DsarMigrationRun(
+			source: $source,
+			satellites: $this->loadSatellites(source: $source),
+			migrated: $this->alreadyMigrated(objectService: $source->objectService),
+		);
+		$counts = $this->migrateAll(run: $run, verzoeken: $verzoeken);
+
+		$this->report(output: $output, summary: new DsarMigrationSummary(counts: $counts, total: count($verzoeken)));
+	}//end runInner()
+
+	/**
+	 * Read the avgVerzoek objects; a failed read is a warning, no objects an
+	 * info line, and either gives nothing to migrate.
+	 *
+	 * @param DsarMigrationSource $source Where the avgVerzoek objects are read from.
+	 * @param IOutput             $output Progress reporting.
+	 *
+	 * @return array<int|string, mixed> The source rows, or none.
+	 */
+	private function readRequests(DsarMigrationSource $source, IOutput $output): array {
 		try {
-			// System read: an RBAC-filtered read as 'Anonymous' sees nothing, so
-			// the migration would silently report "no avgVerzoek objects present"
-			// instead of migrating them.
-			$verzoeken = $objectService->findAll(
-				['filters' => ['register' => $registerId, 'schema' => $requestSchema], 'limit' => 5000],
-				_rbac: false,
-				_multitenancy: false
-			);
+			$verzoeken = $this->fetchRequests(source: $source);
 		} catch (\Throwable $e) {
 			$output->warning('Pipelinq AVG→DSAR migration: could not read avgVerzoek objects — ' . $e->getMessage());
-			return;
+			return [];
 		}
 
 		if (is_array($verzoeken) === false || $verzoeken === []) {
 			$output->info('Pipelinq AVG→DSAR migration: no avgVerzoek objects present.');
-			return;
+			return [];
 		}
 
-		$satellites = $this->loadSatellites(objectService: $objectService, registerId: $registerId);
-		$migrated = $this->alreadyMigrated(objectService: $objectService);
+		return $verzoeken;
+	}//end readRequests()
 
+	/**
+	 * Query every avgVerzoek object.
+	 *
+	 * @param DsarMigrationSource $source Where the avgVerzoek objects are read from.
+	 *
+	 * @return mixed What findAll returned.
+	 */
+	private function fetchRequests(DsarMigrationSource $source): mixed {
+		// System read: an RBAC-filtered read as 'Anonymous' sees nothing, so
+		// the migration would silently report "no avgVerzoek objects present"
+		// instead of migrating them.
+		return $source->objectService->findAll(
+			['filters' => ['register' => $source->registerId, 'schema' => $source->requestSchema], 'limit' => 5000],
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end fetchRequests()
+
+	/**
+	 * Migrate every readable source row and tally the outcome buckets.
+	 *
+	 * @param DsarMigrationRun         $run       The run.
+	 * @param array<int|string, mixed> $verzoeken The source rows.
+	 *
+	 * @return array<string, int> Outcome buckets.
+	 */
+	private function migrateAll(DsarMigrationRun $run, array $verzoeken): array {
 		$counts = ['migrated' => 0, 'skipped' => 0, 'unmappable' => 0, 'failed' => 0];
 		foreach ($verzoeken as $row) {
 			$request = $this->rowToArray(row: $row);
@@ -352,60 +388,83 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 				continue;
 			}
 
-			$outcome = $this->migrateOne(
-				objectService: $objectService,
-				registerId: $registerId,
-				requestSchema: $requestSchema,
-				request: $request,
-				satellites: $satellites,
-				migrated: $migrated
-			);
-			$counts[$outcome]++;
-		}//end foreach
+			$counts[$this->migrateRequest(run: $run, request: $request)]++;
+		}
 
-		$this->report(output: $output, counts: $counts, total: count($verzoeken));
-	}//end runInner()
+		return $counts;
+	}//end migrateAll()
+
+	/**
+	 * Migrate one source object of a run.
+	 *
+	 * @param DsarMigrationRun     $run     The run.
+	 * @param array<string, mixed> $request The source object.
+	 *
+	 * @return string One of `migrated` | `skipped` | `unmappable` | `failed`.
+	 */
+	private function migrateRequest(DsarMigrationRun $run, array $request): string {
+		return $this->migrateOne(
+			objectService: $run->source->objectService,
+			registerId: $run->source->registerId,
+			requestSchema: $run->source->requestSchema,
+			request: $request,
+			satellites: $run->satellites,
+			migrated: $run->migrated
+		);
+	}//end migrateRequest()
 
 	/**
 	 * Emit the run summary plus the two conditional warnings.
 	 *
-	 * Split out of run() to keep that method inside the complexity budget.
-	 *
-	 * @param IOutput $output The repair output channel.
-	 * @param array<string, int> $counts Outcome buckets.
-	 * @param int $total Source objects seen.
+	 * @param IOutput              $output  The repair output channel.
+	 * @param DsarMigrationSummary $summary Outcome buckets and source objects seen.
 	 *
 	 * @return void
 	 */
-	private function report(IOutput $output, array $counts, int $total): void {
-		$summary = sprintf(
-			'Pipelinq AVG→DSAR migration: %d migrated, %d skipped (already migrated or trashed),'
-			. ' %d unmappable, %d failed (of %d source objects).',
-			$counts['migrated'],
-			$counts['skipped'],
-			$counts['unmappable'],
-			$counts['failed'],
-			$total,
-		);
-		$output->info($summary);
-		$this->logger->info($summary);
+	private function report(IOutput $output, DsarMigrationSummary $summary): void {
+		$line = $summary->line();
+		$output->info($line);
+		$this->logger->info($line);
 
-		if ($counts['unmappable'] > 0) {
+		$this->warnUnmappable(output: $output, unmappable: $summary->counts['unmappable']);
+		$this->warnFailed(output: $output, failed: $summary->counts['failed']);
+	}//end report()
+
+	/**
+	 * Warn about verzoeken left in place because they have no DSAR equivalent.
+	 *
+	 * @param IOutput $output     The repair output channel.
+	 * @param int     $unmappable How many were left in place.
+	 *
+	 * @return void
+	 */
+	private function warnUnmappable(IOutput $output, int $unmappable): void {
+		if ($unmappable > 0) {
 			$output->warning(
-				'Pipelinq AVG→DSAR migration: ' . $counts['unmappable']
+				'Pipelinq AVG→DSAR migration: ' . $unmappable
 				. ' verzoek(en) have no dataSubjectRequest equivalent (e.g. artikel "geen-avg") and were left'
 				. ' in place. They are not failures — but they will not disappear on a re-run either, so decide'
 				. ' what should happen to them before retiring the avgVerzoek fragment.'
 			);
 		}
+	}//end warnUnmappable()
 
-		if ($counts['failed'] > 0) {
+	/**
+	 * Warn about objects whose migration failed.
+	 *
+	 * @param IOutput $output The repair output channel.
+	 * @param int     $failed How many failed.
+	 *
+	 * @return void
+	 */
+	private function warnFailed(IOutput $output, int $failed): void {
+		if ($failed > 0) {
 			$output->warning(
-				'Pipelinq AVG→DSAR migration: ' . $counts['failed']
+				'Pipelinq AVG→DSAR migration: ' . $failed
 				. ' object(s) failed — the avgVerzoek fragment must not be removed until a clean run.'
 			);
 		}
-	}//end report()
+	}//end warnFailed()
 
 	/**
 	 * Migrate one avgVerzoek object; return the outcome bucket.
@@ -793,19 +852,13 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	/**
 	 * Load bewijsItem / weigering / redactieActie satellites indexed by verzoekId.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $registerId The register id.
+	 * @param DsarMigrationSource $source Where the satellites are read from.
 	 *
 	 * @return array<string, array<int|string, mixed>> Indexed satellite store.
 	 */
-	private function loadSatellites(object $objectService, string $registerId): array {
+	private function loadSatellites(DsarMigrationSource $source): array {
 		return [
-			'bewijs' => $this->indexByRequest(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaKey: 'bewijsItem_schema',
-				parentField: 'requestId'
-			),
+			'bewijs' => $this->indexByRequest(source: $source, satellite: new DsarSatelliteSchema(schemaKey: 'bewijsItem_schema', parentField: 'requestId')),
 			// A redactieActie hangs off a bewijsItem, NOT off the verzoek: its
 			// required parent is `bewijsItemId` and it has no `verzoekId` at all.
 			// Indexing it by `verzoekId` matched nothing, so `redactions[]` came
@@ -813,16 +866,12 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			// redaction record. Index by the real parent and resolve through the
 			// verzoek's bewijsItems (see mapVerzoek).
 			'redactie' => $this->indexByRequest(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaKey: 'redactieActie_schema',
-				parentField: 'bewijsItemId'
+				source: $source,
+				satellite: new DsarSatelliteSchema(schemaKey: 'redactieActie_schema', parentField: 'bewijsItemId')
 			),
 			'weigering' => $this->indexFirstByRequest(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaKey: 'weigering_schema',
-				parentField: 'requestId'
+				source: $source,
+				satellite: new DsarSatelliteSchema(schemaKey: 'weigering_schema', parentField: 'requestId')
 			),
 		];
 	}//end loadSatellites()
@@ -830,22 +879,20 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	/**
 	 * Group a satellite schema's objects into lists keyed by their parent verzoekId.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $registerId The register id.
-	 * @param string $schemaKey The satellite schema config key.
-	 * @param string $parentField The field holding the parent verzoek id.
+	 * @param DsarMigrationSource $source    Where the satellite is read from.
+	 * @param DsarSatelliteSchema $satellite The satellite schema and its parent field.
 	 *
 	 * @return array<string, array<int, array<string, mixed>>> The grouped store.
 	 */
-	private function indexByRequest(object $objectService, string $registerId, string $schemaKey, string $parentField): array {
+	private function indexByRequest(DsarMigrationSource $source, DsarSatelliteSchema $satellite): array {
 		$index = [];
-		foreach ($this->readSchema(objectService: $objectService, registerId: $registerId, schemaKey: $schemaKey) as $row) {
+		foreach ($this->readSchema(source: $source, schemaKey: $satellite->schemaKey) as $row) {
 			$data = $this->rowToArray(row: $row);
 			if ($data === null) {
 				continue;
 			}
 
-			$parent = (string)($data[$parentField] ?? '');
+			$parent = (string)($data[$satellite->parentField] ?? '');
 			if ($parent === '') {
 				continue;
 			}
@@ -854,27 +901,25 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		}
 
 		return $index;
-	}//end indexByVerzoek()
+	}//end indexByRequest()
 
 	/**
 	 * Group a satellite schema keeping the first object per parent verzoekId.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $registerId The register id.
-	 * @param string $schemaKey The satellite schema config key.
-	 * @param string $parentField The field holding the parent verzoek id.
+	 * @param DsarMigrationSource $source    Where the satellite is read from.
+	 * @param DsarSatelliteSchema $satellite The satellite schema and its parent field.
 	 *
 	 * @return array<string, array<string, mixed>> The first-per-parent store.
 	 */
-	private function indexFirstByRequest(object $objectService, string $registerId, string $schemaKey, string $parentField): array {
+	private function indexFirstByRequest(DsarMigrationSource $source, DsarSatelliteSchema $satellite): array {
 		$index = [];
-		foreach ($this->readSchema(objectService: $objectService, registerId: $registerId, schemaKey: $schemaKey) as $row) {
+		foreach ($this->readSchema(source: $source, schemaKey: $satellite->schemaKey) as $row) {
 			$data = $this->rowToArray(row: $row);
 			if ($data === null) {
 				continue;
 			}
 
-			$parent = (string)($data[$parentField] ?? '');
+			$parent = (string)($data[$satellite->parentField] ?? '');
 			if ($parent === '' || isset($index[$parent]) === true) {
 				continue;
 			}
@@ -883,26 +928,37 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		}
 
 		return $index;
-	}//end indexFirstByVerzoek()
+	}//end indexFirstByRequest()
 
 	/**
 	 * Read a schema's objects by config key, tolerating an absent schema.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $registerId The register id.
-	 * @param string $schemaKey The schema config key.
+	 * @param DsarMigrationSource $source    Where the schema is read from.
+	 * @param string              $schemaKey The schema config key.
 	 *
 	 * @return array<int, mixed> The rows (empty when the schema is unprovisioned/unreadable).
 	 */
-	private function readSchema(object $objectService, string $registerId, string $schemaKey): array {
+	private function readSchema(DsarMigrationSource $source, string $schemaKey): array {
 		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
 		if ($schemaId === '') {
 			return [];
 		}
 
+		return $this->findSchemaRows(source: $source, schemaId: $schemaId);
+	}//end readSchema()
+
+	/**
+	 * Query one schema's objects; a failed or non-list answer gives none.
+	 *
+	 * @param DsarMigrationSource $source   Where the schema is read from.
+	 * @param string              $schemaId The schema id.
+	 *
+	 * @return array<int, mixed> The rows.
+	 */
+	private function findSchemaRows(DsarMigrationSource $source, string $schemaId): array {
 		try {
-			$rows = $objectService->findAll(
-				['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 10000]
+			$rows = $source->objectService->findAll(
+				['filters' => ['register' => $source->registerId, 'schema' => $schemaId], 'limit' => 10000]
 			);
 		} catch (\Throwable $e) {
 			return [];
@@ -913,7 +969,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		}
 
 		return [];
-	}//end readSchema()
+	}//end findSchemaRows()
 
 	/**
 	 * Normalise a findAll row (ObjectEntity or rendered array) to an array.
