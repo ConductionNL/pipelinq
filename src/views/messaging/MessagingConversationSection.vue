@@ -186,6 +186,14 @@ const EMPTY_PREFLIGHT = {
 	templates: [],
 }
 
+/**
+ * @param {string} id The message.
+ * @return {string} The URL that sends it again.
+ */
+function resendUrl(id) {
+	return generateUrl('/apps/pipelinq/api/messaging/messages/{id}/resend', { id })
+}
+
 export default {
 	name: 'MessagingConversationSection',
 	components: {
@@ -647,22 +655,35 @@ export default {
 			}
 			this.resending = message.id
 			this.resendErrors = { ...this.resendErrors, [message.id]: '' }
-			let status
+			const status = await this.requestResend(message)
+			this.showResendOutcome(message, status)
+		},
+
+		/**
+		 * Ask the server to send the message again.
+		 *
+		 * @param {object} message The message.
+		 * @return {Promise<string>} The status it answered, `failed` when none.
+		 */
+		async requestResend(message) {
 			try {
-				const { data } = await axios.post(
-					generateUrl(
-						'/apps/pipelinq/api/messaging/messages/{id}/resend',
-						{
-							id: message.id,
-						},
-					),
-				)
-				status = (data && data.status) || 'failed'
+				const { data } = await axios.post(resendUrl(message.id))
+				return (data && data.status) || 'failed'
 			} catch (error) {
-				status = error?.response?.data?.status || 'failed'
+				return error?.response?.data?.status || 'failed'
 			} finally {
 				this.resending = ''
 			}
+		},
+
+		/**
+		 * Reload when it was sent, open the WhatsApp composer when a template
+		 * is required, else show the reason on the row.
+		 *
+		 * @param {object} message The message.
+		 * @param {string} status The resend status.
+		 */
+		showResendOutcome(message, status) {
 			if (status === 'sent') {
 				this.onSent()
 				return
