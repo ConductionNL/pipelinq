@@ -219,34 +219,8 @@ class PointsExpiryBatchJob extends TimedJob {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function getActiveProgrammes(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'loyaltyProgramme_schema', '');
-		if ($register === '' || $schema === '') {
-			return [];
-		}
-
-		try {
-			$rows = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-				config: [
-					'filters' => [
-						'status' => 'active',
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 500,
-				]
-			);
-		} catch (Throwable $e) {
-			return [];
-		}
-
 		$result = [];
-		$list = [];
-		if (is_array($rows) === true) {
-			$list = $rows;
-		}
-
-		foreach ($list as $row) {
+		foreach ((new ActiveLoyaltyProgrammes(appConfig: $this->appConfig, container: $this->container))->rows() as $row) {
 			$result[] = $this->toArray(value: $row);
 		}
 
