@@ -79,11 +79,11 @@ export default {
 			this.error = ''
 			this.loading = true
 			try {
-				const result = await portalApi.login(
-					this.email,
-					this.password,
-					this.totpCode || null,
-				)
+				const result = await portalApi.login({
+					email: this.email,
+					password: this.password,
+					totpCode: this.totpCode || null,
+				})
 				if (result.status === 'authenticated' && result.token) {
 					setToken(result.token, result.expiresAt)
 					this.$router.push('/dashboard')
