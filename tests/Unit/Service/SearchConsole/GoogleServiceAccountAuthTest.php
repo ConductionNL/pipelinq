@@ -198,4 +198,55 @@ class GoogleServiceAccountAuthTest extends TestCase {
 		$this->expectException(RuntimeException::class);
 		$auth->accessToken(key: $key, scope: 's');
 	}//end testAnAnswerWithoutATokenIsAnError()
+	/**
+	 * Every way a token exchange ends: the exact request; a transport
+	 * failure is logged and rethrown with its cause; a body that is not
+	 * JSON, or JSON without a token, is refused with the exact message.
+	 *
+	 * @return void
+	 */
+	public function testEveryWayATokenExchangeEnds(): void {
+		[$private] = self::keyPair();
+		$key = $this->build()->parseKey(self::keyJson($private));
+		$captured = [];
+		$response = $this->createMock(IResponse::class);
+		$response->method('getBody')->willReturn('{"access_token":"tok"}');
+		$auth = $this->build(
+			function (string $url, array $options) use (&$captured, $response): IResponse {
+				$captured = $options;
+				return $response;
+			}
+		);
+		$this->assertSame('tok', $auth->accessToken(key: $key, scope: 's'));
+		$this->assertSame(['body', 'timeout'], array_keys($captured));
+		$this->assertSame(['grant_type', 'assertion'], array_keys($captured['body']));
+		$this->assertSame(20, $captured['timeout']);
+
+		$failure = new \RuntimeException('dns');
+		$client = $this->createMock(IClient::class);
+		$client->method('post')->willThrowException($failure);
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->method('newClient')->willReturn($client);
+		$time = $this->createMock(ITimeFactory::class);
+		$time->method('getTime')->willReturn(self::NOW);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with('Search Console: token exchange failed', ['exception' => 'dns']);
+		try {
+			(new GoogleServiceAccountAuth($clientService, $time, $logger))->accessToken(key: $key, scope: 's');
+			$this->fail('a transport failure must be rethrown');
+		} catch (RuntimeException $e) {
+			$this->assertSame(['Search Console: token exchange failed', 0, $failure], [$e->getMessage(), $e->getCode(), $e->getPrevious()]);
+		}
+
+		foreach (['not json', '{"access_token":""}', '"tok"'] as $body) {
+			$response = $this->createMock(IResponse::class);
+			$response->method('getBody')->willReturn($body);
+			try {
+				$this->build(static fn (): IResponse => $response)->accessToken(key: $key, scope: 's');
+				$this->fail($body);
+			} catch (RuntimeException $e) {
+				$this->assertSame('Search Console: token exchange answered without an access token', $e->getMessage(), $body);
+			}
+		}
+	}//end testEveryWayATokenExchangeEnds()
 }//end class
