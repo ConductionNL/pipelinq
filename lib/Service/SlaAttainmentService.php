@@ -55,6 +55,17 @@ class SlaAttainmentService {
 	public const VALID_GROUPS = ['policy', 'customer', 'tier', 'team', 'target'];
 
 	/**
+	 * The filter options compute() validates: their default, the valid values
+	 * and the error a wrong value raises.
+	 *
+	 * @var array<string, array{default: string, allowed: array<int, string>, error: string}>
+	 */
+	private const OPTIONS = [
+		'bucket' => ['default' => 'month', 'allowed' => self::VALID_BUCKETS, 'error' => 'invalidBucket'],
+		'groupBy' => ['default' => 'policy', 'allowed' => self::VALID_GROUPS, 'error' => 'invalidGroupBy'],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container.
@@ -83,15 +94,8 @@ class SlaAttainmentService {
 	 * @spec exclude phpmd mechanical refactor
 	 */
 	public function compute(array $params): array {
-		$bucket = (string)($params['bucket'] ?? 'month');
-		if (in_array($bucket, self::VALID_BUCKETS, true) === false) {
-			throw new InvalidArgumentException('invalidBucket');
-		}
-
-		$groupBy = (string)($params['groupBy'] ?? 'policy');
-		if (in_array($groupBy, self::VALID_GROUPS, true) === false) {
-			throw new InvalidArgumentException('invalidGroupBy');
-		}
+		$bucket = self::validOption(params: $params, key: 'bucket');
+		$groupBy = self::validOption(params: $params, key: 'groupBy');
 
 		[$start, $end] = $this->resolveBucketRange(bucket: $bucket, params: $params);
 		$events = $this->loadBreachEventsInRange(range: [$start, $end]);
@@ -110,30 +114,30 @@ class SlaAttainmentService {
 		$withCounts = $this->countWithObjectsInRange(rows: $trackedRows, context: $context);
 		$merged = $this->mergeWithCounts(accumulated: $accumulated, withCounts: $withCounts);
 
-		$byTargetOut = $this->buildByTargetOut(byTarget: $merged['byTarget']);
-		$byGroup = $this->buildByGroup(groupAccum: $merged['groupAccum']);
-		$overallAttainment = $this->ratio(numerator: $merged['met'], denominator: $merged['total']);
-
-		return [
-			'attainment' => $overallAttainment,
-			// Same value scaled to a literal percent (0–100) so a declarative
-			// dashboard stat widget can render it with format.style "percent".
-			'attainmentPercent' => round(($overallAttainment * 100), 1),
-			'total' => $merged['total'],
-			'met' => $merged['met'],
-			'breached' => $accumulated['breached'],
-			'inFlightBreached' => $accumulated['inFlight'],
-			'closedBreached' => $accumulated['closed'],
-			'range' => [
-				'start' => $start->format(DateTimeInterface::ATOM),
-				'end' => $end->format(DateTimeInterface::ATOM),
-			],
-			'details' => [
-				'byTarget' => $byTargetOut,
-				'byGroup' => $byGroup,
-			],
-		];
+		$figures = new SlaAttainmentFigures();
+		return $figures->counts(merged: $merged, accumulated: $accumulated)
+			+ ['range' => $figures->range(start: $start, end: $end), 'details' => $figures->details(merged: $merged)];
 	}//end compute()
+
+	/**
+	 * A requested option, its default when absent; refused when not one of the valid ones.
+	 *
+	 * @param array<string, mixed> $params The filter parameters.
+	 * @param string               $key    `bucket` or `groupBy`.
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException When the option is not valid.
+	 */
+	private static function validOption(array $params, string $key): string {
+		$option = self::OPTIONS[$key];
+		$value = (string)($params[$key] ?? $option['default']);
+		if (in_array($value, $option['allowed'], true) === false) {
+			throw new InvalidArgumentException($option['error']);
+		}
+
+		return $value;
+	}//end validOption()
 
 	/**
 	 * Walk the breach events and accumulate per-target/per-group breach counts.
@@ -144,52 +148,16 @@ class SlaAttainmentService {
 	 * @return array{total: int, breached: int, inFlight: int, closed: int, byTarget: array<string, mixed>, groupAccum: array<string, mixed>}
 	 */
 	private function accumulateBreachedEvents(array $events, array $context): array {
-		$total = 0;
-		$breached = 0;
-		$inFlight = 0;
-		$closed = 0;
-		$byTarget = [];
-		$groupAccum = [];
-
+		$tally = new BreachTally(context: $context, grouping: new SlaGrouping(context: $context));
 		foreach ($events as $event) {
 			if ($context['policyFilter'] !== '' && (string)($event['policyId'] ?? '') !== $context['policyFilter']) {
 				continue;
 			}
 
-			$total++;
-			$kind = (string)($event['targetKind'] ?? 'resolution');
-			$resolved = isset($event['resolvedAt']) === true && $event['resolvedAt'] !== '';
-			if ($resolved === true) {
-				$closed++;
-			}
+			$tally->add(event: $event);
+		}
 
-			if ($resolved === false) {
-				$inFlight++;
-			}
-
-			$breached++;
-			$byTarget[$kind] = ($byTarget[$kind] ?? ['breached' => 0, 'met' => 0]);
-			$byTarget[$kind]['breached']++;
-
-			// The object the breach belongs to supplies its tier, team and customer.
-			$tracked = ($context['tracked'][(string)($event['targetObjectId'] ?? '')] ?? []);
-			$subject = ['policyId' => (string)($event['policyId'] ?? ''), 'kinds' => [$kind], 'tracked' => $tracked, 'event' => $event];
-			foreach ($this->groupKeys(subject: $subject, context: $context) as $groupKey) {
-				$groupName = $this->groupName(key: $groupKey, context: $context);
-				$groupAccum[$groupKey] = ($groupAccum[$groupKey] ?? ['name' => $groupName, 'total' => 0, 'breached' => 0]);
-				$groupAccum[$groupKey]['total']++;
-				$groupAccum[$groupKey]['breached']++;
-			}
-		}//end foreach
-
-		return [
-			'total' => $total,
-			'breached' => $breached,
-			'inFlight' => $inFlight,
-			'closed' => $closed,
-			'byTarget' => $byTarget,
-			'groupAccum' => $groupAccum,
-		];
+		return $tally->summary();
 	}//end accumulateBreachedEvents()
 
 	/**
@@ -225,73 +193,6 @@ class SlaAttainmentService {
 			'groupAccum' => $groupAccum,
 		];
 	}//end mergeMetCounts()
-
-	/**
-	 * Build the `details.byTarget` output payload from the merged per-target counts.
-	 *
-	 * @param array<string, array<string, int>> $byTarget Merged per-target breached/met counts.
-	 *
-	 * @return array<string, array<string, mixed>>
-	 */
-	private function buildByTargetOut(array $byTarget): array {
-		$byTargetOut = [];
-		foreach ($byTarget as $kind => $counts) {
-			$withCount = (int)$counts['met'];
-			$denom = ($counts['breached'] + $withCount);
-			$attainment = $this->ratio(numerator: $withCount, denominator: $denom);
-
-			$byTargetOut[$kind] = [
-				'attainment' => $attainment,
-				'breached' => $counts['breached'],
-				'met' => $withCount,
-			];
-		}
-
-		return $byTargetOut;
-	}//end buildByTargetOut()
-
-	/**
-	 * Build the `details.byGroup` output payload from the merged per-group counts.
-	 *
-	 * @param array<string, array<string, mixed>> $groupAccum Merged per-group breached/met counts.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function buildByGroup(array $groupAccum): array {
-		$byGroup = [];
-		foreach ($groupAccum as $key => $entry) {
-			$denom = (int)$entry['total'];
-			$withE = (int)($entry['met'] ?? 0);
-			$groupAttainment = $this->ratio(numerator: $withE, denominator: $denom);
-
-			$byGroup[] = [
-				'groupKey' => (string)$key,
-				'groupName' => (string)($entry['name'] ?? $key),
-				'attainment' => $groupAttainment,
-				'total' => $denom,
-				'met' => $withE,
-				'breached' => (int)$entry['breached'],
-			];
-		}
-
-		return $byGroup;
-	}//end buildByGroup()
-
-	/**
-	 * Ratio rounded to 4 decimals, or 0.0 when the denominator is not positive.
-	 *
-	 * @param int $numerator The numerator.
-	 * @param int $denominator The denominator.
-	 *
-	 * @return float
-	 */
-	private function ratio(int $numerator, int $denominator): float {
-		if ($denominator > 0) {
-			return round(($numerator / $denominator), 4);
-		}
-
-		return 0.0;
-	}//end ratio()
 
 	/**
 	 * Resolve the (start, end) instant pair for the requested bucket.
@@ -431,16 +332,48 @@ class SlaAttainmentService {
 			return [];
 		}
 
+		$objectService = $this->breachObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		$events = [];
+		foreach ($this->breachRows(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema]) as $row) {
+			$event = $this->parseBreachEventRow(row: $row, range: $range);
+			if ($event !== null) {
+				$events[] = $event;
+			}
+		}
+
+		return $events;
+	}//end loadBreachEventsInRange()
+
+	/**
+	 * The OpenRegister object service; null (logged) when it is not available.
+	 *
+	 * @return object|null
+	 */
+	private function breachObjectService(): ?object {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaAttainmentService: ObjectService not available',
 				['error' => $e->getMessage()]
 			);
-			return [];
+			return null;
 		}
+	}//end breachObjectService()
 
+	/**
+	 * Every breach-event row of the configured schema; none (logged) when the read fails.
+	 *
+	 * @param object               $objectService The OpenRegister object service.
+	 * @param array<string, mixed> $filters       The register and schema.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	private function breachRows(object $objectService, array $filters): array {
 		try {
 			// 🔴 register/schema GO INSIDE `filters`, NOT AT THE TOP LEVEL.
 			//
@@ -452,10 +385,7 @@ class SlaAttainmentService {
 			// than visibly broken.
 			$rows = $objectService->findAll(
 				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
+					'filters' => $filters,
 					'limit' => 5000,
 				]
 			);
@@ -467,16 +397,8 @@ class SlaAttainmentService {
 			return [];
 		}
 
-		$events = [];
-		foreach ((array)$rows as $row) {
-			$event = $this->parseBreachEventRow(row: $row, range: $range);
-			if ($event !== null) {
-				$events[] = $event;
-			}
-		}
-
-		return $events;
-	}//end loadBreachEventsInRange()
+		return (array)$rows;
+	}//end breachRows()
 
 	/**
 	 * Parse and range-filter a single breach-event row.
@@ -576,6 +498,7 @@ class SlaAttainmentService {
 	 */
 	private function countWithObjectsInRange(array $rows, array $context): array {
 		$accumulator = ['total' => 0, 'byTarget' => [], 'byGroup' => []];
+		$grouping = new SlaGrouping(context: $context);
 
 		foreach ($rows as $row) {
 			$result = $this->evaluateTrackedObjectRow(row: $row, context: $context);
@@ -589,8 +512,8 @@ class SlaAttainmentService {
 			}
 
 			$subject = ['policyId' => $result['policyId'], 'kinds' => array_keys($result['byTarget']), 'tracked' => $row, 'event' => []];
-			foreach ($this->groupKeys(subject: $subject, context: $context) as $key) {
-				$name = $this->groupName(key: $key, context: $context);
+			foreach ($grouping->keysFor(subject: $subject) as $key) {
+				$name = $grouping->nameOf(key: $key);
 				$accumulator['byGroup'][$key] = ($accumulator['byGroup'][$key] ?? ['name' => $name, 'total' => 0]);
 				$accumulator['byGroup'][$key]['total']++;
 			}
@@ -712,88 +635,6 @@ class SlaAttainmentService {
 
 		return ['allMet' => $allWith, 'touchedKey' => $touchedKey, 'byTarget' => $byTarget];
 	}//end evaluateSlaTargets()
-
-	/**
-	 * The groups a met object or a breach event counts in. One group, except
-	 * when grouping by target: a met object counts once per target it met.
-	 *
-	 * A breach event's own fields win; otherwise the values come from the
-	 * tracked object it belongs to, so met and breached rows of one group
-	 * describe the same objects. A tier falls back to the policy's own tier,
-	 * which is how the engine chose the policy.
-	 *
-	 * @param array<string, mixed> $subject The SLA policy identity (policyId), the target kinds counted (kinds),
-	 *                                      the tracked object (tracked, [] when unknown) and the breach event
-	 *                                      (event, [] for a met object).
-	 * @param array<string, mixed> $context Run context (see compute()).
-	 *
-	 * @return array<int, string> Group keys.
-	 */
-	private function groupKeys(array $subject, array $context): array {
-		['policyId' => $policyId, 'kinds' => $kinds, 'tracked' => $tracked, 'event' => $event] = $subject;
-		$policyTier = (string)($context['policies'][$policyId]['customerTier'] ?? '');
-		if ($policyTier === '*') {
-			$policyTier = '';
-		}
-
-		return match ($context['groupBy']) {
-			'policy' => [$this->firstFilled(values: [$policyId])],
-			'target' => $kinds,
-			'tier' => [
-				$this->firstFilled(
-					values: [
-						$event['customerTier'] ?? null,
-						$tracked['slaTier'] ?? null,
-						$tracked['customerTier'] ?? null,
-						$policyTier,
-					]
-				),
-			],
-			'team' => [$this->firstFilled(values: [$event['team'] ?? null, $tracked['team'] ?? null])],
-			'customer' => [$this->firstFilled(values: [$event['organisationId'] ?? null, $tracked['client'] ?? null])],
-			default => ['all'],
-		};
-	}//end groupKeys()
-
-	/**
-	 * The first non-empty string, or `unspecified`.
-	 *
-	 * @param array<int, mixed> $values Candidates, in order of preference.
-	 *
-	 * @return string The value.
-	 */
-	private function firstFilled(array $values): string {
-		foreach ($values as $value) {
-			if (is_string($value) === true && $value !== '') {
-				return $value;
-			}
-		}
-
-		return 'unspecified';
-	}//end firstFilled()
-
-	/**
-	 * The display name of a group: the policy's or client's name where the
-	 * key is an id, the key itself otherwise.
-	 *
-	 * @param string $key Group key.
-	 * @param array<string, mixed> $context Run context (see compute()).
-	 *
-	 * @return string Group display name.
-	 */
-	private function groupName(string $key, array $context): string {
-		$name = match ($context['groupBy']) {
-			'policy' => (string)($context['policies'][$key]['name'] ?? ''),
-			'customer' => (string)($context['clients'][$key] ?? ''),
-			default => '',
-		};
-
-		if ($name === '') {
-			return $key;
-		}
-
-		return $name;
-	}//end groupName()
 
 	/**
 	 * Normalise OR row/entity to a plain associative array.
