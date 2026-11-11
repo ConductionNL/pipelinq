@@ -35,17 +35,10 @@ use ReflectionMethod;
 use ReflectionNamedType;
 
 /**
- * Every public action: refused without a user, refused or allowed for a
- * user without CRM privilege, allowed for a privileged user.
+ * Every public action: refused without a user, refused for a user without
+ * CRM privilege, allowed for a privileged user.
  */
 class MarketingControllersAccessGoldenTest extends TestCase {
-	/**
-	 * The actions a logged-in user without CRM privilege may still call.
-	 *
-	 * @var array<int, string>
-	 */
-	private const UNGATED = ['BlastController::create', 'TemplateController::create'];
-
 	/**
 	 * Every public action of the three controllers.
 	 *
@@ -103,7 +96,7 @@ class MarketingControllersAccessGoldenTest extends TestCase {
 
 	/**
 	 * A user without CRM privilege is refused with 403 before any service
-	 * call, except on the two create actions.
+	 * call.
 	 *
 	 * @param class-string $class  The controller.
 	 * @param string       $action The action.
@@ -113,15 +106,8 @@ class MarketingControllersAccessGoldenTest extends TestCase {
 	 * @dataProvider actionProvider
 	 */
 	public function testUnprivilegedUser(string $class, string $action): void {
-		$key = (new ReflectionClass($class))->getShortName() . '::' . $action;
-		$gated = in_array($key, self::UNGATED, true) === false;
-		$response = $this->invoke(class: $class, action: $action, user: true, privileged: false, strict: $gated);
-		if ($gated === true) {
-			$this->assertSame([403, ['error' => 'Forbidden']], [$response->getStatus(), $response->getData()]);
-			return;
-		}
-
-		$this->assertNotContains($response->getStatus(), [401, 403]);
+		$response = $this->invoke(class: $class, action: $action, user: true, privileged: false, strict: true);
+		$this->assertSame([403, ['error' => 'Forbidden']], [$response->getStatus(), $response->getData()]);
 	}//end testUnprivilegedUser()
 
 	/**
