@@ -262,54 +262,97 @@ class IntegriqMarketingConsent {
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
 	 */
 	public function changeRequestFor(array $row, string $id): ?array {
-		$withdrawnAt = trim((string)($row['withdrawnAt'] ?? ''));
-		$reason = (string)($row['withdrawnReason'] ?? '');
-		if ($withdrawnAt !== '' && in_array($reason, self::BOUNCE_REASONS, true) === true) {
+		if ($this->isBounce(row: $row) === true) {
 			return null;
 		}
 
+		$state = $this->recordState(row: $row);
+		$request = $this->consentRequest(row: $row, state: $state);
+		// The UUID plus the state, so a later withdrawal of the same record
+		// is a new wish. Fits integriq's 64-character legacy_uuid column.
+		$request['legacyRef'] = $id.':'.self::STATE_SUFFIX[$state];
+		if ($state === 'opted-in') {
+			$request['lawfulBasis'] = (string)($row['lawfulBasis'] ?? '');
+			return $request;
+		}
+
+		$request['source'] = (string)($row['withdrawnReason'] ?? '');
+		return $request;
+	}//end changeRequestFor()
+
+	/**
+	 * Whether a consentRecord was withdrawn by a bounce, which is not migrated.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 *
+	 * @return bool True for a bounce.
+	 */
+	private function isBounce(array $row): bool {
+		$withdrawnAt = trim((string)($row['withdrawnAt'] ?? ''));
+		$reason = (string)($row['withdrawnReason'] ?? '');
+		return $withdrawnAt !== '' && in_array($reason, self::BOUNCE_REASONS, true) === true;
+	}//end isBounce()
+
+	/**
+	 * `opted-out` for a withdrawn record, `opted-in` for a live one.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 *
+	 * @return string The state.
+	 */
+	private function recordState(array $row): string {
+		if (trim((string)($row['withdrawnAt'] ?? '')) !== '') {
+			return 'opted-out';
+		}
+
+		return 'opted-in';
+	}//end recordState()
+
+	/**
+	 * The change request's address, scope, evidence and source for a record in a state.
+	 *
+	 * @param array<string,mixed> $row   The consentRecord.
+	 * @param string              $state Its state.
+	 *
+	 * @return array<string,mixed> The request.
+	 */
+	private function consentRequest(array $row, string $state): array {
 		$contactId = (string)($row['contactId'] ?? '');
 		$channel = strtolower((string)($row['channel'] ?? ''));
 		$listId = trim((string)($row['listId'] ?? ''));
-		$state = 'opted-in';
-		if ($withdrawnAt !== '') {
-			$state = 'opted-out';
-		}
-
 		$scope = 'channel';
 		if ($listId !== '') {
 			$scope = 'list';
 		}
 
-		$evidence = ($row['evidence'] ?? []);
-		if (is_array($evidence) === false) {
-			$evidence = ['text' => (string)$evidence];
-		}
-
-		$request = [
+		return [
 			'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
 			'state' => $state,
 			'scope' => $scope,
 			'channel' => $channel,
 			'ref' => $listId,
 			'contactRef' => $this->contactRefOf(contactId: $contactId),
-			'evidence' => $evidence,
+			'evidence' => $this->evidenceOf(row: $row),
 			'source' => (string)($row['consentSource'] ?? ''),
 			'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
-			// The UUID plus the state, so a later withdrawal of the same record
-			// is a new wish. Fits integriq's 64-character legacy_uuid column.
-			'legacyRef' => $id.':'.self::STATE_SUFFIX[$state],
 		];
-		if ($state === 'opted-in') {
-			$request['lawfulBasis'] = (string)($row['lawfulBasis'] ?? '');
+	}//end consentRequest()
+
+	/**
+	 * A record's evidence as a map; a plain value becomes its `text`.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 *
+	 * @return array<string,mixed> The evidence.
+	 */
+	private function evidenceOf(array $row): array {
+		$evidence = ($row['evidence'] ?? []);
+		if (is_array($evidence) === false) {
+			return ['text' => (string)$evidence];
 		}
 
-		if ($state === 'opted-out') {
-			$request['source'] = $reason;
-		}
-
-		return $request;
-	}//end changeRequestFor()
+		return $evidence;
+	}//end evidenceOf()
 
 	/**
 	 * Hand integriq one prepared change request.
