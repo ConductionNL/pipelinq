@@ -227,4 +227,60 @@ class PageWatchReaderTest extends TestCase {
 		$this->assertTrue($outcome->succeeded());
 		$this->assertSame([], $outcome->items);
 	}//end testAnUnchangedFragmentProducesNoEvent()
+
+	/**
+	 * The diff is exact across a first reading, no change, and added and removed lines.
+	 *
+	 * @return void
+	 */
+	public function testTheDiffIsExact(): void {
+		$h = static fn (string $v): string => substr(hash('sha256', $v), 0, 16);
+		$first = $this->reader->diff(fingerprint: '', lineFingerprints: [], fragment: "Eén. Twee!\n\nDrie? Eén.");
+		$this->assertSame(
+			[
+				'changed'          => true,
+				'fingerprint'      => $h("Eén. Twee!\n\nDrie? Eén."),
+				'lineFingerprints' => [$h('Eén.'), $h('Twee!'), $h('Drie?')],
+				'summary'          => 'First reading of this fragment.',
+				'added'            => ['Eén.', 'Twee!', 'Drie?'],
+				'removed'          => 0,
+			],
+			$first
+		);
+
+		$same = $this->reader->diff(fingerprint: $first['fingerprint'], lineFingerprints: ['stale'], fragment: "Eén. Twee!\n\nDrie? Eén.");
+		$this->assertSame(
+			['changed' => false, 'fingerprint' => $first['fingerprint'], 'lineFingerprints' => $first['lineFingerprints'], 'summary' => '', 'added' => [], 'removed' => 0],
+			$same
+		);
+
+		$next = $this->reader->diff(fingerprint: $first['fingerprint'], lineFingerprints: $first['lineFingerprints'], fragment: 'Twee! Vier.');
+		$this->assertSame(
+			[
+				'changed'          => true,
+				'fingerprint'      => $h('Twee! Vier.'),
+				'lineFingerprints' => [$h('Twee!'), $h('Vier.')],
+				'summary'          => $next['summary'],
+				'added'            => ['Vier.'],
+				'removed'          => 2,
+			],
+			$next
+		);
+		$this->assertStringContainsString('Added: Vier.', $next['summary']);
+		$this->assertStringContainsString('2 line(s) removed.', $next['summary']);
+	}//end testTheDiffIsExact()
+
+	/**
+	 * A changed fragment yields exactly one item and the new state; an unchanged one none.
+	 *
+	 * @return void
+	 */
+	public function testTheChangedItemIsExact(): void {
+		$outcome = $this->readOnce(body: $this->page(inside: 'Nieuw bericht.', outside: 'x'));
+		$this->assertSame(
+			[['url' => 'https://example.org/nieuws', 'title' => 'https://example.org/nieuws', 'summary' => 'First reading of this fragment.', 'stamp' => $outcome->state['fingerprint']]],
+			$outcome->items
+		);
+		$this->assertSame(['fingerprint', 'lineFingerprints'], array_keys($outcome->state));
+	}//end testTheChangedItemIsExact()
 }//end class
