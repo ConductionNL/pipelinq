@@ -90,31 +90,13 @@ class SeedDemoDataCommand extends Command {
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		// OpenRegister enforces RBAC against the current user. occ runs with
-		// no session ("Anonymous"), which lacks create/delete rights on the
-		// pipelinq schemas, so impersonate an admin for the seed.
-		if ($this->userSession->getUser() === null) {
-			$admin = $this->resolveAdmin();
-			if ($admin === null) {
-				$output->writeln('<error>No admin user found to run the seed under.</error>');
-				return Command::FAILURE;
-			}
-
-			$this->userSession->setUser($admin);
-			$output->writeln('<comment>Running as admin user "' . $admin->getUID() . '".</comment>');
-		}
-
-		$remove = (bool)$input->getOption('remove');
-
-		try {
-			$result = $this->runMode(remove: $remove);
-		} catch (\Throwable $e) {
-			$output->writeln('<error>pipelinq:demo:seed failed: ' . $e->getMessage() . '</error>');
+		if ($this->actAsAdminWhenAnonymous(output: $output) === false) {
 			return Command::FAILURE;
 		}
 
-		if ($result['success'] === false) {
-			$output->writeln('<error>pipelinq:demo:seed issue: ' . ($result['message'] ?? 'unknown error') . '</error>');
+		$remove = (bool)$input->getOption('remove');
+		$result = $this->seedResult(remove: $remove, output: $output);
+		if ($result === null) {
 			return Command::FAILURE;
 		}
 
@@ -124,18 +106,76 @@ class SeedDemoDataCommand extends Command {
 		}
 
 		$output->writeln('<info>pipelinq:demo:seed ' . $mode . 'done</info>');
-		foreach (['created', 'skipped', 'removed', 'retained'] as $bucket) {
-			if (isset($result[$bucket]) === false) {
-				continue;
-			}
+		$this->printCounts(result: $result, output: $output);
+		return Command::SUCCESS;
+	}//end execute()
 
-			foreach ($result[$bucket] as $section => $count) {
+	/**
+	 * Impersonate an admin when occ runs without a session.
+	 *
+	 * OpenRegister enforces RBAC against the current user. occ runs with
+	 * no session ("Anonymous"), which lacks create/delete rights on the
+	 * pipelinq schemas, so impersonate an admin for the seed.
+	 *
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return bool False when no admin could be found (reported).
+	 */
+	private function actAsAdminWhenAnonymous(OutputInterface $output): bool {
+		if ($this->userSession->getUser() !== null) {
+			return true;
+		}
+
+		$admin = $this->resolveAdmin();
+		if ($admin === null) {
+			$output->writeln('<error>No admin user found to run the seed under.</error>');
+			return false;
+		}
+
+		$this->userSession->setUser($admin);
+		$output->writeln('<comment>Running as admin user "' . $admin->getUID() . '".</comment>');
+		return true;
+	}//end actAsAdminWhenAnonymous()
+
+	/**
+	 * Run the requested mode, or report why it failed.
+	 *
+	 * @param bool            $remove Whether to remove instead of seed.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return array<string, mixed>|null The service result, or null when it failed (reported).
+	 */
+	private function seedResult(bool $remove, OutputInterface $output): ?array {
+		try {
+			$result = $this->runMode(remove: $remove);
+		} catch (\Throwable $e) {
+			$output->writeln('<error>pipelinq:demo:seed failed: ' . $e->getMessage() . '</error>');
+			return null;
+		}
+
+		if ($result['success'] === false) {
+			$output->writeln('<error>pipelinq:demo:seed issue: ' . ($result['message'] ?? 'unknown error') . '</error>');
+			return null;
+		}
+
+		return $result;
+	}//end seedResult()
+
+	/**
+	 * Print the created, skipped, removed and retained counts per section.
+	 *
+	 * @param array<string, mixed> $result The service result.
+	 * @param OutputInterface      $output Console output.
+	 *
+	 * @return void
+	 */
+	private function printCounts(array $result, OutputInterface $output): void {
+		foreach (['created', 'skipped', 'removed', 'retained'] as $bucket) {
+			foreach (($result[$bucket] ?? []) as $section => $count) {
 				$output->writeln(sprintf('  %-8s %-16s = %d', $bucket, $section, $count));
 			}
 		}
-
-		return Command::SUCCESS;
-	}//end execute()
+	}//end printCounts()
 
 	/**
 	 * Run the requested mode against the shared seed service.
