@@ -82,8 +82,7 @@ class ContactSyncController extends Controller {
 		try {
 			return new JSONResponse($this->contactSyncService->cardStatus(uid: $uid));
 		} catch (\Exception $e) {
-			$this->logger->error('ContactSyncController::status failed', ['exception' => $e]);
-			return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
+			return $this->unexpectedError(action: 'status', failure: $e);
 		}
 	}//end status()
 
@@ -113,11 +112,7 @@ class ContactSyncController extends Controller {
 			$results = $this->contactSyncService->searchContacts($query);
 			return new JSONResponse(['results' => $results]);
 		} catch (\Exception $e) {
-			$this->logger->error('ContactSyncController::search failed', ['exception' => $e]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				500
-			);
+			return $this->unexpectedError(action: 'search', failure: $e);
 		}
 	}//end search()
 
@@ -161,12 +156,8 @@ class ContactSyncController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error('ContactSyncController::import failed', ['exception' => $e]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				500
-			);
-		}//end try
+			return $this->unexpectedError(action: 'import', failure: $e);
+		}
 	}//end import()
 
 	/**
@@ -195,12 +186,9 @@ class ContactSyncController extends Controller {
 		$objectType = $this->request->getParam('objectType', 'client');
 		$object = $this->request->getParam('object', []);
 
-		if (in_array($objectType, ['client', 'contact'], true) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Invalid objectType -- must be client or contact')], 400);
-		}
-
-		if (is_array($object) === false || trim((string)($object['name'] ?? '')) === '') {
-			return new JSONResponse(['error' => $this->l10n->t('Name is required')], 400);
+		$refusal = $this->createRefusal(objectType: $objectType, object: $object);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -212,8 +200,7 @@ class ContactSyncController extends Controller {
 		} catch (\RuntimeException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 400);
 		} catch (\Exception $e) {
-			$this->logger->error('ContactSyncController::create failed', ['exception' => $e]);
-			return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
+			return $this->unexpectedError(action: 'create', failure: $e);
 		}
 	}//end create()
 
@@ -243,7 +230,52 @@ class ContactSyncController extends Controller {
 
 		$objectType = $this->request->getParam('objectType', '');
 		$objectId = $this->request->getParam('objectId', '');
+		$refusal = $this->objectRefRefusal(objectType: $objectType, objectId: $objectId);
+		if ($refusal !== null) {
+			return $refusal;
+		}
 
+		try {
+			return $this->writeBackAnswer(
+				contactsUid: $this->contactSyncService->syncToContacts(
+					objectType: $objectType,
+					objectId: $objectId
+				)
+			);
+		} catch (\Exception $e) {
+			return $this->unexpectedError(action: 'writeBack', failure: $e);
+		}
+	}//end writeBack()
+
+	/**
+	 * The 400 for a create request that is not a named client or contact, or null.
+	 *
+	 * @param mixed $objectType The object type parameter.
+	 * @param mixed $object     The form fields parameter.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function createRefusal(mixed $objectType, mixed $object): ?JSONResponse {
+		if (in_array($objectType, ['client', 'contact'], true) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Invalid objectType -- must be client or contact')], 400);
+		}
+
+		if (is_array($object) === false || trim((string)($object['name'] ?? '')) === '') {
+			return new JSONResponse(['error' => $this->l10n->t('Name is required')], 400);
+		}
+
+		return null;
+	}//end createRefusal()
+
+	/**
+	 * The 400 for a write-back request without a client or contact reference, or null.
+	 *
+	 * @param mixed $objectType The object type parameter.
+	 * @param mixed $objectId   The object id parameter.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function objectRefRefusal(mixed $objectType, mixed $objectId): ?JSONResponse {
 		if ($objectType === '' || $objectId === '') {
 			return new JSONResponse(['error' => $this->l10n->t('Missing objectType or objectId')], 400);
 		}
@@ -252,41 +284,53 @@ class ContactSyncController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Invalid objectType -- must be client or contact')], 400);
 		}
 
-		try {
-			$contactsUid = $this->contactSyncService->syncToContacts(
-				objectType: $objectType,
-				objectId: $objectId
-			);
+		return null;
+	}//end objectRefRefusal()
 
-			// 🔴 null MEANS THE SYNC DID NOT HAPPEN.
-			//
-			// syncToContacts() answers null when the Contacts app is
-			// unavailable, the object was not found, or the vCard write failed.
-			// This used to answer 200 {success: true, contactsUid: null} over
-			// every one of those, so a caller was told the write-back succeeded
-			// while nothing had been written to the addressbook at all.
-			if ($contactsUid === null) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'error' => $this->l10n->t('Write-back to Contacts did not complete'),
-					],
-					Http::STATUS_INTERNAL_SERVER_ERROR
-				);
-			}
-
+	/**
+	 * The answer to a write-back.
+	 *
+	 * 🔴 null MEANS THE SYNC DID NOT HAPPEN.
+	 *
+	 * syncToContacts() answers null when the Contacts app is
+	 * unavailable, the object was not found, or the vCard write failed.
+	 * This used to answer 200 {success: true, contactsUid: null} over
+	 * every one of those, so a caller was told the write-back succeeded
+	 * while nothing had been written to the addressbook at all.
+	 *
+	 * @param string|null $contactsUid The synced contact's uid, or null.
+	 *
+	 * @return JSONResponse The answer.
+	 */
+	private function writeBackAnswer(?string $contactsUid): JSONResponse {
+		if ($contactsUid === null) {
 			return new JSONResponse(
 				[
-					'success' => true,
-					'contactsUid' => $contactsUid,
-				]
-			);
-		} catch (\Exception $e) {
-			$this->logger->error('ContactSyncController::writeBack failed', ['exception' => $e]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				500
+					'success' => false,
+					'error' => $this->l10n->t('Write-back to Contacts did not complete'),
+				],
+				Http::STATUS_INTERNAL_SERVER_ERROR
 			);
 		}
-	}//end writeBack()
+
+		return new JSONResponse(
+			[
+				'success' => true,
+				'contactsUid' => $contactsUid,
+			]
+		);
+	}//end writeBackAnswer()
+
+	/**
+	 * Log an action's unexpected failure and answer the generic 500.
+	 *
+	 * @param string     $action  The action name.
+	 * @param \Exception $failure The failure.
+	 *
+	 * @return JSONResponse The 500.
+	 */
+	private function unexpectedError(string $action, \Exception $failure): JSONResponse {
+		$this->logger->error('ContactSyncController::' . $action . ' failed', ['exception' => $failure]);
+		return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
+	}//end unexpectedError()
 }//end class
