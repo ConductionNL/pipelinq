@@ -39,6 +39,16 @@ use Psr\Log\LoggerInterface;
  */
 class DemoJourneySeeder {
 	/**
+	 * The references a demo run links: definition key, uuid-map section, field.
+	 *
+	 * @var array<int, array{0: string, 1: string, 2: string}>
+	 */
+	private const RUN_LINKS = [
+		['contactKey', 'contacts', 'contactId'],
+		['clientKey', 'clients', 'clientId'],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param JourneyService $journeyService Journey write path, which compiles each journey into a flow.
@@ -76,47 +86,95 @@ class DemoJourneySeeder {
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function seed(array $definitions, array $uuids): array {
-		$counts = ['created' => 0, 'runs' => 0, 'skipped' => 0];
 		if ($definitions === []) {
+			return ['created' => 0, 'runs' => 0, 'skipped' => 0];
+		}
+
+		return $this->seedAll(definitions: $definitions, uuids: $uuids);
+	}//end seed()
+
+	/**
+	 * Seed every definition whose name does not exist yet.
+	 *
+	 * @param array<int, array<string, mixed>> $definitions The seed file's `journeys` section.
+	 * @param array<string, string>            $uuids       Section-local keys mapped to seeded uuids.
+	 *
+	 * @return array{created: int, runs: int, skipped: int} Counts.
+	 */
+	private function seedAll(array $definitions, array $uuids): array {
+		$existing = $this->existingNames();
+		$scope = new DemoRunScope(uuids: $uuids, runSchema: $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA));
+		$counts = ['created' => 0, 'runs' => 0, 'skipped' => 0];
+		foreach ($definitions as $definition) {
+			if (isset($existing[(string)($definition['data']['name'] ?? '')]) === true) {
+				$counts['skipped']++;
+				continue;
+			}
+
+			$counts = $this->withSeeded(counts: $counts, runs: $this->seedJourney(definition: $definition, scope: $scope));
+		}
+
+		return $counts;
+	}//end seedAll()
+
+	/**
+	 * The counts with one seeded journey and its runs; unchanged when the
+	 * journey did not save.
+	 *
+	 * @param array{created: int, runs: int, skipped: int} $counts The counts so far.
+	 * @param int|null                                     $runs   The journey's saved runs, null when it did not save.
+	 *
+	 * @return array{created: int, runs: int, skipped: int}
+	 */
+	private function withSeeded(array $counts, ?int $runs): array {
+		if ($runs === null) {
 			return $counts;
 		}
 
+		$counts['created']++;
+		$counts['runs'] += $runs;
+
+		return $counts;
+	}//end withSeeded()
+
+	/**
+	 * The names of the journeys that already exist, as keys.
+	 *
+	 * @return array<string, true>
+	 */
+	private function existingNames(): array {
 		$existing = [];
 		foreach ($this->journeyService->listJourneys() as $journey) {
 			$existing[(string)($journey['name'] ?? '')] = true;
 		}
 
-		$runSchema = $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA);
+		return $existing;
+	}//end existingNames()
 
-		foreach ($definitions as $definition) {
-			$data = ($definition['data'] ?? []);
-			if (isset($existing[(string)($data['name'] ?? '')]) === true) {
-				$counts['skipped']++;
-				continue;
-			}
+	/**
+	 * Save one demo journey, never active (a status other than draft or
+	 * paused becomes draft), and its runs; null (logged) when the journey
+	 * does not save.
+	 *
+	 * @param array<string, mixed> $definition The journey definition.
+	 * @param DemoRunScope         $scope      The seed's uuid map and run schema.
+	 *
+	 * @return int|null How many runs were saved.
+	 */
+	private function seedJourney(array $definition, DemoRunScope $scope): ?int {
+		$data = ($definition['data'] ?? []);
+		if (in_array(($data['status'] ?? ''), ['draft', 'paused'], true) === false) {
+			$data['status'] = 'draft';
+		}
 
-			if (in_array(($data['status'] ?? ''), ['draft', 'paused'], true) === false) {
-				$data['status'] = 'draft';
-			}
+		$journeyId = $this->store->idOf(payload: $this->journeyService->save(payload: $data, createdByUid: ''));
+		if ($journeyId === '') {
+			$this->logger->warning('Pipelinq demo seed: journey not saved', ['name' => ($data['name'] ?? '')]);
+			return null;
+		}
 
-			$saved = $this->journeyService->save(payload: $data, createdByUid: '');
-			$journeyId = $this->store->idOf(payload: $saved);
-			if ($journeyId === '') {
-				$this->logger->warning('Pipelinq demo seed: journey not saved', ['name' => ($data['name'] ?? '')]);
-				continue;
-			}
-
-			$counts['created']++;
-			$counts['runs'] += $this->seedRuns(
-				runs: ($definition['runs'] ?? []),
-				journeyId: $journeyId,
-				uuids: $uuids,
-				runSchema: $runSchema,
-			);
-		}//end foreach
-
-		return $counts;
-	}//end seed()
+		return $this->seedRuns(runs: ($definition['runs'] ?? []), target: new DemoRunTarget(journeyId: $journeyId, scope: $scope));
+	}//end seedJourney()
 
 	/**
 	 * Remove the demo journeys, their runs and the flows they compiled into.
@@ -159,43 +217,42 @@ class DemoJourneySeeder {
 	/**
 	 * Save the runs of one seeded journey.
 	 *
-	 * @param array<int, array<string, mixed>> $runs The journey definition's `runs`.
-	 * @param string $journeyId The seeded journey's id.
-	 * @param array<string, string> $uuids Section-local keys mapped to seeded uuids.
-	 * @param string $runSchema The journey run schema.
+	 * @param array<int, array<string, mixed>> $runs   The journey definition's `runs`.
+	 * @param DemoRunTarget                    $target The runs' journey and the seed's scope.
 	 *
 	 * @return int How many runs were saved.
 	 */
-	private function seedRuns(array $runs, string $journeyId, array $uuids, string $runSchema): int {
+	private function seedRuns(array $runs, DemoRunTarget $target): int {
 		$saved = 0;
-
 		foreach ($runs as $run) {
-			$payload = $this->values->resolvePlaceholders(data: ($run['data'] ?? []));
-			$payload = $this->values->linkReference(
-				data: $payload,
-				definition: $run,
-				uuids: $uuids,
-				keyName: 'contactKey',
-				section: 'contacts',
-				field: 'contactId',
-			);
-			$payload = $this->values->linkReference(
-				data: $payload,
-				definition: $run,
-				uuids: $uuids,
-				keyName: 'clientKey',
-				section: 'clients',
-				field: 'clientId',
-			);
-			$payload['journeyId'] = $journeyId;
-
-			if ($this->store->save(schemaSlug: $runSchema, payload: $payload) !== null) {
+			if ($this->store->save(schemaSlug: $target->scope->runSchema, payload: $this->runPayload(run: $run, target: $target)) !== null) {
 				$saved++;
 			}
 		}
 
 		return $saved;
 	}//end seedRuns()
+
+	/**
+	 * One run's payload: its placeholders resolved, its contact and client
+	 * linked to the seeded uuids, and its journey set.
+	 *
+	 * @param array<string, mixed> $run    The run definition.
+	 * @param DemoRunTarget        $target The run's journey and the seed's scope.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function runPayload(array $run, DemoRunTarget $target): array {
+		$payload = $this->values->resolvePlaceholders(data: ($run['data'] ?? []));
+		$uuids = $target->scope->uuids;
+		foreach (self::RUN_LINKS as [$keyName, $section, $field]) {
+			$payload = $this->values->linkReference(data: $payload, definition: $run, uuids: $uuids, keyName: $keyName, section: $section, field: $field);
+		}
+
+		$payload['journeyId'] = $target->journeyId;
+
+		return $payload;
+	}//end runPayload()
 
 	/**
 	 * The names of the seed file's journeys that carry the demo marker.
