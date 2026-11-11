@@ -118,6 +118,34 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 		}
 
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->lineSchema();
+		if ($register === '' || $schema === '') {
+			return true;
+		}
+
+		// Register + schema scope MUST be nested under `@self` (flat
+		// filters.register / filters.schema are treated as ordinary property
+		// filters and match nothing, which made the guard see every cart as
+		// empty and deny every confirm). Transaction stays a top-level filter.
+		return $this->hasNoLines(
+			filters: [
+				'@self' => [
+					'register' => $register,
+					'schema' => $schema,
+				],
+				'transaction' => $transactionId,
+			]
+		);
+	}//end cartIsEmpty()
+
+	/**
+	 * The line schema id: the configured one, else the id resolved from the canonical slug.
+	 *
+	 * @return string The schema id, or '' when neither is available.
+	 *
+	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 */
+	private function lineSchema(): string {
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransactionLine_schema', '');
 		// Fall back to the numeric schema id resolved from the canonical slug
 		// when the deployed app-config leaves posTransactionLine_schema blank.
@@ -130,36 +158,33 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 			$schema = $this->resolveSchemaIdBySlug(slug: 'posTransactionLine');
 		}
 
-		if ($register === '' || $schema === '') {
-			return true;
-		}
+		return $schema;
+	}//end lineSchema()
 
+	/**
+	 * Whether no line matches the filters; a failed lookup counts as no lines (fail closed).
+	 *
+	 * @param array<string, mixed> $filters The `@self` scope and the transaction filter.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 */
+	private function hasNoLines(array $filters): bool {
 		try {
-			// Register + schema scope MUST be nested under `@self` (flat
-			// filters.register / filters.schema are treated as ordinary property
-			// filters and match nothing, which made the guard see every cart as
-			// empty and deny every confirm). Transaction stays a top-level filter.
 			$results = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-				config: [
-					'filters' => [
-						'@self' => [
-							'register' => $register,
-							'schema' => $schema,
-						],
-						'transaction' => $transactionId,
-					],
-				]
+				config: ['filters' => $filters]
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: confirm guard could not verify cart contents (fail closed)',
-				['exception' => $e->getMessage(), 'transaction' => $transactionId]
+				['exception' => $e->getMessage(), 'transaction' => $filters['transaction']]
 			);
 			return true;
-		}//end try
+		}
 
 		return count(($results ?? [])) === 0;
-	}//end cartIsEmpty()
+	}//end hasNoLines()
 
 	/**
 	 * Resolve a schema slug to its numeric OpenRegister schema id.
