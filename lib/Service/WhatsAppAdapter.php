@@ -697,12 +697,12 @@ class WhatsAppAdapter {
 		// The webhook is a PublicPage with no user. The provider lookup is a
 		// read without RBAC and its row stays in-process; after the signature
 		// check every write runs as the messaging service account.
-		$delivery = new InboundWebhookDelivery(rawBody: $rawBody, signature: $signature, providerId: $providerId);
 		$row = $this->providerRepo->findByIdForWebhook(id: $providerId);
 		if ($row === null) {
 			return ['status' => 'providerUnknown'];
 		}
 
+		$delivery = new InboundWebhookDelivery(rawBody: $rawBody, signature: $signature, providerId: $providerId);
 		if ($this->hasValidSignature(row: $row, delivery: $delivery) === false) {
 			return ['status' => 'invalidSignature'];
 		}
@@ -720,15 +720,15 @@ class WhatsAppAdapter {
 	 * @return bool True when the signature verifies.
 	 */
 	private function hasValidSignature(array $row, InboundWebhookDelivery $delivery): bool {
-		if ($this->providerClient->verifySignature(channelProvider: $row, rawBody: $delivery->rawBody, signature: $delivery->signature) === false) {
+		$valid = $this->providerClient->verifySignature(channelProvider: $row, rawBody: $delivery->rawBody, signature: $delivery->signature);
+		if ($valid === false) {
 			$this->logger->warning(
 				'WhatsAppAdapter.handleInboundWebhook: invalid signature',
 				['providerId' => $delivery->providerId]
 			);
-			return false;
 		}
 
-		return true;
+		return $valid;
 	}//end hasValidSignature()
 
 	/**

@@ -401,7 +401,6 @@ class SmsAdapter {
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
 		// A PublicPage with no user: the provider lookup is a read without RBAC; after the
 		// signature check every write runs as the messaging service account.
-		$delivery = new InboundWebhookDelivery(rawBody: $rawBody, signature: $signature, providerId: $providerId);
 		$row = $this->providerRepo->findByIdForWebhook(id: $providerId);
 		if ($row === null) {
 			return ['status' => 'providerUnknown'];
@@ -412,6 +411,7 @@ class SmsAdapter {
 			return ['status' => 'vendorUnsupported'];
 		}
 
+		$delivery = new InboundWebhookDelivery(rawBody: $rawBody, signature: $signature, providerId: $providerId);
 		if ($this->hasValidSignature(client: $client, delivery: $delivery) === false) {
 			return ['status' => 'invalidSignature'];
 		}
@@ -429,15 +429,15 @@ class SmsAdapter {
 	 * @return bool True when the signature verifies.
 	 */
 	private function hasValidSignature(SmsProviderClientInterface $client, InboundWebhookDelivery $delivery): bool {
-		if ($client->verifySignature(rawBody: $delivery->rawBody, signature: $delivery->signature) === false) {
+		$valid = $client->verifySignature(rawBody: $delivery->rawBody, signature: $delivery->signature);
+		if ($valid === false) {
 			$this->logger->warning(
 				'SmsAdapter.handleInboundWebhook: invalid signature',
 				['providerId' => $delivery->providerId]
 			);
-			return false;
 		}
 
-		return true;
+		return $valid;
 	}//end hasValidSignature()
 
 	/**
