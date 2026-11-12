@@ -156,9 +156,7 @@ class EntityActivityService {
 		}
 
 		$filterType = $this->normaliseTypeFilter(rawType: $type);
-
-		$page = max(1, $page);
-		$limit = $this->normaliseLimit(rawLimit: $limit);
+		$window = new ActivityPage(page: max(1, $page), limit: $this->normaliseLimit(rawLimit: $limit));
 
 		$registerId = $this->appConfig->getValueString(
 			Application::APP_ID,
@@ -166,33 +164,48 @@ class EntityActivityService {
 			''
 		);
 		if ($registerId === '') {
-			return $this->emptyResult(page: $page);
+			return $this->emptyResult(page: $window->page);
 		}
 
+		$items = $this->collectActivity(
+			query: new EntityActivityQuery(registerId: $registerId, entityType: $entityType, entityId: $entityId),
+			filterType: $filterType
+		);
+
+		return $this->paginate(items: $this->newestFirst(items: $items), window: $window);
+	}//end getActivity()
+
+	/**
+	 * Collect the activity items the type filter asks for: contactmomenten
+	 * first, then notes.
+	 *
+	 * @param EntityActivityQuery $query      The entity and register.
+	 * @param string              $filterType One of `all|notes|contactmomenten`.
+	 *
+	 * @return array<int,array<string,mixed>> The unsorted items.
+	 */
+	private function collectActivity(EntityActivityQuery $query, string $filterType): array {
 		$items = [];
 
 		if ($filterType === 'all' || $filterType === 'contactmomenten') {
-			$items = array_merge(
-				$items,
-				$this->collectContactmomenten(
-					registerId: $registerId,
-					entityType: $entityType,
-					entityId: $entityId
-				)
-			);
+			$items = array_merge($items, $this->collectContactmomenten(query: $query));
 		}
 
 		if ($filterType === 'all' || $filterType === 'notes') {
-			$items = array_merge(
-				$items,
-				$this->collectNotes(
-					registerId: $registerId,
-					entityType: $entityType,
-					entityId: $entityId
-				)
-			);
+			$items = array_merge($items, $this->collectNotes(query: $query));
 		}
 
+		return $items;
+	}//end collectActivity()
+
+	/**
+	 * Sort activity items newest first by their timestamp.
+	 *
+	 * @param array<int,array<string,mixed>> $items The items.
+	 *
+	 * @return array<int,array<string,mixed>> The sorted items.
+	 */
+	private function newestFirst(array $items): array {
 		usort(
 			$items,
 			static function (array $left, array $right): int {
@@ -203,8 +216,8 @@ class EntityActivityService {
 			}
 		);
 
-		return $this->paginate(items: $items, page: $page, limit: $limit);
-	}//end getActivity()
+		return $items;
+	}//end newestFirst()
 
 	/**
 	 * Normalise the user-supplied `type` filter.
@@ -252,57 +265,66 @@ class EntityActivityService {
 	 * returned items is unchanged, but it is now sourced from the ticket field
 	 * names (title / description / occurredAt / assignee).
 	 *
-	 * @param string $registerId The configured register id.
-	 * @param string $entityType The validated entity type.
-	 * @param string $entityId The OR object UUID.
+	 * @param EntityActivityQuery $query The entity and register.
 	 *
 	 * @return array<int,array<string,mixed>> Normalised activity items.
 	 */
-	private function collectContactmomenten(
-		string $registerId,
-		string $entityType,
-		string $entityId,
-	): array {
+	private function collectContactmomenten(EntityActivityQuery $query): array {
+		$items = [];
+		foreach ($this->contactmomentObjects(query: $query) as $object) {
+			$items[] = $this->contactmomentItem(object: $object);
+		}
+
+		return $items;
+	}//end collectContactmomenten()
+
+	/**
+	 * The contactmoment tickets linked to an entity; none when the ticket
+	 * schema is unconfigured or the entity type has no link field.
+	 *
+	 * @param EntityActivityQuery $query The entity and register.
+	 *
+	 * @return array<int,array<string,mixed>> The raw object arrays.
+	 */
+	private function contactmomentObjects(EntityActivityQuery $query): array {
 		$schemaId = $this->ticketService->getSchemaId();
 		if ($schemaId === '') {
 			return [];
 		}
 
-		$linkField = $this->contactmomentLinkField(entityType: $entityType);
+		$linkField = $this->contactmomentLinkField(entityType: $query->entityType);
 		if ($linkField === null) {
 			// No direct link field on contactmoment for this entity type
 			// (e.g. lead/contact); skip rather than 500.
 			return [];
 		}
 
-		$objects = $this->queryObjects(
-			registerId: $registerId,
-			schemaId: $schemaId,
-			filters: [
-				'ticketType' => TicketService::TYPE_CONTACTMOMENT,
-				$linkField => $entityId,
-			]
-		);
+		$filters = ['ticketType' => TicketService::TYPE_CONTACTMOMENT, $linkField => $query->entityId];
+		return $this->queryObjects(filters: $query->schemaFilters(schemaId: $schemaId, filters: $filters));
+	}//end contactmomentObjects()
 
-		$items = [];
-		foreach ($objects as $object) {
-			$items[] = [
-				'type' => 'interaction',
-				'id' => (string)($object['id'] ?? $object['uuid'] ?? ''),
-				'subject' => (string)($object['title'] ?? ''),
-				'channel' => (string)($object['channel'] ?? ''),
-				// The direction the contact ran in, so the panel rendering this
-				// feed can facet on it rather than digging through the free-form
-				// channelMetadata envelope it used to live in.
-				'direction' => (string)($object['direction'] ?? ''),
-				'agent' => (string)($object['assignee'] ?? ''),
-				'timestamp' => (string)($object['occurredAt'] ?? ''),
-				'summary' => (string)($object['description'] ?? ''),
-			];
-		}
-
-		return $items;
-	}//end collectContactmomenten()
+	/**
+	 * One contactmoment ticket as an activity item.
+	 *
+	 * @param array<string,mixed> $object The ticket.
+	 *
+	 * @return array<string,mixed> The activity item.
+	 */
+	private function contactmomentItem(array $object): array {
+		return [
+			'type' => 'interaction',
+			'id' => (string)($object['id'] ?? $object['uuid'] ?? ''),
+			'subject' => (string)($object['title'] ?? ''),
+			'channel' => (string)($object['channel'] ?? ''),
+			// The direction the contact ran in, so the panel rendering this
+			// feed can facet on it rather than digging through the free-form
+			// channelMetadata envelope it used to live in.
+			'direction' => (string)($object['direction'] ?? ''),
+			'agent' => (string)($object['assignee'] ?? ''),
+			'timestamp' => (string)($object['occurredAt'] ?? ''),
+			'summary' => (string)($object['description'] ?? ''),
+		];
+	}//end contactmomentItem()
 
 	/**
 	 * Map an entity type to the ticket field that holds the back-reference UUID
@@ -328,27 +350,38 @@ class EntityActivityService {
 	 * Fetch the entity's notes (stored on the OR built-in `notes` field on
 	 * the entity object) and expand them into activity items.
 	 *
-	 * @param string $registerId The configured register id.
-	 * @param string $entityType The validated entity type.
-	 * @param string $entityId The OR object UUID.
+	 * @param EntityActivityQuery $query The entity and register.
 	 *
 	 * @return array<int,array<string,mixed>> Normalised activity items.
 	 */
-	private function collectNotes(
-		string $registerId,
-		string $entityType,
-		string $entityId,
-	): array {
-		$schemaId = $this->entitySchemaId(entityType: $entityType);
+	private function collectNotes(EntityActivityQuery $query): array {
+		$items = [];
+		foreach ($this->notesOf(query: $query) as $note) {
+			if (is_array($note) === false) {
+				continue;
+			}
+
+			$items[] = $this->noteItem(note: $note);
+		}
+
+		return $items;
+	}//end collectNotes()
+
+	/**
+	 * The raw `notes` of an entity; none when its schema is unconfigured,
+	 * it cannot be loaded or it carries no notes list.
+	 *
+	 * @param EntityActivityQuery $query The entity and register.
+	 *
+	 * @return array<mixed> The raw notes.
+	 */
+	private function notesOf(EntityActivityQuery $query): array {
+		$schemaId = $this->entitySchemaId(entityType: $query->entityType);
 		if ($schemaId === '') {
 			return [];
 		}
 
-		$object = $this->findObject(
-			entityId: $entityId,
-			registerId: $registerId,
-			schemaId: $schemaId
-		);
+		$object = $this->findObject(entityId: $query->entityId, registerId: $query->registerId, schemaId: $schemaId);
 		if ($object === null) {
 			return [];
 		}
@@ -358,30 +391,45 @@ class EntityActivityService {
 			return [];
 		}
 
-		$items = [];
-		foreach ($rawNotes as $note) {
-			if (is_array($note) === false) {
-				continue;
-			}
+		return $rawNotes;
+	}//end notesOf()
 
-			$items[] = [
-				'type' => 'note',
-				'id' => (string)($note['id'] ?? ''),
-				'subject' => (string)($note['title'] ?? ''),
-				'agent' => (string)(
-					$note['author'] ?? $note['user'] ?? ''
-				),
-				'timestamp' => (string)(
-					$note['createdAt'] ?? $note['timestamp'] ?? ''
-				),
-				'summary' => (string)(
-					$note['message'] ?? $note['content'] ?? $note['text'] ?? ''
-				),
-			];
-		}//end foreach
+	/**
+	 * One note as an activity item.
+	 *
+	 * @param array<string,mixed> $note The note.
+	 *
+	 * @return array<string,mixed> The activity item.
+	 */
+	private function noteItem(array $note): array {
+		return [
+			'type' => 'note',
+			'id' => (string)($note['id'] ?? ''),
+			'subject' => (string)($note['title'] ?? ''),
+		] + $this->noteAuthorship(note: $note);
+	}//end noteItem()
 
-		return $items;
-	}//end collectNotes()
+	/**
+	 * Who wrote a note, when and what, read from the field names the note
+	 * sources use.
+	 *
+	 * @param array<string,mixed> $note The note.
+	 *
+	 * @return array{agent:string,timestamp:string,summary:string} The fields.
+	 */
+	private function noteAuthorship(array $note): array {
+		return [
+			'agent' => (string)(
+				$note['author'] ?? $note['user'] ?? ''
+			),
+			'timestamp' => (string)(
+				$note['createdAt'] ?? $note['timestamp'] ?? ''
+			),
+			'summary' => (string)(
+				$note['message'] ?? $note['content'] ?? $note['text'] ?? ''
+			),
+		];
+	}//end noteAuthorship()
 
 	/**
 	 * Resolve the schema id that stores an entity type's objects.
@@ -410,43 +458,43 @@ class EntityActivityService {
 	 * Query a single schema using equality filters, capped by
 	 * `PER_SCHEMA_CEILING`.
 	 *
-	 * @param string $registerId The register id.
-	 * @param string $schemaId The schema id.
-	 * @param array<string,mixed> $filters Equality filters.
+	 * @param array<string,mixed> $filters Equality filters, register and schema first.
 	 *
 	 * @return array<int,array<string,mixed>> The raw object arrays.
 	 */
-	private function queryObjects(
-		string $registerId,
-		string $schemaId,
-		array $filters,
-	): array {
+	private function queryObjects(array $filters): array {
 		try {
 			$objectService = $this->getObjectService();
 			$params = [
-				'filters' => array_merge(
-					[
-						'register' => $registerId,
-						'schema' => $schemaId,
-					],
-					$filters
-				),
+				'filters' => $filters,
 				'limit' => self::PER_SCHEMA_CEILING,
 			];
 
 			$results = $objectService->findAll($params);
 			return $this->normaliseResults(results: $results);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				'EntityActivityService: failed to query schema',
-				[
-					'exception' => $e->getMessage(),
-					'schemaId' => $schemaId,
-				]
-			);
+			$this->logQueryFailure(schemaId: (string)$filters['schema'], error: $e);
 			return [];
 		}//end try
 	}//end queryObjects()
+
+	/**
+	 * Log a schema query that failed.
+	 *
+	 * @param string    $schemaId The schema id.
+	 * @param Throwable $error    What the query threw.
+	 *
+	 * @return void
+	 */
+	private function logQueryFailure(string $schemaId, Throwable $error): void {
+		$this->logger->error(
+			'EntityActivityService: failed to query schema',
+			[
+				'exception' => $error->getMessage(),
+				'schemaId' => $schemaId,
+			]
+		);
+	}//end logQueryFailure()
 
 	/**
 	 * Find a single object by UUID, scoped to the given register/schema.
@@ -546,22 +594,17 @@ class EntityActivityService {
 	/**
 	 * Slice the sorted items list into the requested page envelope.
 	 *
-	 * @param array<int,array<string,mixed>> $items The sorted activity items.
-	 * @param int $page 1-based page number.
-	 * @param int $limit Page size.
+	 * @param array<int,array<string,mixed>> $items  The sorted activity items.
+	 * @param ActivityPage                   $window The page asked for.
 	 *
 	 * @return array{total:int,page:int,pages:int,results:array<int,array<string,mixed>>}
 	 */
-	private function paginate(array $items, int $page, int $limit): array {
+	private function paginate(array $items, ActivityPage $window): array {
 		$total = count($items);
+		$pages = $this->pageCount(total: $total, limit: $window->limit);
 
-		$pages = 1;
-		if ($total !== 0) {
-			$pages = (int)ceil($total / $limit);
-		}
-
-		$page = min($page, $pages);
-		$start = (($page - 1) * $limit);
+		$page = min($window->page, $pages);
+		$start = (($page - 1) * $window->limit);
 		if ($start < 0) {
 			$start = 0;
 		}
@@ -570,9 +613,26 @@ class EntityActivityService {
 			'total' => $total,
 			'page' => $page,
 			'pages' => $pages,
-			'results' => array_values(array_slice($items, $start, $limit)),
+			'results' => array_values(array_slice($items, $start, $window->limit)),
 		];
 	}//end paginate()
+
+	/**
+	 * The number of pages a feed fills: one for an empty feed.
+	 *
+	 * @param int $total The number of items.
+	 * @param int $limit Page size.
+	 *
+	 * @return int The page count.
+	 */
+	private function pageCount(int $total, int $limit): int {
+		$pages = 1;
+		if ($total !== 0) {
+			$pages = (int)ceil($total / $limit);
+		}
+
+		return $pages;
+	}//end pageCount()
 
 	/**
 	 * Build the response shape for an empty result set (no register

@@ -285,6 +285,46 @@ class WhatsAppAdapterTest extends TestCase {
 	}//end testSendRefusesPendingTemplate()
 
 	/**
+	 * An unknown template is refused before any provider is tried.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownTemplateIsNotFound(): void {
+		$this->consentService->method('canSendBusinessInitiated')->willReturn(true);
+		$this->providerClient->expects($this->never())->method('sendTemplate');
+		$this->providerRepo->expects($this->never())->method('listActive');
+
+		$result = $this->adapter->send(['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'], '', 'tpl-missing', []);
+
+		$this->assertSame(['status' => 'templateNotFound'], $result);
+	}//end testAnUnknownTemplateIsNotFound()
+
+	/**
+	 * A template without a language of its own is sent in the default
+	 * language (nl when none is configured), under its external id.
+	 *
+	 * @return void
+	 */
+	public function testATemplateWithoutALanguageIsSentInTheDefaultLanguage(): void {
+		$this->objectService->saveObject(['uuid' => 'tpl-2', 'status' => 'approved', 'externalId' => 'reminder', 'body' => 'Tot morgen, {{1}}']);
+		$this->consentService->method('canSendBusinessInitiated')->willReturn(true);
+		$this->budgetService->method('canSend')->willReturn(true);
+		$this->providerRepo->method('listActive')->willReturn([['uuid' => 'prov-1', 'kind' => 'whatsapp-cloud-api', 'vendor' => 'meta']]);
+		$sent = [];
+		$this->providerClient->method('sendTemplate')->willReturnCallback(
+			static function (array $channelProvider, string $phoneNumber, string $templateName, string $language, array $parameters) use (&$sent): array {
+				$sent = [$phoneNumber, $templateName, $language, $parameters];
+				return ['externalMessageId' => 'wamid.2', 'vendor' => 'meta'];
+			}
+		);
+
+		$result = $this->adapter->send(['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'], '', 'tpl-2', ['Jan']);
+
+		$this->assertSame('sent', $result['status']);
+		$this->assertSame(['+31611111111', 'reminder', 'nl', ['Jan']], $sent);
+	}//end testATemplateWithoutALanguageIsSentInTheDefaultLanguage()
+
+	/**
 	 * Free-form send within the 24h session window succeeds.
 	 *
 	 * @return void
@@ -639,6 +679,58 @@ class WhatsAppAdapterTest extends TestCase {
 
 		$this->assertFalse($result['unknownSender']);
 	}//end testAMessageFromAKnownContactIsNotLoggedAsUnknown()
+
+	/**
+	 * An opt-in keyword from a known contact records the opt-in, with the
+	 * body as evidence and the sender as the address.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInFromAKnownContactIsRecorded(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptOut');
+		$this->consentService->expects($this->once())
+			->method('recordOptIn')
+			->with(
+				'c-gert',
+				'whatsapp',
+				'chat-reply',
+				'Inbound WhatsApp body "START" matched opt-in keyword',
+				'consent',
+				'+31611119999'
+			);
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'START'), 'sha256=ok', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertFalse($result['unknownSender']);
+		$this->assertFalse($result['optOutRecorded']);
+		$this->assertArrayNotHasKey('contactMomentId', $result);
+	}//end testAnOptInFromAKnownContactIsRecorded()
+
+	/**
+	 * An opt-in keyword from an unknown number records no opt-in: it is
+	 * logged for a person like any other message from that number.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInFromAnUnknownNumberIsOnlyLogged(): void {
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptIn');
+		$this->contactmoments->expects($this->once())
+			->method('recordInboundFromUnknownNumber')
+			->willReturn('cm-7');
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31600000001', 'START'), 'sha256=ok', 'prov-1');
+
+		$this->assertTrue($result['unknownSender']);
+		$this->assertSame('cm-7', $result['contactMomentId']);
+	}//end testAnOptInFromAnUnknownNumberIsOnlyLogged()
 
 	/**
 	 * Seed the contact's inbound WhatsApp messages.

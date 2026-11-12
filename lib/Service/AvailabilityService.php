@@ -232,40 +232,56 @@ class AvailabilityService {
 	 */
 	public function getWorkingHours(string $resourceId, string $weekDay): ?array {
 		$resource = $this->loadResource(resourceId: $resourceId);
-		if ($resource === null) {
+		if ($resource === null || is_array($resource['workingHours'] ?? []) === false) {
 			return null;
 		}
 
-		$entries = ($resource['workingHours'] ?? []);
-		if (is_array($entries) === false) {
+		$entry = $this->workingDayEntry(entries: ($resource['workingHours'] ?? []), weekDay: $weekDay);
+		if ($entry === null) {
 			return null;
 		}
 
+		return $this->openingHours(entry: $entry);
+	}//end getWorkingHours()
+
+	/**
+	 * The first working-hours entry for a week day.
+	 *
+	 * @param array<int|string, mixed> $entries The resource's `workingHours`.
+	 * @param string                   $weekDay The week day asked, in any case.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function workingDayEntry(array $entries, string $weekDay): ?array {
 		$needle = strtolower(trim($weekDay));
 		foreach ($entries as $entry) {
-			if (is_array($entry) === false) {
-				continue;
+			if (is_array($entry) === true && strtolower((string)($entry['day'] ?? '')) === $needle) {
+				return $entry;
 			}
-
-			$day = strtolower((string)($entry['day'] ?? ''));
-			if ($day !== $needle) {
-				continue;
-			}
-
-			$open = (string)($entry['openTime'] ?? '');
-			$close = (string)($entry['closeTime'] ?? '');
-			if ($open === '' || $close === '') {
-				return null;
-			}
-
-			return [
-				'openTime' => $open,
-				'closeTime' => $close,
-			];
-		}//end foreach
+		}
 
 		return null;
-	}//end getWorkingHours()
+	}//end workingDayEntry()
+
+	/**
+	 * The opening and closing time of a working-hours entry.
+	 *
+	 * @param array<string, mixed> $entry A working-hours entry.
+	 *
+	 * @return array{openTime: string, closeTime: string}|null Null when either time is missing.
+	 */
+	private function openingHours(array $entry): ?array {
+		$open = (string)($entry['openTime'] ?? '');
+		$close = (string)($entry['closeTime'] ?? '');
+		if ($open === '' || $close === '') {
+			return null;
+		}
+
+		return [
+			'openTime' => $open,
+			'closeTime' => $close,
+		];
+	}//end openingHours()
 
 	/**
 	 * Merge blocked-time ranges for the given resource on the given date.
@@ -288,44 +304,98 @@ class AvailabilityService {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function getBlockedTimes(string $resourceId, string $date): array {
-		$blocks = [];
-
 		$resource = $this->loadResource(resourceId: $resourceId);
 		if ($resource !== null && $this->isOnVacation(resource: $resource, date: $date) === true) {
 			// Full-day vacation: block the entire 24h window.
-			$blocks[] = ['startMin' => 0, 'endMin' => (24 * 60)];
-			return $blocks;
+			return [['startMin' => 0, 'endMin' => (24 * 60)]];
 		}
 
+		return array_merge(
+			$this->bookingBlocks(resourceId: $resourceId, date: $date),
+			$this->calendarBlockRanges(resourceId: $resourceId, date: $date)
+		);
+	}//end getBlockedTimes()
+
+	/**
+	 * The blocks the resource's bookings on a date occupy, buffers included.
+	 *
+	 * @param string $resourceId Resource UUID/slug.
+	 * @param string $date       ISO date `YYYY-MM-DD`.
+	 *
+	 * @return array<int, array{startMin: int, endMin: int}>
+	 */
+	private function bookingBlocks(string $resourceId, string $date): array {
+		$blocks = [];
 		foreach ($this->loadOverlappingBookings(resourceId: $resourceId, date: $date) as $booking) {
-			$startAt = (string)($booking['startAt'] ?? '');
-			$endAt = (string)($booking['endAt'] ?? '');
-			if ($startAt === '' || $endAt === '') {
-				continue;
+			$block = $this->bookingBlock(booking: $booking, date: $date);
+			if ($block !== null) {
+				$blocks[] = $block;
 			}
-
-			$buffers = $this->buffersFor(serviceId: (string)($booking['serviceId'] ?? ''));
-			$startMin = $this->clampToDay(value: ($this->minutesOfDay(iso: $startAt, date: $date) - $buffers['before']));
-			$endMin = $this->clampToDay(value: ($this->minutesOfDay(iso: $endAt, date: $date) + $buffers['after']));
-			if ($endMin <= $startMin) {
-				continue;
-			}
-
-			$blocks[] = ['startMin' => $startMin, 'endMin' => $endMin];
-		}
-
-		foreach ($this->fetchCalendarBlocks(resourceId: $resourceId, date: $date) as $cal) {
-			$startMin = $this->minutesFromHHMM(time: $cal['startTime']);
-			$endMin = $this->minutesFromHHMM(time: $cal['endTime']);
-			if ($endMin <= $startMin) {
-				continue;
-			}
-
-			$blocks[] = ['startMin' => $startMin, 'endMin' => $endMin];
 		}
 
 		return $blocks;
-	}//end getBlockedTimes()
+	}//end bookingBlocks()
+
+	/**
+	 * The block one booking occupies on a date, widened by its Service's buffers.
+	 *
+	 * @param array<string, mixed> $booking The booking.
+	 * @param string               $date    ISO date `YYYY-MM-DD`.
+	 *
+	 * @return array{startMin: int, endMin: int}|null Null when the booking has no window or the block is empty.
+	 */
+	private function bookingBlock(array $booking, string $date): ?array {
+		$startAt = (string)($booking['startAt'] ?? '');
+		$endAt = (string)($booking['endAt'] ?? '');
+		if ($startAt === '' || $endAt === '') {
+			return null;
+		}
+
+		$buffers = $this->buffersFor(serviceId: (string)($booking['serviceId'] ?? ''));
+		$startMin = $this->clampToDay(value: ($this->minutesOfDay(iso: $startAt, date: $date) - $buffers['before']));
+		$endMin = $this->clampToDay(value: ($this->minutesOfDay(iso: $endAt, date: $date) + $buffers['after']));
+
+		return $this->blockOrNull(startMin: $startMin, endMin: $endMin);
+	}//end bookingBlock()
+
+	/**
+	 * The blocks the external calendar reports for a resource on a date.
+	 *
+	 * @param string $resourceId Resource UUID/slug.
+	 * @param string $date       ISO date `YYYY-MM-DD`.
+	 *
+	 * @return array<int, array{startMin: int, endMin: int}>
+	 */
+	private function calendarBlockRanges(string $resourceId, string $date): array {
+		$blocks = [];
+		foreach ($this->fetchCalendarBlocks(resourceId: $resourceId, date: $date) as $cal) {
+			$block = $this->blockOrNull(
+				startMin: $this->minutesFromHHMM(time: $cal['startTime']),
+				endMin: $this->minutesFromHHMM(time: $cal['endTime'])
+			);
+			if ($block !== null) {
+				$blocks[] = $block;
+			}
+		}
+
+		return $blocks;
+	}//end calendarBlockRanges()
+
+	/**
+	 * A block, or null when it ends at or before its start.
+	 *
+	 * @param int $startMin Start, minutes from midnight.
+	 * @param int $endMin   End, minutes from midnight.
+	 *
+	 * @return array{startMin: int, endMin: int}|null
+	 */
+	private function blockOrNull(int $startMin, int $endMin): ?array {
+		if ($endMin <= $startMin) {
+			return null;
+		}
+
+		return ['startMin' => $startMin, 'endMin' => $endMin];
+	}//end blockOrNull()
 
 	/**
 	 * Split an `HH:MM` time range into a sorted list of slot start offsets.
@@ -650,26 +720,31 @@ class AvailabilityService {
 	 * @param string $date ISO date `YYYY-MM-DD`.
 	 *
 	 * @return array<int, array<string, mixed>>
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential fetch + per-booking overlap guards; extraction adds no clarity.
 	 */
 	private function loadOverlappingBookings(string $resourceId, string $date): array {
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::BOOKING_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return [];
+		$matches = [];
+		foreach ($this->findBookingRows(resourceId: $resourceId, date: $date) as $row) {
+			$booking = $this->toArray(object: $row);
+			if ($booking !== null && $this->overlapsDay(booking: $booking, date: $date) === true) {
+				$matches[] = $booking;
+			}
 		}
 
+		return $matches;
+	}//end loadOverlappingBookings()
+
+	/**
+	 * The stored bookings of a resource; none when unconfigured or when the
+	 * read fails.
+	 *
+	 * @param string $resourceId Resource UUID/slug.
+	 * @param string $date       ISO date `YYYY-MM-DD`, for the log line.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	private function findBookingRows(string $resourceId, string $date): array {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'resourceId' => $resourceId,
-					],
-				]
-			);
+			return $this->findScoped(schemaKey: self::BOOKING_SCHEMA_KEY, filters: ['resourceId' => $resourceId]);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: booking lookup failed',
@@ -677,32 +752,66 @@ class AvailabilityService {
 			);
 			return [];
 		}
+	}//end findBookingRows()
 
-		$dayStart = ($date . 'T00:00:00');
-		$dayEnd = ($date . 'T23:59:59');
-		$matches = [];
-		foreach (($rows ?? []) as $row) {
-			$booking = $this->toArray(object: $row);
-			if ($booking === null) {
-				continue;
-			}
-
-			$startAt = (string)($booking['startAt'] ?? '');
-			$endAt = (string)($booking['endAt'] ?? '');
-			if ($startAt === '' || $endAt === '') {
-				continue;
-			}
-
-			// Overlap with the local day window.
-			if ($endAt < $dayStart || $startAt > $dayEnd) {
-				continue;
-			}
-
-			$matches[] = $booking;
+	/**
+	 * Whether a booking has a window that overlaps the local day.
+	 *
+	 * @param array<string, mixed> $booking The booking.
+	 * @param string               $date    ISO date `YYYY-MM-DD`.
+	 *
+	 * @return bool
+	 */
+	private function overlapsDay(array $booking, string $date): bool {
+		$startAt = (string)($booking['startAt'] ?? '');
+		$endAt = (string)($booking['endAt'] ?? '');
+		if ($startAt === '' || $endAt === '') {
+			return false;
 		}
 
-		return $matches;
-	}//end loadOverlappingBookings()
+		// Overlap with the local day window.
+		$dayStart = ($date . 'T00:00:00');
+		$dayEnd = ($date . 'T23:59:59');
+
+		return ($endAt < $dayStart || $startAt > $dayEnd) === false;
+	}//end overlapsDay()
+
+	/**
+	 * Filters scoped to the configured register and a schema.
+	 *
+	 * @param string                $schemaKey The schema app-config key.
+	 * @param array<string, string> $filters   The record filters.
+	 *
+	 * @return array<string, string>|null The register, schema and filters, or
+	 *                                    null when either id is unconfigured.
+	 */
+	private function scopedFilters(string $schemaKey, array $filters): ?array {
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: $schemaKey);
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		return array_merge(['register' => $register, 'schema' => $schema], $filters);
+	}//end scopedFilters()
+
+	/**
+	 * The stored objects of a pipelinq schema matching equality filters;
+	 * none when the register or schema is unconfigured.
+	 *
+	 * @param string                $schemaKey The schema app-config key.
+	 * @param array<string, string> $filters   The record filters.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	private function findScoped(string $schemaKey, array $filters): array {
+		$scoped = $this->scopedFilters(schemaKey: $schemaKey, filters: $filters);
+		if ($scoped === null) {
+			return [];
+		}
+
+		return $this->getObjectService()->findAll(config: ['filters' => $scoped]);
+	}//end findScoped()
 
 	/**
 	 * Resolve buffer minutes for a Service id.
@@ -759,23 +868,35 @@ class AvailabilityService {
 		}
 
 		foreach ($vacations as $vac) {
-			if (is_array($vac) === false) {
-				continue;
-			}
-
-			$start = (string)($vac['startDate'] ?? '');
-			$end = (string)($vac['endDate'] ?? '');
-			if ($start === '' || $end === '') {
-				continue;
-			}
-
-			if ($date >= $start && $date <= $end) {
+			if ($this->vacationCovers(vacation: $vac, date: $date) === true) {
 				return true;
 			}
 		}
 
 		return false;
 	}//end isOnVacation()
+
+	/**
+	 * Whether one vacation range contains the date, both ends inclusive.
+	 *
+	 * @param mixed  $vacation A vacation entry.
+	 * @param string $date     ISO date `YYYY-MM-DD`.
+	 *
+	 * @return bool
+	 */
+	private function vacationCovers(mixed $vacation, string $date): bool {
+		if (is_array($vacation) === false) {
+			return false;
+		}
+
+		$start = (string)($vacation['startDate'] ?? '');
+		$end = (string)($vacation['endDate'] ?? '');
+		if ($start === '' || $end === '') {
+			return false;
+		}
+
+		return $date >= $start && $date <= $end;
+	}//end vacationCovers()
 
 	/**
 	 * Read an existing AvailabilityCache row for the given resource/date.
@@ -786,32 +907,7 @@ class AvailabilityService {
 	 * @return array<string, mixed>|null
 	 */
 	private function loadCacheEntry(string $resourceId, string $date): ?array {
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::AVAILABILITY_CACHE_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'resourceId' => $resourceId,
-						'date' => $date,
-					],
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: availability cache read failed',
-				['resource' => $resourceId, 'date' => $date]
-			);
-			return null;
-		}
-
-		foreach (($rows ?? []) as $row) {
+		foreach ($this->findCacheRows(resourceId: $resourceId, date: $date) as $row) {
 			$entry = $this->toArray(object: $row);
 			if ($entry !== null) {
 				return $entry;
@@ -820,6 +916,30 @@ class AvailabilityService {
 
 		return null;
 	}//end loadCacheEntry()
+
+	/**
+	 * The stored AvailabilityCache rows of a resource and date; none when
+	 * unconfigured or when the read fails.
+	 *
+	 * @param string $resourceId Resource UUID/slug.
+	 * @param string $date       ISO date `YYYY-MM-DD`.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	private function findCacheRows(string $resourceId, string $date): array {
+		try {
+			return $this->findScoped(
+				schemaKey: self::AVAILABILITY_CACHE_SCHEMA_KEY,
+				filters: ['resourceId' => $resourceId, 'date' => $date]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: availability cache read failed',
+				['resource' => $resourceId, 'date' => $date]
+			);
+			return [];
+		}
+	}//end findCacheRows()
 
 	/**
 	 * Persist (create or update) an AvailabilityCache row.
@@ -861,31 +981,8 @@ class AvailabilityService {
 	 * @return array<int, array{startTime: string, endTime: string}>
 	 */
 	private function fetchCalendarBlocks(string $resourceId, string $date): array {
-		if ($this->calendarProvider === null) {
-			return [];
-		}
-
-		if (method_exists($this->calendarProvider, 'getBlockedTimes') === false) {
-			return [];
-		}
-
-		try {
-			// @phpstan-ignore-next-line dynamic provider seam
-			$blocks = $this->calendarProvider->getBlockedTimes($resourceId, $date);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: calendar provider failed',
-				['resource' => $resourceId, 'date' => $date]
-			);
-			return [];
-		}
-
-		if (is_array($blocks) === false) {
-			return [];
-		}
-
 		$normalised = [];
-		foreach ($blocks as $block) {
+		foreach ($this->providerBlocks(resourceId: $resourceId, date: $date) as $block) {
 			if (is_array($block) === false) {
 				continue;
 			}
@@ -898,6 +995,49 @@ class AvailabilityService {
 
 		return $normalised;
 	}//end fetchCalendarBlocks()
+
+	/**
+	 * The raw blocks the calendar provider reports; none without a provider,
+	 * on a failure or on an answer that is not a list.
+	 *
+	 * @param string $resourceId Resource UUID/slug.
+	 * @param string $date       ISO date `YYYY-MM-DD`.
+	 *
+	 * @return array<int|string, mixed>
+	 */
+	private function providerBlocks(string $resourceId, string $date): array {
+		if ($this->calendarProvider === null || method_exists($this->calendarProvider, 'getBlockedTimes') === false) {
+			return [];
+		}
+
+		$blocks = $this->askCalendarProvider(resourceId: $resourceId, date: $date);
+		if (is_array($blocks) === false) {
+			return [];
+		}
+
+		return $blocks;
+	}//end providerBlocks()
+
+	/**
+	 * Ask the calendar provider for its blocked times; null when it fails.
+	 *
+	 * @param string $resourceId Resource UUID/slug.
+	 * @param string $date       ISO date `YYYY-MM-DD`.
+	 *
+	 * @return mixed The provider's answer.
+	 */
+	private function askCalendarProvider(string $resourceId, string $date): mixed {
+		try {
+			// @phpstan-ignore-next-line dynamic provider seam
+			return $this->calendarProvider->getBlockedTimes($resourceId, $date);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: calendar provider failed',
+				['resource' => $resourceId, 'date' => $date]
+			);
+			return null;
+		}
+	}//end askCalendarProvider()
 
 	/**
 	 * True when [startMin, endMin) overlaps any block.
@@ -938,12 +1078,24 @@ class AvailabilityService {
 
 		$hours = (int)$match[1];
 		$minutes = (int)$match[2];
-		if ($hours < 0 || $hours > 23 || $minutes < 0 || $minutes > 59) {
+		if ($this->isClockTime(hours: $hours, minutes: $minutes) === false) {
 			return 0;
 		}
 
 		return (($hours * 60) + $minutes);
 	}//end minutesFromHHMM()
+
+	/**
+	 * Whether an hour and minute form a time on a 24-hour clock.
+	 *
+	 * @param int $hours   The hour.
+	 * @param int $minutes The minute.
+	 *
+	 * @return bool
+	 */
+	private function isClockTime(int $hours, int $minutes): bool {
+		return ($hours < 0 || $hours > 23 || $minutes < 0 || $minutes > 59) === false;
+	}//end isClockTime()
 
 	/**
 	 * Convert minutes-from-midnight back to `HH:MM` (zero-padded).
@@ -991,27 +1143,39 @@ class AvailabilityService {
 	 */
 	private function minutesOfDay(string $iso, string $date): int {
 		$timestamp = strtotime($iso);
-		if ($timestamp === false) {
+		$day = $this->dayWindow(date: $date);
+		if ($timestamp === false || $day === null) {
 			return 0;
 		}
 
-		$dayStart = strtotime($date . 'T00:00:00');
-		$dayEnd = strtotime($date . 'T23:59:59');
-		if ($dayStart === false || $dayEnd === false) {
+		if ($timestamp <= $day[0]) {
 			return 0;
 		}
 
-		if ($timestamp <= $dayStart) {
-			return 0;
-		}
-
-		if ($timestamp >= $dayEnd) {
+		if ($timestamp >= $day[1]) {
 			return (24 * 60);
 		}
 
-		$minutesFromDayStart = intdiv(($timestamp - $dayStart), 60);
+		$minutesFromDayStart = intdiv(($timestamp - $day[0]), 60);
 		return $this->clampToDay(value: (int)$minutesFromDayStart);
 	}//end minutesOfDay()
+
+	/**
+	 * The first and last second of a local date.
+	 *
+	 * @param string $date Local date `YYYY-MM-DD`.
+	 *
+	 * @return array{0: int, 1: int}|null Null when the date does not parse.
+	 */
+	private function dayWindow(string $date): ?array {
+		$dayStart = strtotime($date . 'T00:00:00');
+		$dayEnd = strtotime($date . 'T23:59:59');
+		if ($dayStart === false || $dayEnd === false) {
+			return null;
+		}
+
+		return [$dayStart, $dayEnd];
+	}//end dayWindow()
 
 	/**
 	 * Lower-case English weekday for a date.

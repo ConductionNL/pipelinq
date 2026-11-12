@@ -757,37 +757,35 @@ class BrpController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$reportRaw = $this->appConfig->getValueString(Application::APP_ID, 'brp.monitor_report', '');
-		$certRaw = $this->appConfig->getValueString(Application::APP_ID, 'brp.cert_health', '');
-
-		$report = null;
-		if ($reportRaw !== '') {
-			$report = json_decode($reportRaw, true);
-		}
-
-		$cert = null;
-		if ($certRaw !== '') {
-			$cert = json_decode($certRaw, true);
-		}
-
-		$reportPayload = null;
-		if (is_array($report) === true) {
-			$reportPayload = $report;
-		}
-
-		$certPayload = null;
-		if (is_array($cert) === true) {
-			$certPayload = $cert;
-		}
-
 		return new JSONResponse(
 			[
-				'report' => $reportPayload,
-				'cert' => $certPayload,
+				'report' => $this->storedJsonObject(key: 'brp.monitor_report'),
+				'cert' => $this->storedJsonObject(key: 'brp.cert_health'),
 			],
 			Http::STATUS_OK
 		);
 	}//end monitor()
+
+	/**
+	 * A JSON object kept in app config; null when unset or not an object.
+	 *
+	 * @param string $key The app-config key.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function storedJsonObject(string $key): ?array {
+		$raw = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		if ($raw === '') {
+			return null;
+		}
+
+		$decoded = json_decode($raw, true);
+		if (is_array($decoded) === false) {
+			return null;
+		}
+
+		return $decoded;
+	}//end storedJsonObject()
 
 	/**
 	 * Determine the actor's role for BRP lookups.
@@ -804,22 +802,45 @@ class BrpController extends Controller {
 			return 'beheerder';
 		}
 
-		$configured = $this->appConfig->getValueString(
-			Application::APP_ID,
-			'brp.allowed_groups',
-			''
-		);
-		$allowed = self::DEFAULT_ALLOWED_GROUPS;
-		if ($configured !== '') {
-			$allowed = array_filter(array_map('trim', explode(',', $configured)));
-		}
+		$allowed = $this->allowedLookupGroups();
 
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return null;
 		}
 
-		foreach ($allowed as $groupId) {
+		return $this->firstMemberGroup(user: $user, groupIds: $allowed);
+	}//end resolveActorRol()
+
+	/**
+	 * The groups whose members may use the BRP: `brp.allowed_groups` when it
+	 * is set, otherwise the default groups.
+	 *
+	 * @return array<int|string, string>
+	 */
+	private function allowedLookupGroups(): array {
+		$configured = $this->appConfig->getValueString(
+			Application::APP_ID,
+			'brp.allowed_groups',
+			''
+		);
+		if ($configured === '') {
+			return self::DEFAULT_ALLOWED_GROUPS;
+		}
+
+		return array_filter(array_map('trim', explode(',', $configured)));
+	}//end allowedLookupGroups()
+
+	/**
+	 * The first of the groups that exists and has the user as a member.
+	 *
+	 * @param \OCP\IUser               $user     The session user.
+	 * @param array<int|string, string> $groupIds The allowed groups, in order.
+	 *
+	 * @return string|null The group id, or null when the user is in none.
+	 */
+	private function firstMemberGroup(\OCP\IUser $user, array $groupIds): ?string {
+		foreach ($groupIds as $groupId) {
 			$group = $this->groupManager->get($groupId);
 			if ($group !== null && $group->inGroup($user) === true) {
 				return $groupId;
@@ -827,7 +848,7 @@ class BrpController extends Controller {
 		}
 
 		return null;
-	}//end resolveActorRol()
+	}//end firstMemberGroup()
 
 	/**
 	 * Persist a brpLookupVerzoek record.
@@ -1017,42 +1038,78 @@ class BrpController extends Controller {
 	 * @return array<string,mixed>|null
 	 */
 	private function findLatestPersonForContact(string $contactId): ?array {
+		$filters = $this->linkedPersonFilters(contactId: $contactId);
+		if ($filters === null) {
+			return null;
+		}
+
+		try {
+			return $this->latestFetched(results: $this->getObjectService()->findAll(config: ['filters' => $filters]));
+		} catch (Throwable $e) {
+			$this->logger->error('findLatestPersoonForContact failed', ['error' => $e->getMessage()]);
+			return null;
+		}//end try
+	}//end findLatestPersoonForContact()
+
+	/**
+	 * The filters for the BrpPersoon objects linked to a contact; null when
+	 * the register or schema is unconfigured.
+	 *
+	 * @param string $contactId Contact UUID.
+	 *
+	 * @return array<string, string>|null
+	 */
+	private function linkedPersonFilters(string $contactId): ?array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}
 
-		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'gekoppeldContact' => $contactId,
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
-			$latest = null;
-			foreach (($results ?? []) as $object) {
-				$arr = [];
-				if (is_array($object) === true) {
-					$arr = $object;
-				} elseif (method_exists($object, 'jsonSerialize') === true) {
-					$arr = (array)$object->jsonSerialize();
-				}
+		return [
+			'gekoppeldContact' => $contactId,
+			'register' => $register,
+			'schema' => $schema,
+		];
+	}//end linkedPersonFilters()
 
-				if ($latest === null || (string)($arr['fetchedOn'] ?? '') > (string)($latest['fetchedOn'] ?? '')) {
-					$latest = $arr;
-				}
+	/**
+	 * The person with the latest `fetchedOn`; the first one wins a tie.
+	 *
+	 * @param mixed $results The stored BrpPersoon objects.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function latestFetched(mixed $results): ?array {
+		$latest = null;
+		foreach (($results ?? []) as $object) {
+			$arr = $this->personRow(object: $object);
+			if ($latest === null || (string)($arr['fetchedOn'] ?? '') > (string)($latest['fetchedOn'] ?? '')) {
+				$latest = $arr;
 			}
+		}
 
-			return $latest;
-		} catch (Throwable $e) {
-			$this->logger->error('findLatestPersoonForContact failed', ['error' => $e->getMessage()]);
-			return null;
-		}//end try
-	}//end findLatestPersoonForContact()
+		return $latest;
+	}//end latestFetched()
+
+	/**
+	 * A stored person as an array: as is, serialised, or empty.
+	 *
+	 * @param mixed $object A stored BrpPersoon.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function personRow(mixed $object): array {
+		if (is_array($object) === true) {
+			return $object;
+		}
+
+		if (method_exists($object, 'jsonSerialize') === true) {
+			return (array)$object->jsonSerialize();
+		}
+
+		return [];
+	}//end personRow()
 
 	/**
 	 * Lazy OR ObjectService.

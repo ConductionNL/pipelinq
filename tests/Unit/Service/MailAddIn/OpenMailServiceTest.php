@@ -52,6 +52,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Pipelinq\Service\TicketService
  * @uses   \OCA\Pipelinq\Mcp\McpAnswer
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  *
  * @spec openspec/changes/contact-moments-mail-add-in/specs/mail-add-in/spec.md
  */

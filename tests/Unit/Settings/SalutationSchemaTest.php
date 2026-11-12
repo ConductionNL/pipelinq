@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
  * fill it for someone who never stated one.
  *
  * @covers \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  */
 class SalutationSchemaTest extends TestCase {
 	/**

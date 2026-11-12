@@ -1,3 +1,0 @@
-- Every app: `GET /api/metrics` (Prometheus text, admin auth) + `GET /api/health` (JSON, public).
-- Metric names: `{app}_` prefix. MUST include `{app}_health_status` and `{app}_info`.
-- Health check MUST verify OpenRegister connectivity (for apps that depend on it).
