@@ -189,7 +189,7 @@
 
 <script>
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
+import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import CalendarRemove from 'vue-material-design-icons/CalendarRemove.vue'
@@ -202,9 +202,9 @@ import MapMarkerOutline from 'vue-material-design-icons/MapMarkerOutline.vue'
 import ProgressCheck from 'vue-material-design-icons/ProgressCheck.vue'
 import { currencyOr } from '../../services/reportingCurrency.js'
 import { createUserDisplayNameFormatter } from '../../services/userDisplayName.js'
-import { useObjectStore } from '../../store/modules/object.js'
 import { slotLabel, timeRange } from '../../utils/bookingTime.js'
 import { BOOKING_STATUS_LABELS, bookingCurrency, bookingDateTime } from './bookingFormat.js'
+import bookingSectionMixin from './bookingSectionMixin.js'
 
 const userName = createUserDisplayNameFormatter()
 
@@ -244,17 +244,9 @@ export default {
 		NcLoadingIcon,
 	},
 
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [bookingSectionMixin],
 
 	props: {
-		/** The booking id (token-resolved from `@objectId` by CnBodySections). */
-		bookingId: {
-			type: String,
-			default: '',
-		},
-
 		/**
 		 * Which part to render: `context`, `assignments`, `timeline`, or
 		 * `all` (each under its own heading).
@@ -268,9 +260,6 @@ export default {
 
 	data() {
 		return {
-			booking: {},
-			loading: false,
-			resourceLookup: {},
 			service: null,
 			customer: null,
 			customerIsContact: false,
@@ -281,21 +270,6 @@ export default {
 	},
 
 	computed: {
-		objectStore() {
-			return useObjectStore()
-		},
-
-		/** The resolved booking id — prop wins, else the injected section context. */
-		resolvedId() {
-			if (this.bookingId) {
-				return this.bookingId
-			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
-			return (bag && bag.objectId) || ''
-		},
-
 		serviceName() {
 			return this.service?.name || this.booking.serviceId || '-'
 		},
@@ -490,33 +464,6 @@ export default {
 		},
 	},
 
-	watch: {
-		resolvedId: {
-			immediate: true,
-			handler() {
-				this.load()
-			},
-		},
-	},
-
-	/**
-	 * Re-read the booking on `cn:page:refresh`, which a header action sends.
-	 *
-	 * @spec openspec/specs/appointment-booking/spec.md
-	 */
-	mounted() {
-		// A header action changed the booking; re-read it without the spinner.
-		this.onPageRefresh = (payload) => {
-			const done = this.load({ silent: true })
-			payload?.waitUntil?.(done)
-		}
-		subscribe('cn:page:refresh', this.onPageRefresh)
-	},
-
-	beforeUnmount() {
-		unsubscribe('cn:page:refresh', this.onPageRefresh)
-	},
-
 	methods: {
 		/**
 		 * Whether a block belongs to the requested part.
@@ -593,37 +540,14 @@ export default {
 		},
 
 		/**
-		 * Load the booking, then resolve the linked Service / Customer /
+		 * Once the booking is in, resolve the linked Service / Customer /
 		 * Resource names.
 		 *
-		 * @param {{silent?: boolean}} [opts] `silent` skips the spinner (a
-		 *  refresh, not a first load).
-		 *
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
-		async load(opts = {}) {
-			if (!this.resolvedId) {
-				return
-			}
-			const silent = opts.silent === true
-			if (!silent) {
-				this.loading = true
-			}
-			try {
-				this.booking =
-					(await this.objectStore.fetchObject(
-						'appointmentBooking',
-						this.resolvedId,
-					)) || {}
-				await this.loadContext()
-			} catch (err) {
-				showError(
-					err?.response?.data?.error
-						|| t('pipelinq', 'Could not load booking.'),
-				)
-			} finally {
-				this.loading = false
-			}
+		loadLinked() {
+			return this.loadContext()
 		},
 
 		/**
