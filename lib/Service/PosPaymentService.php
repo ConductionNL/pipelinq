@@ -43,6 +43,7 @@ use OCA\Pipelinq\Service\Payment\MollieAdapter;
 use OCA\Pipelinq\Service\Payment\PaymentProviderInterface;
 use OCA\Pipelinq\Service\Payment\SettlementUpdate;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
+use OCA\Pipelinq\Service\Payment\PaymentWebhook;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -698,32 +699,65 @@ class PosPaymentService {
 	 */
 	public function handleWebhook(string $providerName, string $rawPayload, string $signature): array {
 		if (in_array(needle: $providerName, haystack: self::PROVIDERS, strict: true) === false) {
-			return [
-				'status' => 'invalid',
-				'error' => 'Unknown provider',
-			];
+			return $this->invalidWebhook(error: 'Unknown provider');
 		}
 
 		try {
 			$provider = $this->getPaymentProvider(name: $providerName);
 		} catch (Throwable $e) {
-			return [
-				'status' => 'invalid',
-				'error' => 'Provider not configured',
-			];
+			return $this->invalidWebhook(error: 'Provider not configured');
 		}
 
-		if ($provider->validateWebhook(rawPayload: $rawPayload, signature: $signature) === false) {
+		return $this->verifiedWebhook(
+			provider: $provider,
+			webhook: new PaymentWebhook(providerName: $providerName, rawPayload: $rawPayload, signature: $signature)
+		);
+	}//end handleWebhook()
+
+	/**
+	 * The answer to a webhook delivery that is refused.
+	 *
+	 * @param string $error Why it is refused.
+	 *
+	 * @return array{status: string, error: string}
+	 */
+	private function invalidWebhook(string $error): array {
+		return [
+			'status' => 'invalid',
+			'error' => $error,
+		];
+	}//end invalidWebhook()
+
+	/**
+	 * Verify a delivery's signature with its provider, then settle it; a
+	 * signature that does not verify is logged and refused before parsing.
+	 *
+	 * @param PaymentProviderInterface $provider The provider adapter.
+	 * @param PaymentWebhook           $webhook  The delivery.
+	 *
+	 * @return array<string, mixed> The webhook answer.
+	 */
+	private function verifiedWebhook(PaymentProviderInterface $provider, PaymentWebhook $webhook): array {
+		if ($provider->validateWebhook(rawPayload: $webhook->rawPayload, signature: $webhook->signature) === false) {
 			$this->logger->warning(
 				'Pipelinq POS payment: invalid webhook signature',
-				['provider' => $providerName]
+				['provider' => $webhook->providerName]
 			);
-			return [
-				'status' => 'invalid',
-				'error' => 'Signature mismatch',
-			];
+			return $this->invalidWebhook(error: 'Signature mismatch');
 		}
 
+		$envelope = $provider->parseWebhook(payload: $this->decodeWebhookPayload(rawPayload: $webhook->rawPayload));
+		return $this->settleWebhookEnvelope(webhook: $webhook, envelope: $envelope);
+	}//end verifiedWebhook()
+
+	/**
+	 * Decode a webhook body; an empty or non-object body is an empty payload.
+	 *
+	 * @param string $rawPayload The raw request body.
+	 *
+	 * @return array<mixed> The decoded payload.
+	 */
+	private function decodeWebhookPayload(string $rawPayload): array {
 		$decoded = [];
 		if ($rawPayload !== '') {
 			$maybe = json_decode($rawPayload, true);
@@ -732,27 +766,48 @@ class PosPaymentService {
 			}
 		}
 
-		$envelope = $provider->parseWebhook(payload: $decoded);
-		$sessionId = $envelope['sessionId'];
-		$eventId = $envelope['eventId'];
-		$status = $envelope['status'];
+		return $decoded;
+	}//end decodeWebhookPayload()
 
+	/**
+	 * Hand a parsed webhook to the settlement; a payload without a session
+	 * is ignored.
+	 *
+	 * @param PaymentWebhook                                         $webhook  The delivery.
+	 * @param array{sessionId: string, eventId: string, status: string} $envelope The provider's parsed envelope.
+	 *
+	 * @return array<string, mixed> The webhook answer.
+	 */
+	private function settleWebhookEnvelope(PaymentWebhook $webhook, array $envelope): array {
+		$sessionId = $envelope['sessionId'];
 		if ($sessionId === '') {
-			// Unknown payload — log + 200 so providers don't retry forever.
-			$this->logger->info(
-				'Pipelinq POS payment: webhook with no sessionId',
-				['provider' => $providerName]
-			);
-			return ['status' => 'ignored'];
+			return $this->ignoreSessionlessWebhook(providerName: $webhook->providerName);
 		}
 
 		return $this->handleSettlement(
-			providerName: $providerName,
+			providerName: $webhook->providerName,
 			sessionId: $sessionId,
-			paymentStatus: $status,
-			eventId: $eventId
+			paymentStatus: $envelope['status'],
+			eventId: $envelope['eventId']
 		);
-	}//end handleWebhook()
+	}//end settleWebhookEnvelope()
+
+	/**
+	 * Log and ignore a webhook that names no session, so the provider does
+	 * not retry an unknown payload forever.
+	 *
+	 * @param string $providerName The provider.
+	 *
+	 * @return array{status: string} The `ignored` answer.
+	 */
+	private function ignoreSessionlessWebhook(string $providerName): array {
+		// Unknown payload — log + 200 so providers don't retry forever.
+		$this->logger->info(
+			'Pipelinq POS payment: webhook with no sessionId',
+			['provider' => $providerName]
+		);
+		return ['status' => 'ignored'];
+	}//end ignoreSessionlessWebhook()
 
 	/**
 	 * Handle a validated settlement update.
