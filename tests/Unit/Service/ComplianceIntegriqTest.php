@@ -145,6 +145,54 @@ class ComplianceIntegriqTest extends TestCase {
 		self::assertCount(3, $this->integriq->decisionEvents);
 	}//end testASegmentOf1200ContactsMakesThreeEvents()
 
+	public function testASegmentCheckViaIntegriqReportsEveryBucketAndOnlyRealLinks(): void {
+		$this->integriq->seed(['address' => 'jan@example.nl', 'state' => 'opted-in', 'scope' => 'channel', 'channel' => 'email', 'lawfulBasis' => 'consent']);
+		$this->integriq->seed(['address' => 'piet@example.nl', 'state' => 'opted-in', 'scope' => 'channel', 'channel' => 'email', 'lawfulBasis' => 'consent']);
+		$this->store->put('contact', ['uuid' => 'c-3', 'email' => 'kees@example.nl']);
+		$this->integriq->seed(['address' => 'kees@example.nl', 'state' => 'opted-in', 'scope' => 'channel', 'channel' => 'email', 'lawfulBasis' => 'consent']);
+		$this->store->put('consentRecord', ['contactId' => 'c-3', 'channel' => 'email', 'withdrawnAt' => '2026-01-01T00:00:00Z', 'withdrawnReason' => 'bounce-hard']);
+		$this->dunning['c-2'] = 'overdue';
+		$this->segments->method('getMembersForBlast')->willReturn([
+			['contactId' => 'c-1', 'email' => 'jan@example.nl'],
+			['contactId' => 'c-2', 'email' => 'piet@example.nl'],
+			['contactId' => 'c-3', 'email' => 'kees@example.nl'],
+			['email' => 'anonymous@example.nl'],
+			['contactId' => 'c-9', 'email' => 'unknown@example.nl'],
+			['contactId' => 'c-1', 'email' => 'jan@example.nl'],
+		]);
+
+		$result = $this->service->checkSegmentCompliance(segmentId: 'seg-1', channel: ' EMAIL ');
+
+		self::assertSame(['c-3', '', 'c-9'], $result['missingConsent']);
+		self::assertSame(3, $result['missingCount']);
+		self::assertFalse($result['compliant']);
+		self::assertSame(['c-2'], $result['suppressed']);
+		self::assertSame(1, $result['suppressedCount']);
+		self::assertSame(['c-1', 'c-2'], array_keys($result['unsubscribe']));
+		self::assertSame(['compliant', 'missingConsent', 'missingCount', 'suppressed', 'suppressedCount', 'unsubscribe'], array_keys($result));
+	}//end testASegmentCheckViaIntegriqReportsEveryBucketAndOnlyRealLinks()
+
+	public function testAnEmptySegmentIsCompliantWithoutAskingIntegriq(): void {
+		$this->segments->method('getMembersForBlast')->willReturn([]);
+
+		self::assertSame(
+			['compliant' => true, 'missingConsent' => [], 'missingCount' => 0, 'suppressed' => [], 'suppressedCount' => 0],
+			$this->service->checkSegmentCompliance(segmentId: 'seg-0', channel: 'email')
+		);
+		self::assertSame([], $this->integriq->decisionEvents);
+	}//end testAnEmptySegmentIsCompliantWithoutAskingIntegriq()
+
+	public function testASendViaIntegriqIsRefusedForABounceAndAskedForTheList(): void {
+		$this->integriq->seed(['address' => 'jan@example.nl', 'state' => 'opted-in', 'scope' => 'list', 'ref' => 'nieuws', 'channel' => 'email', 'lawfulBasis' => 'consent']);
+		$this->integriq->seed(['address' => 'jan@example.nl', 'state' => 'opted-in', 'scope' => 'channel', 'channel' => 'email', 'lawfulBasis' => 'consent']);
+
+		self::assertSame(['allowed' => true, 'reason' => ''], $this->service->permitsSend(contactId: 'c-1', channel: 'Email', listId: 'nieuws'));
+
+		$this->store->put('consentRecord', ['contactId' => 'c-1', 'channel' => 'email', 'listId' => 'nieuws', 'withdrawnAt' => '2026-01-01T00:00:00Z', 'withdrawnReason' => 'bounce-hard']);
+		self::assertSame(['allowed' => false, 'reason' => ComplianceService::REASON_NO_CONSENT], $this->service->permitsSend(contactId: 'c-1', channel: 'Email', listId: 'nieuws'));
+		self::assertSame(['allowed' => false, 'reason' => ComplianceService::REASON_NO_CONSENT], $this->service->permitsSend(contactId: 'c-2', channel: 'email'));
+	}//end testASendViaIntegriqIsRefusedForABounceAndAskedForTheList()
+
 	public function testABounceStaysInPipelinqAndStillExcludes(): void {
 		$this->integriq->seed(['address' => 'jan@example.nl', 'state' => 'opted-in', 'scope' => 'channel', 'channel' => 'email', 'lawfulBasis' => 'consent']);
 		$this->store->put('consentRecord', ['contactId' => 'c-1', 'channel' => 'email', 'lawfulBasis' => 'consent', 'consentedAt' => '2026-01-01T00:00:00Z']);

@@ -35,6 +35,8 @@ use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
 use OCA\Pipelinq\Service\Consent\ConsentWithdrawal;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
+use OCA\Pipelinq\Service\Consent\SegmentConsentRun;
+use OCA\Pipelinq\Service\Consent\SendPermitRequest;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -203,43 +205,86 @@ class ComplianceService {
 	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	public function permitsSend(string $contactId, string $channel, string $intent = self::INTENT_PROMOTIONAL, ?string $listId = null): array {
+		$request = new SendPermitRequest(contactId: $contactId, channel: $channel, intent: $intent, listId: $listId);
 		if ($this->integriq->isActive() === true) {
-			// Integriq answers the consent question; a bounce and the dunning
-			// state stay pipelinq's own and are asked after it.
-			[$category, $requiresConsent] = $this->integriq->categoryFor(intent: $intent);
-			$decision = $this->integriq->decide(
-				contactId: $contactId,
-				channel: strtolower(trim($channel)),
-				category: $category,
-				requiresConsent: $requiresConsent,
-				listId: $listId
-			);
-			if ($decision['send'] === false || $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: $listId) === true) {
-				return ['allowed' => false, 'reason' => self::REASON_NO_CONSENT];
-			}
-
-			if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
-				return ['allowed' => false, 'reason' => self::REASON_SUPPRESSED];
-			}
-
-			return ['allowed' => true, 'reason' => ''];
-		}//end if
-
-		$hasConsent = $this->hasConsentForChannel(contactId: $contactId, channel: $channel);
-		if ($listId !== null && $listId !== '') {
-			$hasConsent = $this->hasConsentForList(contactId: $contactId, listId: $listId, channel: $channel);
+			return $this->permitsSendViaIntegriq(request: $request);
 		}
 
-		if ($hasConsent === false) {
+		if ($this->hasRequestedConsent(request: $request) === false) {
 			return ['allowed' => false, 'reason' => self::REASON_NO_CONSENT];
 		}
 
-		if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
+		return $this->suppressionVerdict(request: $request);
+	}//end permitsSend()
+
+	/**
+	 * The send gate after the cutover: integriq answers the consent
+	 * question; a bounce and the dunning state stay pipelinq's own and are
+	 * asked after it.
+	 *
+	 * @param SendPermitRequest $request The send asked about.
+	 *
+	 * @return array{allowed: bool, reason: string}
+	 */
+	private function permitsSendViaIntegriq(SendPermitRequest $request): array {
+		[$category, $requiresConsent] = $this->integriq->categoryFor(intent: $request->intent);
+		$decision = $this->integriq->decide(
+			contactId: $request->contactId,
+			channel: strtolower(trim($request->channel)),
+			category: $category,
+			requiresConsent: $requiresConsent,
+			listId: $request->listId
+		);
+		if ($decision['send'] === false || $this->isBounceWithdrawnFor(request: $request) === true) {
+			return ['allowed' => false, 'reason' => self::REASON_NO_CONSENT];
+		}
+
+		return $this->suppressionVerdict(request: $request);
+	}//end permitsSendViaIntegriq()
+
+	/**
+	 * Whether pipelinq withdrew the asked-about contact for a bounce.
+	 *
+	 * @param SendPermitRequest $request The send asked about.
+	 *
+	 * @return bool True when a channel or list record was withdrawn for a bounce.
+	 */
+	private function isBounceWithdrawnFor(SendPermitRequest $request): bool {
+		return $this->isBounceWithdrawn(contactId: $request->contactId, channel: $request->channel, listId: $request->listId);
+	}//end isBounceWithdrawnFor()
+
+	/**
+	 * Whether pipelinq's own ConsentRecord permits the send: the channel
+	 * record, or the list record for a list-scoped send.
+	 *
+	 * @param SendPermitRequest $request The send asked about.
+	 *
+	 * @return bool True when the record permits it.
+	 */
+	private function hasRequestedConsent(SendPermitRequest $request): bool {
+		$hasConsent = $this->hasConsentForChannel(contactId: $request->contactId, channel: $request->channel);
+		if ($request->isListScoped() === true) {
+			$hasConsent = $this->hasConsentForList(contactId: $request->contactId, listId: (string)$request->listId, channel: $request->channel);
+		}
+
+		return $hasConsent;
+	}//end hasRequestedConsent()
+
+	/**
+	 * The verdict for a send that has consent: refused when suppressed,
+	 * allowed otherwise.
+	 *
+	 * @param SendPermitRequest $request The send asked about.
+	 *
+	 * @return array{allowed: bool, reason: string}
+	 */
+	private function suppressionVerdict(SendPermitRequest $request): array {
+		if ($this->isSuppressed(contactId: $request->contactId, intent: $request->intent) === true) {
 			return ['allowed' => false, 'reason' => self::REASON_SUPPRESSED];
 		}
 
 		return ['allowed' => true, 'reason' => ''];
-	}//end permitsSend()
+	}//end suppressionVerdict()
 
 	/**
 	 * Whether a promotional send to this contact is suppressed.
@@ -326,57 +371,49 @@ class ComplianceService {
 	public function checkSegmentCompliance(string $segmentId, string $channel, string $intent = self::INTENT_PROMOTIONAL): array {
 		$channel = strtolower(trim($channel));
 		$members = $this->segmentService->getMembersForBlast(segmentId: $segmentId);
+		$run = new SegmentConsentRun(channel: $channel, intent: $intent);
 		if ($members === []) {
-			return [
-				'compliant' => true,
-				'missingConsent' => [],
-				'missingCount' => 0,
-				'suppressed' => [],
-				'suppressedCount' => 0,
-			];
+			return $run->result();
 		}
 
 		if ($this->integriq->isActive() === true) {
 			// One question per 500 members, not one per contact.
-			return $this->segmentComplianceViaIntegriq(members: $members, channel: $channel, intent: $intent);
+			return $this->segmentComplianceViaIntegriq(members: $members, run: $run);
 		}
 
-		$missing = [];
-		$suppressed = [];
 		foreach ($members as $member) {
-			$contactId = (string)($member['contactId'] ?? '');
-			if ($contactId === '') {
-				// Members without a stable contactId cannot be matched to
-				// a ConsentRecord — fail safe, treat as missing.
-				$missing[] = '';
-				continue;
-			}
-
-			if ($this->hasConsentForChannel(contactId: $contactId, channel: $channel) === false) {
-				$missing[] = $contactId;
-				continue;
-			}
-
-			if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
-				$suppressed[] = $contactId;
-			}
+			$this->checkMemberConsent(member: $member, run: $run);
 		}
 
-		$missing = array_values(array_unique($missing));
-		$suppressed = array_values(array_unique($suppressed));
-
-		// `compliant` still means "every member has a lawful basis".
-		// A suppressed contact is one the tenant MAY mail and chose not to,
-		// which is a different thing from one it may not, and collapsing the
-		// two would report a lawful campaign as non-compliant.
-		return [
-			'compliant' => ($missing === []),
-			'missingConsent' => $missing,
-			'missingCount' => count($missing),
-			'suppressed' => $suppressed,
-			'suppressedCount' => count($suppressed),
-		];
+		return $run->result();
 	}//end checkSegmentCompliance()
+
+	/**
+	 * Check one Segment member against pipelinq's own ConsentRecord.
+	 *
+	 * @param array<string, mixed> $member The member.
+	 * @param SegmentConsentRun    $run    The check in progress.
+	 *
+	 * @return void
+	 */
+	private function checkMemberConsent(array $member, SegmentConsentRun $run): void {
+		$contactId = (string)($member['contactId'] ?? '');
+		if ($contactId === '') {
+			// Members without a stable contactId cannot be matched to
+			// a ConsentRecord — fail safe, treat as missing.
+			$run->missing(contactId: '');
+			return;
+		}
+
+		if ($this->hasConsentForChannel(contactId: $contactId, channel: $run->channel) === false) {
+			$run->missing(contactId: $contactId);
+			return;
+		}
+
+		if ($this->isSuppressed(contactId: $contactId, intent: $run->intent) === true) {
+			$run->suppressed(contactId: $contactId);
+		}
+	}//end checkMemberConsent()
 
 	/**
 	 * The segment check after the cutover: one question to integriq per 500 members.
@@ -385,8 +422,7 @@ class ComplianceService {
 	 * and every allowed member gets integriq's link for the delivery.
 	 *
 	 * @param array<int, array<string, mixed>> $members The segment members.
-	 * @param string                           $channel "email" or "sms".
-	 * @param string                           $intent  `promotional` or `service`.
+	 * @param SegmentConsentRun                $run     The check: channel, intent and findings.
 	 *
 	 * @return array{
 	 *     compliant: bool,
@@ -399,38 +435,42 @@ class ComplianceService {
 	 *
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 */
-	private function segmentComplianceViaIntegriq(array $members, string $channel, string $intent): array {
-		[$category, $requiresConsent] = $this->integriq->categoryFor(intent: $intent);
-		$decisions = $this->integriq->decideMembers(members: $members, channel: $channel, category: $category, requiresConsent: $requiresConsent);
+	private function segmentComplianceViaIntegriq(array $members, SegmentConsentRun $run): array {
+		[$category, $requiresConsent] = $this->integriq->categoryFor(intent: $run->intent);
+		$run->useDecisions(
+			decisions: $this->integriq->decideMembers(members: $members, channel: $run->channel, category: $category, requiresConsent: $requiresConsent)
+		);
 
-		$missing = [];
-		$suppressed = [];
-		$unsubscribe = [];
 		foreach ($members as $member) {
-			$contactId = (string)($member['contactId'] ?? '');
-			$decision = ($decisions[$contactId] ?? ['send' => false, 'unsubscribe' => null]);
-			if ($contactId === '' || $decision['send'] === false || $this->isBounceWithdrawn(contactId: $contactId, channel: $channel) === true) {
-				$missing[] = $contactId;
-				continue;
-			}
-
-			$unsubscribe[$contactId] = (string)($decision['unsubscribe']['url'] ?? '');
-			if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
-				$suppressed[] = $contactId;
-			}
+			$this->applyMemberDecision(member: $member, run: $run);
 		}
 
-		$missing = array_values(array_unique($missing));
-		$suppressed = array_values(array_unique($suppressed));
-		return [
-			'compliant' => ($missing === []),
-			'missingConsent' => $missing,
-			'missingCount' => count($missing),
-			'suppressed' => $suppressed,
-			'suppressedCount' => count($suppressed),
-			'unsubscribe' => array_filter($unsubscribe),
-		];
+		return $run->resultWithLinks();
 	}//end segmentComplianceViaIntegriq()
+
+	/**
+	 * Apply integriq's decision for one member: a refusal or a bounce is
+	 * missing consent, dunning is suppressed, and an allowed member keeps
+	 * integriq's link for the delivery.
+	 *
+	 * @param array<string, mixed> $member The member.
+	 * @param SegmentConsentRun    $run    The check in progress.
+	 *
+	 * @return void
+	 */
+	private function applyMemberDecision(array $member, SegmentConsentRun $run): void {
+		$contactId = (string)($member['contactId'] ?? '');
+		$decision = $run->decisionFor(contactId: $contactId);
+		if ($contactId === '' || $decision['send'] === false || $this->isBounceWithdrawn(contactId: $contactId, channel: $run->channel) === true) {
+			$run->missing(contactId: $contactId);
+			return;
+		}
+
+		$run->link(contactId: $contactId, url: (string)($decision['unsubscribe']['url'] ?? ''));
+		if ($this->isSuppressed(contactId: $contactId, intent: $run->intent) === true) {
+			$run->suppressed(contactId: $contactId);
+		}
+	}//end applyMemberDecision()
 
 	/**
 	 * Run every pre-send compliance check for one Blast in a single call.
