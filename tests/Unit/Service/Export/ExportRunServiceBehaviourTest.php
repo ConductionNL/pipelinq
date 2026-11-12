@@ -39,7 +39,7 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  */
-class ExportRunServiceTest extends TestCase {
+class ExportRunServiceBehaviourTest extends TestCase {
 
 	private const ATOM = '/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d\d:\d\d$/';
 

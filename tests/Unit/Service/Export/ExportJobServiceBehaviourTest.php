@@ -46,7 +46,7 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  */
-class ExportJobServiceTest extends TestCase {
+class ExportJobServiceBehaviourTest extends TestCase {
 
 	/**
 	 * Stored jobs, keyed by uuid.
