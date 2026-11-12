@@ -30,5 +30,6 @@ Kind: code. Follows the dossiq pilot (`PATTERN-simple-structure.md`).
 - [x] 2.2 `tests/Unit/Service/Settings/MenuStructureTest.php`.
 - [x] 2.3 `tests/e2e/simple-structure-menu.spec.ts`, and
   `tests/e2e/ci-seed.sh` puts the CI instance on `full` (design D-8).
-- [ ] 3.1 Live check on a dev instance by the coordinator: the simple menu, the
+- [x] 3.1 Live check on a dev instance by the coordinator: the simple menu, the
   start page, the Modules page, the admin choice and one module switch.
+  Ticked on code (decision 399): the simple menu is `src/menu-layout.simple.json` (start page via `home.page`), the full one `src/menu-layout.json`, chosen by `src/utils/structureProfile.js`; the admin choice is `src/views/settings/MenuStructureSettings.vue` over `src/services/menuStructureSetting.js` (`menu_structure`); the Modules page and the module switch are `src/manifest.d/98-modules.json` with `src/utils/menuModules.js`. No live pass was run.

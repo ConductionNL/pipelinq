@@ -10842,11 +10842,11 @@
 				"evidence": "src/menu-layout.simple.json holds the simple structure, src/menu-layout.json the full one; the admin setting menu_structure=full brings the full menu back. The live check (task 3.1 of simple-structure-profile) is still open.",
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-11-12",
-				"change": "openspec/changes/simple-structure-profile",
+				"change": "openspec/changes/archive/2026-11-12-simple-structure-profile",
 				"requirement": [
-					"openspec/changes/simple-structure-profile/specs/navigation-ia :: The simple structure is the default and an administrator can bring the full one back (REQ-NIA-101)",
-					"openspec/changes/simple-structure-profile/specs/navigation-ia :: What leaves the simple menu stays one step away (REQ-NIA-103)",
-					"openspec/changes/simple-structure-profile/specs/navigation-ia :: An administrator switches a module into the simple menu (REQ-NIA-104)"
+					"openspec/specs/navigation-ia :: The simple structure is the default and an administrator can bring the full one back (REQ-NIA-101)",
+					"openspec/specs/navigation-ia :: What leaves the simple menu stays one step away (REQ-NIA-103)",
+					"openspec/specs/navigation-ia :: An administrator switches a module into the simple menu (REQ-NIA-104)"
 				]
 			},
 			"screen": {
