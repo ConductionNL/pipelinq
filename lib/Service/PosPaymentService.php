@@ -37,6 +37,8 @@ use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
 use OCA\Pipelinq\Service\Payment\AdyenAdapter;
+use OCA\Pipelinq\Service\Payment\PaymentRefund;
+use OCA\Pipelinq\Service\Payment\PaymentStart;
 use OCA\Pipelinq\Service\Payment\BrokerHttpTransport;
 use OCA\Pipelinq\Service\Payment\CcvAdapter;
 use OCA\Pipelinq\Service\Payment\MollieAdapter;
@@ -522,38 +524,70 @@ class PosPaymentService {
 			throw new OCSBadRequestException('Transaction is not confirmed');
 		}
 
-		$provider = $this->getPaymentProvider(name: $providerName);
-
-		$amount = (float)($transaction['total'] ?? 0);
-		$result = $provider->initiate(
-			transactionData: $transaction,
-			amount: $amount,
-			paymentMethod: $paymentMethod
-		);
-
+		$start = new PaymentStart(transactionId: $transactionId, providerName: $providerName, paymentMethod: $paymentMethod);
+		$result = $this->initiateWithProvider(start: $start, transaction: $transaction);
 		if ($result['status'] === 'failed') {
 			// Provider failure — DO NOT mutate the transaction state.
-			return [
-				'transaction' => $transaction,
-				'payment' => $result,
-			];
+			return $this->paymentOutcome(transaction: $transaction, payment: $result);
 		}
 
-		$updated = $this->saveTransaction(
-			id: $transactionId,
+		$updated = $this->recordPaymentSession(start: $start, sessionId: $result['sessionId']);
+		return $this->paymentOutcome(transaction: $updated, payment: $result);
+	}//end initiatePayment()
+
+	/**
+	 * Ask the provider to start the payment for the transaction's total.
+	 *
+	 * @param PaymentStart         $start       The transaction, provider and method.
+	 * @param array<string, mixed> $transaction The confirmed transaction.
+	 *
+	 * @return array<string, mixed> The provider's answer.
+	 */
+	private function initiateWithProvider(PaymentStart $start, array $transaction): array {
+		$provider = $this->getPaymentProvider(name: $start->providerName);
+
+		$amount = (float)($transaction['total'] ?? 0);
+		return $provider->initiate(
+			transactionData: $transaction,
+			amount: $amount,
+			paymentMethod: $start->paymentMethod
+		);
+	}//end initiateWithProvider()
+
+	/**
+	 * Record a started payment's provider, session and method on the transaction.
+	 *
+	 * @param PaymentStart $start     The transaction, provider and method.
+	 * @param string       $sessionId The provider's payment session id.
+	 *
+	 * @return array<string, mixed> The updated transaction.
+	 */
+	private function recordPaymentSession(PaymentStart $start, string $sessionId): array {
+		return $this->saveTransaction(
+			id: $start->transactionId,
 			patch: [
-				'paymentProvider' => $providerName,
-				'paymentSessionId' => $result['sessionId'],
+				'paymentProvider' => $start->providerName,
+				'paymentSessionId' => $sessionId,
 				'paymentStatus' => 'pending',
-				'paymentMethod' => $paymentMethod,
+				'paymentMethod' => $start->paymentMethod,
 			]
 		);
+	}//end recordPaymentSession()
 
+	/**
+	 * The answer of a payment call: the transaction and the provider's result.
+	 *
+	 * @param array<string, mixed> $transaction The transaction.
+	 * @param array<string, mixed> $payment     The provider's result.
+	 *
+	 * @return array{transaction: array<string, mixed>, payment: array<string, mixed>}
+	 */
+	private function paymentOutcome(array $transaction, array $payment): array {
 		return [
-			'transaction' => $updated,
-			'payment' => $result,
+			'transaction' => $transaction,
+			'payment' => $payment,
 		];
-	}//end initiatePayment()
+	}//end paymentOutcome()
 
 	/**
 	 * Capture an authorized payment.
@@ -615,6 +649,30 @@ class PosPaymentService {
 	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
 	 */
 	public function refundPayment(string $transactionId, string $reason, string $userId): array {
+		$this->assertMayRefund(userId: $userId, reason: $reason);
+
+		$transaction = $this->refundableTransaction(transactionId: $transactionId);
+		$result = $this->refundWithProvider(transaction: $transaction, reason: $reason);
+		if ($result['status'] === 'failed') {
+			return $this->paymentOutcome(transaction: $transaction, payment: $result);
+		}
+
+		$updated = $this->completeRefund(refund: new PaymentRefund(transactionId: $transactionId, reason: $reason), result: $result);
+		return $this->paymentOutcome(transaction: $updated, payment: $result);
+	}//end refundPayment()
+
+	/**
+	 * Refuse a refund by anyone but a POS manager, or without a reason.
+	 *
+	 * @param string $userId The acting user id.
+	 * @param string $reason The refund reason.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSForbiddenException When the caller is not a POS manager.
+	 * @throws OCSBadRequestException When no reason is given.
+	 */
+	private function assertMayRefund(string $userId, string $reason): void {
 		if ($this->isManager(userId: $userId) === false) {
 			throw new OCSForbiddenException('Manager permission required');
 		}
@@ -623,49 +681,82 @@ class PosPaymentService {
 		if (trim($reason) === '') {
 			throw new OCSBadRequestException('A reason is required to reverse a payment');
 		}
+	}//end assertMayRefund()
 
+	/**
+	 * Load a transaction whose payment is settled or captured and has a
+	 * provider session to refund.
+	 *
+	 * @param string $transactionId The transaction id.
+	 *
+	 * @return array<string, mixed> The transaction.
+	 *
+	 * @throws OCSBadRequestException When the payment is not refundable.
+	 */
+	private function refundableTransaction(string $transactionId): array {
 		$transaction = $this->loadTransaction(id: $transactionId);
 		$paymentStatus = (string)($transaction['paymentStatus'] ?? '');
 		if ($paymentStatus !== 'settled' && $paymentStatus !== 'captured') {
 			throw new OCSBadRequestException('Transaction payment not settled');
 		}
 
-		$providerName = (string)($transaction['paymentProvider'] ?? '');
-		$sessionId = (string)($transaction['paymentSessionId'] ?? '');
-		if ($providerName === '' || $sessionId === '') {
+		if ((string)($transaction['paymentProvider'] ?? '') === '' || (string)($transaction['paymentSessionId'] ?? '') === '') {
 			throw new OCSBadRequestException('No payment session to refund');
 		}
 
-		$provider = $this->getPaymentProvider(name: $providerName);
-		$result = $provider->refund(sessionId: $sessionId, reason: $reason);
+		return $transaction;
+	}//end refundableTransaction()
 
-		if ($result['status'] === 'failed') {
-			return [
-				'transaction' => $transaction,
-				'payment' => $result,
-			];
-		}
+	/**
+	 * Ask the transaction's provider to refund its payment session.
+	 *
+	 * @param array<string, mixed> $transaction The refundable transaction.
+	 * @param string               $reason      The refund reason.
+	 *
+	 * @return array<string, mixed> The provider's answer.
+	 */
+	private function refundWithProvider(array $transaction, string $reason): array {
+		$provider = $this->getPaymentProvider(name: (string)($transaction['paymentProvider'] ?? ''));
+		return $provider->refund(sessionId: (string)($transaction['paymentSessionId'] ?? ''), reason: $reason);
+	}//end refundWithProvider()
 
-		$updated = $this->saveTransaction(
-			id: $transactionId,
-			patch: [
-				'paymentStatus' => 'refunded',
-				'refundReason' => $reason,
-				'refundedAt' => $this->nowIso(),
-			]
-		);
+	/**
+	 * Record a refund on the transaction and emit the refund event.
+	 *
+	 * @param PaymentRefund        $refund The transaction and the reason.
+	 * @param array<string, mixed> $result The provider's answer, carrying the refund id.
+	 *
+	 * @return array<string, mixed> The updated transaction.
+	 */
+	private function completeRefund(PaymentRefund $refund, array $result): array {
+		$updated = $this->recordRefund(refund: $refund);
 
 		$this->emitRefundedEvent(
 			transaction: $updated,
 			refundId: $result['refundId'],
-			reason: $reason
+			reason: $refund->reason
 		);
 
-		return [
-			'transaction' => $updated,
-			'payment' => $result,
-		];
-	}//end refundPayment()
+		return $updated;
+	}//end completeRefund()
+
+	/**
+	 * Record a refund, its reason and its time on the transaction.
+	 *
+	 * @param PaymentRefund $refund The transaction and the reason.
+	 *
+	 * @return array<string, mixed> The updated transaction.
+	 */
+	private function recordRefund(PaymentRefund $refund): array {
+		return $this->saveTransaction(
+			id: $refund->transactionId,
+			patch: [
+				'paymentStatus' => 'refunded',
+				'refundReason' => $refund->reason,
+				'refundedAt' => $this->nowIso(),
+			]
+		);
+	}//end recordRefund()
 
 	// ---------------------------------------------------------------------
 	// Webhook handling (REQ-PAY-006 / REQ-PAY-011).
