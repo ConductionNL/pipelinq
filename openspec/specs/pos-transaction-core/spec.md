@@ -25,7 +25,7 @@ Provide the core POS transaction model for Pipelinq: two OpenRegister schemas (`
 
 ## Requirements
 
-### REQ-POS-001: Transaction Creation (Draft)
+### Requirement: REQ-POS-001: Transaction Creation (Draft)
 
 The system MUST allow a cashier to open a new POS transaction in `draft` status.
 
@@ -47,7 +47,7 @@ The system MUST allow a cashier to open a new POS transaction in `draft` status.
 
 ---
 
-### REQ-POS-002: Line Item Management
+### Requirement: REQ-POS-002: Line Item Management
 
 The system MUST allow adding, editing, and removing line items on a draft or parked transaction.
 
@@ -96,7 +96,7 @@ The system MUST allow adding, editing, and removing line items on a draft or par
 
 ---
 
-### REQ-POS-003: Real-time Total Calculation
+### Requirement: REQ-POS-003: Real-time Total Calculation
 
 The totals panel MUST update in real time as line items are added, edited, or removed.
 
@@ -126,7 +126,7 @@ The totals panel MUST update in real time as line items are added, edited, or re
 
 ---
 
-### REQ-POS-004: Transaction Confirmation
+### Requirement: REQ-POS-004: Transaction Confirmation
 
 The system MUST support confirming a draft or parked transaction, which locks totals and
 emits a CloudEvent.
@@ -160,7 +160,7 @@ emits a CloudEvent.
 
 ---
 
-### REQ-POS-005: Transaction Settlement
+### Requirement: REQ-POS-005: Transaction Settlement
 
 The system MUST allow settling a confirmed transaction to mark payment received.
 
@@ -183,7 +183,7 @@ The system MUST allow settling a confirmed transaction to mark payment received.
 
 ---
 
-### REQ-POS-006: Refund and Void
+### Requirement: REQ-POS-006: Refund and Void
 
 The system MUST support refunding a confirmed or settled transaction. Refund requires
 manager-level permission.
@@ -215,7 +215,7 @@ manager-level permission.
 
 ---
 
-### REQ-POS-007: Park and Resume
+### Requirement: REQ-POS-007: Park and Resume
 
 The system MUST allow parking a draft transaction to be resumed later.
 
@@ -247,7 +247,7 @@ The system MUST allow parking a draft transaction to be resumed later.
 
 ---
 
-### REQ-POS-008: Transaction List View
+### Requirement: REQ-POS-008: Transaction List View
 
 The system MUST provide a searchable, filterable list of all POS transactions.
 
@@ -281,7 +281,7 @@ The system MUST provide a searchable, filterable list of all POS transactions.
 
 ---
 
-### REQ-POS-009: Transaction Detail View
+### Requirement: REQ-POS-009: Transaction Detail View
 
 The system MUST provide a full detail view of a transaction including line items and tax breakdown.
 
@@ -311,7 +311,7 @@ The system MUST provide a full detail view of a transaction including line items
 
 ---
 
-### REQ-POS-010: CloudEvent Emission on Confirmation
+### Requirement: REQ-POS-010: CloudEvent Emission on Confirmation
 
 The system MUST emit a `pipelinq.PosTransaction.confirmed` CloudEvent when a transaction
 is confirmed, enabling Shillinq to draft a journal entry.

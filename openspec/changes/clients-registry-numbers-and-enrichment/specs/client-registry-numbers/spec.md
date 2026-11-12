@@ -67,3 +67,14 @@ and SHALL be undoable from the Bulk changes page.
 - WHEN the fill runs
 - THEN that client is listed as skipped with the reason no KvK number
 - AND its fields are unchanged
+
+### Requirement: Empty person details can be filled from a public source in bulk (REQ-CRN-004)
+
+The contacts list SHALL offer a bulk fill of empty person fields from a configured public source, shown as a preview before it writes, and SHALL fill only fields that are empty.
+
+#### Scenario: Four contacts get a job title
+
+- GIVEN ten selected contacts, four of them without a job title
+- WHEN a user chooses Fill in from public data and presses Preview
+- THEN the preview says four records will change
+- AND after Confirm only those four contacts gain the values found

@@ -160,6 +160,37 @@ class MainRegisterReader {
 	}//end find()
 
 	/**
+	 * Find a single main-register object by id as the signed-in user, under
+	 * their OpenRegister RBAC and organisation, or null when they may not read it.
+	 *
+	 * @param string $schemaKey The schema slug.
+	 * @param string $id The object id.
+	 *
+	 * @return array<string, mixed>|null The object, or null.
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
+	 */
+	public function findAsCaller(string $schemaKey, string $id): ?array {
+		if ($id === '' || $this->hasSchema(schemaKey: $schemaKey) === false) {
+			return null;
+		}
+
+		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+
+		try {
+			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema);
+		} catch (\Throwable $e) {
+			return null;
+		}
+
+		if ($object === null) {
+			return null;
+		}
+
+		return $this->toArray(object: $object);
+	}//end findAsCaller()
+
+	/**
 	 * Persist an object to a main-register schema. The portal only writes here
 	 * for a customer-submitted request; the register and schema are injected so
 	 * a caller can never redirect the write to another schema.

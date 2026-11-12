@@ -580,6 +580,72 @@ class SmsAdapterTest extends TestCase {
 	}//end testAnSmsFromAKnownContactIsNotLoggedAsUnknown()
 
 	/**
+	 * An opt-in keyword from a known contact records the opt-in, and the
+	 * inbound row is stored as a delivered message of that contact.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInSmsFromAKnownContactIsRecordedAndStored(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptOut');
+		$this->consentService->expects($this->once())
+			->method('recordOptIn')
+			->with('c-gert', 'sms', 'chat-reply', 'Inbound SMS body "START" matched opt-in keyword', 'consent', '+31611119999');
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '31611119999', 'body' => 'START']), 'sig', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertFalse($result['unknownSender']);
+		$this->assertFalse($result['optOutRecorded']);
+		$this->assertArrayNotHasKey('contactMomentId', $result);
+		$inbound = array_values(array_filter(
+			$this->objectService->saved,
+			static fn (array $row): bool => ($row['direction'] ?? '') === 'inbound'
+		));
+		$this->assertCount(1, $inbound);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T/', $inbound[0]['sentAt']);
+		unset($inbound[0]['sentAt']);
+		$this->assertSame(
+			['contactId', 'conversationId', 'channel', 'direction', 'body', 'providerId', 'deliveryStatus'],
+			array_keys(array_intersect_key($inbound[0], array_flip(['contactId', 'conversationId', 'channel', 'direction', 'body', 'providerId', 'deliveryStatus'])))
+		);
+		$this->assertSame('c-gert', $inbound[0]['contactId']);
+		$this->assertNotSame('', $inbound[0]['conversationId']);
+		$this->assertSame('sms', $inbound[0]['channel']);
+		$this->assertSame('START', $inbound[0]['body']);
+		$this->assertSame('prov-1', $inbound[0]['providerId']);
+		$this->assertSame('delivered', $inbound[0]['deliveryStatus']);
+	}//end testAnOptInSmsFromAKnownContactIsRecordedAndStored()
+
+	/**
+	 * An opt-in keyword from an unknown number records no opt-in: it is
+	 * logged for a person like any other message from that number.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInSmsFromAnUnknownNumberIsOnlyLogged(): void {
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptIn');
+		$this->contactmoments->expects($this->once())
+			->method('recordInboundFromUnknownNumber')
+			->willReturn('cm-2');
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31699990000', 'body' => 'START']), 'sig', 'prov-1');
+
+		$this->assertTrue($result['unknownSender']);
+		$this->assertSame('cm-2', $result['contactMomentId']);
+	}//end testAnOptInSmsFromAnUnknownNumberIsOnlyLogged()
+
+	/**
 	 * Without a usable messaging service account the webhook answers
 	 * serviceUnavailable (503, so the provider retries) and writes nothing:
 	 * no message, no conversation, no opt-out, no contact moment.

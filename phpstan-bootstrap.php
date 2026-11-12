@@ -7,6 +7,9 @@
  * symlink to /var/www/html/lib/public; in a bare php:8.3-cli CI container
  * (no Nextcloud) the symlink is broken, so we fall back to OCP.bak which
  * ships the real stubs. Same pattern as tests/bootstrap-unit.php.
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 $autoloader = require __DIR__ . '/vendor/autoload.php';

@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \OCA\Pipelinq\Service\Competitor\FediverseWatchReader
  * @uses \OCA\Pipelinq\Service\Competitor\WatchOutcome
  * @uses \OCA\Pipelinq\Service\Egress\EgressResult
+ * @uses \OCA\Pipelinq\Service\Competitor\MastodonAccount
  */
 class FediverseWatchReaderTest extends TestCase {
 

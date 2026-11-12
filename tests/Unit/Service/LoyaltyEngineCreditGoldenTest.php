@@ -55,6 +55,7 @@ use Throwable;
  * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
  * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
  * @uses \OCA\Pipelinq\Util\SerialisedToArray
+ * @uses \OCA\Pipelinq\Service\Loyalty\LoyaltyPurchase
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
