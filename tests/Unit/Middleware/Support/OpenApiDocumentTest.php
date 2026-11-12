@@ -51,7 +51,16 @@ class OpenApiDocumentTest extends TestCase {
 		// Operations marked x-provided-by come from OpenRegister's AppHost route table, which tests may not load.
 		$documented = [];
 		$hosted     = [];
+		$protocol = [];
 		foreach (self::document()['paths'] as $path => $item) {
+			if (isset($item['servers']) === true) {
+				// A path that implements an external standard keeps its unversioned URL and names that base.
+				$this->assertStringEndsWith(suffix: '/apps/pipelinq/api', string: $item['servers'][0]['url']);
+				$this->assertTrue(condition: StandardProtocolPaths::matches(path: '/api'.$path), message: $path.' is not a standard protocol path');
+				$protocol[] = '/api'.self::shape(path: $path);
+				continue;
+			}
+
 			foreach ($item as $verb => $operation) {
 				if (in_array($verb, ['get', 'put', 'post', 'delete', 'patch', 'options', 'head'], true) === false) {
 					continue;
@@ -65,8 +74,10 @@ class OpenApiDocumentTest extends TestCase {
 			}
 		}
 
-		$routed = [];
+		$routed   = [];
 		$declared = require dirname(__DIR__, 4).'/appinfo/routes.php';
+		$urls     = array_map(static fn (array $route): string => self::shape(path: '/'.ltrim((string) $route['url'], '/')), $declared['routes']);
+		$this->assertSame(expected: [], actual: array_values(array_diff($protocol, $urls)), message: 'documented protocol paths without a route');
 		foreach ($declared['routes'] as $route) {
 			$url = '/'.ltrim((string) $route['url'], '/');
 			if (str_starts_with($url, '/api/v1/') === true && StandardProtocolPaths::matches(path: $url) === false) {
