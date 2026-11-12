@@ -434,13 +434,13 @@ class IngestProductVendorMaster implements IRepairStep {
 	private function vendorSupplierTarget(array $vendor): ?SupplierTarget {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+			$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'supplier_schema', '');
 		} catch (\Throwable $e) {
 			$this->logVendorFailure(vendor: $vendor, error: $e);
 			return null;
 		}
 
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'supplier_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning('PVM ingest: supplier register/schema not configured');
 			return null;
