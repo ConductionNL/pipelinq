@@ -139,7 +139,6 @@
 </template>
 
 <script>
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import {
 	confirmShare,
@@ -153,6 +152,7 @@ import {
 	networkLimits,
 	publicationStatusChip,
 } from '../../services/socialNetworks.js'
+import socialPostSectionMixin from './socialPostSectionMixin.js'
 
 export default {
 	name: 'SocialPublicationsSection',
@@ -163,17 +163,7 @@ export default {
 		NcNoteCard,
 	},
 
-	inject: {
-		cnSectionContext: { default: null },
-	},
-
-	props: {
-		/** The post id, on the post detail page (`@objectId`). */
-		postId: {
-			type: String,
-			default: '',
-		},
-	},
+	mixins: [socialPostSectionMixin],
 
 	data() {
 		return {
@@ -184,21 +174,6 @@ export default {
 			rows: [],
 			share: null,
 		}
-	},
-
-	/**
-	 * Load the publications and follow page refreshes.
-	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
-	 */
-	mounted() {
-		this.load()
-		// An approval in the page header can put the post in line to go out.
-		subscribe('cn:page:refresh', this.load)
-	},
-
-	beforeUnmount() {
-		unsubscribe('cn:page:refresh', this.load)
 	},
 
 	methods: {
@@ -212,21 +187,6 @@ export default {
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
-		},
-
-		/**
-		 * The id this section is bound to, either the prop or the section
-		 * context the page host provides.
-		 *
-		 * @return {string} The post id.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
-		 */
-		effectiveId() {
-			if (this.postId) {
-				return this.postId
-			}
-			const context = this.cnSectionContext || {}
-			return context.objectId || context.id || ''
 		},
 
 		/**
