@@ -50,7 +50,7 @@ A JSON error response (status 400 or higher) of an endpoint under `/api/` MUST b
 
 ### Requirement: Every API path is served under its major version
 
-Every route under `/api/` MUST also be served under `/api/v1/`, with the same controller, requirements and defaults (/core/uri-version). The unversioned path MUST keep answering exactly as before, and its responses MUST carry a `Deprecation` header and a `Link` header naming the `/api/v1/` successor with `rel="successor-version"` (/core/deprecation-schedule). The OpenAPI document MUST name `/index.php/apps/pipelinq/api/v1` as its server and MUST describe every versioned path the app routes, and no other path.
+Every route under `/api/` MUST also be served under `/api/v1/`, with the same controller, requirements and defaults (/core/uri-version). A route the app already declares under `/api/v1/` keeps its path; an unversioned path whose versioned form such a route answers keeps no successor and is listed in `ApiPathAliases::WITHOUT_SUCCESSOR`. The unversioned path MUST keep answering exactly as before, and its responses MUST carry a `Deprecation` header and a `Link` header naming the `/api/v1/` successor with `rel="successor-version"` (/core/deprecation-schedule). The OpenAPI document MUST name `/index.php/apps/pipelinq/api/v1` as its server and MUST describe every versioned path the app routes, and no other path.
 
 #### Scenario: An unversioned path names its successor
 

@@ -172,12 +172,12 @@ class ApiContractMiddlewareTest extends TestCase {
 	 * @return void
 	 */
 	public function testUnversionedPathAnnouncesItsSuccessor(): void {
-		$response = $this->decorate(path: '/apps/pipelinq/api/things/7', response: new JSONResponse(data: ['id' => 7]));
+		$response = $this->decorate(path: '/apps/pipelinq/api/things/7/parts', response: new JSONResponse(data: ['id' => 7]));
 		$headers  = $this->headersOf(response: $response);
 
 		$this->assertSame(expected: ['id' => 7], actual: $response->getData());
 		$this->assertSame(expected: '@1794441600', actual: $headers['Deprecation']);
-		$this->assertSame(expected: '</index.php/apps/pipelinq/api/v1/things/7>; rel="successor-version"', actual: $headers['Link']);
+		$this->assertSame(expected: '</index.php/apps/pipelinq/api/v1/things/7/parts>; rel="successor-version"', actual: $headers['Link']);
 	}//end testUnversionedPathAnnouncesItsSuccessor()
 
 	/**

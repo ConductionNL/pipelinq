@@ -37,9 +37,9 @@ class ApiPathAliasesTest extends TestCase {
 	 */
 	public static function successors(): array {
 		return [
-			'api path'         => ['/api/things/7', '/api/v1/things/7'],
-			'request path'     => ['/index.php/apps/pipelinq/api/things', '/index.php/apps/pipelinq/api/v1/things'],
-			'already v1'       => ['/api/v1/things', null],
+			'api path'         => ['/api/things/7/parts', '/api/v1/things/7/parts'],
+			'request path'     => ['/index.php/apps/pipelinq/api/things/7/parts', '/index.php/apps/pipelinq/api/v1/things/7/parts'],
+			'already v1'       => ['/api/v1/things/7/parts', null],
 			'versioned family' => ['/api/zgw/zaken/v1/zaken', null],
 			'protocol'         => ['/api/zgw/notificaties/inbox', null],
 			'page'             => ['/apps/pipelinq/things', null],
@@ -69,10 +69,10 @@ class ApiPathAliasesTest extends TestCase {
 	public function testAliasesComeAfterTheDeclaredVersionedRoutes(): void {
 		$original = [
 			'routes' => [
-				['name' => 'things#versioned', 'url' => '/api/v1/other', 'verb' => 'GET'],
-				['name' => 'things#index', 'url' => '/api/things/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
-				['name' => 'things#update', 'url' => 'api/things', 'verb' => 'PUT', 'postfix' => 'put'],
-				['name' => 'other#legacy', 'url' => '/api/other', 'verb' => 'GET'],
+				['name' => 'things#versioned', 'url' => '/api/v1/other/x/y', 'verb' => 'GET'],
+				['name' => 'things#index', 'url' => '/api/things/{id}/parts', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
+				['name' => 'things#update', 'url' => 'api/things/all/parts', 'verb' => 'PUT', 'postfix' => 'put'],
+				['name' => 'other#legacy', 'url' => '/api/other/x/y', 'verb' => 'GET'],
 				['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
 			],
 		];
@@ -82,8 +82,8 @@ class ApiPathAliasesTest extends TestCase {
 		$this->assertSame(
 			expected: [
 				$original['routes'][0],
-				['name' => 'things#index', 'url' => '/api/v1/things/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\d+'], 'postfix' => 'v1'],
-				['name' => 'things#update', 'url' => '/api/v1/things', 'verb' => 'PUT', 'postfix' => 'putv1'],
+				['name' => 'things#index', 'url' => '/api/v1/things/{id}/parts', 'verb' => 'GET', 'requirements' => ['id' => '\d+'], 'postfix' => 'v1'],
+				['name' => 'things#update', 'url' => '/api/v1/things/all/parts', 'verb' => 'PUT', 'postfix' => 'putv1'],
 			],
 			actual: array_slice($declared['routes'], 0, 3)
 		);
