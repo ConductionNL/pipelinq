@@ -21,3 +21,8 @@
 ## 4. Matrix
 
 - [x] 4.1 Leave `work-collaborators` at partial when this lands: users still cannot follow from the screen. Move it to built only once the nextcloud-vue Follow control is on the ticket and lead detail pages [V1]
+
+## 5. Working on it together
+
+- [ ] 5.1 Grant an added colleague read and write access to the ticket or lead for as long as they are on it, through OpenRegister's per-object authorisation (no pipelinq-side check), and take it back on removal (REQ-NFTL-005, row `work-collaborators`)
+  - Verify: PHPUnit or an API test: the added colleague reads and patches the record; after removal both answer 403
