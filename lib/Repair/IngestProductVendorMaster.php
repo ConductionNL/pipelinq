@@ -49,6 +49,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Repair\Support\SourceRecordLink;
+use OCA\Pipelinq\Repair\Support\SupplierTarget;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -234,11 +235,23 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @spec openspec/specs/product-vendor-master/spec.md
 	 */
 	public function ingest(array $export): array {
-		$productMap = [];
-		$vendorMap = [];
+		return [
+			'products' => $this->ingestProducts(products: ($export['products'] ?? [])),
+			'vendors' => $this->ingestVendors(vendors: ($export['vendors'] ?? [])),
+		];
+	}//end ingest()
 
-		foreach ($export['products'] ?? [] as $shillinqProduct) {
-			$ref = $shillinqProduct['ref'] ?? ($shillinqProduct['id'] ?? '');
+	/**
+	 * Ingest every exported product that carries a ref.
+	 *
+	 * @param mixed $products The exported products.
+	 *
+	 * @return array<string,string> {shillinqRef → productId}.
+	 */
+	private function ingestProducts(mixed $products): array {
+		$productMap = [];
+		foreach ($products as $shillinqProduct) {
+			$ref = $this->exportRef(record: $shillinqProduct);
 			if ($ref === '') {
 				$this->logger->warning('PVM ingest: skipping product with no ref', $shillinqProduct);
 				continue;
@@ -250,8 +263,20 @@ class IngestProductVendorMaster implements IRepairStep {
 			}
 		}
 
-		foreach ($export['vendors'] ?? [] as $shillinqVendor) {
-			$ref = $shillinqVendor['ref'] ?? ($shillinqVendor['id'] ?? '');
+		return $productMap;
+	}//end ingestProducts()
+
+	/**
+	 * Ingest every exported vendor that carries a ref.
+	 *
+	 * @param mixed $vendors The exported vendors.
+	 *
+	 * @return array<string,string> {shillinqVendorRef → contactsUid}.
+	 */
+	private function ingestVendors(mixed $vendors): array {
+		$vendorMap = [];
+		foreach ($vendors as $shillinqVendor) {
+			$ref = $this->exportRef(record: $shillinqVendor);
 			if ($ref === '') {
 				$this->logger->warning('PVM ingest: skipping vendor with no ref', $shillinqVendor);
 				continue;
@@ -263,8 +288,19 @@ class IngestProductVendorMaster implements IRepairStep {
 			}
 		}
 
-		return ['products' => $productMap, 'vendors' => $vendorMap];
-	}//end ingest()
+		return $vendorMap;
+	}//end ingestVendors()
+
+	/**
+	 * An exported record's ref, falling back on its id; '' when it has neither.
+	 *
+	 * @param mixed $record The exported record.
+	 *
+	 * @return mixed
+	 */
+	private function exportRef(mixed $record): mixed {
+		return $record['ref'] ?? ($record['id'] ?? '');
+	}//end exportRef()
 
 	/**
 	 * Ingest one shillinq product master-data record.
@@ -370,72 +406,163 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @spec openspec/specs/product-vendor-master/spec.md
 	 */
 	private function ingestVendor(array $shillinqVendor): array {
-		$apPayload = [];
+		$target = $this->vendorSupplierTarget(vendor: $shillinqVendor);
+		if ($target === null) {
+			return [null, []];
+		}
 
+		$contactsUid = $this->vendorContactUid(vendor: $shillinqVendor);
+		if ($contactsUid === null) {
+			return [null, []];
+		}
+
+		// Separate financial AP fields — route back to shillinq, do not store here.
+		$apPayload = $this->vendorFinancialFields(vendor: $shillinqVendor);
+		$link = new SourceRecordLink(entityType: 'vendor', masterEntity: $contactsUid, rawAttributes: $shillinqVendor);
+
+		return [$this->storeSupplierSafely(target: $target, link: $link), $apPayload];
+	}//end ingestVendor()
+
+	/**
+	 * The supplier store, or null when OpenRegister is unavailable (logged as
+	 * a failed vendor ingest) or the register/schema is not configured.
+	 *
+	 * @param array<string,mixed> $vendor The exported vendor, for the log line.
+	 *
+	 * @return SupplierTarget|null
+	 */
+	private function vendorSupplierTarget(array $vendor): ?SupplierTarget {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 			$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'supplier_schema', '');
-
-			if ($registerId === '' || $schemaId === '') {
-				$this->logger->warning('PVM ingest: supplier register/schema not configured');
-				return [null, $apPayload];
-			}
-
-			// Resolve or create an NC contact for this vendor.
-			$contactsUid = $this->resolveOrCreateContact(vendor: $shillinqVendor);
-			if ($contactsUid === null) {
-				$this->logger->warning(
-					'PVM ingest: could not resolve/create contact',
-					[
-						'vendor' => $shillinqVendor['name'] ?? '',
-					]
-				);
-				return [null, $apPayload];
-			}
-
-			// Separate financial AP fields — route back to shillinq, do not store here.
-			foreach (self::VENDOR_FINANCIAL_FIELDS as $field) {
-				if (isset($shillinqVendor[$field]) === true) {
-					$apPayload[$field] = $shillinqVendor[$field];
-				}
-			}
-
-			// Find existing supplier by contactsUid (idempotency).
-			$existingSupplier = $this->findSupplierByContactsUid(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $schemaId,
-				contactsUid: $contactsUid,
-			);
-
-			$this->upsertSupplier(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $schemaId,
-				shillinqVendor: $shillinqVendor,
-				contactsUid: $contactsUid,
-				existingSupplier: $existingSupplier,
-			);
-
-			$this->writeSourceRecord(
-				objectService: $objectService,
-				registerId: $registerId,
-				link: new SourceRecordLink(entityType: 'vendor', masterEntity: $contactsUid, rawAttributes: $shillinqVendor),
-			);
-
-			return [$contactsUid, $apPayload];
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				'PVM ingest: vendor ingest failed',
+			$this->logVendorFailure(vendor: $vendor, error: $e);
+			return null;
+		}
+
+		if ($registerId === '' || $schemaId === '') {
+			$this->logger->warning('PVM ingest: supplier register/schema not configured');
+			return null;
+		}
+
+		return new SupplierTarget(objectService: $objectService, registerId: $registerId, schemaId: $schemaId);
+	}//end vendorSupplierTarget()
+
+	/**
+	 * Resolve or create the NC contact of a vendor; null (logged) when neither works.
+	 *
+	 * @param array<string,mixed> $vendor The exported vendor.
+	 *
+	 * @return string|null
+	 */
+	private function vendorContactUid(array $vendor): ?string {
+		$contactsUid = $this->resolveOrCreateContact(vendor: $vendor);
+		if ($contactsUid === null) {
+			$this->logger->warning(
+				'PVM ingest: could not resolve/create contact',
 				[
-					'vendor' => $shillinqVendor['name'] ?? '',
-					'exception' => $e->getMessage(),
+					'vendor' => $vendor['name'] ?? '',
 				]
 			);
-			return [null, $apPayload];
-		}//end try
-	}//end ingestVendor()
+		}
+
+		return $contactsUid;
+	}//end vendorContactUid()
+
+	/**
+	 * The financial AP fields a vendor carries; these go back to shillinq.
+	 *
+	 * @param array<string,mixed> $vendor The exported vendor.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function vendorFinancialFields(array $vendor): array {
+		$apPayload = [];
+		foreach (self::VENDOR_FINANCIAL_FIELDS as $field) {
+			if (isset($vendor[$field]) === true) {
+				$apPayload[$field] = $vendor[$field];
+			}
+		}
+
+		return $apPayload;
+	}//end vendorFinancialFields()
+
+	/**
+	 * Store the supplier and its source record; a failure is logged.
+	 *
+	 * @param SupplierTarget   $target The supplier store.
+	 * @param SourceRecordLink $link   The vendor and its contactsUid.
+	 *
+	 * @return string|null The contactsUid, or null when the write failed.
+	 */
+	private function storeSupplierSafely(SupplierTarget $target, SourceRecordLink $link): ?string {
+		try {
+			$this->storeSupplier(target: $target, link: $link);
+		} catch (\Throwable $e) {
+			$this->logVendorFailure(vendor: $link->rawAttributes, error: $e);
+			return null;
+		}
+
+		return $link->masterEntity;
+	}//end storeSupplierSafely()
+
+	/**
+	 * Upsert the supplier (found by contactsUid for idempotency), then write
+	 * the MDM source record.
+	 *
+	 * @param SupplierTarget   $target The supplier store.
+	 * @param SourceRecordLink $link   The vendor and its contactsUid.
+	 *
+	 * @return void
+	 */
+	private function storeSupplier(SupplierTarget $target, SourceRecordLink $link): void {
+		$this->upsertSupplier(
+			objectService: $target->objectService,
+			registerId: $target->registerId,
+			schemaId: $target->schemaId,
+			shillinqVendor: $link->rawAttributes,
+			contactsUid: $link->masterEntity,
+			existingSupplier: $this->existingSupplier(target: $target, contactsUid: $link->masterEntity),
+		);
+
+		$this->writeSourceRecord(objectService: $target->objectService, registerId: $target->registerId, link: $link);
+	}//end storeSupplier()
+
+	/**
+	 * The supplier already stored for a contactsUid, if any.
+	 *
+	 * @param SupplierTarget $target      The supplier store.
+	 * @param string         $contactsUid The vendor's contactsUid.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function existingSupplier(SupplierTarget $target, string $contactsUid): ?array {
+		return $this->findSupplierByContactsUid(
+			objectService: $target->objectService,
+			registerId: $target->registerId,
+			schemaId: $target->schemaId,
+			contactsUid: $contactsUid,
+		);
+	}//end existingSupplier()
+
+	/**
+	 * Log a failed vendor ingest.
+	 *
+	 * @param array<string,mixed> $vendor The exported vendor.
+	 * @param \Throwable          $error  The failure.
+	 *
+	 * @return void
+	 */
+	private function logVendorFailure(array $vendor, \Throwable $error): void {
+		$this->logger->error(
+			'PVM ingest: vendor ingest failed',
+			[
+				'vendor' => $vendor['name'] ?? '',
+				'exception' => $error->getMessage(),
+			]
+		);
+	}//end logVendorFailure()
 
 	/**
 	 * Persist the commercial supplier profile for a vendor (fill-only update or create).
@@ -490,10 +617,6 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @param array<string,mixed> $vendor The vendor data.
 	 *
 	 * @return string|null The NC contact UID, or null on failure.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Contacts-availability guard, prioritised
-	 *   KvK/VAT/email search loop, and a create-with-generated-UID fallback form one cohesive
-	 *   resolution path wrapped in a single fault-tolerant try/catch.
 	 */
 	private function resolveOrCreateContact(array $vendor): ?string {
 		try {
@@ -503,46 +626,111 @@ class IngestProductVendorMaster implements IRepairStep {
 				return null;
 			}
 
-			$searchTerms = array_filter(
-				[
-					$vendor['kvkNumber'] ?? '',
-					$vendor['vatNumber'] ?? '',
-					$vendor['email'] ?? '',
-				]
-			);
-
-			foreach ($searchTerms as $term) {
-				$results = $contactsManager->search((string)$term, ['X-KVK', 'X-VAT', 'EMAIL', 'UID'], []);
-				if (empty($results) === false) {
-					$first = reset($results);
-					if (isset($first['UID']) === true && $first['UID'] !== '') {
-						return (string)$first['UID'];
-					}
-				}
-			}
-
-			// No match found: create a minimal contact via ContactVcardService conventions.
-			// We build a temporary supplier object and delegate to the writer.
-			$tempSupplierId = sprintf('pvm-ingest-%s', uniqid('', true));
-			$contactsUid = $this->contactVcardService->syncToContacts('contact', $tempSupplierId);
-			// If the service could not create a contact, fall back to a generated UID.
-			if ($contactsUid === null || $contactsUid === '') {
-				$contactsUid = sprintf('pvm-%s', md5(($vendor['name'] ?? '') . ($vendor['kvkNumber'] ?? '')));
-				$this->logger->info(
-					'PVM ingest: using generated contactsUid (no Contacts write)',
-					[
-						'uid' => $contactsUid,
-						'vendor' => $vendor['name'] ?? '',
-					]
-				);
-			}
-
-			return $contactsUid;
+			return ($this->findContactUid(contactsManager: $contactsManager, vendor: $vendor) ?? $this->createVendorContact(vendor: $vendor));
 		} catch (\Throwable $e) {
 			$this->logger->error('PVM ingest: contact resolution failed', ['exception' => $e->getMessage()]);
 			return null;
 		}//end try
 	}//end resolveOrCreateContact()
+
+	/**
+	 * The UID of the first contact matching the vendor's KvK number, VAT
+	 * number or e-mail address, tried in that order.
+	 *
+	 * @param object              $contactsManager The NC contacts manager.
+	 * @param array<string,mixed> $vendor          The vendor data.
+	 *
+	 * @return string|null
+	 */
+	private function findContactUid(object $contactsManager, array $vendor): ?string {
+		foreach ($this->contactSearchTerms(vendor: $vendor) as $term) {
+			$uid = $this->firstResultUid(results: $contactsManager->search((string)$term, ['X-KVK', 'X-VAT', 'EMAIL', 'UID'], []));
+			if ($uid !== null) {
+				return $uid;
+			}
+		}
+
+		return null;
+	}//end findContactUid()
+
+	/**
+	 * The vendor's non-empty KvK number, VAT number and e-mail address, in
+	 * matching priority.
+	 *
+	 * @param array<string,mixed> $vendor The vendor data.
+	 *
+	 * @return array<int,mixed>
+	 */
+	private function contactSearchTerms(array $vendor): array {
+		return array_filter(
+			[
+				$vendor['kvkNumber'] ?? '',
+				$vendor['vatNumber'] ?? '',
+				$vendor['email'] ?? '',
+			]
+		);
+	}//end contactSearchTerms()
+
+	/**
+	 * The UID of the first contact a search answered, when it has one.
+	 *
+	 * @param mixed $results The search results.
+	 *
+	 * @return string|null
+	 */
+	private function firstResultUid(mixed $results): ?string {
+		if (empty($results) === true) {
+			return null;
+		}
+
+		$first = reset($results);
+		if (isset($first['UID']) === true && $first['UID'] !== '') {
+			return (string)$first['UID'];
+		}
+
+		return null;
+	}//end firstResultUid()
+
+	/**
+	 * Create a minimal contact for a vendor, or fall back on a generated UID.
+	 *
+	 * @param array<string,mixed> $vendor The vendor data.
+	 *
+	 * @return string
+	 */
+	private function createVendorContact(array $vendor): string {
+		// No match found: create a minimal contact via ContactVcardService conventions.
+		// We build a temporary supplier object and delegate to the writer.
+		$tempSupplierId = sprintf('pvm-ingest-%s', uniqid('', true));
+		$contactsUid = $this->contactVcardService->syncToContacts('contact', $tempSupplierId);
+		// If the service could not create a contact, fall back to a generated UID.
+		if ($contactsUid === null || $contactsUid === '') {
+			return $this->generatedContactUid(vendor: $vendor);
+		}
+
+		return $contactsUid;
+	}//end createVendorContact()
+
+	/**
+	 * A UID derived from the vendor's name and KvK number, used when no
+	 * contact could be written.
+	 *
+	 * @param array<string,mixed> $vendor The vendor data.
+	 *
+	 * @return string
+	 */
+	private function generatedContactUid(array $vendor): string {
+		$contactsUid = sprintf('pvm-%s', md5(($vendor['name'] ?? '') . ($vendor['kvkNumber'] ?? '')));
+		$this->logger->info(
+			'PVM ingest: using generated contactsUid (no Contacts write)',
+			[
+				'uid' => $contactsUid,
+				'vendor' => $vendor['name'] ?? '',
+			]
+		);
+
+		return $contactsUid;
+	}//end generatedContactUid()
 
 	/**
 	 * Build a fill-only payload for a product: only include supply-master fields
@@ -554,20 +742,10 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @return array<string,mixed> The fields to write (may be empty).
 	 */
 	private function buildProductFillPayload(array $existing, array $shillinqSource): array {
-		$updates = [];
-		foreach (self::PRODUCT_FILLABLE_FIELDS as $field) {
-			$srcValue = $shillinqSource[$field] ?? null;
-			if ($srcValue === null || $srcValue === '') {
-				continue;
-			}
-
-			$currentValue = $existing[$field] ?? null;
-			if ($currentValue === null || $currentValue === '' || $currentValue === []) {
-				$updates[$field] = $srcValue;
-			}
-		}
-
-		return $updates;
+		return $this->fillOnlyUpdates(
+			existing: $existing,
+			incoming: $this->pickFields(source: $shillinqSource, fields: self::PRODUCT_FILLABLE_FIELDS)
+		);
 	}//end buildProductFillPayload()
 
 	/**
@@ -580,21 +758,63 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @return array<string,mixed> The fields to write (may be empty).
 	 */
 	private function buildSupplierFillPayload(array $existing, array $shillinqSource): array {
+		return $this->fillOnlyUpdates(
+			existing: $existing,
+			incoming: $this->pickFields(source: $shillinqSource, fields: self::SUPPLIER_FILLABLE_FIELDS)
+		);
+	}//end buildSupplierFillPayload()
+
+	/**
+	 * The named fields of a source record, in field order; a missing field is null.
+	 *
+	 * @param array<string,mixed> $source The incoming record.
+	 * @param array<int,string>   $fields The field names.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function pickFields(array $source, array $fields): array {
+		$picked = [];
+		foreach ($fields as $field) {
+			$picked[$field] = $source[$field] ?? null;
+		}
+
+		return $picked;
+	}//end pickFields()
+
+	/**
+	 * The incoming values that have content, for the fields that are empty
+	 * on the existing record. Never overwrites a filled field.
+	 *
+	 * @param array<string,mixed> $existing The existing record.
+	 * @param array<string,mixed> $incoming The incoming values by field.
+	 *
+	 * @return array<string,mixed> The fields to write (may be empty).
+	 */
+	private function fillOnlyUpdates(array $existing, array $incoming): array {
 		$updates = [];
-		foreach (self::SUPPLIER_FILLABLE_FIELDS as $field) {
-			$srcValue = $shillinqSource[$field] ?? null;
+		foreach ($incoming as $field => $srcValue) {
 			if ($srcValue === null || $srcValue === '') {
 				continue;
 			}
 
-			$currentValue = $existing[$field] ?? null;
-			if ($currentValue === null || $currentValue === '' || $currentValue === []) {
+			if ($this->isEmptyField(value: ($existing[$field] ?? null)) === true) {
 				$updates[$field] = $srcValue;
 			}
 		}
 
 		return $updates;
-	}//end buildSupplierFillPayload()
+	}//end fillOnlyUpdates()
+
+	/**
+	 * Whether a stored field counts as empty: null, '' or [].
+	 *
+	 * @param mixed $value The stored value.
+	 *
+	 * @return bool
+	 */
+	private function isEmptyField(mixed $value): bool {
+		return $value === null || $value === '' || $value === [];
+	}//end isEmptyField()
 
 	/**
 	 * Map a shillinq product export record onto the pipelinq product schema.
@@ -605,22 +825,13 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @return array<string,mixed> Mapped product data for creation.
 	 */
 	private function mapShillinqProductToSchema(array $shillinqProduct): array {
-		$mapped = [];
-
-		// Direct-map fields that align with the pipelinq product schema.
+		// Direct-map fields that align with the pipelinq product schema, then
+		// the supply-master fields.
 		$directMap = ['name', 'sku', 'barcode', 'type', 'status', 'unit']; // phpcs:ignore
-		foreach ($directMap as $f) {
-			if (isset($shillinqProduct[$f]) === true && $shillinqProduct[$f] !== '') {
-				$mapped[$f] = $shillinqProduct[$f];
-			}
-		}
-
-		// Supply-master fields.
-		foreach (self::PRODUCT_FILLABLE_FIELDS as $f) {
-			if (isset($shillinqProduct[$f]) === true && $shillinqProduct[$f] !== '') {
-				$mapped[$f] = $shillinqProduct[$f];
-			}
-		}
+		$mapped = array_merge(
+			$this->filledFields(source: $shillinqProduct, fields: $directMap),
+			$this->filledFields(source: $shillinqProduct, fields: self::PRODUCT_FILLABLE_FIELDS)
+		);
 
 		// ProductId defaults to the OR object UUID; set to '' here and let the
 		// post-create fix-up (in ingestProduct) correct it once the UUID is known.
@@ -628,6 +839,25 @@ class IngestProductVendorMaster implements IRepairStep {
 
 		return $mapped;
 	}//end mapShillinqProductToSchema()
+
+	/**
+	 * The named fields a source record sets to something other than ''.
+	 *
+	 * @param array<string,mixed> $source The source record.
+	 * @param array<int,string>   $fields The field names, in order.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function filledFields(array $source, array $fields): array {
+		$filled = [];
+		foreach ($fields as $field) {
+			if (isset($source[$field]) === true && $source[$field] !== '') {
+				$filled[$field] = $source[$field];
+			}
+		}
+
+		return $filled;
+	}//end filledFields()
 
 	/**
 	 * Map a shillinq vendor export record onto the pipelinq supplier schema.

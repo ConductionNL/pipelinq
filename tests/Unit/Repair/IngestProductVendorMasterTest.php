@@ -416,4 +416,35 @@ class IngestProductVendorMasterTest extends TestCase {
 		$this->assertSame(expected: 'obj-1', actual: $os->store['obj-1']['productId']);
 		$this->assertSame(expected: 'goods', actual: $os->store['sup-1']['category']);
 	}//end testEverySaveGoesToTheConfiguredRegisterAndSchema()
+
+	/**
+	 * A supplier register or schema read that throws is logged as a failed vendor
+	 * ingest and costs only that vendor; the ingest itself does not throw.
+	 *
+	 * @return void
+	 */
+	public function testAThrowingSupplierConfigReadIsLoggedAndSkipsTheVendor(): void {
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$appConfig->method('getValueString')->willThrowException(exception: new \RuntimeException('config down'));
+
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn(new FakeIngestObjectService());
+
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('error')
+			->with('PVM ingest: vendor ingest failed', ['vendor' => 'Acme Supplies', 'exception' => 'config down']);
+
+		$repair = new IngestProductVendorMaster(
+			appManager: $this->createMock(originalClassName: IAppManager::class),
+			appConfig: $appConfig,
+			contactVcardService: $this->createMock(originalClassName: ContactVcardService::class),
+			container: $container,
+			logger: $logger,
+		);
+
+		$maps = $repair->ingest(export: ['vendors' => [['ref' => 'shil-v-1', 'name' => 'Acme Supplies']]]);
+
+		$this->assertSame(expected: ['products' => [], 'vendors' => []], actual: $maps);
+	}//end testAThrowingSupplierConfigReadIsLoggedAndSkipsTheVendor()
 }//end class
