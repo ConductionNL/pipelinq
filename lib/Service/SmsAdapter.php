@@ -31,6 +31,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\SmsMessage;
 use OCA\Pipelinq\Service\Provider\SmsProviderAttempt;
+use OCA\Pipelinq\Service\Provider\SmsSendFailure;
 use OCA\Pipelinq\Service\Provider\SmsSendRun;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -204,10 +205,11 @@ class SmsAdapter {
 
 		// Exhausted all providers transiently — persist failed row + alert.
 		return $this->persistFailureAndAlert(
-			contactId: $contactId,
-			providerId: '',
-			body: $body,
-			error: 'all SMS providers returned transient errors',
+			failure: new SmsSendFailure(
+				message: $run->message,
+				providerId: '',
+				error: 'all SMS providers returned transient errors',
+			),
 		);
 	}//end send()
 
@@ -281,10 +283,11 @@ class SmsAdapter {
 		}
 
 		return $this->persistFailureAndAlert(
-			contactId: $attempt->run->message->contactId,
-			providerId: $attempt->providerId,
-			body: $attempt->run->message->body,
-			error: $error->getMessage(),
+			failure: new SmsSendFailure(
+				message: $attempt->run->message,
+				providerId: $attempt->providerId,
+				error: $error->getMessage(),
+			),
 		);
 	}//end failedAttempt()
 
@@ -547,60 +550,93 @@ class SmsAdapter {
 	 * Persist a `failed` outbound row, leave a system note, and
 	 * notify the tenant admin.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID (empty when none tried).
-	 * @param string $body Message body.
-	 * @param string $error Error description.
+	 * @param SmsSendFailure $failure The message, the provider it failed on (empty when none tried) and the error.
 	 *
 	 * @return array{status: string, error: string, providerId?: string} Outcome.
 	 */
-	private function persistFailureAndAlert(
-		string $contactId,
-		string $providerId,
-		string $body,
-		string $error,
-	): array {
+	private function persistFailureAndAlert(SmsSendFailure $failure): array {
+		$this->persistMessage(payload: $this->failedMessagePayload(failure: $failure));
+		$this->alertSendFailure(failure: $failure);
+
+		return [
+			'status' => self::STATUS_FAILED,
+			'error' => $failure->error,
+			'providerId' => $failure->providerId,
+		];
+	}//end persistFailureAndAlert()
+
+	/**
+	 * The failed outbound message row, in the contact's SMS conversation.
+	 *
+	 * @param SmsSendFailure $failure The failed send.
+	 *
+	 * @return array<string, mixed> The message payload.
+	 */
+	private function failedMessagePayload(SmsSendFailure $failure): array {
 		$conversationId = $this->findOrOpenConversation(
-			contactId: $contactId,
-			providerId: $providerId,
+			contactId: $failure->message->contactId,
+			providerId: $failure->providerId,
 			channel: 'sms',
 		);
 
-		$this->persistMessage(
-			payload: [
-				'contactId' => $contactId,
-				'conversationId' => $conversationId,
-				'channel' => 'sms',
-				'direction' => 'outbound',
-				'body' => $body,
-				'providerId' => $providerId,
-				'deliveryStatus' => 'failed',
-				'sentAt' => $this->nowIso(),
-				'metadata' => ['error' => $error],
-			],
-		);
+		return ['contactId' => $failure->message->contactId, 'conversationId' => $conversationId]
+			+ $this->failedMessageFields(failure: $failure);
+	}//end failedMessagePayload()
 
+	/**
+	 * The fields of a failed outbound message after its contact and conversation.
+	 *
+	 * @param SmsSendFailure $failure The failed send.
+	 *
+	 * @return array<string, mixed> The message fields.
+	 */
+	private function failedMessageFields(SmsSendFailure $failure): array {
+		return [
+			'channel' => 'sms',
+			'direction' => 'outbound',
+			'body' => $failure->message->body,
+			'providerId' => $failure->providerId,
+			'deliveryStatus' => 'failed',
+			'sentAt' => $this->nowIso(),
+			'metadata' => ['error' => $failure->error],
+		];
+	}//end failedMessageFields()
+
+	/**
+	 * Notify the admin of a failed send; a notification that fails is logged.
+	 *
+	 * @param SmsSendFailure $failure The failed send.
+	 *
+	 * @return void
+	 */
+	private function alertSendFailure(SmsSendFailure $failure): void {
 		try {
-			$this->notificationService->sendNotification(
-				userId: 'admin',
-				subject: 'messaging_sms_send_failed',
-				parameters: ['contactId' => $contactId, 'providerId' => $providerId, 'error' => $error],
-				objectType: 'message',
-				objectId: $contactId,
-			);
+			$this->notifySendFailure(failure: $failure);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SmsAdapter.persistFailureAndAlert: notification failed',
 				['exception' => $e->getMessage()]
 			);
 		}
+	}//end alertSendFailure()
 
-		return [
-			'status' => self::STATUS_FAILED,
-			'error' => $error,
-			'providerId' => $providerId,
-		];
-	}//end persistFailureAndAlert()
+	/**
+	 * Send the admin the failed-send notification.
+	 *
+	 * @param SmsSendFailure $failure The failed send.
+	 *
+	 * @return void
+	 */
+	private function notifySendFailure(SmsSendFailure $failure): void {
+		$contactId = $failure->message->contactId;
+		$this->notificationService->sendNotification(
+			userId: 'admin',
+			subject: 'messaging_sms_send_failed',
+			parameters: ['contactId' => $contactId, 'providerId' => $failure->providerId, 'error' => $failure->error],
+			objectType: 'message',
+			objectId: $contactId,
+		);
+	}//end notifySendFailure()
 
 	/**
 	 * Persist an outbound message row.

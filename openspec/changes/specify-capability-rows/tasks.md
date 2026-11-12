@@ -1,0 +1,59 @@
+# Tasks: specify-capability-rows
+
+- [x] 1.1 Write the requirements and record each one on its row in `openspec/parity/capabilities.json`
+  - Verify: `openspec validate specify-capability-rows --strict` passes
+
+- [ ] 2.1 Check row `rep-website-traffic` against "Website traffic shows next to the pipeline for the same period"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Matomo/MatomoReportService.php`
+- [ ] 3.1 Check row `clients-search` against "A client can be found by name, email or phone outside the client list"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Dashboard/FindClientWidget.php`
+- [ ] 4.1 Check row `auto-cross-app` against "A change made to a tracked object by another app gets the same follow-up"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Listener/ObjectEventListener.php`
+- [ ] 5.1 Check row `plat-health-check` against "One check reports the state of every configured connection"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/HealthController.php`
+- [ ] 6.1 Check row `clients-party-kind` against "A client records what kind of party it is"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/PartyKindRegistryService.php:112`
+- [ ] 7.1 Check row `clients-opencorporates` against "An organisation abroad can be looked up in an international company register"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/OpenCorporatesApiClient.php:96`
+- [ ] 8.1 Check row `req-complaint` against "A complaint is held to the legal answer term by default"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ComplaintSlaService.php:112`
+- [ ] 9.1 Check row `auto-setup-wizard` against "The setup wizard opens by itself on the first visit"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/SetupController.php`
+- [ ] 10.1 Check row `pipeline-kanban` against "A lead dragged to another stage column moves to that stage"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `src/views/pipeline/PipelineBoard.vue`
+- [ ] 11.1 Check row `work-recurring-task` against "A task with a repeat schedule comes back on that schedule"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/ScheduledTaskJob.php`
+- [ ] 12.1 Check row `auto-overnight` against "Slow work runs as a background job, not in the user's request"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/SlaDeadlineSweepJob.php`
+- [ ] 13.1 Check row `meeting-link` against "A user can send a booking link that offers the free slots in their own calendar"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/AvailabilityService.php:174`
+- [ ] 14.1 Check row `contract-number` against "A won lead can be turned into a numbered contract"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ContractService.php:208`
+- [ ] 15.1 Check row `gov-klantinteracties` against "Stored contact moments can be read in the VNG Klantinteracties format"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Integration/ContactMomentLeafProvider.php`
+- [ ] 16.1 Check row `req-conversation-export` against "Every service conversation can be copied to an outside archive"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `an`
+- [ ] 17.1 Check row `rep-schema-evolution` against "An export keeps working when a field is added or removed"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Export/SchemaEvolutionService.php`
+- [ ] 18.1 Check row `portal-login` against "A client logs in to the portal with an account of their own"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalAuthService.php:130`
+- [ ] 19.1 Check row `portal-mfa` against "The portal asks for a second factor when the tenant requires it"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalMfaService.php:173`
+- [ ] 20.1 Check row `portal-file-request` against "A client files a request in the portal and follows it"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalRequestService.php:216`
+- [ ] 21.1 Check row `portal-reply` against "A client answers a question on their request in the portal"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalRequestService.php:298`
+- [ ] 22.1 Check row `portal-documents` against "A client downloads their own documents through a short-lived link"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/PortalDocumentController.php`
+- [ ] 23.1 Check row `portal-invoices` against "A client sees their own invoices, contracts, orders and quotes"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalInvoiceService.php`
+- [ ] 24.1 Check row `portal-delegation` against "A business client gives another portal account access to part of their records"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalDelegationService.php:95`
+- [ ] 25.1 Check row `portal-export` against "A client downloads everything the portal holds about them"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalExportService.php:86`
+- [ ] 26.1 Check row `portal-close-account` against "A client closes their own portal account"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalAccountService.php:89`
+- [ ] 27.1 Check row `portal-sign` against "A client signs a document from a link"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/DocumentSigningService.php:88`
+- [ ] 28.1 Check row `auto-api` against "A script reads and writes the app's records through the API"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `appinfo/routes.php`

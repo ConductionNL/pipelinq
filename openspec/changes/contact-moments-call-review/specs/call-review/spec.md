@@ -59,3 +59,14 @@ agreed to the reviewer.
 - GIVEN a shared review with two coaching points
 - WHEN Sanne presses Agree on both in My Work
 - THEN the reviewer sees the review with status agreed and the dates
+
+### Requirement: A reviewer plays the recording from the review (REQ-CRV-004)
+
+The call review SHALL let a reviewer play the call recording while it is within its retention period, and SHALL say so when the recording is gone.
+
+#### Scenario: Listening back before scoring
+
+- GIVEN a recorded call whose retention has not expired
+- WHEN a team lead opens its review
+- THEN the review shows a player for the recording
+- AND after the retention date the review says the recording is no longer kept
