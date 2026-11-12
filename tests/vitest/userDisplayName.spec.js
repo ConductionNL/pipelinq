@@ -129,6 +129,80 @@ function userFields() {
 	return users
 }
 
+/** The field a column shows: its name, or its `key`. */
+function columnKey(c) {
+	return typeof c === 'string' ? c : c?.key
+}
+
+/** Whether a column shows its value through the formatter or a widget. */
+function isWired(c) {
+	return c && typeof c === 'object' && (c.formatter === FORMATTER || !!c.widget)
+}
+
+/** The user fields an index page shows without the formatter: its columns, or its default columns. */
+function indexPageGaps(file, node, config, fields) {
+	if (Array.isArray(config.columns)) {
+		return config.columns
+			.filter((column) => fields.includes(columnKey(column)) && !isWired(column))
+			.map((column) => `${file} ${node.id} column ${columnKey(column)}`)
+	}
+	return fields
+		.filter((field) => config.columnOverrides?.[field]?.formatter !== FORMATTER)
+		.map((field) => `${file} ${node.id} default column ${field}`)
+}
+
+/** The user fields a data widget shows without the formatter. */
+function dataWidgetGaps(file, node, fields) {
+	const shown =
+		node.content.include
+		|| fields.filter((f) => !(node.content.exclude || []).includes(f))
+	return fields
+		.filter(
+			(field) =>
+				shown.includes(field)
+				&& node.content.overrides?.[field]?.formatter !== FORMATTER,
+		)
+		.map((field) => `${file} ${node.id} data ${field}`)
+}
+
+/** The user-field columns an object list or table shows without the formatter. */
+function listWidgetGaps(file, node, fields) {
+	return (node.content.columns || [])
+		.filter((column) => fields.includes(columnKey(column)) && !isWired(column))
+		.map((column) => `${file} ${node.id} list column ${columnKey(column)}`)
+}
+
+/** Walk a manifest node and everything under it, collecting unwired user fields into `found`. */
+function walkManifest(file, node, schema, users, found) {
+	if (Array.isArray(node)) {
+		node.forEach((child) => walkManifest(file, child, schema, users, found))
+		return
+	}
+	if (!node || typeof node !== 'object') {
+		return
+	}
+	const config =
+		node.config && typeof node.config === 'object' ? node.config : null
+	const pageSchema = config?.schema || schema
+	if (config && node.type === 'index') {
+		found.push(...indexPageGaps(file, node, config, users[pageSchema] || []))
+	}
+	if (node.type === 'data' && node.content) {
+		found.push(...dataWidgetGaps(file, node, users[node.content.schema || schema] || []))
+	}
+	if (
+		(node.type === 'object-list' || node.type === 'object-table')
+		&& node.content
+	) {
+		found.push(...listWidgetGaps(file, node, users[node.content.schema] || []))
+	}
+	for (const [k, v] of Object.entries(node)) {
+		if (k !== 'properties') {
+			walkManifest(file, v, pageSchema, users, found)
+		}
+	}
+}
+
 /** Every place a manifest document shows a user field without the formatter. */
 function unwired(users) {
 	const docs = [['src/manifest.json', readJson('src', 'manifest.json')]]
@@ -140,72 +214,9 @@ function unwired(users) {
 				readJson('src', 'manifest.d', name),
 			]),
 		)
-	const key = (c) => (typeof c === 'string' ? c : c?.key)
-	const wired = (c) =>
-		c && typeof c === 'object' && (c.formatter === FORMATTER || !!c.widget)
 	const found = []
-
-	const walk = (file, node, schema) => {
-		if (Array.isArray(node)) {
-			node.forEach((child) => walk(file, child, schema))
-			return
-		}
-		if (!node || typeof node !== 'object') {
-			return
-		}
-		const config =
-			node.config && typeof node.config === 'object' ? node.config : null
-		const pageSchema = config?.schema || schema
-		if (config && node.type === 'index') {
-			const fields = users[pageSchema] || []
-			if (Array.isArray(config.columns)) {
-				for (const column of config.columns) {
-					if (fields.includes(key(column)) && !wired(column)) {
-						found.push(`${file} ${node.id} column ${key(column)}`)
-					}
-				}
-			} else {
-				for (const field of fields) {
-					if (config.columnOverrides?.[field]?.formatter !== FORMATTER) {
-						found.push(`${file} ${node.id} default column ${field}`)
-					}
-				}
-			}
-		}
-		if (node.type === 'data' && node.content) {
-			const fields = users[node.content.schema || schema] || []
-			const shown =
-				node.content.include
-				|| fields.filter((f) => !(node.content.exclude || []).includes(f))
-			for (const field of fields) {
-				if (
-					shown.includes(field)
-					&& node.content.overrides?.[field]?.formatter !== FORMATTER
-				) {
-					found.push(`${file} ${node.id} data ${field}`)
-				}
-			}
-		}
-		if (
-			(node.type === 'object-list' || node.type === 'object-table')
-			&& node.content
-		) {
-			const fields = users[node.content.schema] || []
-			for (const column of node.content.columns || []) {
-				if (fields.includes(key(column)) && !wired(column)) {
-					found.push(`${file} ${node.id} list column ${key(column)}`)
-				}
-			}
-		}
-		for (const [k, v] of Object.entries(node)) {
-			if (k !== 'properties') {
-				walk(file, v, pageSchema)
-			}
-		}
-	}
-
 	for (const [file, doc] of docs) {
-		walk(file, doc, null)
+		walkManifest(file, doc, null, users, found)
 	}
 	return found
 }
