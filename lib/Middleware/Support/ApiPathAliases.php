@@ -63,6 +63,15 @@ final class ApiPathAliases {
 	];
 
 	/**
+	 * Paths whose versioned form has a new name, as a pattern over the
+	 * unversioned path and its replacement, which follows the kebab-case rule.
+	 *
+	 * @var array<string,string>
+	 */
+	public const RENAMED = [
+	];
+
+	/**
 	 * The pattern of a path that already names a version.
 	 *
 	 * @var string
@@ -114,7 +123,7 @@ final class ApiPathAliases {
 		$relative = StandardProtocolPaths::appRelative(path: $path);
 		$prefix   = substr($path, 0, (strlen($path) - strlen($relative)));
 
-		return $prefix.self::versioned(path: $relative);
+		return $prefix.self::versioned(path: self::renamed(path: $relative));
 	}//end successorOf()
 
 	/**
@@ -153,7 +162,7 @@ final class ApiPathAliases {
 			$alias = array_merge(
 				$route,
 				[
-					'url'     => self::versioned(path: $url),
+					'url'     => self::versioned(path: self::renamed(path: $url)),
 					'postfix' => ($route['postfix'] ?? '').'v1',
 				]
 			);
@@ -191,6 +200,33 @@ final class ApiPathAliases {
 
 		return preg_match('#^(?:'.$requirement.')$#', 'a/b') === 1;
 	}//end isApiFallback()
+
+	/**
+	 * The current name of a path, which differs from the path only when RENAMED lists it.
+	 *
+	 * @param string $path An app-relative path.
+	 *
+	 * @return string The path, renamed where it has a new name.
+	 */
+	private static function renamed(string $path): string {
+		foreach (self::renames() as $pattern => $replacement) {
+			$current = preg_replace($pattern, $replacement, $path);
+			if (is_string($current) === true && $current !== $path) {
+				return $current;
+			}
+		}
+
+		return $path;
+	}//end renamed()
+
+	/**
+	 * The renamed paths.
+	 *
+	 * @return array<string,string> The replacements by pattern.
+	 */
+	private static function renames(): array {
+		return self::RENAMED;
+	}//end renames()
 
 	/**
 	 * The patterns of the unversioned paths that keep no successor.

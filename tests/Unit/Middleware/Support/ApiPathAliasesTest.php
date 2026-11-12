@@ -128,14 +128,14 @@ class ApiPathAliasesTest extends TestCase {
 				continue;
 			}
 
-			$path   = '/api/v1'.substr($url, 4);
+			$path   = (string) ApiPathAliases::successorOf(path: $url);
 			$twin   = self::find(routes: $routes, verb: $route['verb'], url: $path, name: $route['name']);
 			$sample = self::sample(route: $route);
 			$this->assertNotNull(actual: $twin, message: $route['verb'].' '.$url.' has no /api/v1/ twin');
 			$this->assertSame(expected: ($route['requirements'] ?? null), actual: ($twin['requirements'] ?? null));
 			$this->assertSame(expected: ($route['defaults'] ?? null), actual: ($twin['defaults'] ?? null));
 			if ($sample !== null) {
-				$first = self::firstMatch(routes: $routes, verb: $route['verb'], path: '/api/v1'.substr($sample, 4));
+				$first = self::firstMatch(routes: $routes, verb: $route['verb'], path: (string) ApiPathAliases::successorOf(path: $sample));
 				$this->assertTrue(
 					condition: self::isAlias(route: $first),
 					message: $route['verb'].' '.$path.' is answered by '.($first['name'] ?? 'no route').', not by the twin of '.$route['name']
