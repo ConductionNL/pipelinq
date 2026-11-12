@@ -59,13 +59,16 @@
 				{{ preferencesLine }}
 			</p>
 
-			<section class="contact-channels-section__group">
+			<section
+				v-for="group in channelGroups"
+				:key="group.type"
+				class="contact-channels-section__group">
 				<div class="contact-channels-section__group-header">
-					<h4>{{ t('pipelinq', 'Emails') }}</h4>
+					<h4>{{ group.heading }}</h4>
 					<NcButton
 						variant="tertiary"
-						data-testid="add-email-button"
-						@click="openEmailPhoneModal('email', null)">
+						:data-testid="'add-' + group.type + '-button'"
+						@click="openEmailPhoneModal(group.type, null)">
 						<template #icon>
 							<Plus :size="18" />
 						</template>
@@ -73,20 +76,20 @@
 					</NcButton>
 				</div>
 				<p
-					v-if="emails.length === 0"
+					v-if="group.entries.length === 0"
 					class="contact-channels-section__empty">
-					{{ t('pipelinq', 'No email addresses yet.') }}
+					{{ group.empty }}
 				</p>
 				<ul v-else class="contact-channels-section__list">
 					<li
-						v-for="(entry, index) in emails"
-						:key="'email-' + index"
+						v-for="(entry, index) in group.entries"
+						:key="group.type + '-' + index"
 						class="contact-channels-section__row">
 						<span class="contact-channels-section__kind">{{
 							kindLabel(entry.kind)
 						}}</span>
 						<a
-							:href="'mailto:' + entry.value"
+							:href="group.scheme + entry.value"
 							class="contact-channels-section__value"
 							>{{ entry.value }}</a
 						>
@@ -99,6 +102,7 @@
 							:size="16"
 							:title="t('pipelinq', 'Verified')" />
 						<NcButton
+							v-if="group.type === 'email'"
 							variant="tertiary"
 							data-testid="write-email-button"
 							@click="writeEmailTo = entry.value">
@@ -110,7 +114,7 @@
 						<NcButton
 							variant="tertiary"
 							:aria-label="t('pipelinq', 'Edit')"
-							@click="openEmailPhoneModal('email', index)">
+							@click="openEmailPhoneModal(group.type, index)">
 							<template #icon>
 								<Pencil :size="16" />
 							</template>
@@ -118,66 +122,7 @@
 						<NcButton
 							variant="tertiary"
 							:aria-label="t('pipelinq', 'Remove')"
-							@click="removeEntry('emails', index)">
-							<template #icon>
-								<Delete :size="16" />
-							</template>
-						</NcButton>
-					</li>
-				</ul>
-			</section>
-
-			<section class="contact-channels-section__group">
-				<div class="contact-channels-section__group-header">
-					<h4>{{ t('pipelinq', 'Phones') }}</h4>
-					<NcButton
-						variant="tertiary"
-						data-testid="add-phone-button"
-						@click="openEmailPhoneModal('phone', null)">
-						<template #icon>
-							<Plus :size="18" />
-						</template>
-						{{ t('pipelinq', 'Add') }}
-					</NcButton>
-				</div>
-				<p
-					v-if="phones.length === 0"
-					class="contact-channels-section__empty">
-					{{ t('pipelinq', 'No phone numbers yet.') }}
-				</p>
-				<ul v-else class="contact-channels-section__list">
-					<li
-						v-for="(entry, index) in phones"
-						:key="'phone-' + index"
-						class="contact-channels-section__row">
-						<span class="contact-channels-section__kind">{{
-							kindLabel(entry.kind)
-						}}</span>
-						<a
-							:href="'tel:' + entry.value"
-							class="contact-channels-section__value"
-							>{{ entry.value }}</a
-						>
-						<Star
-							v-if="entry.primary"
-							:size="16"
-							:title="t('pipelinq', 'Primary')" />
-						<CheckCircle
-							v-if="entry.verified"
-							:size="16"
-							:title="t('pipelinq', 'Verified')" />
-						<NcButton
-							variant="tertiary"
-							:aria-label="t('pipelinq', 'Edit')"
-							@click="openEmailPhoneModal('phone', index)">
-							<template #icon>
-								<Pencil :size="16" />
-							</template>
-						</NcButton>
-						<NcButton
-							variant="tertiary"
-							:aria-label="t('pipelinq', 'Remove')"
-							@click="removeEntry('phones', index)">
+							@click="removeEntry(group.list, index)">
 							<template #icon>
 								<Delete :size="16" />
 							</template>
@@ -462,6 +407,20 @@ export default {
 		 */
 		phones() {
 			return (this.entity && this.entity.phones) || []
+		},
+
+		/**
+		 * The e-mail and phone groups of the full look, each with its entries,
+		 * its words, the list it removes from and the link scheme of a row.
+		 *
+		 * @return {Array<object>} The two groups, e-mail first.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 */
+		channelGroups() {
+			return [
+				{ type: 'email', list: 'emails', scheme: 'mailto:', entries: this.emails, heading: t('pipelinq', 'Emails'), empty: t('pipelinq', 'No email addresses yet.') },
+				{ type: 'phone', list: 'phones', scheme: 'tel:', entries: this.phones, heading: t('pipelinq', 'Phones'), empty: t('pipelinq', 'No phone numbers yet.') },
+			]
 		},
 
 		/**
