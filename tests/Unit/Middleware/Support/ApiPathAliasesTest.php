@@ -71,6 +71,7 @@ class ApiPathAliasesTest extends TestCase {
 				['name' => 'things#index', 'url' => '/api/things/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\d+']],
 				['name' => 'things#update', 'url' => 'api/things', 'verb' => 'PUT', 'postfix' => 'put'],
 				['name' => 'things#versioned', 'url' => '/api/v1/other', 'verb' => 'GET'],
+				['name' => 'other#legacy', 'url' => '/api/other', 'verb' => 'GET'],
 				['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
 			],
 		];
@@ -88,6 +89,23 @@ class ApiPathAliasesTest extends TestCase {
 	}//end testAliasesComeBeforeTheOriginals()
 
 	/**
+	 * The API fallback gets no alias: it already answers the versioned paths no route does.
+	 *
+	 * @return void
+	 */
+	public function testTheApiFallbackHasNoAlias(): void {
+		$fallback = ['name' => 'apiFallback#notFound', 'url' => '/api/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+']];
+		$slug     = ['name' => 'things#show', 'url' => '/api/{slug}', 'verb' => 'GET'];
+
+		$this->assertTrue(condition: ApiPathAliases::isApiFallback(route: $fallback));
+		$this->assertFalse(condition: ApiPathAliases::isApiFallback(route: $slug));
+		$this->assertSame(
+			expected: ['/api/v1/{slug}', '/api/{path}', '/api/{slug}'],
+			actual: array_column(ApiPathAliases::withVersionedAliases(routes: ['routes' => [$fallback, $slug]])['routes'], 'url')
+		);
+	}//end testTheApiFallbackHasNoAlias()
+
+	/**
 	 * The shipped routes.php serves every unversioned API route under `/api/v1/`
 	 * too, with the same controller, requirements and defaults, under a new name.
 	 *
@@ -98,19 +116,25 @@ class ApiPathAliasesTest extends TestCase {
 		$byKey  = [];
 		$names  = [];
 		foreach ($routes as $route) {
-			$byKey[$route['verb'].' '.self::url(route: $route)] = $route;
+			$byKey[$route['verb'].' '.self::url(route: $route)][] = $route;
 			$names[] = strtolower($route['name'].($route['postfix'] ?? ''));
 		}
 
 		$twins = 0;
 		foreach ($routes as $route) {
 			$url = self::url(route: $route);
-			if (ApiPathAliases::isDeprecated(path: $url) === false) {
+			if (ApiPathAliases::isDeprecated(path: $url) === false || ApiPathAliases::isApiFallback(route: $route) === true) {
 				continue;
 			}
 
-			$twin = ($byKey[$route['verb'].' /api/v1'.substr($url, 4)] ?? null);
-			$this->assertNotNull(actual: $twin, message: $route['verb'].' '.$url.' has no /api/v1/ twin');
+			$candidates = ($byKey[$route['verb'].' /api/v1'.substr($url, 4)] ?? []);
+			$this->assertNotSame(expected: [], actual: $candidates, message: $route['verb'].' '.$url.' has no /api/v1/ twin');
+			if (self::isAlias(route: $candidates[0]) === false) {
+				// The app declares this versioned path itself, so no alias replaces it.
+				continue;
+			}
+
+			$twin = array_values(array_filter($candidates, static fn (array $candidate): bool => $candidate['name'] === $route['name']))[0] ?? $candidates[0];
 			$this->assertSame(expected: $route['name'], actual: $twin['name']);
 			$this->assertSame(expected: ($route['requirements'] ?? null), actual: ($twin['requirements'] ?? null));
 			$this->assertSame(expected: ($route['defaults'] ?? null), actual: ($twin['defaults'] ?? null));

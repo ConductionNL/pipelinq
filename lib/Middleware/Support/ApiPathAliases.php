@@ -117,17 +117,27 @@ final class ApiPathAliases {
 	 * @spec openspec/specs/api-contract/spec.md
 	 */
 	public static function withVersionedAliases(array $routes): array {
+		$declared = [];
+		foreach (($routes['routes'] ?? []) as $route) {
+			$declared[self::key(route: $route)] = true;
+		}
+
 		$aliases = [];
 		foreach (($routes['routes'] ?? []) as $route) {
 			$url = '/'.ltrim((string) ($route['url'] ?? ''), '/');
-			if (self::isDeprecated(path: $url) === true) {
-				$aliases[] = array_merge(
-					$route,
-					[
-						'url'     => self::versioned(path: $url),
-						'postfix' => ($route['postfix'] ?? '').'v1',
-					]
-				);
+			if (self::isDeprecated(path: $url) === false || self::isApiFallback(route: $route) === true) {
+				continue;
+			}
+
+			$alias = array_merge(
+				$route,
+				[
+					'url'     => self::versioned(path: $url),
+					'postfix' => ($route['postfix'] ?? '').'v1',
+				]
+			);
+			if (isset($declared[self::key(route: $alias)]) === false) {
+				$aliases[] = $alias;
 			}
 		}
 
@@ -135,6 +145,41 @@ final class ApiPathAliases {
 
 		return $routes;
 	}//end withVersionedAliases()
+
+	/**
+	 * Whether a route is the API fallback, a single placeholder after `/api/` that spans segments.
+	 *
+	 * It answers every API path no other route does, versioned ones included,
+	 * so it needs no alias, and an alias placed before the versioned routes
+	 * would take their requests.
+	 *
+	 * @param array<array-key,mixed> $route The route.
+	 *
+	 * @return bool True for the API fallback.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	public static function isApiFallback(array $route): bool {
+		$url = '/'.ltrim((string) ($route['url'] ?? ''), '/');
+		if (preg_match('#^/api/\{(\w+)\}$#', $url, $match) !== 1) {
+			return false;
+		}
+
+		$requirement = (string) ($route['requirements'][$match[1]] ?? '[^/]+');
+
+		return preg_match('#^(?:'.$requirement.')$#', 'a/b') === 1;
+	}//end isApiFallback()
+
+	/**
+	 * The verb and path a route registers, which two routes cannot share.
+	 *
+	 * @param array<array-key,mixed> $route The route.
+	 *
+	 * @return string The verb and the path with one leading slash.
+	 */
+	private static function key(array $route): string {
+		return strtoupper((string) ($route['verb'] ?? 'GET')).' /'.ltrim((string) ($route['url'] ?? ''), '/');
+	}//end key()
 
 	/**
 	 * The `/api/v1/` form of an unversioned API path.
