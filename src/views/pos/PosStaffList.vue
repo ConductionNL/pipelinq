@@ -60,6 +60,7 @@ import { CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { fetchPosRoles } from '../../services/posRolesApi.js'
 
 export default {
 	name: 'PosStaffList',
@@ -151,13 +152,7 @@ export default {
 		 * @spec exclude POS roles have no owning requirement, see PinLoginModal::loadStaff
 		 */
 		async loadRoles() {
-			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/roles')
-				const response = await axios.get(url)
-				this.roles = response?.data?.roles || []
-			} catch {
-				this.roles = []
-			}
+			this.roles = await fetchPosRoles()
 		},
 
 		/**
