@@ -27,3 +27,14 @@ The system SHALL let a user search an international company register by name and
 - WHEN they search the international register for Siemens in Germany and pick a result
 - THEN the form holds the registered name, address and registration number from the register
 - AND the user can change them before saving
+
+### Requirement: The client page shows who changed what and when
+
+The client page SHALL show the record's history: every change with the date, the user who made it and the fields it changed. The side column SHALL show the last change and link to the full history.
+
+#### Scenario: A colleague changed the phone number
+- GIVEN Jeroen changed the phone number of client Jansen yesterday
+- WHEN Sanne opens Jansen's client page and opens History
+- THEN the history lists yesterday's change by Jeroen with the old and new phone number
+- AND the side column reads that the record was last changed by Jeroen
+- @e2e exclude history comes from the OpenRegister audit trail; covered by the manifest page config

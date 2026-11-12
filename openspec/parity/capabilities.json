@@ -1234,7 +1234,8 @@
 				"spec": "openspec/specs/master-data-management",
 				"requirement": [
 					"openspec/specs/client-management :: Client Deduplication and Merge",
-					"openspec/specs/master-data-management :: REQ-MDM-004 — Merge Tooling with Preview and Reversibility"
+					"openspec/changes/clients-reversible-merge/specs/client-reversible-merge :: Clients and contacts merge through OpenRegister's reversible merge (REQ-CRM-001)",
+					"openspec/changes/clients-reversible-merge/specs/client-reversible-merge :: Moved references return when a merge is undone (REQ-CRM-002)"
 				]
 			},
 			"evidence": {
@@ -1268,7 +1269,11 @@
 				"evidence": "lib/Dashboard/FindClientWidget.php",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/dashboard",
-				"requirement": "openspec/changes/specify-capability-rows/specs/dashboard :: A client can be found by name, email or phone outside the client list"
+				"requirement": [
+					"openspec/changes/specify-capability-rows/specs/dashboard :: A client can be found by name, email or phone outside the client list",
+					"openregister:openspec/specs/unified-search-provider :: OpenRegister MUST be the single fleet-wide unified search provider for register objects",
+					"openspec/specs/kcc-werkplek :: Quick Search Across All Entities"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-management/search-within-your-hubspot-account global search bar at the top of every page searches CRM records; https://knowledge.hubspot.com/records/search-your-crm lists searched properties \"First Name\", \"Last Name\", \"Primary Email\" and phone. All products and plans.",
@@ -1378,7 +1383,10 @@
 				"change": "openregister/import-preview-and-conflict-policy",
 				"reachedOn": "Clients -> actions menu -> Import (register managers only)",
 				"readOn": "2026-10-07",
-				"requirement": "openregister:openspec/specs/data-import-export :: The system MUST support import from CSV, Excel, JSON, and XML formats @e2e exclude REST API import — covered by Newman"
+				"requirement": [
+					"openregister:openspec/specs/data-import-export :: The system MUST support import from CSV, Excel, JSON, and XML formats @e2e exclude REST API import — covered by Newman",
+					"openspec/specs/client-management :: Client Import"
+				]
 			},
 			"note": "Re-read 2026-10-07: reachable from a pipelinq page after all, not only through Open Register. It stays partial: only a register manager can import, and without column mapping or a preview a spreadsheet exported from another CRM does not import as it is. Mapping and preview are openregister's import-preview-and-conflict-policy (open). The client-management spec's 'Client Import from CSV with Column Mapping' asks for more than this.",
 			"evidence": {
@@ -1701,7 +1709,7 @@
 				"spec": "openspec/specs/client-management",
 				"requirement": [
 					"openspec/specs/client-management :: Client Update",
-					"openspec/specs/client-management :: Client Detail View"
+					"openspec/changes/specify-capability-rows/specs/client-management :: The client page shows who changed what and when"
 				]
 			},
 			"evidence": {
@@ -2664,8 +2672,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/contactmomenten-rapportage",
 				"requirement": [
-					"openspec/specs/request-management :: Request Channel Tracking [V1]",
-					"openspec/specs/contactmomenten-rapportage :: Channel Analytics"
+					"openspec/specs/contactmomenten-rapportage :: Channel Analytics",
+					"openspec/specs/omnichannel-registratie :: Unified Contact Registration Form"
 				]
 			},
 			"evidence": {
@@ -3087,7 +3095,7 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/SurveyDispatchService.php:336. Corrections round 8 (2026-09-28), pipelinq#2072: onInteractionCompleted() (lib/Service/SurveyDispatchService.php:336-366) has no production caller: no class in lib/Listener and nothing in lib/AppInfo/Application.php refers to a survey, so no invitation is ever scheduled and lib/BackgroundJob/SurveyInvitationDispatchJob.php:129 finds nothing to send, at 9a5e95c.",
+				"evidence": "lib/Listener/SurveyDispatchListener.php, registered in lib/AppInfo/Application.php, calls SurveyDispatchService::onInteractionCompleted() when an interaction completes; lib/BackgroundJob/SurveyInvitationDispatchJob.php sends the scheduled invitation. Re-read 12 Nov 2026 (closing round): the September note that no caller exists no longer holds.",
 				"owner": "ConductionNL/pipelinq",
 				"change": "openspec/changes/archive/2026-10-09-customer-satisfaction-closed-loop",
 				"requirement": "openspec/specs/customer-satisfaction :: Automated Invitation Dispatch on Interaction Completion"
@@ -3102,7 +3110,7 @@
 			"note": "Own rating yes to no (corrections round 8, 2026-09-28): the survey, its invitation job and its answer page are built, but nothing sends a survey after a contact, pipelinq#2072. built.state stays built because the code shipped with openspec/changes/customer-satisfaction-closed-loop and the missing piece is one listener. Corrections round 9 (2026-09-28): own rating no next to built.state built is left on purpose. The gap rule (own rating no while built.state is not building, specified or decided-no) re-picks this row in the next pass, which decides the missing listener; no change carries it yet.",
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqWerkplekKlant"
+				"board": "PqGesprekAfronden"
 			}
 		},
 		{
@@ -3553,11 +3561,16 @@
 			"feature": "kcc-werkplek",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Service/WalkInQueueService.php:216",
+				"state": "specified",
+				"evidence": "Not built: WalkInQueueService::createTicket stores the visitor without a queue number, so no number is handed out or called (decision 389). Was: lib/Service/WalkInQueueService.php:216",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/appointment-booking",
-				"requirement": "openspec/specs/appointment-booking :: REQ-APT-012 Walk-In Queue"
+				"requirement": [
+					"openspec/specs/appointment-booking :: REQ-APT-012 Walk-In Queue",
+					"openspec/changes/specify-capability-rows/specs/appointment-booking :: A walk-in visitor gets a queue number",
+					"openspec/changes/walk-in-queue-page/specs/appointment-booking :: A walk-in operator works the queue on a manifest page"
+				],
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no queue ticket or counter calling feature in the HubSpot knowledge base (searched the KB sitemap for queue, walk-in, counter, kiosk and check-in, 2026-09-26); the marketplace was not searched for a queue management app; the docs do not state an absence. Note: Was no without a source.",
@@ -4272,7 +4285,10 @@
 				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
 				"readOn": "2026-10-07",
 				"change": "notify-the-followers-of-tickets-and-leads",
-				"requirement": "openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)"
+				"requirement": [
+					"openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)",
+					"openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A colleague added to a ticket or lead can work on it (REQ-NFTL-005)"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/add-collaborators-to-a-deal \"If multiple users in your HubSpot account work together on a deal, you can add them as collaborators ... Each collaborator can access a default view that lists all deals they're included on\". All products and plans.",
@@ -4745,7 +4761,8 @@
 				"requirement": [
 					"openspec/specs/marketing-email-tracking :: First-party open tracking pixel",
 					"openspec/specs/marketing-email-tracking :: First-party click tracking redirect",
-					"openspec/specs/marketing-email-tracking :: Events roll into the existing analytics surface with a retention posture"
+					"openspec/specs/marketing-email-tracking :: Events roll into the existing analytics surface with a retention posture",
+					"openspec/changes/specify-capability-rows/specs/marketing-ui :: The send monitor shows each recipient's opens and clicks"
 				]
 			},
 			"evidence": {
@@ -5132,14 +5149,16 @@
 			"feature": "search-and-competitor-intelligence",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Service/Competitor/CompetitorWatchService.php:225",
+				"state": "specified",
+				"evidence": "Not built: a page watch stores what changed and the Competitors page lists it, but nobody is told: no notification is sent when a watch finds a change (decision 389). Was: lib/Service/Competitor/CompetitorWatchService.php:225",
 				"owner": "ConductionNL/pipelinq",
 				"change": "marketing-search-intelligence",
 				"requirement": [
 					"openspec/specs/marketing-competitor-watches :: A page watch diffs a selected fragment and stores a fingerprint",
-					"openspec/specs/marketing-competitor-watches :: The Competitors page shows what changed and says what did not run"
-				]
+					"openspec/specs/marketing-competitor-watches :: The Competitors page shows what changed and says what did not run",
+					"openspec/changes/specify-capability-rows/specs/marketing-competitor-watches :: The owner of a watch is told when the watched page changes"
+				],
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"evidence": {
 				"hubspot-crm": "Only through a third party tool: Klue https://klue.com/product/integrations \"Hubspot: Enables sellers with the latest competitive insights directly within Hubspot\", where Klue does the website monitoring. HubSpot's own AEO tool compares answer engine visibility with competitors (https://knowledge.hubspot.com/ai/optimize-content-and-improve-brand-visibility-for-ai), not pricing page changes. Note: Was no; an integrated competitive intelligence product provides it.",
@@ -6246,7 +6265,10 @@
 				"evidence": "lib/Service/ContractService.php:245",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/contract-renewal-tracking",
-				"requirement": "openspec/specs/contract-renewal-tracking :: Renewal Lead Automation"
+				"requirement": [
+					"openspec/specs/contract-renewal-tracking :: Renewal Lead Automation",
+					"openspec/changes/specify-capability-rows/specs/contract-renewal-tracking :: Marking a contract renewed drafts next term's contract"
+				]
 			},
 			"evidence": {
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; no contract, subscription or renewal entity exists in Kiss.Bff/Intern/Data/BeheerDbContext.cs or in the OpenKlant and ZGW services KISS calls",
@@ -7741,7 +7763,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
 				"spec": "openspec/specs/xwiki-proxy",
-				"requirement": "openspec/specs/xwiki-proxy :: xWiki search prefers OpenRegister with legacy fallback"
+				"requirement": [
+					"openspec/specs/xwiki-proxy :: xWiki search prefers OpenRegister with legacy fallback",
+					"openspec/specs/kennisbank :: Agents search xWiki from the knowledge widget"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/ai-tools/use-breeze-assistant-with-connected-apps \"Find relevant information from connected apps (e.g., Slack, Gmail) using Breeze Assistant ... Ask questions in plain language and get synthesized answers drawn from your connected tools\", with Google Docs as an example source; All products and plans. Wiki connectors GitBook, Guru and Document360 are sunset on 26 Sept 2026. Note: Was no; Breeze Assistant searches connected document tools.",
@@ -8287,7 +8312,8 @@
 				"change": "correspondence-language-per-party",
 				"requirement": [
 					"openspec/specs/parties :: A party carries the language it asked to be written in (REQ-PCL-001)",
-					"openspec/specs/parties :: The language to write in resolves with its reason (REQ-PCL-003)"
+					"openspec/specs/parties :: The language to write in resolves with its reason (REQ-PCL-003)",
+					"openspec/changes/specify-capability-rows/specs/messaging-saved-replies :: Saved replies in the party's language come first"
 				]
 			},
 			"evidence": {
@@ -8862,7 +8888,8 @@
 				"change": "requests-web-chat-and-bot",
 				"requirement": [
 					"openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover :: An administrator puts a chat on the website (REQ-WCH-001)",
-					"openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover :: A visitor chats without an account (REQ-WCH-002)"
+					"openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover :: A visitor chats without an account (REQ-WCH-002)",
+					"openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover :: The chat goes to a colleague through the Queue (REQ-WCH-004)"
 				]
 			},
 			"note": "HubSpot's free tier includes live chat and a chatbot. This is a real gap, not a rating we missed. Specified 2026-09-28 in openspec/changes/requests-web-chat-and-bot (OpenSpec pass).",
@@ -9409,7 +9436,10 @@
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
 				"change": "clients-registry-numbers-and-enrichment",
-				"requirement": "openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty person details can be filled from a public source in bulk (REQ-CRN-004)"
+				"requirement": [
+					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty person details can be filled from a public source in bulk (REQ-CRN-004)",
+					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty company details can be filled from KvK in bulk (REQ-CRN-003)"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data \"Enrich contacts and companies using data from HubSpot's commercial dataset. Enrich records individually or in bulk\". Starter and up, with credits.",
@@ -10178,7 +10208,10 @@
 				"reachedOn": "ClientDetail and ContactDetail (Messages section); nothing puts social messages in the Queue page",
 				"readOn": "2026-09-26",
 				"change": "requests-inbound-to-queue",
-				"requirement": "openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake :: An agent answers a social media message from its ticket (REQ-ITQ-006)"
+				"requirement": [
+					"openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake :: An agent answers a social media message from its ticket (REQ-ITQ-006)",
+					"openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake :: Facebook and Instagram messages reach the Queue (REQ-ITQ-004)"
+				]
 			},
 			"note": "WhatsApp arrives but lands per contact, not in the shared queue next to mail and phone; social network direct messages are not ingested at all. Specified 2026-09-28 in openspec/changes/requests-inbound-to-queue (OpenSpec pass). Corrections round 8 (2026-09-28): the inbound WhatsApp text is not shown on the contact, pipelinq#2073; rating kept at partial because inbound WhatsApp is still received and stored (lib/Service/WhatsAppAdapter.php:602) and its conversation shows on the contact. The display fix is task 1.1 of openspec/changes/messaging-saved-replies-and-resend.",
 			"evidence": {
@@ -10333,7 +10366,11 @@
 				"reachedOn": "TicketDetail (recording link on the contact moment)",
 				"readOn": "2026-09-26",
 				"change": "contact-moments-call-review",
-				"requirement": "openspec/changes/contact-moments-call-review/specs/call-review :: A reviewer plays the recording from the review (REQ-CRV-004)"
+				"requirement": [
+					"openspec/changes/contact-moments-call-review/specs/call-review :: A reviewer plays the recording from the review (REQ-CRV-004)",
+					"openspec/changes/contact-moments-call-review/specs/call-review :: A reviewer scores a call and writes coaching points (REQ-CRV-002)",
+					"openspec/changes/contact-moments-call-review/specs/call-review :: The agent agrees the coaching points (REQ-CRV-003)"
+				]
 			},
 			"note": "listen back only; score and coaching points are missing. Specified 2026-09-28 in openspec/changes/contact-moments-call-review (OpenSpec pass).",
 			"evidence": {
@@ -10416,7 +10453,10 @@
 				"reachedOn": "ClientDetail and ContactDetail quick log (src/manifest.json:2144)",
 				"readOn": "2026-09-26",
 				"change": "one-contact-moment-on-several-cases",
-				"requirement": "openspec/specs/contactmomenten :: Quick-Log Form"
+				"requirement": [
+					"openspec/specs/contactmomenten :: Quick-Log Form",
+					"openspec/changes/specify-capability-rows/specs/contactmomenten :: A contact moment is filed on an open request"
+				]
 			},
 			"note": "the request picker lists every request ticket, not only open ones",
 			"evidence": {
@@ -10656,7 +10696,10 @@
 				"reachedOn": "background jobs (no page needed); tickets and tasks are the Tickets, Queue and Tasks pages",
 				"readOn": "2026-09-26",
 				"change": "platform-client-retention",
-				"requirement": "openspec/changes/platform-client-retention/specs/client-retention :: A records officer approves each destruction (REQ-PCR-003)"
+				"requirement": [
+					"openspec/changes/platform-client-retention/specs/client-retention :: A records officer approves each destruction (REQ-PCR-003)",
+					"openspec/changes/platform-client-retention/specs/client-retention :: Client and contact schemas declare their personal data (REQ-PCR-004)"
+				]
 			},
 			"note": "contact moments, tasks and BRP data expire by themselves; client and contact records have no retention term, and request/complaint tickets are set to P100Y. Specified 2026-09-28 in openspec/changes/platform-client-retention (OpenSpec pass).",
 			"evidence": {
@@ -10746,7 +10789,8 @@
 				"change": "nextcloud-vue/form-conditions-from-schema",
 				"requirement": [
 					"nextcloud-vue:openspec/changes/form-conditions-from-schema/specs/dialog-system :: A property shows or hides itself by another field's value",
-					"nextcloud-vue:openspec/changes/form-conditions-from-schema/specs/dialog-system :: An administrator sets conditions without code"
+					"nextcloud-vue:openspec/changes/form-conditions-from-schema/specs/dialog-system :: An administrator sets conditions without code",
+					"nextcloud-vue:openspec/changes/form-conditions-from-schema/specs/dialog-system :: A property is required by another field's value"
 				]
 			},
 			"note": "conditional read-only exists at schema level (x-openregister-readonly-when); show, hide and validate on another field's value needs a developer. Specified in ConductionNL/nextcloud-vue openspec/changes/form-conditions-from-schema (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
@@ -11031,11 +11075,12 @@
 			"feature": "public-booking-portal",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Service/AvailabilityService.php:174",
+				"state": "specified",
+				"evidence": "Not built: AvailabilityService computes free slots for bookable resources; there is no personal booking link a user can send (decision 389). Was: lib/Service/AvailabilityService.php:174",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/appointment-booking",
-				"requirement": "openspec/changes/specify-capability-rows/specs/appointment-booking :: A user can send a booking link that offers the free slots in their own calendar"
+				"requirement": "openspec/changes/specify-capability-rows/specs/appointment-booking :: A user can send a booking link that offers the free slots in their own calendar",
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/meetings-tool/create-and-edit-scheduling-pages \"Create one-on-one scheduling pages so contacts can book meetings with you\"; contacts \"access these scheduling pages using a meeting link\", synced with Gmail or Office 365. All products and plans.",
