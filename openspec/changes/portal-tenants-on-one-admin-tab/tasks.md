@@ -8,3 +8,5 @@
 - [x] **T4**: PortalSettings as the overview: Portalen/Auditlog tabs, the portal list, the selected portal's form, latest actions with CSV download
   - vitest `portalTenantManager.spec.js`, `portalAdminSettings.spec.js`
 - [ ] **T5**: Seed the board's three portals in the example set (DQ-DATA) and re-measure PqBeheerPortaal
+- [x] **T6**: `PortalTenantService::resolveTenantId()` resolves the tenant from custom domain, subdomain, then widget header, never from the body or query
+- [ ] **T7**: PHPUnit `PortalTenantServiceTest` for the resolution order and the ignored query-string tenant id

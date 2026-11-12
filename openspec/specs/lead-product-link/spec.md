@@ -324,6 +324,56 @@ a reload.
 - WHEN the user adds a line
 - THEN the Line items count SHALL read 1
 
+### Requirement: The lead form edits the products as a table
+
+The lead form MUST show the lead's products as a table in the form, where a product is added from a product search and its quantity, unit price and discount are changed in place. The lines MUST be saved as their own lead product objects after the lead. A line's total MUST stay the server's calculation, and the table MUST show the sum of the saved line totals.
+
+#### Scenario: A product from the catalogue
+
+- GIVEN a lead in its form
+- WHEN the salesperson picks Adviesuur from the product search
+- THEN a line MUST appear with the product's name and price
+- AND after saving, the lead product MUST be stored with the lead as its lead
+
+### Requirement: A value typed by hand stays beside the calculated value
+
+When a lead line is created, changed or deleted, the system MUST write the sum of the lead's line totals as its calculated value, and MUST write it as the lead's value too unless the value was typed over the calculated one. A lead without lines MUST keep the value typed by hand. While the value differs from the calculated value, the lead page MUST show the calculated value under it and offer "Use calculated value", which MUST set the value to the calculated value.
+
+#### Scenario: A line is added
+
+- GIVEN a lead with no lines and no value
+- WHEN a line with total 3.000 is added
+- THEN the lead's value and calculated value MUST be 3.000
+
+#### Scenario: A typed value stays
+
+- GIVEN a lead with lines adding up to 3.000 and a value typed as 6.000
+- WHEN a line changes and the lines add up to 3.200
+- THEN the value MUST stay 6.000 and the calculated value MUST be 3.200
+- AND the lead page MUST show "Calculated from the lines" 3.200 and "Use calculated value"
+
+#### Scenario: Use calculated value
+
+- GIVEN that lead
+- WHEN the user chooses "Use calculated value"
+- THEN the value MUST be 3.200 and the action and the calculated line MUST no longer show
+
+### Requirement: The server keeps the lead value with its lines
+
+When a lead line is created, changed or deleted, the system MUST write the lead's value as the sum of its line totals. A lead without lines MUST keep the value typed by hand.
+
+#### Scenario: A line is added
+
+- GIVEN a lead with no lines and no value
+- WHEN a line with total 3.000 is added
+- THEN the lead's value MUST be 3.000
+
+#### Scenario: The last line is removed
+
+- GIVEN a lead whose value is 3.000 from its one line
+- WHEN that line is deleted
+- THEN the lead's value MUST stay 3.000, for the user to change by hand
+
 ## Current Implementation Status
 
 **Implemented:**

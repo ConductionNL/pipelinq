@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Pipelinq\Service\Competitor\WatchOutcome
  * @uses \OCA\Pipelinq\Service\Competitor\QuietXmlParser
  * @uses \OCA\Pipelinq\Service\Egress\EgressResult
+ * @uses \OCA\Pipelinq\Service\Competitor\SitemapHop
  */
 class SitemapWatchReaderTest extends TestCase {
 

@@ -2,10 +2,8 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:ed2f9aba-588a-4d0a-a8e2-1674a25358dc",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-11T17:26:10Z",
     "tools": [
       {
         "name": "composer",
@@ -82,10 +80,10 @@
       }
     ],
     "component": {
-      "bom-ref": "conductionnl/pipelinq-dev-development",
+      "bom-ref": "conductionnl/pipelinq-0.1.0.0",
       "type": "application",
       "name": "pipelinq",
-      "version": "dev-development",
+      "version": "0.1.0",
       "group": "conductionnl",
       "description": "Client and request management for Nextcloud powered by OpenRegister",
       "author": "Conduction b.v.",
@@ -96,16 +94,8 @@
           }
         }
       ],
-      "purl": "pkg:composer/conductionnl/pipelinq@dev-development",
+      "purl": "pkg:composer/conductionnl/pipelinq@0.1.0",
       "properties": [
-        {
-          "name": "cdx:composer:package:distReference",
-          "value": "105b15c2acb7466be60588ef8136933fe7e9b34f"
-        },
-        {
-          "name": "cdx:composer:package:sourceReference",
-          "value": "105b15c2acb7466be60588ef8136933fe7e9b34f"
-        },
         {
           "name": "cdx:composer:package:type",
           "value": "library"
@@ -28928,7 +28918,7 @@
   ],
   "dependencies": [
     {
-      "ref": "conductionnl/pipelinq-dev-development"
+      "ref": "conductionnl/pipelinq-0.1.0.0"
     }
   ]
 }

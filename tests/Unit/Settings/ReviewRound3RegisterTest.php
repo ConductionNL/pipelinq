@@ -28,6 +28,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  */
 class ReviewRound3RegisterTest extends TestCase {
 	/**

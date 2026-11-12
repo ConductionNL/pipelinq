@@ -28,6 +28,10 @@ use PHPUnit\Framework\TestCase;
  * A served set of documents, the URLs asked for and the outcome.
  *
  * @covers \OCA\Pipelinq\Service\Competitor\SitemapWatchReader
+ * @uses \OCA\Pipelinq\Service\Competitor\QuietXmlParser
+ * @uses \OCA\Pipelinq\Service\Competitor\SitemapHop
+ * @uses \OCA\Pipelinq\Service\Competitor\WatchOutcome
+ * @uses \OCA\Pipelinq\Service\Egress\EgressResult
  */
 class SitemapCollectGoldenTest extends TestCase {
 

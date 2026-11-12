@@ -50,6 +50,27 @@ use Throwable;
  */
 class SurveyResponseService {
 	/**
+	 * App-config key of the satisfaction survey schema.
+	 *
+	 * @var string
+	 */
+	private const SURVEY_SCHEMA_KEY = 'survey_schema';
+
+	/**
+	 * App-config key of the client schema.
+	 *
+	 * @var string
+	 */
+	private const CLIENT_SCHEMA_KEY = 'client_schema';
+
+	/**
+	 * The survey fields the public page shows.
+	 *
+	 * @var array<int, string>
+	 */
+	private const SURVEY_PAGE_FIELDS = ['id', 'title', 'description', 'questions'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
@@ -186,7 +207,10 @@ class SurveyResponseService {
 		return [
 			'status' => 200,
 			'state' => 'open',
-			'survey' => $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), what: 'survey'),
+			'survey' => array_intersect_key(
+				$this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), schemaKey: self::SURVEY_SCHEMA_KEY),
+				array_flip(self::SURVEY_PAGE_FIELDS)
+			),
 		];
 	}//end show()
 
@@ -280,7 +304,7 @@ class SurveyResponseService {
 		}
 
 		$now = new DateTimeImmutable();
-		$survey = $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), what: 'survey');
+		$survey = $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), schemaKey: self::SURVEY_SCHEMA_KEY);
 		$scored = $this->score(survey: $survey, answers: $answers);
 
 		$response = array_merge(
@@ -320,46 +344,50 @@ class SurveyResponseService {
 
 		$response = $this->followUp->process(
 			response: $response,
-			client: $this->readPublic(uuid: (string)($invitation['clientRef'] ?? ''), what: 'client'),
+			client: $this->readPublic(uuid: (string)($invitation['clientRef'] ?? ''), schemaKey: self::CLIENT_SCHEMA_KEY),
 		);
 
 		return ['status' => 201, 'response' => $response];
 	}//end submit()
 
 	/**
-	 * Read one object on the public path.
+	 * Read one object on the public path, only from pipelinq's register and
+	 * the schema the app config names for it, under OpenRegister's RBAC.
 	 *
-	 * The survey and the client were two readers doing the same thing, which
-	 * is how they drifted: one logged what it could not read and the other
-	 * swallowed it. One reader, one behaviour.
+	 * An id that names an object of any other register or schema reads as
+	 * nothing, so an invitation can only point at a survey or a client.
 	 *
-	 * @param string $uuid The object's uuid.
-	 * @param string $what What is being read, for the log line.
+	 * @param string $uuid      The object's uuid.
+	 * @param string $schemaKey The app-config key of the schema it must belong to.
 	 *
 	 * @return array<string, mixed> The object, or [].
 	 */
-	private function readPublic(string $uuid, string $what): array {
-		if (trim($uuid) === '') {
+	private function readPublic(string $uuid, string $schemaKey): array {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		if (trim($uuid) === '' || $register === '' || $schema === '') {
 			return [];
 		}
 
 		try {
-			// RBAC off: this is the PUBLIC path, where the token is the
-			// authorisation and there is no session to check anything against.
-			$entity = $this->objectService->find(id: $uuid, _rbac: false, _multitenancy: false);
+			$entity = $this->objectService->find(id: $uuid, register: $register, schema: $schema, _multitenancy: false);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SurveyResponseService: an object on the public path could not be read',
-				['what' => $what, 'uuid' => $uuid, 'exception' => $e->getMessage()]
+				['schemaKey' => $schemaKey, 'uuid' => $uuid, 'exception' => $e->getMessage()]
 			);
 
 			return [];
 		}
 
-		$data = null;
-		if ($entity !== null) {
-			$data = $entity->jsonSerialize();
+		if ($entity === null
+			|| (string)$entity->getRegister() !== $register
+			|| (string)$entity->getSchema() !== $schema
+		) {
+			return [];
 		}
+
+		$data = $entity->jsonSerialize();
 
 		if (is_array($data) === false) {
 			return [];

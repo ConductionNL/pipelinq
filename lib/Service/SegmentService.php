@@ -113,6 +113,18 @@ class SegmentService {
 	 *
 	 * @var array<string, array<int, string>>
 	 */
+	/**
+	 * Where each entity type's schema slug comes from: the app-config keys
+	 * tried in order, then the default slug.
+	 *
+	 * @var array<string, array{keys: array<int, string>, default: string}>
+	 */
+	private const ENTITY_SCHEMA_SOURCES = [
+		'contact' => ['keys' => ['contact_schema'], 'default' => self::DEFAULT_CONTACT_SCHEMA_SLUG],
+		'customer' => ['keys' => ['customer_schema', 'client_schema'], 'default' => self::DEFAULT_CUSTOMER_SCHEMA_SLUG],
+		'client' => ['keys' => ['customer_schema', 'client_schema'], 'default' => self::DEFAULT_CUSTOMER_SCHEMA_SLUG],
+	];
+
 	private const OPERATOR_TYPE_MATRIX = [
 		'equals' => ['string', 'integer', 'number', 'boolean', 'array'],
 		'notEquals' => ['string', 'integer', 'number', 'boolean', 'array'],
@@ -217,7 +229,7 @@ class SegmentService {
 		// stored one and would start reading a different value.
 		$properties = array_merge($this->signals->schemaProperties(), $properties);
 
-		return $this->validateNode(node: $rules, path: '$', properties: $properties);
+		return $this->validateNode(node: $rules, at: new SegmentRulePosition(path: '$', properties: $properties));
 	}//end validateRules()
 
 	/**
@@ -318,9 +330,20 @@ class SegmentService {
 			return [];
 		}
 
+		return $this->matchingMembers(rules: $rules, entityType: $entityType);
+	}//end getMembersForBlast()
+
+	/**
+	 * The projected recipients among the entities of a type that match a rule tree.
+	 *
+	 * @param array<string, mixed> $rules      The rule tree.
+	 * @param string               $entityType The entity type.
+	 *
+	 * @return array<int, array<string, string>> Recipient rows.
+	 */
+	private function matchingMembers(array $rules, string $entityType): array {
 		$members = [];
-		$entities = $this->loadEntitiesForType(entityType: $entityType);
-		foreach ($entities as $entity) {
+		foreach ($this->loadEntitiesForType(entityType: $entityType) as $entity) {
 			if ($this->evaluateRules(rules: $rules, entity: $entity) !== true) {
 				continue;
 			}
@@ -329,7 +352,7 @@ class SegmentService {
 		}
 
 		return $members;
-	}//end getMembersForBlast()
+	}//end matchingMembers()
 
 	/**
 	 * List Segments with pagination envelope.
@@ -846,16 +869,31 @@ class SegmentService {
 			return $id;
 		}
 
-		if (isset($entity['@self']) === true && is_array($entity['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				if (isset($entity['@self'][$key]) === true && is_scalar($entity['@self'][$key]) === true) {
-					return (string)$entity['@self'][$key];
-				}
+		return $this->selfMemberId(entity: $entity);
+	}//end resolveMemberId()
+
+	/**
+	 * The member id under `@self`: the first of uuid, id and slug that is
+	 * set to a scalar, even an empty one.
+	 *
+	 * @param array<string, mixed> $entity Entity payload.
+	 *
+	 * @return string Id or empty string.
+	 */
+	private function selfMemberId(array $entity): string {
+		$self = ($entity['@self'] ?? null);
+		if (is_array($self) === false) {
+			return '';
+		}
+
+		foreach (['uuid', 'id', 'slug'] as $key) {
+			if (isset($self[$key]) === true && is_scalar($self[$key]) === true) {
+				return (string)$self[$key];
 			}
 		}
 
 		return '';
-	}//end resolveMemberId()
+	}//end selfMemberId()
 
 	/**
 	 * Resolve a member's first/last name, falling back to splitting a
@@ -871,16 +909,29 @@ class SegmentService {
 	private function resolveMemberName(array $entity): array {
 		$firstName = (string)($entity['firstName'] ?? $entity['first_name'] ?? '');
 		$lastName = (string)($entity['lastName'] ?? $entity['last_name'] ?? '');
-		if ($firstName === '' && $lastName === '' && isset($entity['name']) === true && is_string($entity['name']) === true) {
-			$parts = preg_split('/\s+/', trim($entity['name']));
-			if (is_array($parts) === true && $parts !== []) {
-				$firstName = (string)array_shift($parts);
-				$lastName = trim(implode(' ', $parts));
-			}
+		if ($firstName !== '' || $lastName !== '' || is_string($entity['name'] ?? null) === false) {
+			return ['firstName' => $firstName, 'lastName' => $lastName];
 		}
 
-		return ['firstName' => $firstName, 'lastName' => $lastName];
+		return $this->splitFullName(name: $entity['name']);
 	}//end resolveMemberName()
+
+	/**
+	 * Split a vCard-style full name on whitespace: the first word, then the rest.
+	 *
+	 * @param string $name The full name.
+	 *
+	 * @return array{firstName: string, lastName: string}
+	 */
+	private function splitFullName(string $name): array {
+		$parts = preg_split('/\s+/', trim($name));
+		if (is_array($parts) === false || $parts === []) {
+			return ['firstName' => '', 'lastName' => ''];
+		}
+
+		$firstName = (string)array_shift($parts);
+		return ['firstName' => $firstName, 'lastName' => trim(implode(' ', $parts))];
+	}//end splitFullName()
 
 	/**
 	 * Estimate the size of a Segment by counting matching entities.
@@ -971,7 +1022,17 @@ class SegmentService {
 			return null;
 		}
 
-		$cached = $cache->get($cacheKey);
+		return $this->cachedCount(cached: $cache->get($cacheKey));
+	}//end readEstimateCache()
+
+	/**
+	 * A cached count as an int; null when the value is not a number.
+	 *
+	 * @param mixed $cached The cached value.
+	 *
+	 * @return int|null
+	 */
+	private function cachedCount(mixed $cached): ?int {
 		if (is_int($cached) === true) {
 			return $cached;
 		}
@@ -981,7 +1042,7 @@ class SegmentService {
 		}
 
 		return null;
-	}//end readEstimateCache()
+	}//end cachedCount()
 
 	/**
 	 * Count the entities of a type that match a rule tree.
@@ -1044,7 +1105,7 @@ class SegmentService {
 	 * @return bool
 	 */
 	private function evaluateAndChildren(mixed $children, array $entity): bool {
-		if (is_array($children) === false || $children === []) {
+		if ($this->isNonEmptyList(children: $children) === false) {
 			return false;
 		}
 
@@ -1062,6 +1123,17 @@ class SegmentService {
 	}//end evaluateAndChildren()
 
 	/**
+	 * Whether a composite node's `children` is a non-empty array.
+	 *
+	 * @param mixed $children The node's `children` value.
+	 *
+	 * @return bool
+	 */
+	private function isNonEmptyList(mixed $children): bool {
+		return is_array($children) === true && $children !== [];
+	}//end isNonEmptyList()
+
+	/**
 	 * Evaluate an `OR` node's children: true when the children array is
 	 * non-empty and at least one array child evaluates true (non-array
 	 * children are skipped rather than failing the whole node).
@@ -1075,7 +1147,7 @@ class SegmentService {
 	 * @return bool
 	 */
 	private function evaluateOrChildren(mixed $children, array $entity): bool {
-		if (is_array($children) === false || $children === []) {
+		if ($this->isNonEmptyList(children: $children) === false) {
 			return false;
 		}
 
@@ -1366,6 +1438,19 @@ class SegmentService {
 			return ((bool)$left === (bool)$right);
 		}
 
+		return $this->scalarEquals(left: $left, right: $right);
+	}//end looseEquals()
+
+	/**
+	 * Equality of two non-boolean values: numerically for two numbers,
+	 * case-insensitively for two other scalars, strictly otherwise.
+	 *
+	 * @param mixed $left Left value.
+	 * @param mixed $right Right value.
+	 *
+	 * @return bool Whether the two values match.
+	 */
+	private function scalarEquals(mixed $left, mixed $right): bool {
 		if (is_numeric($left) === true && is_numeric($right) === true) {
 			return ((float)$left === (float)$right);
 		}
@@ -1375,7 +1460,7 @@ class SegmentService {
 		}
 
 		return ($left === $right);
-	}//end looseEquals()
+	}//end scalarEquals()
 
 	/**
 	 * `equals` for a rule: a list field (client.industry became one) equals a
@@ -1394,14 +1479,26 @@ class SegmentService {
 			return $this->looseEquals(left: $actual, right: $value);
 		}
 
-		foreach ($actual as $entry) {
+		return $this->listHasEntry(list: $actual, value: $value);
+	}//end ruleEquals()
+
+	/**
+	 * Whether a list holds a scalar equal to the value, ignoring case.
+	 *
+	 * @param array<int, mixed> $list  The entity's list field.
+	 * @param mixed             $value The scalar rule value.
+	 *
+	 * @return bool
+	 */
+	private function listHasEntry(array $list, mixed $value): bool {
+		foreach ($list as $entry) {
 			if (is_scalar($entry) === true && strcasecmp((string)$entry, (string)$value) === 0) {
 				return true;
 			}
 		}
 
 		return false;
-	}//end ruleEquals()
+	}//end listHasEntry()
 
 	/**
 	 * Numeric comparison returning -1, 0, or 1. Returns 0 when either
@@ -1414,25 +1511,28 @@ class SegmentService {
 	 */
 	private function compareNumeric(mixed $left, mixed $right): int {
 		if (is_numeric($left) === false || is_numeric($right) === false) {
-			if (is_string($left) === true && is_string($right) === true) {
-				return $left <=> $right;
-			}
-
-			return 0;
+			return $this->compareNonNumeric(left: $left, right: $right);
 		}
 
-		$leftFloat = (float)$left;
-		$rightFloat = (float)$right;
-		if ($leftFloat < $rightFloat) {
-			return -1;
-		}
+		return ((float)$left <=> (float)$right);
+	}//end compareNumeric()
 
-		if ($leftFloat > $rightFloat) {
-			return 1;
+	/**
+	 * Compare two values of which at least one is not numeric: two strings
+	 * compare as strings, anything else compares equal.
+	 *
+	 * @param mixed $left Left value.
+	 * @param mixed $right Right value.
+	 *
+	 * @return int -1, 0, or 1.
+	 */
+	private function compareNonNumeric(mixed $left, mixed $right): int {
+		if (is_string($left) === true && is_string($right) === true) {
+			return $left <=> $right;
 		}
 
 		return 0;
-	}//end compareNumeric()
+	}//end compareNonNumeric()
 
 	/**
 	 * Parse two date strings and compare them. Returns 0 on parse
@@ -1478,20 +1578,42 @@ class SegmentService {
 			return null;
 		}
 
+		return ($this->relativeDaysTimestamp(value: $value) ?? $this->parsedTimestamp(value: $value));
+	}//end toTimestamp()
+
+	/**
+	 * The timestamp a "N days" / "N days ago" expression names, counted back
+	 * from now; null for any other text.
+	 *
+	 * @param string $value The rule value.
+	 *
+	 * @return int|null
+	 */
+	private function relativeDaysTimestamp(string $value): ?int {
 		$match = [];
-		if (preg_match('/^(\d+)\s+days?(\s+ago)?$/i', $value, $match) === 1) {
-			$days = (int)$match[1];
-			$stamp = (time() - ($days * 86400));
-			return $stamp;
+		if (preg_match('/^(\d+)\s+days?(\s+ago)?$/i', $value, $match) !== 1) {
+			return null;
 		}
 
+		$days = (int)$match[1];
+		return (time() - ($days * 86400));
+	}//end relativeDaysTimestamp()
+
+	/**
+	 * The timestamp of a date string; null when it does not parse.
+	 *
+	 * @param string $value The date string.
+	 *
+	 * @return int|null
+	 */
+	private function parsedTimestamp(string $value): ?int {
 		$parsed = strtotime($value);
 		if ($parsed === false) {
 			return null;
 		}
 
 		return $parsed;
-	}//end toTimestamp()
+	}//end parsedTimestamp()
 
 	/**
 	 * Substring-or-array-membership check used by `contains` / `containsAny`.
@@ -1507,15 +1629,40 @@ class SegmentService {
 		}
 
 		if (is_array($haystack) === true) {
-			foreach ($haystack as $element) {
-				if ($this->looseEquals(left: $element, right: $needle) === true) {
-					return true;
-				}
-			}
-
-			return false;
+			return $this->listContains(list: $haystack, needle: $needle);
 		}
 
+		return $this->textContains(haystack: $haystack, needle: $needle);
+	}//end valueContains()
+
+	/**
+	 * Whether any element of a list loosely equals the needle.
+	 *
+	 * @param array<int|string, mixed> $list   The entity's list value.
+	 * @param mixed                    $needle The rule value.
+	 *
+	 * @return bool
+	 */
+	private function listContains(array $list, mixed $needle): bool {
+		foreach ($list as $element) {
+			if ($this->looseEquals(left: $element, right: $needle) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end listContains()
+
+	/**
+	 * Case-insensitive substring check of two scalars; an empty needle and
+	 * any non-scalar never match.
+	 *
+	 * @param mixed $haystack The entity's value.
+	 * @param mixed $needle   The rule value.
+	 *
+	 * @return bool
+	 */
+	private function textContains(mixed $haystack, mixed $needle): bool {
 		if (is_scalar($haystack) === false || is_scalar($needle) === false) {
 			return false;
 		}
@@ -1527,28 +1674,27 @@ class SegmentService {
 		}
 
 		return (str_contains($haystackStr, $needleStr) === true);
-	}//end valueContains()
+	}//end textContains()
 
 	/**
 	 * Recursively validate a node.
 	 *
 	 * @param array<string, mixed> $node Tree node.
-	 * @param string $path JSON-pointer-ish breadcrumb.
-	 * @param array<string, mixed> $properties Schema properties map.
+	 * @param SegmentRulePosition  $at   The node's path and the schema properties map.
 	 *
 	 * @return string|null Error string or null.
 	 */
-	private function validateNode(array $node, string $path, array $properties): ?string {
+	private function validateNode(array $node, SegmentRulePosition $at): ?string {
 		$type = $this->nodeType(node: $node);
 		if ($type === 'AND' || $type === 'OR') {
-			return $this->validateCompositeNode(node: $node, path: $path, properties: $properties, type: $type);
+			return $this->validateCompositeNode(node: $node, at: $at);
 		}
 
 		if ($type === 'NOT') {
-			return $this->validateNotNode(node: $node, path: $path, properties: $properties);
+			return $this->validateNotNode(node: $node, at: $at);
 		}
 
-		return $this->validateLeafNode(node: $node, path: $path, properties: $properties);
+		return $this->validateLeafNode(node: $node, at: $at);
 	}//end validateNode()
 
 	/**
@@ -1559,35 +1705,41 @@ class SegmentService {
 	 * complexity budget; behaviour is unchanged.
 	 *
 	 * @param array<string, mixed> $node Tree node.
-	 * @param string $path JSON-pointer-ish breadcrumb.
-	 * @param array<string, mixed> $properties Schema properties map.
-	 * @param string $type `AND` or `OR` (for the error message).
+	 * @param SegmentRulePosition  $at   The node's path and the schema properties map.
 	 *
 	 * @return string|null Error string or null.
 	 */
-	private function validateCompositeNode(array $node, string $path, array $properties, string $type): ?string {
+	private function validateCompositeNode(array $node, SegmentRulePosition $at): ?string {
 		$children = ($node['children'] ?? null);
 		if (is_array($children) === false || $children === []) {
-			return sprintf('%s: composite "%s" node requires non-empty "children".', $path, $type);
+			return sprintf('%s: composite "%s" node requires non-empty "children".', $at->path, $this->nodeType(node: $node));
 		}
 
+		return $this->validateChildren(children: $children, at: $at);
+	}//end validateCompositeNode()
+
+	/**
+	 * Validate the children of a composite node, in order; the first error wins.
+	 *
+	 * @param array<int|string, mixed> $children The node's children.
+	 * @param SegmentRulePosition      $at       The composite node's position.
+	 *
+	 * @return string|null Error string or null.
+	 */
+	private function validateChildren(array $children, SegmentRulePosition $at): ?string {
 		foreach ($children as $index => $child) {
 			if (is_array($child) === false) {
-				return sprintf('%s.children[%d]: child must be an object.', $path, $index);
+				return sprintf('%s.children[%d]: child must be an object.', $at->path, $index);
 			}
 
-			$childError = $this->validateNode(
-				node: $child,
-				path: $path . '.children[' . $index . ']',
-				properties: $properties
-			);
+			$childError = $this->validateNode(node: $child, at: $at->child(segment: '.children[' . $index . ']'));
 			if ($childError !== null) {
 				return $childError;
 			}
 		}
 
 		return null;
-	}//end validateCompositeNode()
+	}//end validateChildren()
 
 	/**
 	 * Validate a `NOT` node: exactly one child, which must be an object
@@ -1597,23 +1749,22 @@ class SegmentService {
 	 * complexity budget; behaviour is unchanged.
 	 *
 	 * @param array<string, mixed> $node Tree node.
-	 * @param string $path JSON-pointer-ish breadcrumb.
-	 * @param array<string, mixed> $properties Schema properties map.
+	 * @param SegmentRulePosition  $at   The node's path and the schema properties map.
 	 *
 	 * @return string|null Error string or null.
 	 */
-	private function validateNotNode(array $node, string $path, array $properties): ?string {
+	private function validateNotNode(array $node, SegmentRulePosition $at): ?string {
 		$children = ($node['children'] ?? null);
 		if (is_array($children) === false || count($children) !== 1) {
-			return sprintf('%s: NOT node requires exactly one child.', $path);
+			return sprintf('%s: NOT node requires exactly one child.', $at->path);
 		}
 
 		$child = $children[0];
 		if (is_array($child) === false) {
-			return sprintf('%s.children[0]: child must be an object.', $path);
+			return sprintf('%s.children[0]: child must be an object.', $at->path);
 		}
 
-		return $this->validateNode(node: $child, path: $path . '.children[0]', properties: $properties);
+		return $this->validateNode(node: $child, at: $at->child(segment: '.children[0]'));
 	}//end validateNotNode()
 
 	/**
@@ -1625,57 +1776,92 @@ class SegmentService {
 	 * complexity budget; behaviour is unchanged.
 	 *
 	 * @param array<string, mixed> $node Tree node.
-	 * @param string $path JSON-pointer-ish breadcrumb.
-	 * @param array<string, mixed> $properties Schema properties map.
+	 * @param SegmentRulePosition  $at   The node's path and the schema properties map.
 	 *
 	 * @return string|null Error string or null.
 	 */
-	private function validateLeafNode(array $node, string $path, array $properties): ?string {
+	private function validateLeafNode(array $node, SegmentRulePosition $at): ?string {
 		$field = ($node['field'] ?? null);
 		if (is_string($field) === false || $field === '') {
-			return sprintf('%s: leaf predicate requires non-empty "field".', $path);
+			return sprintf('%s: leaf predicate requires non-empty "field".', $at->path);
 		}
 
-		$fieldType = $this->resolveFieldType(field: $field, properties: $properties);
+		$fieldType = $this->resolveFieldType(field: $field, properties: $at->properties);
 		if ($fieldType === null) {
-			return sprintf('%s: field "%s" is not declared on the entity schema.', $path, $field);
+			return sprintf('%s: field "%s" is not declared on the entity schema.', $at->path, $field);
 		}
 
-		$operator = ($node['operator'] ?? null);
+		return $this->validateLeafOperator(
+			leaf: new SegmentRuleLeaf(node: $node, path: $at->path, field: $field, fieldType: $fieldType)
+		);
+	}//end validateLeafNode()
+
+	/**
+	 * Validate a declared leaf's operator: supported, valid for the field's
+	 * type, and then its value unless it is a null check.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf.
+	 *
+	 * @return string|null Error string or null.
+	 */
+	private function validateLeafOperator(SegmentRuleLeaf $leaf): ?string {
+		$operator = ($leaf->node['operator'] ?? null);
 		$allowedTypes = $this->resolveAllowedTypesForOperator(operator: $operator);
 		if ($allowedTypes === null) {
-			return sprintf('%s: operator "%s" is not supported.', $path, (string)$operator);
+			return sprintf('%s: operator "%s" is not supported.', $leaf->path, (string)$operator);
 		}
 
-		if (in_array($fieldType, $allowedTypes, true) === false) {
-			return sprintf(
-				'%s: operator "%s" is not valid for field "%s" of type "%s".',
-				$path,
-				(string)$operator,
-				$field,
-				$fieldType
-			);
+		if (in_array($leaf->fieldType, $allowedTypes, true) === false) {
+			return $this->operatorTypeError(leaf: $leaf);
 		}
 
 		if (in_array($operator, ['isNull', 'isNotNull'], true) === true) {
 			return null;
 		}
 
-		if (array_key_exists('value', $node) === false) {
-			return sprintf('%s: operator "%s" requires a "value".', $path, (string)$operator);
+		return $this->validateLeafValue(leaf: $leaf);
+	}//end validateLeafOperator()
+
+	/**
+	 * The error for an operator that is not valid for the field's type.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf.
+	 *
+	 * @return string
+	 */
+	private function operatorTypeError(SegmentRuleLeaf $leaf): string {
+		return sprintf(
+			'%s: operator "%s" is not valid for field "%s" of type "%s".',
+			$leaf->path,
+			(string)($leaf->node['operator'] ?? null),
+			$leaf->field,
+			$leaf->fieldType
+		);
+	}//end operatorTypeError()
+
+	/**
+	 * Validate a leaf's value: present, and coercible to the field's type.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf.
+	 *
+	 * @return string|null Error string or null.
+	 */
+	private function validateLeafValue(SegmentRuleLeaf $leaf): ?string {
+		if (array_key_exists('value', $leaf->node) === false) {
+			return sprintf('%s: operator "%s" requires a "value".', $leaf->path, (string)($leaf->node['operator'] ?? null));
 		}
 
-		if ($this->isValueCoercible(value: $node['value'], fieldType: $fieldType, operator: (string)$operator) === false) {
+		if ($this->isValueCoercible(leaf: $leaf) === false) {
 			return sprintf(
 				'%s: value for field "%s" is not coercible to type "%s".',
-				$path,
-				$field,
-				$fieldType
+				$leaf->path,
+				$leaf->field,
+				$leaf->fieldType
 			);
 		}
 
 		return null;
-	}//end validateLeafNode()
+	}//end validateLeafValue()
 
 	/**
 	 * Resolve the JSON-schema types an operator is valid for, or null when
@@ -1699,39 +1885,67 @@ class SegmentService {
 	}//end resolveAllowedTypesForOperator()
 
 	/**
-	 * Determine whether a value is coercible to the field's declared type.
+	 * Determine whether a leaf's value is coercible to the field's declared type.
 	 *
-	 * @param mixed $value The raw rule value.
-	 * @param string $fieldType JSON-schema type.
-	 * @param string $operator Operator (drives array-vs-scalar shape).
+	 * The operator drives the shape: a member for `contains` / `containsAny`
+	 * on an array field, a list for the list operators, a scalar otherwise.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf, carrying a `value`.
 	 *
 	 * @return bool True when coercion succeeds.
 	 */
-	private function isValueCoercible(mixed $value, string $fieldType, string $operator): bool {
-		if ($fieldType === 'array' && in_array($operator, ['contains', 'containsAny'], true) === true) {
+	private function isValueCoercible(SegmentRuleLeaf $leaf): bool {
+		$value = $leaf->node['value'];
+		$operator = (string)($leaf->node['operator'] ?? null);
+		if ($leaf->fieldType === 'array' && in_array($operator, ['contains', 'containsAny'], true) === true) {
 			return $this->isMembershipCoercible(value: $value);
 		}
 
 		if (in_array($operator, ['in', 'notIn', 'containsAny', 'between'], true) === true) {
-			if (is_array($value) === false) {
-				return false;
-			}
-
-			if ($operator === 'between' && count($value) !== 2) {
-				return false;
-			}
-
-			foreach ($value as $element) {
-				if ($this->isScalarCoercible(value: $element, fieldType: $fieldType) === false) {
-					return false;
-				}
-			}
-
-			return true;
+			return $this->isListCoercible(leaf: $leaf);
 		}
 
-		return $this->isScalarCoercible(value: $value, fieldType: $fieldType);
+		return $this->isScalarCoercible(value: $value, fieldType: $leaf->fieldType);
 	}//end isValueCoercible()
+
+	/**
+	 * Whether a list operator's value is a list of coercible scalars, and a
+	 * pair for `between`.
+	 *
+	 * @param SegmentRuleLeaf $leaf The leaf, carrying a `value`.
+	 *
+	 * @return bool
+	 */
+	private function isListCoercible(SegmentRuleLeaf $leaf): bool {
+		$value = $leaf->node['value'];
+		if (is_array($value) === false) {
+			return false;
+		}
+
+		if (($leaf->node['operator'] ?? null) === 'between' && count($value) !== 2) {
+			return false;
+		}
+
+		return $this->allScalarCoercible(values: $value, fieldType: $leaf->fieldType);
+	}//end isListCoercible()
+
+	/**
+	 * Whether every element coerces to the field type.
+	 *
+	 * @param array<int|string, mixed> $values    The list value.
+	 * @param string                   $fieldType JSON-schema type.
+	 *
+	 * @return bool
+	 */
+	private function allScalarCoercible(array $values, string $fieldType): bool {
+		foreach ($values as $element) {
+			if ($this->isScalarCoercible(value: $element, fieldType: $fieldType) === false) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end allScalarCoercible()
 
 	/**
 	 * Whether a value can be a MEMBER of an array-typed field.
@@ -1778,19 +1992,13 @@ class SegmentService {
 			return true;
 		}
 
-		switch ($fieldType) {
-			case 'integer':
-				return $this->isIntegerCoercible(value: $value);
-			case 'number':
-				return $this->isNumberCoercible(value: $value);
-			case 'boolean':
-				return $this->isBooleanCoercible(value: $value);
-			case 'array':
-				return is_array($value);
-			case 'string':
-			default:
-				return (is_scalar($value) === true);
-		}//end switch
+		return match ($fieldType) {
+			'integer' => $this->isIntegerCoercible(value: $value),
+			'number' => $this->isNumberCoercible(value: $value),
+			'boolean' => $this->isBooleanCoercible(value: $value),
+			'array' => is_array($value),
+			default => (is_scalar($value) === true),
+		};
 	}//end isScalarCoercible()
 
 	/**
@@ -1905,14 +2113,57 @@ class SegmentService {
 	 */
 	private function resolveFieldType(string $field, array $properties): ?string {
 		if (str_contains($field, '.') === false) {
-			if (array_key_exists($field, $properties) === false) {
-				return null;
-			}
-
-			return $this->propertyType(property: $properties[$field]);
+			return $this->topLevelFieldType(field: $field, properties: $properties);
 		}
 
+		return $this->itemFieldType(field: $field, properties: $properties);
+	}//end resolveFieldType()
+
+	/**
+	 * The declared type of a plain top-level field, or null when undeclared.
+	 *
+	 * @param string               $field      The field name.
+	 * @param array<string, mixed> $properties Schema properties map.
+	 *
+	 * @return string|null
+	 */
+	private function topLevelFieldType(string $field, array $properties): ?string {
+		if (array_key_exists($field, $properties) === false) {
+			return null;
+		}
+
+		return $this->propertyType(property: $properties[$field]);
+	}//end topLevelFieldType()
+
+	/**
+	 * The declared type of a dotted `arrayProp.subProp` field, or null when
+	 * the parent is not a declared array or the sub-property is undeclared.
+	 *
+	 * @param string               $field      The dotted field path.
+	 * @param array<string, mixed> $properties Schema properties map.
+	 *
+	 * @return string|null
+	 */
+	private function itemFieldType(string $field, array $properties): ?string {
 		[$parent, $child] = explode('.', $field, 2);
+		$itemProperties = $this->arrayItemProperties(parent: $parent, properties: $properties);
+		if (is_array($itemProperties) === false || array_key_exists($child, $itemProperties) === false) {
+			return null;
+		}
+
+		return $this->propertyType(property: $itemProperties[$child]);
+	}//end itemFieldType()
+
+	/**
+	 * The item properties of a declared array-typed property; null when the
+	 * property is undeclared or not an array.
+	 *
+	 * @param string               $parent     The parent property name.
+	 * @param array<string, mixed> $properties Schema properties map.
+	 *
+	 * @return mixed The item properties as declared, or null.
+	 */
+	private function arrayItemProperties(string $parent, array $properties): mixed {
 		if (array_key_exists($parent, $properties) === false) {
 			return null;
 		}
@@ -1922,13 +2173,8 @@ class SegmentService {
 			return null;
 		}
 
-		$itemProperties = $parentProperty['items']['properties'] ?? null;
-		if (is_array($itemProperties) === false || array_key_exists($child, $itemProperties) === false) {
-			return null;
-		}
-
-		return $this->propertyType(property: $itemProperties[$child]);
-	}//end resolveFieldType()
+		return $parentProperty['items']['properties'] ?? null;
+	}//end arrayItemProperties()
 
 	/**
 	 * Resolve the entityType's schema properties via OpenRegister.
@@ -1957,19 +2203,26 @@ class SegmentService {
 			return null;
 		}
 
+		return $this->schemaPropertiesOf(schema: $this->findSchema(entityType: $entityType, schemaSlug: $schemaSlug));
+	}//end resolveSchemaProperties()
+
+	/**
+	 * Fetch a Schema entity through OpenRegister's SchemaMapper; null when
+	 * the mapper is unavailable or the lookup fails.
+	 *
+	 * @param string $entityType The entity type, for the log line.
+	 * @param string $schemaSlug The schema slug.
+	 *
+	 * @return mixed The schema, or null.
+	 */
+	private function findSchema(string $entityType, string $schemaSlug): mixed {
 		$schemaMapper = $this->getSchemaMapper();
 		if ($schemaMapper === null) {
 			return null;
 		}
 
 		try {
-			// Pipelinq#773 fix (see docblock above) merged from
-			// marketing-segments-ui-repair — no `published:` argument.
-			$schema = $schemaMapper->find(
-				id: $schemaSlug,
-				_rbac: false,
-				_multitenancy: false,
-			);
+			return $this->findSchemaWith(schemaMapper: $schemaMapper, schemaSlug: $schemaSlug);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'SegmentService.resolveSchemaProperties: schema lookup failed',
@@ -1977,7 +2230,34 @@ class SegmentService {
 			);
 			return null;
 		}
+	}//end findSchema()
 
+	/**
+	 * Ask the SchemaMapper for a schema by slug.
+	 *
+	 * @param object $schemaMapper OpenRegister's SchemaMapper.
+	 * @param string $schemaSlug   The schema slug.
+	 *
+	 * @return mixed The schema.
+	 */
+	private function findSchemaWith(object $schemaMapper, string $schemaSlug): mixed {
+		// Pipelinq#773 fix (see resolveSchemaProperties()) merged from
+		// marketing-segments-ui-repair — no `published:` argument.
+		return $schemaMapper->find(
+			id: $schemaSlug,
+			_rbac: false,
+			_multitenancy: false,
+		);
+	}//end findSchemaWith()
+
+	/**
+	 * The properties map of a schema; null when it has none.
+	 *
+	 * @param mixed $schema The schema as the mapper answered it.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function schemaPropertiesOf(mixed $schema): ?array {
 		if (is_object($schema) === false || method_exists($schema, 'getProperties') === false) {
 			return null;
 		}
@@ -1988,7 +2268,7 @@ class SegmentService {
 		}
 
 		return $properties;
-	}//end resolveSchemaProperties()
+	}//end schemaPropertiesOf()
 
 	/**
 	 * Resolve the schema slug for the given entityType.
@@ -2006,31 +2286,31 @@ class SegmentService {
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
 	 */
 	protected function resolveSchemaSlug(string $entityType): string {
-		$entityType = strtolower($entityType);
-		$candidateKeys = [];
-		if ($entityType === 'contact') {
-			$candidateKeys = ['contact_schema'];
-		} elseif ($entityType === 'customer' || $entityType === 'client') {
-			$candidateKeys = ['customer_schema', 'client_schema'];
+		$source = (self::ENTITY_SCHEMA_SOURCES[strtolower($entityType)] ?? null);
+		if ($source === null) {
+			return '';
 		}
 
-		foreach ($candidateKeys as $key) {
+		return ($this->configuredSchemaSlug(keys: $source['keys']) ?? $source['default']);
+	}//end resolveSchemaSlug()
+
+	/**
+	 * The first schema slug set under one of the app-config keys.
+	 *
+	 * @param array<int, string> $keys The app-config keys, in order.
+	 *
+	 * @return string|null The slug, or null when none is set.
+	 */
+	private function configuredSchemaSlug(array $keys): ?string {
+		foreach ($keys as $key) {
 			$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
 			if ($slug !== '') {
 				return $slug;
 			}
 		}
 
-		if ($entityType === 'contact') {
-			return self::DEFAULT_CONTACT_SCHEMA_SLUG;
-		}
-
-		if ($entityType === 'customer' || $entityType === 'client') {
-			return self::DEFAULT_CUSTOMER_SCHEMA_SLUG;
-		}
-
-		return '';
-	}//end resolveSchemaSlug()
+		return null;
+	}//end configuredSchemaSlug()
 
 	/**
 	 * Load one Segment payload by UUID or slug.
@@ -2183,12 +2463,7 @@ class SegmentService {
 	private function extractRules(array $segment): ?array {
 		$rules = ($segment['rules'] ?? null);
 		if (is_string($rules) === true && $rules !== '') {
-			$decoded = json_decode($rules, true);
-			if (is_array($decoded) === true) {
-				return $decoded;
-			}
-
-			return null;
+			return $this->decodedRules(json: $rules);
 		}
 
 		if (is_array($rules) === true) {
@@ -2197,6 +2472,22 @@ class SegmentService {
 
 		return null;
 	}//end extractRules()
+
+	/**
+	 * A rule tree stored as JSON text; null when it is not a JSON object or list.
+	 *
+	 * @param string $json The stored rules.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function decodedRules(string $json): ?array {
+		$decoded = json_decode($json, true);
+		if (is_array($decoded) === true) {
+			return $decoded;
+		}
+
+		return null;
+	}//end decodedRules()
 
 	/**
 	 * Extract the entityType from a Segment payload.

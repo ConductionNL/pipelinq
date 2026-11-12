@@ -38,6 +38,9 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Marketing\BlastSendRun;
+use OCA\Pipelinq\Service\Marketing\ListPage;
+use OCA\Pipelinq\Service\Marketing\ObjectQuery;
+use OCA\Pipelinq\Service\Marketing\ObjectSelection;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -386,11 +389,7 @@ class BlastService {
 		// Campaign parameters go on the template once per blast, BEFORE the
 		// per-delivery render and the click-redirect wrap, so the redirect
 		// target carries them (marketing-campaign-attribution).
-		$template['bodyHtml'] = $this->decorateCampaignLinks(
-			html: (string)($template['bodyHtml'] ?? ''),
-			blast: $blast,
-			template: $template,
-		);
+		$template['bodyHtml'] = $this->decorateCampaignLinks(blast: $blast, template: $template);
 
 		$transport = $this->mailTransportService->resolveTransport(blast: $blast);
 		if ($transport === null) {
@@ -590,38 +589,21 @@ class BlastService {
 	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function listBlasts(?string $status, int $page, int $limit): array {
-		$page = max(1, $page);
-		$limit = min(100, max(1, $limit));
+		$window = ListPage::clamped(page: $page, limit: $limit);
 		$filters = [];
 		if ($status !== null && $status !== '') {
 			$filters['status'] = $status;
 		}
 
-		$schemaSlug = $this->getBlastSchemaSlug();
-		$offset = (($page - 1) * $limit);
-		$total = $this->countObjects(schemaSlug: $schemaSlug, filters: $filters);
+		$selection = new ObjectSelection(schemaSlug: $this->getBlastSchemaSlug(), filters: $filters);
+		$total = $this->countObjects(schemaSlug: $selection->schemaSlug, filters: $selection->filters);
 		// NEWEST FIRST, because every caller of this list says "recent" and none
 		// of them got it. `findAll()` returns insertion order when no sort is
 		// given, so a page of 50 was the fifty OLDEST blasts: on any instance
 		// past its first fifty sends, the performance dashboard showed the ones
 		// nobody is asking about and the send from an hour ago was unreachable.
 		// It reads as an empty Attribution tab rather than as a missing row.
-		$slice = $this->loadObjects(
-			schemaSlug: $schemaSlug,
-			filters: $filters,
-			limit: $limit,
-			offset: $offset,
-			sort: ['createdAt' => 'desc'],
-		);
-		return [
-			'data' => $slice,
-			'pagination' => [
-				'page' => $page,
-				'limit' => $limit,
-				'total' => $total,
-				'pages' => $this->computePages(total: $total, limit: $limit),
-			],
-		];
+		return $window->envelope(data: $this->loadNewestObjects(selection: $selection, page: $window), total: $total);
 	}//end listBlasts()
 
 	/**
@@ -874,71 +856,27 @@ class BlastService {
 	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function listDeliveriesForBlast(string $blastId, int $page, int $limit): array {
-		$page = max(1, $page);
-		$limit = min(100, max(1, $limit));
+		$window = ListPage::clamped(page: $page, limit: $limit);
 		if ($blastId === '') {
-			return [
-				'data' => [],
-				'pagination' => ['page' => $page, 'limit' => $limit, 'total' => 0, 'pages' => 0],
-			];
+			return $window->envelope(data: [], total: 0);
 		}
 
 		$filters = ['blastId' => $blastId];
-		$offset = (($page - 1) * $limit);
 		$total = $this->countDeliveries(filters: $filters);
-		$slice = $this->loadDeliveries(filters: $filters, limit: $limit, offset: $offset);
-		return [
-			'data' => $slice,
-			'pagination' => [
-				'page' => $page,
-				'limit' => $limit,
-				'total' => $total,
-				'pages' => $this->computePages(total: $total, limit: $limit),
-			],
-		];
+		return $window->envelope(data: $this->loadDeliveries(filters: $filters, page: $window), total: $total);
 	}//end listDeliveriesForBlast()
 
 	/**
-	 * Compute the page-count from a total + page-size pair.
+	 * Load one page of a schema's objects, newest first.
 	 *
-	 * Centralised so the inline ternary stays out of the envelope
-	 * builders (matches the team's "no inline IF" coding style).
+	 * @param ObjectSelection $selection The schema and its field filters.
+	 * @param ListPage        $page      The page asked for.
 	 *
-	 * @param int $total Total row count.
-	 * @param int $limit Page size.
-	 *
-	 * @return int Page count (0 when total is 0).
+	 * @return array<int, array<string, mixed>> The rows, or none when OpenRegister is unavailable or the query fails.
 	 */
-	private function computePages(int $total, int $limit): int {
-		if ($total <= 0 || $limit <= 0) {
-			return 0;
-		}
-
-		return (int)ceil($total / $limit);
-	}//end computePages()
-
-	/**
-	 * Load objects of the given schema (used by listBlasts), with optional
-	 * server-side paging pushed down to OpenRegister.
-	 *
-	 * @param string $schemaSlug Schema slug.
-	 * @param array<string, mixed> $filters Filter map.
-	 * @param int|null $limit Optional page size pushed to OR.
-	 * @param int|null $offset Optional offset pushed to OR.
-	 * @param array<string, string>|null $sort Optional ORDER BY pushed to OR,
-	 *                                         as `['field' => 'asc'|'desc']`.
-	 *
-	 * @return array<int, array<string, mixed>> Plain payloads.
-	 */
-	private function loadObjects(
-		string $schemaSlug,
-		array $filters,
-		?int $limit = null,
-		?int $offset = null,
-		?array $sort = null
-	): array {
+	private function loadNewestObjects(ObjectSelection $selection, ListPage $page): array {
 		$register = $this->getRegisterSlug();
-		if ($register === '' || $schemaSlug === '') {
+		if ($register === '' || $selection->schemaSlug === '') {
 			return [];
 		}
 
@@ -947,28 +885,25 @@ class BlastService {
 			return [];
 		}
 
-		$config = [
-			'filters' => array_merge(['register' => $register, 'schema' => $schemaSlug], $filters),
-		];
-		if ($limit !== null) {
-			$config['limit'] = $limit;
-		}
+		$config = $page->newestFirst(filters: $selection->scoped(register: $register));
+		$query = new ObjectQuery(config: $config, failure: 'BlastService.loadObjects: findAll failed', logContext: ['schema' => $selection->schemaSlug]);
+		return $this->findRows(objectService: $objectService, query: $query);
+	}//end loadNewestObjects()
 
-		if ($offset !== null) {
-			$config['offset'] = $offset;
-		}
-
-		if ($sort !== null) {
-			$config['sort'] = $sort;
-		}
-
+	/**
+	 * Run a loader's findAll and return its rows as plain arrays; a query
+	 * that throws is logged and gives none.
+	 *
+	 * @param object      $objectService The OpenRegister ObjectService.
+	 * @param ObjectQuery $query         The config and what to log on failure.
+	 *
+	 * @return array<int, array<string, mixed>> The rows.
+	 */
+	private function findRows(object $objectService, ObjectQuery $query): array {
 		try {
-			$rows = $objectService->findAll(config: $config);
+			$rows = $objectService->findAll(config: $query->config);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.loadObjects: findAll failed',
-				['schema' => $schemaSlug, 'exception' => $e->getMessage()]
-			);
+			$this->logger->warning($query->failure, $query->logContext + ['exception' => $e->getMessage()]);
 			return [];
 		}
 
@@ -978,7 +913,7 @@ class BlastService {
 		}
 
 		return $out;
-	}//end loadObjects()
+	}//end findRows()
 
 	/**
 	 * Count objects of a schema matching the given filters via OpenRegister.
@@ -1348,27 +1283,21 @@ class BlastService {
 	 * that never registered it) sends the body as authored. Fails soft:
 	 * a decorator fault never blocks a send.
 	 *
-	 * @param string $html Template body HTML.
 	 * @param array<string, mixed> $blast The blast row.
-	 * @param array<string, mixed> $template The template row.
+	 * @param array<string, mixed> $template The template row; its `bodyHtml` is decorated.
 	 *
 	 * @return string The decorated HTML, or the original on failure.
 	 *
 	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
-	private function decorateCampaignLinks(string $html, array $blast, array $template): string {
+	private function decorateCampaignLinks(array $blast, array $template): string {
+		$html = (string)($template['bodyHtml'] ?? '');
 		if ($html === '') {
 			return $html;
 		}
 
 		try {
-			$decorator = $this->container->get('OCA\\Pipelinq\\Service\\CampaignLinkDecorator');
-			return $decorator->decorate(
-				html: $html,
-				blast: $blast,
-				template: $template,
-				campaign: $this->campaignForBlast(blast: $blast),
-			);
+			return $this->decorateWithCampaign(blast: $blast, template: $template);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'BlastService.decorateCampaignLinks: decorator unavailable or failed, sending links as authored',
@@ -1377,6 +1306,25 @@ class BlastService {
 			return $html;
 		}
 	}//end decorateCampaignLinks()
+
+	/**
+	 * Decorate the template body's links with the blast's campaign through
+	 * the container's CampaignLinkDecorator.
+	 *
+	 * @param array<string, mixed> $blast    The blast row.
+	 * @param array<string, mixed> $template The template row; its `bodyHtml` is decorated.
+	 *
+	 * @return string The decorated HTML.
+	 */
+	private function decorateWithCampaign(array $blast, array $template): string {
+		$decorator = $this->container->get('OCA\\Pipelinq\\Service\\CampaignLinkDecorator');
+		return $decorator->decorate(
+			html: (string)($template['bodyHtml'] ?? ''),
+			blast: $blast,
+			template: $template,
+			campaign: $this->campaignForBlast(blast: $blast),
+		);
+	}//end decorateWithCampaign()
 
 	/**
 	 * The campaign a blast belongs to, or an empty array.
@@ -1590,12 +1538,11 @@ class BlastService {
 	 * Run a findAll against BlastDelivery with the given filters.
 	 *
 	 * @param array<string, mixed> $filters Filter map.
-	 * @param int|null $limit Optional page size pushed to OR.
-	 * @param int|null $offset Optional offset pushed to OR.
+	 * @param ListPage|null        $page    Optional page pushed to OR.
 	 *
 	 * @return array<int, array<string, mixed>> Matching rows.
 	 */
-	private function loadDeliveries(array $filters, ?int $limit = null, ?int $offset = null): array {
+	private function loadDeliveries(array $filters, ?ListPage $page = null): array {
 		$register = $this->getRegisterSlug();
 		$schema = $this->getBlastDeliverySchemaSlug();
 		if ($register === '' || $schema === '') {
@@ -1607,33 +1554,9 @@ class BlastService {
 			return [];
 		}
 
-		$config = [
-			'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
-		];
-		if ($limit !== null) {
-			$config['limit'] = $limit;
-		}
-
-		if ($offset !== null) {
-			$config['offset'] = $offset;
-		}
-
-		try {
-			$rows = $objectService->findAll(config: $config);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.loadDeliveries: findAll failed',
-				['filters' => $filters, 'exception' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach (($rows ?? []) as $row) {
-			$out[] = $this->toArray(value: $row);
-		}
-
-		return $out;
+		$config = ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)] + ($page?->window() ?? []);
+		$query = new ObjectQuery(config: $config, failure: 'BlastService.loadDeliveries: findAll failed', logContext: ['filters' => $filters]);
+		return $this->findRows(objectService: $objectService, query: $query);
 	}//end loadDeliveries()
 
 	/**
