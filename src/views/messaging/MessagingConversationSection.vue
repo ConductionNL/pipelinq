@@ -173,6 +173,7 @@ import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import SendMessageModal from '../../modals/SendMessageModal.vue'
+import { formatLocalTimestamp } from '../../services/localeUtils.js'
 import { PAGE_REFRESH_CHANNEL } from '../../services/pageRefreshOnCreate.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -460,16 +461,7 @@ export default {
 			return 'messaging-conversation__consent--warn'
 		},
 
-		formatDate(value) {
-			if (!value) {
-				return '—'
-			}
-			const parsed = new Date(value)
-			if (Number.isNaN(parsed.getTime())) {
-				return value
-			}
-			return parsed.toLocaleString()
-		},
+		formatDate: formatLocalTimestamp,
 
 		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
