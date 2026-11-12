@@ -102,6 +102,7 @@ import CashCheck from 'vue-material-design-icons/CashCheck.vue'
 import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import CancelBookingDialog from '../../dialogs/CancelBookingDialog.vue'
 import RescheduleBookingDialog from '../../dialogs/RescheduleBookingDialog.vue'
+import detailHeaderActionsMixin from '../../mixins/detailHeaderActionsMixin.js'
 import { postAction } from '../../services/postedAction.js'
 
 export default {
@@ -117,23 +118,11 @@ export default {
 		RescheduleBookingDialog,
 	},
 
+	mixins: [detailHeaderActionsMixin],
+
 	// The slot also hands over schema / store / openEditForm; none of them
 	// belong on the root element.
 	inheritAttrs: false,
-
-	props: {
-		/** The booking, from CnDetailPage's `#actions` slot. */
-		object: {
-			type: Object,
-			default: null,
-		},
-
-		/** The booking id, from CnDetailPage's `#actions` slot. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-	},
 
 	data() {
 		return {

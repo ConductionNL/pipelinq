@@ -50,6 +50,7 @@
 import { showError } from '@nextcloud/dialogs'
 import { emit } from '@nextcloud/event-bus'
 import { NcButton } from '@nextcloud/vue'
+import detailHeaderActionsMixin from '../../mixins/detailHeaderActionsMixin.js'
 import { movePost } from '../../services/socialApi.js'
 
 export default {
@@ -59,19 +60,7 @@ export default {
 		NcButton,
 	},
 
-	props: {
-		/** The post, from CnDetailPage's `#actions` slot. */
-		object: {
-			type: Object,
-			default: null,
-		},
-
-		/** The post id, from CnDetailPage's `#actions` slot. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-	},
+	mixins: [detailHeaderActionsMixin],
 
 	data() {
 		return {
