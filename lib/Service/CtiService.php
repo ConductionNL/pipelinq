@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Cti\AdapterRegistry;
+use OCA\Pipelinq\Service\Cti\CallAgent;
+use OCA\Pipelinq\Service\Cti\PendingCall;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
@@ -241,47 +243,56 @@ class CtiService {
 	/**
 	 * Create a pending contactmoment ticket.
 	 *
-	 * @param string $direction inbound|outbound.
-	 * @param string $fromNumber Caller number.
-	 * @param string $toNumber Callee number.
-	 * @param string $userId Acting agent UID.
-	 * @param string $extension Agent extension.
+	 * @param PendingCall         $call  The call: direction, numbers and agent.
 	 * @param array<string,mixed> $extra Extra fields to merge in.
 	 *
 	 * @return string|null The new contactmoment ticket UUID or null on failure.
 	 *
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
-	public function createPendingContactmoment(
-		string $direction,
-		string $fromNumber,
-		string $toNumber,
-		string $userId,
-		string $extension,
-		array $extra = [],
-	): ?string {
+	public function createPendingContactmoment(PendingCall $call, array $extra = []): ?string {
 		if ($this->ticketService->isConfigured() === false) {
 			$this->logger->warning('CTI: ticket register/schema not configured.');
 			return null;
 		}
 
-		$fromE164 = $this->phoneNormaliser->normaliseForOrg($fromNumber)['e164'];
-		$toE164 = $this->phoneNormaliser->normaliseForOrg($toNumber)['e164'];
-
-		$payload = array_merge(
-			[
-				'channel' => 'telephony',
-				'direction' => $direction,
-				'from_number' => ($fromE164 ?? $fromNumber),
-				'to_number' => ($toE164 ?? $toNumber),
-				'cti_extension' => $extension,
-				'assignee' => $userId,
-				'started_at' => gmdate('Y-m-d\TH:i:s\Z'),
-				'title' => 'CTI ' . $direction . ' call',
-			],
-			$extra
+		return $this->savePendingContactmoment(
+			payload: array_merge($this->pendingContactmomentFields(call: $call), $extra)
 		);
+	}//end createPendingContactmoment()
 
+	/**
+	 * The fields of a new pending contactmoment, with the numbers in E.164
+	 * where they normalise and as given where they do not.
+	 *
+	 * @param PendingCall $call The call.
+	 *
+	 * @return array<string,mixed> The ticket fields.
+	 */
+	private function pendingContactmomentFields(PendingCall $call): array {
+		$fromE164 = $this->phoneNormaliser->normaliseForOrg($call->fromNumber)['e164'];
+		$toE164 = $this->phoneNormaliser->normaliseForOrg($call->toNumber)['e164'];
+
+		return [
+			'channel' => 'telephony',
+			'direction' => $call->direction,
+			'from_number' => ($fromE164 ?? $call->fromNumber),
+			'to_number' => ($toE164 ?? $call->toNumber),
+			'cti_extension' => $call->agent->extension,
+			'assignee' => $call->agent->userId,
+			'started_at' => gmdate('Y-m-d\TH:i:s\Z'),
+			'title' => 'CTI ' . $call->direction . ' call',
+		];
+	}//end pendingContactmomentFields()
+
+	/**
+	 * Save a new contactmoment ticket; a failed save is logged and gives null.
+	 *
+	 * @param array<string,mixed> $payload The ticket fields.
+	 *
+	 * @return string|null The new contactmoment ticket UUID or null on failure.
+	 */
+	private function savePendingContactmoment(array $payload): ?string {
 		try {
 			$saved = $this->ticketService->save(
 				ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -295,7 +306,7 @@ class CtiService {
 			);
 			return null;
 		}
-	}//end createPendingContactmoment()
+	}//end savePendingContactmoment()
 
 	/**
 	 * Update a contactmoment ticket with final metadata once the call ended.
@@ -434,11 +445,12 @@ class CtiService {
 		$interactionId = null;
 		if ($callResult->success === true) {
 			$interactionId = $this->createPendingContactmoment(
-				direction: 'outbound',
-				fromNumber: $callerId,
-				toNumber: $targetNumber,
-				userId: $userId,
-				extension: $extension,
+				call: new PendingCall(
+					direction: 'outbound',
+					fromNumber: $callerId,
+					toNumber: $targetNumber,
+					agent: new CallAgent(userId: $userId, extension: $extension),
+				),
 				extra: [
 					'telephony_platform' => $platform,
 					'external_call_id' => ($callResult->externalCallId ?? ''),
@@ -828,11 +840,7 @@ class CtiService {
 
 		if ($existing === null) {
 			return $this->createPendingContactmoment(
-				direction: ($event->direction ?? 'inbound'),
-				fromNumber: ($event->fromNumber ?? ''),
-				toNumber: ($event->toNumber ?? ''),
-				userId: ($event->userId ?? ''),
-				extension: ($event->extension ?? ''),
+				call: $this->pendingCallFor(event: $event),
 				extra: $extra,
 			);
 		}
@@ -840,6 +848,23 @@ class CtiService {
 		$this->updateContactmoment(id: $existing, fields: $extra);
 		return $existing;
 	}//end upsertCallContactmoment()
+
+	/**
+	 * The pending call a webhook event describes; an event without a
+	 * direction is an inbound call, missing numbers and agent are empty.
+	 *
+	 * @param CtiWebhookResult $event Normalised event.
+	 *
+	 * @return PendingCall The call.
+	 */
+	private function pendingCallFor(CtiWebhookResult $event): PendingCall {
+		return new PendingCall(
+			direction: ($event->direction ?? 'inbound'),
+			fromNumber: ($event->fromNumber ?? ''),
+			toNumber: ($event->toNumber ?? ''),
+			agent: new CallAgent(userId: ($event->userId ?? ''), extension: ($event->extension ?? '')),
+		);
+	}//end pendingCallFor()
 
 	/**
 	 * Finalise a contactmoment when a call ends.
@@ -854,11 +879,7 @@ class CtiService {
 		if ($id === null) {
 			// Late ended-event with no prior ringing/answered: still create the record.
 			$id = $this->createPendingContactmoment(
-				direction: ($event->direction ?? 'inbound'),
-				fromNumber: ($event->fromNumber ?? ''),
-				toNumber: ($event->toNumber ?? ''),
-				userId: ($event->userId ?? ''),
-				extension: ($event->extension ?? ''),
+				call: $this->pendingCallFor(event: $event),
 				extra: [
 					'telephony_platform' => $platform,
 					'external_call_id' => $event->externalCallId,
