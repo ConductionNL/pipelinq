@@ -185,11 +185,7 @@ class BerichtenboxService {
 	 * @return array The template.
 	 */
 	private function templateFor(CaseStatusMessage $message, MessageOptions $options): array {
-		return ($options->templateOverride ?? $this->findTemplate(
-			caseType: $options->caseType(),
-			status: $message->status,
-			language: $options->language()
-		) ?? $this->fallbackTemplate());
+		return ($options->templateOverride ?? $this->findTemplate(message: $message, options: $options) ?? $this->fallbackTemplate());
 	}//end templateFor()
 
 	/**
@@ -829,15 +825,37 @@ class BerichtenboxService {
 	}//end findMessageByUuid()
 
 	/**
-	 * Find a matching template for zaaktype + status + language.
+	 * Look up the registry template for a message's case type, status and
+	 * language; none when the template store is not configured, has no
+	 * match, or the lookup fails.
 	 *
-	 * @param string $caseType zaaktype slug.
-	 * @param string $status status.
-	 * @param string $language language.
+	 * @param CaseStatusMessage $message The message, for its status.
+	 * @param MessageOptions    $options Its options, for the case type and language.
 	 *
-	 * @return array|null
+	 * @return array|null The template, or null.
 	 */
-	private function findTemplate(string $caseType, string $status, string $language): ?array {
+	private function findTemplate(CaseStatusMessage $message, MessageOptions $options): ?array {
+		$scope = $this->templateScope();
+		if ($scope === null) {
+			return null;
+		}
+
+		return $this->firstTemplate(
+			filters: $scope + [
+				'caseType' => $options->caseType(),
+				'status' => $message->status,
+				'language' => $options->language(),
+			]
+		);
+	}//end findTemplate()
+
+	/**
+	 * The register and template schema the templates are kept in, or null
+	 * when either is not configured.
+	 *
+	 * @return array{register: string, schema: string}|null The scope.
+	 */
+	private function templateScope(): ?array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
 			Application::APP_ID,
@@ -848,19 +866,20 @@ class BerichtenboxService {
 			return null;
 		}
 
+		return ['register' => $register, 'schema' => $schema];
+	}//end templateScope()
+
+	/**
+	 * The first template matching the filters, or null when none matches
+	 * or the lookup fails.
+	 *
+	 * @param array<string, string> $filters The template filters.
+	 *
+	 * @return array|null The template, or null.
+	 */
+	private function firstTemplate(array $filters): ?array {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'caseType' => $caseType,
-						'status' => $status,
-						'language' => $language,
-					],
-					'limit' => 1,
-				]
-			);
+			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters, 'limit' => 1]);
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -870,7 +889,7 @@ class BerichtenboxService {
 		}
 
 		return null;
-	}//end findTemplate()
+	}//end firstTemplate()
 
 	/**
 	 * Return a minimal default template when no match is configured.
