@@ -355,6 +355,37 @@ class SmsAdapterTest extends TestCase {
 	}//end testHandleInboundWebhookInvalidSignature()
 
 	/**
+	 * The inbound webhook refuses, in order: an unknown provider, a vendor
+	 * without a client, a bad signature (logged), a payload without a
+	 * sender or a body; nothing is written for any of them.
+	 *
+	 * @return void
+	 */
+	public function testTheInboundWebhookRefusalsInOrder(): void {
+		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio'];
+		$rows = [null, $row, $row, $row, $row];
+		$this->providerRepo->method('findByIdForWebhook')->willReturnCallback(static function () use (&$rows): ?array {
+			return array_shift($rows);
+		});
+		$clients = [null, $this->buildClient('twilio', 'success', 'ext-1', false), $this->buildClient('twilio', 'success', 'ext-1', true), $this->buildClient('twilio', 'success', 'ext-1', true)];
+		$this->providerFactory->method('create')->willReturnCallback(static function () use (&$clients) {
+			return array_shift($clients);
+		});
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(static function (string $message, array $context = []) use (&$warnings): void {
+			$warnings[] = [$message, $context];
+		});
+
+		$this->assertSame(['status' => 'providerUnknown'], $this->adapter->handleInboundWebhook('{}', 's', 'prov-0'));
+		$this->assertSame(['status' => 'vendorUnsupported'], $this->adapter->handleInboundWebhook('{}', 's', 'prov-1'));
+		$this->assertSame(['status' => 'invalidSignature'], $this->adapter->handleInboundWebhook('{}', 'bad', 'prov-1'));
+		$this->assertSame(['status' => 'invalidPayload'], $this->adapter->handleInboundWebhook((string)json_encode(['Body' => 'hi']), 's', 'prov-1'));
+		$this->assertSame(['status' => 'invalidPayload'], $this->adapter->handleInboundWebhook((string)json_encode(['From' => '+31600000000', 'body' => '']), 's', 'prov-1'));
+		$this->assertSame([['SmsAdapter.handleInboundWebhook: invalid signature', ['providerId' => 'prov-1']]], $warnings);
+		$this->assertSame([], $this->objectService->saved);
+	}//end testTheInboundWebhookRefusalsInOrder()
+
+	/**
 	 * Inbound webhook with valid signature persists the message. The OR mock
 	 * holds no contact, so the sender is unknown and no contact is created.
 	 *

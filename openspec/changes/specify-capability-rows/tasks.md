@@ -59,3 +59,15 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `appinfo/routes.php`
 - [ ] 29.1 Add attributes and variants to the product schema and the product page, refuse a duplicate combination, and let lead, quote and invoice line pickers choose the variant (requirement "A product keeps attributes and variants with their own code and price")
   - Verify: PHPUnit for the duplicate refusal and the price fallback; the shillinq row `inv-catalog` records this requirement
+- [ ] 30.1 Add a vitest over `repliesForChannel` for "Saved replies in the party's language come first" (row `gov-client-language`; code in `src/components/SavedReplyPicker.vue`)
+  - Verify: the test passes; the behaviour already ships
+- [ ] 31.1 Add a vitest over `src/components/ContactmomentQuickLog.vue` for "A contact moment is filed on an open request" (row `cm-link-to-open-request`); limit the request picker to open requests of the chosen client
+  - Verify: the test passes; a closed request is not offered
+- [ ] 32.1 Notify the watch owner when a page watch finds a change: a Nextcloud notification from `lib/Service/Competitor/CompetitorWatchService.php` through `lib/Notification/Notifier.php`, opening the Competitors page (requirement "The owner of a watch is told when the watched page changes", row `mkt-competitor-watch`)
+  - Verify: PHPUnit for the notification on a changed fragment and none on an unchanged one
+- [ ] 33.1 Give a walk-in ticket the next queue number of the day in `lib/Service/WalkInQueueService.php::createTicket` and show it on the queue page and on Call next (requirement "A walk-in visitor gets a queue number", row `req-walkin`)
+  - Verify: PHPUnit for the daily sequence and the reset; the queue page shows the called number
+- [ ] 34.1 Build the personal booking link: a shareable link per user whose page offers the free slots of that user's calendar (via `lib/Service/AvailabilityService.php`) and books the chosen slot into it (requirement "A user can send a booking link that offers the free slots in their own calendar", row `meeting-link`)
+  - Verify: PHPUnit for a busy hour not offered; the booking lands in the user's calendar
+- [ ] 35.1 List the client's real invoices in the portal: read shillinq sales invoices through the integration registry, leave out draft and parked POS carts, and offer each invoice as a PDF (`lib/Service/Portal/PortalInvoiceService.php`, `lib/Service/Portal/AbstractPortalReadFacade.php`; row `portal-invoices`, requirement "A client sees their own invoices, contracts, orders and quotes")
+  - Verify: PHPUnit: a draft cart is not listed, a shillinq invoice is, its PDF downloads

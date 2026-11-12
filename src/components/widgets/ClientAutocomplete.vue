@@ -37,6 +37,7 @@
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcTextField } from '@nextcloud/vue'
 import Close from 'vue-material-design-icons/Close.vue'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 import { initializeStores } from '../../store/store.js'
 
 export default {
@@ -171,11 +172,7 @@ export default {
 		 */
 		async fetchMatchingClients() {
 			const response = await fetch(this.clientSearchUrl(), {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
+				headers: jsonRequestHeaders(),
 			})
 
 			if (!response.ok) throw new Error('Search failed')

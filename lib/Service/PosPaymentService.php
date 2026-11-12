@@ -37,12 +37,15 @@ use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
 use OCA\Pipelinq\Service\Payment\AdyenAdapter;
+use OCA\Pipelinq\Service\Payment\PaymentRefund;
+use OCA\Pipelinq\Service\Payment\PaymentStart;
 use OCA\Pipelinq\Service\Payment\BrokerHttpTransport;
 use OCA\Pipelinq\Service\Payment\CcvAdapter;
 use OCA\Pipelinq\Service\Payment\MollieAdapter;
 use OCA\Pipelinq\Service\Payment\PaymentProviderInterface;
 use OCA\Pipelinq\Service\Payment\SettlementUpdate;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
+use OCA\Pipelinq\Service\Payment\PaymentWebhook;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -229,7 +232,7 @@ class PosPaymentService {
 	public function listPaymentMethods(): array {
 		$methods = [];
 		foreach (self::PROVIDERS as $name) {
-			if ($this->readBool(name: $name, key: 'isActive', default: false) === false) {
+			if ($this->readBool(setting: $this->settingKey(name: $name, key: 'isActive'), default: false) === false) {
 				continue;
 			}
 
@@ -286,20 +289,20 @@ class PosPaymentService {
 			'name' => $name,
 			'displayName' => $this->displayNameFor(name: $name),
 			'type' => $this->typeFor(name: $name),
-			'isActive' => $this->readBool(name: $name, key: 'isActive', default: false),
-			'environment' => $this->readString(name: $name, key: 'environment', default: 'sandbox'),
-			'testMode' => $this->readBool(name: $name, key: 'testMode', default: true),
+			'isActive' => $this->readBool(setting: $this->settingKey(name: $name, key: 'isActive'), default: false),
+			'environment' => $this->readString(setting: $this->settingKey(name: $name, key: 'environment'), default: 'sandbox'),
+			'testMode' => $this->readBool(setting: $this->settingKey(name: $name, key: 'testMode'), default: true),
 			'config' => $this->readObject(name: $name, key: 'config'),
-			'lastTestedAt' => $this->readString(name: $name, key: 'lastTestedAt', default: ''),
+			'lastTestedAt' => $this->readString(setting: $this->settingKey(name: $name, key: 'lastTestedAt'), default: ''),
 			'testResult' => $this->readObject(name: $name, key: 'testResult'),
 			// Not masked: a credential UUID is a reference, not a secret. The admin UI
 			// needs it back to show which credential is selected.
-			'credentialId' => $this->readString(name: $name, key: 'credentialId', default: ''),
+			'credentialId' => $this->readString(setting: $this->settingKey(name: $name, key: 'credentialId'), default: ''),
 		];
 
 		if ($includeMaskedSecrets === true) {
 			foreach (self::SENSITIVE_FIELDS as $field) {
-				$stored = $this->readString(name: $name, key: $field, default: '');
+				$stored = $this->readString(setting: $this->settingKey(name: $name, key: $field), default: '');
 				$config[$field] = '';
 				if ($stored !== '') {
 					$config[$field] = self::MASK;
@@ -345,29 +348,29 @@ class PosPaymentService {
 	 */
 	private function writeNonSensitiveFields(string $name, array $data): void {
 		if (array_key_exists('isActive', $data) === true) {
-			$this->writeBool(name: $name, key: 'isActive', value: (bool)$data['isActive']);
+			$this->writeBool(setting: $this->settingKey(name: $name, key: 'isActive'), value: (bool)$data['isActive']);
 		}
 
 		if (array_key_exists('environment', $data) === true) {
 			$env = (string)$data['environment'];
 			if ($env === 'live' || $env === 'sandbox') {
-				$this->writeString(name: $name, key: 'environment', value: $env);
+				$this->writeString(setting: $this->settingKey(name: $name, key: 'environment'), value: $env);
 			}
 		}
 
 		if (array_key_exists('testMode', $data) === true) {
-			$this->writeBool(name: $name, key: 'testMode', value: (bool)$data['testMode']);
+			$this->writeBool(setting: $this->settingKey(name: $name, key: 'testMode'), value: (bool)$data['testMode']);
 		}
 
 		if (array_key_exists('config', $data) === true && is_array($data['config']) === true) {
-			$this->writeObject(name: $name, key: 'config', value: $data['config']);
+			$this->writeObject(setting: $this->settingKey(name: $name, key: 'config'), value: $data['config']);
 		}
 
 		// The broker credential UUID is a REFERENCE, not a secret: the key behind it
 		// lives in the vault and is injected server-side, so this app cannot read it.
 		// It is therefore stored and returned in the clear, and is not masked.
 		if (array_key_exists('credentialId', $data) === true) {
-			$this->writeString(name: $name, key: 'credentialId', value: (string)$data['credentialId']);
+			$this->writeString(setting: $this->settingKey(name: $name, key: 'credentialId'), value: (string)$data['credentialId']);
 		}
 	}//end writeNonSensitiveFields()
 
@@ -410,7 +413,7 @@ class PosPaymentService {
 			}
 
 			$encrypted = $this->crypto->encrypt($raw);
-			$this->writeString(name: $name, key: $field, value: $encrypted);
+			$this->writeString(setting: $this->settingKey(name: $name, key: $field), value: $encrypted);
 			// Discard plaintext immediately (best-effort).
 			unset($raw);
 		}
@@ -440,7 +443,7 @@ class PosPaymentService {
 			);
 		}
 
-		$credentialId = $this->readString(name: $name, key: 'credentialId', default: '');
+		$credentialId = $this->readString(setting: $this->settingKey(name: $name, key: 'credentialId'), default: '');
 		if ($credentialId === '') {
 			throw new OCSNotFoundException(
 				'Payment provider ' . $name . ' has no credential. Select one from the credential broker in the '
@@ -453,8 +456,8 @@ class PosPaymentService {
 		$credentials = $this->resolveDecryptedCredentials(name: $name);
 
 		$config = [
-			'environment' => $this->readString(name: $name, key: 'environment', default: 'sandbox'),
-			'testMode' => $this->readBool(name: $name, key: 'testMode', default: true),
+			'environment' => $this->readString(setting: $this->settingKey(name: $name, key: 'environment'), default: 'sandbox'),
+			'testMode' => $this->readBool(setting: $this->settingKey(name: $name, key: 'testMode'), default: true),
 		];
 
 		$providerConfig = $this->readObject(name: $name, key: 'config');
@@ -521,38 +524,70 @@ class PosPaymentService {
 			throw new OCSBadRequestException('Transaction is not confirmed');
 		}
 
-		$provider = $this->getPaymentProvider(name: $providerName);
-
-		$amount = (float)($transaction['total'] ?? 0);
-		$result = $provider->initiate(
-			transactionData: $transaction,
-			amount: $amount,
-			paymentMethod: $paymentMethod
-		);
-
+		$start = new PaymentStart(transactionId: $transactionId, providerName: $providerName, paymentMethod: $paymentMethod);
+		$result = $this->initiateWithProvider(start: $start, transaction: $transaction);
 		if ($result['status'] === 'failed') {
 			// Provider failure — DO NOT mutate the transaction state.
-			return [
-				'transaction' => $transaction,
-				'payment' => $result,
-			];
+			return $this->paymentOutcome(transaction: $transaction, payment: $result);
 		}
 
-		$updated = $this->saveTransaction(
-			id: $transactionId,
+		$updated = $this->recordPaymentSession(start: $start, sessionId: $result['sessionId']);
+		return $this->paymentOutcome(transaction: $updated, payment: $result);
+	}//end initiatePayment()
+
+	/**
+	 * Ask the provider to start the payment for the transaction's total.
+	 *
+	 * @param PaymentStart         $start       The transaction, provider and method.
+	 * @param array<string, mixed> $transaction The confirmed transaction.
+	 *
+	 * @return array<string, mixed> The provider's answer.
+	 */
+	private function initiateWithProvider(PaymentStart $start, array $transaction): array {
+		$provider = $this->getPaymentProvider(name: $start->providerName);
+
+		$amount = (float)($transaction['total'] ?? 0);
+		return $provider->initiate(
+			transactionData: $transaction,
+			amount: $amount,
+			paymentMethod: $start->paymentMethod
+		);
+	}//end initiateWithProvider()
+
+	/**
+	 * Record a started payment's provider, session and method on the transaction.
+	 *
+	 * @param PaymentStart $start     The transaction, provider and method.
+	 * @param string       $sessionId The provider's payment session id.
+	 *
+	 * @return array<string, mixed> The updated transaction.
+	 */
+	private function recordPaymentSession(PaymentStart $start, string $sessionId): array {
+		return $this->saveTransaction(
+			id: $start->transactionId,
 			patch: [
-				'paymentProvider' => $providerName,
-				'paymentSessionId' => $result['sessionId'],
+				'paymentProvider' => $start->providerName,
+				'paymentSessionId' => $sessionId,
 				'paymentStatus' => 'pending',
-				'paymentMethod' => $paymentMethod,
+				'paymentMethod' => $start->paymentMethod,
 			]
 		);
+	}//end recordPaymentSession()
 
+	/**
+	 * The answer of a payment call: the transaction and the provider's result.
+	 *
+	 * @param array<string, mixed> $transaction The transaction.
+	 * @param array<string, mixed> $payment     The provider's result.
+	 *
+	 * @return array{transaction: array<string, mixed>, payment: array<string, mixed>}
+	 */
+	private function paymentOutcome(array $transaction, array $payment): array {
 		return [
-			'transaction' => $updated,
-			'payment' => $result,
+			'transaction' => $transaction,
+			'payment' => $payment,
 		];
-	}//end initiatePayment()
+	}//end paymentOutcome()
 
 	/**
 	 * Capture an authorized payment.
@@ -614,6 +649,30 @@ class PosPaymentService {
 	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-payment-is-reversed-only-with-a-reason
 	 */
 	public function refundPayment(string $transactionId, string $reason, string $userId): array {
+		$this->assertMayRefund(userId: $userId, reason: $reason);
+
+		$transaction = $this->refundableTransaction(transactionId: $transactionId);
+		$result = $this->refundWithProvider(transaction: $transaction, reason: $reason);
+		if ($result['status'] === 'failed') {
+			return $this->paymentOutcome(transaction: $transaction, payment: $result);
+		}
+
+		$updated = $this->completeRefund(refund: new PaymentRefund(transactionId: $transactionId, reason: $reason), result: $result);
+		return $this->paymentOutcome(transaction: $updated, payment: $result);
+	}//end refundPayment()
+
+	/**
+	 * Refuse a refund by anyone but a POS manager, or without a reason.
+	 *
+	 * @param string $userId The acting user id.
+	 * @param string $reason The refund reason.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSForbiddenException When the caller is not a POS manager.
+	 * @throws OCSBadRequestException When no reason is given.
+	 */
+	private function assertMayRefund(string $userId, string $reason): void {
 		if ($this->isManager(userId: $userId) === false) {
 			throw new OCSForbiddenException('Manager permission required');
 		}
@@ -622,49 +681,82 @@ class PosPaymentService {
 		if (trim($reason) === '') {
 			throw new OCSBadRequestException('A reason is required to reverse a payment');
 		}
+	}//end assertMayRefund()
 
+	/**
+	 * Load a transaction whose payment is settled or captured and has a
+	 * provider session to refund.
+	 *
+	 * @param string $transactionId The transaction id.
+	 *
+	 * @return array<string, mixed> The transaction.
+	 *
+	 * @throws OCSBadRequestException When the payment is not refundable.
+	 */
+	private function refundableTransaction(string $transactionId): array {
 		$transaction = $this->loadTransaction(id: $transactionId);
 		$paymentStatus = (string)($transaction['paymentStatus'] ?? '');
 		if ($paymentStatus !== 'settled' && $paymentStatus !== 'captured') {
 			throw new OCSBadRequestException('Transaction payment not settled');
 		}
 
-		$providerName = (string)($transaction['paymentProvider'] ?? '');
-		$sessionId = (string)($transaction['paymentSessionId'] ?? '');
-		if ($providerName === '' || $sessionId === '') {
+		if ((string)($transaction['paymentProvider'] ?? '') === '' || (string)($transaction['paymentSessionId'] ?? '') === '') {
 			throw new OCSBadRequestException('No payment session to refund');
 		}
 
-		$provider = $this->getPaymentProvider(name: $providerName);
-		$result = $provider->refund(sessionId: $sessionId, reason: $reason);
+		return $transaction;
+	}//end refundableTransaction()
 
-		if ($result['status'] === 'failed') {
-			return [
-				'transaction' => $transaction,
-				'payment' => $result,
-			];
-		}
+	/**
+	 * Ask the transaction's provider to refund its payment session.
+	 *
+	 * @param array<string, mixed> $transaction The refundable transaction.
+	 * @param string               $reason      The refund reason.
+	 *
+	 * @return array<string, mixed> The provider's answer.
+	 */
+	private function refundWithProvider(array $transaction, string $reason): array {
+		$provider = $this->getPaymentProvider(name: (string)($transaction['paymentProvider'] ?? ''));
+		return $provider->refund(sessionId: (string)($transaction['paymentSessionId'] ?? ''), reason: $reason);
+	}//end refundWithProvider()
 
-		$updated = $this->saveTransaction(
-			id: $transactionId,
-			patch: [
-				'paymentStatus' => 'refunded',
-				'refundReason' => $reason,
-				'refundedAt' => $this->nowIso(),
-			]
-		);
+	/**
+	 * Record a refund on the transaction and emit the refund event.
+	 *
+	 * @param PaymentRefund        $refund The transaction and the reason.
+	 * @param array<string, mixed> $result The provider's answer, carrying the refund id.
+	 *
+	 * @return array<string, mixed> The updated transaction.
+	 */
+	private function completeRefund(PaymentRefund $refund, array $result): array {
+		$updated = $this->recordRefund(refund: $refund);
 
 		$this->emitRefundedEvent(
 			transaction: $updated,
 			refundId: $result['refundId'],
-			reason: $reason
+			reason: $refund->reason
 		);
 
-		return [
-			'transaction' => $updated,
-			'payment' => $result,
-		];
-	}//end refundPayment()
+		return $updated;
+	}//end completeRefund()
+
+	/**
+	 * Record a refund, its reason and its time on the transaction.
+	 *
+	 * @param PaymentRefund $refund The transaction and the reason.
+	 *
+	 * @return array<string, mixed> The updated transaction.
+	 */
+	private function recordRefund(PaymentRefund $refund): array {
+		return $this->saveTransaction(
+			id: $refund->transactionId,
+			patch: [
+				'paymentStatus' => 'refunded',
+				'refundReason' => $refund->reason,
+				'refundedAt' => $this->nowIso(),
+			]
+		);
+	}//end recordRefund()
 
 	// ---------------------------------------------------------------------
 	// Webhook handling (REQ-PAY-006 / REQ-PAY-011).
@@ -698,32 +790,65 @@ class PosPaymentService {
 	 */
 	public function handleWebhook(string $providerName, string $rawPayload, string $signature): array {
 		if (in_array(needle: $providerName, haystack: self::PROVIDERS, strict: true) === false) {
-			return [
-				'status' => 'invalid',
-				'error' => 'Unknown provider',
-			];
+			return $this->invalidWebhook(error: 'Unknown provider');
 		}
 
 		try {
 			$provider = $this->getPaymentProvider(name: $providerName);
 		} catch (Throwable $e) {
-			return [
-				'status' => 'invalid',
-				'error' => 'Provider not configured',
-			];
+			return $this->invalidWebhook(error: 'Provider not configured');
 		}
 
-		if ($provider->validateWebhook(rawPayload: $rawPayload, signature: $signature) === false) {
+		return $this->verifiedWebhook(
+			provider: $provider,
+			webhook: new PaymentWebhook(providerName: $providerName, rawPayload: $rawPayload, signature: $signature)
+		);
+	}//end handleWebhook()
+
+	/**
+	 * The answer to a webhook delivery that is refused.
+	 *
+	 * @param string $error Why it is refused.
+	 *
+	 * @return array{status: string, error: string}
+	 */
+	private function invalidWebhook(string $error): array {
+		return [
+			'status' => 'invalid',
+			'error' => $error,
+		];
+	}//end invalidWebhook()
+
+	/**
+	 * Verify a delivery's signature with its provider, then settle it; a
+	 * signature that does not verify is logged and refused before parsing.
+	 *
+	 * @param PaymentProviderInterface $provider The provider adapter.
+	 * @param PaymentWebhook           $webhook  The delivery.
+	 *
+	 * @return array<string, mixed> The webhook answer.
+	 */
+	private function verifiedWebhook(PaymentProviderInterface $provider, PaymentWebhook $webhook): array {
+		if ($provider->validateWebhook(rawPayload: $webhook->rawPayload, signature: $webhook->signature) === false) {
 			$this->logger->warning(
 				'Pipelinq POS payment: invalid webhook signature',
-				['provider' => $providerName]
+				['provider' => $webhook->providerName]
 			);
-			return [
-				'status' => 'invalid',
-				'error' => 'Signature mismatch',
-			];
+			return $this->invalidWebhook(error: 'Signature mismatch');
 		}
 
+		$envelope = $provider->parseWebhook(payload: $this->decodeWebhookPayload(rawPayload: $webhook->rawPayload));
+		return $this->settleWebhookEnvelope(webhook: $webhook, envelope: $envelope);
+	}//end verifiedWebhook()
+
+	/**
+	 * Decode a webhook body; an empty or non-object body is an empty payload.
+	 *
+	 * @param string $rawPayload The raw request body.
+	 *
+	 * @return array<mixed> The decoded payload.
+	 */
+	private function decodeWebhookPayload(string $rawPayload): array {
 		$decoded = [];
 		if ($rawPayload !== '') {
 			$maybe = json_decode($rawPayload, true);
@@ -732,27 +857,48 @@ class PosPaymentService {
 			}
 		}
 
-		$envelope = $provider->parseWebhook(payload: $decoded);
-		$sessionId = $envelope['sessionId'];
-		$eventId = $envelope['eventId'];
-		$status = $envelope['status'];
+		return $decoded;
+	}//end decodeWebhookPayload()
 
+	/**
+	 * Hand a parsed webhook to the settlement; a payload without a session
+	 * is ignored.
+	 *
+	 * @param PaymentWebhook                                         $webhook  The delivery.
+	 * @param array{sessionId: string, eventId: string, status: string} $envelope The provider's parsed envelope.
+	 *
+	 * @return array<string, mixed> The webhook answer.
+	 */
+	private function settleWebhookEnvelope(PaymentWebhook $webhook, array $envelope): array {
+		$sessionId = $envelope['sessionId'];
 		if ($sessionId === '') {
-			// Unknown payload — log + 200 so providers don't retry forever.
-			$this->logger->info(
-				'Pipelinq POS payment: webhook with no sessionId',
-				['provider' => $providerName]
-			);
-			return ['status' => 'ignored'];
+			return $this->ignoreSessionlessWebhook(providerName: $webhook->providerName);
 		}
 
 		return $this->handleSettlement(
-			providerName: $providerName,
+			providerName: $webhook->providerName,
 			sessionId: $sessionId,
-			paymentStatus: $status,
-			eventId: $eventId
+			paymentStatus: $envelope['status'],
+			eventId: $envelope['eventId']
 		);
-	}//end handleWebhook()
+	}//end settleWebhookEnvelope()
+
+	/**
+	 * Log and ignore a webhook that names no session, so the provider does
+	 * not retry an unknown payload forever.
+	 *
+	 * @param string $providerName The provider.
+	 *
+	 * @return array{status: string} The `ignored` answer.
+	 */
+	private function ignoreSessionlessWebhook(string $providerName): array {
+		// Unknown payload — log + 200 so providers don't retry forever.
+		$this->logger->info(
+			'Pipelinq POS payment: webhook with no sessionId',
+			['provider' => $providerName]
+		);
+		return ['status' => 'ignored'];
+	}//end ignoreSessionlessWebhook()
 
 	/**
 	 * Handle a validated settlement update.
@@ -897,8 +1043,8 @@ class PosPaymentService {
 		}
 
 		$result = $provider->testConnection();
-		$this->writeString(name: $name, key: 'lastTestedAt', value: $this->nowIso());
-		$this->writeObject(name: $name, key: 'testResult', value: $result);
+		$this->writeString(setting: $this->settingKey(name: $name, key: 'lastTestedAt'), value: $this->nowIso());
+		$this->writeObject(setting: $this->settingKey(name: $name, key: 'testResult'), value: $result);
 
 		return $result;
 	}//end testConnection()
@@ -994,7 +1140,7 @@ class PosPaymentService {
 		}
 
 		foreach (self::SENSITIVE_FIELDS as $field) {
-			$encrypted = $this->readString(name: $name, key: $field, default: '');
+			$encrypted = $this->readString(setting: $this->settingKey(name: $name, key: $field), default: '');
 			if ($encrypted === '') {
 				$out[$field] = '';
 				continue;
@@ -1058,18 +1204,29 @@ class PosPaymentService {
 	// ---------------------------------------------------------------------
 
 	/**
-	 * Read a scalar config value as string.
+	 * The app-config key of one provider setting.
 	 *
 	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $key  The field name.
+	 *
+	 * @return string The key.
+	 */
+	private function settingKey(string $name, string $key): string {
+		return self::CONFIG_PREFIX . $name . '.' . $key;
+	}//end settingKey()
+
+	/**
+	 * Read a scalar config value as string.
+	 *
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param string $default The default.
 	 *
 	 * @return string
 	 */
-	private function readString(string $name, string $key, string $default = ''): string {
+	private function readString(string $setting, string $default = ''): string {
 		return $this->appConfig->getValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			$default
 		);
 	}//end readString()
@@ -1077,18 +1234,17 @@ class PosPaymentService {
 	/**
 	 * Read a config boolean.
 	 *
-	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param bool $default The default.
 	 *
 	 * @return bool
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) generic config accessor — the default IS the value being requested, not a behavioural branch
 	 */
-	private function readBool(string $name, string $key, bool $default = false): bool {
+	private function readBool(string $setting, bool $default = false): bool {
 		$raw = $this->appConfig->getValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			''
 		);
 		if ($raw === '') {
@@ -1109,7 +1265,7 @@ class PosPaymentService {
 	private function readObject(string $name, string $key): array {
 		$raw = $this->appConfig->getValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$this->settingKey(name: $name, key: $key),
 			''
 		);
 		if ($raw === '') {
@@ -1127,16 +1283,15 @@ class PosPaymentService {
 	/**
 	 * Write a string config value.
 	 *
-	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param string $value The value.
 	 *
 	 * @return void
 	 */
-	private function writeString(string $name, string $key, string $value): void {
+	private function writeString(string $setting, string $value): void {
 		$this->appConfig->setValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			$value
 		);
 	}//end writeString()
@@ -1144,13 +1299,12 @@ class PosPaymentService {
 	/**
 	 * Write a boolean config value (as the string 'true'/'false').
 	 *
-	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param bool $value The value.
 	 *
 	 * @return void
 	 */
-	private function writeBool(string $name, string $key, bool $value): void {
+	private function writeBool(string $setting, bool $value): void {
 		$encoded = 'false';
 		if ($value === true) {
 			$encoded = 'true';
@@ -1158,7 +1312,7 @@ class PosPaymentService {
 
 		$this->appConfig->setValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			$encoded
 		);
 	}//end writeBool()
@@ -1166,13 +1320,12 @@ class PosPaymentService {
 	/**
 	 * Write a JSON-encoded object config value.
 	 *
-	 * @param string $name The provider name.
-	 * @param string $key The field name.
+	 * @param string $setting The app-config key, from settingKey().
 	 * @param array<string, mixed> $value The value.
 	 *
 	 * @return void
 	 */
-	private function writeObject(string $name, string $key, array $value): void {
+	private function writeObject(string $setting, array $value): void {
 		$encoded = json_encode($value);
 		if (is_string($encoded) === false) {
 			return;
@@ -1180,7 +1333,7 @@ class PosPaymentService {
 
 		$this->appConfig->setValueString(
 			Application::APP_ID,
-			self::CONFIG_PREFIX . $name . '.' . $key,
+			$setting,
 			$encoded
 		);
 	}//end writeObject()

@@ -19,6 +19,7 @@
 <script>
 import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../../store/modules/object.js'
+import workspaceContextMixin from './workspaceContextMixin.js'
 
 const TYPE_SLUG = 'pipelinq-client'
 
@@ -45,26 +46,9 @@ export default {
 
 	components: { CnResourceSelect },
 
-	inject: {
-		cnWorkspaceContext: { default: null },
-	},
+	mixins: [workspaceContextMixin],
 
 	computed: {
-		/**
-		 * The page's workspace context; the provided ref may arrive unwrapped or as `{ value }`.
-		 *
-		 * @return {object|null}
-		 *
-		 * @spec openspec/specs/kcc-werkplek/spec.md
-		 */
-		workspace() {
-			const c = this.cnWorkspaceContext
-			if (!c || typeof c !== 'object') {
-				return null
-			}
-			return 'value' in c ? c.value : c
-		},
-
 		/**
 		 * The id of the client in focus, or an empty string.
 		 *

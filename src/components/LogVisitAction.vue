@@ -26,6 +26,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import MapMarkerCheckOutline from 'vue-material-design-icons/MapMarkerCheckOutline.vue'
 import LogVisitDialog from '../dialogs/LogVisitDialog.vue'
+import detailHeaderActionsMixin from '../mixins/detailHeaderActionsMixin.js'
 import { buildVisitPayloads, linkTaskToContactMoment } from '../services/visitLog.js'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -75,6 +76,8 @@ export default {
 		MapMarkerCheckOutline,
 	},
 
+	mixins: [detailHeaderActionsMixin],
+
 	// The actions slot also hands over schema / store / openEditForm; none of
 	// them belong on the root element.
 	inheritAttrs: false,
@@ -88,18 +91,6 @@ export default {
 
 		/** The lead the visit was about (lead page). */
 		leadId: {
-			type: String,
-			default: '',
-		},
-
-		/** The lead, from CnDetailPage's `#actions` slot (lead page header). */
-		object: {
-			type: Object,
-			default: null,
-		},
-
-		/** The lead id, from CnDetailPage's `#actions` slot (lead page header). */
-		objectId: {
 			type: String,
 			default: '',
 		},

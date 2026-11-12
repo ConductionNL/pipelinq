@@ -165,6 +165,7 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 
 /** How the server shows a KvK API key that is configured. */
 const MASKED_KEY = '***configured***'
@@ -180,11 +181,7 @@ function settingsRequest(init) {
 		generateUrl('/apps/pipelinq/api/prospects/settings'),
 		{
 			...init,
-			headers: {
-				'Content-Type': 'application/json',
-				requesttoken: OC.requestToken,
-				'OCS-APIREQUEST': 'true',
-			},
+			headers: jsonRequestHeaders(),
 		},
 	)
 }
@@ -371,19 +368,11 @@ export default {
 }
 </script>
 
+<style scoped src="../fieldGroupLayout.css"></style>
+
 <style scoped>
 .prospect-settings__form {
 	max-width: 600px;
-}
-
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
 }
 
 .form-group--checkbox {
@@ -395,15 +384,6 @@ export default {
 .form-group--checkbox label {
 	margin-bottom: 0;
 	font-weight: normal;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .form-help {

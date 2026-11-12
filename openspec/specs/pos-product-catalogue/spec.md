@@ -29,7 +29,7 @@ Extend the existing `product` schema into a POS-grade product master (variants m
 
 ## Requirements
 
-### REQ-PPC-001: Product Variants
+### Requirement: REQ-PPC-001: Product Variants
 
 The system MUST allow defining a variant matrix on a product so that a single product master can represent multiple SKUs (e.g. size × colour).
 
@@ -63,7 +63,7 @@ The system MUST allow defining a variant matrix on a product so that a single pr
 
 ---
 
-### REQ-PPC-002: Modifier Groups
+### Requirement: REQ-PPC-002: Modifier Groups
 
 The system MUST allow attaching named modifier groups to a product so that POS staff can prompt the customer for configurable add-ons or substitutions at checkout.
 
@@ -95,7 +95,7 @@ The system MUST allow attaching named modifier groups to a product so that POS s
 
 ---
 
-### REQ-PPC-003: Quantity-Based Price Tiers
+### Requirement: REQ-PPC-003: Quantity-Based Price Tiers
 
 The system MUST allow defining price tiers so that the unit price automatically decreases when the ordered quantity reaches a threshold.
 
@@ -128,7 +128,7 @@ The system MUST allow defining price tiers so that the unit price automatically 
 
 ---
 
-### REQ-PPC-004: Dutch BTW Class
+### Requirement: REQ-PPC-004: Dutch BTW Class
 
 The system MUST allow assigning an explicit Dutch BTW class to each product and MUST auto-populate `taxRate` from the class to prevent inconsistencies.
 
@@ -163,7 +163,7 @@ The system MUST allow assigning an explicit Dutch BTW class to each product and 
 
 ---
 
-### REQ-PPC-005: Barcode Field and Scanner Lookup
+### Requirement: REQ-PPC-005: Barcode Field and Scanner Lookup
 
 The system MUST store a barcode per product (and per variant) and MUST allow barcode scan input in the product search to jump directly to the matching product.
 
@@ -197,7 +197,7 @@ The system MUST store a barcode per product (and per variant) and MUST allow bar
 
 ---
 
-### REQ-PPC-006: Service Duration
+### Requirement: REQ-PPC-006: Service Duration
 
 The system MUST allow specifying a duration in minutes for service-type products to support appointment scheduling and salon booking integrations.
 

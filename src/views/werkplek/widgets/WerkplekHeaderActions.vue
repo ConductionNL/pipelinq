@@ -37,6 +37,7 @@ import TimerOutline from 'vue-material-design-icons/TimerOutline.vue'
 import WerkplekAgentStatus from '../../../components/werkplek/WerkplekAgentStatus.vue'
 import { screenPop } from '../../../services/ctiApi.js'
 import { useObjectStore } from '../../../store/modules/object.js'
+import workspaceContextMixin from './workspaceContextMixin.js'
 
 /**
  * WerkplekHeaderActions — the workspace dashboard's `actionsComponent`,
@@ -91,9 +92,7 @@ export default {
 
 	components: { NcButton, PhoneHangup, TimerOutline, WerkplekAgentStatus },
 
-	inject: {
-		cnWorkspaceContext: { default: null },
-	},
+	mixins: [workspaceContextMixin],
 
 	data() {
 		return {
@@ -104,20 +103,6 @@ export default {
 	},
 
 	computed: {
-		/**
-		 * The page's workspace bag; the provided ref may arrive unwrapped or as `{ value }`.
-		 *
-		 * @return {object|null}
-		 * @spec openspec/specs/kcc-werkplek/spec.md
-		 */
-		workspace() {
-			const c = this.cnWorkspaceContext
-			if (!c || typeof c !== 'object') {
-				return null
-			}
-			return 'value' in c ? c.value : c
-		},
-
 		/**
 		 * Whether a call is on the line: the page shows the in-call cards and this header.
 		 *

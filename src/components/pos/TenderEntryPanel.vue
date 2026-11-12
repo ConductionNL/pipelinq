@@ -113,6 +113,7 @@ import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import AddTenderDialog from '../../modals/AddTenderDialog.vue'
+import { posRecordId } from '../../services/posRecordId.js'
 import { formatEur } from '../../services/posTotals.js'
 
 export default {
@@ -204,12 +205,7 @@ export default {
 
 	methods: {
 		formatEur,
-		tenderId(tender) {
-			if (tender?.['@self']?.id) {
-				return tender['@self'].id
-			}
-			return tender?.id || tender?.uuid || ''
-		},
+		tenderId: posRecordId,
 
 		/**
 		 * The tender type's name, never its uuid.
@@ -287,12 +283,7 @@ export default {
 			)
 		},
 
-		idOf(type) {
-			if (type?.['@self']?.id) {
-				return type['@self'].id
-			}
-			return type?.id || type?.uuid || ''
-		},
+		idOf: posRecordId,
 
 		/**
 		 * Load the tenders and the server's validation summary.

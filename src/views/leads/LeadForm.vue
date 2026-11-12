@@ -480,30 +480,11 @@ export default {
 }
 </script>
 
+<style scoped src="../formLayout.css"></style>
+
 <style scoped>
 .lead-form {
 	max-width: 600px;
-}
-
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	font-weight: bold;
-	margin-bottom: 4px;
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .form-row .form-group--currency {
@@ -520,11 +501,5 @@ export default {
 	color: var(--color-text-maxcontrast);
 	font-size: 12px;
 	margin-top: 4px;
-}
-
-.form-actions {
-	display: flex;
-	gap: 8px;
-	margin-top: 20px;
 }
 </style>

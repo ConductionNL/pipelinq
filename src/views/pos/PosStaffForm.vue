@@ -88,8 +88,6 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -98,6 +96,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
+import { fetchPosRoles } from '../../services/posRolesApi.js'
 import posRecordFormMixin from './posRecordFormMixin.js'
 
 export default {
@@ -165,13 +164,7 @@ export default {
 		 * @spec exclude POS roles have no owning requirement, see PinLoginModal::loadStaff
 		 */
 		async loadRoles() {
-			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/roles')
-				const response = await axios.get(url)
-				this.roles = response?.data?.roles || []
-			} catch {
-				this.roles = []
-			}
+			this.roles = await fetchPosRoles()
 		},
 
 		async load() {

@@ -33,6 +33,7 @@
 import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
+import { jsonRequestHeaders } from '../services/requestHeaders.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 /**
@@ -144,11 +145,7 @@ export default {
 				return []
 			}
 			const lpResponse = await fetch(lpUrl, {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
+				headers: jsonRequestHeaders(),
 			})
 			if (!lpResponse.ok) {
 				return []

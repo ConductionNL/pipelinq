@@ -68,6 +68,7 @@ import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import ConvertToCaseDialog from '../../dialogs/ConvertToCaseDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { sectionObjectId } from '../../utils/sectionContext.js'
 
 /**
  * @param {?{caseType: (string|undefined), keepOpen: (boolean|undefined), informCustomer: (boolean|undefined)}} choice What the dialog asked.
@@ -143,13 +144,7 @@ export default {
 		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
 		resolvedId() {
-			if (this.requestId) {
-				return this.requestId
-			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
-			return (bag && bag.objectId) || ''
+			return this.requestId || sectionObjectId(this.cnSectionContext)
 		},
 
 		/**

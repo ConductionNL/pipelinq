@@ -40,6 +40,7 @@
 import { CnChartWidget } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import { NcEmptyContent } from '@nextcloud/vue'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 import { useBillingCategoryStore } from '../../store/modules/billingCategory.js'
 import { initializeStores } from '../../store/store.js'
 
@@ -180,11 +181,7 @@ export default {
 		 */
 		async loadTimeEntries(type) {
 			const response = await fetch(timeEntriesUrl(type), {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
+				headers: jsonRequestHeaders(),
 			})
 			if (response.ok) {
 				const data = await response.json()

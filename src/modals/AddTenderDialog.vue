@@ -103,6 +103,7 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { posRecordId } from '../services/posRecordId.js'
 import { formatEur } from '../services/posTotals.js'
 
 export default {
@@ -179,12 +180,7 @@ export default {
 
 	methods: {
 		formatEur,
-		idOf(type) {
-			if (type?.['@self']?.id) {
-				return type['@self'].id
-			}
-			return type?.id || type?.uuid || ''
-		},
+		idOf: posRecordId,
 
 		async submit() {
 			this.saving = true

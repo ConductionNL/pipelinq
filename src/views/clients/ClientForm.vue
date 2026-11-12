@@ -706,6 +706,8 @@ export default {
 }
 </script>
 
+<style scoped src="../fieldGroupLayout.css"></style>
+
 <style scoped>
 .client-form {
 	max-width: 800px;
@@ -806,31 +808,12 @@ export default {
 	margin-top: 12px;
 }
 
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
-}
-
 .form-group textarea {
 	width: 100%;
 	padding: 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	resize: vertical;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .field-error {

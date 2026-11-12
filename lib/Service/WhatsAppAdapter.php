@@ -38,6 +38,7 @@ use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateRequest;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -748,15 +749,46 @@ class WhatsAppAdapter {
 			return ['status' => 'providerUnknown'];
 		}
 
-		if ($this->providerClient->verifySignature(channelProvider: $row, rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning(
-				'WhatsAppAdapter.handleInboundWebhook: invalid signature',
-				['providerId' => $providerId]
-			);
+		$delivery = new InboundWebhookDelivery(rawBody: $rawBody, signature: $signature, providerId: $providerId);
+		if ($this->hasValidSignature(row: $row, delivery: $delivery) === false) {
 			return ['status' => 'invalidSignature'];
 		}
 
-		$extracted = $this->extractMetaMessage(rawBody: $rawBody);
+		return $this->ingestVerifiedDelivery(row: $row, delivery: $delivery);
+	}//end handleInboundWebhook()
+
+	/**
+	 * Whether a delivery carries a valid signature for its provider row; an
+	 * invalid one is logged.
+	 *
+	 * @param array<string, mixed>   $row      The provider row.
+	 * @param InboundWebhookDelivery $delivery The delivery.
+	 *
+	 * @return bool True when the signature verifies.
+	 */
+	private function hasValidSignature(array $row, InboundWebhookDelivery $delivery): bool {
+		$valid = $this->providerClient->verifySignature(channelProvider: $row, rawBody: $delivery->rawBody, signature: $delivery->signature);
+		if ($valid === false) {
+			$this->logger->warning(
+				'WhatsAppAdapter.handleInboundWebhook: invalid signature',
+				['providerId' => $delivery->providerId]
+			);
+		}
+
+		return $valid;
+	}//end hasValidSignature()
+
+	/**
+	 * Read a verified delivery's message and ingest it as the messaging
+	 * account; a message without a sender is refused.
+	 *
+	 * @param array<string, mixed>   $row      The provider row.
+	 * @param InboundWebhookDelivery $delivery The verified delivery.
+	 *
+	 * @return array<string, mixed> Outcome envelope.
+	 */
+	private function ingestVerifiedDelivery(array $row, InboundWebhookDelivery $delivery): array {
+		$extracted = $this->extractMetaMessage(rawBody: $delivery->rawBody);
 		$from = $this->phoneNormaliser->normaliseInbound(rawNumber: $extracted['from']);
 
 		if ($from === '') {
@@ -764,9 +796,9 @@ class WhatsAppAdapter {
 		}
 
 		return $this->asMessagingAccount(
-			writes: fn (): array => $this->ingestInbound(providerRow: $row, providerId: $providerId, extracted: $extracted, from: $from)
+			writes: fn (): array => $this->ingestInbound(providerRow: $row, providerId: $delivery->providerId, extracted: $extracted, from: $from)
 		);
-	}//end handleInboundWebhook()
+	}//end ingestVerifiedDelivery()
 
 	/**
 	 * Persist a verified inbound WhatsApp message and act on it, as the

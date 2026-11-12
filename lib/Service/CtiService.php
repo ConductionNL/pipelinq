@@ -30,6 +30,7 @@ use OCA\Pipelinq\Service\Cti\PendingCall;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
+use OCA\Pipelinq\Service\Cti\CallCompletion;
 use InvalidArgumentException;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -311,45 +312,21 @@ class CtiService {
 	/**
 	 * Update a contactmoment ticket with final metadata once the call ended.
 	 *
-	 * @param string $interactionId Contactmoment ticket UUID.
-	 * @param int $durationSeconds Talk duration.
-	 * @param string $outcome Disposition outcome (may be empty).
-	 * @param string $dispositionSubject Disposition subject.
-	 * @param string $dispositionNotes Disposition notes.
+	 * @param string         $interactionId Contactmoment ticket UUID.
+	 * @param CallCompletion $completion    Talk duration and disposition (outcome, subject, notes).
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
-	public function completeContactmoment(
-		string $interactionId,
-		int $durationSeconds,
-		string $outcome,
-		string $dispositionSubject,
-		string $dispositionNotes,
-	): void {
+	public function completeContactmoment(string $interactionId, CallCompletion $completion): void {
 		if ($this->ticketService->isConfigured() === false) {
 			return;
 		}
 
 		try {
-			$dispositionOutcome = 'resolved';
-			if ($outcome !== '') {
-				$dispositionOutcome = $outcome;
-			}
-
-			$this->ticketService->save(
-				ticketType: TicketService::TYPE_CONTACTMOMENT,
-				payload: [
-					'duration_seconds' => $durationSeconds,
-					'ended_at' => gmdate('Y-m-d\TH:i:s\Z'),
-					'disposition_subject' => $dispositionSubject,
-					'disposition_outcome' => $dispositionOutcome,
-					'disposition_notes' => $dispositionNotes,
-				],
-				uuid: $interactionId,
-			);
+			$this->writeCompletion(interactionId: $interactionId, completion: $completion);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI completeContactmoment failed',
@@ -357,6 +334,28 @@ class CtiService {
 			);
 		}//end try
 	}//end completeContactmoment()
+
+	/**
+	 * Write the final call metadata on a contactmoment ticket.
+	 *
+	 * @param string         $interactionId Contactmoment ticket UUID.
+	 * @param CallCompletion $completion    Talk duration and disposition.
+	 *
+	 * @return void
+	 */
+	private function writeCompletion(string $interactionId, CallCompletion $completion): void {
+		$this->ticketService->save(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			payload: [
+				'duration_seconds' => $completion->durationSeconds,
+				'ended_at' => gmdate('Y-m-d\TH:i:s\Z'),
+				'disposition_subject' => $completion->subject,
+				'disposition_outcome' => $completion->dispositionOutcome(),
+				'disposition_notes' => $completion->notes,
+			],
+			uuid: $interactionId,
+		);
+	}//end writeCompletion()
 
 	/**
 	 * Attach recording metadata to an existing contactmoment ticket.

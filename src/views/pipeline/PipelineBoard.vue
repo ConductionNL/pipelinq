@@ -620,6 +620,7 @@ import {
 	pipelineEntitySlugs,
 	resolveObjectType,
 } from '../../services/pipelineUtils.js'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { initializeStores } from '../../store/store.js'
@@ -1619,11 +1620,7 @@ export default {
 					`/apps/openregister/api/objects/${config.register}/${config.schema}?_limit=500`,
 				)
 				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
+					headers: jsonRequestHeaders(),
 				})
 				if (!response.ok) return []
 				const data = await response.json()
@@ -1657,11 +1654,7 @@ export default {
 					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`,
 				)
 				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
+					headers: jsonRequestHeaders(),
 				})
 				if (!response.ok) return []
 				const data = await response.json()
