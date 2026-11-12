@@ -38,7 +38,7 @@
 						<NcButton @click="startEdit(profile)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton variant="error" @click="deleteProfile(profile)">
+						<NcButton variant="error" @click="askDelete(profile)">
 							{{ t('pipelinq', 'Delete') }}
 						</NcButton>
 					</div>
@@ -131,6 +131,7 @@ import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import { useAgentProfilesStore } from '../../store/modules/agentProfiles.js'
 import { useSkillsStore } from '../../store/modules/skills.js'
+import inlineEditRowsMixin from './inlineEditRowsMixin.js'
 
 export default {
 	name: 'AgentProfileSettings',
@@ -143,14 +144,7 @@ export default {
 		NcSettingsSection,
 	},
 
-	data() {
-		return {
-			// The row the delete dialog asks about.
-			deleting: null,
-			editingId: null,
-			editForm: {},
-		}
-	},
+	mixins: [inlineEditRowsMixin],
 
 	computed: {
 		/**
@@ -220,14 +214,6 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-3
-		 */
-		cancelEdit() {
-			this.editingId = null
-			this.editForm = {}
-		},
-
-		/**
 		 * @param {string} skillId Identifier of the skill.
 		 * @param {boolean} checked Whether the skill is now selected.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
@@ -266,16 +252,6 @@ export default {
 		},
 
 		/**
-		 * Ask before deleting a row.
-		 *
-		 * @param {object} profile The row to delete.
-		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
-		 */
-		deleteProfile(profile) {
-			this.deleting = profile
-		},
-
-		/**
 		 * Delete the row the dialog asked about, and tell the dialog how it went.
 		 *
 		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
@@ -289,6 +265,8 @@ export default {
 	},
 }
 </script>
+
+<style scoped src="./inlineEditRows.css"></style>
 
 <style scoped>
 .agent-settings {
@@ -337,17 +315,6 @@ export default {
 	gap: 8px;
 }
 
-.edit-field {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.edit-field label {
-	font-weight: 600;
-	font-size: 13px;
-}
-
 .edit-field input[type='text'],
 .edit-field input[type='number'] {
 	padding: 6px 8px;
@@ -372,12 +339,6 @@ export default {
 	gap: 4px;
 	font-size: 13px;
 	font-weight: normal !important;
-}
-
-.edit-actions {
-	display: flex;
-	gap: 4px;
-	justify-content: flex-end;
 }
 
 .agent-add {

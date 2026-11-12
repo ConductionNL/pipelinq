@@ -30,7 +30,7 @@
 						<NcButton @click="startEdit(skill)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton variant="error" @click="deleteSkill(skill)">
+						<NcButton variant="error" @click="askDelete(skill)">
 							{{ t('pipelinq', 'Delete') }}
 						</NcButton>
 					</div>
@@ -105,6 +105,7 @@ import { CnDeleteDialog } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import { useSkillsStore } from '../../store/modules/skills.js'
+import inlineEditRowsMixin from './inlineEditRowsMixin.js'
 
 export default {
 	name: 'SkillSettings',
@@ -116,14 +117,7 @@ export default {
 		NcSettingsSection,
 	},
 
-	data() {
-		return {
-			// The row the delete dialog asks about.
-			deleting: null,
-			editingId: null,
-			editForm: {},
-		}
-	},
+	mixins: [inlineEditRowsMixin],
 
 	computed: {
 		/**
@@ -166,14 +160,6 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-23
-		 */
-		cancelEdit() {
-			this.editingId = null
-			this.editForm = {}
-		},
-
-		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-26
 		 */
 		async saveEdit() {
@@ -203,16 +189,6 @@ export default {
 		},
 
 		/**
-		 * Ask before deleting a row.
-		 *
-		 * @param {object} skill The row to delete.
-		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
-		 */
-		deleteSkill(skill) {
-			this.deleting = skill
-		},
-
-		/**
 		 * Delete the row the dialog asked about, and tell the dialog how it went.
 		 *
 		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
@@ -226,6 +202,8 @@ export default {
 	},
 }
 </script>
+
+<style scoped src="./inlineEditRows.css"></style>
 
 <style scoped>
 .skill-settings {
@@ -279,28 +257,11 @@ export default {
 	gap: 8px;
 }
 
-.edit-field {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.edit-field label {
-	font-weight: 600;
-	font-size: 13px;
-}
-
 .edit-field input,
 .edit-field textarea {
 	padding: 6px 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
-}
-
-.edit-actions {
-	display: flex;
-	gap: 4px;
-	justify-content: flex-end;
 }
 
 .skill-add {
