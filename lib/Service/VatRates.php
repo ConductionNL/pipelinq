@@ -21,7 +21,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 
 declare(strict_types=1);
@@ -66,7 +66,7 @@ class VatRates {
 	 *
 	 * @return array<string,float> Rate per class, every class present.
 	 *
-	 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+	 * @spec openspec/specs/product-catalog/spec.md
 	 */
 	public static function parse(string $stored): array {
 		$rates = self::DEFAULTS;
@@ -100,7 +100,7 @@ class VatRates {
 	 *
 	 * @return array<string,float> Rate per class.
 	 *
-	 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+	 * @spec openspec/specs/product-catalog/spec.md
 	 */
 	public function rates(): array {
 		return self::parse(stored: $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, ''));

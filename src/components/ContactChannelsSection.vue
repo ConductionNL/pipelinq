@@ -19,7 +19,7 @@
   - declaratively. After a successful save, write-back sync is triggered
   - so the linked Nextcloud Contact vCard picks up the new channels too.
   -
-  - @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+  - @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
   -->
 <template>
 	<div class="contact-channels-section">
@@ -268,7 +268,7 @@ const NETWORK_LABELS = {
  *
  * @param {Array<{value: string, primary?: boolean}>} entries The channel entries.
  * @return {string} The value.
- * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+ * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
  */
 function primaryValue(entries) {
 	const primary = entries.find((e) => e.primary) || entries[0]
@@ -374,7 +374,7 @@ export default {
 
 		/**
 		 * @return {Array} The entity's typed emails, or `[]` when none.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		emails() {
 			return (this.entity && this.entity.emails) || []
@@ -403,7 +403,7 @@ export default {
 
 		/**
 		 * @return {Array} The entity's typed phones, or `[]` when none.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		phones() {
 			return (this.entity && this.entity.phones) || []
@@ -414,7 +414,7 @@ export default {
 		 * its words, the list it removes from and the link scheme of a row.
 		 *
 		 * @return {Array<object>} The two groups, e-mail first.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		channelGroups() {
 			return [
@@ -425,7 +425,7 @@ export default {
 
 		/**
 		 * @return {Array} The entity's social profiles, or `[]` when none.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		socialProfiles() {
 			return (this.entity && this.entity.socialProfiles) || []
@@ -438,7 +438,7 @@ export default {
 		 * summary for context alongside the channel lists.
 		 *
 		 * @return {string} The summary, or '' when nothing is set.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
 		 */
 		preferencesLine() {
 			if (!this.entity) {
@@ -470,7 +470,7 @@ export default {
 		 * Fetch the full client/contact object.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		async load() {
 			if (!this.resolvedId) {
@@ -491,7 +491,7 @@ export default {
 		/**
 		 * @param {string} kind One of the `kind` enum values.
 		 * @return {string} The localised label.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		kindLabel(kind) {
 			const fn = KIND_LABELS[kind]
@@ -504,11 +504,11 @@ export default {
 		 *   different vocabulary from `kind`/`network`, so it gets its own
 		 *   label lookup rather than reusing either.
 		 * @return {string} The localised or proper-noun label.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
 		 */
 		/**
 		 * @return {string} "Prefers …" for the preferred channel, or ''.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
 		 */
 		preferredChannelPart() {
 			if (!this.entity.preferredChannel) {
@@ -524,7 +524,7 @@ export default {
 		 * (pipelinq-forms-review); an older record may only have the latter.
 		 *
 		 * @return {string} The language code in capitals, or ''.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
 		 */
 		languagePart() {
 			const language =
@@ -535,7 +535,7 @@ export default {
 		/**
 		 * Say the channels were not saved, with the store's reason when it has one.
 		 *
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		reportSaveFailure() {
 			const error = this.objectStore.getError?.(this.entityType)
@@ -561,7 +561,7 @@ export default {
 		/**
 		 * @param {string} network One of the `network` enum values.
 		 * @return {string} The label (network names are proper nouns, not translated).
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		networkLabel(network) {
 			const label = NETWORK_LABELS[network]
@@ -575,7 +575,7 @@ export default {
 		 * @param {string} channelType 'email' or 'phone'.
 		 * @param {number|null} index The entry index to edit, or null to add.
 		 * @return {void}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		openEmailPhoneModal(channelType, index) {
 			const list = channelType === 'email' ? this.emails : this.phones
@@ -590,7 +590,7 @@ export default {
 		/**
 		 * @param {number|null} index The entry index to edit, or null to add.
 		 * @return {void}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		openSocialModal(index) {
 			this.socialModal = {
@@ -603,7 +603,7 @@ export default {
 		/**
 		 * @param {object} entry The built entry from ContactEmailPhoneModal.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async onEmailPhoneSaved(entry) {
 			const { channelType, index } = this.emailPhoneModal
@@ -629,7 +629,7 @@ export default {
 		/**
 		 * @param {object} profile The built entry from ContactSocialProfileModal.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async onSocialProfileSaved(profile) {
 			const { index } = this.socialModal
@@ -649,7 +649,7 @@ export default {
 		 * @param {'emails'|'phones'|'socialProfiles'} arrayKey Which array.
 		 * @param {number} index The entry index to drop.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async removeEntry(arrayKey, index) {
 			const list = [...(this.entity[arrayKey] || [])]
@@ -672,7 +672,7 @@ export default {
 		 *
 		 * @param {object} patch The array field(s) being changed.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async persist(patch) {
 			const merged = { ...this.entity, ...patch }

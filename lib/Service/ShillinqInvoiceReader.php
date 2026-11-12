@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use Throwable;
 /**
  * ShillinqInvoiceReader: paid AR invoices for one customer in one window.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
  */
 class ShillinqInvoiceReader {
 	use PayloadToArray;
@@ -110,7 +110,7 @@ class ShillinqInvoiceReader {
 	 * @param LoggerInterface $logger Logger.
 	 * @param ShillinqInvoiceProjection $projection Reduces one shillinq row to what pipelinq reads.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -177,7 +177,7 @@ class ShillinqInvoiceReader {
 	 *
 	 * @return bool True when shillinq is present.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function isAvailable(): bool {
 		return $this->probe();
@@ -194,7 +194,7 @@ class ShillinqInvoiceReader {
 	 * @return array<int, array{id: string, amount: float, currency: string, invoiceDate: string, invoiceNumber: string}>
 	 *         The invoices, keyed by nothing: the caller dedupes by id.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function paidInvoicesFor(string $customerRef, string $from, string $to): array {
 		$rows = $this->customerRows(customerRef: $customerRef, filters: ['lifecycleState' => self::PAID_STATE]);
@@ -233,7 +233,7 @@ class ShillinqInvoiceReader {
 	 *         `amount`, `currency`, `invoiceDate`, `dueDate`, `lifecycleState`
 	 *         and `lines`. Newest first is NOT guaranteed: the caller sorts.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function invoicesFor(string $customerRef): array {
 		$rows = $this->customerRows(customerRef: $customerRef, filters: []);
@@ -255,7 +255,7 @@ class ShillinqInvoiceReader {
 	 *
 	 * @return bool True when shillinq is installed.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	protected function probe(): bool {
 		return class_exists(self::SHILLINQ_PROBE_CLASS);

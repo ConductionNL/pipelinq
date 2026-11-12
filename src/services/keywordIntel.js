@@ -9,7 +9,7 @@
  * tests/vitest, and it keeps the formatting decisions in one place instead of
  * inside four templates that would drift.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
  */
 
 /**
@@ -38,7 +38,7 @@ export const TARGET_STATUSES = ['use-more', 'use-less', 'watch']
  *
  * @param {number} ratio The ratio.
  * @return {string} The percentage.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
  */
 export function percent(ratio) {
 	return `${(Number(ratio || 0) * 100).toFixed(1)}%`
@@ -53,7 +53,7 @@ export function percent(ratio) {
  *
  * @param {object} row A striking-distance row.
  * @return {string} The shortfall.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
  */
 export function shortfall(row) {
 	return percent(Math.max(0, Number(row?.shortfall || 0)))
@@ -65,7 +65,7 @@ export function shortfall(row) {
  * @param {object} page One page of a cannibalisation finding.
  * @param {number} total The query's total impressions.
  * @return {string} The share, or a dash when the total is zero.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-cannibalisation-names-two-pages-competing-for-one-query
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-cannibalisation-names-two-pages-competing-for-one-query
  */
 export function pageShare(page, total) {
 	const impressions = Number(page?.impressions || 0)
@@ -82,7 +82,7 @@ export function pageShare(page, total) {
  *
  * @param {string} bucket The bucket label the server sent.
  * @return {string} The range.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
  */
 export function bucketRange(bucket) {
 	return String(bucket || '').replace('-', '–')
@@ -94,7 +94,7 @@ export function bucketRange(bucket) {
  *
  * @param {string} url The page URL.
  * @return {string} The path with its query string, or the input unchanged.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-cannibalisation-names-two-pages-competing-for-one-query
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-cannibalisation-names-two-pages-competing-for-one-query
  */
 export function pagePath(url) {
 	try {
@@ -112,7 +112,7 @@ export function pagePath(url) {
  * @param {string} term The term.
  * @param {Array<string>} confirmed The confirmed terms, lowercase.
  * @return {boolean} True when it is already a target.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 export function isConfirmed(term, confirmed) {
 	const needle = String(term || '')
@@ -135,7 +135,7 @@ export function isConfirmed(term, confirmed) {
  * @param {object} choice What the marketer chose: status, intent, notes.
  * @param {string} kind The proposal kind the section renders.
  * @return {object} The request body.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 export function confirmPayload(proposal, choice, kind) {
 	const status = TARGET_STATUSES.includes(choice?.status) ? choice.status : 'watch'
@@ -155,7 +155,7 @@ export function confirmPayload(proposal, choice, kind) {
  * @param {object} proposal The proposal row.
  * @param {object} choice What the marketer chose.
  * @return {{intent: string, targetPageRef: string, property: string, notes: string}} The fields.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 function choiceFields(proposal, choice) {
 	return {
@@ -170,7 +170,7 @@ function choiceFields(proposal, choice) {
  * @param {object} proposal The proposal row.
  * @param {object} choice What the marketer chose.
  * @return {string} The page the marketer chose, else the proposal's top page.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 function targetPage(proposal, choice) {
 	return String(choice?.targetPageRef || proposal?.topPage || '')
@@ -184,7 +184,7 @@ function targetPage(proposal, choice) {
  *
  * @param {object} crawl The crawl block of the proposals response.
  * @return {string} The message, or an empty string when the crawl ran.
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
  */
 export function crawlNotice(crawl) {
 	if (crawl?.crawled) {

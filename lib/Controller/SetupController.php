@@ -153,8 +153,8 @@ class SetupController extends Controller {
 	 * @return DataResponse `{ version, completed, dismissed, steps: { <id>: { done } } }`.
 	 *
 	 * @spec openspec/changes/first-time-setup/specs/first-time-setup/spec.md
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
-	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function status(): DataResponse {
@@ -288,7 +288,7 @@ class SetupController extends Controller {
 	 *
 	 * @return DataResponse|null The refusal, or null when the value is absent or known.
 	 *
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	private function refuseUnknownDataset(mixed $dataset): ?DataResponse {
 		if ($dataset === null) {
@@ -316,7 +316,7 @@ class SetupController extends Controller {
 	 * @return DataResponse `{ success, message }`.
 	 *
 	 * @spec openspec/changes/first-time-setup/specs/first-time-setup/spec.md
-	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function runAction(string $actionId): DataResponse {
@@ -410,7 +410,7 @@ class SetupController extends Controller {
 	 * @return DataResponse `{ success, message }`.
 	 *
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	private function loadDataset(): DataResponse {
 		// The card's Load button names its dataset in the body. An older
@@ -499,7 +499,7 @@ class SetupController extends Controller {
 	 *
 	 * @return DataResponse `{ success, dismissed }`.
 	 *
-	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	private function dismissSetup(): DataResponse {
 		$this->appConfig->setValueString(
@@ -516,7 +516,7 @@ class SetupController extends Controller {
 	 *
 	 * @return int|false The stored version, or false.
 	 *
-	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	private function dismissedVersion(): int|false {
 		$stored = $this->config(key: self::DISMISSED_VERSION_KEY);

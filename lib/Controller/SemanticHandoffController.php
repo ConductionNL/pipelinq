@@ -75,7 +75,7 @@ use Throwable;
  *  handoff service + the OR object surface.
  *
  * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class SemanticHandoffController extends Controller {
 	use PayloadToArray;
@@ -195,7 +195,7 @@ class SemanticHandoffController extends Controller {
 	 * @return JSONResponse The conversion outcome.
 	 *
 	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 * @spec openspec/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
 	 */
 	#[NoAdminRequired]
@@ -602,7 +602,7 @@ class SemanticHandoffController extends Controller {
 	 *
 	 * @return bool True on success.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	private function saveObject(string $schema, string $id, array $payload): bool {
 		$objectService = $this->objectService();

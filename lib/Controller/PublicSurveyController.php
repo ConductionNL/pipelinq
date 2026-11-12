@@ -27,7 +27,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use OCP\IRequest;
 /**
  * Open and answer a survey by its per-invitation token.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 class PublicSurveyController extends Controller {
 	/**
@@ -69,7 +69,7 @@ class PublicSurveyController extends Controller {
 	 *
 	 * @return JSONResponse The survey, or the state that stopped it.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -90,7 +90,7 @@ class PublicSurveyController extends Controller {
 	 *
 	 * @return JSONResponse The response, or the state that stopped it.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

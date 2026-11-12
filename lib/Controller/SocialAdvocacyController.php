@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use OCP\IUserSession;
 /**
  * REST controller for the prepared-share path.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 class SocialAdvocacyController extends Controller {
 	/**
@@ -74,7 +74,7 @@ class SocialAdvocacyController extends Controller {
 	 *
 	 * @return JSONResponse `{share}`, or a refusal.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	#[NoAdminRequired]
 	public function share(string $id): JSONResponse {
@@ -95,7 +95,7 @@ class SocialAdvocacyController extends Controller {
 	 *
 	 * @return JSONResponse `{publication}`, or a refusal.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	#[NoAdminRequired]
 	public function confirmShare(string $id): JSONResponse {

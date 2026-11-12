@@ -8,7 +8,7 @@
   - into the array and persists the whole client/contact object; the modal
   - owns no store access.
   -
-  - @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+  - @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
   -->
 <template>
 	<CnDialog
@@ -131,7 +131,7 @@ export default {
 
 		/**
 		 * @return {string} The dialog title when adding a new entry.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		addTitle() {
 			return this.channelType === 'email'
@@ -141,7 +141,7 @@ export default {
 
 		/**
 		 * @return {string} The dialog title when editing an existing entry.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		editTitle() {
 			return this.channelType === 'email'
@@ -151,7 +151,7 @@ export default {
 
 		/**
 		 * @return {string} The value field's label for the current channel type.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		valueLabel() {
 			return this.channelType === 'email'
@@ -165,7 +165,7 @@ export default {
 		 * Validate and emit the built entry; the parent owns persistence.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		/**
 		 * @return {string} The message for a missing value.

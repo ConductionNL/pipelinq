@@ -81,7 +81,7 @@ class BillingHandoffController extends Controller {
 	 * @return JSONResponse {available, deepLinkUrl, isManager}.
 	 *
 	 * @spec openspec/specs/time-approval-workflow/spec.md
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	#[NoAdminRequired]
 	public function availability(): JSONResponse {

@@ -7,7 +7,7 @@
   - back to the caller (ContactChannelsSection), which splices it into the
   - array and persists the whole client/contact object.
   -
-  - @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+  - @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
   -->
 <template>
 	<CnDialog
@@ -155,7 +155,7 @@ export default {
 		 * Validate and emit the built entry; the parent owns persistence.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		submit() {
 			const handle = (this.form.handle || '').trim()

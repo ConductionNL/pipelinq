@@ -62,7 +62,7 @@ export function stepAmount(step) {
  * @param {object} step The step from the editor.
  * @return {object} The step for the schema.
  *
- * @spec openspec/changes/round3-review-points/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export function serializeStep(step) {
 	const source = step || {}

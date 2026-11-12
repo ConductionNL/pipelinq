@@ -26,7 +26,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use OCP\IRequest;
 /**
  * Routes for the contact moments leaf.
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
 class ContactMomentLeafController extends Controller {
 	use ReadsTypedRequestParameters;
@@ -98,7 +98,7 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @return JSONResponse The rows, or the provider's refusal.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	#[NoAdminRequired]
 	public function index(
@@ -122,7 +122,7 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @return Response The created row, the provider's refusal, or a bare 400 when a parameter is missing or not a string.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	#[NoAdminRequired]
 	public function create(): Response {
@@ -153,7 +153,7 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @return JSONResponse The updated contact moment, or the refusal.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
 	 */
 	#[NoAdminRequired]
 	public function fileOnAlsoCase(string $momentId, string $caseId = ''): JSONResponse {
@@ -172,7 +172,7 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @return JSONResponse The updated contact moment, or the refusal.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-cannot-be-left-with-no-case-req-cms-006
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-cannot-be-left-with-no-case-req-cms-006
 	 */
 	#[NoAdminRequired]
 	public function unfileFromCase(string $momentId, string $caseId, ?string $newPrimary = null): JSONResponse {

@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use SimpleXMLElement;
 /**
  * New and changed locations out of a sitemap.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (WatchOutcome). A value
@@ -77,7 +77,7 @@ class SitemapWatchReader {
 	 *
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -94,7 +94,7 @@ class SitemapWatchReader {
 	 *
 	 * @return WatchOutcome The new and changed locations, or the reason there are none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
 	 */
 	public function read(string $url, array $previous, string $sourceId = ''): WatchOutcome {
 		$current = $this->collect(url: $url, hop: new SitemapHop(sourceId: $sourceId, depth: 0));
@@ -123,7 +123,7 @@ class SitemapWatchReader {
 	 *
 	 * @return array{new: array<string, string>, changed: array<string, string>}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
 	 */
 	public function diff(array $previous, array $current): array {
 		$new = [];
@@ -153,7 +153,7 @@ class SitemapWatchReader {
 	 *
 	 * @return array{index: bool, locations: array<string, string>}|null The state, or null when it is not a sitemap.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
 	 */
 	public function parse(string $document): ?array {
 		$xml = $this->load(document: $document);

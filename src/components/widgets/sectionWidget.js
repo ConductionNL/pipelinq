@@ -11,7 +11,7 @@
  * widget's `content`. This factory maps those onto the props the wrapped
  * section already takes, so the section itself does not change.
  *
- * @spec openspec/changes/detail-pages-read-at-a-glance/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 
 import { CnDetailCard } from '@conduction/nextcloud-vue'
@@ -33,7 +33,7 @@ import { computed, h } from 'vue'
  *   section that reads the page's record from there.
  * @return {object} A Vue component.
  *
- * @spec openspec/changes/detail-pages-read-at-a-glance/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 export function sectionWidget(name, section, mapProps, options = {}) {
 	return {

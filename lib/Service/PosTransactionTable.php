@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
 
 declare(strict_types=1);
@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * The configured register and schema ids of the posTransaction objects.
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
 final class PosTransactionTable {
 	/**

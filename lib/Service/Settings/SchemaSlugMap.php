@@ -27,7 +27,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Service\Settings;
 /**
  * Maps a schema slug to the app-config key holding its schema id.
  *
- * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 final class SchemaSlugMap {
 	/**
@@ -72,7 +72,7 @@ final class SchemaSlugMap {
 	 *
 	 * @return string|null The config key, or null when the slug is not configuration.
 	 *
-	 * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public static function configKeyFor(string $slug): ?string {
 		return (self::SLUG_TO_CONFIG_KEY[$slug] ?? null);

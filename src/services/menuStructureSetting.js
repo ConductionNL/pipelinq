@@ -23,7 +23,7 @@ import {
  *   Where to send it, the CSRF token, and the fetch to use (a test passes its own).
  * @return {Promise<{ structure: string, modules: Array<string> }>} What the server stored.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 export async function saveMenuStructure(
 	{ structure, modules },
@@ -49,7 +49,7 @@ export async function saveMenuStructure(
  * @param {{url: string, requestToken: string, send: typeof fetch}} request Where and how to write.
  * @param {{[key: string]: string}} wanted The settings to write.
  * @return {Promise<Response>} The answer.
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 function putSettings(request, wanted) {
 	// Called unbound: window.fetch refuses to run as another object's method.
@@ -71,7 +71,7 @@ function putSettings(request, wanted) {
  * @param {Response} response The write's answer.
  * @param {{[key: string]: string}} wanted The settings written.
  * @return {Promise<void>} Resolves when both settings are stored.
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 async function assertStored(response, wanted) {
 	if (!response.ok) {

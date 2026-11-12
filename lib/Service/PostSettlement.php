@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 /**
  * The settled status of a social post; built by SocialPostService.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 final class PostSettlement {
 	/**
@@ -44,7 +44,7 @@ final class PostSettlement {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function settled(array $post, array $rows): array {
 		[$failures, $done] = $this->tallyPublications(rows: $rows);

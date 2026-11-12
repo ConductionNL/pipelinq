@@ -148,7 +148,7 @@ export default {
 	methods: {
 		/**
 		 * @param {string} value The search term typed by the user.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-3
 		 */
 		onSearch(value) {
 			this.query = value
@@ -206,7 +206,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-1
 		 */
 		async doSearch() {
 			this.searching = true
@@ -247,7 +247,7 @@ export default {
 
 		/**
 		 * @param {object} contact The addressbook contact to import.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-2
 		 */
 		async importContact(contact) {
 			try {

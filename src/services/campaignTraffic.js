@@ -24,7 +24,7 @@
  *
  * @return {'no-blasts'|'unreadable'|'answered'} What the block should say.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 export function trafficOutcome({ asked, answered }) {
 	// Order matters. `asked === 0` has to win, because answered is then also 0
@@ -52,7 +52,7 @@ export function trafficOutcome({ asked, answered }) {
  *
  * @return {Promise<{rows: Array<object>, connected: boolean|null, asked: number, answered: number}>}
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 export async function readTrafficRows(blasts, read, concurrency) {
 	const run = {

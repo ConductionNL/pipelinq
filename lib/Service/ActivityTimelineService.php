@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/activity-timeline/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-activity-timeline/tasks.md#task-1
  * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
  * @spec openspec/specs/activity-timeline/spec.md#requirement-every-entity-must-have-a-timeline-view
  * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
@@ -53,7 +53,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
- * @spec openspec/changes/activity-timeline/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-activity-timeline/tasks.md#task-1
  */
 class ActivityTimelineService {
 	/**

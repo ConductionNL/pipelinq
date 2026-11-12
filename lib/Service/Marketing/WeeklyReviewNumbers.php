@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 /**
  * WeeklyReviewNumbers: one week of counting, in one read per collection.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 class WeeklyReviewNumbers {
 
@@ -43,7 +43,7 @@ class WeeklyReviewNumbers {
 	 *
 	 * @param ListObjectStore $store Register-scoped object plumbing.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -58,7 +58,7 @@ class WeeklyReviewNumbers {
 	 *
 	 * @return array<string, mixed> `sent`, `clicks` and one highlight line.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function mail(string $from, string $to): array {
 		$sent = 0;
@@ -92,7 +92,7 @@ class WeeklyReviewNumbers {
 	 *
 	 * @return array<string, mixed> `published`, `views` and one highlight line.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function social(string $from, string $to): array {
 		$published = 0;
@@ -125,7 +125,7 @@ class WeeklyReviewNumbers {
 	 * @return array<string, mixed> `clicks`, `impressions`, one highlight line
 	 *         and the week's queries, most-shown first.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function search(string $from, string $to): array {
 		$tally = ['clicks' => 0, 'impressions' => 0, 'byQuery' => []];
@@ -192,7 +192,7 @@ class WeeklyReviewNumbers {
 	 * @return array<string, mixed> `moves`, one highlight line, and the
 	 *         titles worth writing about, most relevant first.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function watch(string $from, string $to): array {
 		$moves = 0;
@@ -227,7 +227,7 @@ class WeeklyReviewNumbers {
 	 *
 	 * @return bool True when it holds at least one row.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function readable(string $schemaSlug): bool {
 		return ($this->store->findAll(schemaSlug: $schemaSlug) !== []);

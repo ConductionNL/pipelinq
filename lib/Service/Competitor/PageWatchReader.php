@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use OCA\Pipelinq\Service\Search\HtmlTextExtractor;
 /**
  * Change detection over a CSS-selected fragment.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (WatchOutcome). A value
@@ -80,7 +80,7 @@ class PageWatchReader {
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 * @param HtmlTextExtractor $extractor The CSS-fragment selection.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -99,7 +99,7 @@ class PageWatchReader {
 	 *
 	 * @return WatchOutcome One item when the fragment changed, none when it did not.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function read(
 		string $url,
@@ -156,7 +156,7 @@ class PageWatchReader {
 	 *
 	 * @return array{changed: bool, fingerprint: string, lineFingerprints: array<int, string>, summary: string, added: array<int, string>, removed: int}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function diff(string $fingerprint, array $lineFingerprints, string $fragment): array {
 		$lines = $this->lines(fragment: $fragment);

@@ -13,7 +13,7 @@
  * draft back). It calls `loadDraft()` once its form is prefilled, and
  * `saveContactMoment(data)` to save.
  *
- * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-1
  */
 
 import { generateUrl } from '@nextcloud/router'
@@ -92,7 +92,7 @@ export default {
 		 * Which drafts to offer: by default the place the form was opened.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-4
 		 */
 		draftPickContext() {
 			return this.draftContext
@@ -102,7 +102,7 @@ export default {
 		 * Preset values that are not a draft on their own.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-4
 		 */
 		draftDefaults() {
 			return {}

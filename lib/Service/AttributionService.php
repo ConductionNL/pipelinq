@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Throwable;
 /**
  * AttributionService — click→deal joining and revenue roll-up.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Attribution joins many payload shapes; complexity is inherent to the roll-up.
  */
@@ -72,7 +72,7 @@ class AttributionService {
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -98,7 +98,7 @@ class AttributionService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
 	 */
 	public function recordClick(string $blastDeliveryId, array $clickEvent): void {
 		$delivery = $this->loadDelivery(id: $blastDeliveryId);
@@ -153,8 +153,8 @@ class AttributionService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
-	 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	public function linkBlastToDeal(string $blastDeliveryId, string $dealId): void {
 		$delivery = $this->loadDelivery(id: $blastDeliveryId);
@@ -205,7 +205,7 @@ class AttributionService {
 	 *
 	 * @return float Sum in EUR.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
 	 */
 	public function getBlastAttributedValue(string $blastId): float {
 		$rows = $this->loadAttributionLinks(filters: ['blastId' => $blastId]);
@@ -230,8 +230,8 @@ class AttributionService {
 	 *
 	 * @return array{blastId: string, dealCount: int, attributedValue: float, currency: string}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
-	 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	public function getBlastAttributionSummary(string $blastId): array {
 		$rows = $this->loadAttributionLinks(filters: ['blastId' => $blastId]);
@@ -340,7 +340,7 @@ class AttributionService {
 	 *
 	 * @return string An upper-case three-letter code, EUR when unset.
 	 *
-	 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	private function reportingCurrency(): string {
 		$code = strtoupper(trim($this->appConfig->getValueString(Application::APP_ID, 'currency', 'EUR')));
@@ -358,7 +358,7 @@ class AttributionService {
 	 *
 	 * @return string An upper-case three-letter code.
 	 *
-	 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	private function currencyOf(?array $deal): string {
 		$code = strtoupper(trim((string)($deal['currency'] ?? '')));

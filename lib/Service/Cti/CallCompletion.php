@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service\Cti;
 /**
  * The talk duration and the disposition of a call that ended.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
  */
 final class CallCompletion {
 	/**
@@ -53,7 +53,7 @@ final class CallCompletion {
 	 *
 	 * @return string The outcome.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
 	 */
 	public function dispositionOutcome(): string {
 		$dispositionOutcome = 'resolved';

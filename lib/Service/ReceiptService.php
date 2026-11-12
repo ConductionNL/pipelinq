@@ -461,7 +461,7 @@ class ReceiptService {
 	 *
 	 * @return string The address on one line, or '' when nothing is set.
 	 *
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	public function companyAddress(): string {
 		$oneLine = $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_address', '');

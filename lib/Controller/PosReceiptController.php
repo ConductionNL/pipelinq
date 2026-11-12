@@ -49,7 +49,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/specs/pos-receipt-engine/spec.md
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.1
  */
 class PosReceiptController extends Controller {
 	/**

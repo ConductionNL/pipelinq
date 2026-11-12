@@ -31,7 +31,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-06-14-pos-end-of-day-bookkeeping-post/tasks.md#3.1
  */
 
 declare(strict_types=1);
@@ -63,7 +63,7 @@ use Psr\Log\LoggerInterface;
  *   3. Returns without raising the shillinq journal — the registry-mediated
  *      raise is the separate manager-gated / retry-job workflow.
  *
- * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-06-14-pos-end-of-day-bookkeeping-post/tasks.md#3.1
  */
 class GenerateZReportJob extends TimedJob {
 	use CastingPayloadToArray;
@@ -104,7 +104,7 @@ class GenerateZReportJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 *
-	 * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-end-of-day-bookkeeping-post/tasks.md#3.1
 	 */
 	protected function run(mixed $argument): void {
 		$configured = trim(

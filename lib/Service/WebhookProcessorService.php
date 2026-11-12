@@ -36,7 +36,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  */
 
 declare(strict_types=1);
@@ -68,7 +68,7 @@ use Throwable;
  * routing-matrix row (delivered/bounce/open/click/unsubscribe/complaint), each
  * independently unit-tested; splitting would scatter one cohesive webhook contract.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  */
 class WebhookProcessorService {
 	use PayloadToArray;
@@ -111,7 +111,7 @@ class WebhookProcessorService {
 	 * @param BlastService $blastService Totals re-computation sink.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -137,7 +137,7 @@ class WebhookProcessorService {
 	 * @return bool True when the event was handled (including
 	 *              intentionally-skipped unknowns).
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processEvent(array $event, string $provider): bool {
 		$eventType = strtolower((string)($event['eventType'] ?? $event['event'] ?? ''));
@@ -210,7 +210,7 @@ class WebhookProcessorService {
 	 *
 	 * @return int Count of events handled.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processSendGridEvent(array $events): int {
 		$handled = 0;
@@ -231,7 +231,7 @@ class WebhookProcessorService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processDelivered(array $event): void {
 		$delivery = $this->locateDelivery(event: $event);
@@ -328,7 +328,7 @@ class WebhookProcessorService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processOpen(array $event): void {
 		$delivery = $this->locateDelivery(event: $event);
@@ -429,7 +429,7 @@ class WebhookProcessorService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processComplaint(array $event): void {
 		$delivery = $this->locateDelivery(event: $event);
@@ -468,7 +468,7 @@ class WebhookProcessorService {
 	 *
 	 * @return array<string, mixed> Normalised event.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function normaliseSendGrid(array $event): array {
 		$type = strtolower((string)($event['event'] ?? ''));

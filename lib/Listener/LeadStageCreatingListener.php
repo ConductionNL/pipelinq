@@ -21,7 +21,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 
 declare(strict_types=1);
@@ -80,7 +80,7 @@ class LeadStageCreatingListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatingEvent) === false) {

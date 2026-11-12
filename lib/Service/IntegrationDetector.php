@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+ * @spec openspec/specs/first-time-setup/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use OCP\IURLGenerator;
 /**
  * Reports which optional integrations this instance has.
  *
- * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md#requirement-req-setup-pip-006-detected-integrations
+ * @spec openspec/changes/archive/2026-10-07-pipelinq-setup-wizard-review/specs/first-time-setup/spec.md#requirement-req-setup-pip-006-detected-integrations
  */
 class IntegrationDetector {
 	/**
@@ -57,7 +57,7 @@ class IntegrationDetector {
 	 *
 	 * @return array{installed: bool, url: string} `url` is '' when Shillinq is not installed.
 	 *
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	public function shillinq(): array {
 		$installed = $this->appManager->isInstalled('shillinq');
@@ -78,7 +78,7 @@ class IntegrationDetector {
 	 *
 	 * @return array{available: bool, source: string} `source` is `xwiki-app`, `openregister` or `none`.
 	 *
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	public function xwiki(): array {
 		if ($this->appManager->isInstalled('xwiki') === true) {
@@ -101,7 +101,7 @@ class IntegrationDetector {
 	 *
 	 * @return array{shillinq: array{installed: bool, url: string}, xwiki: array{available: bool, source: string}}
 	 *
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	public function all(): array {
 		return ['shillinq' => $this->shillinq(), 'xwiki' => $this->xwiki()];

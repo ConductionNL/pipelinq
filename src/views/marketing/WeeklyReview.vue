@@ -13,7 +13,7 @@
   ZERO. A quiet week and an unconnected Search Console both render as no
   line; the review names which is which, and so does this page.
 
-  @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+  @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 -->
 <template>
 	<div class="weekly-review">
@@ -222,7 +222,7 @@ export default {
 
 		/**
 		 * @return {boolean} Whether an agent wrote the summary (ADR-088).
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-narrative-mark-has-storage-and-a-renderer-and-no-writer-yet
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-narrative-mark-has-storage-and-a-renderer-and-no-writer-yet
 		 */
 		agentAuthored() {
 			return isAgentAuthored(this.review)
@@ -233,7 +233,7 @@ export default {
 		 * ("maandag 5 oktober om 07:00"); '' without a valid generatedAt.
 		 *
 		 * @return {string} The moment in words.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 		 */
 		generatedLabel() {
 			const date = this.review?.generatedAt ? new Date(this.review.generatedAt) : null
@@ -252,7 +252,7 @@ export default {
 
 		/**
 		 * @return {Array<string>} The sources this instance could not read.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 		 */
 		degraded() {
 			return degradedSources(this.review)
@@ -260,7 +260,7 @@ export default {
 
 		/**
 		 * @return {Array<{text: string, direction: string}>} The highlight lines with their direction.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 		 */
 		highlights() {
 			return highlightLines(this.review)
@@ -275,7 +275,7 @@ export default {
 		/**
 		 * Read the review, in one request.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 		 */
 		async load() {
 			this.loading = true
@@ -292,7 +292,7 @@ export default {
 		/**
 		 * Compose last week's numbers again.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 		 */
 		async regenerate() {
 			this.loading = true

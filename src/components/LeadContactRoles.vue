@@ -107,21 +107,21 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-5
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-7
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-7
 		 */
 		roleOptions() {
 			return crmRoleOptions()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-9
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-9
 		 */
 		sortedContactRoles() {
 			return sortByCrmRole(this.contactRoles)
@@ -134,7 +134,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-2
 		 */
 		async fetchRoles() {
 			this.loading = true
@@ -162,7 +162,7 @@ export default {
 
 		/**
 		 * @param {string} entityId Identifier of the linked entity.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
 		 */
 		async loadEntityName(entityId) {
 			this.entityNameCache[entityId] = await linkedEntityName(this.objectStore, { id: entityId, type: 'contact' })
@@ -174,7 +174,7 @@ export default {
 
 		/**
 		 * @param {string} roleType The stored role type.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
 		 */
 		getRoleLabel(roleType) {
 			return crmRoleLabel(roleType)
@@ -182,7 +182,7 @@ export default {
 
 		/**
 		 * @param {string} query The search term typed by the user.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-8
 		 */
 		async searchContacts(query) {
 			if (this.searchTimeout) {
@@ -210,7 +210,7 @@ export default {
 
 		/**
 		 * @param {object} form The role to add.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
 		 */
 		async addRole(form) {
 			if (!form || !form.toContact || !form.type) {
@@ -240,7 +240,7 @@ export default {
 
 		/**
 		 * @param {object} role The role to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-6
 		 */
 		async removeRole(role) {
 			if (!confirm(t('pipelinq', 'Remove this contact role from the lead?'))) {

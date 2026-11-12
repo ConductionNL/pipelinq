@@ -96,7 +96,7 @@ class ProductCatalogService {
 	 * @return int|float The tax rate percentage.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
-	 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+	 * @spec openspec/specs/product-catalog/spec.md
 	 */
 	public function btwClassToRate(?string $vatClass): int|float {
 		// The rate per class is a setting (VatRates, pipelinq-forms-review);

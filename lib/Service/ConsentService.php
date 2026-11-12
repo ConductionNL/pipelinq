@@ -217,7 +217,7 @@ class ConsentService {
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-lateststate-is-derived-from-integriq-s-decision-req-cii-006
-	 * @spec openspec/changes/latest-state-probe/specs/consent-in-integriq/spec.md#requirement-lateststate-asks-integriq-as-a-probe-req-cii-007
+	 * @spec openspec/specs/consent-in-integriq/spec.md#requirement-lateststate-asks-integriq-as-a-probe-req-cii-007
 	 */
 	public function latestState(string $contactId, string $channel): string {
 		if ($contactId === '' || $channel === '') {

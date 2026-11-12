@@ -8,7 +8,7 @@
  *
  * The host keeps its own form, options and submit.
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-23
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-23
  */
 export default {
 	props: {
@@ -40,8 +40,8 @@ export default {
 	methods: {
 		/**
 		 * @param {object} client The client the user picked.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-23
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-54
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-23
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-54
 		 */
 		onClientSelected(client) {
 			this.selectedClient = client

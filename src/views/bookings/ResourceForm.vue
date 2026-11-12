@@ -14,7 +14,7 @@
     - For each vacations row: startDate <= endDate (ISO YYYY-MM-DD string
       compare).
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
 	<div class="resource-form" data-testid="resource-form">

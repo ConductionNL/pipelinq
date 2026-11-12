@@ -53,7 +53,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-prospect-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-prospect-ui/tasks.md#task-1
 		 */
 		scoreClass() {
 			const score = this.prospect.fitScore || 0

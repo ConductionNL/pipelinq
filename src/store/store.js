@@ -10,7 +10,7 @@ import { useSettingsStore } from './modules/settings.js'
 let initPromise = null
 
 /**
- * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-60
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-60
  */
 export function initializeStores() {
 	if (initPromise) {
@@ -38,7 +38,7 @@ export function initializeStores() {
  * before any view's onMounted fetchSchema() — closing the race that left
  * list pages blank. Idempotent.
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-60
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-60
  */
 export function registerObjectTypes() {
 	const objectStore = useObjectStore()

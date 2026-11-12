@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/callback-management/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-2.1
  */
 class CallbackController extends Controller {
 	/**
@@ -79,7 +79,7 @@ class CallbackController extends Controller {
 	 *
 	 * @return JSONResponse The response with updated task data.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function attempt(string $id): JSONResponse {
@@ -130,7 +130,7 @@ class CallbackController extends Controller {
 	 *
 	 * @return JSONResponse The response with updated task data.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function claim(string $id): JSONResponse {
@@ -172,7 +172,7 @@ class CallbackController extends Controller {
 	 *
 	 * @return JSONResponse The response with updated task data.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function complete(string $id): JSONResponse {
@@ -230,7 +230,7 @@ class CallbackController extends Controller {
 	 * @auth admin-only Moves a task onto another user or group; the body
 	 *       additionally enforces it with an isAdmin() check.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-2.1
 	 */
 	public function reassign(string $id): JSONResponse {
 		$user = $this->currentUser();

@@ -25,7 +25,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 /**
  * Idempotent writes of watch events.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
  */
 class WatchEventStore {
 
@@ -62,7 +62,7 @@ class WatchEventStore {
 	 * @param ListObjectStore $store Register-scoped object access.
 	 * @param ITimeFactory $time Time factory for the first-sighting stamp.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -75,7 +75,7 @@ class WatchEventStore {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function schemaSlug(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA_SLUG);
@@ -88,7 +88,7 @@ class WatchEventStore {
 	 *
 	 * @return array<int, array<string, mixed>> The events.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
 	public function all(array $filters = []): array {
 		return $this->store->findAll(schemaSlug: $this->schemaSlug(), filters: $filters);
@@ -131,7 +131,7 @@ class WatchEventStore {
 	 *
 	 * @return array{created: bool, event: array<string, mixed>|null}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function upsert(array $watch, array $item, array $extra = []): array {
 		$watchId = $this->store->idOf(payload: $watch);

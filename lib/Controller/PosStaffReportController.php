@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  * commission-relevant totals, so it is restricted to POS managers / admins
  * (PosAccessPolicy::isManager, which already gates the BTW report).
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
 class PosStaffReportController extends Controller {
 	/**
@@ -77,7 +77,7 @@ class PosStaffReportController extends Controller {
 	 *
 	 * @return JSONResponse The report payload.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
 	 */
 	#[NoAdminRequired]
 	public function staffSales(): JSONResponse {

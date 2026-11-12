@@ -34,7 +34,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
+ * @spec openspec/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use Throwable;
 /**
  * Resolve the language to write to a party in, with its reason.
  *
- * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
+ * @spec openspec/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
  */
 class CorrespondenceLanguageService {
 	/**
@@ -108,7 +108,7 @@ class CorrespondenceLanguageService {
 	 * @return array<int, string> The available tags, sorted, always including
 	 *   the floor.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
+	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	public function available(): array {
 		try {
@@ -154,7 +154,7 @@ class CorrespondenceLanguageService {
 	 *
 	 * @return array{valid: bool, reason: string} The verdict.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
+	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	public function validate(string $tag): array {
 		$tag = trim($tag);
@@ -196,7 +196,7 @@ class CorrespondenceLanguageService {
 	 * @return array{language: string, rule: string, partyPreference: string}
 	 *   The answer.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
+	 * @spec openspec/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
 	 */
 	public function resolveFor(array $party): array {
 		$preference = trim((string)($party['correspondenceLanguage'] ?? ''));
@@ -232,7 +232,7 @@ class CorrespondenceLanguageService {
 	 *
 	 * @return array<string, mixed> `status` plus the answer, or `error`.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-resolver-is-published-and-no-caller-reads-the-property-directly-req-pcl-005
+	 * @spec openspec/specs/parties/spec.md#requirement-the-resolver-is-published-and-no-caller-reads-the-property-directly-req-pcl-005
 	 */
 	public function resolve(string $partyId): array {
 		$party = $this->readParty(partyId: $partyId);
@@ -251,7 +251,7 @@ class CorrespondenceLanguageService {
 	 *
 	 * @return array<string, mixed> `status` plus the answer, or `error`.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
+	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	public function setPreference(string $partyId, string $tag): array {
 		$party = $this->readParty(partyId: $partyId);
@@ -299,7 +299,7 @@ class CorrespondenceLanguageService {
 	 * @return array{needsChoice: bool, language: string, options: array<int, string>}
 	 *   What the merge should do.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-a-merge-does-not-pick-a-language-silently-req-pcl-006
+	 * @spec openspec/specs/parties/spec.md#requirement-a-merge-does-not-pick-a-language-silently-req-pcl-006
 	 */
 	public function mergeAnswer(array $winner, array $loser): array {
 		$a = trim((string)($winner['correspondenceLanguage'] ?? ''));

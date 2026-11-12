@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-007
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-007
  */
 
 declare(strict_types=1);

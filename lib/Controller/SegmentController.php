@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
 /**
  * REST controller for Segment entities.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
  */
 class SegmentController extends Controller {
 	/**
@@ -97,7 +97,7 @@ class SegmentController extends Controller {
 	 *
 	 * @return JSONResponse `{catalogue, availability}`.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
 	 */
 	#[NoAdminRequired]
 	public function signals(): JSONResponse {
@@ -237,7 +237,7 @@ class SegmentController extends Controller {
 	 *
 	 * @return JSONResponse `{valid, error, estimatedSize}`.
 	 *
-	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+	 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 	 */
 	#[NoAdminRequired]
 	public function preview(): JSONResponse {
@@ -265,7 +265,7 @@ class SegmentController extends Controller {
 	 *
 	 * @return JSONResponse 200 with segment+estimatedSize, 400 on invalid input, 404 when missing.
 	 *
-	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+	 * @spec openspec/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {

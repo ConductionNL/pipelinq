@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-the-picker-shall-offer-only-the-declared-kinds-in-the-declared-order-req-pkr-003
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-the-picker-shall-offer-only-the-declared-kinds-in-the-declared-order-req-pkr-003
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCP\IRequest;
 /**
  * Routes for the party kind registry and the party link write path.
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-consuming-app-shall-declare-which-kinds-a-record-type-accepts-req-pkr-002
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-consuming-app-shall-declare-which-kinds-a-record-type-accepts-req-pkr-002
  */
 class PartyKindController extends Controller {
 	/**
@@ -67,7 +67,7 @@ class PartyKindController extends Controller {
 	 *
 	 * @return JSONResponse The offered kinds, and whether an acceptance exists.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-the-picker-shall-offer-only-the-declared-kinds-in-the-declared-order-req-pkr-003
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-the-picker-shall-offer-only-the-declared-kinds-in-the-declared-order-req-pkr-003
 	 */
 	#[NoAdminRequired]
 	public function index(string $recordType = ''): JSONResponse {
@@ -93,7 +93,7 @@ class PartyKindController extends Controller {
 	 *
 	 * @return JSONResponse The link, or the refusal naming what it refused.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	#[NoAdminRequired]
 	public function link(
@@ -121,7 +121,7 @@ class PartyKindController extends Controller {
 	 *
 	 * @return JSONResponse The rows that landed and the rows refused.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	#[NoAdminRequired]
 	public function import(string $recordType = '', string $recordId = '', array $rows = []): JSONResponse {
@@ -141,7 +141,7 @@ class PartyKindController extends Controller {
 	 *
 	 * @return JSONResponse The ended link, or the refusal.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-kind-declared-single-shall-refuse-a-second-holder-on-one-record-req-pkr-005
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-kind-declared-single-shall-refuse-a-second-holder-on-one-record-req-pkr-005
 	 */
 	#[NoAdminRequired]
 	public function endLink(string $linkId): JSONResponse {

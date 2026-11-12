@@ -4,7 +4,7 @@
   -
   - POS staff admin form (create / edit).
   -
-  - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+  - @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.4
   -->
 <template>
 	<div class="pos-staff-form">
@@ -187,7 +187,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.4
 		 */
 		async save() {
 			const payload = {
@@ -210,7 +210,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.4
 		 */
 		async performDelete() {
 			await this.deleteRecord(t('pipelinq', 'Failed to delete staff'))

@@ -47,7 +47,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-23
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-23
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -64,7 +64,7 @@ export default {
 
 		/**
 		 * @param {object} formData The raw create-form fields.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-24
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-24
 		 */
 		async onSave(formData) {
 			this.saving = true

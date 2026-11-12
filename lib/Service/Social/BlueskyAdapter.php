@@ -37,7 +37,7 @@
  *
  * @link https://docs.bsky.app/docs/advanced-guides/posts
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * Bluesky, over the AT Protocol.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 class BlueskyAdapter extends AbstractSocialAdapter {
 	/**
@@ -62,7 +62,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The network name.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function network(): string {
 		return 'bluesky';
@@ -73,7 +73,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The provider identifier.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	public function brokerProvider(): string {
 		return 'bluesky';
@@ -84,7 +84,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return int The character limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function bodyLimit(): int {
 		return 300;
@@ -95,7 +95,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return int The media limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function maxMedia(): int {
 		return 4;
@@ -109,7 +109,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall The request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishCall(SocialPublishRequest $request): SocialAdapterCall {
 		return new SocialAdapterCall(
@@ -135,7 +135,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The AT URI.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedId(array $payload): string {
 		return (string)($payload['uri'] ?? '');
@@ -150,7 +150,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The public address, or an empty string.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		$uri = (string)($payload['uri'] ?? '');
@@ -178,7 +178,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null without an actor.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {
 		$actor = trim((string)($account['externalAccountId'] ?? ''));
@@ -202,7 +202,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return array{views: int, likes: int, comments: int, shares: int, clicks: int} The normalised numbers.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function normaliseMetrics(array $payload, string $externalId = ''): array {
 		$feed = ($payload['feed'] ?? []);
@@ -235,7 +235,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null without an actor.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function followersCall(array $account): ?SocialAdapterCall {
 		$actor = trim((string)($account['externalAccountId'] ?? ''));
@@ -256,7 +256,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return int The follower count.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function readFollowers(array $payload): int {
 		return $this->readInt(payload: $payload, path: ['followersCount']);
@@ -269,7 +269,7 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string An address that opens the composer.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function composerUrl(SocialPublishRequest $request): string {
 		return 'https://bsky.app/intent/compose?text=' . rawurlencode($request->bodyWithLink());

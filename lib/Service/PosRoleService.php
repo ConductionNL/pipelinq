@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * posStaff record. All persistence flows through OpenRegister's ObjectService
  * (real API: find / findAll / saveObject / deleteObject).
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2
  */
 class PosRoleService {
 	use CastingPayloadToArray;
@@ -66,7 +66,7 @@ class PosRoleService {
 	 *
 	 * @return array<int, array<string, mixed>> The role objects.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function listRoles(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
@@ -98,7 +98,7 @@ class PosRoleService {
 	 *
 	 * @throws OCSNotFoundException If the role is not found.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function getRole(string $id): array {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
@@ -130,7 +130,7 @@ class PosRoleService {
 	 *
 	 * @throws OCSBadRequestException If maxDiscountPercent is out of bounds or name is empty.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function saveRole(array $data, string $id = ''): array {
 		$name = trim((string)($data['name'] ?? ''));
@@ -185,7 +185,7 @@ class PosRoleService {
 	 * @throws OCSNotFoundException If the role is not found.
 	 * @throws OCSForbiddenException If the role is still assigned to active staff.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function deleteRole(string $id): void {
 		// Ensure the role exists first (throws OCSNotFoundException).
@@ -216,7 +216,7 @@ class PosRoleService {
 	 *
 	 * @return int Number of active staff assigned to the role.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function countActiveStaffForRole(string $roleId): int {
 		try {
@@ -266,7 +266,7 @@ class PosRoleService {
 	 *
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	private function config(string $schemaKey): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -284,7 +284,7 @@ class PosRoleService {
 	 *
 	 * @return object The object service.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

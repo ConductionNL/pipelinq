@@ -108,7 +108,7 @@ export default {
 		 * The store the record is read from and saved through.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -120,7 +120,7 @@ export default {
 		 * Follow the record's assignee when the page re-reads it.
 		 *
 		 * @param {string} next The new assignee.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
 		 */
 		assignee(next) {
 			this.currentAssignee = next
@@ -134,7 +134,7 @@ export default {
 		 * Write the chosen colleague into the record's assignee.
 		 *
 		 * @param {string} userId The Nextcloud user id the panel emitted.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
 		 */
 		async assign(userId) {
 			this.failed = false

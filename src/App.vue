@@ -8,7 +8,7 @@
  App.vue renders no CnIndexSidebar itself — CnAppRoot auto-hoists CnIndexPage's
  sidebar, so rendering one here too caused a double sidebar on index pages.
 
- @spec openspec/changes/pipelinq-manifest-v1/tasks.md
+ @spec openspec/changes/archive/2026-05-11-pipelinq-manifest-v1/tasks.md
 -->
 <template>
 	<CnAppRoot
@@ -106,7 +106,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-app-shell/tasks.md#task-3
 	 */
 	provide() {
 		return {
@@ -202,7 +202,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-app-shell/tasks.md#task-2
 		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
@@ -215,7 +215,7 @@ export default {
 		 * reporting currency; the `booking*Name` formatters show names, not ids.
 		 *
 		 * @return {Record<string, (value: unknown) => string>}
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		cellFormatters() {
 			// `auditVerdict` prints the connection audit's follow answers.
@@ -228,7 +228,7 @@ export default {
 		 * the rule keys (`newLead`, `clientUpdated`).
 		 *
 		 * @return {Record<string, string>}
-		 * @spec openspec/changes/simple-tour-and-readable-labels/specs/notifications/spec.md
+		 * @spec openspec/specs/notifications/spec.md
 		 */
 		notificationLabels() {
 			return buildNotificationLabels(ncT)
@@ -345,7 +345,7 @@ export default {
 		 *
 		 * @param {string} key Translation key.
 		 * @return {string} Translated string (or the key on miss).
-		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-app-shell/tasks.md#task-4
 		 */
 		translateForApp(key) {
 			return ncT('pipelinq', key)

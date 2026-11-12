@@ -43,7 +43,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-45
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-45
 		 */
 		items() {
 			const now = new Date()
@@ -77,14 +77,14 @@ export default {
 		 *
 		 * @param {object} item The clicked row (a shaped lead item).
 		 * @param {MouseEvent} [event] The row click.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-46
 		 */
 		onShow(item, event) {
 			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id), event)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-43
 		 */
 		async fetchData() {
 			await this.loadWidget('MyLeadsWidget', async (config) => {

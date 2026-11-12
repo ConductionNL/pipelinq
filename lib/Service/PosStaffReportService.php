@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  * BTW report. Refunded transactions are netted out (negative contribution
  * via the persisted refund flag).
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
 class PosStaffReportService {
 	use CastingPayloadToArray;
@@ -94,7 +94,7 @@ class PosStaffReportService {
 	 *
 	 * @return array<int, array{staffMemberId: string, displayName: string, transactionCount: int, total: float, totalTax: float}> Per-staff rows.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
 	 */
 	public function staffSalesReport(): array {
 		try {

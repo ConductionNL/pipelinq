@@ -9,7 +9,7 @@
  * leaf, and adds a new indicator value as an OpenRegister object. Pure helpers
  * (ordering, acknowledgement state, the value payload) are exported for tests.
  *
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
  */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -22,7 +22,7 @@ const SEVERITY_RANK = { critical: 0, warning: 1, info: 2 }
  *
  * @param {Array<object>} indicators The resolved indicators.
  * @return {Array<object>} A new, sorted array.
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
  */
 export function sortBySeverity(indicators) {
 	const rank = (i) => SEVERITY_RANK[i?.severity] ?? SEVERITY_RANK.warning
@@ -38,7 +38,7 @@ export function sortBySeverity(indicators) {
  *
  * @param {object} indicator A resolved indicator.
  * @return {boolean} True when an acknowledgement is required and missing.
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
  */
 export function needsAcknowledgement(indicator) {
 	return indicator?.requiresAcknowledgement === true && !indicator?.acknowledgedAt
@@ -50,7 +50,7 @@ export function needsAcknowledgement(indicator) {
  * @param {string} partyId The client or contact uuid.
  * @param {object} form The form: { indicator, validFrom, validUntil, source }.
  * @return {object} The object payload.
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md
+ * @spec openspec/specs/party-fields-and-indicators/spec.md
  */
 export function buildIndicatorValue(partyId, form) {
 	const value = {
@@ -72,7 +72,7 @@ export function buildIndicatorValue(partyId, form) {
  *
  * @param {string} partyId The client or contact uuid.
  * @return {Promise<Array<object>>} The indicators.
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
+ * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
  */
 export async function fetchPartyIndicators(partyId) {
 	const response = await axios.get(
@@ -86,7 +86,7 @@ export async function fetchPartyIndicators(partyId) {
  *
  * @param {string} valueId The indicator value uuid.
  * @return {Promise<object>} The updated value.
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
  */
 export async function acknowledgeIndicator(valueId) {
 	const response = await axios.post(
@@ -102,7 +102,7 @@ export async function acknowledgeIndicator(valueId) {
  * The indicators a handler may set: the active entries of the vocabulary.
  *
  * @return {Promise<Array<object>>} The declared indicators.
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md
+ * @spec openspec/specs/party-fields-and-indicators/spec.md
  */
 export async function fetchIndicatorVocabulary() {
 	const response = await axios.get(
@@ -120,7 +120,7 @@ export async function fetchIndicatorVocabulary() {
  * @param {string} partyId The client or contact uuid.
  * @param {object} form The form: { indicator, validFrom, validUntil, source }.
  * @return {Promise<object>} The saved object.
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md
+ * @spec openspec/specs/party-fields-and-indicators/spec.md
  */
 export async function addIndicatorValue(partyId, form) {
 	const response = await axios.post(

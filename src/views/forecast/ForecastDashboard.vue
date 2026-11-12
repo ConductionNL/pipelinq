@@ -282,7 +282,7 @@ export default {
 		 * The quarter the forecast covers, as the card title.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		quarterTitle() {
 			const now = new Date()
@@ -296,7 +296,7 @@ export default {
 		 * The line under the title: the quarter and the level shown.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		subtitle() {
 			const option = this.levelOptions.find((o) => o.value === this.level)
@@ -311,7 +311,7 @@ export default {
 		 * The day the shown snapshots were taken, written out ("maandag 5 oktober").
 		 *
 		 * @return {string} The date, or '' without snapshots.
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		snapshotDate() {
 			const dates = this.rows.map((row) => String(row.as_of_date || '')).filter(Boolean).sort()
@@ -329,7 +329,7 @@ export default {
 		 * The rows whose commit a lead overrode, for the notes under the table.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		overriddenRows() {
 			return this.rows.filter((row) => this.hasOverride(row))
@@ -355,7 +355,7 @@ export default {
 		 * The four KPI tiles: quota, won, committed and what is still to get.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		tiles() {
 			const gapPercent =
@@ -480,7 +480,7 @@ export default {
 		 *
 		 * @param {object} row A snapshot row.
 		 * @return {string} The name.
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		ownerName(row) {
 			return this.names[row.owner_id] || row.owner_id
@@ -490,7 +490,7 @@ export default {
 		 * Look up the display names of the rows' owners.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		async loadNames() {
 			const ids = [...new Set(this.rows.map((row) => row.owner_id).filter(Boolean))]
@@ -512,7 +512,7 @@ export default {
 		 *
 		 * @param {number} value The amount.
 		 * @return {string} The amount, formatted.
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		formatMoney(value) {
 			return formatEur(Number(value || 0))

@@ -13,7 +13,7 @@
  *
  * @param {{item: object, columnProp: string, targetStage: object}} move The move.
  * @return {object} The column value and stage order the card had.
- * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
  */
 export function placeOnStage(move) {
 	const { item, columnProp, targetStage } = move
@@ -35,7 +35,7 @@ export function placeOnStage(move) {
  * @param {object} current The object as read before the save.
  * @param {{item: object, columnProp: string, previous: object, ticketType: ?string}} move The move.
  * @return {object} The object to save.
- * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
  */
 export function stagePayload(current, move) {
 	const { item, columnProp, previous, ticketType } = move
@@ -56,7 +56,7 @@ export function stagePayload(current, move) {
  *
  * @param {?object} refusal The store's error for the object type.
  * @return {?string} The message, or null.
- * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
  */
 export function validationMessage(refusal) {
 	return refusal?.isValidation && refusal.message

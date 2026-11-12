@@ -6,7 +6,7 @@
  * pair (it and its inverse), an edit rewrites the relationship and, when it
  * has one, its inverse. Also the name of the entity at the other end.
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
  */
 
 import { translate as t } from '@nextcloud/l10n'

@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCP\IAppConfig;
 /**
  * CampaignLinkDecorator: campaign slug, UTM map and the anchor rewrite.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
  */
 class CampaignLinkDecorator {
 
@@ -79,7 +79,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -91,7 +91,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return bool True unless `blast.utm_auto` is `false`.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
 	 */
 	public function isEnabled(): bool {
 		$raw = strtolower(trim($this->appConfig->getValueString(Application::APP_ID, self::AUTO_CONFIG_KEY, 'true')));
@@ -109,7 +109,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string The slug, empty only when every source is empty.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function campaignFor(array $blast, array $template = [], array $campaign = []): string {
 		$candidates = [
@@ -145,7 +145,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return array<string, string> `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function utmFor(array $blast, array $template = [], array $campaign = []): array {
 		return [
@@ -184,7 +184,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string The body, unchanged when the setting is off or nothing qualified.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function decorate(string $html, array $blast, array $template = [], array $campaign = []): string {
 		if ($html === '' || $this->isEnabled() === false) {
@@ -225,7 +225,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string|null The decorated URL, or null to keep the original.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
 	 */
 	public function decorateUrl(string $url, array $utm): ?string {
 		$trimmed = trim($url);
@@ -258,7 +258,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string The slug, empty when nothing survives.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function slug(string $value): string {
 		return self::slugify(value: $value);
@@ -271,7 +271,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string The slug, empty when nothing survives.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
 	 */
 	public static function slugify(string $value): string {
 		$clean = $value;

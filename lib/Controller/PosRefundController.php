@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-refund-return/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.2
  */
 
 declare(strict_types=1);
@@ -46,8 +46,8 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-refund-return/tasks.md#2.2
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
+ * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.2
  */
 class PosRefundController extends Controller {
 	/**
@@ -76,7 +76,7 @@ class PosRefundController extends Controller {
 	 *
 	 * @return JSONResponse The updated refund.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function confirm(string $id): JSONResponse {
@@ -98,7 +98,7 @@ class PosRefundController extends Controller {
 	 *
 	 * @return JSONResponse The updated refund.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function reject(string $id): JSONResponse {

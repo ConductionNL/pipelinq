@@ -5,7 +5,7 @@
   BookingRowsEditor. Used by ResourceForm and by the resource edit dialog's
   `#field-vacations` slot.
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
 	<BookingRowsEditor

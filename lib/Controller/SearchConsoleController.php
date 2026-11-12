@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCP\IRequest;
 /**
  * SearchConsoleController: `GET /api/marketing/search-queries`.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
 class SearchConsoleController extends Controller {
 
@@ -51,7 +51,7 @@ class SearchConsoleController extends Controller {
 	 * @param SearchConsoleImportService $importer Connection status.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	public function __construct(
 		string $appName,
@@ -77,7 +77,7 @@ class SearchConsoleController extends Controller {
 	 *
 	 * @return JSONResponse `{from, to, rows[], totalQueries, configured, properties[], serviceAccountEmail, lastImportAt}`.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	#[NoAdminRequired]
 	public function index(?string $from = null, ?string $to = null, int $limit = 50, ?string $property = null): JSONResponse {

@@ -36,7 +36,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-an-indicator-shall-be-a-declared-vocabulary-with-dated-values-req-pfi-002
+ * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-an-indicator-shall-be-a-declared-vocabulary-with-dated-values-req-pfi-002
  */
 
 declare(strict_types=1);
@@ -56,7 +56,7 @@ use Throwable;
 /**
  * Resolve a party's indicators, and answer whether one blocks an act.
  *
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
+ * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
  */
 class PartyIndicatorService {
 	/**
@@ -105,7 +105,7 @@ class PartyIndicatorService {
 	 *
 	 * @return bool True when the value applies.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-an-indicator-shall-be-a-declared-vocabulary-with-dated-values-req-pfi-002
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-an-indicator-shall-be-a-declared-vocabulary-with-dated-values-req-pfi-002
 	 */
 	public function applies(array $value, ?DateTimeImmutable $onDay = null): bool {
 		$onDay = ($onDay ?? new DateTimeImmutable('today'));
@@ -129,7 +129,7 @@ class PartyIndicatorService {
 	 * @return array<int, array<string, mixed>> The indicators, each with its
 	 *   code, label, severity, effects, period, source and acknowledgement.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
 	 */
 	public function resolve(string $partyId, ?DateTimeImmutable $onDay = null): array {
 		$partyId = trim($partyId);
@@ -192,7 +192,7 @@ class PartyIndicatorService {
 	 *
 	 * @throws InvalidArgumentException When the act is not one this service answers.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
 	 */
 	public function isBlocked(string $partyId, string $act, ?DateTimeImmutable $onDay = null): array {
 		$effect = (self::ACTS[$act] ?? null);
@@ -223,7 +223,7 @@ class PartyIndicatorService {
 	 *
 	 * @return array<string, mixed> `status` plus either `indicatorValue` or `error`.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 	 */
 	public function acknowledge(string $valueId): array {
 		$valueId = trim($valueId);
@@ -287,7 +287,7 @@ class PartyIndicatorService {
 	 *
 	 * @return array<int, array<string, mixed>> The union, one entry per code.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-a-merge-shall-survive-field-values-and-shall-union-indicators-req-pfi-006
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-merge-shall-survive-field-values-and-shall-union-indicators-req-pfi-006
 	 */
 	public function unionForMerge(array $winner, array $loser): array {
 		$union = [];

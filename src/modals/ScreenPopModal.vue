@@ -5,7 +5,7 @@
   - ScreenPopModal renders the chooser the agent sees when a CTI screen-pop
   - returns more than one matching contact / client.
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.1
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.1
   -->
 <template>
 	<CnDialog

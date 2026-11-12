@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * number are checked against the raw stored value as well as against the
  * normalised one.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
  */
 class CtiContactMatcher {
 	use PayloadToArray;
@@ -86,7 +86,7 @@ class CtiContactMatcher {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $orgId is reserved for the forthcoming tenant scope; part of the stable public signature.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
 	 */
 	public function findByPhoneNumber(?string $e164Number, ?string $orgId = null): array {
 		if ($e164Number === null || $e164Number === '') {
@@ -259,7 +259,7 @@ class CtiContactMatcher {
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses streaming records; extraction adds no clarity.
 	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential guard clauses streaming records; extraction adds no clarity.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
 	 */
 	public function normaliseStoredPhoneNumbers(): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

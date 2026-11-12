@@ -37,7 +37,7 @@ use Throwable;
  * Runs an export endpoint's action and answers its result, 404 / 403 / 422 from
  * the service's OCS exceptions, or a logged 500 with a generic message.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 final class ExportActionResponse {
 	/**
@@ -60,7 +60,7 @@ final class ExportActionResponse {
 	 *
 	 * @return JSONResponse The response.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	public function respond(callable $action, string $label): JSONResponse {
 		try {

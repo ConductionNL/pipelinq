@@ -69,7 +69,7 @@ export const useSettingsStore = defineStore('settings', {
 	},
 	actions: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-43
 		 */
 		async fetchSettings() {
 			this.loading = true
@@ -94,7 +94,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * @param {object} settingsData The settings payload to persist.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-44
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-44
 		 */
 		async saveSettings(settingsData) {
 			this.loading = true

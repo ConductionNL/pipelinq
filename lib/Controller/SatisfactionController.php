@@ -24,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+ * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use OCP\IRequest;
 /**
  * Routes for the satisfaction panel and the response rate.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 class SatisfactionController extends Controller {
 	/**
@@ -67,7 +67,7 @@ class SatisfactionController extends Controller {
 	 *
 	 * @return JSONResponse The panel, empty state included.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+	 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	#[NoAdminRequired]
 	public function clientPanel(string $clientId): JSONResponse {
@@ -83,7 +83,7 @@ class SatisfactionController extends Controller {
 	 *
 	 * @return JSONResponse The figures, with a per-channel breakdown.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	#[NoAdminRequired]
 	public function responseRate(string $surveyId = '', string $channel = '', int $days = 0): JSONResponse {

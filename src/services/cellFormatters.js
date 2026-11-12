@@ -6,7 +6,7 @@
  * registry (CnAppRoot `formatters` prop). A manifest column picks one with
  * `"formatter": "<key>"`.
  *
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -28,7 +28,7 @@ import { MARKETING_FORMATTERS } from './valueFormatters.js'
  * @param {object} [_property] The schema property (unused).
  * @param {{decimals?: number, currencyField?: string}} [options] Column options.
  * @return {string} The formatted amount.
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function objectCurrency(value, row, _property, options) {
 	if (isBlank(value)) {
@@ -423,7 +423,7 @@ export const CELL_FORMATTERS = {
  *
  * @param {{fetchObject: (type: string, id: string) => Promise<object|null>}} store The object store.
  * @return {Record<string, (value: unknown) => string>} The formatter map.
- * @spec openspec/changes/review-finish/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export function createAppFormatters(store) {
 	return {

@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use OCP\IUserSession;
 /**
  * REST controller for articles.
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 class ArticleController extends Controller {
 	/**
@@ -76,7 +76,7 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse `{data[], pagination}`.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
@@ -92,7 +92,7 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse The article, or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -111,7 +111,7 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 201 with the article, or 400 naming the bad field.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -132,7 +132,7 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the article, 400 or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
@@ -148,7 +148,7 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the article, 400 or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 	 */
 	#[NoAdminRequired]
 	public function publish(string $id): JSONResponse {
@@ -164,7 +164,7 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the article, 400 or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 	 */
 	#[NoAdminRequired]
 	public function archive(string $id): JSONResponse {
@@ -184,7 +184,7 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the article, 400 or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 	 */
 	#[NoAdminRequired]
 	public function transition(string $id): JSONResponse {
@@ -204,7 +204,7 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse `{data[], counts}`.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
 	 */
 	#[NoAdminRequired]
 	public function usages(string $id): JSONResponse {

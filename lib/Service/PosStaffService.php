@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) CRUD + PIN-auth + lockout
  *  logic is inherently branchy; split across small focused methods.
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3
  */
 class PosStaffService {
 	use CastingPayloadToArray;
@@ -100,7 +100,7 @@ class PosStaffService {
 	 *
 	 * @return array<int, array<string, mixed>> The staff objects without pinHash.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function listStaff(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
@@ -132,7 +132,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSNotFoundException If the staff is not found.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function getStaff(string $id): array {
 		$staff = $this->fetchStaff(id: $id);
@@ -154,7 +154,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSBadRequestException If displayName/role missing, or PIN format is invalid on create/update.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function saveStaff(array $data, string $id = ''): array {
 		$displayName = trim((string)($data['displayName'] ?? ''));
@@ -305,7 +305,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSNotFoundException If deletion fails.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function deleteStaff(string $id): void {
 		// Ensure the staff exists first (throws OCSNotFoundException).
@@ -337,7 +337,7 @@ class PosStaffService {
 	 * @throws OCSNotFoundException If the staff is not found.
 	 * @throws OCSForbiddenException If the account is inactive, currently locked, or the PIN does not match.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function validatePin(string $staffId, string $pin): array {
 		if ($this->isValidPinFormat(pin: $pin) === false) {
@@ -387,7 +387,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSNotFoundException If the staff is not found.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function getPermissions(string $staffId): array {
 		$staff = $this->fetchStaff(id: $staffId);
@@ -412,7 +412,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSNotFoundException If the staff is not found in this app's schema.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.3
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.3
 	 */
 	public function authorizeStaff(string $staffId, string $userId): array {
 		$staff = $this->fetchStaff(id: $staffId);

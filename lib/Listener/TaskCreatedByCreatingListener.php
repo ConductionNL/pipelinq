@@ -21,7 +21,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use OCP\IUserSession;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 class TaskCreatedByCreatingListener implements IEventListener {
 
@@ -66,7 +66,7 @@ class TaskCreatedByCreatingListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+	 * @spec openspec/specs/user-fields/spec.md
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatingEvent) === false) {

@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
  * trigger a re-dispatch of an expense to the Shillinq AP webhook
  * (REQ-AP-003 Scenario 11 + REQ-AP-006 Scenario 18).
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
 class ShillinqApController extends Controller {
 	/**
@@ -76,7 +76,7 @@ class ShillinqApController extends Controller {
 	 *
 	 * @return JSONResponse The new AP sync status, or an error.
 	 *
-	 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function retry(string $id): JSONResponse {

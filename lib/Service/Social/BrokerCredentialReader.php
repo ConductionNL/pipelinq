@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Throwable;
 /**
  * Metadata-only reads of a brokered credential.
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 class BrokerCredentialReader {
 	/**
@@ -114,7 +114,7 @@ class BrokerCredentialReader {
 	 *
 	 * @return array<string, mixed>|null The readable metadata, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function read(string $credentialRef): ?array {
 		if (trim($credentialRef) === '') {
@@ -152,7 +152,7 @@ class BrokerCredentialReader {
 	 *
 	 * @return string The status, or an empty string.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function status(string $credentialRef): string {
 		$row = $this->read(credentialRef: $credentialRef);
@@ -179,7 +179,7 @@ class BrokerCredentialReader {
 	 *
 	 * @return array<string, mixed>|null The readable metadata, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function findLatest(string $provider, string $ownerUid): ?array {
 		if (trim($provider) === '' || trim($ownerUid) === '') {

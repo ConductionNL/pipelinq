@@ -5,7 +5,7 @@
   - CtiClickToDialButton renders a phone icon next to any phone number;
   - clicking it issues a click-to-dial via the CTI API and surfaces a toast.
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.3
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.3
   -->
 <template>
 	<span class="cti-click-to-dial">

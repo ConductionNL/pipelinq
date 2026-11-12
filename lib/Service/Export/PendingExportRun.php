@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Service\Export;
 /**
  * A pending export run.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
  */
 final class PendingExportRun {
 	/**
@@ -48,7 +48,7 @@ final class PendingExportRun {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
 	 */
 	public function runId(): string {
 		return (string)($this->run['id'] ?? $this->run['uuid'] ?? '');
@@ -59,7 +59,7 @@ final class PendingExportRun {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
 	 */
 	public function jobId(): string {
 		return (string)($this->run['jobId'] ?? '');
@@ -70,7 +70,7 @@ final class PendingExportRun {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
 	 */
 	public function watermarkFrom(): ?string {
 		$watermarkFrom = (string)($this->run['watermarkFrom'] ?? '');

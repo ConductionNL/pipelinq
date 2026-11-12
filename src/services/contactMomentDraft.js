@@ -65,7 +65,7 @@ export const DRAFT_FIELDS = [
  * @param {{clientId: (string|null), requestId: (string|null), defaults: (object|undefined)}} context Where the quick log was opened, and its presets.
  * @return {boolean} True when there is nothing to keep.
  * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
- * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-4
  */
 export function isDraftFormEmpty(form, context = {}) {
 	if (!form) {
@@ -213,7 +213,7 @@ export function draftFormFrom(draft) {
  * @param {{author: string, clientId: (string|null|undefined), requestId: (string|null), now: Date}} context Who and where.
  * @return {object|null} The newest matching draft, or null.
  * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
- * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-4
  */
 export function pickDraft(drafts, context) {
 	const now = (context.now || new Date()).getTime()

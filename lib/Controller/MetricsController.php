@@ -36,7 +36,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
@@ -60,7 +60,7 @@ use Psr\Container\ContainerInterface;
  *
  * @psalm-suppress UnusedClass
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
  */
 class MetricsController extends Controller {
 
@@ -117,7 +117,7 @@ class MetricsController extends Controller {
 	 *
 	 * @return TextPlainResponse Prometheus text exposition 0.0.4.
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
 	 */
 	#[NoCSRFRequired]
 	public function index(): TextPlainResponse {

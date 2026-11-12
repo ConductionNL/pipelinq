@@ -205,7 +205,7 @@ function popFrom(result) {
  *
  * @param {string} startedAt When the call started.
  * @return {number} The seconds.
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
  */
 function secondsSince(startedAt) {
 	const started = Date.parse(startedAt)
@@ -663,7 +663,7 @@ export default {
 		 *
 		 * @param {object} call The call that ended.
 		 * @return {object} The wrap-up.
-		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
 		 */
 		wrapUpFor(call) {
 			const reference = call.reference || ''
@@ -687,7 +687,7 @@ export default {
 		 *
 		 * @param {object} call The call that ended.
 		 * @return {string} The number, or ''.
-		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
 		 */
 		wrapUpNumber(call) {
 			return (this.pop && this.pop.rawNumber) || call.fromNumber || ''
@@ -697,7 +697,7 @@ export default {
 		 * The caller's name when the screen pop found exactly one match.
 		 *
 		 * @return {string} The name, or ''.
-		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
 		 */
 		wrapUpClientName() {
 			const match = this.pop && this.pop.matches.length === 1 ? this.pop.matches[0] : null
@@ -710,7 +710,7 @@ export default {
 		 *
 		 * @param {object} form Subject, outcome and notes.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
 		 */
 		async saveWrapUp(form) {
 			if (!this.wrapUp || this.wrapUp.preview) {

@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/klantbeeld-360-activation/design.md#decisions
+ * @spec openspec/changes/archive/2026-07-12-klantbeeld-360-activation/design.md#decisions
  */
 
 declare(strict_types=1);

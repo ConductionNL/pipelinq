@@ -45,7 +45,7 @@ use Psr\Log\LoggerInterface;
  * The class operates on minute precision (seconds floored) to keep the
  * loop cheap; SLA deadlines are by spec rounded down anyway.
  *
- * @spec openspec/changes/sla-engine-and-escalation/tasks.md#3.3
+ * @spec openspec/changes/archive/2026-06-14-sla-engine-and-escalation/tasks.md#3.3
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */

@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,8 +43,8 @@ use Psr\Log\LoggerInterface;
  * Controller for the Klantbeeld 360 cross-module analytics summary plus
  * the dashboard analytics overview/trends/funnels endpoints.
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.2
- * @spec openspec/changes/dashboard/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
  */
 class AnalyticsController extends Controller {
 	/**
@@ -73,7 +73,7 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The overview payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function overview(): JSONResponse {
@@ -157,7 +157,7 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The trend payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function trends(): JSONResponse {
@@ -204,7 +204,7 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The funnel payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function funnels(): JSONResponse {

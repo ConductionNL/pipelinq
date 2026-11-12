@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use Throwable;
  *  its audience, the consent gate, the transport and the run ledger; splitting
  *  it would put the gate somewhere the action could be reached without it.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
  */
 class JourneyStepRunner {
 
@@ -82,7 +82,7 @@ class JourneyStepRunner {
 	 * @param ITimeFactory $time Clock.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -104,7 +104,7 @@ class JourneyStepRunner {
 	 *
 	 * @return array<int, array{contactId: string, state: string, reason: string}> One entry per contact.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	public function run(string $journeyId, array $subject = [], string $flowRunUuid = ''): array {
 		$journey = $this->journeys->find(journeyId: $journeyId);

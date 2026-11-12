@@ -30,7 +30,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use OCP\IAppConfig;
 /**
  * BookkeepingSignals: the six shillinq-derived fields, or six nulls.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
  */
 class BookkeepingSignals {
 
@@ -112,7 +112,7 @@ class BookkeepingSignals {
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param ITimeFactory $time Clock.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function __construct(
 		private ShillinqInvoiceReader $invoices,
@@ -126,7 +126,7 @@ class BookkeepingSignals {
 	 *
 	 * @return bool True when it is installed.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
 	public function isAvailable(): bool {
 		return $this->invoices->isAvailable();
@@ -141,7 +141,7 @@ class BookkeepingSignals {
 	 *
 	 * @return array<string, mixed> The six fields, all null when unreadable.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function forCustomer(string $customerRef, array $catalogue): array {
 		$customerRef = trim($customerRef);

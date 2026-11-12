@@ -25,7 +25,7 @@ const base = (path) => generateUrl('/apps/pipelinq' + path)
  * @param {{objectType: string, objectId: string}} target What to write back.
  * @return {Promise<{uid: string|null, skipped: boolean}>} The contacts UID (null
  *   on a failure) and whether the user turned write-back off.
- * @spec openspec/changes/round4-contact-write-back/specs/contacts-sync/spec.md#requirement-a-failed-write-back-is-shown-to-the-user
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-a-failed-write-back-is-shown-to-the-user
  */
 async function requestWriteBack(target) {
 	try {
@@ -67,7 +67,7 @@ export async function createWithContact(objectType, form) {
  * @param {string} objectId The saved object's id.
  * @param {(message: string) => void} [notify] Shows the failure (injectable for tests).
  * @return {Promise<string|null>} The contacts UID on success, or null.
- * @spec openspec/changes/round4-contact-write-back/specs/contacts-sync/spec.md#requirement-a-failed-write-back-is-shown-to-the-user
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-a-failed-write-back-is-shown-to-the-user
  */
 export async function writeBack(objectType, objectId, notify = showError) {
 	const { uid, skipped } = await requestWriteBack({ objectType, objectId })

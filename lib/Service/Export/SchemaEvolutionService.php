@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ namespace OCA\Pipelinq\Service\Export;
 /**
  * Column-drift detection for the export schema snapshots.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
  */
 class SchemaEvolutionService {
 	/**
@@ -44,9 +44,9 @@ class SchemaEvolutionService {
 	 * @return array<int, string> Change descriptions, e.g.
 	 *                            ["added: phone", "removed: legacy", "changed: status (string -> enum)"].
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-01
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-02
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-03
 	 */
 	public function compareColumns(array $current, array $previous): array {
 		$changes = [];
@@ -79,7 +79,7 @@ class SchemaEvolutionService {
 	 *
 	 * @return array<int, string> The change descriptions (empty when no prior snapshot).
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
 	 */
 	public function compareToSnapshot(array $current, ?array $previous): array {
 		if ($previous === null) {

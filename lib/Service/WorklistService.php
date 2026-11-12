@@ -220,7 +220,7 @@ class WorklistService {
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
 	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
-	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+	 * @spec openspec/specs/my-work/spec.md
 	 */
 	public function getMine(string $userId, ?int $limit = null): array {
 		$leads = $this->findObjects(
@@ -867,7 +867,7 @@ class WorklistService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	private function findTickets(string $ticketType, array $filters, int $limit): array {
 		$results = $this->ticketService->findByType(

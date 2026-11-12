@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * The result of publishing one post to one account.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 class SocialPublishOutcome {
 	/**
@@ -68,7 +68,7 @@ class SocialPublishOutcome {
 	 *
 	 * @return self The outcome.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public static function published(string $externalId, string $url = '', float $cost = 0.0): self {
 		return new self(
@@ -90,7 +90,7 @@ class SocialPublishOutcome {
 	 *
 	 * @return self The outcome.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public static function refused(string $code, string $reason, float $cost = 0.0): self {
 		return new self(
@@ -110,7 +110,7 @@ class SocialPublishOutcome {
 	 *
 	 * @return self The outcome.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public static function fromGatewayFailure(SocialGatewayResult $result): self {
 		return self::refused(code: $result->failureCode, reason: $result->failureReason);

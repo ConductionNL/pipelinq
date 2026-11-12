@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 /**
  * ArticleService — the article lifecycle, its usages and its rendering.
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The lifecycle, the derived
  *  usages and the shared renderer are one cohesive surface; splitting them
@@ -165,7 +165,7 @@ class ArticleService {
 	 *
 	 * @param ListObjectStore $store Register-scoped object access.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -180,7 +180,7 @@ class ArticleService {
 	 *
 	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	public function listArticles(int $page, int $limit): array {
 		$page = max(1, $page);
@@ -213,7 +213,7 @@ class ArticleService {
 	 *
 	 * @return array<string, mixed>|null The payload, or null when it does not exist.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	public function getArticleById(string $articleId): ?array {
 		return $this->store->find(schemaSlug: $this->articleSchemaSlug(), id: $articleId);
@@ -233,7 +233,7 @@ class ArticleService {
 	 *
 	 * @return array{article?: array<string, mixed>, error?: string}
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	public function createArticle(array $payload, string $authorUid, string $agent = ''): array {
 		$clean = $this->sanitise(payload: $payload);
@@ -279,7 +279,7 @@ class ArticleService {
 	 *
 	 * @return array{article?: array<string, mixed>, error?: string}
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	public function updateArticle(string $articleId, array $patch, string $agent = ''): array {
 		$existing = $this->getArticleById(articleId: $articleId);
@@ -356,7 +356,7 @@ class ArticleService {
 	 *
 	 * @return array{article?: array<string, mixed>, error?: string}
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 	 */
 	public function publishArticle(string $articleId): array {
 		return $this->applyTransition(articleId: $articleId, transition: 'publish');
@@ -369,7 +369,7 @@ class ArticleService {
 	 *
 	 * @return array{article?: array<string, mixed>, error?: string}
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 	 */
 	public function archiveArticle(string $articleId): array {
 		return $this->applyTransition(articleId: $articleId, transition: 'archive');
@@ -387,7 +387,7 @@ class ArticleService {
 	 *
 	 * @return array{article?: array<string, mixed>, error?: string}
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 	 */
 	public function applyTransition(string $articleId, string $transition): array {
 		$rule = (self::TRANSITIONS[$transition] ?? null);
@@ -454,7 +454,7 @@ class ArticleService {
 	 *
 	 * @return array{data: array<int, array{kind: string, id: string, name: string, status: string}>, counts: array<string, int>}
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
 	 */
 	public function listUsages(string $articleId): array {
 		$article = $this->getArticleById(articleId: $articleId);
@@ -565,7 +565,7 @@ class ArticleService {
 	 *
 	 * @return array<int, array<string, mixed>> The resolved articles.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	public function loadArticlesByIds(array $articleIds): array {
 		$out = [];
@@ -595,7 +595,7 @@ class ArticleService {
 	 *
 	 * @return string The body with the marker expanded.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	public function expandArticlesMarker(string $body, array $articles, string $format): string {
 		if (str_contains($body, self::ARTICLES_MARKER) === false) {
@@ -624,7 +624,7 @@ class ArticleService {
 	 *
 	 * @return string The rendered block, empty when there are no articles.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	public function renderArticlesBlock(array $articles, string $format): string {
 		$parts = [];

@@ -15,7 +15,7 @@
   sums to multi-step total"); enforced client-side here AND server-side by
   AvailabilityService when the booking is created.
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
 	<div class="service-form" data-testid="service-form">
@@ -294,7 +294,7 @@ export default {
 		/**
 		 * A blank service, priced in the reporting currency.
 		 *
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		emptyForm() {
 			return {
@@ -383,7 +383,7 @@ export default {
 		/**
 		 * Validate and emit the service, steps included.
 		 *
-		 * @spec openspec/changes/round3-review-points/specs/appointment-booking/spec.md
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		onSave() {
 			if (!this.validateAll()) {

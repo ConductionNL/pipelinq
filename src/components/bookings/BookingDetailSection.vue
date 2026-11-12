@@ -445,7 +445,7 @@ export default {
 		/**
 		 * The deposit, in the service's currency or the reporting currency.
 		 *
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		depositLabel() {
 			const amount = Number(this.booking.depositAmount || 0)
@@ -491,7 +491,7 @@ export default {
 		 * @param {number|string} value The amount.
 		 * @param {string} [currency] The currency code.
 		 * @return {string} The formatted amount.
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		formatCurrency(value, currency) {
 			return bookingCurrency(value, currency)

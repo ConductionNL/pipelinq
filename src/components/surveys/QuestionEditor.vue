@@ -84,14 +84,14 @@ export default {
 	methods: {
 		/**
 		 * @param {string} arr The updated question list to emit upward.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
 		 */
 		emit(arr) {
 			this.$emit('input', arr)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-1
 		 */
 		add() {
 			this.emit([
@@ -109,7 +109,7 @@ export default {
 
 		/**
 		 * @param {string} i Index of the question to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-4
 		 */
 		remove(i) {
 			const a = [...this.questions]
@@ -138,7 +138,7 @@ export default {
 		 * @param {number} i Index of the question.
 		 * @param {number} oi Index of the option within that question.
 		 * @param {string} v The new option value.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
 		 */
 		setOpt(i, oi, v) {
 			const a = [...this.questions]
@@ -150,7 +150,7 @@ export default {
 
 		/**
 		 * @param {string} i Index of the question to add an option to.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-2
 		 */
 		addOpt(i) {
 			const a = [...this.questions]
@@ -161,7 +161,7 @@ export default {
 		/**
 		 * @param {string} i Index of the question.
 		 * @param {string} oi Index of the option to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-5
 		 */
 		rmOpt(i, oi) {
 			const a = [...this.questions]

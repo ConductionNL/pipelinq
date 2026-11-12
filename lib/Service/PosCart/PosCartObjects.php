@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use Throwable;
 /**
  * The sale and its lines as OpenRegister stores them.
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
  */
 class PosCartObjects {
 	use PayloadToArray;
@@ -50,7 +50,7 @@ class PosCartObjects {
 	 * @param ObjectServiceInterface $objects   OpenRegister's object service.
 	 * @param IAppConfig             $appConfig Holds the register and schema ids.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ObjectServiceInterface $objects,
@@ -65,7 +65,7 @@ class PosCartObjects {
 	 *
 	 * @return bool True for a posTransactionLine.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function isLineSchema(string $schemaId): bool {
 		$lineSchema = $this->schemaId(slug: 'posTransactionLine');
@@ -79,7 +79,7 @@ class PosCartObjects {
 	 *
 	 * @return string|null The stored priceMode.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function priceModeOf(string $transactionId): ?string {
 		try {
@@ -104,7 +104,7 @@ class PosCartObjects {
 	 *
 	 * @throws OCSNotFoundException When the sale is not in this app's register.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function transaction(string $transactionId): array {
 		$found = null;
@@ -132,7 +132,7 @@ class PosCartObjects {
 	 *
 	 * @return array<int, array<string, mixed>> The lines.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function lines(string $transactionId): array {
 		$filters = [
@@ -151,7 +151,7 @@ class PosCartObjects {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function saveLine(array $line): void {
 		$uuid = (string)($line['id'] ?? '');

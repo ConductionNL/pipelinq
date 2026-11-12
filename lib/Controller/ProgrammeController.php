@@ -25,7 +25,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+ * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Routes for the programme portfolio.
  *
- * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+ * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
  */
 class ProgrammeController extends Controller {
 	/**
@@ -75,7 +75,7 @@ class ProgrammeController extends Controller {
 	 *
 	 * @return JSONResponse The items.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	#[NoAdminRequired]
 	public function workItems(string $programmeId): JSONResponse {
@@ -103,7 +103,7 @@ class ProgrammeController extends Controller {
 	 *
 	 * @return JSONResponse The item, or the refusal naming the holder.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	#[NoAdminRequired]
 	public function linkWork(
@@ -129,7 +129,7 @@ class ProgrammeController extends Controller {
 	 *
 	 * @return JSONResponse The figure, always naming its mode.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
 	 */
 	#[NoAdminRequired]
 	public function progress(string $programmeId): JSONResponse {
@@ -162,7 +162,7 @@ class ProgrammeController extends Controller {
 	 *
 	 * @return JSONResponse The cycle, or the refusal.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
 	 */
 	#[NoAdminRequired]
 	public function closeCycle(string $cycleId): JSONResponse {
@@ -189,7 +189,7 @@ class ProgrammeController extends Controller {
 	 *
 	 * @return JSONResponse The chart and the live figures.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
 	 */
 	#[NoAdminRequired]
 	public function cycleChart(string $cycleId): JSONResponse {

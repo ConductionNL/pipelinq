@@ -25,7 +25,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/example-data/spec.md#requirement-every-example-record-imports
+ * @spec openspec/specs/example-data/spec.md#requirement-every-example-record-imports
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCP\IUserSession;
 /**
  * Rewrites user fields in example records to existing users.
  *
- * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/example-data/spec.md#requirement-every-example-record-imports
+ * @spec openspec/specs/example-data/spec.md#requirement-every-example-record-imports
  */
 class DemoUserFields {
 	/**
@@ -66,7 +66,7 @@ class DemoUserFields {
 	 *
 	 * @return array<int, array<string, mixed>> The records, importable.
 	 *
-	 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/example-data/spec.md#requirement-every-example-record-imports
+	 * @spec openspec/specs/example-data/spec.md#requirement-every-example-record-imports
 	 */
 	public function withRealUsers(array $objects): array {
 		$schemas = (array)($this->configLoader->loadConfigurationFile()['components']['schemas'] ?? []);
@@ -88,7 +88,7 @@ class DemoUserFields {
 	 *
 	 * @return array<int, array<string, mixed>> The records with real users only.
 	 *
-	 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/example-data/spec.md#requirement-every-example-record-imports
+	 * @spec openspec/specs/example-data/spec.md#requirement-every-example-record-imports
 	 */
 	public function assign(array $objects, array $schemas, callable $userExists, ?string $actingUid): array {
 		foreach ($objects as $index => $object) {

@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *  collections and one external reader; splitting it per field would put the
  *  memo that makes the whole thing affordable in four places.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
  */
 class SegmentSignalService {
 
@@ -227,7 +227,7 @@ class SegmentSignalService {
 	 * @param BookkeepingSignals $bookkeeping The six shillinq-derived fields.
 	 * @param ITimeFactory $time Clock.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -246,7 +246,7 @@ class SegmentSignalService {
 	 * @return array<string, array{type: string, title: string, source: string, description: string}>
 	 *         The catalogue, in the order a builder lists it.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function catalogue(): array {
 		return self::CATALOGUE;
@@ -262,7 +262,7 @@ class SegmentSignalService {
 	 *
 	 * @return array<string, array{type: string, title: string, description: string}> Property map.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
 	 */
 	public function schemaProperties(): array {
 		$properties = [];
@@ -284,7 +284,7 @@ class SegmentSignalService {
 	 *
 	 * @return bool True when the field is one of the eight.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
 	 */
 	public function isSignalField(string $field): bool {
 		return array_key_exists($field, $this->catalogue());
@@ -295,7 +295,7 @@ class SegmentSignalService {
 	 *
 	 * @return array{shillinq: bool, reason: string} The availability report.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
 	public function availability(): array {
 		$available = $this->bookkeeping->isAvailable();
@@ -319,7 +319,7 @@ class SegmentSignalService {
 	 *
 	 * @return bool True when {@see valueFor()} has an answer.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
 	public function resolves(string $field, array $entity): bool {
 		return ($this->valueFor(field: $field, entity: $entity) !== null);
@@ -333,7 +333,7 @@ class SegmentSignalService {
 	 *
 	 * @return mixed The value, or null when it does not resolve.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function valueFor(string $field, array $entity): mixed {
 		if ($this->isSignalField(field: $field) === false) {
@@ -361,7 +361,7 @@ class SegmentSignalService {
 	 *
 	 * @return array<string, mixed> Field to value, nulls included.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function signalsFor(string $clientId): array {
 		if (array_key_exists($clientId, $this->memo) === true) {
@@ -394,7 +394,7 @@ class SegmentSignalService {
 	 *
 	 * @return string|null The dunning state, or null when there is no answer.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	public function dunningStateForContact(string $contactId): ?string {
 		$contactId = trim($contactId);
@@ -426,7 +426,7 @@ class SegmentSignalService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function forget(): void {
 		$this->memo = [];

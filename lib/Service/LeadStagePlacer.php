@@ -27,7 +27,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 
 declare(strict_types=1);
@@ -62,7 +62,7 @@ final class LeadStagePlacer {
 	 *
 	 * @return array<string, mixed>|null The pipeline, or null when none applies.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function defaultPipeline(array $pipelines): ?array {
 		$fallback = null;
@@ -88,7 +88,7 @@ final class LeadStagePlacer {
 	 *
 	 * @return array{name: string, order: int}|null The stage, or null when the pipeline has no open stage.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function firstOpenStage(array $pipeline): ?array {
 		$stages = array_filter(
@@ -107,7 +107,7 @@ final class LeadStagePlacer {
 	 *
 	 * @return array{name: string, order: int}|null The stage, or null when there is none.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function lowestStage(array $stages): ?array {
 		$stages = array_values($stages);
@@ -139,7 +139,7 @@ final class LeadStagePlacer {
 	 *
 	 * @return array<string, mixed> The fields to merge into the lead; [] when nothing is missing or nothing fits.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function forNewLead(array $lead, array $pipelines, ?string $now = null): array {
 		$patch = $this->stagePatch(lead: $lead, pipelines: $pipelines);
@@ -167,7 +167,7 @@ final class LeadStagePlacer {
 	 *
 	 * @return array<string, mixed> The fields to merge into the lead; [] when nothing is missing or nothing fits.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function forStoredLead(array $lead, array $pipelines, ?string $enteredAt = null): array {
 		$patch = $this->stagePatch(lead: $lead, pipelines: $pipelines);
@@ -234,7 +234,7 @@ final class LeadStagePlacer {
 	 *
 	 * @return string The moment.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function entryMoment(?string $iso): string {
 		if ($iso !== null && trim($iso) !== '') {

@@ -26,7 +26,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 /**
  * TouchpointService: append and read the campaign touchpoint log.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 class TouchpointService {
 
@@ -68,7 +68,7 @@ class TouchpointService {
 	 *
 	 * @param ListObjectStore $store Register-scoped object access.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -80,7 +80,7 @@ class TouchpointService {
 	 *
 	 * @return string The slug.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function schemaSlug(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA_SLUG);
@@ -99,7 +99,7 @@ class TouchpointService {
 	 *
 	 * @return array<int, array<string, mixed>> The touchpoints.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
 	public function forCampaign(string $campaignId): array {
 		if (trim($campaignId) === '') {
@@ -141,7 +141,7 @@ class TouchpointService {
 	 *
 	 * @return bool True when the interaction was already recorded.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function existsForNonce(string $nonce): bool {
 		if (trim($nonce) === '') {
@@ -159,7 +159,7 @@ class TouchpointService {
 	 *
 	 * @return array<string, mixed>|null The saved row, or null when the write failed.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function append(array $touchpoint): ?array {
 		$kind = (string)($touchpoint['kind'] ?? '');
@@ -184,7 +184,7 @@ class TouchpointService {
 	 *
 	 * @return string The id, or an empty string.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function idOf(?array $touchpoint): string {
 		return $this->store->idOf(payload: $touchpoint);
@@ -202,7 +202,7 @@ class TouchpointService {
 	 *
 	 * @return string The channel.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	public function channelForMedium(string $medium): string {
 		$value = strtolower(trim($medium));

@@ -24,7 +24,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * The case set and its primary, as a filing act leaves them.
  *
- * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-cannot-be-left-with-no-case-req-cms-006
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-cannot-be-left-with-no-case-req-cms-006
  */
 final class ContactMomentCases {
 

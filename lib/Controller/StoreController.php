@@ -39,7 +39,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -83,7 +83,7 @@ use Throwable;
  * second pipelinq surface needs the same configured-write seam, at which point
  * the wrapper would earn itself.
  *
- * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+ * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
 class StoreController extends Controller {
 	/**
@@ -183,7 +183,7 @@ class StoreController extends Controller {
 	 *
 	 * @return StoreDescriptor
 	 *
-	 * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	private function descriptor(): StoreDescriptor {
 		return new StoreDescriptor(
@@ -218,7 +218,7 @@ class StoreController extends Controller {
 	 *
 	 * @return JSONResponse 200 with `{outcome, cards}`; 401 for anonymous.
 	 *
-	 * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 *
 	 * @no-admin-idor-exempt Addresses no pipelinq-owned object. The query and
 	 *   kind filter are forwarded to an EXTERNAL registry, so there is nothing
@@ -288,7 +288,7 @@ class StoreController extends Controller {
 	 *
 	 * @return JSONResponse 200 with a per-component report; 400 for a bad slug; 404 when unresolved.
 	 *
-	 * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function install(string $slug): JSONResponse {
@@ -407,7 +407,7 @@ class StoreController extends Controller {
 	 *
 	 * @return array<int, array<string, mixed>> The declared components, possibly empty.
 	 *
-	 * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	private function components(array $item): array {
 		$components = ($item['components'] ?? null);
@@ -436,7 +436,7 @@ class StoreController extends Controller {
 	 *
 	 * @return array{success: bool, components: array<int, array<string, string>>}
 	 *
-	 * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	private function installComponents(array $components): array {
 		$report = [];
@@ -539,7 +539,7 @@ class StoreController extends Controller {
 	 *
 	 * @return array<string, mixed> The object with every identity key removed.
 	 *
-	 * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	private function asNewObject(array $object): array {
 		unset($object['id'], $object['uuid'], $object['@self']);
@@ -556,7 +556,7 @@ class StoreController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the connection, minus the token value.
 	 *
-	 * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function getSettings(): JSONResponse {
@@ -586,7 +586,7 @@ class StoreController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the connection, minus the token value.
 	 *
-	 * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function saveSettings(): JSONResponse {

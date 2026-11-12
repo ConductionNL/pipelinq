@@ -25,7 +25,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Psr\Log\LoggerInterface;
  * The configured portal, the blast's campaign slug, and the campaign's
  * sessions, page views, form submits, days and sources over a window.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 class CampaignSiteTraffic {
 	use PayloadToArray;
@@ -106,7 +106,7 @@ class CampaignSiteTraffic {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function portal(): string {
 		return trim($this->appConfig->getValueString(Application::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
@@ -119,7 +119,7 @@ class CampaignSiteTraffic {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function campaignFor(array $blast): string {
 		return $this->decorator->campaignFor(blast: $blast);
@@ -130,7 +130,7 @@ class CampaignSiteTraffic {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function isPortaliqInstalled(): bool {
 		return class_exists(self::PORTALIQ_PROBE_CLASS);
@@ -144,7 +144,7 @@ class CampaignSiteTraffic {
 	 *
 	 * @return array<string, mixed> sessions, pageViews, formSubmits, days, sources.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function site(array $window, array $blast): array {
 		return $this->sum(rows: $this->rollups(window: $window), wanted: $this->wanted(blast: $blast));

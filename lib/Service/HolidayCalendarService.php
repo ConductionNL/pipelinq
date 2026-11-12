@@ -45,7 +45,7 @@ use Throwable;
  * `sla_tenant_holiday_overrides` app-config key (JSON object keyed by
  * calendar name → array of `{date, name}` entries).
  *
- * @spec openspec/changes/sla-engine-and-escalation/tasks.md#3.2
+ * @spec openspec/changes/archive/2026-06-14-sla-engine-and-escalation/tasks.md#3.2
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */

@@ -124,7 +124,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-6
 		 */
 		prospectStore() {
 			return useProspectStore()
@@ -148,7 +148,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-7
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-7
 		 */
 		async refresh() {
 			await this.prospectStore.fetchProspects(true)
@@ -156,7 +156,7 @@ export default {
 
 		/**
 		 * @param {string} dateStr The stored date.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-4
 		 */
 		formatTime(dateStr) {
 			if (!dateStr) return ''

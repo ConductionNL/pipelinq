@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\IGroupManager;
  * the group manager and the notification service (keeps listener coupling within
  * the project's PHPMD threshold).
  *
- * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
  */
 class LedgerSyncNotifier {
 	/**
@@ -58,7 +58,7 @@ class LedgerSyncNotifier {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
 	 */
 	public function notifyFailure(string $projectName, string $eventType, string $uuid): void {
 		$adminGroup = $this->groupManager->get('admin');

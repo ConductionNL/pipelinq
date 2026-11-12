@@ -30,7 +30,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -53,7 +53,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the small NC + OR
  *  collaborator set a data-seed step needs.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
  */
 class SeedWeeklyReviewAgentTemplate implements IRepairStep {
 
@@ -92,7 +92,7 @@ class SeedWeeklyReviewAgentTemplate implements IRepairStep {
 	 * @param ContainerInterface $container DI container, for OpenRegister's object service.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
@@ -106,7 +106,7 @@ class SeedWeeklyReviewAgentTemplate implements IRepairStep {
 	 *
 	 * @return string The name.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
 	 */
 	public function getName(): string {
 		return 'Seed the weekly marketing review agent template into hermiq (idempotent)';
@@ -119,7 +119,7 @@ class SeedWeeklyReviewAgentTemplate implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
 	 */
 	public function run(IOutput $output): void {
 		$installed = $this->appManager->getInstalledApps();

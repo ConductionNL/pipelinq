@@ -14,7 +14,7 @@
   Its own file per ADR-004: a dialog written inline in the page would couple
   its lifecycle to the page's and could not be reused.
 
-  @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+  @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 -->
 <template>
 	<CnDialog
@@ -135,7 +135,7 @@ export default {
 		 * The term being confirmed.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		term() {
 			return String(this.proposal?.query || this.proposal?.term || '').trim()
@@ -145,7 +145,7 @@ export default {
 		 * What a marketer may decide about a term.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		statusOptions() {
 			return [
@@ -159,7 +159,7 @@ export default {
 		 * What somebody typing the term is trying to do.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		intentOptions() {
 			return [
@@ -190,7 +190,7 @@ export default {
 		 * POST /api/marketing/keyword-targets. This is the only path in the
 		 * product that creates a keyword target.
 		 *
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		async save() {
 			this.saving = true

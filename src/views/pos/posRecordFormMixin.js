@@ -8,7 +8,7 @@
  *
  * The host sets `recordPath` in its data (`roles`, `staff`).
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.2
  */
 
 import axios from '@nextcloud/axios'
@@ -142,7 +142,7 @@ export default {
 		 * page) closes the dialog — the form no longer routes back to a list
 		 * page of its own.
 		 *
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		goBack() {
 			this.$emit('done')

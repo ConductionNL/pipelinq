@@ -14,7 +14,7 @@
   cached availability of the resources the service runs on
   (AvailabilityCacheInvalidationListener, REQ-APT-015).
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
   @spec openspec/specs/appointment-booking/spec.md
 -->
 <template>
@@ -468,7 +468,7 @@ export default {
 		 *
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/round4-readable-values-and-tour-titles/specs/appointment-booking/spec.md
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		cancellationPolicyLabel() {
 			return enumLabel(
@@ -678,7 +678,7 @@ export default {
 		 * @param {string} value The stored resource type.
 		 * @return {string} The label, '' without a value.
 		 *
-		 * @spec openspec/changes/round4-readable-values-and-tour-titles/specs/appointment-booking/spec.md
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		resourceTypeLabel(value) {
 			return enumLabel(RESOURCE_TYPE_LABELS, value, (text) =>
@@ -730,7 +730,7 @@ export default {
 		 * @param {Array<object>} products The catalogue rows.
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/review-audit-fixes-b/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
+		 * @spec openspec/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
 		 */
 		rememberProductNames(products) {
 			const names = { ...this.productNames }
@@ -893,7 +893,7 @@ export default {
 		 * @param {number|string} value The amount.
 		 * @param {string} [currency] The currency code.
 		 * @return {string} The formatted amount.
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		formatCurrency(value, currency) {
 			return bookingCurrency(value, currency)

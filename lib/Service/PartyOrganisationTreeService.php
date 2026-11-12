@@ -36,7 +36,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+ * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use Throwable;
 /**
  * Nest customer organisations, with the three guards that make it survivable.
  *
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+ * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
  */
 class PartyOrganisationTreeService {
 	/**
@@ -99,7 +99,7 @@ class PartyOrganisationTreeService {
 	 *
 	 * @return int The maximum number of nodes from the root to a leaf.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	public function maxDepth(): int {
 		$configured = (int)$this->appConfig->getValueString(
@@ -140,7 +140,7 @@ class PartyOrganisationTreeService {
 	 *
 	 * @return int The depth.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	public function depthOf(string $path): int {
 		$trimmed = trim($path, self::PATH_SEPARATOR);
@@ -177,7 +177,7 @@ class PartyOrganisationTreeService {
 	 *
 	 * @return array<string, mixed> `status` plus either `moved` or `error`.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	public function setParent(string $nodeId, ?string $parentId): array {
 		$nodeId = trim($nodeId);
@@ -238,7 +238,7 @@ class PartyOrganisationTreeService {
 	 *
 	 * @return array<string, mixed> Either `path`, or `status` plus `error`.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	private function parentPathFor(string $nodeId, string $parentId): array {
 		if ($parentId === '') {
@@ -299,7 +299,7 @@ class PartyOrganisationTreeService {
 	 *
 	 * @return array<string, array<string, mixed>> The objects to write.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	private function movePlan(array $move): array {
 		['newPath' => $newPath, 'oldPath' => $oldPath] = $move;

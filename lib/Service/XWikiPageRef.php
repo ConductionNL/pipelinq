@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+ * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
  */
 
 declare(strict_types=1);
@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * One xWiki page: its wiki id and its dotted reference ("Kennisbank.Paspoort.WebHome").
  *
- * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+ * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
  */
 final class XWikiPageRef {
 	/**
@@ -46,7 +46,7 @@ final class XWikiPageRef {
 	 *
 	 * @return string The path, starting with /rest.
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function restPath(): string {
 		$segments = $this->segments();
@@ -60,7 +60,7 @@ final class XWikiPageRef {
 	 *
 	 * @return string The path, starting with /bin/view.
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function viewPath(): string {
 		return sprintf('/bin/view/%s', implode('/', $this->segments()));
@@ -71,7 +71,7 @@ final class XWikiPageRef {
 	 *
 	 * @return string The space.
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function space(): string {
 		return (string)($this->segments()[0] ?? '');

@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -63,7 +63,7 @@ use Throwable;
  *  needs, not an object that has grown more responsibilities than it
  *  should have.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
  */
 class SegmentService {
 	use PayloadToArray;
@@ -175,7 +175,7 @@ class SegmentService {
 	 * @return array<string, array{type: string, title: string, source: string, description: string}>
 	 *         The signal catalogue, as {@see SegmentSignalService::catalogue()} publishes it.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
 	 */
 	public function signalCatalogue(): array {
 		return $this->signals->catalogue();
@@ -186,7 +186,7 @@ class SegmentService {
 	 *
 	 * @return array{shillinq: bool, reason: string} The availability report.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
 	public function signalAvailability(): array {
 		return $this->signals->availability();
@@ -366,7 +366,7 @@ class SegmentService {
 	 *
 	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
 	 */
 	public function listSegments(int $page, int $limit): array {
 		$page = max(1, $page);
@@ -417,7 +417,7 @@ class SegmentService {
 	 *
 	 * @return array<string, mixed>|null The Segment payload or null.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
 	 */
 	public function getSegmentById(string $segmentId): ?array {
 		if ($segmentId === '') {
@@ -441,7 +441,7 @@ class SegmentService {
 	 *
 	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
 	 */
 	public function createSegment(array $payload, string $createdByUid): array {
 		$name = (string)($payload['name'] ?? '');
@@ -482,7 +482,7 @@ class SegmentService {
 	 *
 	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
 	 *
-	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+	 * @spec openspec/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
 	 */
 	public function updateSegment(string $segmentId, array $payload): array {
 		if ($segmentId === '') {
@@ -540,7 +540,7 @@ class SegmentService {
 	 *
 	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
 	 *
-	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+	 * @spec openspec/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
 	 */
 	private function persistSegmentUpdate(
 		string $segmentId,
@@ -633,7 +633,7 @@ class SegmentService {
 	 *
 	 * @return array<int, array<string, string>> Recipient rows.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
 	 */
 	public function previewSegmentMembers(string $segmentId, int $limit = 50): array {
 		$limit = min(500, max(1, $limit));
@@ -658,7 +658,7 @@ class SegmentService {
 	 * @return int The refreshed estimated size; 0 when the Segment is
 	 *             missing or unreachable.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
 	 */
 	public function refreshSegmentSize(string $segmentId): int {
 		if ($segmentId === '') {
@@ -1239,7 +1239,7 @@ class SegmentService {
 	 *
 	 * @return bool Whether the entity matches.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
 	private function evaluateSignalLeaf(string $field, string $operator, callable $handler, mixed $value, array $entity): bool {
 		$actual = $this->signals->valueFor(field: $field, entity: $entity);
@@ -1263,7 +1263,7 @@ class SegmentService {
 	 *
 	 * @return bool Whether any element matches.
 	 *
-	 * @spec openspec/changes/contact-channel-details/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
+	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
 	 */
 	private function evaluateProjectedLeaf(array $entity, string $field, callable $handler, mixed $value): bool {
 		[$parent, $child] = explode('.', $field, 2);
@@ -1472,7 +1472,7 @@ class SegmentService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	private function ruleEquals(mixed $actual, mixed $value): bool {
 		if (is_array($actual) === false || array_is_list($actual) === false || is_scalar($value) === false) {
@@ -1962,7 +1962,7 @@ class SegmentService {
 	 *
 	 * @return bool True when every candidate is a scalar.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
 	 */
 	private function isMembershipCoercible(mixed $value): bool {
 		$candidates = $value;
@@ -2109,7 +2109,7 @@ class SegmentService {
 	 *
 	 * @return string|null The JSON-schema type, or null when undeclared.
 	 *
-	 * @spec openspec/changes/contact-channel-details/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
+	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
 	 */
 	private function resolveFieldType(string $field, array $properties): ?string {
 		if (str_contains($field, '.') === false) {
@@ -2192,7 +2192,7 @@ class SegmentService {
 	 *                                   schema is not resolvable.
 	 *
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
-	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
 	 *   pipelinq#773 — SchemaMapper::find() dropped its $published
 	 *   parameter (openregister ea99a5004); the call site no longer
 	 *   passes it.
@@ -2433,7 +2433,7 @@ class SegmentService {
 	 *
 	 * @return string Schema slug.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function getSegmentSchemaSlugPublic(): string {
 		return $this->getSegmentSchemaSlug();

@@ -9,7 +9,7 @@
   - native picker rather than typed as a bare path, the same
   - `getFilePickerBuilder` pattern the library's own `CnFilesWidgetForm` uses.
   -
-  - @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+  - @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
   -->
 <template>
 	<CnDialog
@@ -158,7 +158,7 @@ const ARTICLE_TEXT_DEFAULTS = {
  *
  * @param {object} source The article, or an empty object for a new one.
  * @return {object} The model.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
  */
 function articleModel(source) {
 	const model = {}
@@ -231,7 +231,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The modal title.
 		 */
 		modalTitle() {
@@ -241,7 +241,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Array<{value: string, label: string}>} The two language options.
 		 */
 		languageOptions() {
@@ -255,7 +255,7 @@ export default {
 		 */
 		languageOption: {
 			/**
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+			 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 			 * @return {string} The current language code.
 			 */
 			get() {
@@ -264,7 +264,7 @@ export default {
 
 			/**
 			 * @param {string} value The language code just picked.
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+			 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 			 */
 			set(value) {
 				this.model.language = value || 'nl'
@@ -272,7 +272,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {boolean} Whether the form has enough to attempt a save.
 		 */
 		canSave() {
@@ -285,7 +285,7 @@ export default {
 		 * Open the Nextcloud Files picker restricted to images, and store the
 		 * picked node's path.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves once a pick has been applied, or declined.
 		 */
 		async openHeroPicker() {
@@ -327,7 +327,7 @@ export default {
 		/**
 		 * Build the payload from the model.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {object} The payload the API expects.
 		 */
 		buildPayload() {
@@ -341,7 +341,7 @@ export default {
 		/**
 		 * Create or update the article.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves when the caller has been told.
 		 */
 		async save() {

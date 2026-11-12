@@ -34,7 +34,7 @@
  *
  * @link https://developers.facebook.com/docs/threads/posts
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * Threads, published in two steps, with no provider filed yet.
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
  *
  * @SuppressWarnings(PHPMD.StaticAccess) `SocialGatewayResult` and
  *  `SocialPublishOutcome` are value objects with NAMED CONSTRUCTORS
@@ -58,7 +58,7 @@ class ThreadsAdapter extends AbstractSocialAdapter implements PublishesThroughCo
 	 *
 	 * @return string The network name.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function network(): string {
 		return 'threads';
@@ -70,7 +70,7 @@ class ThreadsAdapter extends AbstractSocialAdapter implements PublishesThroughCo
 	 *
 	 * @return string An empty string.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	public function brokerProvider(): string {
 		return '';
@@ -81,7 +81,7 @@ class ThreadsAdapter extends AbstractSocialAdapter implements PublishesThroughCo
 	 *
 	 * @return int The character limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function bodyLimit(): int {
 		return 500;
@@ -94,7 +94,7 @@ class ThreadsAdapter extends AbstractSocialAdapter implements PublishesThroughCo
 	 *
 	 * @return SocialAdapterCall The container request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishCall(SocialPublishRequest $request): SocialAdapterCall {
 		$media = $request->firstPublicMedia();
@@ -123,7 +123,7 @@ class ThreadsAdapter extends AbstractSocialAdapter implements PublishesThroughCo
 	 *
 	 * @return SocialAdapterCall The publish request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishContainerCall(SocialPublishRequest $request, string $containerId): SocialAdapterCall {
 		return new SocialAdapterCall(
@@ -141,7 +141,7 @@ class ThreadsAdapter extends AbstractSocialAdapter implements PublishesThroughCo
 	 *
 	 * @return SocialPublishOutcome The outcome.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	public function publish(SocialPublishRequest $request): SocialPublishOutcome {
 		$refusal = $this->refuseWhenNotConfigured();
@@ -162,7 +162,7 @@ class ThreadsAdapter extends AbstractSocialAdapter implements PublishesThroughCo
 	 *
 	 * @return string An address that opens the composer.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function composerUrl(SocialPublishRequest $request): string {
 		return 'https://www.threads.net/intent/post?text=' . rawurlencode($request->bodyWithLink());
