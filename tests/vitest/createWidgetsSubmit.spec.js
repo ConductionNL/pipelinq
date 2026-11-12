@@ -40,11 +40,12 @@ afterEach(() => {
 /**
  * @param {object} widget The widget options.
  * @param {object} state The state.
- * @return {object} A context with the widget's data, the state and every method bound.
+ * @return {object} A context with the widget's data (its mixins' first), the state and every method bound.
  */
 function bind(widget, state) {
-	const ctx = { ...widget.data.call({}), ...state }
-	for (const [name, fn] of Object.entries(widget.methods)) {
+	const parts = [...(widget.mixins || []), widget]
+	const ctx = Object.assign({}, ...parts.map((part) => part.data?.call({}) || {}), state)
+	for (const [name, fn] of Object.entries(Object.assign({}, ...parts.map((part) => part.methods || {})))) {
 		if (!(name in ctx)) {
 			ctx[name] = fn.bind(ctx)
 		}
