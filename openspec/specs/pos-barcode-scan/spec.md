@@ -33,7 +33,7 @@ Define the requirements for barcode input capture and product lookup in the pipe
 
 ## Requirements
 
-### REQ-PBS-001: HID keyboard-wedge barcode input
+### Requirement: REQ-PBS-001: HID keyboard-wedge barcode input
 
 The `useBarcodeScanner` composable MUST detect input from USB/Bluetooth HID keyboard-wedge barcode scanners and emit a `scan` event distinct from ordinary keyboard typing.
 
@@ -72,7 +72,7 @@ The `useBarcodeScanner` composable MUST detect input from USB/Bluetooth HID keyb
 
 ---
 
-### REQ-PBS-002: Camera-based barcode scanning with BarcodeDetector API
+### Requirement: REQ-PBS-002: Camera-based barcode scanning with BarcodeDetector API
 
 When `BarcodeDetector` is available in the browser, `useBarcodeScanner` MUST support opening a camera stream and resolving barcodes using `BarcodeDetector.detect()`.
 
@@ -106,7 +106,7 @@ When `BarcodeDetector` is available in the browser, `useBarcodeScanner` MUST sup
 
 ---
 
-### REQ-PBS-003: BarcodeDetector unavailability fallback
+### Requirement: REQ-PBS-003: BarcodeDetector unavailability fallback
 
 When `BarcodeDetector` is not supported by the browser, `BarcodeScanner.vue` MUST degrade gracefully to HID-only mode without errors.
 
@@ -132,7 +132,7 @@ When `BarcodeDetector` is not supported by the browser, `BarcodeScanner.vue` MUS
 
 ---
 
-### REQ-PBS-004: Product lookup by barcode
+### Requirement: REQ-PBS-004: Product lookup by barcode
 
 The `useBarcodeProductLookup` composable MUST resolve a scanned barcode string to a `product` object. Resolution is performed by the server-authoritative, IDOR-safe `POST /apps/pipelinq/api/products/barcode-lookup` endpoint (scoped to this app's register + product schema), and the (untrusted) scanned value MUST be validated for length + charset before any request is sent.
 
@@ -171,7 +171,7 @@ The `useBarcodeProductLookup` composable MUST resolve a scanned barcode string t
 
 ---
 
-### REQ-PBS-005: Variant barcode resolution
+### Requirement: REQ-PBS-005: Variant barcode resolution
 
 When a direct product-level barcode match fails, the lookup MUST search `product.variants[].barcode` and return the parent product, the matched variant object, and its zero-based `variantIndex`. This resolution is performed server-side by `ProductCatalogService::matchProductByBarcode`.
 
@@ -198,7 +198,7 @@ When a direct product-level barcode match fails, the lookup MUST search `product
 
 ---
 
-### REQ-PBS-006: User-facing scan feedback in the barcode search view
+### Requirement: REQ-PBS-006: User-facing scan feedback in the barcode search view
 
 When `BarcodeScanner.vue` is integrated into `ProductBarcodeSearch.vue`, the view MUST provide clear Dutch-language feedback for all scan outcomes.
 
