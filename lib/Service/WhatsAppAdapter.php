@@ -36,6 +36,7 @@ use OCA\Pipelinq\Service\Provider\WhatsAppProviderAttempt;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendFailure;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
+use OCA\Pipelinq\Service\Provider\WhatsAppTemplateRequest;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -223,9 +224,7 @@ class WhatsAppAdapter {
 
 		$language = (string)$this->appConfig->getValueString(Application::APP_ID, 'whatsapp.default_language', 'nl');
 		$resolved = $this->resolveSendContext(
-			templateId: $templateId,
-			parameters: $parameters,
-			language: $language,
+			request: new WhatsAppTemplateRequest(templateId: $templateId, parameters: $parameters, language: $language),
 			contactId: $contactId
 		);
 		if ($resolved['error'] !== null) {
@@ -274,10 +273,8 @@ class WhatsAppAdapter {
 	 * complexity budget; behaviour is unchanged — the two branches are
 	 * mutually exclusive on whether `$templateId` is set.
 	 *
-	 * @param string|null $templateId Template UUID/slug or null for free-form.
-	 * @param array<int, string> $parameters Positional template parameters.
-	 * @param string $language Default language (app-config).
-	 * @param string $contactId Contact UUID (session-window lookup).
+	 * @param WhatsAppTemplateRequest $request   Template id, parameters and default language.
+	 * @param string                  $contactId Contact UUID (session-window lookup).
 	 *
 	 * @return array{
 	 *     error: array<string, mixed>|null,
@@ -286,27 +283,45 @@ class WhatsAppAdapter {
 	 *     language?: string
 	 * } Resolved context, or an `error` outcome to return immediately.
 	 */
-	private function resolveSendContext(?string $templateId, array $parameters, string $language, string $contactId): array {
-		$isTemplateSend = (($templateId ?? '') !== '');
-		if ($isTemplateSend === true) {
-			$resolved = $this->resolveTemplateForSend(
-				templateId: (string)$templateId,
-				parameters: $parameters,
-				language: $language
-			);
-			if ($resolved['ok'] === false) {
-				return ['error' => $resolved['error']];
-			}
-
-			return [
-				'error' => null,
-				'template' => $resolved['template'],
-				'templateName' => $resolved['templateName'],
-				'language' => $resolved['language'],
-			];
+	private function resolveSendContext(WhatsAppTemplateRequest $request, string $contactId): array {
+		if ($request->isTemplateSend() === true) {
+			return $this->templateSendContext(request: $request);
 		}
 
-		// Free-form: require an in-window session.
+		return $this->freeFormSendContext(contactId: $contactId, language: $request->language);
+	}//end resolveSendContext()
+
+	/**
+	 * The send context of a template send: the resolved template, or the
+	 * refusal to return.
+	 *
+	 * @param WhatsAppTemplateRequest $request Template id, parameters and default language.
+	 *
+	 * @return array<string, mixed> The context, `error` null on success.
+	 */
+	private function templateSendContext(WhatsAppTemplateRequest $request): array {
+		$resolved = $this->resolveTemplateForSend(request: $request);
+		if ($resolved['ok'] === false) {
+			return ['error' => $resolved['error']];
+		}
+
+		return [
+			'error' => null,
+			'template' => $resolved['template'],
+			'templateName' => $resolved['templateName'],
+			'language' => $resolved['language'],
+		];
+	}//end templateSendContext()
+
+	/**
+	 * The send context of a free-form send, which requires an in-window session.
+	 *
+	 * @param string $contactId Contact UUID (session-window lookup).
+	 * @param string $language  Default language (app-config).
+	 *
+	 * @return array<string, mixed> The context, or the session-expired refusal.
+	 */
+	private function freeFormSendContext(string $contactId, string $language): array {
 		if ($this->isWithinSessionWindow(contactId: $contactId) === false) {
 			return ['error' => ['status' => self::STATUS_SESSION_WINDOW_EXPIRED]];
 		}
@@ -317,7 +332,7 @@ class WhatsAppAdapter {
 			'templateName' => '',
 			'language' => $language,
 		];
-	}//end resolveSendContext()
+	}//end freeFormSendContext()
 
 	/**
 	 * Consent gate for a WhatsApp send.
@@ -440,10 +455,9 @@ class WhatsAppAdapter {
 	 * complexity budget; behaviour (template load / approval / parameter
 	 * count checks) is unchanged.
 	 *
-	 * @param string $templateId Template UUID/slug.
-	 * @param array<int, string> $parameters Positional template parameters.
-	 * @param string $language Fallback language when the
-	 *                         template does not specify one.
+	 * @param WhatsAppTemplateRequest $request Template id, parameters and the
+	 *                                         fallback language when the template
+	 *                                         does not specify one.
 	 *
 	 * @return array{
 	 *     ok: bool,
@@ -453,40 +467,79 @@ class WhatsAppAdapter {
 	 *     language?: string
 	 * } Resolution outcome.
 	 */
-	private function resolveTemplateForSend(string $templateId, array $parameters, string $language): array {
-		$template = $this->loadTemplate(id: $templateId);
+	private function resolveTemplateForSend(WhatsAppTemplateRequest $request): array {
+		$template = $this->loadTemplate(id: (string)$request->templateId);
+		$refusal = $this->templateRefusal(template: $template);
+		if ($refusal !== null) {
+			return ['ok' => false, 'error' => $refusal];
+		}
+
+		$mismatch = $this->parameterMismatch(template: $template, parameters: $request->parameters);
+		if ($mismatch !== null) {
+			return ['ok' => false, 'error' => $mismatch];
+		}
+
+		return $this->templateResolution(template: $template, fallbackLanguage: $request->language);
+	}//end resolveTemplateForSend()
+
+	/**
+	 * Why a template cannot be sent: missing, or not approved.
+	 *
+	 * @param array<string, mixed>|null $template The loaded template, or null.
+	 *
+	 * @return array<string, string>|null The refusal, or null when it may be sent.
+	 */
+	private function templateRefusal(?array $template): ?array {
 		if ($template === null) {
-			return ['ok' => false, 'error' => ['status' => self::STATUS_TEMPLATE_NOT_FOUND]];
+			return ['status' => self::STATUS_TEMPLATE_NOT_FOUND];
 		}
 
-		$status = (string)($template['status'] ?? '');
-		if ($status !== 'approved') {
-			return ['ok' => false, 'error' => ['status' => self::STATUS_TEMPLATE_NOT_APPROVED]];
+		if ((string)($template['status'] ?? '') !== 'approved') {
+			return ['status' => self::STATUS_TEMPLATE_NOT_APPROVED];
 		}
 
-		$templateName = (string)($template['externalId'] ?? '');
-		$language = (string)($template['language'] ?? $language);
+		return null;
+	}//end templateRefusal()
 
+	/**
+	 * The refusal for parameters that do not match the template's placeholders.
+	 *
+	 * @param array<string, mixed> $template   The template.
+	 * @param array<int, string>   $parameters Positional template parameters.
+	 *
+	 * @return array<string, mixed>|null The mismatch, or null when they match.
+	 */
+	private function parameterMismatch(array $template, array $parameters): ?array {
 		$expected = $this->parseTemplatePlaceholders(templateBody: (string)($template['body'] ?? ''));
 		$given = count($parameters);
-		if ($expected !== $given) {
-			return [
-				'ok' => false,
-				'error' => [
-					'status' => self::STATUS_TEMPLATE_MISMATCH,
-					'expected' => $expected,
-					'given' => $given,
-				],
-			];
+		if ($expected === $given) {
+			return null;
 		}
 
 		return [
+			'status' => self::STATUS_TEMPLATE_MISMATCH,
+			'expected' => $expected,
+			'given' => $given,
+		];
+	}//end parameterMismatch()
+
+	/**
+	 * A resolved template send: the template, its external name and its
+	 * language, or the fallback when it has none.
+	 *
+	 * @param array<string, mixed> $template         The approved template.
+	 * @param string               $fallbackLanguage The default language.
+	 *
+	 * @return array{ok: bool, template: array<string, mixed>, templateName: string, language: string}
+	 */
+	private function templateResolution(array $template, string $fallbackLanguage): array {
+		return [
 			'ok' => true,
 			'template' => $template,
-			'templateName' => $templateName,
-			'language' => $language,
+			'templateName' => (string)($template['externalId'] ?? ''),
+			'language' => (string)($template['language'] ?? $fallbackLanguage),
 		];
-	}//end resolveTemplateForSend()
+	}//end templateResolution()
 
 	/**
 	 * Attempt a send through one provider row.

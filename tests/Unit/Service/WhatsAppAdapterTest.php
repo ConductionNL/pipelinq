@@ -285,6 +285,46 @@ class WhatsAppAdapterTest extends TestCase {
 	}//end testSendRefusesPendingTemplate()
 
 	/**
+	 * An unknown template is refused before any provider is tried.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownTemplateIsNotFound(): void {
+		$this->consentService->method('canSendBusinessInitiated')->willReturn(true);
+		$this->providerClient->expects($this->never())->method('sendTemplate');
+		$this->providerRepo->expects($this->never())->method('listActive');
+
+		$result = $this->adapter->send(['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'], '', 'tpl-missing', []);
+
+		$this->assertSame(['status' => 'templateNotFound'], $result);
+	}//end testAnUnknownTemplateIsNotFound()
+
+	/**
+	 * A template without a language of its own is sent in the default
+	 * language (nl when none is configured), under its external id.
+	 *
+	 * @return void
+	 */
+	public function testATemplateWithoutALanguageIsSentInTheDefaultLanguage(): void {
+		$this->objectService->saveObject(['uuid' => 'tpl-2', 'status' => 'approved', 'externalId' => 'reminder', 'body' => 'Tot morgen, {{1}}']);
+		$this->consentService->method('canSendBusinessInitiated')->willReturn(true);
+		$this->budgetService->method('canSend')->willReturn(true);
+		$this->providerRepo->method('listActive')->willReturn([['uuid' => 'prov-1', 'kind' => 'whatsapp-cloud-api', 'vendor' => 'meta']]);
+		$sent = [];
+		$this->providerClient->method('sendTemplate')->willReturnCallback(
+			static function (array $channelProvider, string $phoneNumber, string $templateName, string $language, array $parameters) use (&$sent): array {
+				$sent = [$phoneNumber, $templateName, $language, $parameters];
+				return ['externalMessageId' => 'wamid.2', 'vendor' => 'meta'];
+			}
+		);
+
+		$result = $this->adapter->send(['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'], '', 'tpl-2', ['Jan']);
+
+		$this->assertSame('sent', $result['status']);
+		$this->assertSame(['+31611111111', 'reminder', 'nl', ['Jan']], $sent);
+	}//end testATemplateWithoutALanguageIsSentInTheDefaultLanguage()
+
+	/**
 	 * Free-form send within the 24h session window succeeds.
 	 *
 	 * @return void
