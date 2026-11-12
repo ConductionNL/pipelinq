@@ -36,8 +36,6 @@ use RuntimeException;
 
 /**
  * Tests for QuotaService lookups and thresholds.
- *
- * @covers \OCA\Pipelinq\Service\QuotaService
  */
 class QuotaServiceLookupTest extends TestCase {
 

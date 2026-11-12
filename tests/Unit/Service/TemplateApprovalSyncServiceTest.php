@@ -41,8 +41,6 @@ use RuntimeException;
 
 /**
  * Tests for TemplateApprovalSyncService.
- *
- * @covers \OCA\Pipelinq\Service\TemplateApprovalSyncService
  */
 class TemplateApprovalSyncServiceTest extends TestCase {
 
