@@ -41,6 +41,7 @@ use OCA\Pipelinq\Service\Payment\BrokerHttpTransport;
 use OCA\Pipelinq\Service\Payment\CcvAdapter;
 use OCA\Pipelinq\Service\Payment\MollieAdapter;
 use OCA\Pipelinq\Service\Payment\PaymentProviderInterface;
+use OCA\Pipelinq\Service\Payment\SettlementUpdate;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -769,46 +770,24 @@ class PosPaymentService {
 	public function handleSettlement(string $providerName, string $sessionId, string $paymentStatus, string $eventId): array {
 		$transaction = $this->findTransactionBySessionId(sessionId: $sessionId);
 		if ($transaction === null) {
-			// NOT `ignored`. The provider sent a signed settlement for a
-			// session this instance cannot match, so nothing was persisted.
-			// `unmatched` is answered with a retryable 5xx by the controller
-			// so the provider redelivers; a 2xx here tells the provider the
-			// settlement is booked and the money is lost (pipelinq#799).
-			$this->logger->error(
-				'Pipelinq POS payment: webhook for unmatched transaction; asking the provider to retry',
-				[
-					'provider' => $providerName,
-					'session' => $sessionId,
-				]
-			);
-			return ['status' => 'unmatched'];
+			return $this->unmatchedSettlement(providerName: $providerName, sessionId: $sessionId);
 		}
 
-		// Idempotency — last processed event id stored on the transaction.
-		$lastEventId = (string)($transaction['paymentWebhookEventId'] ?? '');
-		if ($eventId !== '' && $lastEventId === $eventId) {
+		$id = (string)($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
+		if ($this->isProcessedEvent(transaction: $transaction, eventId: $eventId) === true) {
 			return [
 				'status' => 'duplicate',
-				'transactionId' => (string)($transaction['@self']['id'] ?? ($transaction['id'] ?? '')),
+				'transactionId' => $id,
 			];
 		}
 
-		$previousStatus = (string)($transaction['paymentStatus'] ?? '');
-		$patch = $this->buildSettlementPatch(
+		$update = new SettlementUpdate(
 			paymentStatus: $paymentStatus,
-			previousStatus: $previousStatus,
+			previousStatus: (string)($transaction['paymentStatus'] ?? ''),
 			eventId: $eventId
 		);
-
-		$id = (string)($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
-		$updated = $this->saveTransaction(id: $id, patch: $patch);
-
-		$this->emitSettlementEvents(
-			paymentStatus: $paymentStatus,
-			previousStatus: $previousStatus,
-			transaction: $updated,
-			eventId: $eventId
-		);
+		$updated = $this->saveTransaction(id: $id, patch: $this->buildSettlementPatch(update: $update));
+		$this->emitSettlementEvents(update: $update, transaction: $updated);
 
 		return [
 			'status' => 'ok',
@@ -817,25 +796,61 @@ class PosPaymentService {
 	}//end handleSettlement()
 
 	/**
+	 * Answer a settlement for a session this instance cannot match.
+	 *
+	 * NOT `ignored`. The provider sent a signed settlement for a session this
+	 * instance cannot match, so nothing was persisted. `unmatched` is answered
+	 * with a retryable 5xx by the controller so the provider redelivers; a 2xx
+	 * here tells the provider the settlement is booked and the money is lost
+	 * (pipelinq#799).
+	 *
+	 * @param string $providerName The provider.
+	 * @param string $sessionId    The provider session id.
+	 *
+	 * @return array{status: string} The `unmatched` answer.
+	 */
+	private function unmatchedSettlement(string $providerName, string $sessionId): array {
+		$this->logger->error(
+			'Pipelinq POS payment: webhook for unmatched transaction; asking the provider to retry',
+			[
+				'provider' => $providerName,
+				'session' => $sessionId,
+			]
+		);
+		return ['status' => 'unmatched'];
+	}//end unmatchedSettlement()
+
+	/**
+	 * Idempotency: whether the transaction already processed this provider event.
+	 *
+	 * @param array<string, mixed> $transaction The transaction.
+	 * @param string               $eventId     The provider event id; an empty one never matches.
+	 *
+	 * @return bool True when this event was the last one processed.
+	 */
+	private function isProcessedEvent(array $transaction, string $eventId): bool {
+		$lastEventId = (string)($transaction['paymentWebhookEventId'] ?? '');
+		return $eventId !== '' && $lastEventId === $eventId;
+	}//end isProcessedEvent()
+
+	/**
 	 * Build the transaction patch for a settlement update.
 	 *
-	 * @param string $paymentStatus The normalised lifecycle status.
-	 * @param string $previousStatus The transaction's status before this update.
-	 * @param string $eventId The provider event id (idempotency key).
+	 * @param SettlementUpdate $update The settlement update.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function buildSettlementPatch(string $paymentStatus, string $previousStatus, string $eventId): array {
+	private function buildSettlementPatch(SettlementUpdate $update): array {
 		$patch = [
-			'paymentStatus' => $paymentStatus,
-			'paymentWebhookEventId' => $eventId,
+			'paymentStatus' => $update->paymentStatus,
+			'paymentWebhookEventId' => $update->eventId,
 		];
 
-		if ($paymentStatus === 'settled' && $previousStatus !== 'settled') {
+		if ($update->settlesNow() === true) {
 			$patch['settledAt'] = $this->nowIso();
 		}
 
-		if ($paymentStatus === 'refunded' && $previousStatus !== 'refunded') {
+		if ($update->refundsNow() === true) {
 			$patch['refundedAt'] = $this->nowIso();
 		}
 
@@ -845,20 +860,18 @@ class PosPaymentService {
 	/**
 	 * Emit the settled/refunded CloudEvent for a settlement update, if applicable.
 	 *
-	 * @param string $paymentStatus The normalised lifecycle status.
-	 * @param string $previousStatus The transaction's status before this update.
+	 * @param SettlementUpdate     $update      The settlement update (its event id is the refund id on refund).
 	 * @param array<string, mixed> $transaction The updated transaction.
-	 * @param string $eventId The provider event id (used as refundId on refund).
 	 *
 	 * @return void
 	 */
-	private function emitSettlementEvents(string $paymentStatus, string $previousStatus, array $transaction, string $eventId): void {
-		if ($paymentStatus === 'settled' && $previousStatus !== 'settled') {
+	private function emitSettlementEvents(SettlementUpdate $update, array $transaction): void {
+		if ($update->settlesNow() === true) {
 			$this->emitSettledEvent(transaction: $transaction);
 		}
 
-		if ($paymentStatus === 'refunded' && $previousStatus !== 'refunded') {
-			$this->emitRefundedEvent(transaction: $transaction, refundId: $eventId, reason: 'Provider-initiated refund');
+		if ($update->refundsNow() === true) {
+			$this->emitRefundedEvent(transaction: $transaction, refundId: $update->eventId, reason: 'Provider-initiated refund');
 		}
 	}//end emitSettlementEvents()
 
