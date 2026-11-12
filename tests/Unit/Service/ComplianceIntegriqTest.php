@@ -29,6 +29,7 @@ use OCA\Pipelinq\Tests\Unit\Support\InMemoryObjectService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -48,6 +49,13 @@ class ComplianceIntegriqTest extends TestCase {
 	private array $dunning = [];
 
 	private string $flag = 'integriq';
+
+	/**
+	 * The info lines the service logged, as [message, context].
+	 *
+	 * @var array<int, array{0: string, 1: array<string, mixed>}>
+	 */
+	private array $infoLogs = [];
 
 	protected function setUp(): void {
 		$this->integriq = new FakeIntegriq();
@@ -71,11 +79,17 @@ class ComplianceIntegriqTest extends TestCase {
 		$this->segments = $this->createMock(SegmentService::class);
 
 		$logger = new NullLogger();
+		$serviceLogger = $this->createMock(LoggerInterface::class);
+		$serviceLogger->method('info')->willReturnCallback(
+			function (string $message, array $context = []): void {
+				$this->infoLogs[] = [$message, $context];
+			}
+		);
 		$this->service = new ComplianceService(
 			$container,
 			$appConfig,
 			$this->segments,
-			$logger,
+			$serviceLogger,
 			$signals,
 			new IntegriqMarketingConsent(FakeIntegriq::client($appConfig, $this->integriq), new ContactAddressLookup($container, $appConfig, $logger)),
 		);
@@ -150,6 +164,19 @@ class ComplianceIntegriqTest extends TestCase {
 		self::assertSame(['opted-out', 'list', 'nieuws'], [$rows[0]['state'], $rows[0]['scope'], $rows[0]['ref']]);
 		self::assertSame([], $this->store->ofSchema('consentRecord'));
 	}//end testAListUnsubscribeReachesIntegriqAsAListOptOut()
+
+	public function testAWithdrawalIntegriqTookTransitionsTheQueueAndIsLogged(): void {
+		$this->store->put('blastDelivery', ['uuid' => 'd-1', 'contactId' => 'c-1', 'blastId' => 'b-1', 'status' => 'queued']);
+
+		$this->service->recordConsentWithdrawal(contactId: 'c-1', channel: ' Email ', reason: 'user-unsubscribed', sourceBlastId: 'b-1', listId: 'nieuws');
+
+		self::assertSame('unsubscribed-before-send', $this->store->ofSchema('blastDelivery')[0]['status']);
+		self::assertSame([], $this->store->ofSchema('consentRecord'));
+		self::assertSame(
+			[['ComplianceService.recordConsentWithdrawal: withdrawal recorded in integriq', ['contactId' => 'c-1', 'channel' => 'email', 'listId' => 'nieuws', 'reason' => 'user-unsubscribed']]],
+			$this->infoLogs
+		);
+	}//end testAWithdrawalIntegriqTookTransitionsTheQueueAndIsLogged()
 
 	public function testAConfirmedListSubscriptionIsAListConsentInIntegriq(): void {
 		$this->service->recordListConsent(contactId: 'c-2', listId: 'nieuws', channel: 'email', lawfulBasis: 'consent', consentSource: 'double-opt-in', evidence: ['confirmedAt' => '2026-10-05']);

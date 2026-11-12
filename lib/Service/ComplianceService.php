@@ -31,6 +31,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
+use OCA\Pipelinq\Service\Consent\ConsentWithdrawal;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -501,7 +503,7 @@ class ComplianceService {
 			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: null) === false);
 		}
 
-		$record = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: null);
+		$record = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: null));
 		return $this->recordPermitsSend(record: $record, contactId: $contactId, channel: $channel);
 	}//end hasConsentForChannel()
 
@@ -539,7 +541,7 @@ class ComplianceService {
 			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: $listId) === false);
 		}
 
-		$record = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: $listId);
+		$record = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId));
 		return $this->recordPermitsSend(record: $record, contactId: $contactId, channel: $channel);
 	}//end hasConsentForList()
 
@@ -556,9 +558,9 @@ class ComplianceService {
 	 */
 	private function isBounceWithdrawn(string $contactId, string $channel, ?string $listId = null): bool {
 		$channel = strtolower(trim($channel));
-		$records = [$this->findConsentRecord(contactId: $contactId, channel: $channel, listId: null)];
+		$records = [$this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: null))];
 		if ($listId !== null && $listId !== '') {
-			$records[] = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: $listId);
+			$records[] = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId));
 		}
 
 		foreach ($records as $record) {
@@ -697,7 +699,7 @@ class ComplianceService {
 		}
 
 		$now = gmdate('Y-m-d\TH:i:s\Z');
-		$record = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: $listId);
+		$record = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId));
 		$payload = ($record ?? ['softBounceCount' => 0]);
 		$payload['contactId'] = $contactId;
 		$payload['channel'] = $channel;
@@ -1172,68 +1174,164 @@ class ComplianceService {
 			return;
 		}
 
-		$now = gmdate('Y-m-d\TH:i:s\Z');
+		$this->withdrawConsent(
+			withdrawal: new ConsentWithdrawal(
+				key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId),
+				reason: $reason,
+				sourceBlastId: $sourceBlastId,
+				withdrawnAt: gmdate('Y-m-d\TH:i:s\Z'),
+			)
+		);
+	}//end recordConsentWithdrawal()
 
-		// After the cutover a wish goes to integriq. A bounce is not a wish
-		// and stays in pipelinq, as does a wish integriq did not take.
-		if ($this->integriq->isActive() === true
-			&& $this->integriq->recordWithdrawal(contactId: $contactId, channel: $channel, reason: $reason, listId: $listId) === true
-		) {
-			$this->transitionQueuedDeliveries(contactId: $contactId, sourceBlastId: $sourceBlastId);
-			$this->logger->info(
-				'ComplianceService.recordConsentWithdrawal: withdrawal recorded in integriq',
-				['contactId' => $contactId, 'channel' => $channel, 'listId' => $listId, 'reason' => $reason]
-			);
+	/**
+	 * Record a withdrawal: in integriq after the cutover, otherwise on the
+	 * pipelinq ConsentRecord; either way the contact's queued deliveries
+	 * are transitioned and the withdrawal is logged.
+	 *
+	 * A bounce is not a wish and stays in pipelinq, as does a wish integriq
+	 * did not take.
+	 *
+	 * @param ConsentWithdrawal $withdrawal The withdrawal.
+	 *
+	 * @return void
+	 */
+	private function withdrawConsent(ConsentWithdrawal $withdrawal): void {
+		if ($this->withdrawnInIntegriq(withdrawal: $withdrawal) === true) {
+			$this->transitionDeliveriesOf(withdrawal: $withdrawal);
+			$this->logIntegriqWithdrawal(withdrawal: $withdrawal);
 			return;
 		}
 
-		$record = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: $listId);
+		$this->writeWithdrawal(withdrawal: $withdrawal);
+		$this->transitionDeliveriesOf(withdrawal: $withdrawal);
+		$this->logWithdrawal(withdrawal: $withdrawal);
+	}//end withdrawConsent()
+
+	/**
+	 * Whether integriq is active and took the withdrawal.
+	 *
+	 * @param ConsentWithdrawal $withdrawal The withdrawal.
+	 *
+	 * @return bool True when integriq holds it now.
+	 */
+	private function withdrawnInIntegriq(ConsentWithdrawal $withdrawal): bool {
+		$key = $withdrawal->key;
+		return $this->integriq->isActive() === true
+			&& $this->integriq->recordWithdrawal(
+				contactId: $key->contactId,
+				channel: $key->channel,
+				reason: $withdrawal->reason,
+				listId: $key->listId
+			) === true;
+	}//end withdrawnInIntegriq()
+
+	/**
+	 * Transition the withdrawn contact's queued deliveries.
+	 *
+	 * @param ConsentWithdrawal $withdrawal The withdrawal.
+	 *
+	 * @return void
+	 */
+	private function transitionDeliveriesOf(ConsentWithdrawal $withdrawal): void {
+		$this->transitionQueuedDeliveries(contactId: $withdrawal->key->contactId, sourceBlastId: $withdrawal->sourceBlastId);
+	}//end transitionDeliveriesOf()
+
+	/**
+	 * Write a withdrawal on the pipelinq ConsentRecord: a ledger row when
+	 * there is none, nothing when it was already withdrawn (the first
+	 * withdrawal timestamp is kept), the withdrawal otherwise.
+	 *
+	 * @param ConsentWithdrawal $withdrawal The withdrawal.
+	 *
+	 * @return void
+	 */
+	private function writeWithdrawal(ConsentWithdrawal $withdrawal): void {
+		$record = $this->findConsentRecord(key: $withdrawal->key);
 		if ($record === null) {
-			$this->persistWithdrawalLedger(
-				contactId: $contactId,
-				channel: $channel,
-				reason: $reason,
-				now: $now,
-				listId: $listId,
-			);
+			$this->persistWithdrawalLedger(withdrawal: $withdrawal);
+			return;
 		}
 
-		if ($record !== null) {
-			$existingWithdrawnAt = $record['withdrawnAt'] ?? null;
-			$alreadyWithdrawn = (is_string($existingWithdrawnAt) === true && trim($existingWithdrawnAt) !== '');
-			if ($alreadyWithdrawn === true) {
-				// Already withdrawn — keep first-withdrawal timestamp.
-				$this->logger->info(
-					'ComplianceService.recordConsentWithdrawal: already withdrawn',
-					[
-						'contactId' => $contactId,
-						'channel' => $channel,
-						'listId' => $listId,
-						'sourceBlastId' => $sourceBlastId,
-					]
-				);
-			}
+		if ($this->isWithdrawnRecord(record: $record) === true) {
+			$this->logAlreadyWithdrawn(withdrawal: $withdrawal);
+			return;
+		}
 
-			if ($alreadyWithdrawn === false) {
-				$record['withdrawnAt'] = $now;
-				$record['withdrawnReason'] = $reason;
-				$this->persistConsentObject(payload: $record, id: $this->extractObjectId(payload: $record));
-			}
-		}//end if
+		$record['withdrawnAt'] = $withdrawal->withdrawnAt;
+		$record['withdrawnReason'] = $withdrawal->reason;
+		$this->persistConsentObject(payload: $record, id: $this->extractObjectId(payload: $record));
+	}//end writeWithdrawal()
 
-		$this->transitionQueuedDeliveries(contactId: $contactId, sourceBlastId: $sourceBlastId);
+	/**
+	 * Whether a ConsentRecord already carries a withdrawal.
+	 *
+	 * @param array<string, mixed> $record The record.
+	 *
+	 * @return bool True when `withdrawnAt` is a non-blank string.
+	 */
+	private function isWithdrawnRecord(array $record): bool {
+		$existingWithdrawnAt = $record['withdrawnAt'] ?? null;
+		return (is_string($existingWithdrawnAt) === true && trim($existingWithdrawnAt) !== '');
+	}//end isWithdrawnRecord()
 
+	/**
+	 * Log a withdrawal of a record that was already withdrawn.
+	 *
+	 * @param ConsentWithdrawal $withdrawal The withdrawal.
+	 *
+	 * @return void
+	 */
+	private function logAlreadyWithdrawn(ConsentWithdrawal $withdrawal): void {
+		$this->logger->info(
+			'ComplianceService.recordConsentWithdrawal: already withdrawn',
+			[
+				'contactId' => $withdrawal->key->contactId,
+				'channel' => $withdrawal->key->channel,
+				'listId' => $withdrawal->key->listId,
+				'sourceBlastId' => $withdrawal->sourceBlastId,
+			]
+		);
+	}//end logAlreadyWithdrawn()
+
+	/**
+	 * Log a withdrawal that integriq took.
+	 *
+	 * @param ConsentWithdrawal $withdrawal The withdrawal.
+	 *
+	 * @return void
+	 */
+	private function logIntegriqWithdrawal(ConsentWithdrawal $withdrawal): void {
+		$this->logger->info(
+			'ComplianceService.recordConsentWithdrawal: withdrawal recorded in integriq',
+			[
+				'contactId' => $withdrawal->key->contactId,
+				'channel' => $withdrawal->key->channel,
+				'listId' => $withdrawal->key->listId,
+				'reason' => $withdrawal->reason,
+			]
+		);
+	}//end logIntegriqWithdrawal()
+
+	/**
+	 * Log a withdrawal recorded in pipelinq.
+	 *
+	 * @param ConsentWithdrawal $withdrawal The withdrawal.
+	 *
+	 * @return void
+	 */
+	private function logWithdrawal(ConsentWithdrawal $withdrawal): void {
 		$this->logger->info(
 			'ComplianceService.recordConsentWithdrawal: withdrawal recorded',
 			[
-				'contactId' => $contactId,
-				'channel' => $channel,
-				'listId' => $listId,
-				'reason' => $reason,
-				'sourceBlastId' => $sourceBlastId,
+				'contactId' => $withdrawal->key->contactId,
+				'channel' => $withdrawal->key->channel,
+				'listId' => $withdrawal->key->listId,
+				'reason' => $withdrawal->reason,
+				'sourceBlastId' => $withdrawal->sourceBlastId,
 			]
 		);
-	}//end recordConsentWithdrawal()
+	}//end logWithdrawal()
 
 	/**
 	 * Persist a ConsentRecord, creating it when no id is supplied.
@@ -1294,41 +1392,42 @@ class ComplianceService {
 	 * Write a synthetic ConsentRecord at withdrawal time when none existed.
 	 *
 	 * Preserves the audit ledger for GDPR Art. 7(3), which grants a
-	 * withdrawal even where consent was never formally captured.
+	 * withdrawal even where consent was never formally captured. The list
+	 * id is written only when the withdrawal is scoped to one list.
 	 *
-	 * @param string $contactId Contact UUID / slug.
-	 * @param string $channel "email" or "sms".
-	 * @param string $reason Withdrawal reason.
-	 * @param string $now UTC timestamp string.
-	 * @param string|null $listId MailingList id when the withdrawal is
-	 *                            scoped to one list.
+	 * @param ConsentWithdrawal $withdrawal The withdrawal.
 	 *
 	 * @return void
 	 */
-	private function persistWithdrawalLedger(
-		string $contactId,
-		string $channel,
-		string $reason,
-		string $now,
-		?string $listId = null,
-	): void {
-		$payload = [
-			'contactId' => $contactId,
-			'channel' => $channel,
-			'lawfulBasis' => 'consent',
-			'consentSource' => 'auto-withdrawal-ledger',
-			'consentedAt' => $now,
-			'withdrawnAt' => $now,
-			'withdrawnReason' => $reason,
-			'softBounceCount' => 0,
-		];
-
+	private function persistWithdrawalLedger(ConsentWithdrawal $withdrawal): void {
+		$payload = $this->withdrawalLedgerRow(withdrawal: $withdrawal);
+		$listId = $withdrawal->key->listId;
 		if ($listId !== null && $listId !== '') {
 			$payload['listId'] = $listId;
 		}
 
 		$this->persistConsentObject(payload: $payload, id: null);
 	}//end persistWithdrawalLedger()
+
+	/**
+	 * The ledger row of a withdrawal without a prior ConsentRecord.
+	 *
+	 * @param ConsentWithdrawal $withdrawal The withdrawal.
+	 *
+	 * @return array<string, mixed> The row, without a list id.
+	 */
+	private function withdrawalLedgerRow(ConsentWithdrawal $withdrawal): array {
+		return [
+			'contactId' => $withdrawal->key->contactId,
+			'channel' => $withdrawal->key->channel,
+			'lawfulBasis' => 'consent',
+			'consentSource' => 'auto-withdrawal-ledger',
+			'consentedAt' => $withdrawal->withdrawnAt,
+			'withdrawnAt' => $withdrawal->withdrawnAt,
+			'withdrawnReason' => $withdrawal->reason,
+			'softBounceCount' => 0,
+		];
+	}//end withdrawalLedgerRow()
 
 	/**
 	 * Transition queued BlastDelivery rows for the contact to
@@ -1438,62 +1537,16 @@ class ComplianceService {
 	 * mailing lists shipped, which is exactly the regression this argument
 	 * exists to prevent.
 	 *
-	 * @param string $contactId Contact UUID / slug.
-	 * @param string $channel "email" or "sms".
-	 * @param string|null $listId MailingList id, or null for the
-	 *                            channel-wide record.
+	 * @param ConsentRecordKey $key Contact, channel ("email" or "sms") and
+	 *                              list id, or no list for the channel-wide
+	 *                              record.
 	 *
 	 * @return array<string, mixed>|null Record array or null.
 	 */
-	private function findConsentRecord(string $contactId, string $channel, ?string $listId = null): ?array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getConsentRecordSchemaSlug();
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'contactId' => $contactId,
-						'channel' => $channel,
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ComplianceService.findConsentRecord: findAll failed',
-				[
-					'contactId' => $contactId,
-					'channel' => $channel,
-					'exception' => $e->getMessage(),
-				]
-			);
-			return null;
-		}//end try
-
-		$wanted = '';
-		if ($listId !== null) {
-			$wanted = $listId;
-		}
-
-		foreach (($rows ?? []) as $row) {
+	private function findConsentRecord(ConsentRecordKey $key): ?array {
+		foreach ($this->consentRecordCandidates(key: $key) as $row) {
 			$array = $this->toArray(value: $row);
-			$isMatch = $this->isConsentRecordFor(
-				row: $array,
-				contactId: $contactId,
-				channel: $channel,
-				wantedList: $wanted,
-			);
-			if ($isMatch === true) {
+			if ($key->matches(row: $array) === true) {
 				return $array;
 			}
 		}
@@ -1502,35 +1555,65 @@ class ComplianceService {
 	}//end findConsentRecord()
 
 	/**
-	 * Whether a row is the ConsentRecord for a contact, channel and scope.
+	 * The ConsentRecord rows OpenRegister returns for a key's contact and
+	 * channel; none when the store is not configured or the lookup fails.
 	 *
-	 * A defensive in-PHP re-check: OpenRegister's filter DSL ignores a key
-	 * it does not recognise, and an ignored filter returns rows nobody asked
-	 * for while looking exactly like a correct result.
+	 * @param ConsentRecordKey $key The record asked for.
 	 *
-	 * @param array<string, mixed> $row The candidate row.
-	 * @param string $contactId The contact being looked up.
-	 * @param string $channel The lower-cased channel.
-	 * @param string $wantedList The list id, or an empty string for the
-	 *                           channel-wide record.
-	 *
-	 * @return bool True when the row is the one asked for.
+	 * @return iterable<mixed> The candidate rows.
 	 */
-	private function isConsentRecordFor(array $row, string $contactId, string $channel, string $wantedList): bool {
-		if ($row === []) {
-			return false;
+	private function consentRecordCandidates(ConsentRecordKey $key): iterable {
+		$register = $this->getRegisterSlug();
+		$schema = $this->getConsentRecordSchemaSlug();
+		if ($register === '' || $schema === '') {
+			return [];
 		}
 
-		if ((string)($row['contactId'] ?? '') !== $contactId) {
-			return false;
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
 		}
 
-		if (strtolower((string)($row['channel'] ?? '')) !== $channel) {
-			return false;
-		}
+		return $this->queryConsentRows(objectService: $objectService, filters: $key->filters(register: $register, schema: $schema));
+	}//end consentRecordCandidates()
 
-		return (string)($row['listId'] ?? '') === $wantedList;
-	}//end isConsentRecordFor()
+	/**
+	 * Run the ConsentRecord query; a failing query is logged and gives no rows.
+	 *
+	 * @param object                $objectService The OpenRegister ObjectService.
+	 * @param array<string, string> $filters       The filters, contact and channel first.
+	 *
+	 * @return iterable<mixed> The rows.
+	 */
+	private function queryConsentRows(object $objectService, array $filters): iterable {
+		try {
+			return ($objectService->findAll(
+				config: ['filters' => $filters]
+			) ?? []);
+		} catch (Throwable $e) {
+			$this->logConsentLookupFailure(filters: $filters, error: $e);
+			return [];
+		}
+	}//end queryConsentRows()
+
+	/**
+	 * Log a ConsentRecord query that failed.
+	 *
+	 * @param array<string, string> $filters The filters of the failed query.
+	 * @param Throwable             $error   What the query threw.
+	 *
+	 * @return void
+	 */
+	private function logConsentLookupFailure(array $filters, Throwable $error): void {
+		$this->logger->warning(
+			'ComplianceService.findConsentRecord: findAll failed',
+			[
+				'contactId' => $filters['contactId'],
+				'channel' => $filters['channel'],
+				'exception' => $error->getMessage(),
+			]
+		);
+	}//end logConsentLookupFailure()
 
 	/**
 	 * Resolve the register slug from app config.
