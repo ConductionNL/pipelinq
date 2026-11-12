@@ -69,3 +69,5 @@
   - Verify: PHPUnit for the daily sequence and the reset; the queue page shows the called number
 - [ ] 34.1 Build the personal booking link: a shareable link per user whose page offers the free slots of that user's calendar (via `lib/Service/AvailabilityService.php`) and books the chosen slot into it (requirement "A user can send a booking link that offers the free slots in their own calendar", row `meeting-link`)
   - Verify: PHPUnit for a busy hour not offered; the booking lands in the user's calendar
+- [ ] 35.1 List the client's real invoices in the portal: read shillinq sales invoices through the integration registry, leave out draft and parked POS carts, and offer each invoice as a PDF (`lib/Service/Portal/PortalInvoiceService.php`, `lib/Service/Portal/AbstractPortalReadFacade.php`; row `portal-invoices`, requirement "A client sees their own invoices, contracts, orders and quotes")
+  - Verify: PHPUnit: a draft cart is not listed, a shillinq invoice is, its PDF downloads

@@ -5553,13 +5553,14 @@
 			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Service/Portal/PortalInvoiceService.php schemaKey() posTransaction and present() (invoiceNumber, date, amount, status) list the client's POS transactions through lib/Service/Portal/MainRegisterReader.php, reachable since pipelinq#2037 and #2045; lib/Service/Portal/AbstractPortalReadFacade.php getForAccount() filters on ownership only, so draft and parked carts are listed as invoices too, no PDF is offered, and shillinq sales invoices are never read",
+				"state": "specified",
+				"evidence": "Not built: the portal lists the client's POS transactions as invoices, draft and parked carts included, offers no PDF, and never reads shillinq sales invoices (decision 389). Was: lib/Service/Portal/PortalInvoiceService.php schemaKey() posTransaction and present() (invoiceNumber, date, amount, status) list the client's POS transactions through lib/Service/Portal/MainRegisterReader.php, reachable since pipelinq#2037 and #2045; lib/Service/Portal/AbstractPortalReadFacade.php getForAccount() filters on ownership only, so draft and parked carts are listed as invoices too, no PDF is offered, and shillinq sales invoices are never read",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "customer portal, Invoices tab (src/portal/views/PortalDashboard.vue:119)",
 				"readOn": "2026-09-28",
 				"change": "2026-06-14-customer-portal",
-				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client sees their own invoices, contracts, orders and quotes"
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client sees their own invoices, contracts, orders and quotes",
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/invoices/share-created-invoices \"share them through an email, using a direct link, downloading a PDF\"; \"a link to view the invoice in their browser\". All plans for the invoices tool. The invoice is reached by a link per invoice; the support portal does not list a client's invoices.",
@@ -8843,7 +8844,7 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "src/components/ContactLinks.vue (tel:, mailto:, geo: links on ClientDetail and ContactDetail), src/components/LogVisitAction.vue with src/dialogs/LogVisitDialog.vue (visit contact moment and follow-up crmTask on ClientDetail and LeadDetail), src/views/MyWork.vue (Today group first, follow-up tasks, phone layout), phone CSS on src/views/pipeline/PipelineBoard.vue",
+				"evidence": "src/components/ContactLinks.vue (tel:, mailto:, geo: links on ClientDetail and ContactDetail), src/components/LogVisitAction.vue with src/dialogs/LogVisitDialog.vue (visit contact moment and follow-up crmTask on ClientDetail and LeadDetail), src/manifest.json page MyWork (route /my-work, a dashboard page with src/views/dashboard/widgets/MyWorkWidget.vue: Today group first, follow-up tasks, phone layout), phone CSS on src/views/pipeline/PipelineBoard.vue",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Client and contact detail (Call, Mail, Directions), client and lead detail (Log a visit), My work, Pipeline board, at phone width in a browser or the Nextcloud mobile apps",
 				"readOn": "2026-09-29",
