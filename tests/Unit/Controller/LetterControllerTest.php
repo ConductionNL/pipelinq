@@ -30,6 +30,7 @@ use OCA\Pipelinq\Controller\LetterController;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
 use OCA\Pipelinq\Service\Letter\LetterLog;
+use OCA\Pipelinq\Service\Letter\LoggedLetter;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCP\IAppConfig;
@@ -617,11 +618,13 @@ class LetterControllerTest extends TestCase
     public function testContactMomentPayloadMatchesTheRealTicketSchema(): void
     {
         $payload = LetterLog::contactMomentPayload(
-            clientId: self::CLIENT,
-            contactId: self::CONTACT,
-            ticketId: self::TICKET,
-            templateName: 'Appointment letter',
-            path: '/DocuDesk/Appointment letter.pdf',
+            letter: new LoggedLetter(
+                clientId: self::CLIENT,
+                contactId: self::CONTACT,
+                ticketId: self::TICKET,
+                templateName: 'Appointment letter',
+                path: '/DocuDesk/Appointment letter.pdf',
+            ),
             occurredAt: new DateTimeImmutable('2026-09-30T10:15:00+02:00')
         );
         $payload['ticketType'] = TicketService::TYPE_CONTACTMOMENT;
