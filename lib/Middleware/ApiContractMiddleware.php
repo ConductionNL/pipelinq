@@ -1,0 +1,339 @@
+<?php
+
+/**
+ * Pipelinq API contract middleware.
+ *
+ * Applies the NL API Design Rules that hold for every response of the app's
+ * JSON API: the `API-Version` header (/core/version-header), RFC 9457 problem
+ * details for error responses (/core/error-handling/problem-details) and, on an
+ * unversioned path, the announcement of its `/api/v1/` successor
+ * (/core/uri-version, /core/deprecation-schedule).
+ *
+ * @category  Middleware
+ * @package   OCA\Pipelinq\Middleware
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://conduction.nl
+ *
+ * @spec openspec/specs/api-contract/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Middleware;
+
+use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Middleware\Support\ApiPathAliases;
+use OCA\Pipelinq\Middleware\Support\StandardProtocolPaths;
+use OCP\App\IAppManager;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
+use OCP\AppFramework\Middleware;
+use OCP\IRequest;
+
+/**
+ * Stamps `API-Version` on API responses, marks an unversioned path deprecated
+ * in favour of its `/api/v1/` alias, and turns JSON error bodies into problem
+ * details. Paths that speak a protocol defined elsewhere
+ * ({@see StandardProtocolPaths}) are left exactly as they are.
+ *
+ * An error body keeps every member it already had, so existing callers that
+ * read `error` or `message` see no change. A body that already uses `type`,
+ * `title` or `status` for something else is left as it is, because rewriting
+ * those members would break its callers.
+ *
+ * @category Middleware
+ * @package  OCA\Pipelinq\Middleware
+ * @author   Conduction Development Team <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://conduction.nl
+ *
+ * @spec openspec/specs/api-contract/spec.md
+ */
+class ApiContractMiddleware extends Middleware {
+
+	/**
+	 * The path fragment that marks a request as part of the JSON API.
+	 *
+	 * @var string
+	 */
+	private const API_PATH_MARKER = '/api/';
+
+	/**
+	 * The media type of an RFC 9457 problem details document.
+	 *
+	 * @var string
+	 */
+	public const PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
+
+	/**
+	 * The HTTP reason phrase used as `title` for each error status.
+	 *
+	 * @var array<int,string>
+	 */
+	private const TITLES = [
+		400 => 'Bad Request',
+		401 => 'Unauthorized',
+		402 => 'Payment Required',
+		403 => 'Forbidden',
+		404 => 'Not Found',
+		405 => 'Method Not Allowed',
+		406 => 'Not Acceptable',
+		409 => 'Conflict',
+		410 => 'Gone',
+		412 => 'Precondition Failed',
+		413 => 'Content Too Large',
+		415 => 'Unsupported Media Type',
+		422 => 'Unprocessable Content',
+		423 => 'Locked',
+		424 => 'Failed Dependency',
+		428 => 'Precondition Required',
+		429 => 'Too Many Requests',
+		500 => 'Internal Server Error',
+		501 => 'Not Implemented',
+		502 => 'Bad Gateway',
+		503 => 'Service Unavailable',
+		504 => 'Gateway Timeout',
+	];
+
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest    $request    The incoming request.
+	 * @param IAppManager $appManager Resolves the installed app version.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Instantiated via Nextcloud dependency injection.
+	 */
+	public function __construct(
+		private readonly IRequest $request,
+		private readonly IAppManager $appManager,
+	) {
+	}//end __construct()
+
+	/**
+	 * Add the version header and, for a JSON error, the problem details shape.
+	 *
+	 * @param mixed    $controller The controller that ran.
+	 * @param string   $methodName The method that ran.
+	 * @param Response $response   The controller's response.
+	 *
+	 * @return Response The same response, decorated.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The Middleware contract fixes this signature.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	public function afterController($controller, $methodName, Response $response): Response {
+		return $this->decorate(response: $response);
+	}//end afterController()
+
+	/**
+	 * Decorate a response when the request is part of the JSON API.
+	 *
+	 * @param Response $response The controller's response.
+	 *
+	 * @return Response The same response, decorated.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	private function decorate(Response $response): Response {
+		if ($this->isApiRequest() === false) {
+			return $response;
+		}
+
+		$response->addHeader(name: 'API-Version', value: $this->appManager->getAppVersion(appId: Application::APP_ID));
+		$this->announceSuccessor(response: $response);
+		if ($response instanceof JSONResponse) {
+			$this->decorateError(response: $response);
+		}
+
+		return $response;
+	}//end decorate()
+
+	/**
+	 * Whether the request path lies under the app's `/api/` and is not a standard protocol path.
+	 *
+	 * @return bool True for a request on the app's own API.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) StandardProtocolPaths is a pure lookup that routes.php shares, outside any container.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	private function isApiRequest(): bool {
+		$path = $this->request->getPathInfo();
+		if (is_string($path) === false || str_contains($path, self::API_PATH_MARKER) === false) {
+			return false;
+		}
+
+		return StandardProtocolPaths::matches(path: $path) === false;
+	}//end isApiRequest()
+
+	/**
+	 * Add the RFC 9745 `Deprecation` header and a `Link` to the successor on an unversioned path.
+	 *
+	 * The path keeps answering exactly as before; only the headers are added.
+	 *
+	 * @param Response $response The response.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) ApiPathAliases is a pure lookup that routes.php shares, outside any container.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	private function announceSuccessor(Response $response): void {
+		$path      = (string) $this->request->getPathInfo();
+		$successor = ApiPathAliases::successorOf(path: $path);
+		if ($successor === null) {
+			return;
+		}
+
+		$response->addHeader(name: 'Deprecation', value: ApiPathAliases::DEPRECATED_SINCE);
+		$response->addHeader(
+			name: 'Link',
+			value: '<'.$this->scriptPrefix(pathInfo: $path).$successor.'>; rel="successor-version"'
+		);
+	}//end announceSuccessor()
+
+	/**
+	 * The front controller that precedes the path info in the request URI, such as `/index.php`.
+	 *
+	 * @param string $pathInfo The request path info.
+	 *
+	 * @return string The prefix, or '' when the URI carries none.
+	 */
+	private function scriptPrefix(string $pathInfo): string {
+		$uri      = (string) $this->request->getRequestUri();
+		$position = strpos($uri, $pathInfo);
+		if ($pathInfo === '' || $position === false) {
+			return '';
+		}
+
+		return substr($uri, 0, $position);
+	}//end scriptPrefix()
+
+	/**
+	 * Serve a JSON error response as problem details when its body allows it.
+	 *
+	 * @param JSONResponse $response The response.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	private function decorateError(JSONResponse $response): void {
+		if ($response->getStatus() < 400) {
+			return;
+		}
+
+		$problem = $this->problemFor(data: $response->getData(), status: $response->getStatus());
+		if ($problem === null) {
+			return;
+		}
+
+		$response->setData(data: $problem);
+		$response->addHeader(name: 'Content-Type', value: self::PROBLEM_CONTENT_TYPE);
+	}//end decorateError()
+
+	/**
+	 * The problem details form of an error body, or null when it cannot take that form.
+	 *
+	 * @param mixed $data   The error body.
+	 * @param int   $status The response status.
+	 *
+	 * @return array<array-key,mixed>|null The body with the problem members first, or null.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	private function problemFor(mixed $data, int $status): array|null {
+		if (is_array($data) === false || $this->isListBody(data: $data) === true) {
+			return null;
+		}
+
+		$problem = [
+			'type'   => 'about:blank',
+			'title'  => $this->titleOf(status: $status),
+			'status' => $status,
+		];
+		if ($this->conflicts(problem: $problem, data: $data) === true) {
+			return null;
+		}
+
+		$detail = $this->detailOf(data: $data);
+		if ($detail !== null) {
+			$problem['detail'] = $detail;
+		}
+
+		return array_merge($problem, $data);
+	}//end problemFor()
+
+	/**
+	 * The HTTP reason phrase of an error status.
+	 *
+	 * @param int $status The response status.
+	 *
+	 * @return string The reason phrase, or `Error` for a status without one here.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	private function titleOf(int $status): string {
+		return (self::TITLES[$status] ?? 'Error');
+	}//end titleOf()
+
+	/**
+	 * Whether an error body is a non-empty JSON list, which has no members to keep.
+	 *
+	 * @param array<array-key,mixed> $data The error body.
+	 *
+	 * @return bool True for a list.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	private function isListBody(array $data): bool {
+		return $data !== [] && array_is_list($data) === true;
+	}//end isListBody()
+
+	/**
+	 * Whether the body already uses a problem member with another value.
+	 *
+	 * @param array<string,mixed>    $problem The problem members.
+	 * @param array<array-key,mixed> $data    The error body.
+	 *
+	 * @return bool True when rewriting the body would change one of its members.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	private function conflicts(array $problem, array $data): bool {
+		foreach ($problem as $member => $value) {
+			if (array_key_exists($member, $data) === true && $data[$member] !== $value) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end conflicts()
+
+	/**
+	 * The human-readable explanation already present in an error body, if any.
+	 *
+	 * @param array<array-key,mixed> $data The error body.
+	 *
+	 * @return string|null The `detail`, `message` or `error` text, or null.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	private function detailOf(array $data): ?string {
+		foreach (['detail', 'message', 'error'] as $member) {
+			$value = ($data[$member] ?? null);
+			if (is_string($value) === true && $value !== '') {
+				return $value;
+			}
+		}
+
+		return null;
+	}//end detailOf()
+}//end class

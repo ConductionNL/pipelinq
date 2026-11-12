@@ -80,6 +80,7 @@ use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Listener\PosLinePricingListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
+use OCA\Pipelinq\Middleware\ApiContractMiddleware;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\AppointmentPaymentProvider;
@@ -147,6 +148,10 @@ class Application extends App implements IBootstrap {
 	 *  avoid.
 	 */
 	public function register(IRegistrationContext $context): void {
+		// The API contract (version header, deprecation of unversioned paths,
+		// problem details). Registered first: Nextcloud runs afterController in
+		// reverse order, so it sees the final response of every other middleware.
+		$context->registerMiddleware(ApiContractMiddleware::class);
 
 		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never its
 		// concrete class, so this app's unit tests can mock a type they are able to
