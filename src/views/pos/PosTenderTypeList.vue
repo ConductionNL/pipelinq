@@ -76,6 +76,7 @@ import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
+import { posRecordId } from '../../services/posRecordId.js'
 
 export default {
 	name: 'PosTenderTypeList',
@@ -286,12 +287,7 @@ export default {
 			await this.refresh()
 		},
 
-		idOf(type) {
-			if (type?.['@self']?.id) {
-				return type['@self'].id
-			}
-			return type?.id || type?.uuid || ''
-		},
+		idOf: posRecordId,
 	},
 }
 </script>
