@@ -46,6 +46,7 @@ import { generateUrl } from '@nextcloud/router'
 import CashMultiple from 'vue-material-design-icons/CashMultiple.vue'
 import FileOutline from 'vue-material-design-icons/FileOutline.vue'
 import { formatDate } from '../../../services/localeUtils.js'
+import { jsonRequestHeaders } from '../../../services/requestHeaders.js'
 import { dueState } from '../../../utils/dueState.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -179,11 +180,7 @@ export default {
 						'/apps/pipelinq/api/worklist/mine?limit=' + WIDGET_LIMIT,
 					),
 					{
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
+						headers: jsonRequestHeaders(),
 					},
 				)
 				if (!response.ok) throw new Error('Failed to fetch worklist')

@@ -165,6 +165,7 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 
 /** How the server shows a KvK API key that is configured. */
 const MASKED_KEY = '***configured***'
@@ -180,11 +181,7 @@ function settingsRequest(init) {
 		generateUrl('/apps/pipelinq/api/prospects/settings'),
 		{
 			...init,
-			headers: {
-				'Content-Type': 'application/json',
-				requesttoken: OC.requestToken,
-				'OCS-APIREQUEST': 'true',
-			},
+			headers: jsonRequestHeaders(),
 		},
 	)
 }

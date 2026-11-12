@@ -95,6 +95,7 @@ import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
+import { jsonRequestHeaders } from '../services/requestHeaders.js'
 import { initialsOf } from '../services/userDisplayName.js'
 
 export default {
@@ -215,11 +216,7 @@ export default {
 						`/apps/pipelinq/api/contacts-sync/search?q=${encodeURIComponent(this.query)}`,
 					),
 					{
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
+						headers: jsonRequestHeaders(),
 					},
 				)
 				if (response.ok) {
@@ -267,11 +264,7 @@ export default {
 					generateUrl('/apps/pipelinq/api/contacts-sync/import'),
 					{
 						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
+						headers: jsonRequestHeaders(),
 						body: JSON.stringify(body),
 					},
 				)

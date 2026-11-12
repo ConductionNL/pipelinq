@@ -108,19 +108,8 @@ import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import DeletePipelineDialog from '../../dialogs/DeletePipelineDialog.vue'
 import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import { resolveObjectType } from '../../services/pipelineUtils.js'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 import { useObjectStore } from '../../store/modules/object.js'
-
-/**
- * @return {object} The headers of a JSON request to the object API, read
- *   at call time so they carry the current request token.
- */
-function requestHeaders() {
-	return {
-		'Content-Type': 'application/json',
-		requesttoken: OC.requestToken,
-		'OCS-APIREQUEST': 'true',
-	}
-}
 
 /**
  * The total an object count path answers; a refused or failed count adds 0.
@@ -131,7 +120,7 @@ function requestHeaders() {
  */
 async function countAt(path) {
 	try {
-		const resp = await fetch(generateUrl(path), { headers: requestHeaders() })
+		const resp = await fetch(generateUrl(path), { headers: jsonRequestHeaders() })
 		if (!resp.ok) {
 			return 0
 		}
