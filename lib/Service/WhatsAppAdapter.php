@@ -32,6 +32,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\WhatsAppMessage;
 use OCA\Pipelinq\Service\Provider\WhatsAppProviderAttempt;
+use OCA\Pipelinq\Service\Provider\WhatsAppSendFailure;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -259,12 +260,8 @@ class WhatsAppAdapter {
 		}
 
 		return $this->persistFailureAndAlert(
-			contactId: $contactId,
-			providerId: '',
-			body: $run->outboundBody(),
-			templateId: $this->templateIdForSend(template: $template),
-			error: 'all WhatsApp providers returned transient errors',
-			parameters: $parameters,
+			run: $run,
+			failure: new WhatsAppSendFailure(providerId: '', error: 'all WhatsApp providers returned transient errors'),
 		);
 	}//end send()
 
@@ -564,12 +561,8 @@ class WhatsAppAdapter {
 		}
 
 		return $this->persistFailureAndAlert(
-			contactId: $attempt->run->message->contactId,
-			providerId: $attempt->providerId,
-			body: $attempt->run->outboundBody(),
-			templateId: $this->templateIdForSend(template: $attempt->run->templateSend->template),
-			error: $error->getMessage(),
-			parameters: $attempt->run->templateSend->parameters,
+			run: $attempt->run,
+			failure: new WhatsAppSendFailure(providerId: $attempt->providerId, error: $error->getMessage()),
 		);
 	}//end failedAttempt()
 
@@ -975,68 +968,104 @@ class WhatsAppAdapter {
 	/**
 	 * Persist + alert on full-failure.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID.
-	 * @param string $body Body (or template marker).
-	 * @param string $templateId Template UUID or empty.
-	 * @param string $error Error description.
-	 * @param array<int, string> $parameters Template parameters, kept so Send again can repeat a template send.
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
 	 *
 	 * @return array{status: string, error: string, providerId?: string} Outcome.
 	 *
 	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
-	private function persistFailureAndAlert(
-		string $contactId,
-		string $providerId,
-		string $body,
-		string $templateId,
-		string $error,
-		array $parameters = [],
-	): array {
+	private function persistFailureAndAlert(WhatsAppSendRun $run, WhatsAppSendFailure $failure): array {
+		$this->persistMessage(payload: $this->failedMessagePayload(run: $run, failure: $failure));
+		$this->alertSendFailure(run: $run, failure: $failure);
+
+		return [
+			'status' => self::STATUS_FAILED,
+			'error' => $failure->error,
+			'providerId' => $failure->providerId,
+		];
+	}//end persistFailureAndAlert()
+
+	/**
+	 * The failed outbound message row, in the contact's WhatsApp conversation.
+	 *
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
+	 *
+	 * @return array<string, mixed> The message payload.
+	 */
+	private function failedMessagePayload(WhatsAppSendRun $run, WhatsAppSendFailure $failure): array {
 		$conversationId = $this->findOrOpenConversation(
-			contactId: $contactId,
-			providerId: $providerId,
+			contactId: $run->message->contactId,
+			providerId: $failure->providerId,
 			channel: 'whatsapp',
 		);
 
-		$this->persistMessage(
-			payload: [
-				'contactId' => $contactId,
-				'conversationId' => $conversationId,
-				'channel' => 'whatsapp',
-				'direction' => 'outbound',
-				'body' => $body,
-				'providerId' => $providerId,
-				'templateId' => $templateId,
-				'templateParameters' => array_values($parameters),
-				'deliveryStatus' => 'failed',
-				'sentAt' => $this->nowIso(),
-				'metadata' => ['error' => $error],
-			],
-		);
+		return ['contactId' => $run->message->contactId, 'conversationId' => $conversationId]
+			+ $this->failedMessageFields(run: $run, failure: $failure);
+	}//end failedMessagePayload()
 
+	/**
+	 * The fields of a failed outbound message after its contact and conversation.
+	 *
+	 * The template parameters are kept so Send again can repeat a template send.
+	 *
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
+	 *
+	 * @return array<string, mixed> The message fields.
+	 */
+	private function failedMessageFields(WhatsAppSendRun $run, WhatsAppSendFailure $failure): array {
+		return [
+			'channel' => 'whatsapp',
+			'direction' => 'outbound',
+			'body' => $run->outboundBody(),
+			'providerId' => $failure->providerId,
+			'templateId' => $this->templateIdForSend(template: $run->templateSend->template),
+			'templateParameters' => array_values($run->templateSend->parameters),
+			'deliveryStatus' => 'failed',
+			'sentAt' => $this->nowIso(),
+			'metadata' => ['error' => $failure->error],
+		];
+	}//end failedMessageFields()
+
+	/**
+	 * Notify the admin of a failed send; a notification that fails is logged.
+	 *
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
+	 *
+	 * @return void
+	 */
+	private function alertSendFailure(WhatsAppSendRun $run, WhatsAppSendFailure $failure): void {
 		try {
-			$this->notificationService->sendNotification(
-				userId: 'admin',
-				subject: 'messaging_whatsapp_send_failed',
-				parameters: ['contactId' => $contactId, 'providerId' => $providerId, 'error' => $error],
-				objectType: 'message',
-				objectId: $contactId,
-			);
+			$this->notifySendFailure(run: $run, failure: $failure);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'WhatsAppAdapter.persistFailureAndAlert: notification failed',
 				['exception' => $e->getMessage()]
 			);
 		}
+	}//end alertSendFailure()
 
-		return [
-			'status' => self::STATUS_FAILED,
-			'error' => $error,
-			'providerId' => $providerId,
-		];
-	}//end persistFailureAndAlert()
+	/**
+	 * Send the admin the failed-send notification.
+	 *
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
+	 *
+	 * @return void
+	 */
+	private function notifySendFailure(WhatsAppSendRun $run, WhatsAppSendFailure $failure): void {
+		$contactId = $run->message->contactId;
+		$this->notificationService->sendNotification(
+			userId: 'admin',
+			subject: 'messaging_whatsapp_send_failed',
+			parameters: ['contactId' => $contactId, 'providerId' => $failure->providerId, 'error' => $failure->error],
+			objectType: 'message',
+			objectId: $contactId,
+		);
+	}//end notifySendFailure()
 
 	/**
 	 * Persist the outbound message row of a provider attempt that went out.
