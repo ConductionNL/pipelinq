@@ -36,6 +36,8 @@ use OCA\Pipelinq\Service\Provider\SmsSendFailure;
 use OCA\Pipelinq\Service\Provider\SmsSendRun;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
+use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -413,15 +415,45 @@ class SmsAdapter {
 			return ['status' => 'vendorUnsupported'];
 		}
 
-		if ($client->verifySignature(rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning(
-				'SmsAdapter.handleInboundWebhook: invalid signature',
-				['providerId' => $providerId]
-			);
+		$delivery = new InboundWebhookDelivery(rawBody: $rawBody, signature: $signature, providerId: $providerId);
+		if ($this->hasValidSignature(client: $client, delivery: $delivery) === false) {
 			return ['status' => 'invalidSignature'];
 		}
 
-		$decoded = $this->decodeBody(rawBody: $rawBody);
+		return $this->ingestVerifiedDelivery(delivery: $delivery);
+	}//end handleInboundWebhook()
+
+	/**
+	 * Whether a delivery carries a valid signature for its vendor client; an
+	 * invalid one is logged.
+	 *
+	 * @param SmsProviderClientInterface $client   The vendor client of the provider row.
+	 * @param InboundWebhookDelivery     $delivery The delivery.
+	 *
+	 * @return bool True when the signature verifies.
+	 */
+	private function hasValidSignature(SmsProviderClientInterface $client, InboundWebhookDelivery $delivery): bool {
+		$valid = $client->verifySignature(rawBody: $delivery->rawBody, signature: $delivery->signature);
+		if ($valid === false) {
+			$this->logger->warning(
+				'SmsAdapter.handleInboundWebhook: invalid signature',
+				['providerId' => $delivery->providerId]
+			);
+		}
+
+		return $valid;
+	}//end hasValidSignature()
+
+	/**
+	 * Read a verified delivery's sender and text and ingest it as the
+	 * messaging account; a delivery without either is refused.
+	 *
+	 * @param InboundWebhookDelivery $delivery The verified delivery.
+	 *
+	 * @return array<string, mixed> Outcome envelope.
+	 */
+	private function ingestVerifiedDelivery(InboundWebhookDelivery $delivery): array {
+		$decoded = $this->decodeBody(rawBody: $delivery->rawBody);
 		$body = (string)($decoded['body'] ?? ($decoded['Body'] ?? ''));
 		$from = $this->phoneNormaliser->normaliseInbound(
 			rawNumber: (string)($decoded['from'] ?? ($decoded['From'] ?? ''))
@@ -432,9 +464,9 @@ class SmsAdapter {
 		}
 
 		return $this->asMessagingAccount(
-			writes: fn (): array => $this->ingestInbound(providerId: $providerId, from: $from, body: $body)
+			writes: fn (): array => $this->ingestInbound(providerId: $delivery->providerId, from: $from, body: $body)
 		);
-	}//end handleInboundWebhook()
+	}//end ingestVerifiedDelivery()
 
 	/**
 	 * Persist a verified inbound SMS and act on it, as the messaging account.
