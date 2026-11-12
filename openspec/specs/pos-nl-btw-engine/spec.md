@@ -25,7 +25,7 @@ Provide a server-side Dutch BTW (VAT) computation engine on top of pos-transacti
 
 ## Requirements
 
-### REQ-BTW-001: Per-Item Tax Rate Selection
+### Requirement: REQ-BTW-001: Per-Item Tax Rate Selection
 
 The system MUST allow each line item on a POS transaction to carry its own tax rate (0%, 9%, or 21%).
 
@@ -53,7 +53,7 @@ The system MUST allow each line item on a POS transaction to carry its own tax r
 
 ---
 
-### REQ-BTW-002: Tax Breakdown Grouped by Rate
+### Requirement: REQ-BTW-002: Tax Breakdown Grouped by Rate
 
 The system MUST compute and display a transaction-level `taxBreakdown` array that groups tax
 liability by rate.
@@ -91,7 +91,7 @@ liability by rate.
 
 ---
 
-### REQ-BTW-003: Invoice Breakdown for GL Posting
+### Requirement: REQ-BTW-003: Invoice Breakdown for GL Posting
 
 The system MUST generate an `invoiceBreakdown` array on `posTransaction` that shillinq can consume
 to post separate GL journal entries per tax rate.
@@ -120,7 +120,7 @@ to post separate GL journal entries per tax rate.
 
 ---
 
-### REQ-BTW-004: Price Mode Display (Inclusive vs Exclusive)
+### Requirement: REQ-BTW-004: Price Mode Display (Inclusive vs Exclusive)
 
 The system MUST support labeling transactions as tax-inclusive or tax-exclusive for receipt display.
 
@@ -140,7 +140,7 @@ The system MUST support labeling transactions as tax-inclusive or tax-exclusive 
 
 ---
 
-### REQ-BTW-005: Tax Breakdown Display on Detail View
+### Requirement: REQ-BTW-005: Tax Breakdown Display on Detail View
 
 The system MUST render the tax breakdown prominently on the transaction detail view.
 
@@ -169,7 +169,7 @@ The system MUST render the tax breakdown prominently on the transaction detail v
 
 ---
 
-### REQ-BTW-006: Recalculation Logic for Mixed-Rate Carts
+### Requirement: REQ-BTW-006: Recalculation Logic for Mixed-Rate Carts
 
 The system MUST correctly compute tax when a transaction contains items at multiple rates.
 
@@ -196,7 +196,7 @@ The system MUST correctly compute tax when a transaction contains items at multi
 
 ---
 
-### REQ-BTW-007: Backwards Compatibility (Fallback for Single-Rate)
+### Requirement: REQ-BTW-007: Backwards Compatibility (Fallback for Single-Rate)
 
 The system MUST not break existing single-rate transactions (all lines at 21%).
 
