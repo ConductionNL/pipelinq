@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\AnyPayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
@@ -406,8 +407,7 @@ class AppointmentCalendarLeafProvider {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $customerId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			return $customerId;
@@ -648,8 +648,7 @@ class AppointmentCalendarLeafProvider {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: booking load failed in calendar push', ['booking' => $bookingId]);
@@ -676,8 +675,7 @@ class AppointmentCalendarLeafProvider {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $resourceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			return null;
@@ -707,8 +705,7 @@ class AppointmentCalendarLeafProvider {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $serviceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			return null;

@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -322,7 +323,9 @@ class WhatsAppAdapterSendGoldenTest extends TestCase {
 				return [];
 			}
 
-			public function find($id, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+			public function find($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->test->note(['find' => compact('id', 'register', 'schema')]);
 				if ($id === $this->template['uuid']) {
 					return $this->template;

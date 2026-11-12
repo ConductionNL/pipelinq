@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosTransactionService;
@@ -79,7 +80,8 @@ class StockMovedFakeObjectService {
 	/**
 	 * @return array<string, mixed>|null
 	 */
-	public function find(string $id, string $register, string $schema): ?array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+		$schema = (string)($options?->schema ?? '');
 		return $this->store[$schema][$id] ?? null;
 	}//end find()
 }//end class

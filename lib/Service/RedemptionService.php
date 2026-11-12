@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -319,7 +320,7 @@ class RedemptionService {
 		}
 
 		try {
-			$object = $this->getObjectService()->find(id: $redemptionId, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $redemptionId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -468,7 +469,7 @@ class RedemptionService {
 		}
 
 		try {
-			$object = $this->getObjectService()->find(id: $optionId, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $optionId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}

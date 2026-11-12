@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
@@ -474,7 +475,7 @@ class LoyaltyReportingService {
 		}
 
 		try {
-			$object = $this->getObjectService()->find(id: $optionId, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $optionId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}

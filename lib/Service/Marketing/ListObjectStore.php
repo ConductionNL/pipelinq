@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -111,8 +112,7 @@ class ListObjectStore {
 		try {
 			$entity = $context['service']->find(
 				id: $id,
-				register: $context['register'],
-				schema: $context['schema'],
+				options: new ObjectFindOptions(register: $context['register'], schema: $context['schema']),
 				_rbac: false,
 				_multitenancy: false,
 			);

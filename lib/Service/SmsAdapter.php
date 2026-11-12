@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\SmsInbound;
@@ -742,8 +743,10 @@ class SmsAdapter {
 		try {
 			$found = $objectService->find(
 				id: $messageId,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG)
+				options: new ObjectFindOptions(
+					register: $this->getRegisterSlug(),
+					schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
+				)
 			);
 		} catch (Throwable $e) {
 			return null;

@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Adapter\ExportSinkInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Service\Export\ExportDestinationService;
@@ -109,15 +110,13 @@ class ExportDestinationServiceTest extends TestCase {
 		$objectService->method('find')->willReturnCallback(
 			function (
 				$id,
-				$_extend = [],
-				$files = false,
-				$register = null,
-				$schema = null,
-				$_rbac = true,
-				$_multitenancy = true,
-				$_render = true,
-				$_audit = true,
+				?ObjectFindOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use ($recorder, $destination, $sourceResult) {
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$_render = ($options?->render ?? true);
 				$recorder->calls[] = ['id' => $id, 'register' => $register, 'schema' => $schema, '_render' => $_render];
 
 				// `integriq`, not `openconnector`: service() wires a resolver

@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\MessagingController;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -98,7 +99,7 @@ class MessagingControllerResendTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 				return ($this->rows[$id] ?? null);
 			}
 

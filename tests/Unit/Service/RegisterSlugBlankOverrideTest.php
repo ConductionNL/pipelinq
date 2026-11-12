@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\MessagingService;
@@ -99,11 +100,11 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 		$object->method('find')->willReturnCallback(
 			static function (
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				?ObjectFindOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			) use (&$seen): ?ObjectEntityInterface {
+				$register = $options?->register;
 				$seen[] = $register;
 				return null;
 			}

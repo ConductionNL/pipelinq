@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Exception\NotAuthorizedException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -127,8 +128,7 @@ class ClientCaseReader {
 		try {
 			$object = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
 				id: $clientId,
-				register: $register,
-				schema: $schema,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
 				_rbac: true,
 				_multitenancy: true,
 			);

@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\BsnValidationService;
 use OCA\Pipelinq\Service\HaalCentraalClient;
 use OCA\Pipelinq\Service\HaalCentraalException;
 use OCA\Pipelinq\Service\OptOutService;
+use OCA\Pipelinq\Tests\Unit\Support\FindCallShape;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -359,6 +360,12 @@ class BrpLookupGoldenTest extends TestCase {
 	 * @return void
 	 */
 	private function record(string $name, array $args): void {
+		if (str_ends_with($name, '::find') === true) {
+			$named = array_map(fn (mixed $value): mixed => $this->plain(value: $value), FindCallShape::named(args: $args));
+			$this->calls[] = [$this->shortName(name: $name) => $named];
+			return;
+		}
+
 		$named = [];
 		foreach ((new ReflectionMethod($name))->getParameters() as $i => $param) {
 			if (array_key_exists($i, $args) === false) {

@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\NotesController;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -120,15 +121,12 @@ class NotesControllerTest extends TestCase {
 		$objectServiceMock->method('find')->willReturnCallback(
 			function (
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				?ObjectFindOptions $options = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
-				bool $_render = true,
-				bool $_audit = true,
 			): ?ObjectEntityInterface {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->findCalls[] = ['register' => (string)$register, 'schema' => (string)$schema];
 
 				$entity = new ObjectEntity();

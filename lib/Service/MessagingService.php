@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
@@ -131,7 +132,7 @@ class MessagingService {
 
 		foreach ($schemas as $schema) {
 			try {
-				$entity = $objectService->find(id: $contactId, register: $register, schema: $schema);
+				$entity = $objectService->find(id: $contactId, options: new ObjectFindOptions(register: $register, schema: $schema));
 			} catch (Throwable $e) {
 				$entity = null;
 			}
@@ -242,8 +243,7 @@ class MessagingService {
 		try {
 			$entity = $objectService->find(
 				id: $messageId,
-				register: $this->registerSlug(),
-				schema: $this->messageSchema()
+				options: new ObjectFindOptions(register: $this->registerSlug(), schema: $this->messageSchema())
 			);
 		} catch (Throwable $e) {
 			return null;

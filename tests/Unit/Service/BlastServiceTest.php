@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
@@ -98,7 +99,7 @@ class BlastServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Payload or null.
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 				return ($this->store[$id] ?? null);
 			}//end find()
 
@@ -1185,9 +1186,11 @@ class BlastServiceTest extends TestCase {
 			public function __construct(private object $delegate) {
 			}//end __construct()
 
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->findCalls[] = ['id' => $id, 'register' => $register, 'schema' => $schema];
-				return $this->delegate->find($id, $register, $schema);
+				return $this->delegate->find($id, $options);
 			}//end find()
 
 			public function findAll(array $config = []): array {

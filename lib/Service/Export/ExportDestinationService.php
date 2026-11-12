@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -387,11 +388,9 @@ class ExportDestinationService extends AbstractExportService {
 		try {
 			$source = $this->getObjectService()->find(
 				id: $sourceId,
-				register: $registerSlug,
-				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
+				options: new ObjectFindOptions(register: $registerSlug, schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG, render: false),
 				_rbac: true,
 				_multitenancy: true,
-				_render: false,
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

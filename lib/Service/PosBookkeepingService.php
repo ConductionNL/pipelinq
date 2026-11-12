@@ -49,6 +49,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -823,7 +824,7 @@ class PosBookkeepingService {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}

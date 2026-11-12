@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
@@ -330,8 +331,7 @@ class AppointmentPaymentProvider {
 		try {
 			$found = $objectService->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -380,8 +380,7 @@ class AppointmentPaymentProvider {
 		try {
 			$customer = $objectService->find(
 				id: $customerId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			return false;
@@ -425,8 +424,7 @@ class AppointmentPaymentProvider {
 		try {
 			$booking = $objectService->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			return;

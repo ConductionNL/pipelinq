@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use Psr\Container\ContainerInterface;
 use DateTimeImmutable;
@@ -97,12 +98,14 @@ abstract class AbstractExportService {
 	 * @param string $id The object UUID.
 	 *
 	 * @return array<string, mixed>|null The object as an array, or null when absent.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-001
 	 */
 	protected function findObjectById(string $schemaKey, string $id): ?array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}

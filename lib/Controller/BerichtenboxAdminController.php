@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\AppFramework\Controller;
@@ -79,8 +80,10 @@ class BerichtenboxAdminController extends Controller {
 			$service = $this->getObjectService();
 			$message = $service->find(
 				id: $id,
-				register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', '')
+				options: new ObjectFindOptions(
+					register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
+					schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', ''),
+				)
 			);
 		} catch (Throwable $e) {
 			return new JSONResponse(

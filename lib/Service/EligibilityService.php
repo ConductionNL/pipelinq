@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
@@ -289,8 +290,7 @@ class EligibilityService {
 		try {
 			$result = $this->getObjectService()->find(
 				id: $serviceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

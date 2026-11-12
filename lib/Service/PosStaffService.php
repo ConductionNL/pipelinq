@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -434,7 +435,7 @@ class PosStaffService {
 		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}

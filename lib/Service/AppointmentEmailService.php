@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -582,8 +583,7 @@ class AppointmentEmailService {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq appointment email: stamp lookup failed', ['booking' => $bookingId]);
@@ -761,8 +761,7 @@ class AppointmentEmailService {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $id,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			return null;

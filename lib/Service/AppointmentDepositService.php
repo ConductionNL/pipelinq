@@ -37,6 +37,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
@@ -484,8 +485,7 @@ class AppointmentDepositService {
 		try {
 			$booking = $objectService->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

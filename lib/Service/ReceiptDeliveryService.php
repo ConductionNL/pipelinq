@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -448,7 +449,7 @@ class ReceiptDeliveryService {
 
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'client_schema');
-			$client = $this->getObjectService()->find(id: $clientId, register: $register, schema: $schema);
+			$client = $this->getObjectService()->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 			$client = $this->toArray(object: $client);
 
 			return (string)($client['email'] ?? $client['emailAddress'] ?? '');
@@ -614,7 +615,7 @@ class ReceiptDeliveryService {
 		[$register, $schema] = $this->resolveSchema(schemaKey: 'posTransaction_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}
@@ -701,7 +702,7 @@ class ReceiptDeliveryService {
 
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptTemplate_schema');
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 
 			return $this->toArray(object: $object);
 		} catch (\Throwable $e) {

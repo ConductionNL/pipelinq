@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\SlaPolicyController;
 use OCP\IAppConfig;
@@ -69,7 +70,10 @@ class SlaPolicyControllerUpdateTest extends TestCase {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->expects($this->once())
 			->method('find')
-			->with('pol-1', [], false, 'sla', 'policy')
+			->with(
+				'pol-1',
+				$this->callback(static fn (?ObjectFindOptions $options): bool => $options?->register === 'sla' && $options?->schema === 'policy'),
+			)
 			->willReturn($existing);
 		$objectService->method('saveObject')->willReturn($saved);
 

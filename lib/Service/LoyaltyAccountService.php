@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -126,8 +127,7 @@ class LoyaltyAccountService {
 		try {
 			$object = $this->getObjectService()->find(
 				id: $accountId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->debug('Pipelinq: account lookup failed', ['exception' => $e->getMessage()]);

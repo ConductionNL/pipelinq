@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\EligibilityService;
 use OCP\IAppConfig;
@@ -194,8 +195,11 @@ class EligibilityServiceTest extends TestCase {
 			callback: static function (mixed ...$args) use ($bySchema): ?ObjectEntityInterface {
 				$id = (string)($args[0] ?? '');
 				$schema = '';
-				if (isset($args[4]) === true && is_string($args[4]) === true) {
-					// Real OR signature: register at args[3], schema at args[4].
+				if (($args[1] ?? null) instanceof ObjectFindOptions) {
+					// Real OR signature: register and schema ride in the find options.
+					$schema = (string)$args[1]->schema;
+				} elseif (isset($args[4]) === true && is_string($args[4]) === true) {
+					// Old flat OR signature: register at args[3], schema at args[4].
 					$schema = (string)$args[4];
 				} elseif (isset($args[2]) === true && is_string($args[2]) === true) {
 					// Pipelinq stub signature: register at args[1], schema at args[2].

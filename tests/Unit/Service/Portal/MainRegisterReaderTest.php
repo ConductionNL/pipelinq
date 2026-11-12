@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -84,10 +85,11 @@ class MainRegisterReaderTest extends TestCase {
 			->method('find')
 			->with(
 				$this->equalTo('t-1'),
-				$this->anything(),
-				$this->anything(),
-				$this->equalTo('7'),
-				$this->equalTo('42'),
+				$this->callback(
+					static fn (?ObjectFindOptions $options): bool => $options !== null
+						&& $options->register === '7'
+						&& $options->schema === '42'
+				),
 				$this->isFalse(),
 				$this->isFalse(),
 			)

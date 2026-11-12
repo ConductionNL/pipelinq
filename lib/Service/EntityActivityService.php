@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -514,8 +515,7 @@ class EntityActivityService {
 			$objectService = $this->getObjectService();
 			$entity = $objectService->find(
 				id: $entityId,
-				register: $registerId,
-				schema: $schemaId
+				options: new ObjectFindOptions(register: $registerId, schema: $schemaId)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

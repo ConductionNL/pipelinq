@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Listener\DeferredWorkGuard;
 use OCA\Pipelinq\Listener\SurveyDispatchListener;
@@ -412,7 +413,8 @@ class SurveyDispatchListenerTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null): ?ObjectEntity {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntity {
+				$schema = $options?->schema;
 				if (isset($this->stored[(string)$id]) === false) {
 					return null;
 				}

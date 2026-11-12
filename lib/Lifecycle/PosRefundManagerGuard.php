@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCA\Pipelinq\AppInfo\Application;
@@ -165,8 +166,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 		try {
 			$object = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
 				id: $id,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			return null;

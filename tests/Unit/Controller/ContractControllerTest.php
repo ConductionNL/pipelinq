@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\ContractController;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -164,13 +165,9 @@ class ContractControllerTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				mixed $register = null,
-				mixed $schema = null,
+				?ObjectFindOptions $options = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
-				bool $_render = true,
 			): ?array {
 				$row = ($this->store[(string)$id] ?? null);
 				if ($row === null || ($row['_deleted'] ?? null) !== null) {
@@ -293,10 +290,9 @@ class ContractControllerTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				mixed $register = null,
-				mixed $schema = null,
+				?ObjectFindOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
 			): ?array {
 				return ($this->store[(string)$id] ?? null);
 			}//end find()

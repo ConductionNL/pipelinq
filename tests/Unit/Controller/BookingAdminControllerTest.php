@@ -37,6 +37,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Register;
 use OCA\OpenRegister\Db\Schema;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Controller\BookingAdminController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -319,14 +320,9 @@ class BookingAdminControllerTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				Register|string|int|null $register = null,
-				Schema|string|int|null $schema = null,
+				?ObjectFindOptions $options = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
-				bool $_render = true,
-				bool $_audit = true,
 			): ?ObjectEntityInterface {
 				$row = ($this->store[(string)$id] ?? null);
 				if ($row === null || ($row['_deleted'] ?? null) !== null) {

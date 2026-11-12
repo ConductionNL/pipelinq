@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\AttributionService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -82,7 +83,7 @@ class AttributionServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Payload or null.
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
 				return ($this->store[$id] ?? null);
 			}
 

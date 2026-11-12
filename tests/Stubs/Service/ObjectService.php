@@ -53,6 +53,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Register;
 use OCA\OpenRegister\Db\Schema;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IUser;
 
 if (class_exists(ObjectService::class) === false) {
@@ -142,28 +143,18 @@ if (class_exists(ObjectService::class) === false) {
 		/**
 		 * Find a single object.
 		 *
-		 * @param integer|string            $id            The object id or UUID.
-		 * @param array<string, mixed>|null $_extend       Properties to expand.
-		 * @param boolean                   $files         Whether to include files.
-		 * @param string|int|null           $register      Register slug or ID.
-		 * @param string|int|null           $schema        Schema slug or ID.
-		 * @param boolean                   $_rbac         Whether to enforce RBAC checks.
-		 * @param boolean                   $_multitenancy Whether to enforce tenant scoping.
-		 * @param boolean                   $_render       Whether to render the result.
-		 * @param boolean                   $_audit        Whether to write an audit trail.
+		 * @param integer|string         $id            The object id or UUID.
+		 * @param ObjectFindOptions|null $options       Register, schema, extend, files, render and audit.
+		 * @param boolean                $_rbac         Whether to enforce RBAC checks.
+		 * @param boolean                $_multitenancy Whether to enforce tenant scoping.
 		 *
 		 * @return ObjectEntityInterface|null
 		 */
 		public function find(
 			int|string $id,
-			?array $_extend = [],
-			bool $files = false,
-			Register|string|int|null $register = null,
-			Schema|string|int|null $schema = null,
+			?ObjectFindOptions $options = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			bool $_render = true,
-			bool $_audit = true,
 		): ?ObjectEntityInterface {
 			return null;
 		}//end find()
@@ -647,22 +638,16 @@ if (class_exists(ObjectService::class) === false) {
 		/**
 		 * Find a single object without audit or rendering side-effects.
 		 *
-		 * @param string                    $id            The object id.
-		 * @param array<string, mixed>|null $_extend       Properties to expand.
-		 * @param boolean                   $files         Whether to include files.
-		 * @param string|int|null           $register      Register slug or ID.
-		 * @param string|int|null           $schema        Schema slug or ID.
-		 * @param boolean                   $_rbac         Whether to enforce RBAC checks.
-		 * @param boolean                   $_multitenancy Whether to enforce tenant scoping.
+		 * @param string                 $id            The object id.
+		 * @param ObjectFindOptions|null $options       Register, schema, extend and files.
+		 * @param boolean                $_rbac         Whether to enforce RBAC checks.
+		 * @param boolean                $_multitenancy Whether to enforce tenant scoping.
 		 *
 		 * @return ObjectEntityInterface
 		 */
 		public function findSilent(
 			string $id,
-			?array $_extend = [],
-			bool $files = false,
-			Register|string|int|null $register = null,
-			Schema|string|int|null $schema = null,
+			?ObjectFindOptions $options = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
 		): ObjectEntityInterface {

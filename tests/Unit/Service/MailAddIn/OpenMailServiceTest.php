@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\MailAddIn;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCA\Pipelinq\Service\ContactSyncService;
@@ -102,7 +103,8 @@ class OpenMailServiceTest extends TestCase {
 			public function __construct(private array &$rows) {
 			}//end __construct()
 
-			public function find(string $id, $register = null, $schema = null, bool $_rbac = false): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$schema = $options?->schema;
 				if ($_rbac !== true) {
 					throw new \LogicException('The reader must read as the caller.');
 				}

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -189,7 +190,7 @@ class LoyaltyProgrammeService {
 		}
 
 		try {
-			$object = $this->getObjectService()->find(id: $programmeId, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $programmeId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}

@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -289,8 +290,7 @@ class ContractController extends Controller {
 			// as well as for a stranger. See #801.
 			$object = $objectService->find(
 				id: $id,
-				register: $registerId,
-				schema: $schemaId,
+				options: new ObjectFindOptions(register: $registerId, schema: $schemaId),
 			);
 			if ($object === null) {
 				return null;

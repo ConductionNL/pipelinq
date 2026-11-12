@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ShillinqWipService;
 use OCP\AppFramework\Controller;
@@ -160,7 +161,7 @@ class TimeEntryWipController extends Controller {
 	private function fetchEntry(string $register, string $schema, string $uuid): ?array {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
+			$object = $objectService->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schema));
 			if ($object === null) {
 				return null;
 			}

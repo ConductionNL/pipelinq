@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCA\Pipelinq\Util\EntityIdOf;
@@ -610,8 +611,7 @@ class WalkInQueueService {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $ticketId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: walk-in ticket load failed', ['ticket' => $ticketId]);
@@ -647,8 +647,7 @@ class WalkInQueueService {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $serviceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: walk-in service load failed', ['service' => $serviceId]);

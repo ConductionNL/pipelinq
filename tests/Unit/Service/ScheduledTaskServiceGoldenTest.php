@@ -28,6 +28,7 @@ use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCA\Pipelinq\Tests\Unit\Support\Autowire;
 use OCA\Pipelinq\Tests\Unit\Support\ComparesGolden;
+use OCA\Pipelinq\Tests\Unit\Support\FindCallShape;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -358,7 +359,7 @@ class ScheduledTaskServiceGoldenTest extends TestCase {
 		);
 		$objects->method('find')->willReturnCallback(
 			function (...$args) use ($fail): ?ObjectEntityInterface {
-				$this->trace[] = ['find' => array_slice($args, 0, 5)];
+				$this->trace[] = ['find' => array_slice(FindCallShape::find(args: $args), 0, 5)];
 				if ($fail === 'find') {
 					throw new RuntimeException('find down');
 				}

@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
 use OCA\Pipelinq\Service\Consent\ConsentWithdrawal;
@@ -61,6 +62,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Guard-heavy but flat GDPR/CAN-SPAM checks; each operation is independently unit-tested.
  *
  * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister find options (openregister #9116) add one collaborator.
  */
 class ComplianceService {
 	use PayloadToArray;
@@ -886,7 +888,7 @@ class ComplianceService {
 		}
 
 		try {
-			$entity = $objectService->find(id: $templateId, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $templateId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'ComplianceService.getTemplateById: not found',

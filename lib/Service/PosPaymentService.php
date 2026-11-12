@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
 use OCA\Pipelinq\Service\Payment\AdyenAdapter;
@@ -1226,8 +1227,7 @@ class PosPaymentService {
 		try {
 			$found = $objectService->find(
 				id: $id,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			throw new OCSNotFoundException('Transaction not found');

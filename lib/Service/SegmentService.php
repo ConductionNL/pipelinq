@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -64,6 +65,7 @@ use Throwable;
  *  should have.
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister find options (openregister #9116) add one collaborator.
  */
 class SegmentService {
 	use PayloadToArray;
@@ -2334,8 +2336,7 @@ class SegmentService {
 		try {
 			$entity = $objectService->find(
 				id: $segmentId,
-				register: $register,
-				schema: $schema,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(

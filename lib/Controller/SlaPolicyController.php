@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
@@ -54,6 +55,7 @@ use Throwable;
  *   - PUT   /api/sla/policies/{id} update policy (justification required)
  *
  * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The OpenRegister find options (openregister #9116) add one collaborator.
  */
 class SlaPolicyController extends Controller {
 	/**
@@ -154,8 +156,7 @@ class SlaPolicyController extends Controller {
 			try {
 				$existing = $objectService->find(
 					id: $id,
-					register: $register,
-					schema: $schema,
+					options: new ObjectFindOptions(register: $register, schema: $schema),
 				);
 			} catch (Throwable $e) {
 				$this->logger->debug(

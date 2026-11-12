@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -150,7 +151,7 @@ class RecipientNameReader {
 	private function read(string $id, string $register, string $schema): ?array {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $id, register: $register, schema: $schema);
+			$object = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'RecipientNameReader: recipient not read',

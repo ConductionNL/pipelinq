@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Support;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+
 /**
  * Rows by uuid, each remembering its schema.
  */
@@ -64,7 +66,8 @@ class InMemoryObjectService {
 		return $out;
 	}//end ofSchema()
 
-	public function find(string $id, $register = null, $schema = null): ?array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+		$schema = $options?->schema;
 		$hit = ($this->rows[$id] ?? null);
 		if ($hit === null || ($schema !== null && $hit['schema'] !== $schema)) {
 			return null;

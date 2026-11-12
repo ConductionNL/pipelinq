@@ -37,6 +37,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
@@ -715,7 +716,7 @@ class CashShiftService {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}

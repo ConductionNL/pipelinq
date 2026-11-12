@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
@@ -1172,8 +1173,7 @@ class BookingService {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: booking load failed', ['booking' => $bookingId]);
@@ -1228,8 +1228,7 @@ class BookingService {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $serviceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: service load failed', ['service' => $serviceId]);
@@ -1376,8 +1375,7 @@ class BookingService {
 		try {
 			$customer = $this->getObjectService()->find(
 				id: $customerId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: customer load for no-show failed', ['customer' => $customerId]);

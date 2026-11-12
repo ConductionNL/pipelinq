@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
@@ -311,8 +312,7 @@ class ContactmomentService {
 		// Fetch the object to check ownership.
 		$object = $objectService->find(
 			id: $id,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectFindOptions(register: $config['register'], schema: $config['schema'])
 		);
 
 		if ($object === null) {

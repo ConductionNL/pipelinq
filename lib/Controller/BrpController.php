@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
@@ -950,7 +951,7 @@ class BrpController extends Controller {
 		}
 
 		try {
-			$existing = $this->getObjectService()->find(id: $clientId, register: $register, schema: $schema);
+			$existing = $this->getObjectService()->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 			$client = [];
 			if (is_array($existing) === true) {
 				$client = $existing;
@@ -998,8 +999,7 @@ class BrpController extends Controller {
 		try {
 			$existing = $this->getObjectService()->find(
 				id: $contactId,
-				register: $register,
-				schema: $schema,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
 			);
 			$existingArr = [];
 			if (is_array($existing) === true) {

@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -242,7 +243,7 @@ class OrganisationEnrichmentService {
 
 		[$register, $schema] = $this->config();
 		try {
-			$object = $this->objectService->find(id: $clientId, register: $register, schema: $schema);
+			$object = $this->objectService->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->debug('Pipelinq: client not read for enrichment', ['exception' => $e->getMessage()]);
 			return null;

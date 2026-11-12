@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskDeadlines;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskRights;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskStore;
@@ -262,10 +263,7 @@ class ScheduledTaskService {
 		try {
 			$object = $this->store->objects()->find(
 				$id,
-				[],
-				false,
-				$registerId,
-				$schemaId
+				options: new ObjectFindOptions(register: $registerId, schema: $schemaId)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

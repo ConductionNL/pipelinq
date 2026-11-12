@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Controller\PortalController;
 use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCA\Pipelinq\Service\BookingService;
@@ -126,7 +127,8 @@ class PortalControllerTest extends TestCase {
 			) {
 			}//end __construct()
 
-			public function find(string $id, string $register, string $schema): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$schema = (string)($options?->schema ?? '');
 				if ($schema === 'svc-schema') {
 					if ($this->serviceStub === []) {
 						throw new \RuntimeException('not found');

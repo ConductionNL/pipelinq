@@ -36,6 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Marketing\BlastSendRun;
 use OCA\Pipelinq\Service\Marketing\ListPage;
@@ -1480,8 +1481,7 @@ class BlastService {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $register,
-				schema: $schemaSlug,
+				options: new ObjectFindOptions(register: $register, schema: $schemaSlug),
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(

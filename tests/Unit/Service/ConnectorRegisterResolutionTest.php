@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
@@ -425,9 +426,9 @@ class ConnectorRegisterResolutionTest extends TestCase {
 			function (...$args) {
 				$this->readCount++;
 				// Positional: named arguments reach a mock callback in
-				// declaration order, and `register` is the FOURTH parameter of
-				// ObjectServiceInterface::find (id, _extend, files, register).
-				$this->readRegister = ($args[3] ?? null);
+				// declaration order, and the register rides in the find
+				// options, the SECOND parameter of ObjectServiceInterface::find.
+				$this->readRegister = (($args[1] ?? null)?->register ?? null);
 				return null;
 			}
 		);
@@ -616,7 +617,8 @@ class ConnectorRegisterResolutionTest extends TestCase {
 			 *
 			 * @return array<string, mixed> The source payload.
 			 */
-			public function find(string $id, ?string $register=null, ?string $schema=null): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = ($options?->register === null ? null : (string)$options->register);
 				$this->test->recordRead(register: $register);
 				return $this->source;
 			}//end find()

@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -70,7 +71,8 @@ class MessagingOptOutWiringTest extends TestCase {
 				return $object;
 			}
 
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$schema = $options?->schema;
 				$hit = ($this->rows[$id] ?? null);
 				if ($hit === null || ($schema !== null && $hit['schema'] !== $schema)) {
 					return null;
