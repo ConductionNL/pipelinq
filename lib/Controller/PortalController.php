@@ -867,8 +867,8 @@ class PortalController extends Controller {
 		$customerId = $this->lookupCustomerForBooking(bookingId: $bookingId);
 		$base = $this->urlGenerator->getAbsoluteURL('/index.php/apps/pipelinq/portal/api/booking/' . rawurlencode($bookingId));
 		return [
-			'reschedule' => ($base . '?token=' . rawurlencode($this->signLink(bookingId: $bookingId, action: 'reschedule', customerId: $customerId))),
-			'cancel' => ($base . '?token=' . rawurlencode($this->signLink(bookingId: $bookingId, action: 'cancel', customerId: $customerId))),
+			'reschedule' => sprintf('%s?token=%s', $base, rawurlencode($this->signLink(bookingId: $bookingId, action: 'reschedule', customerId: $customerId))),
+			'cancel' => sprintf('%s?token=%s', $base, rawurlencode($this->signLink(bookingId: $bookingId, action: 'cancel', customerId: $customerId))),
 		];
 	}//end buildManageLinks()
 

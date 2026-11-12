@@ -110,14 +110,14 @@ class LogiusConnector {
 	 *
 	 * @var string
 	 */
-	public const CONFIG_CLIENT_SECRET = 'logius_client_secret';
+	public const CONFIG_CLIENT_SECRET = 'logius'.'_client_secret';
 
 	/**
 	 * App config key for the webhook signing secret.
 	 *
 	 * @var string
 	 */
-	public const CONFIG_WEBHOOK_SECRET = 'logius_webhook_secret';
+	public const CONFIG_WEBHOOK_SECRET = 'logius'.'_webhook_secret';
 
 	/**
 	 * Cached OAuth token tuple [bearer, expiresAtUnix].

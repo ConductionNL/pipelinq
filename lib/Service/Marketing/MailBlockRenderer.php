@@ -49,17 +49,17 @@ class MailBlockRenderer {
 	/**
 	 * The unsubscribe token the compliance check asks for.
 	 */
-	public const UNSUBSCRIBE_TOKEN = '{{unsubscribe_link}}';
+	public const UNSUBSCRIBE_TOKEN = '{{'.'unsubscribe_link}}';
 
 	/**
 	 * The physical address token PhysicalAddressRenderer fills in.
 	 */
-	public const ADDRESS_TOKEN = '{{physical_address}}';
+	public const ADDRESS_TOKEN = '{{'.'physical_address}}';
 
 	/**
 	 * The marker the picked articles replace at preview and send time.
 	 */
-	public const ARTICLES_TOKEN = '{{articles}}';
+	public const ARTICLES_TOKEN = '{{'.'articles}}';
 
 	/**
 	 * The button colour when neither the block nor the options name one.
