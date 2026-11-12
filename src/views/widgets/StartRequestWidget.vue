@@ -165,7 +165,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-53
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-53
 	 */
 	async mounted() {
 		try {
@@ -181,7 +181,7 @@ export default {
 		generateUrl,
 		toText,
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-55
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-55
 		 */
 		async onSubmit() {
 			this.submitted = true
@@ -211,7 +211,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-56
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-56
 		 */
 		resetForm() {
 			this.form = {
@@ -228,7 +228,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-52
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-52
 		 */
 		async fetchRecentRequests() {
 			if (!this.config?.ticket) return

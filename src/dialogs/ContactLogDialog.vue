@@ -16,7 +16,7 @@ same draft as the client page's quick log), offered again when the dialog
 opens on the same ticket.
 
 @spec openspec/specs/contact-log-dialog/spec.md#requirement-a-contact-moment-is-logged-from-the-ticket-in-its-own-dialog
-@spec openspec/changes/contact-log-dialog-keeps-draft/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
+@spec openspec/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
 -->
 <template>
 	<CnDialog
@@ -207,7 +207,7 @@ export default {
 		 * Where the dialog opened: on this ticket, for its customer.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-3
 		 */
 		draftContext() {
 			return { author: this.author, clientId: this.openedClientId, requestId: this.ticketId || null }
@@ -218,7 +218,7 @@ export default {
 		 * dialog lets the agent change the customer.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-3
 		 */
 		draftPickContext() {
 			return { author: this.author, requestId: this.ticketId || null }
@@ -228,7 +228,7 @@ export default {
 		 * The channel and direction the dialog opens on.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-3
 		 */
 		draftDefaults() {
 			return { channel: 'telefoon', direction: 'inbound' }
@@ -239,7 +239,7 @@ export default {
 		 * time of day, with the date when it was not today.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-3
 		 */
 		offeredDraftClock() {
 			const changed = new Date(draftChangedAt(this.offeredDraft))
@@ -332,7 +332,7 @@ export default {
 		/**
 		 * Keeps the draft when the customer changes.
 		 *
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
+		 * @spec openspec/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
 		 */
 		client() {
 			this.scheduleDraft()
@@ -342,7 +342,7 @@ export default {
 	/**
 	 * Loads the ticket and the clients to pick from, then restores the draft.
 	 *
-	 * @spec openspec/changes/contact-log-dialog-keeps-draft/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
+	 * @spec openspec/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
 	 */
 	async created() {
 		await Promise.all([this.loadTicket(), this.searchClients('')])
@@ -358,7 +358,7 @@ export default {
 		 * The form's fields as the ticket names them, for the draft.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-3
 		 */
 		draftableForm() {
 			return {
@@ -378,7 +378,7 @@ export default {
 		 *
 		 * @param {object} kept The fields the draft holds.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-3
 		 */
 		async applyDraftForm(kept) {
 			this.restoreDraftFields(kept)
@@ -391,7 +391,7 @@ export default {
 		 * Put back the draft's text fields.
 		 *
 		 * @param {object} kept The fields the draft holds.
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-3
 		 */
 		restoreDraftFields(kept) {
 			for (const key of ['title', 'channel', 'direction', 'duration', 'notes']) {
@@ -407,7 +407,7 @@ export default {
 		 *
 		 * @param {string} clientId The draft's customer.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-3
 		 */
 		async restoreDraftClient(clientId) {
 			const known = this.clientResults.find((option) => option.id === clientId)
@@ -514,7 +514,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
+		 * @spec openspec/specs/contact-log-dialog/spec.md#requirement-the-tickets-contact-dialog-keeps-a-draft
 		 */
 		async save() {
 			if (this.busy || this.form.title.trim() === '') {

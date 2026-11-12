@@ -25,7 +25,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
 /**
  * SearchConsoleImportService: fetch, upsert, report.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 class SearchConsoleImportService {
 
@@ -113,7 +113,7 @@ class SearchConsoleImportService {
 	 * @param GoogleServiceAccountAuth $auth Service account token minting.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function __construct(
 		private IClientService $clientService,
@@ -130,7 +130,7 @@ class SearchConsoleImportService {
 	 *
 	 * @return array<int, string> Site URLs such as `https://example.org/` or `sc-domain:example.org`.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function properties(): array {
 		$raw = $this->appConfig->getValueString(Application::APP_ID, self::PROPERTIES_KEY, '');
@@ -155,7 +155,7 @@ class SearchConsoleImportService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function hasKey(): bool {
 		return $this->key() !== null;
@@ -166,7 +166,7 @@ class SearchConsoleImportService {
 	 *
 	 * @return string The email, empty without a key.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function serviceAccountEmail(): string {
 		$key = $this->key();
@@ -182,7 +182,7 @@ class SearchConsoleImportService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function lastImportAt(): string {
 		return $this->appConfig->getValueString(Application::APP_ID, self::LAST_IMPORT_KEY, '');
@@ -195,7 +195,7 @@ class SearchConsoleImportService {
 	 *
 	 * @return array{properties: int, rows: int, errors: array<string, string>} Counts and per-property failures.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function importRecent(int $days = 3): array {
 		$key = $this->key();
@@ -280,7 +280,7 @@ class SearchConsoleImportService {
 	 *
 	 * @throws Throwable When the API refuses.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function importProperty(SearchConsoleRead $read, string $property): int {
 		$rows = $this->fetchRows(read: $read, property: $property);

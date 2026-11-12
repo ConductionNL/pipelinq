@@ -24,9 +24,9 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use Psr\Log\LoggerInterface;
  *  two related resources (destinations and jobs); each method delegates to a
  *  service and shares one error-handling helper.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 class ExportJobController extends Controller {
 	/**
@@ -84,7 +84,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The destinations.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	#[NoAdminRequired]
 	public function listDestinations(): JSONResponse {
@@ -99,7 +99,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The created destination.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-01
 	 */
 	#[NoAdminRequired]
 	public function createDestination(): JSONResponse {
@@ -153,7 +153,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The test result.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-02
 	 */
 	#[NoAdminRequired]
 	public function testDestination(string $id): JSONResponse {
@@ -168,7 +168,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The jobs.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	#[NoAdminRequired]
 	public function listJobs(): JSONResponse {
@@ -193,7 +193,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The created job.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-01
 	 */
 	#[NoAdminRequired]
 	public function createJob(): JSONResponse {
@@ -249,7 +249,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The test result (sample, errors).
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003-01
 	 */
 	#[NoAdminRequired]
 	public function testRun(string $id): JSONResponse {
@@ -269,7 +269,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The enabled job.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	#[NoAdminRequired]
 	public function enableJob(string $id): JSONResponse {

@@ -31,7 +31,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 
 declare(strict_types=1);
@@ -89,7 +89,7 @@ class NormalisePartyFormFields implements IRepairStep {
 	 *
 	 * @return string Name.
 	 *
-	 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	public function getName(): string {
 		return 'Copy a party language into correspondenceLanguage and wrap client industry into a list (idempotent)';
@@ -102,7 +102,7 @@ class NormalisePartyFormFields implements IRepairStep {
 	 *
 	 * @return array<string,mixed> The keys to write.
 	 *
-	 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	public static function patchFor(array $row): array {
 		$patch = [];
@@ -131,7 +131,7 @@ class NormalisePartyFormFields implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	public function run(IOutput $output): void {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

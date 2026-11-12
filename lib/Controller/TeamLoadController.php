@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Throwable;
 /**
  * The team's load.
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
  */
 class TeamLoadController extends Controller {
 
@@ -68,7 +68,7 @@ class TeamLoadController extends Controller {
 	 *
 	 * @return JSONResponse `{ results: [...] }` (see TeamLoadService::getTeamLoad()), or an error.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {

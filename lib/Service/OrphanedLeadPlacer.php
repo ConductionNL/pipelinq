@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * Places a lead whose pipeline was deleted.
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
  */
 final class OrphanedLeadPlacer {
 	/**
@@ -60,7 +60,7 @@ final class OrphanedLeadPlacer {
 	 *
 	 * @return array<string, mixed> The fields to merge into the lead; [] when nothing applies.
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+	 * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function forOrphanedLead(array $lead, array $pipelines, ?string $now = null): array {
 		$pipelineId = trim((string)($lead['pipeline'] ?? ''));

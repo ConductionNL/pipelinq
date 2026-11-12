@@ -148,35 +148,35 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-9
 		 */
 		profilesStore() {
 			return useAgentProfilesStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-11
 		 */
 		skillsStore() {
 			return useSkillsStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		loading() {
 			return this.profilesStore.loading
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		profiles() {
 			return this.profilesStore.profiles
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		allSkills() {
 			return this.skillsStore.skills
@@ -184,7 +184,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-7
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-7
 	 */
 	mounted() {
 		this.profilesStore.fetchProfiles()
@@ -194,7 +194,7 @@ export default {
 	methods: {
 		/**
 		 * @param {object} profile The agent profile whose skills to name.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		getSkillNames(profile) {
 			if (!profile.skills || !this.allSkills.length) return []
@@ -206,7 +206,7 @@ export default {
 
 		/**
 		 * @param {object} profile The agent profile to edit.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
 		 */
 		startEdit(profile) {
 			this.editingId = profile.id
@@ -216,7 +216,7 @@ export default {
 		/**
 		 * @param {string} skillId Identifier of the skill.
 		 * @param {boolean} checked Whether the skill is now selected.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
 		 */
 		toggleSkill(skillId, checked) {
 			const skills = [...(this.editForm.skills || [])]
@@ -230,7 +230,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
 		 */
 		async saveEdit() {
 			await this.profilesStore.saveProfile(this.editForm)
@@ -238,7 +238,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async addProfile() {
 			const userId = prompt(t('pipelinq', 'Enter Nextcloud user ID:'))
@@ -254,7 +254,7 @@ export default {
 		/**
 		 * Delete the row the dialog asked about, and tell the dialog how it went.
 		 *
-		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
 		 */
 		async confirmDelete() {
 			const deleted = await this.profilesStore.deleteProfile(this.deleting.id)

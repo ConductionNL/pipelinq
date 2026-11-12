@@ -21,7 +21,7 @@ import { generateUrl } from '@nextcloud/router'
  * Every connected account, plus each network's readiness.
  *
  * @return {Promise<{data: Array<object>, readiness: object}>} The envelope.
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
  */
 export async function fetchAccounts() {
 	const { data } = await axios.get(
@@ -35,7 +35,7 @@ export async function fetchAccounts() {
  *
  * @param {string} accountId The account.
  * @return {Promise<object>} The connect parameters.
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 export async function fetchConnectParameters(accountId) {
 	const { data } = await axios.post(
@@ -49,7 +49,7 @@ export async function fetchConnectParameters(accountId) {
  *
  * @param {object} connect The parameters `fetchConnectParameters()` answered with.
  * @return {Promise<string>} The authorization URL to navigate to.
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 export async function startBrokerConnection(connect) {
 	const { data } = await axios.post(
@@ -66,7 +66,7 @@ export async function startBrokerConnection(connect) {
  * @param {string} credentialRef The credential id, or an empty string to let
  *   the server resolve the newest one this user just connected.
  * @return {Promise<object>} The updated account.
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 export async function attachCredential(accountId, credentialRef = '') {
 	const { data } = await axios.post(
@@ -81,7 +81,7 @@ export async function attachCredential(accountId, credentialRef = '') {
  *
  * @param {string} accountId The account.
  * @return {Promise<object>} The updated account.
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 export async function revokeAccount(accountId) {
 	const { data } = await axios.post(
@@ -95,7 +95,7 @@ export async function revokeAccount(accountId) {
  *
  * @param {string} status A status to filter on, or an empty string.
  * @return {Promise<Array<object>>} The posts.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export async function fetchPosts(status = '') {
 	const query = status ? `?status=${encodeURIComponent(status)}` : ''
@@ -110,7 +110,7 @@ export async function fetchPosts(status = '') {
  *
  * @param {string} postId The post.
  * @return {Promise<object>} The post.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export async function fetchPost(postId) {
 	const { data } = await axios.get(
@@ -124,7 +124,7 @@ export async function fetchPost(postId) {
  *
  * @param {object} payload The post fields.
  * @return {Promise<object>} The created post.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+ * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
  */
 export async function createPost(payload) {
 	const { data } = await axios.post(
@@ -140,7 +140,7 @@ export async function createPost(payload) {
  * @param {string} postId The post.
  * @param {object} payload The post fields.
  * @return {Promise<object>} The updated post.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+ * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
  */
 export async function updatePost(postId, payload) {
 	const { data } = await axios.patch(
@@ -157,7 +157,7 @@ export async function updatePost(postId, payload) {
  * @param {string} action One of `submit`, `approve`, `reject`.
  * @param {string} note The decider's words, when there are any.
  * @return {Promise<object>} The updated post.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+ * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
  */
 export async function movePost(postId, action, note = '') {
 	const { data } = await axios.post(
@@ -172,7 +172,7 @@ export async function movePost(postId, action, note = '') {
  *
  * @param {string} postId The post.
  * @return {Promise<Array<object>>} The publications.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 export async function fetchPublications(postId) {
 	const { data } = await axios.get(
@@ -186,7 +186,7 @@ export async function fetchPublications(postId) {
  *
  * @param {string} publicationId The publication.
  * @return {Promise<object>} The updated publication.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 export async function retryPublication(publicationId) {
 	const { data } = await axios.post(
@@ -200,7 +200,7 @@ export async function retryPublication(publicationId) {
  *
  * @param {string} publicationId The publication.
  * @return {Promise<object>} The share bundle.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 export async function fetchShare(publicationId) {
 	const { data } = await axios.get(
@@ -215,7 +215,7 @@ export async function fetchShare(publicationId) {
  * @param {string} publicationId The publication.
  * @param {string} url Where it landed, when they know.
  * @return {Promise<object>} The updated publication.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 export async function confirmShare(publicationId, url = '') {
 	const { data } = await axios.post(
@@ -232,7 +232,7 @@ export async function confirmShare(publicationId, url = '') {
  *
  * @param {string} network A network to limit the ranking to, or an empty string.
  * @return {Promise<Array<object>>} The ranked rows.
- * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+ * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
  */
 export async function fetchPerformance(network = '') {
 	const query = network ? `?network=${encodeURIComponent(network)}` : ''

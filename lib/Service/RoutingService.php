@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -45,8 +45,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class RoutingService {
 	/**
@@ -87,7 +87,7 @@ class RoutingService {
 	 *
 	 * @return array<string, mixed> Shape: { suggestions, atCapacity, noMatch }.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.2
 	 */
 	public function getSuggestedAgents(string $entityType, string $entityId): array {
 		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -183,7 +183,7 @@ class RoutingService {
 	 *
 	 * @return int The open item count.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
 	 */
 	public function getAgentWorkload(string $userId): int {
 		if ($userId === '') {
@@ -254,7 +254,7 @@ class RoutingService {
 	 *
 	 * @return array<int, array<string, mixed>> Matching agentProfile objects.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.4
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.4
 	 */
 	public function findMatchingAgents(string $category): array {
 		if ($category === '') {
@@ -406,7 +406,7 @@ class RoutingService {
 	 *
 	 * @return array<int, array<string, mixed>> Available profiles.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.5
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.5
 	 */
 	public function filterByAvailability(array $profiles): array {
 		return array_values(
@@ -424,7 +424,7 @@ class RoutingService {
 	 *
 	 * @return array{0: array<int, array<string, mixed>>, 1: int} Tuple of (in-capacity profiles, at-capacity count).
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.6
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.6
 	 */
 	public function filterByCapacity(array $profiles): array {
 		$inCapacity = [];
@@ -451,7 +451,7 @@ class RoutingService {
 	 *
 	 * @return bool True if workload >= maxConcurrent.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.7
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.7
 	 */
 	public function isAgentAtCapacity(array $profile, int $workload): bool {
 		$max = (int)($profile['maxConcurrent'] ?? self::DEFAULT_MAX_CONCURRENT);

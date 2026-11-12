@@ -17,7 +17,7 @@
   -  That is rule 4 of the marketing architecture and the grammar has no field
   - for it.
   -
-  - @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+  - @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
   -->
 <template>
 	<div class="social-variants" data-testid="social-variants">
@@ -137,7 +137,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<string>} The networks this post's accounts live on.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		networks() {
 			const chosen = Array.isArray(this.post?.accountIds)
@@ -155,7 +155,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The per-network fit, from the shared rule.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		fits() {
 			return fitsForNetworks(this.post || {}, this.networks)
@@ -163,7 +163,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The decisions taken on this post.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		approvals() {
 			return Array.isArray(this.post?.approvals) ? this.post.approvals : []
@@ -176,7 +176,7 @@ export default {
 		 *
 		 * @param {string} network The network.
 		 * @return {string} The text.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		bodyFor(network) {
 			return resolveVariant(this.post || {}, network).body
@@ -184,7 +184,7 @@ export default {
 
 		/**
 		 * @return {Promise<void>} Resolves once the post and accounts are in.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		async load() {
 			const id = this.effectiveId()
@@ -214,7 +214,7 @@ export default {
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
@@ -225,7 +225,7 @@ export default {
 		 *
 		 * @param {string} decision The stored decision.
 		 * @return {string} Its label, or the value itself when unknown.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		decisionLabel(decision) {
 			const labels = {
@@ -241,7 +241,7 @@ export default {
 		 * @param {string} value An ISO timestamp.
 		 * @return {string} It in the reader's locale, or as stored when unreadable.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		formatDate(value) {
 			const date = new Date(value)

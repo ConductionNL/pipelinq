@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service\Cti\Adapter;
 /**
  * Builds the client options of a JSON POST that carries a bearer token.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 final class BearerJsonPost {
 	/**
@@ -46,7 +46,7 @@ final class BearerJsonPost {
 	 *
 	 * @return array<string,mixed> The client options.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
 	 */
 	public function options(array $body): array {
 		return [

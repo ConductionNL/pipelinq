@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-7.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-7.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Psr\Log\LoggerInterface;
  * Runs once per day; deletes ctiEventLog entries whose `received_at` is older
  * than 30 days. Number of deleted records is logged for audit.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-7.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-7.2
  */
 class CtiEventLogCleanupJob extends TimedJob {
 	/**

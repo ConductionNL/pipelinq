@@ -30,7 +30,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use Throwable;
 /**
  * LandingPageProvisioningService: one campaign asks Portaliq for one page.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
  */
 class LandingPageProvisioningService {
 
@@ -94,7 +94,7 @@ class LandingPageProvisioningService {
 	 * @param IL10N $l10n Translates the form labels the visitor reads.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function __construct(
 		private IEventDispatcher $dispatcher,
@@ -115,7 +115,7 @@ class LandingPageProvisioningService {
 	 * @return array{error: string, portal: string, route: string, pageId: string, publicUrl: string, formId: string}
 	 *         `error` is empty on success, otherwise Portaliq's own code or `portaliq_missing`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function createFor(string $campaignId, string $portal = '', string $route = ''): array {
 		$campaign = $this->campaigns->find(id: $campaignId);
@@ -150,7 +150,7 @@ class LandingPageProvisioningService {
 	 *
 	 * @return bool True when Portaliq is present.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	protected function isPortaliqInstalled(): bool {
 		return class_exists(self::REQUEST_EVENT_CLASS);
@@ -167,7 +167,7 @@ class LandingPageProvisioningService {
 	 *
 	 * @return array<string, mixed> `summary`, `body`, `heroImageRef`, `links`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function articleFor(array $campaign): array {
 		return [
@@ -187,7 +187,7 @@ class LandingPageProvisioningService {
 	 *
 	 * @return array<string, mixed> `fields`, `submitLabel`, `consentText`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function formDefinition(): array {
 		return [
@@ -230,7 +230,7 @@ class LandingPageProvisioningService {
 	 *
 	 * @return string A route with a leading slash.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function routeFor(array $campaign, string $requested = ''): string {
 		$route = trim($requested);

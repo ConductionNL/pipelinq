@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * (ADR-022). All reads/writes are scoped to this app's own register + schema,
  * so an id belonging to another app resolves to a 404 (IDOR-safe).
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 abstract class AbstractExportService {
 	use CastingPayloadToArray {
@@ -189,7 +189,7 @@ abstract class AbstractExportService {
 	 * @return object The object service.
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	protected function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
  * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
  * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
  * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
@@ -45,7 +45,7 @@ use Psr\Log\LoggerInterface;
  *  single-purpose methods over one contactmoment reporting concern; splitting
  *  it would scatter one cohesive reporting surface across several classes.
  *
- * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
  */
 class ReportingService {
 	/**
@@ -85,7 +85,7 @@ class ReportingService {
 	 *
 	 * @return array{total: int, fcrRate: float, avgHandlingTime: string, slaCompliance: float} KPI data.
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getKpis(string $from, string $to): array {
 		try {
@@ -182,7 +182,7 @@ class ReportingService {
 	 *
 	 * @return array<string, int> Contact counts keyed by channel.
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getChannelDistribution(string $from, string $to): array {
 		try {
@@ -205,7 +205,7 @@ class ReportingService {
 	 *
 	 * @return array<string, array<string, int>> Time-series data: channel => [date => count].
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getChannelTrend(string $from, string $to, string $granularity = 'daily'): array {
 		try {
@@ -247,7 +247,7 @@ class ReportingService {
 	 *
 	 * @return array<string, array{count: int, fcrRate: float, avgHandlingTime: string}> Per-agent metrics.
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getAgentPerformance(string $from, string $to): array {
 		try {
@@ -292,7 +292,7 @@ class ReportingService {
 	 *
 	 * @return float Compliance as a percentage (0-100).
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getSlaCompliance(string $channel, string $from, string $to): float {
 		try {
@@ -327,7 +327,7 @@ class ReportingService {
 	 *
 	 * @return float FCR as a percentage (0-100).
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
 	 */
 	public function calculateFcr(array $contactmomenten): float {
@@ -351,7 +351,7 @@ class ReportingService {
 	 *
 	 * @return array<string, array<string, mixed>> SLA targets per channel.
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getSlaTargets(): array {
 		return $this->getAllSlaTargets();
@@ -552,7 +552,7 @@ class ReportingService {
 	 *
 	 * @return array<array<string, mixed>> Normalised contactmoment data arrays.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#scenario-contactmomenten-reporting-reads-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#scenario-contactmomenten-reporting-reads-tickets
 	 */
 	private function fetchContactmomenten(string $from, string $to): array {
 		$rows = $this->ticketService->findByType(ticketType: TicketService::TYPE_CONTACTMOMENT);

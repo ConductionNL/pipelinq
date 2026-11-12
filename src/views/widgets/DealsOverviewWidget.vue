@@ -44,7 +44,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-28
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-28
 		 */
 		clientMap() {
 			const map = {}
@@ -55,7 +55,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-31
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-31
 		 */
 		items() {
 			return this.leads.map((lead) => {
@@ -84,14 +84,14 @@ export default {
 		 *
 		 * @param {object} item The clicked row (a shaped lead item).
 		 * @param {MouseEvent} [event] The row click.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-32
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-32
 		 */
 		onShow(item, event) {
 			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id), event)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-29
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-29
 		 */
 		async fetchData() {
 			await this.loadWidget('DealsOverviewWidget', async (config) => {

@@ -32,7 +32,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
@@ -59,7 +59,7 @@ use Psr\Container\ContainerInterface;
  *
  * @psalm-suppress UnusedClass
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
  */
 class HealthController extends Controller {
 
@@ -118,7 +118,7 @@ class HealthController extends Controller {
 	 *
 	 * @return JSONResponse `{status, app, version, checks}` with HTTP code per policy.
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

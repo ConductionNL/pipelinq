@@ -15,7 +15,7 @@
  * gets the post's link and media. A full copy per network would drift the
  * moment somebody fixed a typo in one of five places.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 
 import { networkLimits } from './socialNetworks.js'
@@ -26,7 +26,7 @@ import { networkLimits } from './socialNetworks.js'
  * @param {object} post The post being composed.
  * @param {string} network The network to resolve for.
  * @return {{body: string, link: string, media: Array<object>}} The resolved values.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export function resolveVariant(post, network) {
 	const resolved = baseVariant(post)
@@ -78,7 +78,7 @@ function withVariant(resolved, variant) {
  * @param {object} post The post being composed.
  * @param {string} network The network.
  * @return {{network: string, label: string, length: number, limit: number, over: number, fits: boolean}} The fit.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export function fitForNetwork(post, network) {
 	const limits = networkLimits(network)
@@ -101,7 +101,7 @@ export function fitForNetwork(post, network) {
  * @param {object} post The post being composed.
  * @param {Array<string>} networks The networks the chosen accounts live on.
  * @return {Array<object>} One fit per network.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export function fitsForNetworks(post, networks) {
 	const seen = []
@@ -127,7 +127,7 @@ export function fitsForNetworks(post, networks) {
  * @param {object} post The post being composed.
  * @param {Array<string>} networks The networks the chosen accounts live on.
  * @return {{ok: boolean, problems: Array<string>}} Whether it may be submitted.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export function canSubmit(post, networks) {
 	const problems = []

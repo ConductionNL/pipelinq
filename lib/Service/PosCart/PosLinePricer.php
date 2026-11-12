@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use OCA\Pipelinq\Service\PosTransactionService;
  *
  * The arithmetic is PosTransactionService::recalculateLine, the same the confirm step books.
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
  */
 class PosLinePricer {
 	/**
@@ -45,7 +45,7 @@ class PosLinePricer {
 	 * @param PosTransactionService $pos     Holds the VAT arithmetic and stores a sale's totals.
 	 * @param PosCartObjects        $objects Reads and stores the sale and its lines.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function __construct(
 		public readonly PosTransactionService $pos,
@@ -60,7 +60,7 @@ class PosLinePricer {
 	 *
 	 * @return array<string, float> The server's figures.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function figures(array $line): array {
 		$mode = $this->objects->priceModeOf(transactionId: (string)($line['transaction'] ?? ''));
@@ -75,7 +75,7 @@ class PosLinePricer {
 	 *
 	 * @return array<string, float> The server's figures.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function figuresIn(array $line, ?string $priceMode): array {
 		$priced = $this->pos->recalculateLine(lineData: $line, priceMode: $this->pos->normalizePriceMode(mode: $priceMode));

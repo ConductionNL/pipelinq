@@ -21,7 +21,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+ * @spec openspec/specs/my-work/spec.md
  */
 
 declare(strict_types=1);
@@ -86,7 +86,7 @@ class TicketAssignController extends Controller {
 	 *
 	 * @return JSONResponse The ticket's id and new assignee, or an error.
 	 *
-	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+	 * @spec openspec/specs/my-work/spec.md
 	 */
 	#[NoAdminRequired]
 	public function assignToMe(string $id = ''): JSONResponse {
@@ -126,7 +126,7 @@ class TicketAssignController extends Controller {
 	 *
 	 * @return JSONResponse The ticket's id and new assignee, 404 when nothing waits, or an error.
 	 *
-	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+	 * @spec openspec/specs/my-work/spec.md
 	 */
 	#[NoAdminRequired]
 	public function assignOldest(): JSONResponse {

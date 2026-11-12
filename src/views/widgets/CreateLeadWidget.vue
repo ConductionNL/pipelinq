@@ -107,7 +107,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-26
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-26
 		 */
 		pipelineOptions() {
 			return this.pipelines.map((p) => ({
@@ -119,7 +119,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-22
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-22
 	 */
 	async mounted() {
 		try {
@@ -133,7 +133,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-20
 		 */
 		async fetchPipelines() {
 			if (!this.config?.pipeline) return
@@ -153,7 +153,7 @@ export default {
 
 		/**
 		 * @param {object} pipeline The pipeline whose first open stage to take.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-21
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-21
 		 */
 		getFirstStage(pipeline) {
 			const stages = pipeline?.stages || []
@@ -165,7 +165,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-24
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-24
 		 */
 		onQuickAdd() {
 			if (this.form.title) {
@@ -174,7 +174,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-25
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-25
 		 */
 		async onSubmit() {
 			this.submitted = true
@@ -242,7 +242,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-27
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-27
 		 */
 		resetForm() {
 			this.form = {

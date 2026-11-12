@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * The entity a synced email is linked to, the mail direction and the source account.
  *
- * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-3
  */
 final class EmailLinkTarget {
 	/**

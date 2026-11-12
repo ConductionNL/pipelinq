@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * Matches emails to contacts, organizations, and other entities
  * based on email address and domain.
  *
- * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-3
  */
 class EmailSyncService {
 	/**
@@ -54,7 +54,7 @@ class EmailSyncService {
 	 * @param string $email The email address.
 	 *
 	 * @return string|null The domain, or null if invalid.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-4
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-4
 	 */
 	public function extractDomain(string $email): ?string {
 		$parts = explode('@', $email);
@@ -71,7 +71,7 @@ class EmailSyncService {
 	 * @param string $userId The user ID.
 	 *
 	 * @return array<int> Array of mail account IDs.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-6
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-6
 	 */
 	public function getSyncAccounts(string $userId): array {
 		$value = $this->config->getUserValue(
@@ -96,7 +96,7 @@ class EmailSyncService {
 	 * @param string $userId The user ID.
 	 *
 	 * @return bool True if sync is enabled.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-7
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-7
 	 */
 	public function isSyncEnabled(string $userId): bool {
 		$value = $this->config->getUserValue(
@@ -116,7 +116,7 @@ class EmailSyncService {
 	 * @param bool $enabled Whether sync is enabled.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-9
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-9
 	 */
 	public function setSyncEnabled(string $userId, bool $enabled): void {
 		$value = 'false';
@@ -139,7 +139,7 @@ class EmailSyncService {
 	 * @param array<int> $accounts Array of mail account IDs.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-8
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-8
 	 */
 	public function setSyncAccounts(string $userId, array $accounts): void {
 		$this->config->setUserValue(
@@ -156,7 +156,7 @@ class EmailSyncService {
 	 * @param string $userId The user ID.
 	 *
 	 * @return string|null ISO 8601 timestamp of last sync, or null.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-5
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-5
 	 */
 	public function getLastSyncTime(string $userId): ?string {
 		$value = $this->config->getUserValue(
@@ -179,7 +179,7 @@ class EmailSyncService {
 	 * @param string $userId The user ID.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-10
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-10
 	 */
 	public function updateLastSyncTime(string $userId): void {
 		$this->config->setUserValue(
@@ -197,7 +197,7 @@ class EmailSyncService {
 	 * @param EmailLinkTarget $target The entity it is linked to.
 	 *
 	 * @return array<string, mixed> The EmailLink data.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-3
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-3
 	 */
 	public function buildEmailLinkData(SyncedEmail $email, EmailLinkTarget $target): array {
 		return [

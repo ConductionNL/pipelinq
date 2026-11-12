@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-3
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use Throwable;
  * unexpected is logged with full detail and the caller receives a static
  * error message (ADR-015).
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-3
  */
 class EntityActivityController extends Controller {
 	/**
@@ -81,7 +81,7 @@ class EntityActivityController extends Controller {
 	 *
 	 * @return JSONResponse The paginated activity feed, or an error body.
 	 *
-	 * @spec openspec/changes/entity-notes/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-3
 	 */
 	#[NoAdminRequired]
 	public function index(string $entityType, string $entityId): JSONResponse {

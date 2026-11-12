@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3 -->
+<!-- @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.3 -->
 <template>
 	<CnFormDialog
 		:dialogTitle="t('pipelinq', 'New task')"
@@ -26,7 +26,7 @@ import { useObjectStore } from '../../store/modules/object.js'
  * state so the agent can spin off a follow-up task without re-typing.
  * Lives in its own .vue file per hydra-gate-modal-isolation.
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.3
  */
 export default {
 	name: 'WerkplekNewTaskDialog',
@@ -60,7 +60,7 @@ export default {
 		 * CnFormDialog field definitions for the task schema.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.3
 		 */
 		fields() {
 			return [
@@ -120,7 +120,7 @@ export default {
 		 * Initial values for the dialog (pre-filled context).
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.3
 		 */
 		initialValues() {
 			return {

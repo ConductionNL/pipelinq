@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ use Throwable;
  *   "unsubscribe propagates within minutes".
  * - Catches per-Blast errors: a failed Blast logs and the loop continues.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
  */
 class BlastSendJob extends TimedJob {
 	use PayloadToArray;
@@ -82,7 +82,7 @@ class BlastSendJob extends TimedJob {
 	 * @param WebhookProcessorService $webhookProcessor Webhook event processor.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
 	 */
 	public function __construct(
 		ITimeFactory $time,
@@ -105,7 +105,7 @@ class BlastSendJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
 	 */
 	protected function run(mixed $argument): void {
 		$this->logger->info('BlastSendJob: starting cycle');
@@ -127,7 +127,7 @@ class BlastSendJob extends TimedJob {
 	 *
 	 * @return int Total deliveries dispatched across all Blasts.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
 	 */
 	public function dispatchSendingBlasts(): int {
 		$blasts = $this->loadSendingBlasts();
@@ -171,7 +171,7 @@ class BlastSendJob extends TimedJob {
 	 *
 	 * @return int Number of events drained.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
 	 */
 	public function drainWebhookQueue(): int {
 		$queue = $this->readQueue();
@@ -214,7 +214,7 @@ class BlastSendJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function enqueueWebhookEvent(string $provider, array $event): void {
 		$queue = $this->readQueue();

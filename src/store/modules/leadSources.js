@@ -14,7 +14,7 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 	},
 	actions: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-29
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-29
 		 */
 		async fetchSources() {
 			await loadSettingsTags(this, { url: API_BASE, what: 'lead sources' })
@@ -25,7 +25,7 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		 *
 		 * @param {string} name The source name to add.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-28
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-28
 		 */
 		async addSource(name) {
 			return keepingError(this, async () => {
@@ -41,7 +41,7 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 
 		/**
 		 * @param {string} id Identifier of the lead source.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-30
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-30
 		 */
 		async removeSource(id) {
 			await keepingError(this, async () => {
@@ -56,7 +56,7 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		/**
 		 * @param {string} id Identifier of the lead source.
 		 * @param {string} name The new name.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-31
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-31
 		 */
 		async renameSource(id, name) {
 			return keepingError(this, async () => {

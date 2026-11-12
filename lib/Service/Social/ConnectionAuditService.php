@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 /**
  * Who follows whom, and where the question cannot be answered.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the
  *  three-valued answer itself: every read has a yes, a no and a reason it
@@ -112,7 +112,7 @@ class ConnectionAuditService {
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 * @param ITimeFactory $time Time factory for the audit stamp.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -126,7 +126,7 @@ class ConnectionAuditService {
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
 	 */
 	public function rows(): array {
 		return $this->store->findAll(schemaSlug: $this->schemaSlug());
@@ -137,7 +137,7 @@ class ConnectionAuditService {
 	 *
 	 * @return array{pairs: int, answered: int, unknown: int}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	public function run(): array {
 		$accounts = $this->accountsByNetwork();
@@ -174,7 +174,7 @@ class ConnectionAuditService {
 	 *
 	 * @return array<string, mixed> The row.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	public function audit(array $account, array $client, array $profile): array {
 		$network = $profile['network'];
@@ -460,7 +460,7 @@ class ConnectionAuditService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	public function schemaSlug(): string {
 		return $this->store->schemaSlug(configKey: 'socialConnection_schema', default: self::SCHEMA_SLUG);

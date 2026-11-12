@@ -227,7 +227,7 @@ function accuracyRow(owner, rows) {
  *
  * @param {string} date An ISO date (YYYY-MM-DD).
  * @return {number|string} The week, or '' when the date does not parse.
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function isoWeekOf(date) {
 	const day = new Date(String(date) + 'T12:00:00Z')
@@ -248,7 +248,7 @@ export function isoWeekOf(date) {
  *
  * @param {Array<object>} snapshots Rows with owner_id, as_of_date and commit.
  * @return {Array<{owner_id: string, direction: 'into'|'out', amount: number}>} The moves.
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function commitMovements(snapshots) {
 	const dates = [...new Set(snapshots.map((row) => String(row.as_of_date || '')).filter(Boolean))].sort()

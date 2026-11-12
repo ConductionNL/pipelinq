@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-resolver-is-published-and-no-caller-reads-the-property-directly-req-pcl-005
+ * @spec openspec/specs/parties/spec.md#requirement-the-resolver-is-published-and-no-caller-reads-the-property-directly-req-pcl-005
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use OCP\IRequest;
 /**
  * Routes for the correspondence language and its resolver.
  *
- * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
+ * @spec openspec/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
  */
 class CorrespondenceLanguageController extends Controller {
 	/**
@@ -61,7 +61,7 @@ class CorrespondenceLanguageController extends Controller {
 	 *
 	 * @return JSONResponse The picker's options.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
+	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	#[NoAdminRequired]
 	public function available(): JSONResponse {
@@ -81,7 +81,7 @@ class CorrespondenceLanguageController extends Controller {
 	 *
 	 * @return JSONResponse The answer, or the refusal.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
+	 * @spec openspec/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
 	 */
 	#[NoAdminRequired]
 	public function resolve(string $partyId): JSONResponse {
@@ -96,7 +96,7 @@ class CorrespondenceLanguageController extends Controller {
 	 *
 	 * @return JSONResponse The new answer, or the refusal naming the tag.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
+	 * @spec openspec/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
 	 */
 	#[NoAdminRequired]
 	public function setPreference(string $partyId, string $language = ''): JSONResponse {

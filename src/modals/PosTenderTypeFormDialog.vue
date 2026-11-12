@@ -4,8 +4,8 @@
   -
   - POS tender type create / edit modal (pos-split-tender REQ-PST-001).
   -
-  - @spec openspec/changes/pos-split-tender/tasks.md#8.2
-  - @spec openspec/changes/pos-split-tender/tasks.md#8.3
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.2
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.3
   -->
 <template>
 	<CnDialog

@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use OCP\IAppConfig;
 /**
  * CampaignService: read, mint, validate and store a campaign.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
  */
 class CampaignService {
 
@@ -112,7 +112,7 @@ class CampaignService {
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param CampaignLinkDecorator $decorator Owns the slug rule a campaign value is minted with.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -126,7 +126,7 @@ class CampaignService {
 	 *
 	 * @return string The slug.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function schemaSlug(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA_SLUG);
@@ -139,7 +139,7 @@ class CampaignService {
 	 *
 	 * @return array<string, mixed>|null The campaign, or null.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function find(string $id): ?array {
 		if (trim($id) === '') {
@@ -156,7 +156,7 @@ class CampaignService {
 	 *
 	 * @return array<int, array<string, mixed>> The campaigns.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function all(array $filters = []): array {
 		return $this->store->findAll(schemaSlug: $this->schemaSlug(), filters: $filters);
@@ -172,7 +172,7 @@ class CampaignService {
 	 *
 	 * @return array<string, mixed> The campaign, or an empty array.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function forBlast(array $blast): array {
 		$campaignId = trim((string)($blast['campaignId'] ?? ''));
@@ -193,7 +193,7 @@ class CampaignService {
 	 * @return array{sources: array<int, string>, mediums: array<int, string>}
 	 *         Both vocabularies, lowercase and unique.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function vocabularies(): array {
 		return [
@@ -212,7 +212,7 @@ class CampaignService {
 	 *
 	 * @return string The slug, empty when nothing survives.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function mint(string $name): string {
 		return $this->decorator->slug(value: $name);
@@ -235,7 +235,7 @@ class CampaignService {
 	 * @return array{error: string, value: string, allowed: array<int, string>, campaign: array<string, mixed>|null}
 	 *         `error` empty on success.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function save(array $payload, ?string $id = null, string $uid = ''): array {
 		$existing = null;
@@ -283,7 +283,7 @@ class CampaignService {
 	 *
 	 * @return array<string, mixed>|null The saved campaign, or null when the write failed.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function recordLandingPage(string $id, array $landingPage, string $formId): ?array {
 		$campaign = $this->find(id: $id);
@@ -305,7 +305,7 @@ class CampaignService {
 	 *
 	 * @return string The id, or an empty string.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function idOf(?array $campaign): string {
 		return $this->store->idOf(payload: $campaign);

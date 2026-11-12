@@ -11,7 +11,7 @@
   - each network's own limit, and a submit that puts the post up for approval
   - rather than saving it are three things the grammar has no field for.
   -
-  - @spec openspec/changes/social-publishing/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
+  - @spec openspec/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
   -->
 <template>
 	<div class="social-post-form-view">
@@ -34,7 +34,7 @@ export default {
 		 * The composer was dismissed without saving.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/social-publishing/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
 		 */
 		onClose() {
 			this.$router.push({ name: 'SocialPosts' })
@@ -46,7 +46,7 @@ export default {
 		 *
 		 * @param {object} post The saved post.
 		 * @return {void}
-		 * @spec openspec/changes/social-publishing/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
 		 */
 		onSaved(post) {
 			const id = post && (post.id || post.uuid)

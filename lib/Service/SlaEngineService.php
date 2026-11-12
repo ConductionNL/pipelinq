@@ -59,7 +59,7 @@ use Throwable;
  * `ContainerInterface` to resolve OpenRegister's ObjectService lazily —
  * mirroring the existing pipelinq pattern (DealCreatedListener etc.).
  *
- * @spec openspec/changes/sla-engine-and-escalation/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-06-14-sla-engine-and-escalation/tasks.md#3.1
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)

@@ -179,7 +179,7 @@ export default {
 		 *
 		 * @return {string|null}
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
+		 * @spec openspec/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
 		 */
 		segmentId() {
 			return (
@@ -329,7 +329,7 @@ export default {
 		/**
 		 * Read the segment being edited into the form.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
+		 * @spec openspec/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
 		 */
 		async loadSegment() {
 			this.loading = true
@@ -353,7 +353,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+		 * @spec openspec/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
 		 */
 		async save() {
 			if (!this.canSave) {

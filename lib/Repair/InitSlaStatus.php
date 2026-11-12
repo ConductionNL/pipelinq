@@ -91,7 +91,7 @@ class InitSlaStatus implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function run(IOutput $output): void {
 		$register = $this->source->register();

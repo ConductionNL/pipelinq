@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,7 +48,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
  */
 class SchedulesController extends Controller {
 	/**
@@ -98,7 +98,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse Paginated task envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -140,7 +140,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse The created task (201) or an error envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -179,7 +179,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse Items envelope (always 200 when not erroring).
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function pending(): JSONResponse {
@@ -218,7 +218,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse The task or 404.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -254,7 +254,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse The updated task or an error envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
@@ -289,7 +289,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse 204 on success or an error envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function destroy(string $id): JSONResponse {

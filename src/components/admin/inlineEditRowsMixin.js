@@ -9,7 +9,7 @@
  * The section opens the form itself (`startEdit`), because what a row's form
  * copy holds differs per section.
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-23
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-23
  */
 export default {
 	data() {
@@ -25,8 +25,8 @@ export default {
 		/**
 		 * Close the row's form and drop its copy.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-3
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-23
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-23
 		 */
 		cancelEdit() {
 			this.editingId = null
@@ -37,7 +37,7 @@ export default {
 		 * Ask before deleting a row.
 		 *
 		 * @param {object} row The row to delete.
-		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
 		 */
 		askDelete(row) {
 			this.deleting = row

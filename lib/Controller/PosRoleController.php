@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4
  */
 class PosRoleController extends Controller {
 	/**
@@ -77,7 +77,7 @@ class PosRoleController extends Controller {
 	 *
 	 * @return JSONResponse The role list.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -99,7 +99,7 @@ class PosRoleController extends Controller {
 	 *
 	 * @return JSONResponse The role.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -121,7 +121,7 @@ class PosRoleController extends Controller {
 	 *
 	 * @return JSONResponse The created role.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function create(): JSONResponse {
 		$forbidden = $this->requireAdmin();
@@ -145,7 +145,7 @@ class PosRoleController extends Controller {
 	 * @auth admin-only Rewrites a POS permission role; the body additionally
 	 *       enforces it with an explicit requireAdmin() guard.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function update(string $id): JSONResponse {
 		$forbidden = $this->requireAdmin();
@@ -173,7 +173,7 @@ class PosRoleController extends Controller {
 	 * @auth admin-only Deletes a POS permission role; the body additionally
 	 *       enforces it with an explicit requireAdmin() guard.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function destroy(string $id): JSONResponse {
 		$forbidden = $this->requireAdmin();

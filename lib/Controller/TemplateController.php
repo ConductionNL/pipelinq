@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use OCP\IUserSession;
 /**
  * REST controller for CampaignTemplate entities.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
  */
 class TemplateController extends Controller {
 	/**
@@ -176,7 +176,7 @@ class TemplateController extends Controller {
 	 *
 	 * @return JSONResponse The expanded bodies and the embedded articles, or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+	 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 	 */
 	#[NoAdminRequired]
 	public function preview(string $id): JSONResponse {

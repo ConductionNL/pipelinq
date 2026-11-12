@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCP\EventDispatcher\IEventListener;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
  */
 class PosLinePricingListener implements IEventListener {
 	/**
@@ -47,7 +47,7 @@ class PosLinePricingListener implements IEventListener {
 	 *
 	 * @param PosLinePricer $pricer Prices the line.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly PosLinePricer $pricer,
@@ -61,7 +61,7 @@ class PosLinePricingListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatingEvent) === false && ($event instanceof ObjectUpdatingEvent) === false) {

@@ -11,7 +11,7 @@
   - Competitors: the competitor watches (CompetitorWatches, embedded);
   - Connection audit: the stored follow audit, with Check again.
 
-  @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+  @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
   @spec openspec/specs/marketing/spec.md
 -->
 <template>
@@ -240,7 +240,7 @@ export default {
 		 * The search query columns: every one sorts and filters from its head.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		columns() {
 			const number = (key, label) => ({
@@ -266,7 +266,7 @@ export default {
 		 * the section holds, as board PqZoekinzicht draws the heads.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		auditColumns() {
 			return [
@@ -372,7 +372,7 @@ export default {
 		 *
 		 * @param {boolean} refresh Re-run the audit before reading.
 		 * @return {Promise<boolean>} Whether the audit answered.
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		async fetchAudit(refresh = false) {
 			try {

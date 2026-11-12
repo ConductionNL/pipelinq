@@ -9,7 +9,7 @@
  * pipeline ("propertyMappings.1.totalsProperty null", pipelinq review R5), so
  * an empty value is left out instead.
  *
- * @spec openspec/changes/review-finish/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 
 const isBlank = (value) => value === null || value === undefined || value === ''
@@ -17,7 +17,7 @@ const isBlank = (value) => value === null || value === undefined || value === ''
 /**
  * @param {Array<object>} mappings The form's property mappings.
  * @return {Array<object>} Mappings without empty optional fields.
- * @spec openspec/changes/review-finish/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 export function pipelineMappingsPayload(mappings) {
 	return (mappings || []).map((m) => {
@@ -32,7 +32,7 @@ export function pipelineMappingsPayload(mappings) {
 /**
  * @param {Array<object>} stages The form's stages.
  * @return {Array<object>} Stages without empty optional fields.
- * @spec openspec/changes/review-finish/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 export function pipelineStagesPayload(stages) {
 	return (stages || []).map(stagePayload)
@@ -41,7 +41,7 @@ export function pipelineStagesPayload(stages) {
 /**
  * @param {object} s A form stage.
  * @return {object} The stage without empty optional fields.
- * @spec openspec/changes/review-finish/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 function stagePayload(s) {
 	const out = {

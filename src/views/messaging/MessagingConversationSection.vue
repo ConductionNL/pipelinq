@@ -18,7 +18,7 @@
   - since OpenRegister has no native cross-schema join) and lets the agent
   - pick which contact person to converse with via a picker.
   -
-  - @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+  - @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
   -->
 <template>
 	<section class="messaging-conversation cn-board-form">
@@ -65,7 +65,7 @@
 				{{ t('pipelinq', 'SMS consent:') }}
 				<strong :class="consentClass(preflightConsent.sms)">{{
 					/**
-					 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+					 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 					 */
 					consentLabel(preflightConsent.sms)
 				}}</strong>
@@ -111,7 +111,7 @@
 					}}</span>
 					<span class="messaging-conversation__direction">{{
 						/**
-						 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+						 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 						 */
 						directionLabel(message.direction)
 					}}</span>
@@ -245,7 +245,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -253,7 +253,7 @@ export default {
 
 		/** The contactId every fetch/send in this component is keyed on. */
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		effectiveContactId() {
 			return this.entityType === 'contact'
@@ -263,7 +263,7 @@ export default {
 
 		/** The clientId passed to the composer for the send-request audit trail. */
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		effectiveClientId() {
 			return this.entityType === 'client'
@@ -272,7 +272,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		contactOptions() {
 			return this.linkedContacts.map((c) => ({
@@ -333,7 +333,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		preflightForModal() {
 			return this.preflight || EMPTY_PREFLIGHT
@@ -341,7 +341,7 @@ export default {
 
 		/** Most recently active conversation thread for the current contact, if any. */
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		latestConversation() {
 			if (this.conversations.length === 0) {
@@ -367,7 +367,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+	 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 	 */
 	async mounted() {
 		subscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
@@ -407,7 +407,7 @@ export default {
 
 		/**
 		 * @param {string} status The conversation status.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		conversationStatusLabel(status) {
 			const labels = {
@@ -426,7 +426,7 @@ export default {
 
 		/**
 		 * @param {string} status The delivery status.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		deliveryStatusClass(status) {
 			if (status === 'failed' || status === 'expired') {
@@ -449,7 +449,7 @@ export default {
 
 		/**
 		 * @param {string} state The consent state.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		consentClass(state) {
 			if (state === 'opted-in') {
@@ -464,7 +464,7 @@ export default {
 		formatDate: formatLocalTimestamp,
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async resolveContactClient() {
 			try {
@@ -483,7 +483,7 @@ export default {
 		/**
 		 * Fetch the client's contacts. A refetch keeps the selected contact when it is still linked.
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async fetchLinkedContacts() {
@@ -509,7 +509,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
 		 */
 		async fetchMessages() {
@@ -537,7 +537,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async fetchConversations() {
 			if (!this.effectiveContactId) {
@@ -556,7 +556,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async fetchPreflight() {
 			if (!this.effectiveContactId) {
@@ -596,7 +596,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		openComposer() {
 			if (!this.effectiveContactId) {
@@ -737,7 +737,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		onSent() {
 			this.showComposer = false

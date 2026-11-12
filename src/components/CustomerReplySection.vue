@@ -353,7 +353,7 @@ export default {
 		 * @param {object} current The ticket as read just now.
 		 * @param {string} answer The answer being saved.
 		 * @return {Array<object>} `{message, createdAt}` per answer, oldest first.
-		 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+		 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 		 */
 		answersAfter(current, answer) {
 			const answers = Array.isArray(current.portalAnswers)

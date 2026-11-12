@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-messaging-via-or-leaf/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Throwable;
  * `LoggerInterface $logger` property (the SMS clients and WhatsAppProviderClient
  * already do).
  *
- * @spec openspec/changes/pipelinq-messaging-via-or-leaf/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
  */
 trait MessageDispatchTrait {
 
@@ -72,7 +72,7 @@ trait MessageDispatchTrait {
 	 * @throws TransientSmsProviderException On a transient degrade (failover-eligible).
 	 * @throws PermanentSmsProviderException On a permanent degrade / missing leaf (no failover).
 	 *
-	 * @spec openspec/changes/pipelinq-messaging-via-or-leaf/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
 	 */
 	private function dispatchViaLeaf(string $source, array $body, string $path, array $headers = []): array {
 		if ($source === '') {
@@ -118,7 +118,7 @@ trait MessageDispatchTrait {
 	 *
 	 * @throws PermanentSmsProviderException When the leaf class / service is unavailable.
 	 *
-	 * @spec openspec/changes/pipelinq-messaging-via-or-leaf/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
 	 */
 	private function resolveDispatchProvider(): object {
 		if (class_exists(self::$dispatchLeafClass) === false) {
@@ -153,7 +153,7 @@ trait MessageDispatchTrait {
 	 * @throws TransientSmsProviderException On a transient cause.
 	 * @throws PermanentSmsProviderException On a permanent cause.
 	 *
-	 * @spec openspec/changes/pipelinq-messaging-via-or-leaf/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
 	 */
 	private function throwForCause(string $cause): never {
 		$this->logger->warning(

@@ -11,7 +11,7 @@
   page paints is the failure pipelinq#1781 removed from the blast performance
   page, and the derivations run over the same rows anyway.
 
-  @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+  @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 -->
 <template>
 	<div class="keyword-intel" :class="{ 'keyword-intel--embedded': embedded }">
@@ -402,7 +402,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The tooltip on every "Add as target" button.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		addTargetHint() {
 			return this.t('pipelinq', 'Save this search as a keyword to work on')
@@ -414,7 +414,7 @@ export default {
 		 * heads; the confirm column carries no head controls.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		strikingColumns() {
 			return [
@@ -431,7 +431,7 @@ export default {
 		 * The "nothing of ours answers this" columns, as `strikingColumns`.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		gapColumns() {
 			return [
@@ -446,7 +446,7 @@ export default {
 		 * The selectable windows.
 		 *
 		 * @return {Array<object>} days and label per option.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		windowOptions() {
 			return [
@@ -459,7 +459,7 @@ export default {
 		 * Whether there is anything at all to show.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		isEmpty() {
 			return !this.buckets.some((bucket) => bucket.queries > 0)
@@ -470,7 +470,7 @@ export default {
 		 * to derive from, and the settings are where that is fixed.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		emptyDescription() {
 			return this.t(
@@ -509,7 +509,7 @@ export default {
 		 * @param {string} key The row field.
 		 * @param {string} label The head label.
 		 * @return {object} The column.
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		numberColumn(key, label) {
 			return { key, label, type: 'number', sortable: true, class: 'keyword-intel__num', cellClass: 'keyword-intel__num' }
@@ -519,7 +519,7 @@ export default {
 		 * GET /api/marketing/keyword-proposals for the chosen window. One
 		 * request serves every section on this page.
 		 *
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		async fetchProposals() {
 			this.loading = true
@@ -559,7 +559,7 @@ export default {
 		 *
 		 * @param {object} proposal The proposal row.
 		 * @param {string} kind Which derivation proposed it.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		openConfirm(proposal, kind) {
 			this.confirming = { proposal, kind }
@@ -570,7 +570,7 @@ export default {
 		 * proposals do not change because a target was created.
 		 *
 		 * @param {string} term The confirmed term.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		onConfirmed(term) {
 			this.confirmedTerms = [
@@ -583,7 +583,7 @@ export default {
 		/**
 		 * @param {Date} date A date.
 		 * @return {string} YYYY-MM-DD in UTC.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		isoDay(date) {
 			return date.toISOString().slice(0, 10)
@@ -596,7 +596,7 @@ export default {
 		 * @param {object} choice What the marketer chose.
 		 * @param {string} kind The proposal kind.
 		 * @return {object} The request body.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		payloadFor(proposal, choice, kind) {
 			return confirmPayload(proposal, choice, kind)

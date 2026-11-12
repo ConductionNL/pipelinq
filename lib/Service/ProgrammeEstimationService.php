@@ -36,7 +36,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-an-estimation-scale-shall-be-administered-with-one-active-set-per-scope-req-prj-004
+ * @spec openspec/specs/project-portfolio/spec.md#requirement-an-estimation-scale-shall-be-administered-with-one-active-set-per-scope-req-prj-004
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Scales, per-role estimates and cycle snapshots.
  *
- * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-work-item-shall-be-estimable-per-role-with-a-derived-total-req-prj-005
+ * @spec openspec/specs/project-portfolio/spec.md#requirement-a-work-item-shall-be-estimable-per-role-with-a-derived-total-req-prj-005
  */
 class ProgrammeEstimationService {
 	/**
@@ -76,7 +76,7 @@ class ProgrammeEstimationService {
 	 *
 	 * @return array{allowed: bool, reason: string} The answer.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-an-estimation-scale-shall-be-administered-with-one-active-set-per-scope-req-prj-004
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-an-estimation-scale-shall-be-administered-with-one-active-set-per-scope-req-prj-004
 	 */
 	public function mayActivate(array $scale, array $existingScales): array {
 		$scope = trim((string)($scale['scope'] ?? ''));
@@ -157,7 +157,7 @@ class ProgrammeEstimationService {
 	 * @return array{perRole: array<string, float>, total: float, unresolved: array<int, string>}
 	 *   The figures.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-work-item-shall-be-estimable-per-role-with-a-derived-total-req-prj-005
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-work-item-shall-be-estimable-per-role-with-a-derived-total-req-prj-005
 	 */
 	public function totalFor(array $estimates, array $scales): array {
 		$perRole = [];
@@ -222,7 +222,7 @@ class ProgrammeEstimationService {
 	 *
 	 * @return array<string, mixed> The snapshot.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
 	 */
 	public function snapshotFor(array $cycle, int $done, int $total, ?DateTimeImmutable $now = null): array {
 		$now = ($now ?? new DateTimeImmutable());
@@ -244,7 +244,7 @@ class ProgrammeEstimationService {
 	 *
 	 * @return array<string, mixed> `status` plus either `cycle` or `error`.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
 	 */
 	public function closeCycle(array $cycle, array $tasks): array {
 		$snapshot = $this->snapshotFor(cycle: $cycle, done: $this->doneCount(tasks: $tasks), total: count($tasks));
@@ -277,7 +277,7 @@ class ProgrammeEstimationService {
 	 * @return array{chart: array<string, mixed>, live: array<string, int>, source: string}
 	 *   The figures.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
 	 */
 	public function chartFor(array $cycle, array $tasks): array {
 		$live = ['done' => $this->doneCount(tasks: $tasks), 'total' => count($tasks)];
@@ -328,7 +328,7 @@ class ProgrammeEstimationService {
 	 *
 	 * @return array<string, mixed> `status`, the tasks moved and a per-item trail.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-cycle-shall-snapshot-its-progress-when-it-closes-req-prj-006
 	 */
 	public function carryOver(string $targetCycleId, array $tasks): array {
 		$targetCycleId = trim($targetCycleId);

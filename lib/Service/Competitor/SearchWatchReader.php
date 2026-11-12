@@ -34,7 +34,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * A scheduled web search through hermiq.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (WatchOutcome). A value
@@ -81,7 +81,7 @@ class SearchWatchReader {
 	 * @param ContainerInterface $container DI container for the lazy hermiq resolve.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -97,7 +97,7 @@ class SearchWatchReader {
 	 *
 	 * @return WatchOutcome The results, or the reason there are none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
 	 */
 	public function read(string $query, ?string $actingUserId = null): WatchOutcome {
 		$trimmed = trim($query);

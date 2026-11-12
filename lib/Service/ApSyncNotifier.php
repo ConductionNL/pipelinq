@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\IGroupManager;
  * the group manager and the notification service (keeps listener coupling
  * within the project's PHPMD threshold).
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
 class ApSyncNotifier {
 	/**
@@ -57,7 +57,7 @@ class ApSyncNotifier {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
 	 */
 	public function notifyFailure(string $expenseTitle, string $uuid): void {
 		$adminGroup = $this->groupManager->get('admin');

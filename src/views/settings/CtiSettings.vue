@@ -5,7 +5,7 @@
   - CtiSettings is the admin page used to configure the CTI screen-pop /
   - click-to-dial adapter. Reads and writes /api/cti/config.
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.5
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.5
   -->
 <template>
 	<NcSettingsSection

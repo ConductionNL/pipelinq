@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
 
 declare(strict_types=1);
@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * The approver and approval time a Shillinq hand-off carries.
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
 final class ShillinqApproval {
 	/**

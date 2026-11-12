@@ -273,7 +273,7 @@ class MailTransportService {
 	 *
 	 * @return RenderedMail
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
 	 */
 	private function buildRenderedMail(array $template, array $delivery): RenderedMail {
@@ -359,7 +359,7 @@ class MailTransportService {
 	 *
 	 * @return string The body with the marker expanded.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	private function expandArticles(array $template, string $format): string {
 		$key = 'bodyText';
@@ -386,7 +386,7 @@ class MailTransportService {
 	 *
 	 * @return array<int, array<string, mixed>> The resolved articles.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	private function resolveTemplateArticles(array $template): array {
 		$ids = ($template['articleIds'] ?? []);
@@ -451,7 +451,7 @@ class MailTransportService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#3.2
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#3.2
 	 */
 	private function firstPartyTrackingEnabled(): bool {
 		return $this->appConfig->getValueString(
@@ -470,7 +470,7 @@ class MailTransportService {
 	 *
 	 * @return string The rewritten HTML, or the original on failure.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#3.2
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#3.2
 	 */
 	private function injectTrackingLinks(string $html, string $blastDeliveryId): string {
 		if ($html === '' || $blastDeliveryId === '') {

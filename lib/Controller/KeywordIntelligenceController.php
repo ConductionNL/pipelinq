@@ -30,7 +30,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use UnexpectedValueException;
 /**
  * Keyword proposals, and the confirmation that turns one into a target.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 class KeywordIntelligenceController extends Controller {
 	use ReadsTypedRequestParameters;
@@ -99,7 +99,7 @@ class KeywordIntelligenceController extends Controller {
 	 * @param KeywordTargetService $targets The single write path.
 	 * @param CrmPrivilegeCheck $privilege The session user and their CRM privilege.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function __construct(
 		IRequest $request,
@@ -118,7 +118,7 @@ class KeywordIntelligenceController extends Controller {
 	 *
 	 * @return Response `{from, to, buckets[], strikingDistance[], cannibalisation[], gaps[], crawl, confirmedTerms[]}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
 	 */
 	#[NoAdminRequired]
 	public function proposals(): Response {
@@ -142,7 +142,7 @@ class KeywordIntelligenceController extends Controller {
 	 *
 	 * @return JSONResponse `{targets[]}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	#[NoAdminRequired]
 	public function targets(): JSONResponse {
@@ -163,7 +163,7 @@ class KeywordIntelligenceController extends Controller {
 	 *
 	 * @return Response The stored target, or the refusal.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	#[NoAdminRequired]
 	public function confirm(): Response {

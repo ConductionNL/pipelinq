@@ -29,7 +29,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+ * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use OCP\IUserSession;
 /**
  * REST controller for social posts, their publications and the ranking.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+ * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) One route per verb the
  *  composer and the approval gate need; each is three lines over the service.
@@ -87,7 +87,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{data[]}`.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	#[NoAdminRequired]
 	public function index(string $status = ''): JSONResponse {
@@ -101,7 +101,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 404.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -120,7 +120,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse 201 with the post, or 400.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -141,7 +141,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 400.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
@@ -157,7 +157,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 400 naming the network that does not fit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	#[NoAdminRequired]
 	public function submit(string $id): JSONResponse {
@@ -173,7 +173,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 400.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	#[NoAdminRequired]
 	public function approve(string $id): JSONResponse {
@@ -192,7 +192,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 400.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	#[NoAdminRequired]
 	public function reject(string $id): JSONResponse {
@@ -210,7 +210,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{data[]}`.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	#[NoAdminRequired]
 	public function publications(string $id): JSONResponse {
@@ -226,7 +226,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{publication}`, or 400 with the reason a retry cannot fix.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	#[NoAdminRequired]
 	public function retry(string $id): JSONResponse {
@@ -245,7 +245,7 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{data[]}`.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 	 */
 	#[NoAdminRequired]
 	public function performance(string $network = '', int $limit = 50): JSONResponse {

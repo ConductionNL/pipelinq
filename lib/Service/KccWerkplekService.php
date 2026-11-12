@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -46,7 +46,7 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregator fans out over several
  *   independent OR read facades; each branch is guard-heavy but flat.
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  */
 class KccWerkplekService {
 	/**
@@ -76,7 +76,7 @@ class KccWerkplekService {
 	 *                                     `ticket` + `ticketType=request` instead
 	 *                                     of the retired `request` schema.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -93,7 +93,7 @@ class KccWerkplekService {
 	 *
 	 * @throws RuntimeException If the OpenRegister app is not installed.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		// Availability established before the reach (ADR-083). The container
@@ -124,7 +124,7 @@ class KccWerkplekService {
 	 *
 	 * @return string Resolved schema slug, or empty string when missing.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function getSchema(string $schemaKey): string {
 		return $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
@@ -142,7 +142,7 @@ class KccWerkplekService {
 	 *
 	 * @return string Register slug (typically `pipelinq`); '' when unconfigured.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function getRegister(): string {
 		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -162,7 +162,7 @@ class KccWerkplekService {
 	 *
 	 * @return array<string, mixed> Plain associative array.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function toArray(mixed $object): array {
 		if (is_array($object) === true) {
@@ -191,7 +191,7 @@ class KccWerkplekService {
 	 *
 	 * @return array<int, array<string, mixed>> Plain object arrays.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function findAllSafe(string $schemaKey): array {
 		$register = $this->getRegister();
@@ -238,7 +238,7 @@ class KccWerkplekService {
 	 *
 	 * @return array<int, array<string, mixed>> Plain object arrays.
 	 *
-	 * @spec openspec/changes/pipelinq-query-pushdown-batch-3/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-3/tasks.md#task-2.2
 	 */
 	private function findFilteredSafe(string $schemaKey, array $filters): array {
 		$register = $this->getRegister();
@@ -286,7 +286,7 @@ class KccWerkplekService {
 	 *
 	 * @return array<int, array<string, mixed>> Plain object arrays.
 	 *
-	 * @spec openspec/changes/pipelinq-query-pushdown-batch-3/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-3/tasks.md#task-2.2
 	 */
 	private function findTicketsSafe(string $ticketType, array $filters): array {
 		if ($this->ticketService->isConfigured() === false) {
@@ -318,7 +318,7 @@ class KccWerkplekService {
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses assembling one payload; extraction adds no clarity.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	public function getWorkspaceState(string $userId): array {
 		// Push the assigned-and-open inbox subset down into OpenRegister instead
@@ -383,7 +383,7 @@ class KccWerkplekService {
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Idempotent find-merge-save with defensive guards; extraction adds no clarity.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	public function setAvailability(string $userId, bool $available): array {
 		$register = $this->getRegister();

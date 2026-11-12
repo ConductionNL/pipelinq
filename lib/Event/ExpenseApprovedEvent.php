@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\EventDispatcher\Event;
  * transition; carries the data needed by ShillinqApService to build the AP
  * CloudEvents payload without re-fetching the expense from OpenRegister.
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
  */
 class ExpenseApprovedEvent extends Event {
 	/**

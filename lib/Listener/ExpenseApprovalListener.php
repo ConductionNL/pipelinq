@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
  */
 
 declare(strict_types=1);
@@ -79,7 +79,7 @@ use Throwable;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges the schema map,
  *  Shillinq AP service, admin notifier, event dispatcher, OR ObjectService,
@@ -129,7 +129,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
 	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
@@ -181,7 +181,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
 	 */
 	public function runDeferredWork(array $entry): void {
 		$uuid = (string)($entry['uuid'] ?? '');

@@ -10,9 +10,9 @@
   - hosting it puts both in its header and calls `openAddDialog()`. Read-only
   - when the transaction is `settled` or `refunded`.
   -
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.2
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.5
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.6
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.2
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.5
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.6
   -->
 <template>
 	<div class="tender-panel">
@@ -155,7 +155,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.2
 		 */
 		canEdit() {
 			return (
@@ -212,7 +212,7 @@ export default {
 		 *
 		 * @param {object} tender The tender.
 		 * @return {string} The name, or a placeholder while it loads.
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+		 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
 		 */
 		tenderTypeLabel(tender) {
 			const id = tender?.tenderType || ''
@@ -254,7 +254,7 @@ export default {
 		 * request per type. A failed lookup reads Unknown.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+		 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
 		 */
 		async resolveTypeNames() {
 			const known = new Set(this.tenderTypes.map((type) => this.idOf(type)))
@@ -356,7 +356,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.2
 		 */
 		removeTender(tender) {
 			if (!this.tenderId(tender)) {
@@ -370,7 +370,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.2
 		 */
 		async performRemoveTender() {
 			const tender = this.pendingRemoveTender

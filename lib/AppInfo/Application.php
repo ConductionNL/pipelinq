@@ -509,7 +509,7 @@ class Application extends App implements IBootstrap {
 	 *         disabled-OpenRegister-safe pattern); neither is a compile-time
 	 *         dependency, so static analysis cannot resolve them.
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.1
 	 */
 	private function registerAppHost(IRegistrationContext $context): void {
 		$appId = self::APP_ID;
@@ -558,7 +558,7 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
 	 */
 	private function registerExportServices(IRegistrationContext $context): void {
 		$context->registerService(

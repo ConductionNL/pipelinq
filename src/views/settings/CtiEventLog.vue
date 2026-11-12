@@ -5,7 +5,7 @@
   - CtiEventLog is the admin event-log inspector for the CTI adapter.
   - Reads /api/cti/event-log (30 days of webhook receipts).
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.6
   -->
 <template>
 	<NcSettingsSection
@@ -175,7 +175,7 @@ export default {
 		/**
 		 * @param {string} platform A stored platform value.
 		 * @return {string} Its label, or the value as stored when unknown.
-		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.6
 		 */
 		platformLabel(platform) {
 			return enumLabel(CTI_PLATFORM_LABELS, platform, translate)
@@ -184,7 +184,7 @@ export default {
 		/**
 		 * @param {string} eventType A stored event type.
 		 * @return {string} Its label, or the value as stored when unknown.
-		 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.6
 		 */
 		eventTypeLabel(eventType) {
 			return enumLabel(CTI_EVENT_TYPE_LABELS, eventType, translate)

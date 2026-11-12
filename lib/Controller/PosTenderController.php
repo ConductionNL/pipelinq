@@ -34,9 +34,9 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-003
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-002
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-003
  */
 
 declare(strict_types=1);
@@ -73,7 +73,7 @@ use Throwable;
  *  a thin controller needs (service + session + request + logger); splitting
  *  them would add indirection.
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
  */
 class PosTenderController extends Controller {
 	/**
@@ -104,7 +104,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @return JSONResponse The tender types sorted by sortOrder.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	#[NoAdminRequired]
 	public function indexTypes(): JSONResponse {
@@ -134,7 +134,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @return JSONResponse The tender type, or 404 when missing.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	#[NoAdminRequired]
 	public function showType(string $id): JSONResponse {
@@ -161,7 +161,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @return JSONResponse The created tender type with HTTP 201.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function createType(): JSONResponse {
@@ -193,7 +193,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @return JSONResponse The updated tender type.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function updateType(string $id): JSONResponse {
@@ -226,7 +226,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @return JSONResponse HTTP 204 on success.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function destroyType(string $id): JSONResponse {
@@ -263,8 +263,8 @@ class PosTenderController extends Controller {
 	 *
 	 * @return JSONResponse The tenders + the tender-sum validation.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-002
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-004
 	 */
 	#[NoAdminRequired]
 	public function indexTenders(string $transactionId): JSONResponse {
@@ -303,7 +303,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @return JSONResponse The created tender + the updated validation summary.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-002
 	 */
 	#[NoAdminRequired]
 	public function addTender(string $transactionId): JSONResponse {
@@ -344,7 +344,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @return JSONResponse HTTP 204 on success.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-003
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-003
 	 */
 	#[NoAdminRequired]
 	public function removeTender(string $transactionId, string $tenderId): JSONResponse {
@@ -384,7 +384,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @return JSONResponse The validation summary.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-004
 	 */
 	#[NoAdminRequired]
 	public function summary(string $transactionId): JSONResponse {

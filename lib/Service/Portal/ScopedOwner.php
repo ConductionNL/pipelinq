@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service\Portal;
 /**
  * An object's owning contact id and client id, either of which may be unknown.
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 final class ScopedOwner {
 	/**
@@ -52,7 +52,7 @@ final class ScopedOwner {
 	 *
 	 * @return bool True when the object belongs to the bucket.
 	 *
-	 * @spec openspec/changes/customer-portal/specs.md#REQ-003
+	 * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
 	 */
 	public function isIn(array $contactIds, array $clientIds): bool {
 		return ($this->contactId !== null && in_array($this->contactId, $contactIds, true) === true)

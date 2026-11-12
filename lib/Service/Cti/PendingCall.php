@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service\Cti;
  * The direction, the numbers and the agent of a call that gets a pending
  * contactmoment.
  *
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 final class PendingCall {
 	/**

@@ -19,7 +19,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Psr\Log\LoggerInterface;
 /**
  * REST controller for the KCC Werkplek workspace state.
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  */
 class KccWerkplekController extends Controller {
 	/**
@@ -55,7 +55,7 @@ class KccWerkplekController extends Controller {
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N|null $l10n Words the header line in the user's language.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	public function __construct(
 		IRequest $request,
@@ -78,7 +78,7 @@ class KccWerkplekController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function stateAction(): JSONResponse {
@@ -114,7 +114,7 @@ class KccWerkplekController extends Controller {
 	 *
 	 * @return string The line, or '' without a translator.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function availabilityLine(bool $available): string {
 		if ($this->l10n === null) {
@@ -140,7 +140,7 @@ class KccWerkplekController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function setAvailabilityAction(): JSONResponse {

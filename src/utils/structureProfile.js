@@ -46,7 +46,7 @@
  * Nothing here deletes anything. The pages, the routes and the fragments are
  * the same in both profiles, which is what keeps every deep link working.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md
+ * @spec openspec/specs/navigation-ia/spec.md
  */
 
 /** The profile a fresh instance gets. */
@@ -76,7 +76,7 @@ const LAYOUT_KEYS = [
  * @param {unknown} raw The stored setting, as initial state hands it over.
  * @return {string} `simple` or `full`.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 export function resolveStructureProfile(raw) {
 	return raw === STRUCTURE_FULL ? STRUCTURE_FULL : STRUCTURE_SIMPLE
@@ -90,7 +90,7 @@ export function resolveStructureProfile(raw) {
  *   The order is fixed: replace keys, patch items by name, append, then order.
  * @return {object} A new page object.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-102
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-102
  */
 export function applyPageOverlay(pageIn, overlay) {
 	const page = titledPage(pageIn, overlay)
@@ -230,7 +230,7 @@ function overlaySlots(page, overlay) {
  * @param {unknown} item A list item from a page config.
  * @return {string|undefined} Its name, or undefined when it has none.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-102
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-102
  */
 export function overlayItemName(item) {
 	if (typeof item === 'string') {
@@ -257,7 +257,7 @@ const THEMING_PLACEHOLDER = '@theming.'
  * @param {object|null} theming The theming capabilities (`name`, `logo`, ...).
  * @return {object} A new nav block with every placeholder resolved.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-107
  */
 export function resolveNavPlaceholders(nav, theming) {
 	const resolveOne = (placeholder) => {
@@ -308,7 +308,7 @@ export function resolveNavPlaceholders(nav, theming) {
  * @return {object} Nextcloud's theming block plus `emblem`, '' when the set
  *   ships none.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-107
  */
 export function navTheming(capabilities) {
 	const theming = capabilities?.theming ?? {}
@@ -338,8 +338,8 @@ export function navTheming(capabilities) {
  *   capabilities, for the placeholders a profile's `nav` block may carry.
  * @return {object} The built manifest.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-102
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-102
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-107
  */
 export function buildProfiledManifest(
 	buildManifest,
@@ -421,7 +421,7 @@ export function buildProfiledManifest(
  * @param {Array<object>|undefined} tours The profile file's `tours`.
  * @return {object} The manifest with the profile's tours added.
  *
- * @spec openspec/changes/simple-tour-and-readable-labels/specs/navigation-ia/spec.md#requirement-a-tour-only-starts-where-the-menu-can-carry-it-req-nia-106
+ * @spec openspec/specs/navigation-ia/spec.md#requirement-a-tour-only-starts-where-the-menu-can-carry-it-req-nia-106
  */
 export function applyProfileTours(built, tours) {
 	if (!Array.isArray(tours) || tours.length === 0) {
@@ -451,7 +451,7 @@ export function applyProfileTours(built, tours) {
  * @param {unknown} value The profile's default for it.
  * @param {object} config The page's own config.
  * @return {unknown} The value the page gets.
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 function defaultFor(key, value, config) {
 	if (key === 'headerButtons' && config.showAdd === false && Array.isArray(value)) {
@@ -474,7 +474,7 @@ function defaultFor(key, value, config) {
  * @param {object} built The built manifest.
  * @param {object|undefined} defaults The profile file's `pageDefaults`.
  * @return {object} The manifest with the defaults filled in.
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 export function applyPageDefaults(built, defaults) {
 	if (

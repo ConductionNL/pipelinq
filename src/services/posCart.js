@@ -9,7 +9,7 @@
  * sale's VAT per rate and totals. Nothing here works out a price: these
  * helpers only shape what is sent and copy back what the server returns.
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-3
  */
 
 import axios from '@nextcloud/axios'

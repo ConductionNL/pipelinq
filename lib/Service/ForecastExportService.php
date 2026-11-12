@@ -321,7 +321,7 @@ class ForecastExportService {
 	 *
 	 * @return int The matching row count, or 0 when OR is unavailable.
 	 *
-	 * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-8
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-1/tasks.md#task-8
 	 */
 	private function countObjects(string $schemaKey, array $filters): int {
 		$allFilters = $this->scopedFilters(schemaKey: $schemaKey, filters: $filters);

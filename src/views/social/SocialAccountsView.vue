@@ -20,7 +20,7 @@
   - string would be dropped and the account would be unidentifiable on the way
   - back.
   -
-  - @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+  - @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
   -->
 <template>
 	<div class="social-accounts" data-testid="social-accounts">
@@ -144,7 +144,7 @@ export default {
 		 *
 		 * @param {object} account The account.
 		 * @return {string} Its id.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		accountId(account) {
 			return account?.id || account?.uuid || ''
@@ -155,7 +155,7 @@ export default {
 		 *
 		 * @param {string} status The stored status.
 		 * @return {object} The chip.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 		 */
 		chip(status) {
 			return accountStatusChip(status)
@@ -166,7 +166,7 @@ export default {
 		 *
 		 * @param {string} network The network.
 		 * @return {string} Its label.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 		 */
 		networkLabel(network) {
 			return networkLimits(network).label
@@ -178,7 +178,7 @@ export default {
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
@@ -191,7 +191,7 @@ export default {
 		 * @param {object} account The account.
 		 * @return {boolean} True when the handle differs from the shown name.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		showHandle(account) {
 			return Boolean(
@@ -207,7 +207,7 @@ export default {
 		 *
 		 * @param {object} account The account.
 		 * @return {string} The reason, or an empty string.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 		 */
 		reasonFor(account) {
 			if (account?.statusReason) {
@@ -223,7 +223,7 @@ export default {
 		 *
 		 * @param {object} account The account.
 		 * @return {boolean} True when connecting is possible.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 		 */
 		canConnect(account) {
 			return (
@@ -235,7 +235,7 @@ export default {
 		/**
 		 * @param {object} account The account.
 		 * @return {string} Connect, or Reconnect for a grant that has ended.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		connectLabel(account) {
 			return account?.credentialRef
@@ -248,7 +248,7 @@ export default {
 		 * back from a consent screen.
 		 *
 		 * @return {Promise<void>} Resolves once loaded.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		async load() {
 			this.loading = true
@@ -271,7 +271,7 @@ export default {
 		 * here with `?connected=ok`.
 		 *
 		 * @return {Promise<void>} Resolves once recorded.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		async finishConnection() {
 			const { id, outcome } = this.connectionReturn()
@@ -326,7 +326,7 @@ export default {
 		 *
 		 * @param {object} account The account.
 		 * @return {Promise<void>} Resolves once the browser is sent onward.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		async connect(account) {
 			const id = this.accountId(account)
@@ -358,7 +358,7 @@ export default {
 		 *
 		 * @param {object} account The account.
 		 * @return {Promise<void>} Resolves once revoked.
-		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+		 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		async revoke(account) {
 			const id = this.accountId(account)

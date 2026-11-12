@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
@@ -55,7 +55,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Thin controller wiring the
  *  CtiService surface to HTTP — coupling is unavoidable on a CRUD facade.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
  */
 class CtiController extends Controller {
 	/**
@@ -95,7 +95,7 @@ class CtiController extends Controller {
 	 * Telephony platform events — one per call state change, so a busy contact
 	 * centre generates these steadily and the rate-limit ceiling is generous.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -230,7 +230,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse The screen-pop result.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[NoAdminRequired]
 	public function screenPop(): JSONResponse {
@@ -256,7 +256,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse The originate result.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[NoAdminRequired]
 	public function clickToDial(): JSONResponse {
@@ -299,7 +299,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Outcome with optional task id.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[NoAdminRequired]
 	public function disposition(string $id): JSONResponse {
@@ -366,7 +366,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Acknowledgement.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[NoAdminRequired]
 	public function attachRecording(string $id): JSONResponse {
@@ -409,7 +409,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Current config (credentials never returned).
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	public function getConfig(): JSONResponse {
 		$uid = $this->privilege->actingUserId();
@@ -439,7 +439,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse The saved configuration.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function updateConfig(): JSONResponse {
@@ -503,7 +503,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Test outcome.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function testConnection(): JSONResponse {
@@ -525,7 +525,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Event log entries (max 30-day retention).
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	public function eventLog(): JSONResponse {
 		$uid = $this->privilege->actingUserId();

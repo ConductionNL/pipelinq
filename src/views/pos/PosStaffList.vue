@@ -4,7 +4,7 @@
   -
   - POS staff admin list (pos-staff-pin-permissions REQ-PSP-002).
   -
-  - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+  - @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.3
   -->
 <template>
 	<div class="pos-staff-list">
@@ -81,7 +81,7 @@ export default {
 		 * The table's columns, every one sortable and filterable from its head.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.3
 		 */
 		columns() {
 			return [
@@ -96,7 +96,7 @@ export default {
 		 * The fields the heads sort and filter on.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.3
 		 */
 		tableSchema() {
 			return {
@@ -114,7 +114,7 @@ export default {
 		 * moment, so the head sorts by time; the cell reads it as a moment.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.3
 		 */
 		tableRows() {
 			return this.staff.map((member) => ({
@@ -160,7 +160,7 @@ export default {
 		 *
 		 * @param {string} iso The stored moment, or empty.
 		 * @return {string} Day, month and time, or a dash.
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.3
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.3
 		 */
 		loginMoment(iso) {
 			if (!iso) {
@@ -187,7 +187,7 @@ export default {
 		 * PosStaffManager opens the form in a dialog.
 		 *
 		 * @param {object} row The staff row.
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		edit(row) {
 			this.$emit('edit', row.id)
@@ -196,7 +196,7 @@ export default {
 		/**
 		 * Ask the host to open an empty form.
 		 *
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		createNew() {
 			this.$emit('create')

@@ -23,7 +23,7 @@
  * This module only rewrites the profile file and the built manifest. It never
  * looks at who the reader is: every page keeps its own permission checks.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md
+ * @spec openspec/specs/navigation-ia/spec.md
  */
 
 /** The app setting, and the initial-state key the page controller provides. */
@@ -39,7 +39,7 @@ export const MODULES_SETTING = 'menu_modules'
  * @param {object} profileFile The profile file that declares the modules.
  * @return {Array<string>} The known keys, in the order the file declares them.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-104
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-104
  */
 export function resolveMenuModules(raw, profileFile) {
 	const known = Object.keys(profileFile?.modules || {})
@@ -67,7 +67,7 @@ export function resolveMenuModules(raw, profileFile) {
  * @param {Array<string>} enabled The module keys that are on.
  * @return {object} A new profile file. The one passed in is not changed.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-104
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-104
  */
 export function applyMenuModules(profileFile, enabled) {
 	const modules = profileFile?.modules
@@ -150,7 +150,7 @@ function pushCaption(menu, caption) {
  * @return {{ manifest: object, homePage: string|null }} The manifest, and the
  *   page id `/` must redirect to (null when nothing moved).
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-105
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-105
  */
 export function applyHomePage(manifest, home) {
 	const pages = manifest?.pages || []
@@ -192,7 +192,7 @@ export function applyHomePage(manifest, home) {
  * @param {object} manifest The built manifest.
  * @return {object} The manifest, with the tours it cannot carry taken out.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-106
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-106
  */
 export function holdUnreachableTours(manifest) {
 	const tours = manifest?.walkthrough?.tours

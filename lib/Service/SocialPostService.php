@@ -44,7 +44,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 
 declare(strict_types=1);
@@ -64,7 +64,7 @@ use OCP\IAppConfig;
 /**
  * The social post lifecycle, its variants and its publishing.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The composer surface, the
  *  approval gate and the publishing loop are one cohesive object lifecycle;
@@ -211,7 +211,7 @@ class SocialPostService {
 	 *
 	 * @return string The schema slug.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function schema(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA);
@@ -224,7 +224,7 @@ class SocialPostService {
 	 *
 	 * @return array{data: array<int, array<string, mixed>>} The posts.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function listPosts(string $status = ''): array {
 		$filters = [];
@@ -242,7 +242,7 @@ class SocialPostService {
 	 *
 	 * @return array<string, mixed>|null The post, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function getPost(string $postId): ?array {
 		return $this->store->find(schemaSlug: $this->schema(), id: $postId);
@@ -257,7 +257,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function createPost(array $payload, string $uid, string $agent = ''): array {
 		if (trim((string)($payload['body'] ?? '')) === '') {
@@ -292,7 +292,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function updatePost(string $postId, array $payload, string $uid): array {
 		$post = $this->getPost(postId: $postId);
@@ -329,7 +329,7 @@ class SocialPostService {
 	 *
 	 * @return array{body: string, link: string, media: array<int, array<string, mixed>>} The resolved values.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function resolveVariant(array $post, string $network): array {
 		$media = ($post['media'] ?? []);
@@ -362,7 +362,7 @@ class SocialPostService {
 	 *
 	 * @return array<int, string> One readable line per network that does not fit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function overlongVariants(array $post): array {
 		$problems = [];
@@ -396,7 +396,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function submitForApproval(string $postId): array {
 		$post = $this->getPost(postId: $postId);
@@ -435,7 +435,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function approve(string $postId, string $uid, string $note = ''): array {
 		return $this->decide(
@@ -453,7 +453,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function reject(string $postId, string $uid, string $note = ''): array {
 		return $this->decide(
@@ -469,7 +469,7 @@ class SocialPostService {
 	 *
 	 * @return int How many posts were attempted.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function publishDuePosts(?string $now = null): int {
 		$moment = ($now ?? gmdate('Y-m-d\TH:i:s\Z'));
@@ -496,7 +496,7 @@ class SocialPostService {
 	 * @return array{error?: string, post?: array<string, mixed>, publications?: array<int, array<string, mixed>>}
 	 *         The settled post and its publications, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function publishPost(string $postId): array {
 		$post = $this->getPost(postId: $postId);
@@ -534,7 +534,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, publication?: array<string, mixed>} The row, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function retryPublication(string $publicationId, string $uid): array {
 		$publication = $this->publications->find(publicationId: $publicationId);
@@ -576,7 +576,7 @@ class SocialPostService {
 	 *
 	 * @return array<string, mixed>|null The publication row, or null when it could not be written.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	private function publishToAccount(array $post, string $accountId): ?array {
 		$account = new PublishingAccount(id: $accountId, row: $this->accounts->getAccount(accountId: $accountId));
@@ -678,7 +678,7 @@ class SocialPostService {
 	 *
 	 * @return SocialPublishRequest The request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
+	 * @spec openspec/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
 	 */
 	private function requestFor(array $post, array $account): SocialPublishRequest {
 		$network = (string)($account['network'] ?? '');
@@ -718,7 +718,7 @@ class SocialPostService {
 	 *
 	 * @return string The link to publish.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
+	 * @spec openspec/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
 	 */
 	private function decoratedLink(array $post, string $network, string $link): string {
 		$campaignId = trim((string)($post['campaignId'] ?? ''));
@@ -759,7 +759,7 @@ class SocialPostService {
 	 *
 	 * @return SocialPublishOutcome|null The refusal, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	private function budgetRefusal(SocialNetworkAdapter $adapter): ?SocialPublishOutcome {
 		$cost = $adapter->costPerPost();
@@ -792,7 +792,7 @@ class SocialPostService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	private function afterAttempt(string $accountId, SocialNetworkAdapter $adapter, SocialPublishOutcome $outcome): void {
 		if ($outcome->accepted === true && $outcome->cost > 0.0) {
@@ -820,7 +820,7 @@ class SocialPostService {
 	 *
 	 * @return array<string, mixed> The settled post.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	private function settle(string $postId, array $post): array {
 		$rows = $this->publications->forPost(postId: $postId);

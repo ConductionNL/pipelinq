@@ -21,7 +21,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Throwable;
 /**
  * Write and end party links, under the registry's rule.
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-kind-declared-single-shall-refuse-a-second-holder-on-one-record-req-pkr-005
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-kind-declared-single-shall-refuse-a-second-holder-on-one-record-req-pkr-005
  */
 class PartyLinkService {
 	/**
@@ -67,7 +67,7 @@ class PartyLinkService {
 	 *
 	 * @return array<string, mixed> `status` plus either `partyLink` or `error`.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function link(string $recordType, string $recordId, string $party, string $kind): array {
 		$recordType = trim($recordType);
@@ -161,7 +161,7 @@ class PartyLinkService {
 	 *
 	 * @return array<string, mixed> `status`, the rows that landed and the rows refused.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function import(string $recordType, string $recordId, array $rows): array {
 		$verdict = $this->registry->judgeBatch(

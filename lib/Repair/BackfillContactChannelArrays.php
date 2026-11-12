@@ -28,7 +28,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Throwable;
  * Repair step: backfill client/contact emails[]/phones[] from the legacy
  * scalar email/phone fields.
  *
- * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
  */
 class BackfillContactChannelArrays implements IRepairStep {
 	/**
@@ -101,7 +101,7 @@ class BackfillContactChannelArrays implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
 	 */
 	public function run(IOutput $output): void {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

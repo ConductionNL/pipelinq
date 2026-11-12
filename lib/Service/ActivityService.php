@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * Notification-channel delivery for lifecycle transitions is covered
  * declaratively by the schema annotations (see {@see NotificationService}).
  *
- * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-05-31-pipelinq-or-lifecycle-notification/tasks.md#task-3.2
  */
 class ActivityService {
 	/**
@@ -281,7 +281,7 @@ class ActivityService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-activity-notify/tasks.md#task-1
 	 */
 	public function publishDealLost(
 		string $title,

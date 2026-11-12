@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\IAppConfig;
  * Reads the window's rows, crawls our own pages for the gap check, and runs
  * the four derivations under the configured impression floor.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
  */
 class KeywordProposals {
 	/**
@@ -67,7 +67,7 @@ class KeywordProposals {
 	 *
 	 * @return array<string, mixed> `{from, to, minImpressions, buckets[], strikingDistance[], cannibalisation[], gaps[], crawl}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
 	 */
 	public function forWindow(array $window): array {
 		$read = $this->report->rows(from: $window['from'], to: $window['to'], property: $window['property']);

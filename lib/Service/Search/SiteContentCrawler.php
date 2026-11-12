@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use OCA\Pipelinq\Service\Egress\EgressResult;
 /**
  * Crawls our own pages through the egress plane.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
  */
 class SiteContentCrawler {
 
@@ -70,7 +70,7 @@ class SiteContentCrawler {
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 * @param HtmlTextExtractor $extractor Title and headings out of a document.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -88,7 +88,7 @@ class SiteContentCrawler {
 	 *
 	 * @return array<int, string> The page URLs, in crawl order.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
 	 */
 	public function pagesToCrawl(array $rows, int $limit = self::DEFAULT_LIMIT): array {
 		$impressions = [];
@@ -114,7 +114,7 @@ class SiteContentCrawler {
 	 *
 	 * @return array{crawled: bool, reason: string, failure: string|null, pages: array<int, array{url: string, text: string}>}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
 	 */
 	public function crawl(array $rows, int $limit = self::DEFAULT_LIMIT): array {
 		if ($this->egress->isConfigured(configKey: self::SOURCE_KEY) === false) {

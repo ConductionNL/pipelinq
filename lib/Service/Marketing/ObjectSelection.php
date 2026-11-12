@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 /**
  * A schema slug and the field filters that select objects in it.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
  */
 final class ObjectSelection {
 	/**
@@ -53,7 +53,7 @@ final class ObjectSelection {
 	 *
 	 * @return array<string, mixed> The scoped filters.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function scoped(string $register): array {
 		return array_merge(['register' => $register, 'schema' => $this->schemaSlug], $this->filters);

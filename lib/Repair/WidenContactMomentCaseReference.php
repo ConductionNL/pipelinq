@@ -26,7 +26,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Repair step: widen one case reference into a one-element set.
  *
- * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
  */
 class WidenContactMomentCaseReference implements IRepairStep {
 	/**
@@ -73,7 +73,7 @@ class WidenContactMomentCaseReference implements IRepairStep {
 	 *
 	 * @return string Name.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
 	 */
 	public function getName(): string {
 		return 'Widen a contact moment\'s single case reference into a one-element set';
@@ -90,7 +90,7 @@ class WidenContactMomentCaseReference implements IRepairStep {
 	 *
 	 * @return array<string, mixed>|null The fields to write, or null.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
 	 */
 	public function widenedFields(array $data): ?array {
 		$set = ($data['caseReferences'] ?? null);
@@ -116,7 +116,7 @@ class WidenContactMomentCaseReference implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
 	 */
 	public function run(IOutput $output): void {
 		if ($this->ticketService->isConfigured() === false) {

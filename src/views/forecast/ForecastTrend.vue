@@ -223,7 +223,7 @@ export default {
 		 * share of the highest week, the ISO week and the amount in thousands.
 		 *
 		 * @return {Array<{date: string, percent: number, week: string, short: string, full: string}>}
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		bars() {
 			const totals = this.series.map((point) => Number(point.closed_won || 0) + Number(point.commit || 0))
@@ -309,7 +309,7 @@ export default {
 		 *
 		 * @param {Array<object>} snapshots The period's snapshots.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		async loadMovements(snapshots) {
 			const moves = commitMovements(snapshots)
@@ -357,7 +357,7 @@ export default {
 		 *
 		 * @param {number} value The amount.
 		 * @return {string} The amount, formatted.
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		formatMoney(value) {
 			return formatEur(Number(value || 0))

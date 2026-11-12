@@ -10,7 +10,7 @@
  *
  * The section defines `load()`.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 
@@ -42,8 +42,8 @@ export default {
 		 * context the page host provides.
 		 *
 		 * @return {string} The post id.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		effectiveId() {
 			if (this.postId) {

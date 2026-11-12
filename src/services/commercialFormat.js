@@ -17,7 +17,7 @@ import { reportingCurrency } from './reportingCurrency.js'
  * @param {string} [currency] - Currency code (defaults to the reporting currency).
  * @return {string} Formatted currency string.
  * @spec openspec/specs/commercial-dashboard/spec.md
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function formatEur(
 	value,
@@ -42,7 +42,7 @@ export function formatEur(
  * @param {string} [currency] - Currency code (defaults to the reporting currency).
  * @return {string} Compact currency string.
  * @spec openspec/specs/commercial-dashboard/spec.md
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function formatEurCompact(value, currency = reportingCurrency()) {
 	if (value === null || value === undefined || Number.isNaN(Number(value))) {

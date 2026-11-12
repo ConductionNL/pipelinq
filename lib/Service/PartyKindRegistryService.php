@@ -32,7 +32,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use Throwable;
 /**
  * The party kind vocabulary, the acceptance per record type, and the refusals.
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
  */
 class PartyKindRegistryService {
 	/**
@@ -81,7 +81,7 @@ class PartyKindRegistryService {
 	 *
 	 * @return array<string, array<string, mixed>> The vocabulary.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function vocabulary(): array {
 		$byCode = [];
@@ -107,7 +107,7 @@ class PartyKindRegistryService {
 	 *
 	 * @return array<int, array<string, mixed>> The offered kinds, in order.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-the-picker-shall-offer-only-the-declared-kinds-in-the-declared-order-req-pkr-003
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-the-picker-shall-offer-only-the-declared-kinds-in-the-declared-order-req-pkr-003
 	 */
 	public function kindsFor(string $recordType): array {
 		$vocabulary = $this->vocabulary();
@@ -193,7 +193,7 @@ class PartyKindRegistryService {
 	 * @return array{allowed: bool, reason: string} The answer, with the reason
 	 *   a refusal names.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function mayLink(string $recordType, string $recordId, string $kind, string $party = ''): array {
 		$recordType = trim($recordType);
@@ -310,7 +310,7 @@ class PartyKindRegistryService {
 	 * @return array{accepted: array<int, array<string, string>>, refused: array<int, array<string, string>>}
 	 *   The verdict per row.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function judgeBatch(string $recordType, string $recordId, array $rows): array {
 		$accepted = [];

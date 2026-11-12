@@ -29,7 +29,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
@@ -62,7 +62,7 @@ use Throwable;
  *   `patchBlastName()` / `cancelBlast()` / `listDeliveriesForBlast()` —
  *   thin repository surface consumed by the REST controllers (member 06).
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Blast lifecycle plus the thin
  *  repository surface consumed by the REST controllers live together by design;
@@ -121,7 +121,7 @@ class BlastService {
 	 * @param MailTransportService $mailTransportService Transport resolution + per-delivery dispatch.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -159,7 +159,7 @@ class BlastService {
 	 *                              `queued`, `skippedNoConsent`, `variantA`,
 	 *                              `variantB`, `variantBlastId`, `status`.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)   $isDraft selects the documented
 	 *  dry-run preview mode; it is the method's defined contract, not a toggle to split.
@@ -455,7 +455,7 @@ class BlastService {
 	 *
 	 * @return string New Blast UUID/slug or empty on failure.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
 	 */
 	public function createAbVariant(string $parentBlastId, array $variantData): string {
 		$parent = $this->loadBlast(blastId: $parentBlastId);
@@ -508,7 +508,7 @@ class BlastService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
 	 */
 	public function updateBlastTotals(string $blastId): void {
 		$blast = $this->loadBlast(blastId: $blastId);
@@ -551,7 +551,7 @@ class BlastService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
 	 */
 	public function transitionQueuedDeliveries(string $contactId, string $blastId, string $newStatus = self::STATUS_UNSUBSCRIBED_BEFORE_SEND): void {
 		$deliveries = $this->loadQueuedDeliveriesForContact(blastId: $blastId, contactId: $contactId);
@@ -586,7 +586,7 @@ class BlastService {
 	 *
 	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function listBlasts(?string $status, int $page, int $limit): array {
 		$window = ListPage::clamped(page: $page, limit: $limit);
@@ -617,7 +617,7 @@ class BlastService {
 	 *
 	 * @return array<string, mixed>|null Blast payload or null.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function getBlastById(string $blastId): ?array {
 		if ($blastId === '') {
@@ -642,7 +642,7 @@ class BlastService {
 	 *
 	 * @return array{blast?: array<string, mixed>, error?: string}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function createDraftBlast(array $payload, string $createdByUid): array {
 		$error = $this->validateDraftBlastPayload(payload: $payload);
@@ -775,7 +775,7 @@ class BlastService {
 	 *
 	 * @return array<string, mixed>|null Saved Blast or null on failure.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function patchBlastName(string $blastId, string $name): ?array {
 		if (trim($name) === '') {
@@ -810,7 +810,7 @@ class BlastService {
 	 *
 	 * @return array{status: string, cancelledDeliveries: int} Summary.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function cancelBlast(string $blastId): array {
 		$blast = $this->loadBlast(blastId: $blastId);
@@ -853,7 +853,7 @@ class BlastService {
 	 *
 	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function listDeliveriesForBlast(string $blastId, int $page, int $limit): array {
 		$window = ListPage::clamped(page: $page, limit: $limit);
@@ -926,7 +926,7 @@ class BlastService {
 	 *
 	 * @return int The matching row count, or 0 when OR is unavailable.
 	 *
-	 * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-5
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-1/tasks.md#task-5
 	 */
 	private function countObjects(string $schemaSlug, array $filters): int {
 		$register = $this->getRegisterSlug();
@@ -968,7 +968,7 @@ class BlastService {
 	 *
 	 * @return array<int, array{member: array<string, string>, variant: string, blastId: string}>
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
 	 */
 	public function sliceMembersForAb(array $members, ?int $abSplitPercent, string $parentBlastId, ?string $variantBlastId): array {
 		$sliced = [];
@@ -1012,7 +1012,7 @@ class BlastService {
 	 * @return array{members: array<int, array<string, mixed>>, missingConsent: array<int, string>, suppressed: array<int, string>}
 	 *
 	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	protected function resolveAudience(string $segmentId, string $listId, string $channel): array {
 		if ($listId !== '') {
@@ -1125,7 +1125,7 @@ class BlastService {
 	 * @return array<string, mixed> `{compliant, missingConsent[], missingCount, suppressed[]}`.
 	 *
 	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	protected function checkSegmentCompliance(string $segmentId, string $channel): array {
 		try {
@@ -1192,7 +1192,7 @@ class BlastService {
 	 *
 	 * @return array<int, string> The ids.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	private function contactIdsOf(mixed $value): array {
 		if (is_array($value) === false) {
@@ -1222,7 +1222,7 @@ class BlastService {
 	 *
 	 * @return string "A" or "B".
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
 	 */
 	public function variantFor(string $contactId, ?int $abSplitPercent): string {
 		if ($abSplitPercent === null || $abSplitPercent <= 0 || $abSplitPercent > 100) {
@@ -1288,7 +1288,7 @@ class BlastService {
 	 *
 	 * @return string The decorated HTML, or the original on failure.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	private function decorateCampaignLinks(array $blast, array $template): string {
 		$html = (string)($template['bodyHtml'] ?? '');
@@ -1337,7 +1337,7 @@ class BlastService {
 	 *
 	 * @return array<string, mixed> The campaign, or an empty array.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	private function campaignForBlast(array $blast): array {
 		if (trim((string)($blast['campaignId'] ?? '')) === '') {
@@ -1566,7 +1566,7 @@ class BlastService {
 	 *
 	 * @return int Matching row count, or 0 when OR is unavailable.
 	 *
-	 * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-5
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-1/tasks.md#task-5
 	 */
 	private function countDeliveries(array $filters): int {
 		$register = $this->getRegisterSlug();

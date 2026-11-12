@@ -35,7 +35,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
  */
 
 declare(strict_types=1);
@@ -57,7 +57,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Resolver + read/write facade for the unified ticket schema.
  *
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
  */
 class TicketService {
 	/**
@@ -140,7 +140,7 @@ class TicketService {
 	 *
 	 * @var array<string, array<int, string>>
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public const FACET_REQUIRED = [
 		self::TYPE_CONTACTMOMENT => ['direction'],
@@ -182,7 +182,7 @@ class TicketService {
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		// Injected (ADR-083): a property read throws nothing, so the old
@@ -203,7 +203,7 @@ class TicketService {
 	 *
 	 * @return string The register id ('' when unconfigured).
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getRegisterId(): string {
 		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -229,7 +229,7 @@ class TicketService {
 	 *
 	 * @return string The schema id ('' when unconfigured).
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getSchemaId(): string {
 		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'ticket_schema', '');
@@ -247,7 +247,7 @@ class TicketService {
 	 *
 	 * @return bool True when the ticket surface is usable.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function isConfigured(): bool {
 		return $this->getRegisterId() !== '' && $this->getSchemaId() !== '';
@@ -265,7 +265,7 @@ class TicketService {
 	 * @return string|null One of the TYPE_* constants, or null when the text
 	 *                     names no subtype.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function detectTypeInText(string $text): ?string {
 		$lower = mb_strtolower($text);
@@ -291,7 +291,7 @@ class TicketService {
 	 *
 	 * @return array<int, mixed> The matching ticket rows.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 	 */
 	public function findByType(string $ticketType, array $extraFilters = [], int $limit = 10000, array $sort = []): array {
 		if ($this->isConfigured() === false) {
@@ -345,7 +345,7 @@ class TicketService {
 	 *   because callers catch it to answer 400, and without the tag static
 	 *   analysis reads that catch as dead.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function save(string $ticketType, array $payload, ?string $uuid = null): object {
 		if ($this->isConfigured() === false) {
@@ -383,7 +383,7 @@ class TicketService {
 	 * @throws InvalidArgumentException When a required facet field is missing
 	 *   or carries a value the schema does not offer.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public function assertFacetFields(string $ticketType, array $payload): void {
 		foreach ((self::FACET_REQUIRED[$ticketType] ?? []) as $field) {
@@ -421,7 +421,7 @@ class TicketService {
 	 * @throws InvalidArgumentException When the set holds a duplicate, or the
 	 *   primary is not a member of it.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
 	 */
 	private function assertCaseSet(array $payload): void {
 		$set = ($payload['caseReferences'] ?? null);
@@ -470,7 +470,7 @@ class TicketService {
 	 *
 	 * @return array<string, mixed> The payload with date-times in ISO-8601.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function sanitizeForSave(array $payload): array {
 		foreach (self::DATE_TIME_FIELDS as $field) {

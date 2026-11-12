@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
  * flattens its groups into a `staffMemberId => value` map. Built by
  * PosStaffReportService for one report.
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
 final class StaffGroupTotals {
 	/**
@@ -57,7 +57,7 @@ final class StaffGroupTotals {
 	 *  OpenRegister's documented static query-builder factory; there is no
 	 *  instance to inject.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#10.2
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
 	 */
 	public function valuesFor(?string $sumField, array $filter): array {
 		$metric = 'sum';

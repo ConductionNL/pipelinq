@@ -313,7 +313,7 @@ export default {
 	 * the parent, which shows the saved steps by product name.
 	 *
 	 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
-	 * @spec openspec/changes/review-audit-fixes-b/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
 	 */
 	async mounted() {
 		this.productsLoading = true

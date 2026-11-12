@@ -9,7 +9,7 @@
  * (`person`, `normal`, `free`, `staff`). These maps hold the same English
  * labels as the register, and a test keeps the two equal.
  *
- * @spec openspec/changes/round4-readable-values-and-tour-titles/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 
 /** Client type (client.type). */
@@ -69,7 +69,7 @@ export const CTI_EVENT_TYPE_LABELS = {
  * @param {string} value The stored value.
  * @param {(text: string) => string} translate Translates an English source string.
  * @return {string} The label, or the value itself when it has none.
- * @spec openspec/changes/round4-readable-values-and-tour-titles/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 export function enumLabel(labels, value, translate = (text) => text) {
 	if (value === null || value === undefined || value === '') {
@@ -84,7 +84,7 @@ export function enumLabel(labels, value, translate = (text) => text) {
  * @param {object} labels One of the maps above.
  * @param {(text: string) => string} translate Translates an English source string.
  * @return {Array<{value: string, label: string}>} The options, in map order.
- * @spec openspec/changes/round4-readable-values-and-tour-titles/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 export function enumOptions(labels, translate = (text) => text) {
 	return Object.keys(labels).map((value) => ({

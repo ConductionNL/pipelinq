@@ -13,7 +13,7 @@
  * from the core autocomplete endpoint, which every signed-in user may call
  * (the provisioning API is admin-only). A uid nobody answers to stays as it is.
  *
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 
 import { reactive } from 'vue'
@@ -26,7 +26,7 @@ export const PENDING_LABEL = '…'
  *
  * @param {string} uid The uid.
  * @return {Promise<string>} The display name, or the uid when no user matches it exactly.
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 export async function fetchUserDisplayName(uid) {
 	// Loaded on first use: @nextcloud/auth reads browser storage when it is
@@ -50,7 +50,7 @@ export async function fetchUserDisplayName(uid) {
  *
  * @param {() => object|null} getCurrentUser Reads the session user.
  * @return {object|null} The user.
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 function signedInUser(getCurrentUser) {
 	try {
@@ -67,7 +67,7 @@ function signedInUser(getCurrentUser) {
  * @param {{axios: object, generateOcsUrl: (path: string) => string}} http The HTTP client and URL builder.
  * @param {string} uid The user id.
  * @return {Promise<string>} The name.
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 async function autocompleteName(http, uid) {
 	try {
@@ -91,7 +91,7 @@ async function autocompleteName(http, uid) {
  * @param {unknown} list The autocomplete entries.
  * @param {string} uid The user id.
  * @return {string} The label of the entry with that exact id, or the uid.
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 function matchingLabel(list, uid) {
 	const match = (Array.isArray(list) ? list : []).find(
@@ -106,7 +106,7 @@ function matchingLabel(list, uid) {
  *
  * @param {(uid: string) => Promise<string>} [lookup] The lookup (injectable for tests).
  * @return {(value: unknown) => string} The formatter.
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 export function createUserDisplayNameFormatter(lookup = fetchUserDisplayName) {
 	const names = reactive({})

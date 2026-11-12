@@ -124,7 +124,7 @@ class SeedTrustConfigurationRows implements IRepairStep {
 	 *
 	 * @return string The step name.
 	 *
-	 * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-005
+	 * @spec openspec/specs/master-data-management/spec.md#REQ-MDM-005
 	 */
 	public function getName(): string {
 		return 'Seed pipelinq trust-tier rows into OpenRegister trust-configuration register (idempotent)';

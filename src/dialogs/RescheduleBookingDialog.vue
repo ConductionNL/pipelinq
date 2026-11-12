@@ -5,7 +5,7 @@
   Emits `confirm(newStartAt)` with an ISO-8601 timestamp; the caller posts
   it to /api/bookings/{id}/reschedule. Extracted to its own file per
   ADR-004 (modal-isolation).
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
 	<CnDialog

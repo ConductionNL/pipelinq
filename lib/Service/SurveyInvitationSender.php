@@ -26,7 +26,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
 /**
  * Deliver an invitation over its channel.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 class SurveyInvitationSender {
 	/**
@@ -69,7 +69,7 @@ class SurveyInvitationSender {
 	 * @param string $token The per-invitation token.
 	 *
 	 * @return string The url.
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
 	public function linkFor(string $token): string {
 		return $this->urlGenerator->getAbsoluteURL(
@@ -86,7 +86,7 @@ class SurveyInvitationSender {
 	 *
 	 * @return bool True when the hand-off succeeded.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
 	 */
 	public function send(array $invitation, string $address = ''): bool {
 		$channel = trim((string)($invitation['channel'] ?? 'email'));

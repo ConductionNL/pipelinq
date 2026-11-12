@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  *
  * Runs every 15 minutes (900 seconds). Skips tasks already notified within 24 hours.
  *
- * @spec openspec/changes/callback-management/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-3.1
  */
 class CallbackOverdueJob extends TimedJob {
 	/**
@@ -81,7 +81,7 @@ class CallbackOverdueJob extends TimedJob {
 	 * @param mixed $argument The job argument (unused).
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-1
+	 * @spec   openspec/changes/archive/2026-05-31-reverse-2026-05-26-be-background-jobs/tasks.md#task-1
 	 */
 	protected function run(mixed $argument): void {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -110,7 +110,7 @@ class CallbackOverdueJob extends TimedJob {
 	 *
 	 * @return bool True if the task was recently notified.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-3.1
 	 */
 	public function wasRecentlyNotified(string $taskId): bool {
 		$key = self::NOTIFIED_KEY_PREFIX . $taskId;
@@ -136,7 +136,7 @@ class CallbackOverdueJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-3.1
 	 */
 	public function markNotified(string $taskId): void {
 		$key = self::NOTIFIED_KEY_PREFIX . $taskId;

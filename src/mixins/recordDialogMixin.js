@@ -9,7 +9,7 @@
  * list emits instead of routing to a detail page and the form opens in a
  * dialog. The host binds `dialogOpen`, `editingId` and `reloadKey`.
  *
- * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+ * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
  */
 export default {
 	data() {
@@ -26,7 +26,7 @@ export default {
 		 * Open an existing record in the dialog.
 		 *
 		 * @param {string} id The record uuid.
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		openRecord(id) {
 			this.editingId = id
@@ -36,7 +36,7 @@ export default {
 		/**
 		 * Open an empty form.
 		 *
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		openNew() {
 			this.editingId = ''
@@ -46,7 +46,7 @@ export default {
 		/**
 		 * Close the dialog and re-render the list so a save or delete shows up.
 		 *
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		closeDialog() {
 			this.dialogOpen = false

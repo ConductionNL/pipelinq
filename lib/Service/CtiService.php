@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -60,8 +60,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)     Public surface mirrors the CTI controller/webhook operations it backs.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregate of many small guard-clause methods; no single hotspot.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class CtiService {
 	use PayloadToArray;
@@ -106,7 +106,7 @@ class CtiService {
 	 *
 	 * @return array{logged: bool, valid: bool, interactionId: string|null}
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
 	 */
 	public function handleWebhook(
 		string $platform,
@@ -249,7 +249,7 @@ class CtiService {
 	 *
 	 * @return string|null The new contactmoment ticket UUID or null on failure.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function createPendingContactmoment(PendingCall $call, array $extra = []): ?string {
 		if ($this->ticketService->isConfigured() === false) {
@@ -317,8 +317,8 @@ class CtiService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function completeContactmoment(string $interactionId, CallCompletion $completion): void {
 		if ($this->ticketService->isConfigured() === false) {
@@ -367,7 +367,7 @@ class CtiService {
 	 * @return bool True when the recording was written, false when the ticket
 	 *              store is unconfigured or the write failed.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function attachRecording(string $interactionId, string $recordingUrl, string $expiresAt): bool {
 		// 🔴 RETURNS WHETHER THE WRITE HAPPENED.
@@ -412,7 +412,7 @@ class CtiService {
 	 * @param string $targetNumber Destination number (E.164 preferred).
 	 *
 	 * @return OriginateResult The outcome (success/failure, external call id, pre-created contactmoment id).
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
 	 */
 	public function originateCall(string $userId, string $extension, string $targetNumber): OriginateResult {
 		$platform = $this->activePlatform();
@@ -706,7 +706,7 @@ class CtiService {
 	 *
 	 * @return int Number of deleted records.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over the fetch/filter/delete loop; extraction adds no clarity.
 	 */
@@ -1014,7 +1014,7 @@ class CtiService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	private function updateContactmoment(string $id, array $fields): void {
 		if ($this->ticketService->isConfigured() === false) {
@@ -1047,7 +1047,7 @@ class CtiService {
 	 * @param string $queue The escalation queue id, or ''.
 	 *
 	 * @return array{outcome: string, interactionId: string, taskId: string|null}
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
 	 */
 	public function processDisposition(string $interactionId, string $subject, string $outcome, string $notes, string $queue=''): array {
 		return $this->dispositionService->processDisposition(

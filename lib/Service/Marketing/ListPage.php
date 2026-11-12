@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ namespace OCA\Pipelinq\Service\Marketing;
  * clamp them, with the paging pushed to OpenRegister and the envelope the
  * listings answer.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
  */
 final class ListPage {
 	/**
@@ -56,7 +56,7 @@ final class ListPage {
 	 *
 	 * @return self The clamped page.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public static function clamped(int $page, int $limit): self {
 		return new self(page: max(1, $page), limit: min(100, max(1, $limit)));
@@ -67,7 +67,7 @@ final class ListPage {
 	 *
 	 * @return array{limit: int, offset: int}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function window(): array {
 		return [
@@ -83,7 +83,7 @@ final class ListPage {
 	 *
 	 * @return array<string, mixed> The findAll config.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function newestFirst(array $filters): array {
 		return ['filters' => $filters] + $this->window() + ['sort' => ['createdAt' => 'desc']];
@@ -97,7 +97,7 @@ final class ListPage {
 	 *
 	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
 	 */
 	public function envelope(array $data, int $total): array {
 		return [

@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/activity-timeline/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-activity-timeline/tasks.md#task-2
  * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-entries-must-be-available-via-api
  * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
  */

@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-2
  */
 #[NoAdminRequired]
 class RoutingController extends Controller {
@@ -84,7 +84,7 @@ class RoutingController extends Controller {
 	 *                      On validation failure: 400 with { message }.
 	 *                      On unexpected failure: 500 with { message: 'Operation failed' }.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-2.2
 	 */
 	#[NoAdminRequired]
 	public function getSuggestions(): JSONResponse {

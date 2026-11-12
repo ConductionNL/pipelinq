@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ use OCP\AppFramework\Http\JSONResponse;
 /**
  * The required, dialable-number and dialable-extension checks of click-to-dial.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
  */
 final class CtiDialRules {
 
@@ -41,7 +41,7 @@ final class CtiDialRules {
 	 *
 	 * @return JSONResponse|null
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	public function refusal(string $targetNumber, string $extension): ?JSONResponse {
 		if ($targetNumber === '' || $extension === '') {

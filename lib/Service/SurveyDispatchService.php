@@ -35,7 +35,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
  */
 
 declare(strict_types=1);
@@ -54,7 +54,7 @@ use Throwable;
 /**
  * Match dispatch rules, run the guards, and write the invitation.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
  */
 class SurveyDispatchService {
 	/**
@@ -106,7 +106,7 @@ class SurveyDispatchService {
 	 *
 	 * @return array<int, array<string, mixed>> The rules, or [] when unset or unreadable.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
 	 */
 	public function rules(): array {
 		$raw = $this->appConfig->getValueString(Application::APP_ID, self::RULES_KEY, '[]');
@@ -141,7 +141,7 @@ class SurveyDispatchService {
 	 *
 	 * @return array<int, array<string, mixed>> The matching rules.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
 	 */
 	public function matchingRules(string $entityType, string $status, string $channel = ''): array {
 		$matching = [];
@@ -190,7 +190,7 @@ class SurveyDispatchService {
 	 *
 	 * @return string|null The suppression reason, or null when nothing blocks.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
 	public function suppressionReason(
 		array $rule,
@@ -270,7 +270,7 @@ class SurveyDispatchService {
 	 *
 	 * @return array<string, mixed> The invitation to persist.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
 	 */
 	public function buildInvitation(
 		array $rule,
@@ -331,7 +331,7 @@ class SurveyDispatchService {
 	 *
 	 * @return array<int, array<string, mixed>> The invitations written.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
 	 */
 	public function onInteractionCompleted(string $entityType, array $entity, array $contact): array {
 		$rules = $this->matchingRules(
@@ -479,7 +479,7 @@ class SurveyDispatchService {
 	 *
 	 * @return array<string, mixed> delivered, responded, rate, suppressed, failed, byChannel.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function responseRate(array $invitations): array {
 		$figures = new SurveyInvitationFigures();
@@ -498,7 +498,7 @@ class SurveyDispatchService {
 	 *
 	 * @return array<int, array<string, mixed>> The invitations inside the period.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function withinDays(array $invitations, int $days, ?DateTimeImmutable $now = null): array {
 		return (new SurveyInvitationFigures())->withinDays(invitations: $invitations, days: $days, now: $now);

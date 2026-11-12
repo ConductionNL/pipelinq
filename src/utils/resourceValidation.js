@@ -9,7 +9,7 @@
  * Plain string comparison is safe: times are HH:MM and dates YYYY-MM-DD, both
  * enforced by the schema.
  *
- * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+ * @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
  */
 
 import { translate as t } from '@nextcloud/l10n'

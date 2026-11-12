@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
  *
  * Built by the adapter that owns the HTTP client factory and logger.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 final class CallOriginator {
 	/**
@@ -55,7 +55,7 @@ final class CallOriginator {
 	 *
 	 * @return CtiCallResult The outcome, with the new call id when the reply carries one.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
 	 */
 	public function place(OriginateRequest $request, CtiPlatform $platform): CtiCallResult {
 		try {

@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
  * {@see CtiWebhookResult}, originate outbound calls and verify webhook
  * signatures. Adapters MUST be stateless beyond the configuration they hold.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 interface CtiAdapterInterface {
 	/**

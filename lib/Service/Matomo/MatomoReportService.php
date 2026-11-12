@@ -34,7 +34,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use OCP\IAppConfig;
 /**
  * Campaign, referrer and goal reports out of Matomo.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
  */
 class MatomoReportService {
 
@@ -107,7 +107,7 @@ class MatomoReportService {
 	 * @param CampaignService $campaigns Our own campaigns, to match rows onto.
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -125,7 +125,7 @@ class MatomoReportService {
 	 *
 	 * @return array<string, mixed> `{connected, reason, from, to, campaigns[], referrerTypes[], goals}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-three-matomo-reports-matched-to-the-campaigns-we-already-mint
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-three-matomo-reports-matched-to-the-campaigns-we-already-mint
 	 */
 	public function report(string $from, string $to): array {
 		$refusal = $this->refusal();
@@ -148,7 +148,7 @@ class MatomoReportService {
 	 *
 	 * @return array{connected: bool, reason: string, failure: string}|null
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
 	 */
 	public function refusal(): ?array {
 		if ($this->egress->isConfigured(configKey: self::SOURCE_KEY) === false) {
@@ -204,7 +204,7 @@ class MatomoReportService {
 	 *
 	 * @return string The UUID, or an empty string.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
 	 */
 	public function credentialRef(): string {
 		return trim($this->appConfig->getValueString(Application::APP_ID, self::CREDENTIAL_KEY, ''));
@@ -219,7 +219,7 @@ class MatomoReportService {
 	 *
 	 * @return bool True when it looks like a token rather than a reference.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
 	 */
 	public static function looksLikeAToken(string $value): bool {
 		return (preg_match('/^[0-9a-fA-F]{32}$/', trim($value)) === 1);
@@ -266,7 +266,7 @@ class MatomoReportService {
 	 *
 	 * @return array<int, array<string, mixed>> The rows, each marked matched or not.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-three-matomo-reports-matched-to-the-campaigns-we-already-mint
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-three-matomo-reports-matched-to-the-campaigns-we-already-mint
 	 */
 	private function matchCampaigns(array $rows): array {
 		$ours = $this->campaignsByUtm();

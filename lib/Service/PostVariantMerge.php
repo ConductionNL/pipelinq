@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * The variant merge of a social post; built by SocialPostService.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 final class PostVariantMerge {
 	/**
@@ -42,7 +42,7 @@ final class PostVariantMerge {
 	 *
 	 * @return array{body: string, link: string, media: array<int, array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function merged(array $resolved, array $variant): array {
 		foreach (['body', 'link'] as $field) {
@@ -69,7 +69,7 @@ final class PostVariantMerge {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function variantFor(array $post, string $network): ?array {
 		$variants = ($post['variants'] ?? []);

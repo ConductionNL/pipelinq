@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.4
  */
 
 declare(strict_types=1);
@@ -44,8 +44,8 @@ use Psr\Log\LoggerInterface;
  * (unify-ticket-supertype); it is resolved through {@see TicketService}. The
  * follow-up task keeps its own `task` schema.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.4
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class CtiDispositionService {
 	use EntityAccessorTrait;
@@ -95,7 +95,7 @@ class CtiDispositionService {
 	 *
 	 * @throws \InvalidArgumentException When $outcome is not in self::OUTCOMES, or $queue is unknown.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.4
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 	 */
 	public function processDisposition(
@@ -200,7 +200,7 @@ class CtiDispositionService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	private function updateContactmoment(string $id, string $subject, string $outcome, string $notes): void {
 		if ($this->ticketService->isConfigured() === false) {

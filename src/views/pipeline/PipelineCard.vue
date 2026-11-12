@@ -199,7 +199,7 @@ function roundedFinite(value) {
  * @param {object} lead The lead.
  * @param {Array<object>} stages The pipeline's stages.
  * @return {boolean}
- * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
  */
 function isSettledLead(lead, stages) {
 	if (lead.status === 'won' || lead.status === 'lost') {
@@ -216,7 +216,7 @@ function isSettledLead(lead, stages) {
  * @param {object} lead The lead.
  * @param {Array<object>} stages The pipeline's stages.
  * @return {boolean}
- * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
  */
 function isLeadOverdue(lead, stages) {
 	if (!lead.expectedCloseDate || isSettledLead(lead, stages)) {
@@ -230,7 +230,7 @@ function isLeadOverdue(lead, stages) {
  *
  * @param {object} request The request.
  * @return {boolean}
- * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
  */
 function isRequestOverdue(request) {
 	// `requestedAt` became `occurredAt` on the ticket supertype.
@@ -364,7 +364,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -377,7 +377,7 @@ export default {
 		 * (unify-ticket-supertype). `entityType` stays logical so the badge, the
 		 * overdue rule and the board's routing keep working unchanged.
 		 *
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 		 */
 		resolvedType() {
 			return resolveObjectType(this.entityType)
@@ -404,14 +404,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
 		 */
 		currentColumnValue() {
 			return this.item[this.columnProperty] || ''
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
 		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		isOverdue() {
@@ -425,21 +425,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
 		 */
 		daysAge() {
 			return getDaysAge(this.item)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
 		 */
 		agingClass() {
 			return getAgingClass(this.daysAge)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
 		 */
 		agingLabel() {
 			return formatAge(this.daysAge)
@@ -457,14 +457,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
 		 */
 		stageOptions() {
 			return this.stages.map((s) => s.name)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
 		 */
 		userOptions() {
 			return this.users
@@ -490,7 +490,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
 				this.selectedStage = val || null
@@ -501,7 +501,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
 				this.selectedAssignee = val || null
@@ -551,7 +551,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
 		 */
 		async loadUsers() {
 			this.users = await listAssignableUserIds()
@@ -563,7 +563,7 @@ export default {
 		 * subtype, so a PUT can never strip it (unify-ticket-supertype).
 		 *
 		 * @return {object} Payload for objectStore.saveObject().
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
 		buildSavePayload() {
 			const updated = { ...this.item }
@@ -577,7 +577,7 @@ export default {
 
 		/**
 		 * @param {string} newStage The stage the card was moved to.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
 		 */
 		async onStageChange(newStage) {
 			if (!newStage || newStage === this.currentColumnValue) return
@@ -603,7 +603,7 @@ export default {
 		 *
 		 * @param {string} newStage The stage moved to.
 		 * @return {object} The object to save.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
 		 */
 		stageMovePayload(newStage) {
 			const updated = this.buildSavePayload()
@@ -621,7 +621,7 @@ export default {
 
 		/**
 		 * @param {string} newAssignee Nextcloud uid of the new assignee.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
 		 */
 		async onAssignChange(newAssignee) {
 			if (newAssignee === this.item.assignee) return
@@ -717,7 +717,7 @@ export default {
 
 		/**
 		 * @param {string} dateStr The stored date.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
 		 */
 		formatDate(dateStr) {
 			return formatLocaleDate(dateStr)

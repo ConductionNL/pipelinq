@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
 class LineTotalsListener implements IEventListener {
 	/**
@@ -47,7 +47,7 @@ class LineTotalsListener implements IEventListener {
 	 * @param LineRollUp      $rollUp Writes the parent's totals.
 	 * @param LoggerInterface $logger Logs a roll-up that failed.
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly LineRollUp $rollUp,
@@ -62,7 +62,7 @@ class LineTotalsListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function handle(Event $event): void {
 		$line = $this->objectOf(event: $event);

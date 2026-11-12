@@ -67,7 +67,7 @@ export const useProspectStore = defineStore('prospect', {
 	actions: {
 		/**
 		 * @param {boolean} refresh Bypass the cache and refetch.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-33
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-33
 		 */
 		async fetchProspects(refresh = false) {
 			this.loading = true

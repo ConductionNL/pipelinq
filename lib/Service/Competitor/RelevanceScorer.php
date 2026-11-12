@@ -34,7 +34,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Throwable;
 /**
  * Relevance scoring through hermiq, or nothing at all.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
  */
 class RelevanceScorer {
 
@@ -83,7 +83,7 @@ class RelevanceScorer {
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -97,7 +97,7 @@ class RelevanceScorer {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
 	 */
 	public function enabled(): bool {
 		return ($this->appConfig->getValueString(Application::APP_ID, self::ENABLED_KEY, 'false') === 'true');
@@ -113,7 +113,7 @@ class RelevanceScorer {
 	 *
 	 * @return array<string, mixed> The fields to merge, possibly empty.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
 	 */
 	public function fieldsFor(array $item, ?string $actingUserId = null): array {
 		if ($this->enabled() === false) {
@@ -151,7 +151,7 @@ class RelevanceScorer {
 	 *
 	 * @return array{score: int, reason: string}|null The score, or null when the answer is not one.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
 	 */
 	public function parse(string $answer): ?array {
 		$trimmed = trim($answer);

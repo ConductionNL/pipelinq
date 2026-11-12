@@ -13,7 +13,7 @@
   object-list widget cannot express it: the refusal reason has to be read as
   words, not as a raw enum value.
 
-  @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+  @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 -->
 <template>
 	<section class="journey-runs" data-testid="journey-runs-section">
@@ -133,7 +133,7 @@ export default {
 		 * How many runs ended each way.
 		 *
 		 * @return {object} `{sent, refused, failed}`.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		counts() {
 			return runCounts(this.runs)
@@ -148,7 +148,7 @@ export default {
 		/**
 		 * Read this journey's runs.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		async load() {
 			if (!this.journeyId) {
@@ -170,7 +170,7 @@ export default {
 		 *
 		 * @param {string} state The stored state.
 		 * @return {string} The label.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		stateLabel(state) {
 			return runStateLabel(state, this.t)
@@ -181,7 +181,7 @@ export default {
 		 *
 		 * @param {string} reason The stored reason.
 		 * @return {string} The label.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		reasonLabel(reason) {
 			return runReasonLabel(reason, this.t)
@@ -192,7 +192,7 @@ export default {
 		 *
 		 * @param {string} state The stored state.
 		 * @return {string} A CnStatusBadge variant.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		stateVariant(state) {
 			return { sent: 'success', 'task-created': 'success', refused: 'warning', failed: 'error' }[state] || 'default'
@@ -203,7 +203,7 @@ export default {
 		 *
 		 * @param {string} value An ISO date-time.
 		 * @return {string} The moment, or the value as stored when it is not a date.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		when(value) {
 			const date = new Date(value)

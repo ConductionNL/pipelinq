@@ -41,7 +41,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 
 declare(strict_types=1);
@@ -55,7 +55,7 @@ use Throwable;
 /**
  * The brokered egress seam for every social network call.
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  *
  * @SuppressWarnings(PHPMD.StaticAccess) `SocialGatewayResult` and
  *  `SocialPublishOutcome` are value objects with NAMED CONSTRUCTORS
@@ -157,7 +157,7 @@ class SocialBrokerGateway {
 	 *
 	 * @return bool True when the broker class can be resolved.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function isAvailable(): bool {
 		return class_exists(self::BROKER_CLASS);
@@ -177,7 +177,7 @@ class SocialBrokerGateway {
 	 *
 	 * @return array{state: string, reason: string} The readiness and its reason.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	public function readiness(string $brokerProvider): array {
 		if ($brokerProvider === '') {
@@ -263,7 +263,7 @@ class SocialBrokerGateway {
 	 *
 	 * @return SocialGatewayResult What came back, or which of the six failures happened.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) The branches ARE the closed
 	 *  failure set this method exists to produce; folding them into a helper

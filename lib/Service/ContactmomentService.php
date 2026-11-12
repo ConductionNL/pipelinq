@@ -45,7 +45,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * the legacy `contactmoment_schema` config key is no longer consulted.
  *
  * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class ContactmomentService {
 	use EntityAccessorTrait;
@@ -74,7 +74,7 @@ class ContactmomentService {
 	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface The object service.
 	 *
 	 * @throws \RuntimeException If OpenRegister is not available.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-2
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-2
 	 */
 	public function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		// Injected (ADR-083): a property read throws nothing, so the old
@@ -93,7 +93,7 @@ class ContactmomentService {
 	 * @throws \RuntimeException If configuration is missing.
 	 *
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmomentservice-backend
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function getConfig(): array {
 		if ($this->ticketService->isConfigured() === false) {
@@ -137,7 +137,7 @@ class ContactmomentService {
 	 * @return string|null The contactmoment ticket UUID, or null when skipped/failed.
 	 *
 	 * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function recordOutboundMessage(
 		string $channel,
@@ -302,7 +302,7 @@ class ContactmomentService {
 	 * @throws NotPermittedException If user lacks permission.
 	 *
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmoment-update-and-deletion
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function delete(string $id, string $currentUserId): bool {
 		$objectService = $this->getObjectService();

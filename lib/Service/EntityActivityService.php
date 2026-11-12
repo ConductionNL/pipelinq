@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  branch a defensive coercion); the branches sum past the threshold but no single
  *  method is complex, and splitting the pipeline would only relocate the guards.
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
  */
 class EntityActivityService {
 	/**
@@ -120,7 +120,7 @@ class EntityActivityService {
 	 *
 	 * @return bool True when the type is allowed.
 	 *
-	 * @spec openspec/changes/entity-notes/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
 	 */
 	public function isAllowedEntityType(string $entityType): bool {
 		return in_array($entityType, self::ALLOWED_ENTITY_TYPES, true);
@@ -142,7 +142,7 @@ class EntityActivityService {
 	 *
 	 * @throws InvalidArgumentException When the entity type is unknown.
 	 *
-	 * @spec openspec/changes/entity-notes/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
 	 */
 	public function getActivity(
 		string $entityType,

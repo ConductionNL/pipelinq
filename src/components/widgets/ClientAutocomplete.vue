@@ -57,7 +57,7 @@ export default {
 		placeholder: {
 			type: String,
 			/**
-			 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
 			 */
 			default() {
 				return t('pipelinq', 'Search client…')
@@ -67,7 +67,7 @@ export default {
 		label: {
 			type: String,
 			/**
-			 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
 			 */
 			default() {
 				return t('pipelinq', 'Client')
@@ -91,7 +91,7 @@ export default {
 	watch: {
 		/**
 		 * @param {string} newVal The incoming value.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-14
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-14
 		 */
 		value(newVal) {
 			this.selectedClient = newVal
@@ -99,7 +99,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-10
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-10
 	 */
 	async mounted() {
 		try {
@@ -112,7 +112,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-11
 		 */
 		onInput() {
 			if (this.selectedClient) {
@@ -125,7 +125,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-12
 		 */
 		async searchClients() {
 			if (!this.config?.client || !this.query || this.query.length < 2) {
@@ -182,7 +182,7 @@ export default {
 
 		/**
 		 * @param {object} client The client the user picked.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-13
 		 */
 		selectClient(client) {
 			this.selectedClient = client
@@ -193,7 +193,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-8
 		 */
 		clearSelection() {
 			this.selectedClient = null

@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.3
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Psr\Log\LoggerInterface;
  * delivers a `Validation-Token` / bearer token header; the adapter checks it
  * against the configured OAuth access token (or its hash).
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.3
  */
 class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInterface {
 	/**
@@ -105,7 +105,7 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 *
 	 * @return CtiWebhookResult The normalised webhook result.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.3
 	 */
 	public function handleInboundWebhook(array $payload): CtiWebhookResult {
 		$body = new WebhookFields(source: (array)($payload['body'] ?? $payload));
@@ -154,7 +154,7 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 *
 	 * @return CtiCallResult The call origination result.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.3
 	 */
 	public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {
 		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_api_base_url', '');

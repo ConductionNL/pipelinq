@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/create-sales-group/specs/notifications/spec.md#requirement-the-group-the-notification-rules-address-exists-req-raf-071
+ * @spec openspec/specs/notifications/spec.md#requirement-the-group-the-notification-rules-address-exists-req-raf-071
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Creates the `sales` group when it does not exist.
  *
- * @spec openspec/changes/create-sales-group/specs/notifications/spec.md#requirement-the-group-the-notification-rules-address-exists-req-raf-071
+ * @spec openspec/specs/notifications/spec.md#requirement-the-group-the-notification-rules-address-exists-req-raf-071
  */
 class CreateSalesGroup implements IRepairStep {
 
@@ -66,7 +66,7 @@ class CreateSalesGroup implements IRepairStep {
 	 *
 	 * @return string The name.
 	 *
-	 * @spec openspec/changes/create-sales-group/specs/notifications/spec.md#requirement-the-group-the-notification-rules-address-exists-req-raf-071
+	 * @spec openspec/specs/notifications/spec.md#requirement-the-group-the-notification-rules-address-exists-req-raf-071
 	 */
 	public function getName(): string {
 		return 'Create the sales group the notification rules address';
@@ -79,7 +79,7 @@ class CreateSalesGroup implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/create-sales-group/specs/notifications/spec.md#requirement-the-group-the-notification-rules-address-exists-req-raf-071
+	 * @spec openspec/specs/notifications/spec.md#requirement-the-group-the-notification-rules-address-exists-req-raf-071
 	 */
 	public function run(IOutput $output): void {
 		if ($this->groupManager->groupExists(gid: self::GROUP_ID) === true) {

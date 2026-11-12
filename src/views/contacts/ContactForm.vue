@@ -226,14 +226,14 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-46
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-43
 		 */
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
@@ -248,7 +248,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-42
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-42
 			 */
 			handler(val) {
 				if (val && Object.keys(val).length > 0) {
@@ -259,7 +259,7 @@ export default {
 
 		/**
 		 * @param {string} val Identifier of the newly selected client.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-50
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-50
 		 */
 		selectedClient(val) {
 			this.form.client = val
@@ -267,7 +267,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-45
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-45
 	 */
 	mounted() {
 		if (this.preSelectedClient) {
@@ -279,7 +279,7 @@ export default {
 	methods: {
 		/**
 		 * @param {object} data The contact to load into the form.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-48
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-48
 		 */
 		populateForm(data) {
 			this.form = {
@@ -313,7 +313,7 @@ export default {
 		 * @param {string} term The name typed into the picker, prefilled in the dialog.
 		 * @return {Promise<object|null>} The created client, or null if cancelled.
 		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 * @spec openspec/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		createClient(term) {
 			this.pendingClientName = term || ''
@@ -349,7 +349,7 @@ export default {
 
 		/**
 		 * @param {string} field Name of the field to validate.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-52
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-52
 		 */
 		validateField(field) {
 			const check = FIELD_CHECKS.get(field)
@@ -359,7 +359,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-51
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-51
 		 */
 		validateAll() {
 			this.validateField('name')
@@ -370,7 +370,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-47
 		 */
 		onSave() {
 			if (!this.validateAll()) {

@@ -336,7 +336,7 @@ class NaviService {
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	private function buildCountContext(string $query, string $previousQuery = ''): array {
 		$ticketType = $this->ticketService->detectTypeInText(text: $query);
@@ -363,7 +363,7 @@ class NaviService {
 	 *
 	 * @return array<int, array<string, mixed>> Plain-array rows.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	private function findTickets(string $ticketType): array {
 		$objects = [];

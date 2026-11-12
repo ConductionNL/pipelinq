@@ -359,7 +359,7 @@ const FORMAT_CHECKS = [
  *
  * @param {string} name The name typed in.
  * @return {string} The error, or ''.
- * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
  */
 function nameError(name) {
 	if (!name.trim()) {
@@ -373,7 +373,7 @@ function nameError(name) {
  *
  * @param {object} errors The errors so far, added to in place.
  * @param {object} form The form.
- * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
  */
 function addFormatErrors(errors, form) {
 	for (const check of FORMAT_CHECKS) {
@@ -385,7 +385,7 @@ function addFormatErrors(errors, form) {
 }
 
 /**
- * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-05-31-2026-03-20-client-management/tasks.md#task-3.1
  */
 /**
  * The signed-in user, or null.
@@ -509,7 +509,7 @@ export default {
 		 * Derived from the form, like LeadForm, so an empty required field shows
 		 * its error from the start rather than only after it is edited.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
 		 */
 		errors() {
 			const errors = {}
@@ -525,7 +525,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-27
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-27
 		 */
 		isValid() {
 			return Object.keys(this.errors).length === 0
@@ -535,7 +535,7 @@ export default {
 		 * The instance's languages, labelled in the user's own language.
 		 *
 		 * @return {Array<{id: string, label: string}>} The options.
-		 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		languageOptions() {
 			let names = null
@@ -560,7 +560,7 @@ export default {
 		/**
 		 * Look for a client with the same e-mail address or name once one is typed.
 		 *
-		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-client-management/tasks.md#task-3.1
 		 */
 		duplicateKey() {
 			clearTimeout(this.duplicateTimer)
@@ -583,7 +583,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
+			 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
 			 */
 			handler(val) {
 				if (val && Object.keys(val).length > 0) {
@@ -602,7 +602,7 @@ export default {
 		 * Ask for a client that already has this e-mail address or this name.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-client-management/tasks.md#task-3.1
 		 */
 		async checkDuplicate() {
 			const key = this.duplicateKey
@@ -621,7 +621,7 @@ export default {
 
 		/**
 		 * @param {object} data The contact to load into the form.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
 		 */
 		populateForm(data) {
 			this.form = clientFormFrom(data)
@@ -631,7 +631,7 @@ export default {
 		 * Load the languages the instance can write in, and preselect one
 		 * for a new client (D2).
 		 *
-		 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		async loadLanguages() {
 			try {
@@ -655,7 +655,7 @@ export default {
 		 * Search Nextcloud users for the account owner picker (D4).
 		 *
 		 * @param {string} query What the user typed.
-		 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		async searchUsers(query) {
 			if (!query || query.length < 2) {
@@ -687,8 +687,8 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-28
-		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-28
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-client-management/tasks.md#task-3.1
 		 */
 		onSave() {
 			this.markSaveAttempted()

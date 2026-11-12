@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 /**
  * Lifecycle + audit management for export runs and schema snapshots.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
  */
 class ExportRunService extends AbstractExportService {
 	/**
@@ -66,7 +66,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> The created exportRun.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
 	 */
 	public function createPendingRun(array $job, ?string $watermarkFrom = null): array {
 		$datasets = ($job['sourceSchemas'] ?? []);
@@ -112,7 +112,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<int, array<string, mixed>> The matching runs.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
 	 */
 	public function listRuns(array $filters = []): array {
 		$runs = $this->findAllObjects(schemaKey: self::RUN_SCHEMA_KEY, filters: $this->runFilters(filters: $filters));
@@ -171,7 +171,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> The updated run.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-03
 	 */
 	public function markSkippedOverlap(string $runId, string $reason): array {
 		$run = $this->getRun(runId: $runId);
@@ -191,7 +191,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> The completed run.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010-01
 	 */
 	public function completeRun(string $runId, array $outcome): array {
 		$run = $this->getRun(runId: $runId);
@@ -228,7 +228,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> The created snapshot.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
 	 */
 	public function createSnapshot(
 		string $runId,
@@ -272,7 +272,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed>|null The previous snapshot, or null.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
 	 */
 	public function findPreviousSnapshot(string $jobId, string $schemaName): ?array {
 		$runs = $this->listRuns(filters: ['job_id' => $jobId]);
@@ -300,7 +300,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed>|null The last succeeded run, or null.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006-01
 	 */
 	public function lastSucceededRun(string $jobId): ?array {
 		$runs = $this->listRuns(filters: ['job_id' => $jobId, 'status' => 'succeeded']);

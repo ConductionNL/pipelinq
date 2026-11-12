@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.1
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.1
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use OCP\IGroupManager;
  * a cashier-level transition on a given object. The manager predicate gates
  * refund and refund completion to the configured manager group or admins.
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.1
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.1
  */
 class PosAccessPolicy {
 	/**
@@ -90,7 +90,7 @@ class PosAccessPolicy {
 	 *
 	 * @return bool Whether the user may transition this transaction.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.1
 	 */
 	public function canAccessTransaction(array $object, string $userId): bool {
 		if ($userId === '') {
@@ -122,7 +122,7 @@ class PosAccessPolicy {
 	 *
 	 * @return bool Whether the user may use the POS surfaces.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.2
 	 */
 	public function isPosUser(string $userId): bool {
 		return $this->groupGate()->admits(userId: $userId, group: $this->posGroup());
@@ -139,7 +139,7 @@ class PosAccessPolicy {
 	 *
 	 * @return bool Whether the user is a POS manager.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.1
 	 */
 	public function isManager(string $userId): bool {
 		return $this->groupGate()->admits(userId: $userId, group: new ConfiguredGroup(key: self::MANAGER_GROUP_KEY));

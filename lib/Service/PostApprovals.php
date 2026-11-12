@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * The approvals of a social post; built by SocialPostService.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 final class PostApprovals {
 	/**
@@ -45,7 +45,7 @@ final class PostApprovals {
 	 *
 	 * @return array{userId: string, decision: string, decidedAt: string, note: string}
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function entryFor(PostReview $review, ReviewVerdict $verdict): array {
 		return [
@@ -65,7 +65,7 @@ final class PostApprovals {
 	 *
 	 * @return array<int, mixed>
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function appended(array $post, array $approval): array {
 		$approvals = ($post['approvals'] ?? []);

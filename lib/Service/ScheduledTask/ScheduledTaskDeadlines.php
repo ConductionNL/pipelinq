@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Throwable;
  * into processing, or the assignee and the escalation group of an expired
  * one. A failed notification is logged and does not stop the run.
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
 class ScheduledTaskDeadlines {
 	/**
@@ -96,7 +96,7 @@ class ScheduledTaskDeadlines {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function notifyAssignee(array $task): void {
 		$assignee = $task['assigneeUserId'] ?? '';

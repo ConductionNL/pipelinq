@@ -7,7 +7,7 @@
   - CampaignService mints the campaign value, freezes it across a rename and
   - refuses a source or medium outside the tenant's vocabulary.
   -
-  - @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+  - @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
   -->
 <template>
 	<CnDialog
@@ -198,7 +198,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The id of the campaign being edited, empty when creating one.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		campaignId() {
 			const item = this.item || {}
@@ -212,7 +212,7 @@ export default {
 
 		/**
 		 * @return {Array<string>} The statuses the schema declares.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		statuses() {
 			return ['planned', 'running', 'finished', 'cancelled']
@@ -223,7 +223,7 @@ export default {
 		/**
 		 * Read the record each time the dialog opens.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		prepareOnOpen() {
 			this.load()
@@ -232,7 +232,7 @@ export default {
 		/**
 		 * Reset the form, then read the vocabularies, and the campaign when editing one.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		async load() {
 			this.form = blankForm()
@@ -264,7 +264,7 @@ export default {
 		/**
 		 * Read the campaign being edited.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		async fetchCampaign() {
 			try {
@@ -298,7 +298,7 @@ export default {
 		 * campaign opens on its detail page; an edited one re-reads the page
 		 * the dialog was opened from.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		async save() {
 			this.saving = true
@@ -355,7 +355,7 @@ export default {
 		 *
 		 * @param {object} result The refusal.
 		 * @return {string} The sentence.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		explain(result) {
 			const allowed = (result.allowed || []).join(', ')
@@ -382,7 +382,7 @@ export default {
 		/**
 		 * @param {Date|null} date A date, or null.
 		 * @return {string} YYYY-MM-DD, or an empty string.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		isoDay(date) {
 			if (!date) {

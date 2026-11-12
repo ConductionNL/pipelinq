@@ -20,7 +20,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/detail-pages-read-at-a-glance/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 
 declare(strict_types=1);
@@ -90,7 +90,7 @@ class OpenDealsController extends Controller {
 	 *
 	 * @return JSONResponse `{openDealCount, openDealValue}` or an error.
 	 *
-	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {

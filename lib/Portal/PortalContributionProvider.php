@@ -34,7 +34,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+ * @spec openspec/specs/portal-contribution/spec.md
  */
 
 declare(strict_types=1);
@@ -71,7 +71,7 @@ use OCA\Pipelinq\Service\Portal\QuestionDetailService;
  * supertype it also carries the OTHER kinds' properties — the per-collection
  * `fields` whitelist below is what stops them leaking across kinds.
  *
- * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+ * @spec openspec/specs/portal-contribution/spec.md
  */
 class PortalContributionProvider {
 	/**
@@ -150,7 +150,7 @@ class PortalContributionProvider {
 	 *
 	 * @param QuestionDetailService|null $questionDetail Reads one question's timeline and items.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	public function __construct(
 		private readonly ?QuestionDetailService $questionDetail = null,
@@ -168,7 +168,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, string> The audience identifiers.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function getAudiences(): array {
@@ -183,7 +183,7 @@ class PortalContributionProvider {
 	 *
 	 * @return string The primary audience identifier.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function getAudience(): string {
 		return 'client';
@@ -204,7 +204,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed>|null The manifest, or null when not contributing.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function getContribution(array $subject): ?array {
@@ -248,7 +248,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed> The client manifest.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function clientContribution(): array {
 		return [
@@ -575,7 +575,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed> The customer manifest.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function customerContribution(): array {
 		// NOTE: the citizen "My privacy requests" collection + "Submit a privacy
@@ -698,7 +698,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The collection declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsCollection(): array {
 		return [
@@ -752,7 +752,7 @@ class PortalContributionProvider {
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
 	 * @spec openspec/changes/a-resident-asks-a-question-without-a-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-that-is-not-about-a-dossier
 	 * @spec openspec/changes/a-contact-question-is-required-and-dated/specs/dossier-questions/spec.md#requirement-a-question-asked-on-the-contact-page-needs-its-text-and-is-dated
 	 */
@@ -773,7 +773,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The page declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsPage(): array {
 		return [
@@ -806,7 +806,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The two collections.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function ownTicketCollections(): array {
 		return [
@@ -857,7 +857,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The two create actions.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function ownTicketActions(): array {
 		return [
@@ -903,7 +903,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The two pages.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function ownTicketPages(): array {
 		return [
@@ -963,7 +963,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	public function questionTimeline(string $id): array {
 		$detail = $this->questionDetail();
@@ -982,7 +982,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The items.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
 	 */
 	public function questionDossierItems(string $id): array {
 		$detail = $this->questionDetail();
@@ -1000,7 +1000,7 @@ class PortalContributionProvider {
 	 *
 	 * @return QuestionDetailService|null The service, or null when it cannot be built.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	protected function questionDetail(): ?QuestionDetailService {
 		return $this->questionDetail;

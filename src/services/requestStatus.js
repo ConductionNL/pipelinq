@@ -50,14 +50,14 @@ const PRIORITY_COLORS = {
  * The lifecycle lookups — allowed and valid transitions, terminal statuses,
  * status and priority labels and colours — answered from the tables above.
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-39
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-46
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-44
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-43
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-42
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-41
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-40
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-45
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-39
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-46
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-44
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-43
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-42
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-41
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-40
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-45
  */
 export const {
 	getAllowedTransitions,

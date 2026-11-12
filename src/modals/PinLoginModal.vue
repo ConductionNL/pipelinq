@@ -10,7 +10,7 @@
   - POSTs to /api/pos/staff/auth and, on success, calls
   - posSessionStore.openSession() with the returned envelope.
   -
-  - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#7.1
+  - @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#7.1
   -->
 <template>
 	<CnDialog
@@ -139,7 +139,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#7.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#7.1
 		 */
 		canSubmit() {
 			return (

@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
  */
 
 declare(strict_types=1);
@@ -48,8 +48,8 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
  */
 class PosTransactionController extends Controller {
 	/**
@@ -78,7 +78,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function confirm(string $id): JSONResponse {
@@ -100,7 +100,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function settle(string $id): JSONResponse {
@@ -122,7 +122,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function refund(string $id): JSONResponse {
@@ -145,7 +145,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function park(string $id): JSONResponse {
@@ -167,7 +167,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function resume(string $id): JSONResponse {

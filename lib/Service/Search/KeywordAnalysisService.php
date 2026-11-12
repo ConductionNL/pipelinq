@@ -34,7 +34,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ namespace OCA\Pipelinq\Service\Search;
 /**
  * Position buckets, striking distance, cannibalisation and content gaps.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Four independent
  *  derivations over one row shape, each a short predicate with its own
@@ -146,7 +146,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, array{bucket: string, queries: int, clicks: int, impressions: int}> One entry per bucket, in order.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
 	 */
 	public function positionBuckets(array $rows): array {
 		$labels = array_merge(array_keys(self::BUCKETS), [self::TAIL_BUCKET]);
@@ -176,7 +176,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return string One of {@see BUCKETS} or {@see TAIL_BUCKET}.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
 	 */
 	public function bucketOf(float $position): string {
 		foreach (self::BUCKETS as $label => $bound) {
@@ -196,7 +196,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, array<string, mixed>> Findings, most impressions first.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
 	 */
 	public function strikingDistance(array $rows, int $minImpressions = self::DEFAULT_MIN_IMPRESSIONS): array {
 		$out = [];
@@ -282,7 +282,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, array<string, mixed>> Findings, most impressions first.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-cannibalisation-names-two-pages-competing-for-one-query
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-cannibalisation-names-two-pages-competing-for-one-query
 	 */
 	public function cannibalisation(
 		array $rows,
@@ -352,7 +352,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, array<string, mixed>> Gaps, most impressions first.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
 	 */
 	public function contentGaps(array $rows, array $pages, int $minImpressions = self::DEFAULT_MIN_IMPRESSIONS): array {
 		if ($pages === []) {
@@ -440,7 +440,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, string> The tokens, deduplicated, in order.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
 	 */
 	public function significantTokens(string $value): array {
 		$parts = preg_split('/[^a-z0-9]+/', $this->normalise(value: $value));

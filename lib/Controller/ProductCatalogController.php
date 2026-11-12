@@ -52,7 +52,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/specs/pos-product-catalogue/spec.md
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.2
  */
 class ProductCatalogController extends Controller {
 	/**
@@ -175,7 +175,7 @@ class ProductCatalogController extends Controller {
 	 *
 	 * @return string|JSONResponse The acting user UID, or a 401/403 response.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.2
 	 */
 	private function requireUserId(): string|JSONResponse {
 		$user = $this->userSession->getUser();

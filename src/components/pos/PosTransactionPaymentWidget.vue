@@ -10,7 +10,7 @@
   - reloads only the tenders. A page refresh reloads them too, quietly, so the
   - table stays on screen.
   -
-  - @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-002
   -->
 <template>
 	<CnWidgetWrapper

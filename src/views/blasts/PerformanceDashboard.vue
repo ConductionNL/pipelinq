@@ -717,7 +717,7 @@ export default {
 		 * summaries in parallel. Each block degrades independently —
 		 * Attribution failures don't blank the Overview tab.
 		 *
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 		 */
 		async fetchAll() {
 			this.loading = true
@@ -918,7 +918,7 @@ export default {
 		 * not, the loop stops there and the block says so.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 		 */
 		async fetchTrafficRows() {
 			// Counted, not inferred: "no blast to ask about" and "every ask

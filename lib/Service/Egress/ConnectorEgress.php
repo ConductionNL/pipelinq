@@ -31,7 +31,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Throwable;
 /**
  * One outbound read, through one OpenConnector source.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (EgressResult). A value
@@ -97,7 +97,7 @@ class ConnectorEgress {
 	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -114,7 +114,7 @@ class ConnectorEgress {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function isConfigured(string $configKey): bool {
 		return ($this->sourceId(configKey: $configKey) !== '');
@@ -130,7 +130,7 @@ class ConnectorEgress {
 	 *
 	 * @return EgressResult The body, or the reason there is none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function read(string $configKey, string $endpoint, array $config = [], string $method = 'GET'): EgressResult {
 		$sourceId = $this->sourceId(configKey: $configKey);
@@ -172,7 +172,7 @@ class ConnectorEgress {
 	 *
 	 * @return EgressResult The body, or the reason there is none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function readUrl(string $configKey, string $url, array $config = [], string $sourceId = ''): EgressResult {
 		$resolvedId = trim($sourceId);

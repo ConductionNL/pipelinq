@@ -24,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -52,7 +52,7 @@ use RuntimeException;
  * aggregates counts/sums in PHP and returns the four headline KPIs for the
  * Analytics dashboard.
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.1
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive analytics aggregator; splitting would fragment related KPI logic.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregation over many KPI dimensions; complexity is inherent, not accidental.
@@ -81,7 +81,7 @@ class AnalyticsService {
 	 *
 	 * @var array<int, string>
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	public const ALLOWED_TREND_METRICS = [
@@ -129,7 +129,7 @@ class AnalyticsService {
 	 *
 	 * @var array<int, string>
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
 	 */
 	public const ALLOWED_OVERVIEW_PERIODS = ['week', 'month', 'quarter', 'year'];
 
@@ -162,7 +162,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	private function findTickets(string $ticketType): array {
 		$objects = [];
@@ -256,7 +256,7 @@ class AnalyticsService {
 	 * @throws InvalidArgumentException When the period is not recognised.
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
 	 */
 	public function getOverview(string $period = self::DEFAULT_PERIOD): array {
 		if (in_array($period, self::ALLOWED_OVERVIEW_PERIODS, true) === false) {
@@ -457,7 +457,7 @@ class AnalyticsService {
 	 * @throws InvalidArgumentException When metric or period unsupported.
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
 	 */
 	public function getTrends(string $metric, string $period = self::DEFAULT_PERIOD): array {
 		if (in_array($metric, self::ALLOWED_TREND_METRICS, true) === false) {
@@ -618,7 +618,7 @@ class AnalyticsService {
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
 	 */
 	public function getFunnels(): array {
 		$leads = $this->findObjects(schemaKey: 'lead_schema');
@@ -913,7 +913,7 @@ class AnalyticsService {
 	 * @return array{weightedForecast: float, openPipelineValue: float, openCount: int, scoredOpenCount: int}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
 	 */
 	private function aggregateOpenPipeline(array $leads): array {
@@ -1044,7 +1044,7 @@ class AnalyticsService {
 	 *
 	 * @return float The weighted value.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	private function winChanceWeightedValue(array $lead): float {
 		$score = ($lead['qualificationScore'] ?? null);

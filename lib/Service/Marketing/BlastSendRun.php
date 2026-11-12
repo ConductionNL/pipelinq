@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Service\Marketing;
  * The blast, its channel, whether it is a dry run, and the resolved audience
  * with the contacts left out for missing consent and for a suppression.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
  */
 class BlastSendRun {
 	/**
@@ -58,7 +58,7 @@ class BlastSendRun {
 	 *
 	 * @return int The count.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
 	 */
 	public function noConsent(): int {
 		return count($this->audience['missingConsent']);
@@ -69,7 +69,7 @@ class BlastSendRun {
 	 *
 	 * @return int The count.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
 	 */
 	public function suppressed(): int {
 		return count($this->audience['suppressed'] ?? []);

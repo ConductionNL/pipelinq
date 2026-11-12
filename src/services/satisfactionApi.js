@@ -6,7 +6,7 @@
 // (customer-satisfaction-closed-loop). Both endpoints live in
 // lib/Controller/SatisfactionController.php.
 //
-// @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+// @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -18,7 +18,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {number} [options.days] The period in days, 0 for all time.
  * @param {string} [options.surveyId] One survey, or every survey.
  * @return {Promise<object>} delivered, responded, rate, suppressed, failed, byChannel.
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 export async function fetchResponseRate({ days = 0, surveyId = '' } = {}) {
 	const { data } = await axios.get(
@@ -41,7 +41,7 @@ function objectOrEmpty(data) {
  *
  * @param {{days: number, surveyId: string}} filters The filters asked for.
  * @return {object} The query parameters.
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 function responseRateParams({ days, surveyId }) {
 	const params = {}
@@ -59,7 +59,7 @@ function responseRateParams({ days, surveyId }) {
  *
  * @param {string} clientId The client's uuid.
  * @return {Promise<object>} empty, responseCount, nps, averageRating, trend, verbatims.
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+ * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
  */
 export async function fetchClientSatisfaction(clientId) {
 	const { data } = await axios.get(

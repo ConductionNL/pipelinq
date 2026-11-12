@@ -17,7 +17,7 @@
   - an account with no followers recorded shows no rate rather than a zero
   - that would read as "nobody engaged".
   -
-  - @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+  - @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
   -->
 <template>
 	<div class="social-performance" data-testid="social-performance">
@@ -113,7 +113,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<object>} The columns, every one sortable.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		columns() {
 			return [
@@ -149,7 +149,7 @@ export default {
 		 * publication date and the follower count shown on their second lines.
 		 *
 		 * @return {Array<{value: string, label: string}>} The sort choices.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		sortOptions() {
 			const extra = {
@@ -169,7 +169,7 @@ export default {
 
 		/**
 		 * @return {Array<{value: string, label: string}>} The two directions.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		orderOptions() {
 			return [
@@ -183,7 +183,7 @@ export default {
 		 * sorts on the number it shows. `source` keeps the row as the server sent it.
 		 *
 		 * @return {Array<object>} The table rows.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		tableRows() {
 			return this.rows.map((row) => ({
@@ -208,7 +208,7 @@ export default {
 		 * directions, as the server's ranking does: it has nothing to say yet.
 		 *
 		 * @return {Array<object>} The sorted rows.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		sortedRows() {
 			if (!this.sortKey) {
@@ -243,7 +243,7 @@ export default {
 	methods: {
 		/**
 		 * @param {object} event The table's `{key, order}` sort event.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		onSort(event) {
 			this.sortKey = event?.key || null
@@ -256,7 +256,7 @@ export default {
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
@@ -268,7 +268,7 @@ export default {
 		 * @param {string} value An ISO timestamp.
 		 * @return {string} It in the reader's locale, or as stored when unreadable.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		formatDate(value) {
 			const date = new Date(value)
@@ -278,7 +278,7 @@ export default {
 		/**
 		 * @param {string} network The network.
 		 * @return {string} Its label.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		networkLabel(network) {
 			return networkLimits(network).label
@@ -287,7 +287,7 @@ export default {
 		/**
 		 * @param {object} row A ranking row.
 		 * @return {string} The engagement rate, or a hyphen.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		rate(row) {
 			return formatEngagementRate(row)
@@ -297,7 +297,7 @@ export default {
 		 * One request, after the page has already rendered.
 		 *
 		 * @return {Promise<void>} Resolves once the rows are in.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		async load() {
 			this.loading = true

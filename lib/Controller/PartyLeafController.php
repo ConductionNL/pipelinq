@@ -26,7 +26,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
+ * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use OCP\IRequest;
 /**
  * Routes for the party panel, the blocking question and the tree.
  *
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
+ * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
  */
 class PartyLeafController extends Controller {
 	/**
@@ -73,7 +73,7 @@ class PartyLeafController extends Controller {
 	 *
 	 * @return JSONResponse The panel, or the refusal.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
 	 */
 	#[NoAdminRequired]
 	public function panel(string $partyId): JSONResponse {
@@ -88,7 +88,7 @@ class PartyLeafController extends Controller {
 	 *
 	 * @return JSONResponse The answer, naming any indicator that blocks.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
 	 */
 	#[NoAdminRequired]
 	public function blocked(string $partyId, string $act): JSONResponse {
@@ -116,7 +116,7 @@ class PartyLeafController extends Controller {
 	 *
 	 * @return JSONResponse The updated value, or the refusal.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 	 */
 	#[NoAdminRequired]
 	public function acknowledge(string $valueId): JSONResponse {
@@ -131,7 +131,7 @@ class PartyLeafController extends Controller {
 	 *
 	 * @return JSONResponse The result, or the refusal naming what it refused.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	#[NoAdminRequired]
 	public function setParent(string $partyId, ?string $parentId = null): JSONResponse {

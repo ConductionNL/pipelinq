@@ -32,7 +32,7 @@ use OCP\EventDispatcher\IEventListener;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-events/tasks.md#task-2
  */
 class ObjectEventListener implements IEventListener {
 	/**
@@ -51,7 +51,7 @@ class ObjectEventListener implements IEventListener {
 	 * @param Event $event The event to handle.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-2
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-events/tasks.md#task-2
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectCreatedEvent) {

@@ -328,7 +328,7 @@ class BackfillLeadRelations implements IRepairStep {
 	 *
 	 * @return string One of 'fixed', 'skipped' or 'stuck'.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	private function backfillOne(
 		array $lead,

@@ -12,7 +12,7 @@
   - ADR-088 agent-mark refusal) has no declarative equivalent — see
   - design.md "The REST surface is four methods wide".
   -
-  - @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+  - @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
   -->
 <template>
 	<div class="article-form-view">
@@ -34,7 +34,7 @@ export default {
 		/**
 		 * The modal was dismissed without saving.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {void}
 		 */
 		onClose() {
@@ -46,7 +46,7 @@ export default {
 		 * where the lifecycle actions (submit for review, publish) live.
 		 *
 		 * @param {object} article The created article.
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {void}
 		 */
 		onSaved(article) {

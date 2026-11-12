@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.StaticAccess)           GuardResult exposes only the
  *  static allow()/deny() factories mandated by OpenRegister's contract.
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
  */
 class PosRefundManagerGuard implements LifecycleGuardInterface {
 	use CastingPayloadToArray;
@@ -92,7 +92,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 * @return GuardResult Allow for a manager/admin (and, for complete, within
 	 *                     the over-refund cap); deny otherwise.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ($this->policy->isManager(userId: $userId) === false) {
@@ -114,7 +114,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 * @return GuardResult Allow when within the cap; deny when it would exceed
 	 *                     the original transaction total.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function checkOverRefundCap(array $refund): GuardResult {
 		$transactionId = (string)($refund['originalTransaction'] ?? '');
@@ -153,7 +153,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 *
 	 * @return array<string, mixed>|null The transaction, or null.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function fetchTransaction(string $id): ?array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -191,7 +191,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 *
 	 * @return float The sum of completed refund gross amounts.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function sumCompletedRefunds(string $transactionId, string $excludeRefundId): float {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

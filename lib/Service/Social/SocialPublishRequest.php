@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * One resolved post, for one account, ready to be shaped.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 class SocialPublishRequest {
 	/**
@@ -77,7 +77,7 @@ class SocialPublishRequest {
 	 *
 	 * @return string The text to publish.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
+	 * @spec openspec/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
 	 */
 	public function bodyWithLink(): string {
 		$text = trim($this->body);
@@ -100,7 +100,7 @@ class SocialPublishRequest {
 	 *
 	 * @return array<string, mixed>|null The media item, or null when there is none.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function firstPublicMedia(): ?array {
 		foreach ($this->media as $item) {

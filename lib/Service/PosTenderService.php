@@ -37,12 +37,12 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-003
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-005
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-002
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-003
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-004
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-005
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
  */
 
 declare(strict_types=1);
@@ -80,7 +80,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Complexity mirrors the six
  *  REQ-PST requirements; each is independently unit-tested.
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
  */
 class PosTenderService {
 	/**
@@ -140,7 +140,7 @@ class PosTenderService {
 	 *
 	 * @return array<int, array<string, mixed>> The tender types sorted by sortOrder.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) public API consumed positionally
 	 *  by PosTenderController and the retry job; changing the signature is out of
@@ -194,7 +194,7 @@ class PosTenderService {
 	 *
 	 * @throws TenderTypeNotFoundException When the id does not resolve.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	public function getTenderTypeById(string $id): array {
 		if ($id === '') {
@@ -225,7 +225,7 @@ class PosTenderService {
 	 *
 	 * @throws TenderTypeNotFoundException When the code does not resolve.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	public function getTenderTypeByCode(string $code): array {
 		if ($code === '') {
@@ -250,7 +250,7 @@ class PosTenderService {
 	 *
 	 * @throws OCSBadRequestException When required fields are missing or the code is not unique.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	public function createTenderType(array $data): array {
 		$payload = $this->validateTenderTypePayload(data: $data, allowMissingCode: false);
@@ -280,7 +280,7 @@ class PosTenderService {
 	 * @throws TenderTypeNotFoundException When the id does not resolve.
 	 * @throws OCSBadRequestException When required fields are missing.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	public function updateTenderType(string $id, array $data): array {
 		$current = $this->getTenderTypeById(id: $id);
@@ -301,7 +301,7 @@ class PosTenderService {
 	 * @throws TenderTypeNotFoundException When the id does not resolve.
 	 * @throws OCSBadRequestException When active tenders reference this type.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
 	public function deleteTenderType(string $id): void {
 		// Resolve to confirm existence + carry a 404 when missing.
@@ -353,7 +353,7 @@ class PosTenderService {
 	 *
 	 * @return array<int, array<string, mixed>> The tenders.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-002
 	 */
 	public function getTendersForTransaction(string $transactionId): array {
 		if ($transactionId === '') {
@@ -417,8 +417,8 @@ class PosTenderService {
 	 * @throws TenderTypeNotFoundException When the tender type is not found.
 	 * @throws InvalidTenderException When the tender fails its validation invariant.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-005
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-002
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-005
 	 */
 	public function addTender(string $transactionId, array $payload): array {
 		$transaction = $this->fetchTransaction(id: $transactionId);
@@ -497,7 +497,7 @@ class PosTenderService {
 	 * @throws OCSNotFoundException When the transaction or tender is not found.
 	 * @throws InvalidTenderException When the transaction is already settled.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-003
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-003
 	 */
 	public function removeTender(string $transactionId, string $tenderId): void {
 		$transaction = $this->fetchTransaction(id: $transactionId);
@@ -542,7 +542,7 @@ class PosTenderService {
 	 *
 	 * @throws OCSNotFoundException When the transaction is not found.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-004
 	 */
 	public function validateTenderSum(string $transactionId): array {
 		$transaction = $this->fetchTransaction(id: $transactionId);
@@ -578,7 +578,7 @@ class PosTenderService {
 	 *
 	 * @return float The change due, in EUR (>= 0).
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-005
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-005
 	 */
 	public function calculateChange(float $cashTenderedAmount, float $transactionTotal): float {
 		if ($cashTenderedAmount <= $transactionTotal) {
@@ -606,7 +606,7 @@ class PosTenderService {
 	 * @throws OCSNotFoundException When the transaction is not found.
 	 * @throws InvalidTenderException When the tender sum does not match the total.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-004
 	 */
 	public function assertBalancedForSettle(string $transactionId): void {
 		$validation = $this->validateTenderSum(transactionId: $transactionId);
@@ -674,7 +674,7 @@ class PosTenderService {
 	 *
 	 * @return array<int, string> The emitted event ids.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
 	 */
 	public function emitTendersPosted(string $transactionId): array {
 		$transaction = $this->fetchTransactionOrNull(id: $transactionId);
@@ -716,7 +716,7 @@ class PosTenderService {
 	 *
 	 * @return string The emitted event id, or empty when the emission was a no-op.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
 	 */
 	public function emitSingleTenderPosted(string $transactionUuid, string $transactionReference, array $tender): string {
 		$tenderId = $this->extractId(entity: $tender);
@@ -808,7 +808,7 @@ class PosTenderService {
 	 *
 	 * @return array<int, array<string, mixed>> The unposted tenders.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
 	 */
 	public function listUnpostedTenders(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
