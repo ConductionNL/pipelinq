@@ -368,19 +368,11 @@ export default {
 }
 </script>
 
+<style scoped src="../fieldGroupLayout.css"></style>
+
 <style scoped>
 .prospect-settings__form {
 	max-width: 600px;
-}
-
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
 }
 
 .form-group--checkbox {
@@ -392,15 +384,6 @@ export default {
 .form-group--checkbox label {
 	margin-bottom: 0;
 	font-weight: normal;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .form-help {
