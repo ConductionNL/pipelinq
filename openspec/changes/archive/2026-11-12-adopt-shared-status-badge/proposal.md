@@ -2,6 +2,8 @@
 kind: code
 ---
 
+> Superseded by the board-look rounds (screens round 6), which moved every status chip onto `CnStatusBadge` / `cn-status-badge`; none of the `.status-pill--*`, `.ledger-card__pill--*` or `.kpi-card__value--warn` patterns this change replaces is left in `src/` (checked 12 Nov 2026, decision 399). Reversible.
+
 ## Why
 
 `@conduction/nextcloud-vue` ships `CnStatusBadge` specifically to end this pattern — its own
