@@ -36,6 +36,8 @@ Requirements are added to these main specs:
   `first-time-setup`, `notifications-activity`, `prometheus-metrics`,
   `marketing-analytics-connectors`, `vng-klantinteracties-leaf` and
   `openregister-integration`: one or two requirements each.
+- `product-catalog`: attributes and variants, for shillinq's `inv-catalog` row
+  (shillinq reads the product master from pipelinq).
 
 ## Out of scope
 

@@ -1361,7 +1361,8 @@
 				"owner": "ConductionNL/openregister",
 				"change": "openregister/import-preview-and-conflict-policy",
 				"reachedOn": "Clients -> actions menu -> Import (register managers only)",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-07",
+				"requirement": "openregister:openspec/specs/data-import-export :: The system MUST support import from CSV, Excel, JSON, and XML formats @e2e exclude REST API import — covered by Newman"
 			},
 			"note": "Re-read 2026-10-07: reachable from a pipelinq page after all, not only through Open Register. It stays partial: only a register manager can import, and without column mapping or a preview a spreadsheet exported from another CRM does not import as it is. Mapping and preview are openregister's import-preview-and-conflict-policy (open). The client-management spec's 'Client Import from CSV with Column Mapping' asks for more than this.",
 			"evidence": {
@@ -2465,7 +2466,8 @@
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "Flows, FlowDetail",
 				"readOn": "2026-09-26",
-				"change": "openregister/flow-tag-object-step"
+				"change": "openregister/flow-tag-object-step",
+				"requirement": "openregister:openspec/changes/flow-tag-object-step/specs/flow-engine :: A flow step can add or remove a tag on an object"
 			},
 			"note": "a rule can set priority or another field, not a coloured label. Specified in ConductionNL/openregister openspec/changes/flow-tag-object-step (openregister lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
@@ -4092,7 +4094,11 @@
 				"owner": "ConductionNL/nextcloud-vue",
 				"reachedOn": "any index page (shareable URL only); save-view control reached on nothing",
 				"readOn": "2026-09-28",
-				"change": "nextcloud-vue/saved-views-shared-by-role"
+				"change": "nextcloud-vue/saved-views-shared-by-role",
+				"requirement": [
+					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Share a view with a group",
+					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Shared views listed beside own views"
+				]
 			},
 			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks. Re-read 2026-09-28 (OpenSpec pass, wave-5 correction round 6): rating partial holds at nextcloud-vue 2.57.1; evidence refreshed from 2.56.0. Specified in ConductionNL/nextcloud-vue openspec/changes/saved-views-shared-by-role (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
@@ -8293,7 +8299,8 @@
 				"state": "building",
 				"evidence": "no per-group field rule found in lib/Lifecycle/",
 				"owner": "ConductionNL/openregister",
-				"change": "openregister/modelling-field-access-editor"
+				"change": "openregister/modelling-field-access-editor",
+				"requirement": "openregister:openspec/specs/row-field-level-security :: Schemas MUST support field-level security via property authorization blocks"
 			},
 			"note": "EspoCRM does this per role. Ours is all or nothing today.",
 			"evidence": {
@@ -8659,7 +8666,11 @@
 				"owner": "ConductionNL/integriq",
 				"change": "integriq/2026-07-14-connector-catalog-ui",
 				"reachedOn": "integriq: Store in the footer menu -> a card -> Enable or Instantiate",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-07",
+				"requirement": [
+					"integriq:openspec/changes/archive/2026-07-14-connector-catalog-ui/specs/connector-catalog :: Catalog lists adapters, seeded source templates and configuration templates with category filter and status badges (REQ-001)",
+					"integriq:openspec/changes/archive/2026-07-14-connector-catalog-ui/specs/connector-catalog :: Catalog detail modal offers an authorized Enable or Instantiate action (REQ-002)"
+				]
 			},
 			"note": "Re-read 2026-10-07: there is now a shop window, in integriq rather than in pipelinq. It stays partial because the Store holds a short list of adapters, seeded sources and four templates, not hundreds; growing the library is integriq's row con-library-size (building). HubSpot lists 1,500 integrations and Pipedrive 400.",
 			"evidence": {
@@ -9262,7 +9273,11 @@
 				"owner": "ConductionNL/shillinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "shillinq/receivables-automatic-dunning"
+				"change": "shillinq/receivables-automatic-dunning",
+				"requirement": [
+					"shillinq:openspec/changes/receivables-automatic-dunning/specs/bookkeeping-credit-control-dunning :: A daily job marks overdue invoices and chases them (REQ-RAD-001)",
+					"shillinq:openspec/changes/receivables-automatic-dunning/specs/bookkeeping-credit-control-dunning :: A reminder mail carries the stage's wording and the invoice (REQ-RAD-003)"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://www.hubspot.com/spotlight \"Automates collections, so every overdue invoice gets a personalized nudge, and follows up as the conversation unfolds\"; tier not stated on the page.",
@@ -10471,7 +10486,11 @@
 				"owner": "ConductionNL/nextcloud-vue",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "nextcloud-vue/form-conditions-from-schema"
+				"change": "nextcloud-vue/form-conditions-from-schema",
+				"requirement": [
+					"nextcloud-vue:openspec/changes/form-conditions-from-schema/specs/dialog-system :: A property shows or hides itself by another field's value",
+					"nextcloud-vue:openspec/changes/form-conditions-from-schema/specs/dialog-system :: An administrator sets conditions without code"
+				]
 			},
 			"note": "conditional read-only exists at schema level (x-openregister-readonly-when); show, hide and validate on another field's value needs a developer. Specified in ConductionNL/nextcloud-vue openspec/changes/form-conditions-from-schema (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
@@ -10618,7 +10637,8 @@
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "OpenRegister's deleted objects page, not a pipelinq page",
 				"readOn": "2026-09-26",
-				"change": "openregister/records-restore-with-cascade"
+				"change": "openregister/records-restore-with-cascade",
+				"requirement": "openregister:openspec/changes/records-restore-with-cascade/specs/deletion-audit-trail :: A restore brings back what the delete cascaded, as one act"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-retention-policy-settings deleted contacts sit in \"the recycling bin within 90 days\"; https://knowledge.hubspot.com/object-settings/restore-crm-changes rolls records back \"to a previous point within the last 14 days\" including changes by workflows and imports (Starter and up).",

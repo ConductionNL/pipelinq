@@ -57,3 +57,5 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/DocumentSigningService.php:88`
 - [ ] 28.1 Check row `auto-api` against "A script reads and writes the app's records through the API"
   - Verify: the scenarios hold on a live instance; evidence on the row: `appinfo/routes.php`
+- [ ] 29.1 Add attributes and variants to the product schema and the product page, refuse a duplicate combination, and let lead, quote and invoice line pickers choose the variant (requirement "A product keeps attributes and variants with their own code and price")
+  - Verify: PHPUnit for the duplicate refusal and the price fallback; the shillinq row `inv-catalog` records this requirement
