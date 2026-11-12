@@ -330,9 +330,20 @@ class SegmentService {
 			return [];
 		}
 
+		return $this->matchingMembers(rules: $rules, entityType: $entityType);
+	}//end getMembersForBlast()
+
+	/**
+	 * The projected recipients among the entities of a type that match a rule tree.
+	 *
+	 * @param array<string, mixed> $rules      The rule tree.
+	 * @param string               $entityType The entity type.
+	 *
+	 * @return array<int, array<string, string>> Recipient rows.
+	 */
+	private function matchingMembers(array $rules, string $entityType): array {
 		$members = [];
-		$entities = $this->loadEntitiesForType(entityType: $entityType);
-		foreach ($entities as $entity) {
+		foreach ($this->loadEntitiesForType(entityType: $entityType) as $entity) {
 			if ($this->evaluateRules(rules: $rules, entity: $entity) !== true) {
 				continue;
 			}
@@ -341,7 +352,7 @@ class SegmentService {
 		}
 
 		return $members;
-	}//end getMembersForBlast()
+	}//end matchingMembers()
 
 	/**
 	 * List Segments with pagination envelope.
@@ -858,16 +869,31 @@ class SegmentService {
 			return $id;
 		}
 
-		if (isset($entity['@self']) === true && is_array($entity['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				if (isset($entity['@self'][$key]) === true && is_scalar($entity['@self'][$key]) === true) {
-					return (string)$entity['@self'][$key];
-				}
+		return $this->selfMemberId(entity: $entity);
+	}//end resolveMemberId()
+
+	/**
+	 * The member id under `@self`: the first of uuid, id and slug that is
+	 * set to a scalar, even an empty one.
+	 *
+	 * @param array<string, mixed> $entity Entity payload.
+	 *
+	 * @return string Id or empty string.
+	 */
+	private function selfMemberId(array $entity): string {
+		$self = ($entity['@self'] ?? null);
+		if (is_array($self) === false) {
+			return '';
+		}
+
+		foreach (['uuid', 'id', 'slug'] as $key) {
+			if (isset($self[$key]) === true && is_scalar($self[$key]) === true) {
+				return (string)$self[$key];
 			}
 		}
 
 		return '';
-	}//end resolveMemberId()
+	}//end selfMemberId()
 
 	/**
 	 * Resolve a member's first/last name, falling back to splitting a
@@ -883,16 +909,29 @@ class SegmentService {
 	private function resolveMemberName(array $entity): array {
 		$firstName = (string)($entity['firstName'] ?? $entity['first_name'] ?? '');
 		$lastName = (string)($entity['lastName'] ?? $entity['last_name'] ?? '');
-		if ($firstName === '' && $lastName === '' && isset($entity['name']) === true && is_string($entity['name']) === true) {
-			$parts = preg_split('/\s+/', trim($entity['name']));
-			if (is_array($parts) === true && $parts !== []) {
-				$firstName = (string)array_shift($parts);
-				$lastName = trim(implode(' ', $parts));
-			}
+		if ($firstName !== '' || $lastName !== '' || is_string($entity['name'] ?? null) === false) {
+			return ['firstName' => $firstName, 'lastName' => $lastName];
 		}
 
-		return ['firstName' => $firstName, 'lastName' => $lastName];
+		return $this->splitFullName(name: $entity['name']);
 	}//end resolveMemberName()
+
+	/**
+	 * Split a vCard-style full name on whitespace: the first word, then the rest.
+	 *
+	 * @param string $name The full name.
+	 *
+	 * @return array{firstName: string, lastName: string}
+	 */
+	private function splitFullName(string $name): array {
+		$parts = preg_split('/\s+/', trim($name));
+		if (is_array($parts) === false || $parts === []) {
+			return ['firstName' => '', 'lastName' => ''];
+		}
+
+		$firstName = (string)array_shift($parts);
+		return ['firstName' => $firstName, 'lastName' => trim(implode(' ', $parts))];
+	}//end splitFullName()
 
 	/**
 	 * Estimate the size of a Segment by counting matching entities.
@@ -983,7 +1022,17 @@ class SegmentService {
 			return null;
 		}
 
-		$cached = $cache->get($cacheKey);
+		return $this->cachedCount(cached: $cache->get($cacheKey));
+	}//end readEstimateCache()
+
+	/**
+	 * A cached count as an int; null when the value is not a number.
+	 *
+	 * @param mixed $cached The cached value.
+	 *
+	 * @return int|null
+	 */
+	private function cachedCount(mixed $cached): ?int {
 		if (is_int($cached) === true) {
 			return $cached;
 		}
@@ -993,7 +1042,7 @@ class SegmentService {
 		}
 
 		return null;
-	}//end readEstimateCache()
+	}//end cachedCount()
 
 	/**
 	 * Count the entities of a type that match a rule tree.
@@ -2414,12 +2463,7 @@ class SegmentService {
 	private function extractRules(array $segment): ?array {
 		$rules = ($segment['rules'] ?? null);
 		if (is_string($rules) === true && $rules !== '') {
-			$decoded = json_decode($rules, true);
-			if (is_array($decoded) === true) {
-				return $decoded;
-			}
-
-			return null;
+			return $this->decodedRules(json: $rules);
 		}
 
 		if (is_array($rules) === true) {
@@ -2428,6 +2472,22 @@ class SegmentService {
 
 		return null;
 	}//end extractRules()
+
+	/**
+	 * A rule tree stored as JSON text; null when it is not a JSON object or list.
+	 *
+	 * @param string $json The stored rules.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function decodedRules(string $json): ?array {
+		$decoded = json_decode($json, true);
+		if (is_array($decoded) === true) {
+			return $decoded;
+		}
+
+		return null;
+	}//end decodedRules()
 
 	/**
 	 * Extract the entityType from a Segment payload.
