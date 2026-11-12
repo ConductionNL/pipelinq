@@ -1248,7 +1248,8 @@
 				"state": "built",
 				"evidence": "lib/Dashboard/FindClientWidget.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/dashboard"
+				"spec": "openspec/specs/dashboard",
+				"requirement": "openspec/changes/specify-capability-rows/specs/dashboard :: A client can be found by name, email or phone outside the client list"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-management/search-within-your-hubspot-account global search bar at the top of every page searches CRM records; https://knowledge.hubspot.com/records/search-your-crm lists searched properties \"First Name\", \"Last Name\", \"Primary Email\" and phone. All products and plans.",
@@ -1523,7 +1524,8 @@
 				"state": "built",
 				"evidence": "lib/Service/OpenCorporatesApiClient.php:96",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/prospect-discovery"
+				"spec": "openspec/specs/prospect-discovery",
+				"requirement": "openspec/changes/specify-capability-rows/specs/client-management :: An organisation abroad can be looked up in an international company register"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/how-data-enrichment-works-in-hubspot enrichment fills company records \"from HubSpot's commercial dataset, third-party providers, and publicly available information\"; Marketing, Sales or Service Hub Starter and up. It is enrichment from a commercial dataset, not a lookup in an official international company register.",
@@ -1694,7 +1696,8 @@
 				"state": "built",
 				"evidence": "lib/Service/PartyKindRegistryService.php:112",
 				"owner": "ConductionNL/pipelinq",
-				"change": "party-kinds-accepted-per-case-type"
+				"change": "party-kinds-accepted-per-case-type",
+				"requirement": "openspec/changes/specify-capability-rows/specs/client-management :: A client records what kind of party it is"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspot-crm-default-company-properties \"Type: the company's relationship to you (e.g., prospect, partner, reseller, vendor, or other)\"; persons and organisations are separate objects (https://knowledge.hubspot.com/records/understand-objects). No citizen or party kind value exists by default; a custom property would carry it. Note: Was no; the person versus organisation split and a company type exist, a citizen kind does not.",
@@ -1729,7 +1732,8 @@
 				"state": "built",
 				"evidence": "src/views/pipeline/PipelineBoard.vue",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/pipeline"
+				"spec": "openspec/specs/pipeline",
+				"requirement": "openspec/changes/specify-capability-rows/specs/pipeline :: A lead dragged to another stage column moves to that stage"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/manage-records-in-board-view \"objects with pipelines also have an updated board view, where records are shown as cards moving through stages in a pipeline\"; cards are dragged between stages. All products and plans.",
@@ -3345,7 +3349,8 @@
 				"evidence": "lib/Service/ComplaintSlaService.php:112",
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
-				"spec": "openspec/specs/klachtenregistratie"
+				"spec": "openspec/specs/klachtenregistratie",
+				"requirement": "openspec/changes/specify-capability-rows/specs/klachtenregistratie :: A complaint is held to the legal answer term by default"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspots-default-ticket-properties \"Category: main reason customer reached out for help\" and https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk SLA goals \"based on specific ticket properties\" let a complaint category carry its own answer term (Service Hub Professional). No complaint type or statutory term is built in; it is configured on a generic ticket.",
@@ -3680,7 +3685,8 @@
 				"state": "built",
 				"evidence": "lib/BackgroundJob/ScheduledTaskJob.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-05-11-task-background-jobs"
+				"change": "2026-05-11-task-background-jobs",
+				"requirement": "openspec/changes/specify-capability-rows/specs/task-background-jobs :: A task with a repeat schedule comes back on that schedule"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/tasks/create-tasks \"To make the task recurring, select the Set to repeat checkbox ... select days, weeks, months, or years as the interval\". The page marks seats as required for certain features; recurring tasks are documented for users with a Core, Sales or Service seat. Note: Was partial; the feature is documented and available to paid seats.",
@@ -4094,7 +4100,8 @@
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
 				"readOn": "2026-10-07",
-				"change": "notify-the-followers-of-tickets-and-leads"
+				"change": "notify-the-followers-of-tickets-and-leads",
+				"requirement": "openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/add-collaborators-to-a-deal \"If multiple users in your HubSpot account work together on a deal, you can add them as collaborators ... Each collaborator can access a default view that lists all deals they're included on\". All products and plans.",
@@ -5090,7 +5097,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalAuthService.php:130",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client logs in to the portal with an account of their own"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/set-up-a-support-portal \"A support portal is a login-protected space where customers can access and manage their support tickets\". Service Hub Professional, Enterprise.",
@@ -5122,7 +5130,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalMfaService.php:173",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: The portal asks for a second factor when the tenant requires it"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/website-pages/manage-private-content-settings portal members sign in with a password, a password-less code or \"social sign-on\" (Google or Microsoft), and https://knowledge.hubspot.com/website-pages/set-up-single-sign-on-sso-to-access-private-content SSO through an identity provider such as Okta \"for knowledge base articles and customer portals\" (Service Hub or Content Hub Professional). A second factor comes only from the external identity provider; the portal itself documents none.",
@@ -5156,7 +5165,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "customer portal, Requests (src/portal/portalRoutes.js:43)",
 				"readOn": "2026-09-27",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client files a request in the portal and follows it"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/set-up-a-support-portal \"To create and connect a support form, click Create a basic support form\" in the portal; customers then \"access and manage their support tickets\" and see their status there. Service Hub Professional, Enterprise.",
@@ -5190,7 +5200,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "customer portal, Requests detail reply box; back office TicketDetail status",
 				"readOn": "2026-09-27",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client answers a question on their request in the portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings \"When the customer logs in to their customer portal, they can reply to the ticket, and their response will appear in the selected inbox or help desk.\" Service Hub Professional, Enterprise.",
@@ -5222,7 +5233,8 @@
 				"state": "built",
 				"evidence": "lib/Controller/PortalDocumentController.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client downloads their own documents through a short-lived link"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/set-up-a-support-portal ticket attachments are visible in the portal unless \"Sensitive Data settings\" block them (\"customers won't be able to view sensitive files in the support portal\"); Service Hub Professional. There is no document library per client in the portal, only files on their tickets.",
@@ -5254,7 +5266,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Portal/DocumentSigningService.php:88",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client signs a document from a link"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/quotes/use-e-signatures-with-quotes \"Use e-signatures to gain acceptance of a quote or legacy quote from a buyer\", the buyer signs from the quote link. Sales Hub Starter, Professional, Enterprise or Revenue Hub Professional, Enterprise. Limited to quotes.",
@@ -5288,7 +5301,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "customer portal, Invoices tab (src/portal/views/PortalDashboard.vue:119)",
 				"readOn": "2026-09-28",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client sees their own invoices, contracts, orders and quotes"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/invoices/share-created-invoices \"share them through an email, using a direct link, downloading a PDF\"; \"a link to view the invoice in their browser\". All plans for the invoices tool. The invoice is reached by a link per invoice; the support portal does not list a client's invoices.",
@@ -5321,7 +5335,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalDelegationService.php:95",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A business client gives another portal account access to part of their records"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings \"All tickets from their company\" or \"Selected customers can see company tickets\" by contact property; Service Hub Professional. Access is set by the company, the client cannot grant a third party such as a bookkeeper access themselves.",
@@ -5353,7 +5368,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalExportService.php:86",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client downloads everything the portal holds about them"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-privacy-requests \"Set up your data privacy request page where contacts can submit requests related to the management of their personal data\", handled by an admin in the data request manager. All plans. A request, not a self service download.",
@@ -5385,7 +5401,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalAccountService.php:89",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-customer-portal"
+				"change": "2026-06-14-customer-portal",
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client closes their own portal account"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-privacy-requests contacts can request deletion of their personal data through the privacy request page; a Super Admin carries it out. All plans. No self service account closure in the portal is documented.",
@@ -5812,7 +5829,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ContractService.php:208",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/contract-renewal-tracking"
+				"spec": "openspec/specs/contract-renewal-tracking",
+				"requirement": "openspec/changes/specify-capability-rows/specs/contract-renewal-tracking :: A won lead can be turned into a numbered contract"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/set-up-contracts \"Contracts are created when a quote is accepted\", inheriting line items and terms, or created directly (beta); each contract is its own record with a Record ID, linked to the deal (https://knowledge.hubspot.com/contracts/understand-contracts-in-hubspot). Revenue Hub. Note: Was partial for the hub; the contract is its own record.",
@@ -6884,7 +6902,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Export/SchemaEvolutionService.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
+				"spec": "openspec/specs/bi-export-and-data-warehouse-sink",
+				"requirement": "openspec/changes/specify-capability-rows/specs/bi-export-and-data-warehouse-sink :: An export keeps working when a field is added or removed"
 			},
 			"evidence": {
 				"kiss": "the management API returns a fixed DTO (Kiss.Bff/Intern/ContactmomentDetails/Features/ContactMomentDetailsModel.cs); users cannot add fields, so the capability does not arise",
@@ -6981,7 +7000,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Matomo/MatomoReportService.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-search-intelligence"
+				"change": "marketing-search-intelligence",
+				"requirement": "openspec/changes/specify-capability-rows/specs/marketing-analytics-connectors :: Website traffic shows next to the pipeline for the same period"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/analyze-your-site-traffic-with-the-traffic-analytics-tool \"view website traffic data ... by source, topic cluster, device type, country\" (Marketing Hub or Content Hub Professional, Enterprise); traffic and deal reports sit on one dashboard (https://knowledge.hubspot.com/dashboards/manage-your-dashboards). Note: Was partial; with Marketing Hub Professional both sit on one dashboard.",
@@ -7117,7 +7137,8 @@
 				"state": "built",
 				"evidence": "appinfo/routes.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/marketing-api"
+				"spec": "openspec/specs/marketing-api",
+				"requirement": "openspec/changes/specify-capability-rows/specs/openregister-integration :: A script reads and writes the app's records through the API"
 			},
 			"evidence": {
 				"hubspot-crm": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide and the HubSpot API reference at https://developers.hubspot.com/docs cover CRM object read and write over REST with OAuth or private app tokens; All products and plans, with API rate limits by tier.",
@@ -7277,7 +7298,8 @@
 				"state": "built",
 				"evidence": "lib/BackgroundJob/SlaDeadlineSweepJob.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/sla-engine-and-escalation"
+				"spec": "openspec/specs/sla-engine-and-escalation",
+				"requirement": "openspec/changes/specify-capability-rows/specs/task-background-jobs :: Slow work runs as a background job, not in the user's request"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/use-based-on-a-schedule-workflow-enrollment-triggers \"set a workflow to recur just once, or on an annual, monthly, weekly, or daily schedule\" at a chosen time (Professional hubs); imports and exports run in the background, but no article names deferring slow work to a night queue.",
@@ -7341,7 +7363,8 @@
 				"state": "built",
 				"evidence": "lib/Listener/ObjectEventListener.php",
 				"owner": "ConductionNL/openregister",
-				"spec": "openspec/specs/notifications-activity"
+				"spec": "openspec/specs/notifications-activity",
+				"requirement": "openspec/changes/specify-capability-rows/specs/notifications-activity :: A change made to a tracked object by another app gets the same follow-up"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/set-slack-event-triggers-with-agent-hub-workflows \"trigger a workflow whenever a Slack user is mentioned or when a message is sent to a specific Slack channel\" (Professional hubs); call events from third-party apps such as Aircall also trigger workflows (https://knowledge.hubspot.com/workflows/set-event-enrollment-triggers). No shared file or calendar workspace. Note: Was no; Slack and calling events can trigger workflows.",
@@ -7440,7 +7463,8 @@
 				"evidence": "lib/Controller/SetupController.php",
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
-				"spec": "openspec/specs/first-time-setup"
+				"spec": "openspec/specs/first-time-setup",
+				"requirement": "openspec/changes/specify-capability-rows/specs/first-time-setup :: The setup wizard opens by itself on the first visit"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/use-your-home-page \"if this is your first time using HubSpot, you can work through your onboarding plan and access recommended HubSpot Academy videos\" (All products and plans); onboarding checklists at https://knowledge.hubspot.com/help-and-resources/manage-onboarding-to-do-lists-with-checklists (Professional hubs).",
@@ -7741,7 +7765,8 @@
 				"state": "built",
 				"evidence": "lib/Integration/ContactMomentLeafProvider.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/vng-klantinteracties-leaf"
+				"spec": "openspec/specs/vng-klantinteracties-leaf",
+				"requirement": "openspec/changes/specify-capability-rows/specs/vng-klantinteracties-leaf :: Stored contact moments can be read in the VNG Klantinteracties format"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for the VNG Klantinteracties API and found no article or app. Note: Was no without a source; the docs do not state the absence.",
@@ -8258,7 +8283,8 @@
 				"state": "built",
 				"evidence": "lib/Controller/HealthController.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/prometheus-metrics"
+				"spec": "openspec/specs/prometheus-metrics",
+				"requirement": "openspec/changes/specify-capability-rows/specs/prometheus-metrics :: One check reports the state of every configured connection"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/manage-your-connected-apps \"On the Connections home tab, view at a glance app connection statuses, identify issues that need attention\", to \"prevent issues like expired connections or reaching API call limits\". All products and plans. Note: Was partial; the Connections home is that page.",
@@ -8982,7 +9008,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-registry-numbers-and-enrichment"
+				"change": "clients-registry-numbers-and-enrichment",
+				"requirement": "openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty person details can be filled from a public source in bulk (REQ-CRN-004)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data \"Enrich contacts and companies using data from HubSpot's commercial dataset. Enrich records individually or in bulk\". Starter and up, with credits.",
@@ -9602,7 +9629,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ExportJobs, ExportJobNew, ExportDestinations, ExportRuns",
 				"readOn": "2026-09-26",
-				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
+				"spec": "openspec/specs/bi-export-and-data-warehouse-sink",
+				"requirement": "openspec/changes/specify-capability-rows/specs/bi-export-and-data-warehouse-sink :: Every service conversation can be copied to an outside archive"
 			},
 			"note": "contact moments, tickets and WhatsApp/SMS messages export; mail bodies stay in Nextcloud Mail and are only linked",
 			"evidence": {
@@ -9731,7 +9759,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail (Messages section); nothing puts social messages in the Queue page",
 				"readOn": "2026-09-26",
-				"change": "requests-inbound-to-queue"
+				"change": "requests-inbound-to-queue",
+				"requirement": "openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake :: An agent answers a social media message from its ticket (REQ-ITQ-006)"
 			},
 			"note": "WhatsApp arrives but lands per contact, not in the shared queue next to mail and phone; social network direct messages are not ingested at all. Specified 2026-09-28 in openspec/changes/requests-inbound-to-queue (OpenSpec pass). Corrections round 8 (2026-09-28): the inbound WhatsApp text is not shown on the contact, pipelinq#2073; rating kept at partial because inbound WhatsApp is still received and stored (lib/Service/WhatsAppAdapter.php:602) and its conversation shows on the contact. The display fix is task 1.1 of openspec/changes/messaging-saved-replies-and-resend.",
 			"evidence": {
@@ -9880,7 +9909,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "TicketDetail (recording link on the contact moment)",
 				"readOn": "2026-09-26",
-				"change": "contact-moments-call-review"
+				"change": "contact-moments-call-review",
+				"requirement": "openspec/changes/contact-moments-call-review/specs/call-review :: A reviewer plays the recording from the review (REQ-CRV-004)"
 			},
 			"note": "listen back only; score and coaching points are missing. Specified 2026-09-28 in openspec/changes/contact-moments-call-review (OpenSpec pass).",
 			"evidence": {
@@ -10560,7 +10590,8 @@
 				"state": "built",
 				"evidence": "lib/Service/AvailabilityService.php:174",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/appointment-booking"
+				"spec": "openspec/specs/appointment-booking",
+				"requirement": "openspec/changes/specify-capability-rows/specs/appointment-booking :: A user can send a booking link that offers the free slots in their own calendar"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/meetings-tool/create-and-edit-scheduling-pages \"Create one-on-one scheduling pages so contacts can book meetings with you\"; contacts \"access these scheduling pages using a meeting link\", synced with Gmail or Office 365. All products and plans.",
