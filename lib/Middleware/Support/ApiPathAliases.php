@@ -86,7 +86,7 @@ final class ApiPathAliases {
 			return false;
 		}
 
-		foreach (self::WITHOUT_SUCCESSOR as $pattern) {
+		foreach (self::withoutSuccessor() as $pattern) {
 			if (preg_match($pattern, $relative) === 1) {
 				return false;
 			}
@@ -191,6 +191,15 @@ final class ApiPathAliases {
 
 		return preg_match('#^(?:'.$requirement.')$#', 'a/b') === 1;
 	}//end isApiFallback()
+
+	/**
+	 * The patterns of the unversioned paths that keep no successor.
+	 *
+	 * @return array<string,string> The patterns by reason.
+	 */
+	private static function withoutSuccessor(): array {
+		return self::WITHOUT_SUCCESSOR;
+	}//end withoutSuccessor()
 
 	/**
 	 * The verb and path a route registers, which two routes cannot share.
