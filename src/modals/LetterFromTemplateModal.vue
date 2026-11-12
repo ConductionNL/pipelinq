@@ -565,7 +565,7 @@ export default {
 		},
 
 		/**
-		 * @return {object} The template, contact, ticket and appointment the preview is made with.
+		 * @return {object} The template, contact, ticket and appointment the preview and the letter are made with.
 		 */
 		previewOptions() {
 			return {
@@ -583,24 +583,7 @@ export default {
 		 */
 		async download() {
 			if (!this.canMake) return
-			this.making = true
-			this.error = ''
-			try {
-				const letter = await makeLetter(this.resolvedClientId, {
-					templateId: this.templateId,
-					contactId: this.contactId || undefined,
-					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
-					appointmentId: this.appointmentId || undefined,
-					downloadOnly: true,
-				})
-				downloadLetter(letter)
-			} catch (e) {
-				this.error =
-					e?.response?.data?.message
-					|| t('pipelinq', 'The letter could not be made.')
-			} finally {
-				this.making = false
-			}
+			await this.produceLetter({ ...this.previewOptions(), downloadOnly: true }, () => {})
 		},
 
 		/**
@@ -610,17 +593,26 @@ export default {
 		 */
 		async make() {
 			if (!this.canMake) return
+			await this.produceLetter(this.previewOptions(), (letter) => {
+				this.result = letter
+			})
+		},
+
+		/**
+		 * Have filinq make the letter and download it; say why when it fails.
+		 *
+		 * @param {object} options What the letter is made with.
+		 * @param {(letter: object) => void} keep What to do with the made letter, once downloaded.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+		 */
+		async produceLetter(options, keep) {
 			this.making = true
 			this.error = ''
 			try {
-				const letter = await makeLetter(this.resolvedClientId, {
-					templateId: this.templateId,
-					contactId: this.contactId || undefined,
-					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
-					appointmentId: this.appointmentId || undefined,
-				})
+				const letter = await makeLetter(this.resolvedClientId, options)
 				downloadLetter(letter)
-				this.result = letter
+				keep(letter)
 			} catch (e) {
 				this.error =
 					e?.response?.data?.message
