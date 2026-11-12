@@ -75,3 +75,14 @@ on import.
 - WHEN pipelinq's register is imported after an upgrade
 - THEN the import finishes with no `PARTIAL IMPORT` in the log
 - AND the `ticket` and `lead` schemas read back through OpenRegister carry the watchers block on the four rules
+
+### Requirement: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)
+
+The ticket and lead pages SHALL let a user add a colleague as a follower, after which that colleague receives the record's update notifications.
+
+#### Scenario: Sanne adds Jeroen to her ticket
+
+- GIVEN a ticket assigned to Sanne
+- WHEN Sanne adds Jeroen as a follower and then changes the ticket's status
+- THEN Jeroen is listed as a follower on the ticket
+- AND he receives the ticket changed notification
