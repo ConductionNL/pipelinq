@@ -8,7 +8,7 @@
  * retrying, the prepared share text and confirming a manual share), each run
  * against a plain component context.
  *
- * @spec openspec/specs/social-publishing/spec.md
+ * @spec openspec/specs/social-posts/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

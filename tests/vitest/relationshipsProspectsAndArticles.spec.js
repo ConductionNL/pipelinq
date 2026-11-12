@@ -9,7 +9,7 @@
  * (hero image, loading, refreshing and the lifecycle moves), each run against
  * a plain component context.
  *
- * @spec openspec/specs/contact-relationships/spec.md
+ * @spec openspec/specs/contact-relationship-mapping/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

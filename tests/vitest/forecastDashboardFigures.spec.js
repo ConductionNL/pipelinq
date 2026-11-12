@@ -7,7 +7,7 @@
  * snapshots it loads per level, the summary figures and tiles, the at-risk
  * warning, owner names, overrides, exchange rates and the CSV export.
  *
- * @spec openspec/specs/sales-forecasting/spec.md
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md
  */
 
 import { flushPromises, shallowMount } from '@vue/test-utils'

@@ -7,7 +7,7 @@
  * refusal), the multi-step service editor, the survey question editor and
  * the reschedule dialog, each run against a plain component context.
  *
- * @spec openspec/specs/bookings/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

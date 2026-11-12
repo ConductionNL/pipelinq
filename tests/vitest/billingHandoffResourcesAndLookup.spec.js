@@ -8,7 +8,7 @@
  * rows editor and the POS customer lookup, each run against a plain
  * component context.
  *
- * @spec openspec/specs/billing-handoff/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

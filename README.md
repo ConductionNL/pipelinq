@@ -240,7 +240,7 @@ stub false-positive) — see the file header and issue #496 before regenerating.
 ### Test coverage
 
 <!-- coverage:start -->
-Measured test coverage: 80.1% of statements (PHP 80.1% of 58,402 statements), at commit `ec0fa287b` on 2026-11-12. The JavaScript frontend is not in this figure, because it has no coverage measurement yet. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+Measured test coverage: 80.0% of statements (PHP 81.6% of 58,395 statements, JavaScript 74.8% of 17,450 statements), at commit `5fc45223b` on 2026-11-12. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
 <!-- coverage:end -->
 
 ## Tech Stack

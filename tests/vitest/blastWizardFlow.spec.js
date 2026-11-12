@@ -7,7 +7,7 @@
  * which step each choice unlocks, template validation and preview, the review
  * rows and consent line, the pre-send consent check, and the blast it creates.
  *
- * @spec openspec/specs/marketing-blasts/spec.md
+ * @spec openspec/specs/marketing-blast/spec.md
  */
 
 import axios from '@nextcloud/axios'

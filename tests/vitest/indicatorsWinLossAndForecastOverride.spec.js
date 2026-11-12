@@ -8,7 +8,7 @@
  * forecast override dialog (the reason it needs and what it saves), each run
  * against a plain component context.
  *
- * @spec openspec/specs/forecasting/spec.md
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

@@ -8,7 +8,7 @@
  * accounts page (connecting, finishing a connection, revoking), each run
  * against a plain component context with their services doubled.
  *
- * @spec openspec/specs/data-export/spec.md
+ * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

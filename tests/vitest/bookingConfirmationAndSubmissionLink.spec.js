@@ -8,7 +8,7 @@
  * parties, what may be linked, and the link itself with or without a lead),
  * each run against a plain component context.
  *
- * @spec openspec/specs/bookings/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

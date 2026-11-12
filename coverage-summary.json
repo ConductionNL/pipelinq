@@ -1,47 +1,67 @@
 {
     "total": {
         "lines": {
-            "total": 58402,
-            "covered": 46765,
+            "total": 74921,
+            "covered": 60111,
             "skipped": 0,
-            "pct": 80.07
+            "pct": 80.23
         },
         "statements": {
-            "total": 58402,
-            "covered": 46765,
+            "total": 75845,
+            "covered": 60695,
             "skipped": 0,
-            "pct": 80.07
+            "pct": 80.03
         },
         "functions": {
-            "total": 6945,
-            "covered": 4706,
+            "total": 14301,
+            "covered": 9464,
             "skipped": 0,
-            "pct": 67.76
+            "pct": 66.18
         }
     },
     "suites": {
         "phpunit": {
             "statements": {
-                "total": 58402,
-                "covered": 46765,
+                "total": 58395,
+                "covered": 47639,
                 "skipped": 0,
-                "pct": 80.07
+                "pct": 81.58
             },
             "functions": {
-                "total": 6945,
-                "covered": 4706,
+                "total": 7174,
+                "covered": 5037,
                 "skipped": 0,
-                "pct": 67.76
+                "pct": 70.21
             },
             "lines": {
-                "total": 58402,
-                "covered": 46765,
+                "total": 58395,
+                "covered": 47639,
                 "skipped": 0,
-                "pct": 80.07
+                "pct": 81.58
+            }
+        },
+        "vitest": {
+            "lines": {
+                "total": 16526,
+                "covered": 12472,
+                "skipped": 0,
+                "pct": 75.47
+            },
+            "statements": {
+                "total": 17450,
+                "covered": 13056,
+                "skipped": 0,
+                "pct": 74.82
+            },
+            "functions": {
+                "total": 7127,
+                "covered": 4427,
+                "skipped": 0,
+                "pct": 62.12
             }
         }
     },
     "measuredAt": "2026-11-12",
-    "commit": "ec0fa287b",
+    "commit": "5fc45223b",
     "generator": "scripts/coverage-publish.php"
 }
