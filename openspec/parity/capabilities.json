@@ -1163,6 +1163,12 @@
 					"openspec/specs/customer-360 :: Linked CRM Entities",
 					"openspec/specs/customer-360 :: Interaction History",
 					"openspec/specs/customer-360 :: Notes and Internal Communication"
+				],
+				"change": [
+					"openspec/changes/leaf-integration-broadening",
+					"openspec/changes/client-page-as-the-relation-boards",
+					"openspec/changes/ticket-leaf-closed-reference-assignee",
+					"openspec/changes/tickets-list-by-party"
 				]
 			},
 			"evidence": {
@@ -1493,7 +1499,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
 				"spec": "openspec/specs/client-management",
-				"requirement": "openspec/specs/client-management :: Client Segmentation and Tagging"
+				"requirement": "openspec/specs/client-management :: Client Segmentation and Tagging",
+				"change": "openspec/changes/shared-label-list"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/color-coded-object-tags \"Supported objects include: Appointments, App objects, Courses, Deals, Leads, Listings, Orders, Projects, Services, Tickets, Users\"; contacts and companies are not listed, so a client is grouped by a custom property or a segment instead. Sales or Service Hub Starter and up.",
@@ -1671,7 +1678,8 @@
 				"spec": "openspec/specs/unify-client-contact",
 				"reachedOn": "Clients -> New client -> Account owner; client detail page",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/unify-client-contact :: REQ-PUCC-008 — Every client SHALL name the colleague who owns it"
+				"requirement": "openspec/specs/unify-client-contact :: REQ-PUCC-008 — Every client SHALL name the colleague who owns it",
+				"change": "openspec/changes/filter-menu-owner-and-street"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/how-to-set-a-record-owner \"Assign records to HubSpot users, using the [Object] owner property for contacts, leads, companies, deals, tickets, and custom object records.\" All products and plans.",
@@ -1815,7 +1823,8 @@
 				"evidence": "lib/Service/DefaultPipelineService.php:60",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/pipeline",
-				"requirement": "openspec/specs/pipeline :: Multiple Pipelines per Organization [V1] (REQ-PIPE-019)"
+				"requirement": "openspec/specs/pipeline :: Multiple Pipelines per Organization [V1] (REQ-PIPE-019)",
+				"change": "openspec/changes/only-the-drawn-pipelines"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/set-up-and-customize-pipelines \"If your account has more than one unique process, you can create additional pipelines\", each with its own stages; the number of pipelines depends on the subscription (Sales Hub Starter and up for more than one deal pipeline).",
@@ -2710,7 +2719,11 @@
 				"evidence": "lib/Service/CtiService.php:219",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/cti-screenpop-adapter",
-				"requirement": "openspec/specs/cti-screenpop-adapter :: Inbound Screen-Pop on Call Answer (REQ-CTI-001)"
+				"requirement": "openspec/specs/cti-screenpop-adapter :: Inbound Screen-Pop on Call Answer (REQ-CTI-001)",
+				"change": [
+					"openspec/changes/kcc-agent-panel",
+					"openspec/changes/screen-pop-incoming-call"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/calling/receive-calls-in-hubspot on an inbound call \"The inbound phone name, contact's name, phone number, company name, photo, and a link to the contact record may be displayed\". Sales Hub or Service Hub Starter, Professional, Enterprise. Note: Was partial only because it is a paid hub; the buyer gets it in Starter.",
@@ -3164,7 +3177,11 @@
 				"state": "built",
 				"evidence": "lib/Service/TicketService.php:285",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/archive/2026-10-09-unify-ticket-supertype",
+				"change": [
+					"openspec/changes/archive/2026-10-09-unify-ticket-supertype",
+					"openspec/changes/request-dialog-client-lookups",
+					"openspec/changes/simple-ticket-page"
+				],
 				"requirement": [
 					"openspec/specs/request-management :: Request CRUD [MVP]",
 					"openspec/specs/request-management :: Request-to-Case Conversion [V1]"
@@ -3570,7 +3587,8 @@
 					"openspec/changes/specify-capability-rows/specs/appointment-booking :: A walk-in visitor gets a queue number",
 					"openspec/changes/walk-in-queue-page/specs/appointment-booking :: A walk-in operator works the queue on a manifest page"
 				],
-				"plan": "openspec/changes/specify-capability-rows"
+				"plan": "openspec/changes/specify-capability-rows",
+				"change": "openspec/changes/walk-in-queue-page"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no queue ticket or counter calling feature in the HubSpot knowledge base (searched the KB sitemap for queue, walk-in, counter, kiosk and check-in, 2026-09-26); the marketplace was not searched for a queue management app; the docs do not state an absence. Note: Was no without a source.",
@@ -3710,7 +3728,8 @@
 				"requirement": [
 					"openspec/specs/my-work :: Personal Workload View [MVP]",
 					"openspec/specs/my-work :: My work lists all my items in one list"
-				]
+				],
+				"change": "openspec/changes/tickets-board-view"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/use-your-home-page \"From the homepage, you can review upcoming meetings, tasks, frequently visited HubSpot tools and records, recent activity\" (all plans); task views and shared task queues (https://knowledge.hubspot.com/tasks/use-task-queues, Sales or Service Hub Starter and up) give one list of what waits on you.",
@@ -3916,7 +3935,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
 				"spec": "openspec/specs/notifications-activity",
-				"requirement": "openspec/specs/notifications-activity :: CRM Notifications [V1]"
+				"requirement": "openspec/specs/notifications-activity :: CRM Notifications [V1]",
+				"change": "openspec/changes/pipelinq-open-client-on-contactmoment"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/how-to-set-up-user-notifications-in-hubspot \"User notifications keep you informed ... such as when you are assigned a record\", by email, desktop and mobile. All products and plans.",
@@ -4090,7 +4110,8 @@
 				"evidence": "lib/Service/TimeBillingHandoffService.php:252",
 				"owner": "ConductionNL/shillinq",
 				"spec": "openspec/specs/time-approval-workflow",
-				"requirement": "openspec/specs/time-approval-workflow :: Approved time entries are emitted to shillinq's time-intake"
+				"requirement": "openspec/specs/time-approval-workflow :: Approved time entries are emitted to shillinq's time-intake",
+				"change": "openspec/changes/the-billing-time-entry-is-a-satellite"
 			},
 			"evidence": {
 				"hubspot-crm": "Only through a third party app: https://ecosystem.hubspot.com/marketplace/listing/hubclock-by-thread-integrations-552213 StopWatch \"Automatically Calculated Billings Based on Tracked Time\" (Unlimited plan) and PSOhub \"Import your automated timesheets and expense reports directly into invoices\" (https://www.psohub.com/en/hubspot-time-tracking). No native time to invoice flow in the knowledge base. Note: Was no; marketplace apps provide it.",
@@ -4438,7 +4459,10 @@
 				"state": "specified",
 				"evidence": "no calendar read in src/views/MyWork.vue or lib/Service/WorklistService.php; REQ-MW-130",
 				"owner": "ConductionNL/pipelinq",
-				"change": "my-work-roadmap",
+				"change": [
+					"my-work-roadmap",
+					"openspec/changes/calendar-deepening"
+				],
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Upcoming meetings from the calendar (REQ-MW-130)"
 			},
 			"source": "spec-round-2026-10-07",
@@ -4651,6 +4675,10 @@
 				"requirement": [
 					"openspec/specs/marketing-segmentation :: Segment Builder Composes Rule Trees",
 					"openspec/specs/marketing-segmentation :: Segments Are Live, Not Frozen Lists"
+				],
+				"change": [
+					"openspec/changes/segment-groups-its-rules",
+					"openspec/changes/segment-last-contact-signal"
 				]
 			},
 			"evidence": {
@@ -4683,7 +4711,10 @@
 				"state": "built",
 				"evidence": "lib/Service/TemplateRenderer.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/marketing-mail-templates",
+				"change": [
+					"openspec/changes/marketing-mail-templates",
+					"openspec/changes/marketing-articles-move-to-portaliq"
+				],
 				"requirement": "openspec/changes/marketing-mail-templates/specs/marketing-mail-templates :: A template holds a reusable mail (REQ-MMT-001)"
 			},
 			"evidence": {
@@ -4866,7 +4897,8 @@
 				"evidence": "lib/Service/ComplianceService.php:211",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/marketing-compliance",
-				"requirement": "openspec/specs/marketing-compliance :: Blast Cannot Send Without Lawful Basis"
+				"requirement": "openspec/specs/marketing-compliance :: Blast Cannot Send Without Lawful Basis",
+				"change": "openspec/changes/opt-out-before-send"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/email-error-when-sending-to-contact \"The system will only block emails from sending if ... it would be illegal to send an email to that particular contact\", including \"there isn't GDPR-compliant legal basis for sending to them\" and per subscription type opt outs. All products and plans; SMS and WhatsApp consent are checked per channel too. Note: Was partial; the block per subscription type and legal basis is documented.",
@@ -5422,7 +5454,13 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "customer portal, Requests (src/portal/portalRoutes.js:43)",
 				"readOn": "2026-09-27",
-				"change": "2026-06-14-customer-portal",
+				"change": [
+					"2026-06-14-customer-portal",
+					"openspec/changes/a-contact-question-is-required-and-dated",
+					"openspec/changes/a-resident-asks-a-question-without-a-dossier",
+					"openspec/changes/question-text-is-required-on-the-portal",
+					"openspec/changes/questions-about-a-citizen-dossier"
+				],
 				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client files a request in the portal and follows it"
 			},
 			"evidence": {
@@ -5775,7 +5813,8 @@
 					"openspec/specs/appointment-booking :: REQ-APT-003 Availability Computation",
 					"openspec/specs/appointment-booking :: REQ-APT-009 Cancellation with Policy Enforcement",
 					"openspec/specs/appointment-booking :: REQ-APT-015 Admin Booking Management"
-				]
+				],
+				"change": "openspec/changes/booking-and-service-pages"
 			},
 			"note": "Decision 99 (8 Oct): boards PqServices and PqService draw it and no row had it. Built; the board details still missing (buffer and Booked on columns, matching resources, bookings figure) are in services-and-resources-at-a-glance under portal-booking-capacity.",
 			"source": "spec-round-2026-10-08",
@@ -6129,7 +6168,8 @@
 				"evidence": "lib/Service/ContractService.php:208",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/contract-renewal-tracking",
-				"requirement": "openspec/changes/specify-capability-rows/specs/contract-renewal-tracking :: A won lead can be turned into a numbered contract"
+				"requirement": "openspec/changes/specify-capability-rows/specs/contract-renewal-tracking :: A won lead can be turned into a numbered contract",
+				"change": "openspec/changes/contract-contact-ref"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/set-up-contracts \"Contracts are created when a quote is accepted\", inheriting line items and terms, or created directly (beta); each contract is its own record with a Record ID, linked to the deal (https://knowledge.hubspot.com/contracts/understand-contracts-in-hubspot). Revenue Hub. Note: Was partial for the hub; the contract is its own record.",
@@ -6307,7 +6347,8 @@
 					"openspec/specs/contract-renewal-tracking :: Recurring Revenue Roll-Up",
 					"openspec/specs/contract-renewal-tracking :: MRR KPI Card",
 					"openspec/specs/contract-renewal-tracking :: Renewals Due Widget"
-				]
+				],
+				"change": "openspec/changes/recurring-revenue-runrate-widget"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/understand-contracts-in-hubspot the contract shows \"total contract value (TCV), annual contract value, monthly recurring revenue (MRR), and annual recurring revenue (ARR)\" (Revenue Hub); https://knowledge.hubspot.com/reports/track-recurring-revenue-with-revenue-analytics reports renewals, upgrades and churn (Sales or Service Hub Enterprise). Note: Was partial.",
@@ -7042,7 +7083,8 @@
 				"evidence": "lib/Service/ReportingService.php:90",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/contactmomenten-rapportage",
-				"requirement": "openspec/specs/commercial-dashboard :: Operational dashboard preserved"
+				"requirement": "openspec/specs/commercial-dashboard :: Operational dashboard preserved",
+				"change": "openspec/changes/simple-contact-dashboard"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/dashboards/manage-your-dashboards names \"a user-specific service dashboard to see how a customer service representative is performing\"; https://knowledge.hubspot.com/reports/create-service-reports-in-the-service-analytics-suite pre-built reports on \"customer satisfaction scores, average ticket response time, and overall support volume\". Service Hub Starter, Professional, Enterprise.",
@@ -7387,7 +7429,8 @@
 				"requirement": [
 					"openspec/specs/contactmomenten-rapportage :: Channel Analytics",
 					"openspec/specs/contactmomenten-rapportage :: Contact Moment Categorization"
-				]
+				],
+				"change": "openspec/changes/wire-rapportage-csv-export"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-custom-single-object-reports lists Calls among the objects to report on, and https://knowledge.hubspot.com/reports/create-reports-with-the-custom-report-builder can \"surface data from marketing and sales activities\" grouped by any property. Marketing, Sales or Service Hub Professional, Enterprise. Note: Was partial; activity reports by type and property need a Professional hub.",
@@ -7599,7 +7642,8 @@
 				"requirement": [
 					"openspec/specs/crm-mcp-tool-surface :: CRM CRUD tools are declared on the schema, not hand-coded",
 					"openspec/specs/crm-mcp-tool-surface :: MCP provider exposes RBAC-guarded CRM write tools"
-				]
+				],
+				"change": "openspec/changes/mcp-full-action-coverage"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/set-up-and-use-the-hubspot-connector-for-claude the connector can \"Create and update HubSpot CRM records ... Log activities\"; \"During approval, Super Admins select which data permissions the connector can access and who in the account can install it\", and \"Users can access only the data allowed by their existing HubSpot permissions\". All products and plans. Note: Was partial; admin-scoped permissions for an AI assistant are documented.",
@@ -7802,7 +7846,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
 				"spec": "openspec/specs/first-time-setup",
-				"requirement": "openspec/specs/first-time-setup :: REQ-SETUP-PIP-008 — Optional Demo-Data Seed"
+				"requirement": "openspec/specs/first-time-setup :: REQ-SETUP-PIP-008 — Optional Demo-Data Seed",
+				"change": "openspec/changes/example-set-zuiddrecht"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/sample-import-files offers \"Contacts sample spreadsheet: XLSX or CSV\" and other sample files to import; a new account holds one sample contact (Maria Johnson, per https://community.hubspot.com/t5/APIs-Integrations/Best-way-to-populate-test-account-with-sample-data-for/m-p/536437/highlight/true). No one-click example data set. Note: Was unknown.",
@@ -7872,7 +7917,8 @@
 				"requirement": [
 					"openspec/specs/brp-lookup :: A BRP lookup can verify a client's identity",
 					"openspec/specs/brp-lookup :: The lookup reads the person it asked for"
-				]
+				],
+				"change": "openspec/changes/brp-monitor-moves-to-integriq"
 			},
 			"note": "The 2026-03 KISS research lists this as a pipelinq gap. It has since been built.",
 			"evidence": {
@@ -8175,7 +8221,8 @@
 				"evidence": "lib/Service/BerichtenboxService.php:143",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/berichtenbox",
-				"requirement": "openspec/specs/berichtenbox :: Outbound Status Push on Zaak Transition (REQ-OUTBOUND-001)"
+				"requirement": "openspec/specs/berichtenbox :: Outbound Status Push on Zaak Transition (REQ-OUTBOUND-001)",
+				"change": "openspec/changes/berichtenbox-admin-stats-pagination-and-tests"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for MijnOverheid Berichtenbox and found no article or app. Note: Was no without a source; the docs do not state the absence.",
@@ -8517,7 +8564,8 @@
 				"requirement": [
 					"openspec/specs/crm-access-groups :: Company-wide CRM surfaces SHALL be limited to privileged users",
 					"openspec/specs/crm-access-groups :: An owned record SHALL be acted on only by its owner or a privileged user"
-				]
+				],
+				"change": "openspec/changes/close-pipelinq-register-to-staff"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/hubspot-user-permissions-guide \"Super Admins can set user permissions to control what users can view, create, edit, or delete ... you can give a sales rep permission to communicate only with contacts they own\", per object with owned, team or everything scopes. All products and plans; teams and permission sets on Starter and up. Note: Was partial for paid tiers; basic view and edit scopes are on every plan.",
@@ -8584,7 +8632,8 @@
 				"evidence": "lib/Service/EncryptionService.php",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/berichtenbox",
-				"requirement": "openspec/specs/berichtenbox :: Encryption Key Management (REQ-KEYVAULT-015)"
+				"requirement": "openspec/specs/berichtenbox :: Encryption Key Management (REQ-KEYVAULT-015)",
+				"change": "openspec/changes/pos-psp-keys-via-broker"
 			},
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/security \"The physical and virtualized hard drives used by HubSpot product server instances as well as long-term storage solutions like AWS S3 use AES-256 encryption\"; connected app tokens are held by HubSpot in that store.",
@@ -8714,7 +8763,8 @@
 				"evidence": "lib/Service/DataDeletionService.php:110",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/avg-verzoeken-workflow",
-				"requirement": "openspec/specs/avg-verzoeken-workflow :: REQ-AVG-018 — Erasure removes the person and keeps the financial records"
+				"requirement": "openspec/specs/avg-verzoeken-workflow :: REQ-AVG-018 — Erasure removes the person and keeps the financial records",
+				"change": "openspec/changes/erase-on-soft-delete"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/how-do-i-perform-a-gdpr-delete-in-hubspot permanent delete removes the contact \"including email tracking history, call records, form submissions\", while \"anonymized analytics data will remain\"; associated deals and companies are separate records and stay. All products and plans. Note: Was partial; the delete keeps the other records intact.",
@@ -8815,7 +8865,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-09-26",
 				"spec": "openspec/specs/register-i18n",
-				"requirement": "openspec/specs/register-i18n :: App UI MUST provide complete Dutch and English translations per ADR-005"
+				"requirement": "openspec/specs/register-i18n :: App UI MUST provide complete Dutch and English translations per ADR-005",
+				"change": "openspec/changes/i18n-key-hygiene-dutch-literals"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/hubspot-language-offerings lists Nederlands (Dutch) among \"languages ... available in the HubSpot interface\", noting some features may lag. All products and plans.",
@@ -9512,7 +9563,8 @@
 				"owner": "ConductionNL/shillinq",
 				"spec": "openspec/specs/product-stock",
 				"requirement": "openspec/specs/product-stock :: The product page shows the available stock (REQ-PST-001)",
-				"readOn": "2026-10-30"
+				"readOn": "2026-10-30",
+				"change": "openspec/changes/pos-stock-moved-event"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base URL list for inventory and stock and found no article; https://knowledge.hubspot.com/properties/hubspots-default-product-properties shows no quantity on hand (read 2026-09-26). Note: Was no without a source.",
@@ -10742,7 +10794,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "every page; portal at /apps/pipelinq/portal",
 				"readOn": "2026-09-26",
-				"change": "platform-accessibility-statement",
+				"change": [
+					"platform-accessibility-statement",
+					"openspec/changes/keyboard-accessible-click-toggles"
+				],
 				"requirement": [
 					"openspec/changes/platform-accessibility-statement/specs/accessibility-conformance :: The back office is checked for WCAG 2.1 AA on every nightly run (REQ-PAS-001)",
 					"openspec/changes/platform-accessibility-statement/specs/accessibility-conformance :: Each release carries a conformance report (REQ-PAS-002)",
@@ -10767,6 +10822,37 @@
 				"board": null,
 				"reason": "no screen: an accessibility statement and audit, across every screen"
 			}
+		},
+		{
+			"id": "plat-simple-menu",
+			"area": "platform",
+			"name": "Open the app in a short menu with only the daily work, and bring the full menu back when you need it",
+			"pipelinq": "yes",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in src/menu-layout.simple.json beside src/menu-layout.json",
+			"feature": "navigation-ia",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "src/menu-layout.simple.json holds the simple structure, src/menu-layout.json the full one; the admin setting menu_structure=full brings the full menu back. The live check (task 3.1 of simple-structure-profile) is still open.",
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-11-12",
+				"change": "openspec/changes/simple-structure-profile",
+				"requirement": [
+					"openspec/changes/simple-structure-profile/specs/navigation-ia :: The simple structure is the default and an administrator can bring the full one back (REQ-NIA-101)",
+					"openspec/changes/simple-structure-profile/specs/navigation-ia :: What leaves the simple menu stays one step away (REQ-NIA-103)",
+					"openspec/changes/simple-structure-profile/specs/navigation-ia :: An administrator switches a module into the simple menu (REQ-NIA-104)"
+				]
+			},
+			"screen": {
+				"board": "PqModules"
+			},
+			"note": "Added 12 Nov 2026 (closing round, decision 395): simple-structure-profile builds it and no row named it."
 		},
 		{
 			"id": "plat-field-conditions",
