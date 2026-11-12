@@ -66,6 +66,7 @@ import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import CashShiftDropDialog from '../../modals/CashShiftDropDialog.vue'
 import { postShiftAction } from '../../services/posShiftActions.js'
+import posDetailWidgetMixin from './posDetailWidgetMixin.js'
 
 export default {
 	name: 'CashShiftDropsWidget',
@@ -78,6 +79,8 @@ export default {
 		Plus,
 	},
 
+	mixins: [posDetailWidgetMixin],
+
 	// The host also spreads the content keys and register / schema / store;
 	// none of them belong on the root element.
 	inheritAttrs: false,
@@ -87,24 +90,6 @@ export default {
 		content: {
 			type: Object,
 			default: () => ({}),
-		},
-
-		/** The shift, from the detail page. */
-		objectData: {
-			type: Object,
-			default: null,
-		},
-
-		/** The shift id, from the detail page. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
 		},
 	},
 
