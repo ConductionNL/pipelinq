@@ -48,14 +48,18 @@ class OpenApiDocumentTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheDocumentMatchesTheRoutes(): void {
-		// Operations OpenRegister's AppHost routes for the app exist only when OpenRegister is installed.
-		$hosted     = class_exists('OCA\OpenRegister\AppHost\Routes');
+		// Operations marked x-provided-by come from OpenRegister's AppHost route table, which tests may not load.
 		$documented = [];
+		$hosted     = [];
 		foreach (self::document()['paths'] as $path => $item) {
 			foreach ($item as $verb => $operation) {
-				if (in_array($verb, ['get', 'put', 'post', 'delete', 'patch', 'options', 'head'], true) === true
-					&& ($hosted === true || ($operation['x-provided-by'] ?? null) !== 'openregister')
-				) {
+				if (in_array($verb, ['get', 'put', 'post', 'delete', 'patch', 'options', 'head'], true) === false) {
+					continue;
+				}
+
+				if (($operation['x-provided-by'] ?? null) === 'openregister') {
+					$hosted[] = strtoupper($verb).' '.self::shape(path: '/api/v1'.$path);
+				} else {
 					$documented[] = strtoupper($verb).' '.self::shape(path: '/api/v1'.$path);
 				}
 			}
@@ -70,7 +74,7 @@ class OpenApiDocumentTest extends TestCase {
 			}
 		}
 
-		$routed = array_values(array_unique($routed));
+		$routed = array_values(array_unique(array_diff($routed, $hosted)));
 		sort($documented);
 		sort($routed);
 		$this->assertSame(expected: [], actual: array_values(array_diff($documented, $routed)), message: 'documented but not routed');
