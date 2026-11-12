@@ -6,17 +6,6 @@
 useDefault = true
 
 [[allowlists]]
-description = "Agent skill instructions: curl examples with the default admin:admin login of the local development container."
-targetRules = ["curl-auth-user"]
-paths = [
-  '''(^|/)\.claude/skills/opsx\-verify/SKILL\.md$''',
-  '''(^|/)\.claude/skills/team\-qa/SKILL\.md$''',
-  '''(^|/)\.claude/skills/test\-api/SKILL\.md$''',
-  '''(^|/)\.claude/skills/test\-performance/SKILL\.md$''',
-  '''(^|/)\.claude/skills/test\-security/SKILL\.md$''',
-]
-
-[[allowlists]]
 description = "Documentation examples: the default admin:admin login of the local development and demo containers."
 targetRules = ["curl-auth-user"]
 paths = [
