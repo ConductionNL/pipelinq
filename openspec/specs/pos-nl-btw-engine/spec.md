@@ -216,6 +216,33 @@ The system MUST not break existing single-rate transactions (all lines at 21%).
 
 ---
 
+### Requirement: The server prices every stored sale line
+
+When a posTransactionLine is created or changed, the system MUST write its `taxAmount` and `lineTotal` from its quantity, unit price, discount and VAT rate, in the price display of its sale, before it is stored. A `taxAmount` or `lineTotal` sent by a client MUST NOT be stored.
+
+#### Scenario: A client sends its own figures
+
+- GIVEN a sale with price display incl. VAT
+- WHEN a line of 1 x 12,10 at 21% is stored with `lineTotal` 1,00
+- THEN the stored line MUST read `taxAmount` 2,10 and `lineTotal` 12,10
+
+### Requirement: The till asks the server to price the open sale
+
+`POST /api/pos-transactions/{id}/recalculate` MUST store the server's figures on every line of a draft or parked sale whose stored figures differ (the price display changed), store the sale's totals and VAT per rate, and return the sale and its lines. It MUST refuse a user who is not the sale's cashier, in the POS group or an admin (403), and a sale that is no longer draft or parked (422).
+
+#### Scenario: The price display is switched
+
+- GIVEN a draft sale with price display excl. VAT and a line of 1 x 12,10 at 21% (line total 14,64)
+- WHEN the cashier switches the price display to incl. VAT
+- THEN the till MUST store the sale and call recalculate
+- AND the line MUST read line total 12,10 and the sale total 12,10
+
+#### Scenario: A confirmed sale is not priced again
+
+- GIVEN a confirmed sale
+- WHEN recalculate is called for it
+- THEN the system MUST answer 422 and change nothing
+
 ## CloudEvent Schema
 
 The `pipelinq.PosTransaction.confirmed` event (from pos-transaction-core) is unchanged in format,

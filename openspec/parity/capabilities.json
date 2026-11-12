@@ -4212,7 +4212,8 @@
 				"requirement": [
 					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Share a view with a group",
 					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Shared views listed beside own views"
-				]
+				],
+				"plan": "openspec/changes/my-work-roadmap"
 			},
 			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks. Re-read 2026-09-28 (OpenSpec pass, wave-5 correction round 6): rating partial holds at nextcloud-vue 2.57.1; evidence refreshed from 2.56.0. Specified in ConductionNL/nextcloud-vue openspec/changes/saved-views-shared-by-role (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"evidence": {

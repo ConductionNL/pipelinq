@@ -2,10 +2,18 @@
 
 ## MODIFIED Requirements
 
-### Requirement: The page must link to the comparison on the public site
+### Requirement: The page MUST link to the comparison on the public site
 
 The features page SHALL link to the comparison on the public site in the reader's language, opening in a new tab,
 through the library page's compare link, so it takes the library's board look.
+
+#### Scenario: The comparison is one link away
+
+- **GIVEN** a user opens `/features-roadmap`
+- **WHEN** the page loads
+- **THEN** the page MUST NOT render the comparison tables or its caveats
+- **AND** a link reading "How pipelinq compares to other help desks" MUST point at `/compare` on the docs site
+- **AND** the link MUST open in a new tab
 
 #### Scenario: PqRoadmap
 
