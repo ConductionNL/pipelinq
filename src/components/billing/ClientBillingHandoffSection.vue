@@ -83,6 +83,7 @@ import {
 	getBillingHandoffAvailability,
 	sendToBilling,
 } from '../../services/billingHandoffApi.js'
+import { sectionObjectId } from '../../utils/sectionContext.js'
 
 /**
  * @param {object} result A synced result.
@@ -203,13 +204,7 @@ export default {
 		 * @spec openspec/specs/time-approval-workflow/spec.md
 		 */
 		resolvedId() {
-			if (this.clientId) {
-				return this.clientId
-			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
-			return (bag && bag.objectId) || ''
+			return this.clientId || sectionObjectId(this.cnSectionContext)
 		},
 
 		/**

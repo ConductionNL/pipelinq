@@ -57,6 +57,7 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { sectionObjectId } from '../../utils/sectionContext.js'
 
 const DEFAULT_AVAILABILITY = {
 	available: false,
@@ -119,13 +120,7 @@ export default {
 		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
 		 */
 		resolvedId() {
-			if (this.contractId) {
-				return this.contractId
-			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
-			return (bag && bag.objectId) || ''
+			return this.contractId || sectionObjectId(this.cnSectionContext)
 		},
 
 		/** Shown only when an ns#Invoice implementer exists AND the contract is active. */
