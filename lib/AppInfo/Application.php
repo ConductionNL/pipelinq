@@ -151,7 +151,7 @@ class Application extends App implements IBootstrap {
 		// The API contract (version header, deprecation of unversioned paths,
 		// problem details). Registered first: Nextcloud runs afterController in
 		// reverse order, so it sees the final response of every other middleware.
-		$context->registerMiddleware(ApiContractMiddleware::class);
+		$context->registerMiddleware(class: ApiContractMiddleware::class);
 
 		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never its
 		// concrete class, so this app's unit tests can mock a type they are able to
