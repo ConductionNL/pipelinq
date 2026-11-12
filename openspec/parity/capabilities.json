@@ -11180,9 +11180,8 @@
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
-					"PqAfspraken",
-					"PqAfspraak",
-					"PqAfspraakVerplaatsen"
+					"PqBoekingslink",
+					"PqAfspraken"
 				]
 			}
 		},
