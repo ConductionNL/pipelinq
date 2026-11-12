@@ -555,7 +555,9 @@ export default {
 					(m) => ({ ...m }),
 				),
 
-				stages: (this.pipeline.stages || []).map((s) => ({ ...s })),
+				stages: (this.pipeline.stages || [])
+					.map((s) => ({ ...s }))
+					.sort((a, b) => a.order - b.order),
 			}
 			// `form.stages` is now the display order (see recomputeOrders): the
 			// vuedraggable v4 item slot iterates the bound list rather than a
@@ -659,11 +661,9 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
 		 */
 		recomputeOrders() {
-			// Sort IN PLACE so `form.stages` is itself the display order. The item
-			// slot of vuedraggable v4 iterates the bound list, so the array order
-			// and the `order` field must agree — and keeping them in one array is
-			// what lets `stageErrors[index]` line up with the row it is shown on.
-			this.form.stages.sort((a, b) => a.order - b.order)
+			// The array position is the display order: the item slot of
+			// vuedraggable v4 iterates the bound list, so `order` follows the
+			// array, and `stageErrors[index]` lines up with the row it is shown on.
 			this.form.stages.forEach((stage, i) => {
 				stage.order = i
 			})
