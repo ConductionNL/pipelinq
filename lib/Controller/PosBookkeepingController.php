@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-06-14-pos-end-of-day-bookkeeping-post/tasks.md#2.2
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-06-14-pos-end-of-day-bookkeeping-post/tasks.md#2.2
  */
 class PosBookkeepingController extends Controller {
 	/**

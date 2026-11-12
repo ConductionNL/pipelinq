@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-001
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-001
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service\Portal;
  * One portal login in progress: the tenant and client it comes from, and the
  * account once it is found. Built and used only by PortalAuthService::login.
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-001
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-001
  */
 final class PortalLoginRun {
 	/**

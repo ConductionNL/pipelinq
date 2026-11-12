@@ -14,7 +14,7 @@
  *
  * @param {Array<object>} items The board items.
  * @return {Set<string>} The lead ids.
- * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
  */
 export function boardLeadIds(items) {
 	return new Set(
@@ -31,7 +31,7 @@ export function boardLeadIds(items) {
  * @param {?Array<object>} lpCollection Every line item.
  * @param {Set<string>} leadIds The leads to keep.
  * @return {{byLead: object, productIds: Set<string>}} The groups and the product ids.
- * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
  */
 export function groupLeadProducts(lpCollection, leadIds) {
 	const byLead = {}
@@ -51,7 +51,7 @@ export function groupLeadProducts(lpCollection, leadIds) {
  * @param {?Array<object>} products Every product.
  * @param {Set<string>} productIds The products to name.
  * @return {object} The names by product id.
- * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
  */
 export function productNames(products, productIds) {
 	const names = {}
@@ -69,7 +69,7 @@ export function productNames(products, productIds) {
  * @param {Array<object>} lineItems The line items.
  * @param {object} namesById The product names by id.
  * @return {Array<{product: string, name: string, count: number, total: number}>} One entry per product, highest total first.
- * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.2
  */
 export function productTotals(lineItems, namesById) {
 	const aggregate = new Map()

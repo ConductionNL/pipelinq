@@ -34,7 +34,7 @@ export const INDUSTRY_SECTORS = [
  *
  * @param {unknown} value The stored industry.
  * @return {string[]} The sectors.
- * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 export function industryList(value) {
 	if (Array.isArray(value)) {
@@ -51,7 +51,7 @@ export function industryList(value) {
  * @param {string} instanceDefault The instance default language.
  * @param {string} userLanguage The current user's language.
  * @return {string} The tag, or ''.
- * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 export function defaultLanguage(available, instanceDefault, userLanguage) {
 	if (available.includes(userLanguage)) {
@@ -86,7 +86,7 @@ const CLIENT_FORM_DEFAULTS = {
  * An empty client form, with lists of its own.
  *
  * @return {object} The form.
- * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
  */
 export function emptyClientForm() {
 	return { ...CLIENT_FORM_DEFAULTS, industry: [], labels: [] }
@@ -98,7 +98,7 @@ export function emptyClientForm() {
  *
  * @param {object} data The client to load into the form.
  * @return {object} The form.
- * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
  */
 export function clientFormFrom(data) {
 	const form = {}

@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
  */
 
 declare(strict_types=1);
@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service\Competitor;
 /**
  * The source id and the depth of one sitemap read.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
  */
 final class SitemapHop {
 
@@ -47,7 +47,7 @@ final class SitemapHop {
 	 *
 	 * @return self
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
 	 */
 	public function deeper(): self {
 		return new self(sourceId: $this->sourceId, depth: ($this->depth + 1));

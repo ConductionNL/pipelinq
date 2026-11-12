@@ -28,7 +28,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Repair step: give every existing contact moment a first-class direction.
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
  */
 class MigrateContactMomentDirection implements IRepairStep {
 	/**
@@ -95,7 +95,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 	 *
 	 * @return string Name.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public function getName(): string {
 		return 'Fill the direction of contact moments written before the field existed';
@@ -111,7 +111,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 	 *
 	 * @return string|null The direction to write, or null to leave the row alone.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public function directionFor(array $data): ?string {
 		$existing = ($data['direction'] ?? null);
@@ -152,7 +152,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public function run(IOutput $output): void {
 		if ($this->ticketService->isConfigured() === false) {

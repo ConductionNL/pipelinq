@@ -41,7 +41,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 
 declare(strict_types=1);
@@ -58,7 +58,7 @@ use OCP\IGroupManager;
 /**
  * The social account lifecycle and its ownership boundary.
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) Connect, reconnect, attach,
  *  revoke, status sync and the ownership guard are one account lifecycle;
@@ -178,7 +178,7 @@ class SocialAccountService {
 	 * @return array{data: array<int, array<string, mixed>>, readiness: array<string, array{state: string, reason: string}>}
 	 *         The accounts and the per-network readiness.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	public function listAccounts(): array {
 		return [
@@ -196,7 +196,7 @@ class SocialAccountService {
 	 *
 	 * @return array<int, array<string, mixed>> The active accounts.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function activeAccounts(): array {
 		$out = [];
@@ -218,7 +218,7 @@ class SocialAccountService {
 	 *
 	 * @return array<string, mixed>|null The account, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function getAccount(string $accountId): ?array {
 		return $this->store->find(schemaSlug: $this->schema(), id: $accountId);
@@ -236,7 +236,7 @@ class SocialAccountService {
 	 *
 	 * @return bool True when the caller may act on it.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-personal-account-belongs-to-the-person-who-connected-it
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-personal-account-belongs-to-the-person-who-connected-it
 	 */
 	public function mayActOn(string $uid, array $account): bool {
 		if (trim($uid) === '') {
@@ -262,7 +262,7 @@ class SocialAccountService {
 	 *
 	 * @return array{error?: string, account?: array<string, mixed>} The created account, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-personal-account-belongs-to-the-person-who-connected-it
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-personal-account-belongs-to-the-person-who-connected-it
 	 */
 	public function createAccount(array $payload, string $uid): array {
 		$network = trim((string)($payload['network'] ?? ''));
@@ -309,7 +309,7 @@ class SocialAccountService {
 	 *
 	 * @return array{error?: string, connect?: array<string, mixed>} The parameters, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function connectRequest(string $accountId, string $uid, string $returnUrl): array {
 		$found = $this->connectableAccount(accountId: $accountId, uid: $uid);
@@ -390,7 +390,7 @@ class SocialAccountService {
 	 *
 	 * @return array<string, mixed> The fields that apply.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	private function optionalConnectFields(array $account): array {
 		$out = [];
@@ -423,7 +423,7 @@ class SocialAccountService {
 	 *
 	 * @return array{error?: string, account?: array<string, mixed>} The updated account, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function attachCredential(string $accountId, string $uid, array $payload): array {
 		$found = $this->connectableAccount(accountId: $accountId, uid: $uid);
@@ -505,7 +505,7 @@ class SocialAccountService {
 	 *
 	 * @return array{error?: string, account?: array<string, mixed>} The updated account, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function revoke(string $accountId, string $uid): array {
 		$account = $this->getAccount(accountId: $accountId);
@@ -543,7 +543,7 @@ class SocialAccountService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function markRelinkNeeded(string $accountId, string $reason): void {
 		$account = $this->getAccount(accountId: $accountId);
@@ -607,7 +607,7 @@ class SocialAccountService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function recordFollowerCount(string $accountId, int $followers): void {
 		$account = $this->getAccount(accountId: $accountId);
@@ -630,7 +630,7 @@ class SocialAccountService {
 	 *
 	 * @return array<string, mixed>|null The updated account, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function syncStatus(string $accountId): ?array {
 		$account = $this->getAccount(accountId: $accountId);
@@ -656,7 +656,7 @@ class SocialAccountService {
 	 *
 	 * @return string The schema slug.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	public function schema(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA);
@@ -675,7 +675,7 @@ class SocialAccountService {
 	 *
 	 * @return array<string, mixed> The account to store.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	private function withCredential(array $account, array $credential): array {
 		$account['credentialRef'] = (string)($credential['id'] ?? '');

@@ -9,7 +9,7 @@
   - and never compiled, which looks exactly like one whose trigger has not
   - fired yet.
   -
-  - @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+  - @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
   -->
 <template>
 	<CnDialog
@@ -275,7 +275,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The id of the journey being edited, empty when creating one.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		journeyId() {
 			const item = this.item || {}
@@ -289,7 +289,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The trigger kinds the schema declares.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		triggerOptions() {
 			return [
@@ -322,7 +322,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The four condition operators.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		operatorOptions() {
 			return [
@@ -335,7 +335,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The two actions.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		actionOptions() {
 			return [
@@ -349,7 +349,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The two send intents.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 		 */
 		intentOptions() {
 			return [
@@ -360,7 +360,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The three statuses.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		statusOptions() {
 			return [
@@ -375,7 +375,7 @@ export default {
 		/**
 		 * Read the record each time the dialog opens.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		prepareOnOpen() {
 			this.load()
@@ -384,7 +384,7 @@ export default {
 		/**
 		 * Reset the form, seed the pickers, and read the journey when editing one.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		async load() {
 			Object.assign(this, blankState())
@@ -404,7 +404,7 @@ export default {
 		/**
 		 * Read the journey being edited into the form.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		async fetchJourney() {
 			try {
@@ -440,7 +440,7 @@ export default {
 		 * take it, the journey is still saved, so the dialog closes and says why
 		 * in a notification.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		async save() {
 			this.saving = true
@@ -491,7 +491,7 @@ export default {
 		 * @param {Array<object>} options The options.
 		 * @param {string} value The stored value.
 		 * @return {object} The option, falling back to the first.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		pick(options, value) {
 			return options.find((option) => option.value === value) || options[0]

@@ -82,7 +82,7 @@ class PointsCreditRun {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/loyalty-ledger-operation-id/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
+	 * @spec openspec/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
 	 */
 	public function operationId(): string {
 		$transactionId = (string)($this->transaction['posTransactionId'] ?? '');

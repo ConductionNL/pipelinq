@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Throwable;
 /**
  * GoogleServiceAccountAuth: key parsing, assertion signing, token exchange.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 class GoogleServiceAccountAuth {
 
@@ -63,7 +63,7 @@ class GoogleServiceAccountAuth {
 	 * @param ITimeFactory $time Time factory for `iat`/`exp`.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function __construct(
 		private IClientService $clientService,
@@ -79,7 +79,7 @@ class GoogleServiceAccountAuth {
 	 *
 	 * @return array<string, string>|null `client_email`, `private_key`, `token_uri`, or null when unusable.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function parseKey(string $json): ?array {
 		$decoded = json_decode(trim($json), true);
@@ -123,7 +123,7 @@ class GoogleServiceAccountAuth {
 	 *
 	 * @throws RuntimeException When the private key does not load or signing fails.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function buildAssertion(array $key, string $scope, ?int $now = null): string {
 		$issuedAt = ($now ?? $this->time->getTime());
@@ -170,7 +170,7 @@ class GoogleServiceAccountAuth {
 	 *
 	 * @throws RuntimeException When Google refuses or answers without a token.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function accessToken(array $key, string $scope): string {
 		$assertion = $this->buildAssertion(key: $key, scope: $scope);
@@ -234,7 +234,7 @@ class GoogleServiceAccountAuth {
 	 *
 	 * @return string The encoded string.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public static function base64Url(string $data): string {
 		return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');

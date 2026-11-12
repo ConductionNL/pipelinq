@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * OpenRegister object service, and sets the read language from a request's
  * Accept-Language.
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
 class ScheduledTaskStore {
 	/**
@@ -70,7 +70,7 @@ class ScheduledTaskStore {
 	 * @return array{0: string, 1: string} [register, schema] tuple, each ''
 	 *                                     when unconfigured.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function location(): array {
 		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -89,7 +89,7 @@ class ScheduledTaskStore {
 	 *
 	 * @return ObjectServiceInterface
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function objects(): ObjectServiceInterface {
 		return $this->objectService;
@@ -109,7 +109,7 @@ class ScheduledTaskStore {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
 	 */
 	public function applyAcceptLanguage(string $acceptLanguage): void {
 		if ($acceptLanguage === '') {

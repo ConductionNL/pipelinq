@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use OCP\IRequest;
 /**
  * The Matomo report and the connection audit.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
  */
 class MarketingConnectorController extends Controller {
 
@@ -66,7 +66,7 @@ class MarketingConnectorController extends Controller {
 	 * @param ITimeFactory $time Time factory for the default window.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
 	 */
 	public function __construct(
 		string $appName,
@@ -87,7 +87,7 @@ class MarketingConnectorController extends Controller {
 	 *
 	 * @return JSONResponse `{connected, reason, from, to, campaigns[], referrerTypes[], goals}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-three-matomo-reports-matched-to-the-campaigns-we-already-mint
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-three-matomo-reports-matched-to-the-campaigns-we-already-mint
 	 */
 	#[NoAdminRequired]
 	public function matomo(?string $from = null, ?string $to = null): JSONResponse {
@@ -108,7 +108,7 @@ class MarketingConnectorController extends Controller {
 	 *
 	 * @return JSONResponse `{rows[], summary}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
 	 */
 	#[NoAdminRequired]
 	public function connectionAudit(string $refresh = 'false'): JSONResponse {

@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use DateTimeImmutable;
  * @SuppressWarnings(PHPMD.ElseExpression)           The else mirrors the cron range/step
  *  parser's two symmetric branches and reads clearer than an early return here.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
 class CronExpressionHelper {
 	/**
@@ -96,7 +96,7 @@ class CronExpressionHelper {
 	 *
 	 * @return bool True when valid.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	public function isValid(string $expression): bool {
 		$expression = trim($expression);
@@ -151,7 +151,7 @@ class CronExpressionHelper {
 	 *
 	 * @return string The human-readable description.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	public function describe(string $expression, string $locale = 'en'): string {
 		$fields = $this->fieldsOf(expression: $expression);
@@ -206,7 +206,7 @@ class CronExpressionHelper {
 	 *
 	 * @return bool True when the schedule fires at this minute.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
 	 */
 	public function isDue(string $expression, \DateTimeInterface $when): bool {
 		$fields = $this->fieldsOf(expression: $expression);

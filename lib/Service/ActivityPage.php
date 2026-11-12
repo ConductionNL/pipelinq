@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * A 1-based page number and a page size, both already normalised.
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
  */
 final class ActivityPage {
 	/**

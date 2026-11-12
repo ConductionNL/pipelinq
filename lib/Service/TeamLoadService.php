@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Throwable;
  * Reads the agent profiles and counts each agent's open items through
  * {@see RoutingService::getAgentWorkload()}, the same count routing ranks by.
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
  */
 class TeamLoadService {
 
@@ -76,7 +76,7 @@ class TeamLoadService {
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
 	 * @spec openspec/specs/skill-routing/spec.md#requirement-team-today-shows-each-colleague-once-by-name
 	 */
 	public function getTeamLoad(): array {

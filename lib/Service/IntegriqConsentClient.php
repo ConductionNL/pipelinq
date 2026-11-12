@@ -259,7 +259,7 @@ class IntegriqConsentClient {
 	 *
 	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
 	 *
-	 * @spec openspec/changes/latest-state-probe/specs/consent-in-integriq/spec.md#requirement-lateststate-asks-integriq-as-a-probe-req-cii-007
+	 * @spec openspec/specs/consent-in-integriq/spec.md#requirement-lateststate-asks-integriq-as-a-probe-req-cii-007
 	 */
 	public function probeOne(ConsentAsk $ask, array $recipient): array {
 		return $this->askOne(

@@ -74,7 +74,7 @@ class ContactDataBuilder {
 	 * @return array The client data ready for saving.
 	 *
 	 * @spec openspec/specs/contacts-sync/spec.md
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	public function buildClientImportData(array $ncContact, string $uid): array {
 		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
@@ -148,7 +148,7 @@ class ContactDataBuilder {
 	 * @return array The contact data ready for saving.
 	 *
 	 * @spec openspec/specs/contacts-sync/spec.md
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array {
 		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
@@ -216,7 +216,7 @@ class ContactDataBuilder {
 	 *
 	 * @return array<int, array{kind:string,value:string,primary:bool,verified:bool}>
 	 *
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	private function extractTypedEntries(mixed $value): array {
 		$items = $this->normaliseToList(value: $value);
@@ -272,7 +272,7 @@ class ContactDataBuilder {
 	 *
 	 * @return array<int, array{network:string,handle:string,url:string,verified:bool,followedByUs:bool,followsUs:bool}>
 	 *
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	private function extractSocialProfiles(mixed $value): array {
 		$profiles = [];

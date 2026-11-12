@@ -34,7 +34,7 @@ use OCP\IUserSession;
  * An unauthenticated and an unprivileged caller get the same refusal, so they
  * cannot tell each other apart.
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 final class CrmUserGuard {
 	/**
@@ -56,7 +56,7 @@ final class CrmUserGuard {
 	 *
 	 * @return JSONResponse The action's response, or the 403.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	public function respond(callable $action): JSONResponse {
 		$uid = $this->signedInUid();
@@ -74,7 +74,7 @@ final class CrmUserGuard {
 	 *
 	 * @return JSONResponse The action's response, or the 403.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function respondToUser(callable $action): JSONResponse {
 		$uid = $this->signedInUid();

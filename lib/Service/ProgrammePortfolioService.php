@@ -39,7 +39,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+ * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
  */
 
 declare(strict_types=1);
@@ -55,7 +55,7 @@ use Throwable;
 /**
  * Link work to a programme, and answer how far along it is.
  *
- * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+ * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
  */
 class ProgrammePortfolioService {
 	/**
@@ -117,7 +117,7 @@ class ProgrammePortfolioService {
 	 *
 	 * @return string One of the MODES.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
 	 */
 	public function modeFor(array $programme): string {
 		$override = trim((string)($programme['progressMode'] ?? ''));
@@ -139,7 +139,7 @@ class ProgrammePortfolioService {
 	 *
 	 * @return array{allowed: bool, reason: string} The answer.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	public function mayLink(
 		string $domainObjectType,
@@ -186,7 +186,7 @@ class ProgrammePortfolioService {
 	 * @return array<string, mixed> The row, with `resolved` false when the
 	 *   owning app is absent or answered nothing.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	public function presentWorkItem(array $workItem, array $resolvedTitles = [], array $installedApps = []): array {
 		$type = (string)($workItem['domainObjectType'] ?? '');
@@ -232,7 +232,7 @@ class ProgrammePortfolioService {
 	 * @return array{mode: string, progress: int|null, computable: bool, reason: string}
 	 *   The figure, always naming its mode.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
 	 */
 	public function progressFor(array $programme, array $tasks = [], ?array $effort = null): array {
 		$mode = $this->modeFor(programme: $programme);
@@ -366,7 +366,7 @@ class ProgrammePortfolioService {
 	 *
 	 * @return array<string, mixed> `status` plus either `workItem` or `error`.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	public function linkWork(
 		string $programmeId,

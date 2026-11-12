@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/pipelinq-werkplek-declarative/tasks.md#task-3 -->
+<!-- @spec openspec/changes/archive/2026-06-22-pipelinq-werkplek-declarative/tasks.md#task-3 -->
 <template>
 	<div class="werkplek-header-actions">
 		<WerkplekAgentStatus
@@ -45,7 +45,7 @@ import workspaceContextMixin from './workspaceContextMixin.js'
  * (`#header-actions`). Loads the initial availability from the aggregated
  * `GET /api/kcc-werkplek/state` endpoint; the toggle itself PUTs changes.
  *
- * @spec openspec/changes/pipelinq-werkplek-declarative/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-22-pipelinq-werkplek-declarative/tasks.md#task-3
  */
 /**
  * The caller the address names: the client of an active call, or the
@@ -211,7 +211,7 @@ export default {
 		 * whether the agent is available reads it again.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.1
 		 */
 		onSaved() {
 			emit('cn:dashboard:description-refresh', {})

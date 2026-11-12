@@ -91,7 +91,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 	},
 	actions: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-3
 		 */
 		async fetchProfiles() {
 			this.loading = true
@@ -112,7 +112,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 
 		/**
 		 * @param {object} data The agent profile to persist; an `id` makes it an update.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-5
 		 */
 		async saveProfile(data) {
 			this.loading = true
@@ -135,7 +135,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 
 		/**
 		 * @param {string} id Identifier of the agent profile to delete.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-2
 		 */
 		async deleteProfile(id) {
 			this.loading = true
@@ -161,7 +161,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		 *
 		 * @param {string} userId Nextcloud user UID
 		 * @return {Promise<number>} Open item count
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-4
 		 */
 		async getWorkload(userId) {
 			const registry = useObjectStore().objectTypeRegistry
@@ -177,7 +177,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		 * @param {object} config Ticket type config (register/schema of the `ticket` supertype)
 		 * @param {string} userId User ID
 		 * @return {Promise<number>}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-1
 		 */
 		async _countOpenRequests(config, userId) {
 			const terminalStatuses = ['completed', 'rejected', 'converted']

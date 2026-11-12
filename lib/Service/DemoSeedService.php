@@ -58,7 +58,7 @@ use OCA\Pipelinq\Service\Demo\DemoSeedWriter;
  * Idempotent demo-data seeding + removal against OpenRegister.
  *
  * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class DemoSeedService {
 	/**
@@ -403,7 +403,7 @@ class DemoSeedService {
 	 *
 	 * @return bool True when the object was re-pointed.
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-reseed-re-links-demo-leads-to-the-new-pipeline-req-raf-010
+	 * @spec openspec/specs/lead-management/spec.md#requirement-a-reseed-re-links-demo-leads-to-the-new-pipeline-req-raf-010
 	 */
 	private function relinkExisting(DemoSeedTarget $target, array $existing, array $data, string $uuid): bool {
 		$patch = $this->relinkPatch(existing: $existing, data: $data);

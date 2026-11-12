@@ -24,9 +24,9 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use OCP\AppFramework\OCS\OCSBadRequestException;
  * @SuppressWarnings(PHPMD.CountInLoopExpression)    The page loop counts the just
  *  -fetched page to decide whether another page is needed (streaming pagination).
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005
  */
 class ExportDataService extends AbstractExportService {
 	/**
@@ -157,8 +157,8 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @throws OCSBadRequestException When the schema does not exist or the mode is misconfigured.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006
 	 */
 	public function extractSchema(array $job, string $schemaSlug, ?string $watermarkFrom = null, ?int $rowCap = null): array {
 		$schemaKey = $this->requireSchemaKey(slug: $schemaSlug);
@@ -271,7 +271,7 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @return string The formatted payload.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007
 	 */
 	public function format(array $rows, string $format): string {
 		switch ($format) {
@@ -292,7 +292,7 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @return string The CSV payload.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007-01
 	 */
 	public function formatCsv(array $rows): string {
 		$columns = $this->collectColumns(rows: $rows);
@@ -321,7 +321,7 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @return string The JSON-lines payload.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007-03
 	 */
 	public function formatJsonl(array $rows): string {
 		$lines = [];
@@ -356,7 +356,7 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @return string The Parquet-envelope payload.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007-02
 	 */
 	public function formatParquet(array $rows): string {
 		$columns = $this->collectColumns(rows: $rows);
@@ -393,7 +393,7 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @return string The (possibly) compressed payload.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007-04
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007-04
 	 */
 	public function compress(string $contents, string $compression): string {
 		switch ($compression) {
@@ -431,7 +431,7 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @return array<int, array<string, mixed>> The filtered rows.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005-02
 	 */
 	public function applyRowFilter(array $rows, string $expression): array {
 		if (preg_match('/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*(!=|<>|==|=)\s*(.+?)\s*$/', $expression, $m) !== 1) {
@@ -466,7 +466,7 @@ class ExportDataService extends AbstractExportService {
 	 * @return array{0: array<int, array<string, mixed>>, 1: array<int, string>}
 	 *                                                                           The masked rows and the list of dropped columns.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005-03
 	 */
 	public function applyColumnAllowlist(array $rows, array $allowlist): array {
 		$allowed = array_fill_keys($allowlist, true);
@@ -505,7 +505,7 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @return array<int, string> The sensitive columns that would be exported.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-05
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-05
 	 */
 	public function sensitiveColumnsExported(array $presentColumns, ?array $allowlist): array {
 		$sensitive = array_fill_keys(self::SENSITIVE_COLUMNS, true);
@@ -544,7 +544,7 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @return array<int, array<string, mixed>> The rows with the marker.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006-03
 	 */
 	public function addTombstoneMarker(array $rows): array {
 		$marked = [];

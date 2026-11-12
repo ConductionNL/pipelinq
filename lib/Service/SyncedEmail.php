@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * One synced mail message, as an EmailLink stores it.
  *
- * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-3
  */
 final class SyncedEmail {
 	/**

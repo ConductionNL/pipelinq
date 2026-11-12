@@ -32,7 +32,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use Throwable;
 /**
  * List and append the contact moments filed on a host object.
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
 class ContactMomentLeafProvider {
 	/**
@@ -111,7 +111,7 @@ class ContactMomentLeafProvider {
 	 *
 	 * @return array<string, mixed> `status` plus either `contactMoments` or `error`.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	public function list(string $hostId, int $limit = self::DEFAULT_LIMIT, string $partyId = ''): array {
 		$hostId = trim($hostId);
@@ -166,7 +166,7 @@ class ContactMomentLeafProvider {
 	 *
 	 * @return array<string, mixed> `status` plus either `contactMoment` or `error`.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	public function create(string $hostId, array $payload): array {
 		$hostId = trim($hostId);
@@ -260,7 +260,7 @@ class ContactMomentLeafProvider {
 	 *
 	 * @return array<string, mixed>|null The 409 answer, or null.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
 	 */
 	private function outboundRefusal(string $partyId, array $payload): ?array {
 		if ($partyId === '' || trim((string)($payload['direction'] ?? '')) !== 'outbound') {
@@ -290,7 +290,7 @@ class ContactMomentLeafProvider {
 	 *
 	 * @return array<string, mixed> The ticket, ready for TicketService::save().
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	private function ticketFrom(string $hostId, array $payload, string $partyId): array {
 		$ticket = [

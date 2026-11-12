@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1
+ * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1
  */
 
 declare(strict_types=1);
@@ -57,7 +57,7 @@ use Throwable;
  *  semantics this reuses (AttributionService::recordClick(),
  *  BlastService::updateBlastTotals()) — one cohesive tracking service.
  *
- * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1
+ * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1
  */
 class TrackingLinkService {
 	use PayloadToArray;
@@ -136,7 +136,7 @@ class TrackingLinkService {
 	 * @param TrafficEventEmitter $trafficEventEmitter Portaliq traffic
 	 *                                                 dual-write.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -157,7 +157,7 @@ class TrackingLinkService {
 	 *
 	 * @return string The dotted `<payload>.<signature>` token.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.1
 	 */
 	public function signOpenToken(string $blastDeliveryId): string {
 		return $this->signPayload(payload: ['d' => $blastDeliveryId, 'u' => null]);
@@ -176,7 +176,7 @@ class TrackingLinkService {
 	 *
 	 * @return string The dotted `<payload>.<signature>` token.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.1
 	 */
 	public function signClickToken(string $blastDeliveryId, string $targetUrl): string {
 		return $this->signPayload(payload: ['d' => $blastDeliveryId, 'u' => $targetUrl]);
@@ -194,7 +194,7 @@ class TrackingLinkService {
 	 * @return array<string, mixed>|null Decoded payload (`d`, `u`, `iat`,
 	 *                                   `exp`) or null when invalid/expired.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.1
 	 */
 	public function verifyToken(string $token): ?array {
 		$parts = explode('.', $token);
@@ -241,7 +241,7 @@ class TrackingLinkService {
 	 *
 	 * @return string The rewritten HTML (unchanged on empty input).
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.2
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.2
 	 */
 	public function injectTracking(string $html, string $blastDeliveryId): string {
 		if ($html === '' || $blastDeliveryId === '') {
@@ -276,7 +276,7 @@ class TrackingLinkService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.3
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.3
 	 * @spec openspec/specs/marketing-email-tracking/spec.md#requirement-opens-and-clicks-are-reported-to-portaliq-as-email-traffic-events
 	 */
 	public function recordOpen(string $blastDeliveryId): void {
@@ -317,7 +317,7 @@ class TrackingLinkService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.3
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.3
 	 * @spec openspec/specs/marketing-email-tracking/spec.md#requirement-opens-and-clicks-are-reported-to-portaliq-as-email-traffic-events
 	 */
 	public function recordClick(string $blastDeliveryId, string $url): void {

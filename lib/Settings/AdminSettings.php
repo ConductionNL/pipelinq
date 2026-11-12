@@ -65,8 +65,8 @@ class AdminSettings implements IDelegatedSettings {
 	 * @return TemplateResponse The settings form template.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
-	 * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	public function getForm(): TemplateResponse {
 		$config = $this->settingsService->getSettings();

@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service\LineTotals;
 /**
  * The arithmetic of quote and lead lines, amounts rounded to cents.
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
 class LineTotalMath {
 	/**
@@ -37,7 +37,7 @@ class LineTotalMath {
 	 *
 	 * @return float The line total.
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function quoteLineTotal(array $line): float {
 		$gross    = ((float)($line['quantity'] ?? 0) * (float)($line['unitPrice'] ?? 0));
@@ -53,7 +53,7 @@ class LineTotalMath {
 	 *
 	 * @return array{subtotal: float, vatAmount: float, total: float} The totals.
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function quoteTotals(array $lines, float $vatRate): array {
 		$subtotal = round(array_sum(array_map(fn (array $line): float => $this->quoteLineTotal(line: $line), $lines)), 2);
@@ -68,7 +68,7 @@ class LineTotalMath {
 	 *
 	 * @return float The value.
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function leadValue(array $lines): float {
 		return round(array_sum(array_map(static fn (array $line): float => (float)($line['total'] ?? 0), $lines)), 2);
@@ -83,7 +83,7 @@ class LineTotalMath {
 	 *
 	 * @return array<string, float> The fields.
 	 *
-	 * @spec openspec/changes/lead-use-calculated-value/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-lead-use-calculated-value/tasks.md#task-1
 	 */
 	public function leadPatch(array $lines, array $lead): array {
 		$calculated = $this->leadValue(lines: $lines);

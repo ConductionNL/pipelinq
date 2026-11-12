@@ -26,7 +26,7 @@ use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 /**
  * One landing page submission with the campaign it belongs to.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 final class LandingSubmission {
 

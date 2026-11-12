@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#2
+ * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#2
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * Controller for /api/blast/track/* — first-party open/click tracking.
  *
- * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#2
+ * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#2
  */
 class BlastTrackingController extends Controller {
 
@@ -135,7 +135,7 @@ class BlastTrackingController extends Controller {
 	 *
 	 * @return DataDisplayResponse The 1x1 GIF (200), caching disabled.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#2.1
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -176,7 +176,7 @@ class BlastTrackingController extends Controller {
 	 * @return JSONResponse|RedirectResponse The 302 redirect, or a 410 on
 	 *                                       an invalid token.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#2.1
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

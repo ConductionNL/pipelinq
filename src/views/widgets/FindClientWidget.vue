@@ -341,7 +341,7 @@ export default {
 		/**
 		 * The server already searched; this only caps what the widget shows.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
 		 */
 		filteredClients() {
 			return this.clients.slice(0, RESULT_LIMIT)
@@ -353,7 +353,7 @@ export default {
 		 * Search on the server as the user types, so every client can be
 		 * found, not only the first page.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
 		 */
 		searchQuery() {
 			clearTimeout(this.searchTimer)
@@ -372,7 +372,7 @@ export default {
 	methods: {
 		toText,
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-38
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-38
 		 */
 		async fetchData() {
 			this.loading = true
@@ -393,7 +393,7 @@ export default {
 		 * older query never replaces a newer one.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
 		 */
 		async searchClients() {
 			if (!this.config?.client) {
@@ -414,7 +414,7 @@ export default {
 		/**
 		 * @param {string} type The registered object-type slug.
 		 * @param {string} params Query parameters.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-39
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-39
 		 */
 		async fetchRaw(type, params = {}) {
 			return fetchRegisteredObjects(this.config, { type, params })
@@ -438,7 +438,7 @@ export default {
 		 *
 		 * @param {object} client The client to open.
 		 * @param {MouseEvent|KeyboardEvent} [event] The triggering event.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
 		 */
 		viewClient(client, event) {
 			openRowTarget(event, this.clientUrl(client))
@@ -459,7 +459,7 @@ export default {
 
 		/**
 		 * @param {object} client The client to raise a request for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
 		 */
 		createRequestForClient(client) {
 			this.actionClient = client
@@ -469,7 +469,7 @@ export default {
 
 		/**
 		 * @param {object} client The client to raise a lead for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-36
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-36
 		 */
 		createLeadForClient(client) {
 			this.actionClient = client
@@ -479,7 +479,7 @@ export default {
 
 		/**
 		 * @param {object} client The client whose email to copy.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-34
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-34
 		 */
 		async copyEmail(client) {
 			try {
@@ -494,7 +494,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-33
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-33
 		 */
 		cancelAction() {
 			this.actionClient = null
@@ -503,7 +503,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-41
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-41
 		 */
 		async submitAction() {
 			if (!this.actionTitle || !this.actionClient) return
@@ -537,7 +537,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-35
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-35
 		 */
 		async createClient() {
 			this.newClientSubmitted = true

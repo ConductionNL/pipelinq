@@ -19,7 +19,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use OCP\IUser;
 /**
  * Where a repair step reads and writes one schema's objects, and as whom.
  *
- * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
  */
 class SchemaWriteTarget {
 	/**

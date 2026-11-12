@@ -16,7 +16,7 @@ export const useSkillsStore = defineStore('skills', {
 	},
 	actions: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-46
 		 */
 		async fetchSkills() {
 			this.loading = true
@@ -37,7 +37,7 @@ export const useSkillsStore = defineStore('skills', {
 
 		/**
 		 * @param {object} data The skill to persist; an `id` makes it an update.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-47
 		 */
 		async saveSkill(data) {
 			this.loading = true
@@ -60,7 +60,7 @@ export const useSkillsStore = defineStore('skills', {
 
 		/**
 		 * @param {string} id Identifier of the skill to delete.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-45
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-45
 		 */
 		async deleteSkill(id) {
 			this.loading = true

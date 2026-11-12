@@ -699,7 +699,7 @@ export default {
 		 *
 		 * @return {string} The preview document.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#scenario-the-blast-preview-shows-the-embedded-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-the-blast-preview-shows-the-embedded-articles
 		 */
 		previewDocument() {
 			const csp =
@@ -790,7 +790,7 @@ export default {
 
 		/**
 		 * @param {object|null} option The template just picked, or null.
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		selectedTemplate(option) {
 			this.model.templateId = option?.id || ''
@@ -1241,7 +1241,7 @@ export default {
 		 * The template with its `{{articles}}` marker expanded by the same
 		 * call the send path makes, so the preview is what will send.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		async loadPreview() {
 			this.preview = null

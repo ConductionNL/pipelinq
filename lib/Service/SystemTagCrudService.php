@@ -28,7 +28,7 @@ use OCP\SystemTag\TagAlreadyExistsException;
 /**
  * Low-level CRUD operations for SystemTag-based lists.
  *
- * @spec openspec/changes/reverse-2026-05-26-be-tags/tasks.md
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md
  */
 class SystemTagCrudService {
 	/**
@@ -59,7 +59,7 @@ class SystemTagCrudService {
 	 * @param string $objectType The object type.
 	 *
 	 * @return array The tag IDs.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-3
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-3
 	 */
 	public function getTagIdsForType(string $objectType): array {
 		$tagIds = $this->tagMapper->getTagIdsForObjects(
@@ -80,7 +80,7 @@ class SystemTagCrudService {
 	 * @param array $tagIds The tag IDs to resolve.
 	 *
 	 * @return array The resolved tag data.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-5
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-5
 	 */
 	public function resolveTagData(array $tagIds): array {
 		$tags = $this->tagManager->getTagsByIds($tagIds);
@@ -102,7 +102,7 @@ class SystemTagCrudService {
 	 * @param string $name The tag name.
 	 *
 	 * @return object The system tag.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-2
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-2
 	 */
 	public function createOrReuseSystemTag(string $name): object {
 		try {
@@ -127,7 +127,7 @@ class SystemTagCrudService {
 	 * @param int $tagId The tag ID to assign.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-1
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-1
 	 */
 	public function assignTag(string $objectType, int $tagId): void {
 		// ISystemTagObjectMapper declares `list<string>|string`, so the int is
@@ -147,7 +147,7 @@ class SystemTagCrudService {
 	 * @param int $tagId The tag ID to remove.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-6
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-6
 	 */
 	public function unassignAndCleanup(string $objectType, int $tagId): void {
 		// Same `list<string>` contract as assignTag() above.
@@ -178,7 +178,7 @@ class SystemTagCrudService {
 	 * @param string $newName The new name.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-4
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-4
 	 */
 	public function renameSystemTag(int $tagId, string $newName): void {
 		// Read existing flags so we do not clobber userAssignable on rename.

@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCA\Pipelinq\Service\Egress\EgressResult;
 /**
  * Public Mastodon and Bluesky timelines.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (WatchOutcome). A value
@@ -71,7 +71,7 @@ class FediverseWatchReader {
 	 *
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -86,7 +86,7 @@ class FediverseWatchReader {
 	 *
 	 * @return WatchOutcome The posts, or the reason there are none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
 	 */
 	public function read(string $handle, string $sourceId = ''): WatchOutcome {
 		$trimmed = ltrim(trim($handle), '@');

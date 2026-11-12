@@ -25,7 +25,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Repair step: seed the party kinds the fleet already uses.
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
  */
 class SeedPartyKinds implements IRepairStep {
 	/**
@@ -120,7 +120,7 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @return string Name.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function getName(): string {
 		return 'Seed the party kinds the fleet already uses';
@@ -135,7 +135,7 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @return array<int, array<string, mixed>> The kinds to write.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function missingKinds(array $existingCodes): array {
 		return array_values(
@@ -153,7 +153,7 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function run(IOutput $output): void {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

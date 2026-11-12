@@ -34,7 +34,7 @@ const CONFIG_TOKEN = /^@config\.([A-Za-z0-9_]+)\??$/
  * @param {object} appConfig The page-level app config map.
  * @return {object} The widget, with its target resolved (a copy when changed).
  *
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function resolveGaugeTarget(widget, appConfig) {
 	const key = gaugeConfigKey(widget)
@@ -50,7 +50,7 @@ export function resolveGaugeTarget(widget, appConfig) {
  *
  * @param {object|null} widget The widget.
  * @return {string|null} The key.
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 function gaugeConfigKey(widget) {
 	const raw = widget?.content?.target?.value
@@ -68,7 +68,7 @@ function gaugeConfigKey(widget) {
  * @param {object} content The gauge's content.
  * @param {number} value The configured target.
  * @return {object} The content.
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 function withTarget(content, value) {
 	const hasTarget = Number.isFinite(value) && value > 0
@@ -127,7 +127,7 @@ export function pageAppConfig(config, caseTarget) {
  * @param {object} appConfig The app config map from the `config` initial state.
  * @return {object} The same manifest, with those pages' config seeded.
  *
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function seedPageAppConfig(manifest, appConfig) {
 	const config = appConfig || {}

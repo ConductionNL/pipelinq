@@ -31,7 +31,7 @@ use OCA\OpenRegister\Service\ConfigurationService;
 /**
  * Service for loading and importing Pipelinq configuration.
  *
- * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
  */
 class SettingsLoadService {
 	/**

@@ -12,7 +12,7 @@
   - field for. Success bumps `cn:page:refresh`, so the page and its sections
   - re-read the post.
   -
-  - @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+  - @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
   -->
 <template>
 	<div
@@ -74,7 +74,7 @@ export default {
 		 *
 		 * @return {string} The status.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		status() {
 			return this.object?.status || ''
@@ -85,7 +85,7 @@ export default {
 		 *
 		 * @return {string} The post id.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		postId() {
 			return (
@@ -100,7 +100,7 @@ export default {
 		 *
 		 * @param {string} action One of `submit`, `approve`, `reject`.
 		 * @return {Promise<void>} Resolves once moved.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		async move(action) {
 			this.busy = true

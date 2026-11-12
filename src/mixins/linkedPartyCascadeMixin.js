@@ -82,7 +82,7 @@ export default {
 		 * @param {string} term The name typed into the picker, prefilled in the dialog.
 		 * @return {Promise<object|null>} The created client, or null if cancelled.
 		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 * @spec openspec/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		createClient(term) {
 			this.pendingName = term || ''

@@ -42,7 +42,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+ * @spec openspec/specs/website-enquiry-intake/spec.md
  */
 
 declare(strict_types=1);
@@ -90,7 +90,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The type identifier.
 	 *
-	 * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
 	public function getId(): string {
 		return self::NODE_ID;
@@ -101,7 +101,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The display name.
 	 *
-	 * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
 	public function getDisplayName(): string {
 		return 'Provision contact identity';
@@ -112,7 +112,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The description.
 	 *
-	 * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
 	public function getDescription(): string {
 		return 'Find or create the addressbook contact a client or contact object must point at, '
@@ -124,7 +124,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The icon URL.
 	 *
-	 * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
 	public function getIcon(): string {
 		return $this->urls->getAbsoluteURL($this->urls->imagePath('pipelinq', 'app.svg'));
@@ -137,7 +137,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return bool Whether it is available.
 	 *
-	 * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
 	public function isAvailableForScope(int $scope): bool {
 		unset($scope);
@@ -150,7 +150,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return array<int, string> The accepted keys.
 	 *
-	 * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
 	public function configKeys(): array {
 		return ['objectType', 'nameFrom', 'emailFrom', 'phoneFrom', 'output'];
@@ -165,7 +165,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @throws UnexpectedValueException When the object type or output is missing or unknown.
 	 *
-	 * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
 	public function validateConfig(array $config): void {
 		$type = trim((string)($config['objectType'] ?? ''));
@@ -196,7 +196,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 * @throws UnexpectedValueException When the configuration is unusable.
 	 * @throws RuntimeException When an identity could not be provisioned.
 	 *
-	 * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md
+	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
 	public function execute(array $items, array $config, array $context): array {
 		unset($context);

@@ -22,8 +22,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Coordinates the export
  *  destination / data / run collaborators a job service legitimately needs.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
 class ExportJobService extends AbstractExportService {
 	/**
@@ -88,7 +88,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @return array<int, array<string, mixed>> The jobs.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	public function listJobs(): array {
 		return $this->findAllObjects(schemaKey: self::SCHEMA_KEY);
@@ -123,7 +123,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @throws OCSBadRequestException On validation failure.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-01
 	 */
 	public function createJob(array $data, string $userId): array {
 		$this->validateJob(data: $data);
@@ -189,8 +189,8 @@ class ExportJobService extends AbstractExportService {
 	 * @throws OCSBadRequestException When the destination is invalid.
 	 * @throws OCSNotFoundException When the job is absent.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-02
 	 */
 	public function enableJob(string $id): array {
 		$job = $this->getJob(id: $id);
@@ -253,7 +253,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> Result: success, sample_rows, errors, samples[].
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003-01
 	 */
 	public function testRun(array $job): array {
 		$errors = [];
@@ -303,7 +303,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @return string The preview text.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-03
 	 */
 	public function describeSchedule(string $expression, string $locale = 'en'): string {
 		return $this->cron->describe(expression: $expression, locale: $locale);
@@ -318,7 +318,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @throws OCSBadRequestException On any validation failure.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	private function validateJob(array $data): void {
 		if (trim((string)($data['name'] ?? '')) === '') {

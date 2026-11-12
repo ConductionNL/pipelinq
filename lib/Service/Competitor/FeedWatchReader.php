@@ -30,7 +30,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use SimpleXMLElement;
 /**
  * RSS and Atom entries out of a feed.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (WatchOutcome). A value
@@ -67,7 +67,7 @@ class FeedWatchReader {
 	 *
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -82,7 +82,7 @@ class FeedWatchReader {
 	 *
 	 * @return WatchOutcome The entries, or the reason there are none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
 	 */
 	public function read(string $url, string $sourceId = ''): WatchOutcome {
 		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $url, sourceId: $sourceId);
@@ -108,7 +108,7 @@ class FeedWatchReader {
 	 *
 	 * @return array<int, array<string, mixed>>|null The entries, or null when the document is not a feed.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
 	 */
 	public function parse(string $document): ?array {
 		$xml = $this->load(document: $document);

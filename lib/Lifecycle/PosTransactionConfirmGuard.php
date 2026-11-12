@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  *
  * Access (owner/group/admin) + non-empty cart. Fails closed.
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
  */
 class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	/**
@@ -81,7 +81,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action is part of the
 	 *  LifecycleGuardInterface signature; this guard only runs for confirm.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ($this->policy->canAccessTransaction(object: $object, userId: $userId) === false) {
@@ -110,7 +110,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 *
 	 * @return bool Whether the cart is empty (or could not be verified).
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	private function cartIsEmpty(string $transactionId): bool {
 		if ($transactionId === '') {
@@ -143,7 +143,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 *
 	 * @return string The schema id, or '' when neither is available.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	private function lineSchema(): string {
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransactionLine_schema', '');
@@ -168,7 +168,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	private function hasNoLines(array $filters): bool {
 		try {
@@ -198,7 +198,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 *
 	 * @return string The numeric schema id, or '' when it cannot be resolved.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	private function resolveSchemaIdBySlug(string $slug): string {
 		if ($slug === '') {

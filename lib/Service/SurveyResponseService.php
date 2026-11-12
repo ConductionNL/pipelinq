@@ -28,7 +28,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Open and answer a survey by its per-invitation token.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 class SurveyResponseService {
 	/**
@@ -102,7 +102,7 @@ class SurveyResponseService {
 	 *
 	 * @return string One of open, closed, expired, unknown.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function stateOf(?array $invitation, ?DateTimeImmutable $now = null): string {
 		if ($invitation === null) {
@@ -194,7 +194,7 @@ class SurveyResponseService {
 	 *
 	 * @return array<string, mixed> `status` plus either the survey or `state`.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function show(string $token): array {
 		$invitation = $this->invitationFor(token: $token);
@@ -226,7 +226,7 @@ class SurveyResponseService {
 	 * @return array{npsScore: int|null, averageRating: float|null, verbatim: string}
 	 *   The scored answers.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function score(array $survey, array $answers): array {
 		$nps = null;
@@ -293,7 +293,7 @@ class SurveyResponseService {
 	 *
 	 * @return array<string, mixed> `status` plus either the response or `state`.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function submit(string $token, array $answers, ?bool $optOut = null): array {
 		$invitation = $this->invitationFor(token: $token);

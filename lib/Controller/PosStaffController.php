@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4
  */
 class PosStaffController extends Controller {
 	/**
@@ -82,7 +82,7 @@ class PosStaffController extends Controller {
 	 *
 	 * @return JSONResponse The staff list.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function index(): JSONResponse {
 		$forbidden = $this->requireAdmin();
@@ -107,7 +107,7 @@ class PosStaffController extends Controller {
 	 *       set; the body additionally enforces it with an explicit
 	 *       requireAdmin() guard.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function show(string $id): JSONResponse {
 		$forbidden = $this->requireAdmin();
@@ -133,7 +133,7 @@ class PosStaffController extends Controller {
 	 *
 	 * @return JSONResponse The created staff record.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function create(): JSONResponse {
 		$forbidden = $this->requireAdmin();
@@ -158,7 +158,7 @@ class PosStaffController extends Controller {
 	 *       permissions; the body additionally enforces it with an explicit
 	 *       requireAdmin() guard.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function update(string $id): JSONResponse {
 		$forbidden = $this->requireAdmin();
@@ -188,7 +188,7 @@ class PosStaffController extends Controller {
 	 *       access; the body additionally enforces it with an explicit
 	 *       requireAdmin() guard.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function destroy(string $id): JSONResponse {
 		$forbidden = $this->requireAdmin();
@@ -220,7 +220,7 @@ class PosStaffController extends Controller {
 	 *
 	 * @return JSONResponse The session envelope on success; 403 on lockout / bad PIN / inactive.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	#[NoAdminRequired]
 	public function authenticate(): JSONResponse {

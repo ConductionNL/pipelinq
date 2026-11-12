@@ -111,7 +111,7 @@ class ReceiptDeliveryService {
 	 * @throws OCSForbiddenException If the caller may not access the transaction.
 	 *
 	 * @spec openspec/specs/pos-receipt-engine/spec.md
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.1
 	 */
 	public function preview(string $transactionId, ?string $templateId = null, string $userId = ''): array {
 		$transaction = $this->loadTransactionWithLines(id: $transactionId);
@@ -725,7 +725,7 @@ class ReceiptDeliveryService {
 	 *
 	 * @throws OCSForbiddenException If the caller may not access the transaction.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.1
 	 */
 	private function assertCanAccess(array $transaction, string $userId): void {
 		if ($this->policy->canAccessTransaction(object: $transaction, userId: $userId) === false) {

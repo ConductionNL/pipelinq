@@ -98,7 +98,7 @@ class PointsLedgerService {
 	 *
 	 * @return static The service for that operation.
 	 *
-	 * @spec openspec/changes/loyalty-ledger-operation-id/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
+	 * @spec openspec/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
 	 */
 	public function forOperation(string $operationId): static {
 		$ledger = clone $this;
@@ -482,7 +482,7 @@ class PointsLedgerService {
 	 *
 	 * @throws RuntimeException When the id belongs to another movement or cannot be checked.
 	 *
-	 * @spec openspec/changes/loyalty-ledger-operation-id/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
+	 * @spec openspec/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
 	 */
 	private function firstEntryOf(LedgerMovement $movement): ?array {
 		if ($this->operationId === '') {

@@ -44,7 +44,7 @@ use UnexpectedValueException;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/admin-settings/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-admin-settings/tasks.md#task-3
  */
 class SettingsController extends Controller {
 	use OpenRegisterServiceLookup;
@@ -80,7 +80,7 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The settings response.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
-	 * @spec openspec/changes/admin-settings/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-06-14-admin-settings/tasks.md#task-3
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -276,7 +276,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse The user settings response.
 	 *
-	 * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-7
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-settings/tasks.md#task-7
 	 */
 	#[NoAdminRequired]
 	public function getUserSettings(): JSONResponse {
@@ -295,7 +295,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse The updated user settings response.
 	 *
-	 * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-8
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-settings/tasks.md#task-8
 	 */
 	#[NoAdminRequired]
 	public function updateUserSettings(): JSONResponse {

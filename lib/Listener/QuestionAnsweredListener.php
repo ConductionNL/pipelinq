@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+ * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+ * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
  */
 class QuestionAnsweredListener implements IEventListener {
 
@@ -67,7 +67,7 @@ class QuestionAnsweredListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectUpdatedEvent === false) {

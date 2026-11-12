@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+ * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use OCP\IAppConfig;
  * renamed is theirs now. Append-only schemas keep their rows until the
  * retention cron expires them.
  *
- * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+ * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 class DemoRecordSweeper {
 	/**
@@ -68,7 +68,7 @@ class DemoRecordSweeper {
 	 *
 	 * @return array{removed: int, retained: int}|null Null when no register is provisioned.
 	 *
-	 * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function removeMatching(array $objects): ?array {
 		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

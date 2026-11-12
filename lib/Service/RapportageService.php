@@ -77,7 +77,7 @@ class RapportageService {
 	 * @return array<int, array{stage: string, count: int, totalValue: float, weightedValue: float}>
 	 *
 	 * @spec openspec/specs/lead-management/spec.md
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	public function getStageValues(?string $pipelineId = null): array {
 		$leads = $this->fetchLeads();
@@ -118,7 +118,7 @@ class RapportageService {
 	 *
 	 * @return float The weighted value.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	private function winChanceWeightedValue(array $lead): float {
 		$score = ($lead['qualificationScore'] ?? null);

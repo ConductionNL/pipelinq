@@ -11,12 +11,12 @@
  * The host has `pipelines` (every stored pipeline) and a `form` with
  * `pipeline` and `stage`.
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-49
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-49
  */
 export default {
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-53
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-53
 		 */
 		selectedPipeline() {
 			if (!this.form.pipeline) return null
@@ -24,7 +24,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-55
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-55
 		 */
 		stageOptions() {
 			if (!this.selectedPipeline?.stages) return []
@@ -39,7 +39,7 @@ export default {
 		 * Reset the stage when the pipeline changes, and auto-select the
 		 * pipeline's first open stage.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-49
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-49
 		 */
 		onPipelineChange() {
 			this.form.stage = null

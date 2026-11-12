@@ -27,7 +27,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Send scheduled invitations whose delay has elapsed, and expire stale ones.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
  */
 class SurveyInvitationDispatchJob extends TimedJob {
 	/**
@@ -86,7 +86,7 @@ class SurveyInvitationDispatchJob extends TimedJob {
 	 *
 	 * @return array<int, array{invitation: array<string, mixed>, act: string}> The plan.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function plan(array $invitations, DateTimeImmutable $now): array {
 		$plan = [];
@@ -122,7 +122,7 @@ class SurveyInvitationDispatchJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
 	 */
 	protected function run($argument): void {
 		$now = new DateTimeImmutable();

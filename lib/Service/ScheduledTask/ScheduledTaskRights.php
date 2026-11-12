@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use OCP\IUserSession;
  * The session user is a new task's creator ('system' without a session); the
  * assignee, a member of the assigned group or an admin may change a task.
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
 class ScheduledTaskRights {
 	/**
@@ -55,7 +55,7 @@ class ScheduledTaskRights {
 	 *
 	 * @return string The session user's UID, or 'system' without a session.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function createdBy(): string {
 		$user = $this->userSession->getUser();
@@ -79,7 +79,7 @@ class ScheduledTaskRights {
 	 *
 	 * @throws OCSForbiddenException When the user is not authorised.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function authorizeTaskMutation(array $task, string $userId): void {
 		if ($userId === '') {

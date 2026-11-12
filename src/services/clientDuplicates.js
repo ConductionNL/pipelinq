@@ -15,7 +15,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
  * @param {string} [input.email] The e-mail address.
  * @param {string} [input.name] The name.
  * @return {Promise<{id: string, name: string, field: string}|null>} The client and what matched, or null.
- * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-05-31-2026-03-20-client-management/tasks.md#task-3.1
  */
 export async function findClientDuplicate(input = {}) {
 	const store = useObjectStore()

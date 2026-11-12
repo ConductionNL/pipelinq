@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Throwable;
 /**
  * SearchQueryReportService: top queries by clicks over a window.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
 class SearchQueryReportService {
 	use SerialisedToArray;
@@ -74,7 +74,7 @@ class SearchQueryReportService {
 	 * @param ITimeFactory $time Time factory for the default window.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -94,7 +94,7 @@ class SearchQueryReportService {
 	 *
 	 * @return array{from: string, to: string, rows: array<int, array<string, mixed>>, totalQueries: int}
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	public function topQueries(?string $from = null, ?string $to = null, int $limit = 50, ?string $property = null): array {
 		[$from, $to] = $this->window(from: $from, to: $to);
@@ -126,7 +126,7 @@ class SearchQueryReportService {
 	 *
 	 * @return array{from: string, to: string, rows: array<int, array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function rows(?string $from = null, ?string $to = null, ?string $property = null): array {
 		[$from, $to] = $this->window(from: $from, to: $to);
@@ -142,7 +142,7 @@ class SearchQueryReportService {
 	 *
 	 * @return array<int, array<string, mixed>> One row per query, ordered by clicks then impressions, descending.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	public function aggregate(array $rows): array {
 		$byQuery = [];

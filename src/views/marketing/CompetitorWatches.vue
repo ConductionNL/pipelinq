@@ -14,7 +14,7 @@
   not. Rendering an unscored event as zero would sort it with the irrelevant
   ones and it would never be read.
 
-  @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+  @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 -->
 <template>
 	<div class="competitors" :class="{ 'competitors--embedded': embedded }">
@@ -208,7 +208,7 @@ export default {
 		 * section holds, as board PqZoekinzicht draws the heads; cells wrap.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		watchColumns() {
 			const column = (key, label, extra = {}) => ({ key, label, sortable: true, cellClass: 'cn-cell--wrap', ...extra })
@@ -227,7 +227,7 @@ export default {
 		 * filters on what the reader sees.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		watchRows() {
 			return this.watches.map((watch) => ({
@@ -274,7 +274,7 @@ export default {
 		 * competitors, the watches and the events the page renders, so
 		 * nothing fans out per watch before it paints (pipelinq#1781).
 		 *
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
 		async fetchAll() {
 			this.loading = true
@@ -311,7 +311,7 @@ export default {
 		 * flow; this is the "I just added it, does it work" path.
 		 *
 		 * @param {object} watch The watch.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 		 */
 		async run(watch) {
 			const id = this.idOf(watch)
@@ -335,7 +335,7 @@ export default {
 		/**
 		 * @param {object} row An object from OpenRegister or the API.
 		 * @return {string} Its id.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
 		idOf(row) {
 			return String(row?.id || row?.['@self']?.id || row?.uuid || '')
@@ -344,7 +344,7 @@ export default {
 		/**
 		 * @param {object} watch A watch.
 		 * @return {string} The competitor's name.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
 		competitorName(watch) {
 			return this.competitorNameById(watch?.competitorId)
@@ -353,7 +353,7 @@ export default {
 		/**
 		 * @param {string} id A competitor id.
 		 * @return {string} The name, or the id when it is unknown.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
 		competitorNameById(id) {
 			const found = this.competitors.find(
@@ -365,7 +365,7 @@ export default {
 		/**
 		 * @param {string} kind A stored watch kind.
 		 * @return {string} Its label, or the value as stored when unknown.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
 		kindLabel(kind) {
 			return enumLabel(WATCH_KIND_LABELS, kind, (text) =>
@@ -376,7 +376,7 @@ export default {
 		/**
 		 * @param {string} schedule A stored watch schedule.
 		 * @return {string} Its label, or the value as stored when unknown.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
 		scheduleLabel(schedule) {
 			return enumLabel(WATCH_SCHEDULE_LABELS, schedule, (text) =>
@@ -387,7 +387,7 @@ export default {
 		/**
 		 * @param {string} value An ISO timestamp.
 		 * @return {string} Its date and time in the reader's locale, or the value as stored when unreadable.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
 		formatWhen(value) {
 			if (!value || Number.isNaN(new Date(value).getTime())) {
@@ -407,7 +407,7 @@ export default {
 		 *
 		 * @param {object} watch A watch.
 		 * @return {string}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
 		outcomeLabel(watch) {
 			const labels = {
@@ -423,7 +423,7 @@ export default {
 		/**
 		 * @param {object} watch A watch.
 		 * @return {string} The status pill variant: success when read, error when it failed.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 		 */
 		outcomeVariant(watch) {
 			if (!watch?.lastOutcome) {
@@ -438,7 +438,7 @@ export default {
 		 *
 		 * @param {object} event A watch event.
 		 * @return {string}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
+		 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
 		 */
 		relevanceLabel(event) {
 			if (

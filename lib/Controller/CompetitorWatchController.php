@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use OCP\IRequest;
 /**
  * Watch events, and a manual run.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
  */
 class CompetitorWatchController extends Controller {
 
@@ -65,7 +65,7 @@ class CompetitorWatchController extends Controller {
 	 * @param ConnectorEgress $egress Whether an egress source is configured at all.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
 	public function __construct(
 		string $appName,
@@ -84,7 +84,7 @@ class CompetitorWatchController extends Controller {
 	 *
 	 * @return JSONResponse `{configured, reason, competitors[], watches[], events[]}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -117,7 +117,7 @@ class CompetitorWatchController extends Controller {
 	 *
 	 * @return JSONResponse The outcome, or the refusal.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	#[NoAdminRequired]
 	public function run(string $id): JSONResponse {

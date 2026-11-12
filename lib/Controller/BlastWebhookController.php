@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -79,7 +79,7 @@ use Throwable;
  *  individually simple; splitting the class would only scatter one cohesive
  *  concern (provider event ingestion) across several files.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  */
 class BlastWebhookController extends Controller {
 	/**
@@ -96,7 +96,7 @@ class BlastWebhookController extends Controller {
 	 * @param WebhookProcessorService $webhookProcessor Synchronous fast-path helper.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function __construct(
 		IRequest $request,
@@ -124,7 +124,7 @@ class BlastWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Acknowledgement (`accepted` count).
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -167,7 +167,7 @@ class BlastWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Acknowledgement.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -212,7 +212,7 @@ class BlastWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Acknowledgement.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

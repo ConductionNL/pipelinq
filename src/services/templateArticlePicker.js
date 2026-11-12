@@ -9,7 +9,7 @@
  * vitest suite carries no component-mounting harness, so behaviour that
  * matters has to live in a plain function to stay testable.
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  */
 
 /**
@@ -17,7 +17,7 @@
  *
  * @param {string} body The template's `bodyHtml`.
  * @return {boolean} Whether the marker is present.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  */
 export function hasArticlesMarker(body) {
 	return typeof body === 'string' && body.includes('{{articles}}')
@@ -32,7 +32,7 @@ export function hasArticlesMarker(body) {
  * @param {Array<string>} articleIds The picked article ids.
  * @param {string} body The template's `bodyHtml`.
  * @return {boolean} Whether to show the warning.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  */
 export function shouldWarnMissingMarker(articleIds, body) {
 	return (
@@ -46,7 +46,7 @@ export function shouldWarnMissingMarker(articleIds, body) {
  * The id an article (or an NcSelect option carrying one) resolves to.
  *
  * @param {object} article An article payload or picker option.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  * @return {string} The id, matching the `uuid`-then-`id` order
  *   `ArticleService`/`ListObjectStore` resolve identity with, or an empty
  *   string.
@@ -67,7 +67,7 @@ export function articleId(article) {
  * @param {Array<string>} articleIds The saved order of article ids.
  * @param {Array<object>} articles The full article list the picker offers.
  * @return {Array<object>} The picked articles, in the saved order.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  */
 export function resolveSelectedArticles(articleIds, articles) {
 	const safeIds = Array.isArray(articleIds) ? articleIds : []
@@ -82,7 +82,7 @@ export function resolveSelectedArticles(articleIds, articles) {
  *
  * @param {Array<object>} options The options NcSelect reports as selected.
  * @return {Array<string>} The article ids, in NcSelect's own order.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  */
 export function orderedArticleIds(options) {
 	return (Array.isArray(options) ? options : []).map((option) => articleId(option))
@@ -95,7 +95,7 @@ export function orderedArticleIds(options) {
  *
  * @param {Array<object>} articles The full article list.
  * @return {Array<object>} The published subset.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  */
 export function publishedOnly(articles) {
 	return (Array.isArray(articles) ? articles : []).filter(

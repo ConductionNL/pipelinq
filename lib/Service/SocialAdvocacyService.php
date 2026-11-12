@@ -37,7 +37,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use OCA\Pipelinq\Service\Social\SocialPublishRequest;
 /**
  * The prepared-share path for accounts that cannot be posted to.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 class SocialAdvocacyService {
 	/**
@@ -89,7 +89,7 @@ class SocialAdvocacyService {
 	 *
 	 * @return array<string, mixed>|null The updated publication, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function requestShare(array $publication, array $account, array $post, SocialPublishRequest $request): ?array {
 		$prepared = $this->asAwaitingShare(publication: $publication, request: $request);
@@ -156,7 +156,7 @@ class SocialAdvocacyService {
 	 *
 	 * @return array{error?: string, share?: array<string, mixed>} The bundle, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function shareBundle(string $publicationId, string $uid): array {
 		$context = $this->authorised(publicationId: $publicationId, uid: $uid);
@@ -217,7 +217,7 @@ class SocialAdvocacyService {
 	 *
 	 * @return array{error?: string, publication?: array<string, mixed>} The updated row, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function confirmShare(string $publicationId, string $uid, string $url = ''): array {
 		$context = $this->authorised(publicationId: $publicationId, uid: $uid);

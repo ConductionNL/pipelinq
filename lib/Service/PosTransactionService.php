@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+ * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
  */
 
 declare(strict_types=1);
@@ -79,8 +79,8 @@ use RuntimeException;
  *  reflects breadth of a cohesive concern, not tangled logic. Splitting it would
  *  scatter one transactional concern across several classes.
  *
- * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
  */
 class PosTransactionService {
 	use CastingPayloadToArray;
@@ -260,7 +260,7 @@ class PosTransactionService {
 	 *
 	 * @return array<string, mixed> The line data with computed net, taxAmount and lineTotal.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 * @spec openspec/specs/pos-nl-btw-engine/spec.md
 	 */
 	public function recalculateLine(array $lineData, ?string $priceMode = null): array {
@@ -314,7 +314,7 @@ class PosTransactionService {
 	 * @return array<string, mixed> Computed totals: priceMode, subtotal, discountTotal,
 	 *                              taxBreakdown, invoiceBreakdown, totalTax, total.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 * @spec openspec/specs/pos-nl-btw-engine/spec.md #REQ-BTW-003, #REQ-BTW-004
 	 */
 	public function computeTotals(array $lines, ?string $priceMode = null): array {
@@ -508,7 +508,7 @@ class PosTransactionService {
 	 * @throws OCSForbiddenException If the caller is not a POS manager / admin.
 	 *
 	 * @spec openspec/specs/pos-nl-btw-engine/spec.md
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.3
 	 */
 	public function taxReport(?string $status = null, string $userId = ''): array {
 		if ($this->policy->isManager(userId: $userId) === false) {
@@ -529,7 +529,7 @@ class PosTransactionService {
 	 *
 	 * @throws OCSNotFoundException If the transaction does not exist in this app's register.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	public function recalculateTotals(string $transactionId): array {
 		$transaction = $this->fetchTransaction(id: $transactionId);
@@ -557,7 +557,7 @@ class PosTransactionService {
 	 * @throws OCSNotFoundException If the transaction does not exist.
 	 * @throws OCSBadRequestException If status is invalid or the cart is empty.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	public function confirmTransaction(string $id, string $userId): array {
 		// Pre-stage server-authoritative side-effect fields BEFORE the engine
@@ -621,8 +621,8 @@ class PosTransactionService {
 	 * @throws OCSForbiddenException If the caller may not access the transaction.
 	 * @throws OCSBadRequestException If the transaction is not confirmed.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
 	 */
 	public function settleTransaction(string $id, string $userId): array {
 		$transaction = $this->fetchTransaction(id: $id);
@@ -682,7 +682,7 @@ class PosTransactionService {
 	 *
 	 * @return PosTenderService|null The service, or null when unavailable.
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-004
 	 */
 	private function resolveTenderService(): ?PosTenderService {
 		try {
@@ -865,8 +865,8 @@ class PosTransactionService {
 	 * @throws OCSForbiddenException If the user lacks manager permission.
 	 * @throws OCSBadRequestException If the status is invalid or the reason is empty.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
 	 */
 	public function refundTransaction(string $id, string $reason, string $userId): array {
 		if (trim($reason) === '') {
@@ -900,8 +900,8 @@ class PosTransactionService {
 	 * @throws OCSForbiddenException If the caller may not access the transaction.
 	 * @throws OCSBadRequestException If the transaction is not a draft.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
 	 */
 	public function parkTransaction(string $id, string $userId): array {
 		$transaction = $this->fetchTransaction(id: $id);
@@ -927,8 +927,8 @@ class PosTransactionService {
 	 * @throws OCSForbiddenException If the caller may not access the transaction.
 	 * @throws OCSBadRequestException If the transaction is not parked.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
 	 */
 	public function resumeTransaction(string $id, string $userId): array {
 		$transaction = $this->fetchTransaction(id: $id);
@@ -988,7 +988,7 @@ class PosTransactionService {
 	 * @throws OCSBadRequestException When the transition is invalid from the current state.
 	 * @throws OCSNotFoundException When the object cannot be resolved.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
 	 */
 	private function transitionObject(string $id, string $action): array {
 		// Cleanse the STORED object before the engine re-saves it. The
@@ -1027,7 +1027,7 @@ class PosTransactionService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
 	 */
 	private function sanitizeForTransition(string $id): void {
 		try {
@@ -1070,7 +1070,7 @@ class PosTransactionService {
 	 *
 	 * @return \Throwable The mapped OCS exception (or the original on no match).
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
 	 */
 	private function mapTransitionError(\Throwable $e): \Throwable {
 		$short = (new ReflectionClass($e))->getShortName();
@@ -1115,7 +1115,7 @@ class PosTransactionService {
 	 *
 	 * @return bool Whether it represents an access denial (→ HTTP 403).
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
 	 */
 	private function isAccessDenial(string $message): bool {
 		foreach (['gemachtigd', 'beheerder', 'mag deze transactie', 'mag een transactie'] as $marker) {
@@ -1140,7 +1140,7 @@ class PosTransactionService {
 	 *
 	 * @return string The generated CloudEvents id, or empty string on failure.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	public function emitConfirmedEvent(array $transaction): string {
 		$eventId = $this->uuid();
@@ -1170,7 +1170,7 @@ class PosTransactionService {
 	 *
 	 * @return array<string, mixed> The CloudEvent payload.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	private function buildConfirmedPayload(string $eventId, array $transaction): array {
 		$confirmedAt = (string)($transaction['confirmedAt'] ?? '');
@@ -1219,7 +1219,7 @@ class PosTransactionService {
 	 *
 	 * @throws OCSNotFoundException If the object is not found in this app's posTransaction schema.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	private function fetchTransaction(string $id): array {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
@@ -1294,7 +1294,7 @@ class PosTransactionService {
 	 *
 	 * @return array<int, array<string, mixed>> The line items.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	private function fetchLines(string $transactionId): array {
 		[$register, $schema] = $this->config(schemaKey: 'posTransactionLine_schema');
@@ -1377,7 +1377,7 @@ class PosTransactionService {
 	 *
 	 * @return array<string, mixed> The saved transaction as an array.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	private function saveTransaction(string $id, array $transaction): array {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
@@ -1418,7 +1418,7 @@ class PosTransactionService {
 	 *
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	private function config(string $schemaKey): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -1462,7 +1462,7 @@ class PosTransactionService {
 	 *
 	 * @return string The numeric schema id, or '' when it cannot be resolved.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	private function resolveSchemaIdBySlug(string $slug): string {
 		if ($slug === '') {
@@ -1503,7 +1503,7 @@ class PosTransactionService {
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	private function getObjectService(): object {
 		// Availability established before the reach (ADR-083) — the lookup names
@@ -1528,7 +1528,7 @@ class PosTransactionService {
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
 	 */
 	private function getTransitionEngine(): object {
 		try {

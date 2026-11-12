@@ -107,7 +107,7 @@ class Customer360Controller extends Controller {
 	 *
 	 * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
 	 * @spec openspec/specs/customer-360/spec.md#requirement-customer-360-access-is-logged-doelbinding-mvp
-	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
+	 * @spec openspec/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
 	 */
 	public function summary(): JSONResponse {
 		$user = $this->userSession->getUser();
@@ -169,7 +169,7 @@ class Customer360Controller extends Controller {
 	 *
 	 * @return string One of the ACCESS_* constants.
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
+	 * @spec openspec/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
 	 */
 	private function clientAccess(string $clientId): string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

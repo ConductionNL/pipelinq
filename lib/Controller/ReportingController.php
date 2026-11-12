@@ -16,14 +16,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
  * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
  * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
-		// @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+		// @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
@@ -48,7 +48,7 @@ use OCP\IRequest;
  * across the whole service desk, so the guard is the point rather than an
  * inconvenience; the added complexity is one uniform early return per method.
  *
- * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
  */
 class ReportingController extends Controller {
 	/**
@@ -73,7 +73,7 @@ class ReportingController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getKpis(): JSONResponse {
 		// Reporting aggregates across the customer base — a CRM capability.
@@ -98,7 +98,7 @@ class ReportingController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getChannels(): JSONResponse {
 		// Reporting aggregates across the customer base — a CRM capability.
@@ -129,7 +129,7 @@ class ReportingController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getAgents(): JSONResponse {
 		// Reporting aggregates across the customer base — a CRM capability.

@@ -83,7 +83,7 @@ export default {
 
 	watch: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-14
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-14
 		 */
 		objectId() {
 			this.fetchNotes()
@@ -96,7 +96,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-12
 		 */
 		async fetchNotes() {
 			this.loading = true
@@ -120,7 +120,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-10
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-10
 		 */
 		async addNote() {
 			if (this.newMessage.trim() === '') return
@@ -148,7 +148,7 @@ export default {
 
 		/**
 		 * @param {string} noteId Identifier of the note to delete.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-11
 		 */
 		async deleteNote(noteId) {
 			try {
@@ -169,7 +169,7 @@ export default {
 
 		/**
 		 * @param {string} timestamp The stored timestamp.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-13
 		 */
 		formatTime(timestamp) {
 			if (!timestamp) return ''

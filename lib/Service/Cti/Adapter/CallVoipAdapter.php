@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.2
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * Originate endpoint: POST {api_base_url}/calls.
  * Rate limit: 100 requests/sec per platform — enforced via {@see $callTimestamps}.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.2
  */
 class CallVoipAdapter implements CtiAdapterInterface {
 
@@ -97,7 +97,7 @@ class CallVoipAdapter implements CtiAdapterInterface {
 	 *
 	 * @return CtiWebhookResult The parsed webhook result.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.2
 	 */
 	public function handleInboundWebhook(array $payload): CtiWebhookResult {
 		$fields = new WebhookFields(source: $payload);

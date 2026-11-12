@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCP\IGroupManager;
  * closed: an empty user, or an unconfigured group, never grants access beyond
  * the explicit admin check.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 class ExportAccessPolicy {
 	/**
@@ -74,7 +74,7 @@ class ExportAccessPolicy {
 	 *
 	 * @return bool Whether the user may use the export surface.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	public function isExportAdmin(string $userId): bool {
 		if ($userId === '') {

@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
  * off ({@see self::shouldDispatch()}). With it, expense approvals are emitted
  * as CloudEvents 1.0 envelopes through OpenRegister's WebhookService.
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
 class ShillinqApService {
 	/**
@@ -77,7 +77,7 @@ class ShillinqApService {
 	 *
 	 * @return bool True when Shillinq is installed.
 	 *
-	 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
 	 */
 	public function shouldDispatch(): bool {
 		return $this->integrations->shillinq()['installed'] === true;
@@ -92,7 +92,7 @@ class ShillinqApService {
 	 *
 	 * @return bool True on successful dispatch, false on failure or when unconfigured.
 	 *
-	 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
 	 */
 	public function dispatchApEvent(array $expense, string $approvedBy, string $approvedAt): bool {
 		if ($this->shouldDispatch() === false) {

@@ -26,8 +26,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Thin read/retry surface
  *  delegating to the run + job services behind one error-handling helper.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011
  */
 class ExportRunController extends Controller {
 	/**
@@ -86,7 +86,7 @@ class ExportRunController extends Controller {
 	 *
 	 * @return JSONResponse The matching runs.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
 	 */
 	#[NoAdminRequired]
 	public function listRuns(): JSONResponse {
@@ -110,7 +110,7 @@ class ExportRunController extends Controller {
 	 *
 	 * @return JSONResponse The run detail.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-02
 	 */
 	#[NoAdminRequired]
 	public function showRun(string $id): JSONResponse {
@@ -137,7 +137,7 @@ class ExportRunController extends Controller {
 	 *
 	 * @return JSONResponse The newly created pending run.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-03
 	 */
 	#[NoAdminRequired]
 	public function retryRun(string $id): JSONResponse {

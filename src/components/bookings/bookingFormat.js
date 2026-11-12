@@ -41,7 +41,7 @@ export function bookingDateTime(iso) {
  * @param {number|string} value The amount.
  * @param {string} [currency] The currency code.
  * @return {string} The formatted amount.
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function bookingCurrency(value, currency) {
 	const code = currencyOr(currency)

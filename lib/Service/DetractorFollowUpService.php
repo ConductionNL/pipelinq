@@ -31,7 +31,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * Classify a response and raise the follow-up a detractor earns.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
  */
 class DetractorFollowUpService {
 	/**
@@ -100,7 +100,7 @@ class DetractorFollowUpService {
 	 *
 	 * @return int The threshold.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
 	 */
 	public function ratingThreshold(): int {
 		$configured = (int)$this->appConfig->getValueString(Application::APP_ID, self::THRESHOLD_KEY, '2');
@@ -123,7 +123,7 @@ class DetractorFollowUpService {
 	 *
 	 * @return string One of detractor, passive, promoter.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
 	 */
 	public function classify(array $response): string {
 		$nps = ($response['npsScore'] ?? null);
@@ -176,7 +176,7 @@ class DetractorFollowUpService {
 	 *
 	 * @return array<string, mixed>|null The task, or null.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
 	 */
 	public function followUpTaskFor(array $response, array $client, ?DateTimeImmutable $now = null): ?array {
 		if ($this->classify(response: $response) !== 'detractor') {
@@ -212,7 +212,7 @@ class DetractorFollowUpService {
 	 *
 	 * @return array<string, mixed> The response as it was written.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
 	 */
 	public function process(array $response, array $client): array {
 		$classification = $this->classify(response: $response);

@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *  campaign, its blasts, its touchpoints and its attribution; one
  *  cohesive read model, assembled once so the page fetches once.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
 class CampaignReportService {
 
@@ -64,7 +64,7 @@ class CampaignReportService {
 	 * @param ListObjectStore $store Reads the campaign's blasts.
 	 * @param ITimeFactory $time Closes an open window at today.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	public function __construct(
 		private CampaignService $campaigns,
@@ -83,7 +83,7 @@ class CampaignReportService {
 	 *
 	 * @return array<string, mixed>|null The report, or null when the campaign does not exist.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	public function forCampaign(string $campaignId, ?string $from = null, ?string $to = null): ?array {
 		$campaign = $this->campaigns->find(id: $campaignId);
@@ -131,7 +131,7 @@ class CampaignReportService {
 	 *
 	 * @return array<int, array<string, mixed>> One row per channel.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	public function channels(array $blasts, array $touchpoints): array {
 		$rows = $this->withTouchpoints(rows: $this->blastChannels(blasts: $blasts), touchpoints: $touchpoints);
@@ -224,7 +224,7 @@ class CampaignReportService {
 	 *
 	 * @return array<string, int> One count per kind.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	public function engagement(array $touchpoints): array {
 		$counts = [];
@@ -250,7 +250,7 @@ class CampaignReportService {
 	 * @return array{budgetEur: float|null, recorded: array<int, array<string, mixed>>, totalEur: float|null, currency: string}
 	 *         `totalEur` is null when nothing was recorded.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	public function cost(array $campaign): array {
 		$recorded = [];

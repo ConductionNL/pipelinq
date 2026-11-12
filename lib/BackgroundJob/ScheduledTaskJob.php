@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-4
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Psr\Log\LoggerInterface;
  *
  * Runs every 5 minutes; never rethrows so the queue cannot be poisoned.
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-4
  */
 class ScheduledTaskJob extends TimedJob {
 	/**
@@ -69,7 +69,7 @@ class ScheduledTaskJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-4
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */

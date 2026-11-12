@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use Throwable;
  * A quiet XML parse: libxml's errors are collected and cleared, never
  * logged, and the caller's libxml error mode is restored.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
  */
 final class QuietXmlParser {
 	/**
@@ -44,7 +44,7 @@ final class QuietXmlParser {
 	 *
 	 * @return SimpleXMLElement|null The root, or null.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
 	 */
 	public function parse(string $document): ?SimpleXMLElement {
 		if (trim($document) === '') {

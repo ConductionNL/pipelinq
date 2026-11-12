@@ -135,14 +135,14 @@ export default {
 
 	watch: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-routing-ui/tasks.md#task-4
 		 */
 		requestId() {
 			this.loadSuggestions()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-routing-ui/tasks.md#task-2
 		 */
 		category() {
 			this.loadSuggestions()
@@ -155,7 +155,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-routing-ui/tasks.md#task-3
 		 */
 		async loadSuggestions() {
 			this.loading = true
@@ -186,7 +186,7 @@ export default {
 
 		/**
 		 * @param {object} suggestion The routing suggestion to act on.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
 		 */
 		assign(suggestion) {
 			this.$emit('assigned', suggestion.userId)
@@ -194,7 +194,7 @@ export default {
 
 		/**
 		 * @param {object} suggestion The routing suggestion.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-routing-ui/tasks.md#task-5
 		 */
 		workloadIcon(suggestion) {
 			// Non-colour indicator for WCAG AA compliance.
@@ -207,7 +207,7 @@ export default {
 
 		/**
 		 * @param {object} suggestion The routing suggestion.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-routing-ui/tasks.md#task-6
 		 */
 		workloadTitle(suggestion) {
 			return this.t('pipelinq', '{n} of {max} items', {

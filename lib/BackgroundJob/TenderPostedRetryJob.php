@@ -28,7 +28,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Retry job for un-posted tender CloudEvents.
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
  */
 class TenderPostedRetryJob extends TimedJob {
 	/**
@@ -79,7 +79,7 @@ class TenderPostedRetryJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
 	 */
 	protected function run(mixed $argument): void {
 		$unposted = $this->unpostedTendersOrNull();

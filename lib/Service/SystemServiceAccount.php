@@ -26,7 +26,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use RuntimeException;
 /**
  * Runs pipelinq's own writes as a dedicated, disabled system account.
  *
- * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 class SystemServiceAccount {
 	/**
@@ -77,7 +77,7 @@ class SystemServiceAccount {
 	 *
 	 * @return mixed What the operation returns.
 	 *
-	 * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
+	 * @spec openspec/specs/pipeline/spec.md
 	 */
 	public function runAsCurrentOrSystem(callable $operation): mixed {
 		$previous = $this->userSession->getUser();
@@ -100,7 +100,7 @@ class SystemServiceAccount {
 	 *
 	 * @throws RuntimeException When the account cannot be created.
 	 *
-	 * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
+	 * @spec openspec/specs/pipeline/spec.md
 	 */
 	public function account(): IUser {
 		$account = $this->userManager->get(self::USER_ID);

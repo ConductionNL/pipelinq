@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.4
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.4
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * Originate: POST to the configured ARI Originate endpoint, or fall through to
  * an AMI HTTP relay (e.g. asterisk-mgr).
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.4
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.4
  */
 class AsteriskAdapter implements CtiAdapterInterface {
 	/**
@@ -92,7 +92,7 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 *
 	 * @return CtiWebhookResult Normalised event.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.4
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.4
 	 */
 	public function handleInboundWebhook(array $payload): CtiWebhookResult {
 		$fields = new WebhookFields(source: $payload);

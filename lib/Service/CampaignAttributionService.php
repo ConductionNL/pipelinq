@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 /**
  * CampaignAttributionService: first touch, last touch, linear, and the close.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
  */
 class CampaignAttributionService {
 
@@ -108,7 +108,7 @@ class CampaignAttributionService {
 	 * @param TouchpointService $touchpoints The touchpoint log.
 	 * @param ShillinqInvoiceReader $invoices Paid AR invoices, read only.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -127,7 +127,7 @@ class CampaignAttributionService {
 	 * @return array<string, mixed> `touchpoints[]`, `leads[]`, `totals` and
 	 *         `models`: the whole attribution record.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
 	public function forCampaign(string $campaignId, string $from = '', string $to = ''): array {
 		$touchpoints = $this->touchpoints->forCampaign(campaignId: $campaignId);
@@ -156,7 +156,7 @@ class CampaignAttributionService {
 	 *
 	 * @return array<string, float> Touchpoint id to attributed value.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
 	public function split(array $touchpoints, float $value, string $model): array {
 		$ids = [];
@@ -199,7 +199,7 @@ class CampaignAttributionService {
 	 * @return array{basis: string, value: float, currency: string, invoiceIds: array<int, string>}
 	 *         The close.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function closeFor(array $lead, string $from, string $to, array $claimed = []): array {
 		$customerRef = $this->customerRefFor(lead: $lead);
@@ -266,7 +266,7 @@ class CampaignAttributionService {
 	 *
 	 * @return bool True when the lead is won.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function isWon(array $lead): bool {
 		if (strtolower(trim((string)($lead['status'] ?? ''))) === 'won') {

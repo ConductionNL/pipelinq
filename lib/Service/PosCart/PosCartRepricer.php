@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
  * Lines whose stored figures differ from the server's (the price display
  * changed) are stored again; the totals are PosTransactionService::recalculateTotals.
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
  */
 class PosCartRepricer {
 	/**
@@ -43,7 +43,7 @@ class PosCartRepricer {
 	 * @param PosLinePricer $pricer Prices a line; holds the sale store and the totals.
 	 * @param PosCartAccess $access Whether the signed-in user may change a sale.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly PosLinePricer $pricer,
@@ -62,7 +62,7 @@ class PosCartRepricer {
 	 * @throws OCSForbiddenException  When the user may not change the sale.
 	 * @throws OCSBadRequestException When the sale is no longer open.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
 	 */
 	public function reprice(string $transactionId): array {
 		$sale = $this->pricer->objects->transaction(transactionId: $transactionId);

@@ -287,21 +287,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-48
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-48
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-47
 		 */
 		leadSourcesStore() {
 			return useLeadSourcesStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-54
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-54
 		 */
 		sourceOptions() {
 			return this.leadSourcesStore.sourceNames.map((id) => ({
@@ -315,21 +315,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-52
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-52
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-46
 		 */
 		leadPipelines() {
 			return this.pipelines.filter((p) => pipelineAppliesTo(p, 'lead'))
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-51
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-51
 		 */
 		pipelineOptions() {
 			return this.leadPipelines.map((p) => ({
@@ -339,7 +339,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
 		 */
 		errors() {
 			const errors = {}
@@ -370,7 +370,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-44
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-44
 	 */
 	async created() {
 		// Load pipelines, clients, and lead sources for dropdowns
@@ -395,7 +395,7 @@ export default {
 		 * The lead being edited as the form edits it.
 		 *
 		 * @return {object} The form.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-44
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-44
 		 */
 		leadAsForm() {
 			return {
@@ -426,8 +426,8 @@ export default {
 		 * none is marked default, in its first open stage. Every lead sits in
 		 * a stage; the server fills one in too, this shows it in the form.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
-		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		autoAssignDefaultPipeline() {
 			const defaultPipeline = defaultPipelineFor(this.leadPipelines, 'lead')
@@ -443,7 +443,7 @@ export default {
 		 *
 		 * @param {string|undefined} stage The chosen stage name.
 		 * @return {object} The fields to add to the saved lead.
-		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		stagePlacement(stage) {
 			if (!stage) return {}
@@ -461,7 +461,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
 		 */
 		onSave() {
 			this.markSaveAttempted()

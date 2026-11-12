@@ -48,7 +48,7 @@ use Psr\Log\LoggerInterface;
  * settings in {@see self::SUBJECT_SETTING_MAP} that the annotation runtime does
  * not yet replicate.
  *
- * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-05-31-pipelinq-or-lifecycle-notification/tasks.md#task-3.1
  *
  * Seam 4 (declarative-notification migration) verdict — KEEP IMPERATIVE: OpenRegister's
  * AnnotationNotificationDispatcher cannot express this service's per-recipient
@@ -60,7 +60,7 @@ use Psr\Log\LoggerInterface;
  * declaratively in pipelinq_register.json — only the OR-non-expressible directed notifications
  * stay here.
  *
- * @spec openspec/changes/pipelinq-notifications-to-or/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-06-21-pipelinq-notifications-to-or/tasks.md#task-3.1
  */
 class NotificationService {
 	/**
@@ -369,7 +369,7 @@ class NotificationService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-activity-notify/tasks.md#task-2
 	 */
 	public function notifyDealLost(
 		string $title,
@@ -402,7 +402,7 @@ class NotificationService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-activity-notify/tasks.md#task-3
 	 */
 	public function sendNotification(
 		string $userId,

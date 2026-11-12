@@ -83,7 +83,7 @@ export default {
 		 * The name to start the form with.
 		 *
 		 * @return {string} The typed name, or ''.
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 * @spec openspec/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		prefillName() {
 			return this.name || this.initialData?.name || ''
@@ -93,7 +93,7 @@ export default {
 		 * Whether a form opened this dialog, so the new client goes back to it.
 		 *
 		 * @return {boolean} True when opened from a picker.
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 * @spec openspec/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		returnsToForm() {
 			return this.stayOnPage || this.initialData !== null
@@ -118,7 +118,7 @@ export default {
 		 *
 		 * @param {object} created The created client.
 		 * @return {void}
-		 * @spec openspec/changes/pipelinq-forms-review/specs/walkthrough/spec.md
+		 * @spec openspec/specs/walkthrough/spec.md
 		 */
 		notifyWalkthrough(created) {
 			window.dispatchEvent(
@@ -142,8 +142,8 @@ export default {
 		 *
 		 * @param {object} formData The raw create-form fields.
 		 * @spec openspec/specs/unify-client-contact/spec.md
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
+		 * @spec openspec/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		async onSave(formData) {
 			this.saving = true

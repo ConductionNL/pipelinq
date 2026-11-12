@@ -10,7 +10,7 @@
  *
  * The host has an `errors` computed and a `form` with a `title`.
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
  */
 export default {
 	props: {

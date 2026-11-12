@@ -114,7 +114,7 @@ export default {
 		 *
 		 * @param {boolean} open Whether the form is open.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 */
 		show(open) {
 			if (!open) {
@@ -129,7 +129,7 @@ export default {
 		 *
 		 * @param {object} formData The form's values.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 */
 		async onConfirm(formData) {
 			const result = await this.confirm?.(formData)
@@ -141,7 +141,7 @@ export default {
 		/**
 		 * Close the article editor and have the page re-read the saved article.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 */
 		onEditorSaved() {
 			this.editorOpen = false

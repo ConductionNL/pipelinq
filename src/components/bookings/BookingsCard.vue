@@ -14,7 +14,7 @@
   bookings; an inline error state renders when the fetch fails (so the
   customer page never crashes on a relation lookup — REQ-KB360-006).
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
   @spec openspec/specs/appointment-booking/spec.md
 -->
 <template>
@@ -164,7 +164,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+		 * @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 		 */
 		async primeLabels() {
 			const serviceIds = [

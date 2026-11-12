@@ -22,7 +22,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use Throwable;
 /**
  * Counts satisfaction invitations into response-rate figures.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 class SurveyInvitationFigures {
 
@@ -46,7 +46,7 @@ class SurveyInvitationFigures {
 	 *
 	 * @return array{delivered: int, responded: int, rate: float, suppressed: int, failed: int} The figures.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function rate(array $invitations): array {
 		$counts = ['sent' => 0, 'responded' => 0, 'suppressed' => 0, 'failed' => 0];
@@ -79,7 +79,7 @@ class SurveyInvitationFigures {
 	 *
 	 * @return array<string, array<string, int|float>> The figures by channel, sorted.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function byChannel(array $invitations): array {
 		$groups = [];
@@ -110,7 +110,7 @@ class SurveyInvitationFigures {
 	 *
 	 * @return array<int, array<string, mixed>> The invitations inside the period.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function withinDays(array $invitations, int $days, ?DateTimeImmutable $now = null): array {
 		if ($days <= 0) {

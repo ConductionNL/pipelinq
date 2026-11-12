@@ -493,7 +493,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-43
 		 */
 		viewOptions() {
 			return this.views.map((v) => ({
@@ -503,7 +503,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-33
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-33
 		 */
 		errors() {
 			const errors = {}
@@ -521,15 +521,15 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-42
-		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-42
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-2.2
 		 */
 		stageErrors() {
 			return this.form.stages.map(stageErrorsOf)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-34
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-34
 		 */
 		isValid() {
 			if (Object.keys(this.errors).length > 0) return false
@@ -540,7 +540,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-32
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-32
 	 */
 	async created() {
 		if (this.pipeline) {
@@ -568,7 +568,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-35
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-35
 		 */
 		async loadViews() {
 			this.loadingViews = true
@@ -581,7 +581,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-30
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-30
 		 */
 		addMapping() {
 			this.form.propertyMappings.push({
@@ -593,14 +593,14 @@ export default {
 
 		/**
 		 * @param {number} index Index of the property mapping to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-39
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-39
 		 */
 		removeMapping(index) {
 			this.form.propertyMappings.splice(index, 1)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-31
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-31
 		 */
 		addStage() {
 			const maxOrder = this.form.stages.reduce(
@@ -619,7 +619,7 @@ export default {
 
 		/**
 		 * @param {number} index Index of the stage to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
 		 */
 		removeStage(index) {
 			// `index` is now the position in `form.stages`, which recomputeOrders()
@@ -633,7 +633,7 @@ export default {
 		/**
 		 * @param {object} stage The stage to move.
 		 * @param {number} direction -1 to move earlier, 1 to move later.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
 		 */
 		moveStage(stage, direction) {
 			const stages = this.form.stages
@@ -656,7 +656,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
 		 */
 		recomputeOrders() {
 			// Sort IN PLACE so `form.stages` is itself the display order. The item
@@ -670,8 +670,8 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
-		 * @spec openspec/changes/review-finish/specs/pipeline/spec.md
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		onSave() {
 			if (!this.isValid) return

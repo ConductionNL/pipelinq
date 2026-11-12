@@ -37,7 +37,7 @@ use UnexpectedValueException;
 /**
  * Service for managing Pipelinq settings.
  *
- * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
  *
  * @SuppressWarnings(PHPMD.StaticAccess) `MatomoReportService::looksLikeAToken()`
  *  is a pure predicate over a string shape. It is a static on that class
@@ -503,7 +503,7 @@ class SettingsService {
 	 *
 	 * @throws UnexpectedValueException When the reference field carries a token.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
 	 */
 	private function refuseAMatomoToken(array $data): void {
 		$value = trim((string)($data[MatomoReportService::CREDENTIAL_KEY] ?? ''));
@@ -527,7 +527,7 @@ class SettingsService {
 	 * @return array The import result.
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $force is a simple re-import toggle
-	 * @spec                                        openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-16
+	 * @spec                                        openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-settings/tasks.md#task-16
 	 * @spec                                        openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
 	 */
 	public function loadSettings(bool $force = false): array {
@@ -570,7 +570,7 @@ class SettingsService {
 	 * @param string $userId The user ID.
 	 *
 	 * @return array The user settings as key-boolean pairs.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-15
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-settings/tasks.md#task-15
 	 */
 	public function getUserSettings(string $userId): array {
 		$settings = [];
@@ -593,7 +593,7 @@ class SettingsService {
 	 * @param array $data The settings data to update.
 	 *
 	 * @return array The updated user settings.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-17
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-settings/tasks.md#task-17
 	 */
 	public function updateUserSettings(string $userId, array $data): array {
 		foreach (array_keys(array: self::USER_SETTING_DEFAULTS) as $key) {

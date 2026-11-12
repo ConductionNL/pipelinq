@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use OCP\IUserSession;
  * not admin settings — and resolves the acting user via IUserSession so
  * the `createdBy` field is always server-authoritative.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
  */
 class BlastController extends Controller {
 	/**
@@ -253,7 +253,7 @@ class BlastController extends Controller {
 	 *
 	 * @return JSONResponse 200 with `{blastId, dealCount, attributedValue, currency}`, 404 on unknown Blast.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
 	 */
 	#[NoAdminRequired]
 	public function attribution(string $id): JSONResponse {
@@ -286,7 +286,7 @@ class BlastController extends Controller {
 	 *
 	 * @return JSONResponse The performance record, or 401/403/404.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	#[NoAdminRequired]
 	public function performance(string $id, ?string $from = null, ?string $to = null): JSONResponse {

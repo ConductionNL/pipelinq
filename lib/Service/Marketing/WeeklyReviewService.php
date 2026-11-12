@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) One read model over four
  *  collections, assembled once so the page fetches once.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 class WeeklyReviewService {
 
@@ -91,7 +91,7 @@ class WeeklyReviewService {
 	 * @param WeeklyReviewNumbers $numbers One week of counting, per collection.
 	 * @param ITimeFactory $time Clock.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -107,7 +107,7 @@ class WeeklyReviewService {
 	 *
 	 * @return array<string, mixed> The review, not yet stored.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function compose(string $weekStarting = ''): array {
 		$monday = $this->mondayOf(day: $weekStarting);
@@ -151,7 +151,7 @@ class WeeklyReviewService {
 	 *
 	 * @return array<string, mixed>|null The stored review, or null when the write failed.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function generate(string $weekStarting = ''): ?array {
 		$review = $this->compose(weekStarting: $weekStarting);
@@ -169,7 +169,7 @@ class WeeklyReviewService {
 	 *
 	 * @return array<string, mixed>|null The review, or null when none exists.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function latest(): ?array {
 		$latest = null;
@@ -199,7 +199,7 @@ class WeeklyReviewService {
 	 *
 	 * @return array<int, string> `up`, `down` or `flat` per highlight.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	private function directionsOf(array $current, string $monday): array {
 		$week = [date('Y-m-d', (strtotime($monday) - (7 * 86400))), date('Y-m-d', (strtotime($monday) - 86400))];

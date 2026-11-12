@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
 /**
  * The register, entity type and entity id one activity feed is read for.
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
  */
 final class EntityActivityQuery {
 	/**
@@ -57,7 +57,7 @@ final class EntityActivityQuery {
 	 *
 	 * @return array<string,mixed> The scoped filters.
 	 *
-	 * @spec openspec/changes/entity-notes/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
 	 */
 	public function schemaFilters(string $schemaId, array $filters): array {
 		return array_merge(

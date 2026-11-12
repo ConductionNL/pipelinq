@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use OCP\EventDispatcher\Event;
 /**
  * Cross-app notification: a landing-page form Pipelinq asked for was submitted.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 class LandingPageFormSubmittedEvent extends Event {
 
@@ -106,7 +106,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string The app id.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getSourceApp(): string {
 		return $this->sourceApp;
@@ -117,7 +117,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string The form id.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getFormId(): string {
 		return $this->formId;
@@ -128,7 +128,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string The page id.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getPageId(): string {
 		return $this->pageId;
@@ -139,7 +139,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string The route.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getPageRoute(): string {
 		return $this->pageRoute;
@@ -150,7 +150,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string The portal slug.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getPortal(): string {
 		return $this->portal;
@@ -161,7 +161,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string The external reference.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getExternalReference(): string {
 		return $this->externalReference;
@@ -172,7 +172,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return array<string, mixed> Field id to value.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getValues(): array {
 		return $this->values;
@@ -183,7 +183,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return array<string, mixed> The UTM block.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getUtmFirstTouch(): array {
 		return $this->utmFirstTouch;
@@ -194,7 +194,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return array<string, mixed> The UTM block.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getUtmLastTouch(): array {
 		return $this->utmLastTouch;
@@ -205,7 +205,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string The referrer.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getReferrer(): string {
 		return $this->referrer;
@@ -216,7 +216,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string ISO-8601.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getSubmittedAt(): string {
 		return $this->submittedAt;
@@ -227,7 +227,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string The nonce.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getNonce(): string {
 		return $this->nonce;
@@ -238,7 +238,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string The correlation id.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getCorrelationId(): string {
 		return $this->correlationId;
@@ -249,7 +249,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return string|null The lead id, or null when none was created.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function getLeadId(): ?string {
 		return $this->leadId;
@@ -262,7 +262,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function setLeadId(string $leadId): void {
 		$this->leadId = $leadId;
@@ -273,7 +273,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return bool True once the listener has run.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function isHandled(): bool {
 		return $this->handled;
@@ -286,7 +286,7 @@ class LandingPageFormSubmittedEvent extends Event {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function setHandled(bool $handled): void {
 		$this->handled = $handled;

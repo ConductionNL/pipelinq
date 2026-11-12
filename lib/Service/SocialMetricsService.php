@@ -39,7 +39,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+ * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
  */
 
 declare(strict_types=1);
@@ -61,7 +61,7 @@ use OCP\IAppConfig;
 /**
  * The daily metrics pull, the normalisation and the engagement ranking.
  *
- * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+ * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The pull is a join across
  *  publications, accounts, adapters, the broker and the spend budget; each is
@@ -106,7 +106,7 @@ class SocialMetricsService {
 	 *
 	 * @return array{publications: int, accounts: int, failed: int} What the run did.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function pullAll(): array {
 		$updated = 0;
@@ -135,7 +135,7 @@ class SocialMetricsService {
 	 *
 	 * @return bool True when fresh numbers were stored.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function pullOne(array $publication): bool {
 		$externalId = trim((string)($publication['externalId'] ?? ''));
@@ -181,7 +181,7 @@ class SocialMetricsService {
 	 *
 	 * @return int How many accounts were updated.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function refreshFollowerCounts(): int {
 		$updated = 0;
@@ -220,7 +220,7 @@ class SocialMetricsService {
 	 *
 	 * @return array<int, array<string, mixed>> The ranked rows.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 	 */
 	public function ranking(string $network = '', int $limit = 50): array {
 		$followers = [];
@@ -288,7 +288,7 @@ class SocialMetricsService {
 	 *
 	 * @return array<string, mixed> The ranking row.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 	 */
 	public function rankRow(array $publication, array $followers): array {
 		$metrics = ($publication['metrics'] ?? []);
@@ -337,7 +337,7 @@ class SocialMetricsService {
 	 *
 	 * @return SocialGatewayResult What came back.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	private function read(MeteredRead $read, array $account): SocialGatewayResult {
 		$adapter = $read->adapter;

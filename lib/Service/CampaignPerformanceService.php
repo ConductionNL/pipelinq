@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 /**
  * CampaignPerformanceService: one blast, mailbox and site numbers together.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 class CampaignPerformanceService {
 	/**
@@ -87,7 +87,7 @@ class CampaignPerformanceService {
 	 * @param AttributionService  $attributionService Blast to deal roll-up.
 	 * @param CampaignSiteTraffic $traffic            Portal, campaign slug and site sessions.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function __construct(
 		private ITimeFactory $time,
@@ -106,7 +106,7 @@ class CampaignPerformanceService {
 	 *
 	 * @return array<string, mixed>|null The performance record, or null when the blast does not exist.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function forBlast(string $blastId, ?string $from=null, ?string $to=null): ?array {
 		$blast = $this->blastService->getBlastById(blastId: $blastId);

@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-001
+ * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  *
- * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-001
+ * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
  */
 class MdmObjectRepository {
 	/**
@@ -93,7 +93,7 @@ class MdmObjectRepository {
 	 *
 	 * @throws RuntimeException If the register is not configured.
 	 *
-	 * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-001
+	 * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
 	 */
 	public function register(): string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, self::REGISTER_KEY, '');

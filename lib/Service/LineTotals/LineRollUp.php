@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\IAppConfig;
  * A lead without lines keeps the value typed by hand, and so does a lead
  * whose value was typed over the calculated one.
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
 class LineRollUp {
 	/**
@@ -65,7 +65,7 @@ class LineRollUp {
 	 * @param ObjectServiceInterface $objects   OpenRegister's object service.
 	 * @param IAppConfig             $appConfig Holds the register and schema ids.
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ObjectServiceInterface $objects,
@@ -81,7 +81,7 @@ class LineRollUp {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function apply(ObjectEntityInterface $line): void {
 		$parent = $this->parentOf(line: $line);

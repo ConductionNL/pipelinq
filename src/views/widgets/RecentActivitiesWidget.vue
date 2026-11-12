@@ -107,7 +107,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-50
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-50
 		 */
 		items() {
 			return this.activities.map((activity) => {
@@ -132,7 +132,7 @@ export default {
 		 *
 		 * @param {object} item The clicked row (a shaped activity item).
 		 * @param {MouseEvent} [event] The row click.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-51
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-51
 		 */
 		onShow(item, event) {
 			// Non-lead activities are `ticket` rows (unify-ticket-supertype) and
@@ -146,7 +146,7 @@ export default {
 
 		/**
 		 * @param {string} dateStr The date string to humanise.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-49
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-49
 		 */
 		formatTimeAgo(dateStr) {
 			if (!dateStr) return ''
@@ -172,7 +172,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-47
 		 */
 		async fetchData() {
 			await this.loadWidget('RecentActivitiesWidget', async (config) => {

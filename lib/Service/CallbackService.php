@@ -35,7 +35,7 @@ use Psr\Log\LoggerInterface;
  * Handles attempt logging, claim validation, status transitions,
  * and attempt threshold checks for terugbelverzoeken.
  *
- * @spec openspec/changes/callback-management/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
  * @spec openspec/specs/callback-management/spec.md#requirement-callback-service
  */
 class CallbackService {
@@ -125,7 +125,7 @@ class CallbackService {
 	 *
 	 * @return array<string, mixed> The modified task data with the new attempt.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function addAttempt(array $taskData, string $result, string $notes = ''): array {
 		$attempts = $taskData['attempts'] ?? [];
@@ -157,7 +157,7 @@ class CallbackService {
 	 *
 	 * @return bool True if the threshold has been reached.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function isAttemptThresholdReached(array $taskData): bool {
 		$attempts = $taskData['attempts'] ?? [];
@@ -179,7 +179,7 @@ class CallbackService {
 	 *
 	 * @return array{eligible: bool, reason: string} Validation result.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function validateClaim(array $taskData): array {
 		$reason = $this->claimRefusal(taskData: $taskData);
@@ -226,7 +226,7 @@ class CallbackService {
 	 *
 	 * @return array{valid: bool, reason: string} Validation result.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function validateStatusTransition(string $currentStatus, string $targetStatus): array {
 		$graph = $this->transitionGraph();
@@ -252,7 +252,7 @@ class CallbackService {
 	 *
 	 * @return array<string, mixed> The modified task data.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function applyClaim(array $taskData): array {
 		$user = $this->userSession->getUser();
@@ -275,7 +275,7 @@ class CallbackService {
 	 *
 	 * @return array<string, mixed> The modified task data.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function applyCompletion(array $taskData, string $resultText): array {
 		$taskData['status'] = 'completed';
@@ -294,7 +294,7 @@ class CallbackService {
 	 *
 	 * @return array<string, mixed> The modified task data.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function applyReassignment(array $taskData, string $assignee, string $assigneeType): array {
 		if ($assigneeType === 'user') {

@@ -31,7 +31,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * Repair step: unwrap translation-map ticket titles into plain strings.
  *
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
  */
 class NormaliseTicketTitle implements IRepairStep {
 	/**
@@ -116,7 +116,7 @@ class NormaliseTicketTitle implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
 	 */
 	public function run(IOutput $output): void {
 		if ($this->ticketService->isConfigured() === false) {

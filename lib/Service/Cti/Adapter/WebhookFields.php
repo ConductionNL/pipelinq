@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\Service\Cti\Adapter;
  *
  * A field that is absent or null reads as null; any other value is cast.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 final class WebhookFields {
 	/**
@@ -48,7 +48,7 @@ final class WebhookFields {
 	 *
 	 * @return string|null The field's string value.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
 	 */
 	public function text(string $key): ?string {
 		if (isset($this->source[$key]) === false) {
@@ -65,7 +65,7 @@ final class WebhookFields {
 	 *
 	 * @return int|null The field's integer value.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
 	 */
 	public function number(string $key): ?int {
 		if (isset($this->source[$key]) === false) {
@@ -82,7 +82,7 @@ final class WebhookFields {
 	 *
 	 * @return self The nested part's fields.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
 	 */
 	public function part(string $key): self {
 		return new self(source: (array)($this->source[$key] ?? []));
@@ -95,7 +95,7 @@ final class WebhookFields {
 	 *
 	 * @return self The first entry's fields.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
 	 */
 	public function first(string $key): self {
 		$entry = ((array)($this->source[$key] ?? []))[0] ?? [];

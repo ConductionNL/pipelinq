@@ -14,7 +14,7 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 	},
 	actions: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-40
 		 */
 		async fetchChannels() {
 			await loadSettingsTags(this, { url: API_BASE, what: 'request channels' })
@@ -24,7 +24,7 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		 * Create a request channel.
 		 *
 		 * @param {string} name The channel name to add.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-39
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-39
 		 */
 		async addChannel(name) {
 			return keepingError(this, async () => {
@@ -40,7 +40,7 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 
 		/**
 		 * @param {string} id Identifier of the request channel.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-41
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-41
 		 */
 		async removeChannel(id) {
 			await keepingError(this, async () => {
@@ -55,7 +55,7 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		/**
 		 * @param {string} id Identifier of the request channel.
 		 * @param {string} name The new name.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-42
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-store/tasks.md#task-42
 		 */
 		async renameChannel(id, name) {
 			return keepingError(this, async () => {

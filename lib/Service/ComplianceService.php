@@ -202,7 +202,7 @@ class ComplianceService {
 	 * @return array{allowed: bool, reason: string} `reason` is empty when allowed,
 	 *         otherwise `no_consent` or `suppressed_dunning`.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	public function permitsSend(string $contactId, string $channel, string $intent = self::INTENT_PROMOTIONAL, ?string $listId = null): array {
 		$request = new SendPermitRequest(contactId: $contactId, channel: $channel, intent: $intent, listId: $listId);
@@ -298,7 +298,7 @@ class ComplianceService {
 	 *
 	 * @return bool True when the send is skipped.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	public function isSuppressed(string $contactId, string $intent = self::INTENT_PROMOTIONAL): bool {
 		if ($intent !== self::INTENT_PROMOTIONAL) {
@@ -366,7 +366,7 @@ class ComplianceService {
 	 * @return array{compliant: bool, missingConsent: array<int, string>, missingCount: int, suppressed: array<int, string>, suppressedCount: int}
 	 *
 	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	public function checkSegmentCompliance(string $segmentId, string $channel, string $intent = self::INTENT_PROMOTIONAL): array {
 		$channel = strtolower(trim($channel));
@@ -826,7 +826,7 @@ class ComplianceService {
 	 *
 	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
 	 */
 	public function listTemplates(int $page, int $limit): array {
 		$page = max(1, $page);
@@ -871,7 +871,7 @@ class ComplianceService {
 	 *
 	 * @return array<string, mixed>|null Template payload or null.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
 	 */
 	public function getTemplateById(string $templateId): ?array {
 		if ($templateId === '') {
@@ -915,7 +915,7 @@ class ComplianceService {
 	 *
 	 * @return array{template?: array<string, mixed>, error?: string}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
 	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
 	 */
 	public function createTemplate(array $payload, string $createdByUid): array {
@@ -975,7 +975,7 @@ class ComplianceService {
 	 *
 	 * @return array{template?: array<string, mixed>, error?: string}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
 	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
 	 */
 	public function patchTemplate(string $templateId, array $patch): array {
@@ -1024,7 +1024,7 @@ class ComplianceService {
 	 *
 	 * @return array<int, string> Article ids in the order they were given.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	private function normaliseArticleIds(mixed $value): array {
 		if (is_array($value) === false) {

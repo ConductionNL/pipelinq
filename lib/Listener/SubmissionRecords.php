@@ -24,7 +24,7 @@ namespace OCA\Pipelinq\Listener;
 /**
  * The contact and lead a landing page submission produced.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 final class SubmissionRecords {
 

@@ -331,7 +331,7 @@ import { fieldsOr, withoutEmptyFields } from '../../utils/formFields.js'
  *
  * @param {object} request The stored request.
  * @return {object} The form.
- * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
  */
 function formFromRequest(request) {
 	return {
@@ -429,12 +429,12 @@ export default {
 		 * unify-ticket-supertype) to NcDateTimePickerNative, which works with Date
 		 * objects. The user-facing label stays "Requested at".
 		 *
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
 		occurredAtDate: {
 			/**
 			 * @return {Date|null} The stored `occurredAt` as a Date.
-			 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+			 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 			 */
 			get() {
 				return toDateObject(this.form.occurredAt)
@@ -442,7 +442,7 @@ export default {
 
 			/**
 			 * @param {Date|null} date The picked date.
-			 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+			 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 			 */
 			set(date) {
 				this.form.occurredAt = toDateInputString(date)
@@ -450,21 +450,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-44
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-44
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-49
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-49
 		 */
 		requestChannelsStore() {
 			return useRequestChannelsStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-39
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-39
 		 */
 		channelOptions() {
 			return this.requestChannelsStore.channelNames
@@ -494,7 +494,7 @@ export default {
 		 * The kinds of ticket the board layout offers.
 		 *
 		 * @return {Array<{value: string, label: string}>}
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
 		typeOptions() {
 			return [
@@ -526,7 +526,7 @@ export default {
 		 * ticket waits in the queue.
 		 *
 		 * @return {Array<{value: string|null, label: string}>}
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
 		assigneeOptions() {
 			const user = getCurrentUser()
@@ -549,7 +549,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-38
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-38
 		 */
 		availableStatuses() {
 			if (!this.isEdit) return ['new']
@@ -558,21 +558,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-48
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-48
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-50
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-50
 		 */
 		requestPipelines() {
 			return this.pipelines.filter((p) => pipelineAppliesTo(p, 'request'))
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-47
 		 */
 		pipelineOptions() {
 			return this.requestPipelines.map((p) => ({
@@ -582,7 +582,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
 		 */
 		errors() {
 			const errors = {}
@@ -597,7 +597,7 @@ export default {
 		 * typed in the field, so a new form does not open in error.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
 		 */
 		showTitleError() {
 			return this.titleTouched && !!this.errors.title
@@ -605,7 +605,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
 	 */
 	async created() {
 		const [, , categories] = await Promise.all([
@@ -716,7 +716,7 @@ export default {
 		 * picked client, the request type and the current user as handler;
 		 * then the default pipeline.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
 		 */
 		prepareNewRequest() {
 			if (this.preLinkedClient) {
@@ -731,7 +731,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-37
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-37
 		 */
 		autoAssignDefaultPipeline() {
 			const defaultPipeline = this.requestPipelines.find((p) => p.isDefault)
@@ -742,14 +742,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-46
 		 */
 		getPriorityLabel,
 		getStatusLabel,
 
 		/**
 		 * @param {string} value The typed subject.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
 		 */
 		onTitleInput(value) {
 			this.form.title = value

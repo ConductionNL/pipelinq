@@ -33,7 +33,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * File one contact moment onto several cases, and take it off again.
  *
- * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
  */
 class ContactMomentFilingService {
 	/**
@@ -77,7 +77,7 @@ class ContactMomentFilingService {
 	 *
 	 * @return array<int, string> The ordered set of case references.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
 	 */
 	public function caseSetOf(array $moment): array {
 		$set = ($moment['caseReferences'] ?? null);
@@ -111,7 +111,7 @@ class ContactMomentFilingService {
 	 *
 	 * @return string The primary case reference, or '' when the set is empty.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
 	 */
 	public function primaryOf(array $moment): string {
 		$set = $this->caseSetOf(moment: $moment);
@@ -132,7 +132,7 @@ class ContactMomentFilingService {
 	 *
 	 * @return array<string, mixed> `status` plus either `contactMoment` or `error`.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
 	 */
 	public function fileOnAlsoCase(string $momentId, string $caseId): array {
 		$caseId = trim($caseId);
@@ -171,7 +171,7 @@ class ContactMomentFilingService {
 	 *
 	 * @return array<string, mixed> `status` plus either `contactMoment` or `error`.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-cannot-be-left-with-no-case-req-cms-006
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-cannot-be-left-with-no-case-req-cms-006
 	 */
 	public function unfileFromCase(string $momentId, string $caseId, ?string $newPrimary = null): array {
 		$caseId = trim($caseId);
@@ -268,7 +268,7 @@ class ContactMomentFilingService {
 	 * @return array{shared: bool, alsoOnCases: array<int, string>, hiddenCount: int}
 	 *   The marker.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-shared-contact-moment-says-so-before-it-is-edited-req-cms-005
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-shared-contact-moment-says-so-before-it-is-edited-req-cms-005
 	 */
 	public function sharedMarker(array $moment, string $hostId, callable $mayRead): array {
 		$others = array_values(

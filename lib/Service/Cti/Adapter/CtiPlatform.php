@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ use OCA\Pipelinq\Service\Cti\Result\CtiCallResult;
 /**
  * The identifier and display name of one CTI platform, and the call results it reports.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 final class CtiPlatform {
 	/**
@@ -50,7 +50,7 @@ final class CtiPlatform {
 	 *
 	 * @return CtiCallResult The successful result.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
 	 */
 	public function placed(?string $externalCallId): CtiCallResult {
 		return new CtiCallResult(
@@ -67,7 +67,7 @@ final class CtiPlatform {
 	 *
 	 * @return CtiCallResult The failed result.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
 	 */
 	public function refused(string $error): CtiCallResult {
 		return new CtiCallResult(

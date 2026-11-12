@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * Default region is read from `pipelinq::default_country_code` (IAppConfig);
  * value is an ISO-3166-1 alpha-2 code (`NL`, `BE`, `DE`, …).
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.2
  */
 class PhoneNormaliser {
 	/**
@@ -93,7 +93,7 @@ class PhoneNormaliser {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $orgId is a reserved parameter
 	 *  of the public contract (see method summary) for future per-org normalisation
 	 *  overrides; CtiService already passes it.
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.2
 	 */
 	public function normaliseForOrg(string $rawNumber, ?string $orgId = null): array {
 		$raw = trim($rawNumber);

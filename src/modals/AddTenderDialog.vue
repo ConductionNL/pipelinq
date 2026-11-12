@@ -9,8 +9,8 @@
   - Submits POST /api/pos-transactions/{id}/tenders and emits `added` on
   - success so the parent panel can refresh.
   -
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.3
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.4
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.3
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.4
   -->
 <template>
 	<CnDialog

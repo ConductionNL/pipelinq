@@ -21,7 +21,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+ * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Throwable;
 /**
  * XWiki REST proxy service.
  *
- * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+ * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) thin proxy over the xWiki REST
  *  API with discovery, caching, XML parsing and sanitisation kept together as one
@@ -347,7 +347,7 @@ class XWikiService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function getPages(string $space, int $limit = 10, int $offset = 0): array {
 		$limit = max(1, min(100, $limit));
@@ -387,7 +387,7 @@ class XWikiService {
 	 *
 	 * @return array<string, mixed> {title, content, url, modified, space, id}
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function getPageContent(string $wiki, string $page): array {
 		$wiki = $this->wikiIdOf(wiki: $wiki);
@@ -452,7 +452,7 @@ class XWikiService {
 	 *
 	 * @return array<string, mixed> {available: bool, version: string, baseUrl: string, source: string}
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function getStatus(): array {
 		$base = $this->getBaseUrl();
@@ -688,7 +688,7 @@ class XWikiService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function parseSearchResults(string $xml): array {
 		$doc = $this->loadXml(xml: $xml);
@@ -712,7 +712,7 @@ class XWikiService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function parsePageSummaries(string $xml, string $space): array {
 		$doc = $this->loadXml(xml: $xml);
@@ -743,7 +743,7 @@ class XWikiService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function parsePage(string $xml): array {
 		$doc = $this->loadXml(xml: $xml);
@@ -793,7 +793,7 @@ class XWikiService {
 	 *
 	 * @return string Sanitised HTML fragment.
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function extractAndSanitiseHtml(string $html): string {
 		if ($html === '') {
@@ -819,7 +819,7 @@ class XWikiService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function sanitiseHtml(string $html): string {
 		if ($html === '') {

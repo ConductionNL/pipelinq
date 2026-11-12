@@ -184,7 +184,7 @@ class ContactVcardWriterService {
 	 *                                     to write, or null when the card is
 	 *                                     read-only or no addressbook can take it.
 	 *
-	 * @spec openspec/changes/round4-contact-write-back/specs/contacts-sync/spec.md#requirement-write-back-updates-the-existing-card
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-updates-the-existing-card
 	 */
 	private function resolveTarget(array $addressBooks, array $properties, ?string $existingUid): ?array {
 		if ($existingUid !== null && $existingUid !== '') {

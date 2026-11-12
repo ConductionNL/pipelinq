@@ -8,7 +8,7 @@
   - escalation queue when the call was escalated, notes, and what the call
   - was: the client, how long it took and the contact moment it is on.
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
   -->
 <template>
 	<CnDialog

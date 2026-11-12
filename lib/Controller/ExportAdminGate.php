@@ -34,7 +34,7 @@ use OCP\IUserSession;
  * Answers who is calling an export endpoint, and refuses a caller who is not
  * signed in (401) or who is not an export admin or analyst (403).
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 final class ExportAdminGate {
 	/**
@@ -54,7 +54,7 @@ final class ExportAdminGate {
 	 *
 	 * @return string The UID.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	public function userId(): string {
 		$user = $this->userSession->getUser();
@@ -72,7 +72,7 @@ final class ExportAdminGate {
 	 *
 	 * @return JSONResponse|null 401 without a session, 403 without the export role, null otherwise.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	public function refusal(IL10N $l10n): ?JSONResponse {
 		$uid = $this->userId();

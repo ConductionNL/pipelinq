@@ -534,7 +534,7 @@ export default {
 		 * The totals the server stored for the sale; the till works none out.
 		 *
 		 * @return {object} The totals.
-		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-3
 		 */
 		totals() {
 			return storedTotals(this.transaction)
@@ -558,7 +558,7 @@ export default {
 		 * The payments table columns, sortable from their heads.
 		 *
 		 * @return {Array<object>} The CnDataTable column config.
-		 * @spec openspec/changes/card-table-heads-sort-filter/specs/dashboard-widgets/spec.md#requirement-card-tables-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/dashboard-widgets/spec.md#requirement-card-tables-sort-and-filter-from-their-heads
 		 */
 		paymentColumns() {
 			return [
@@ -586,7 +586,7 @@ export default {
 		 * The purchase history columns, sortable from their heads.
 		 *
 		 * @return {Array<object>} The CnDataTable column config.
-		 * @spec openspec/changes/card-table-heads-sort-filter/specs/dashboard-widgets/spec.md#requirement-card-tables-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/dashboard-widgets/spec.md#requirement-card-tables-sort-and-filter-from-their-heads
 		 */
 		historyColumns() {
 			return [
@@ -794,7 +794,7 @@ export default {
 		 *
 		 * @param {number} index The line's position.
 		 * @param {object} line The changed line.
-		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-3
 		 */
 		updateLine(index, line) {
 			this.lines.splice(index, 1, { ...line, _key: this.lines[index]._key, _giftCard: this.lines[index]._giftCard, _dirty: true })
@@ -832,7 +832,7 @@ export default {
 		 * Open the payment dialog on the total the server worked out.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-3
 		 */
 		async openPayment() {
 			if (!this.checkoutAllowed) {
@@ -847,7 +847,7 @@ export default {
 		 * Have the server price the cart after a short pause in typing.
 		 *
 		 * @param {number} [delay] Milliseconds to wait for more changes.
-		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-3
 		 */
 		scheduleSync(delay = 400) {
 			clearTimeout(this.syncTimer)
@@ -859,7 +859,7 @@ export default {
 		 *
 		 * @param {{header: boolean}} [options] header: also store the sale's own fields.
 		 * @return {Promise<string|null>} The sale's id, or null when nothing was stored.
-		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-3
 		 */
 		syncCart({ header = false } = {}) {
 			clearTimeout(this.syncTimer)
@@ -1163,7 +1163,7 @@ export default {
 		 * Switch the price display; the server prices the lines again.
 		 *
 		 * @param {object|null} option The chosen display.
-		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-3
 		 */
 		onPriceModeSelect(option) {
 			this.transaction.priceMode = option ? option.id : 'excl'

@@ -17,7 +17,7 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/specs/email-calendar-sync/spec.md#requirement-sync-must-be-near-real-time-and-handle-conflicts
- * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-7
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-7
  */
 
 declare(strict_types=1);

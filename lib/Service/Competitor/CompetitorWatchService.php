@@ -31,7 +31,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Runs the competitor watches that are due.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
  */
 class CompetitorWatchService {
 
@@ -100,7 +100,7 @@ class CompetitorWatchService {
 	 * @param ITimeFactory $time Time factory for the due calculation.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -119,7 +119,7 @@ class CompetitorWatchService {
 	 *
 	 * @return array<int, array<string, mixed>> The watches.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
 	public function watches(array $filters = []): array {
 		return $this->store->findAll(
@@ -133,7 +133,7 @@ class CompetitorWatchService {
 	 *
 	 * @return array<int, array<string, mixed>> The competitors.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
 	public function competitors(): array {
 		return $this->store->findAll(
@@ -148,7 +148,7 @@ class CompetitorWatchService {
 	 *
 	 * @return array<string, mixed>|null The watch, or null.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
 	public function watch(string $id): ?array {
 		return $this->store->find(
@@ -169,7 +169,7 @@ class CompetitorWatchService {
 	 *
 	 * @return bool True when it should run on this firing.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function isDue(array $watch, int $now): bool {
 		if (($watch['active'] ?? true) === false) {
@@ -198,7 +198,7 @@ class CompetitorWatchService {
 	 *
 	 * @return array<int, array<string, mixed>> The due watches.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function dueNow(int $limit = self::DEFAULT_LIMIT): array {
 		$now = $this->time->getTime();
@@ -225,7 +225,7 @@ class CompetitorWatchService {
 	 *
 	 * @return array{watches: int, events: int, failures: array<string, string>}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function runDue(int $limit = self::DEFAULT_LIMIT, ?string $actingUserId = null): array {
 		$summary = ['watches' => 0, 'events' => 0, 'failures' => []];
@@ -260,7 +260,7 @@ class CompetitorWatchService {
 	 *
 	 * @return array{outcome: string, reason: string, events: int}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function runOne(array $watch, ?string $actingUserId = null): array {
 		$outcome = $this->readers->read(watch: $watch, actingUserId: $actingUserId);

@@ -37,7 +37,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ namespace OCA\Pipelinq\Service\Search;
 /**
  * Expected click-through by search position.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
  */
 final class ExpectedCtrCurve {
 
@@ -103,7 +103,7 @@ final class ExpectedCtrCurve {
 	 *
 	 * @return float A fraction between 0 and 1.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
 	 */
 	public static function rateAt(float $position): float {
 		if ($position <= 1.0) {

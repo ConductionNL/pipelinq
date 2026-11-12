@@ -55,7 +55,7 @@ const DEFAULT_RATES = { high: 21, low: 9, zero: 0, exempt: 0 }
 /**
  * @param {string} stored The stored JSON, or nothing.
  * @return {object} What it holds, or an empty object when it cannot be read.
- * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 function storedRates(stored) {
 	try {
@@ -70,7 +70,7 @@ function storedRates(stored) {
  *
  * @param {object} rates The rates per VAT class, as typed.
  * @return {object|null} The rates to store.
- * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 function checkedRates(rates) {
 	const out = {}
@@ -89,7 +89,7 @@ function checkedRates(rates) {
  *
  * @param {string} stored The stored JSON, or ''.
  * @return {object} Rate per class.
- * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 export function parseVatRates(stored) {
 	const parsed = storedRates(stored)
@@ -134,7 +134,7 @@ export default {
 		 * The four classes with their labels.
 		 *
 		 * @return {Array<{id: string, label: string}>} The classes.
-		 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+		 * @spec openspec/specs/product-catalog/spec.md
 		 */
 		classes() {
 			return [
@@ -152,7 +152,7 @@ export default {
 			 * Follow the stored value once the page has loaded it.
 			 *
 			 * @param {string} value The stored JSON.
-			 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+			 * @spec openspec/specs/product-catalog/spec.md
 			 */
 			handler(value) {
 				this.rates = parseVatRates(value)
@@ -164,7 +164,7 @@ export default {
 		/**
 		 * Store the rates; a rate outside 0-100 is refused before saving.
 		 *
-		 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+		 * @spec openspec/specs/product-catalog/spec.md
 		 */
 		async save() {
 			this.message = ''

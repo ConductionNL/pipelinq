@@ -310,14 +310,14 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
 		 */
 		requestSelectOptions() {
 			return this.requests.map((r) => ({
@@ -327,7 +327,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
 		 */
 		errors() {
 			const errors = {}
@@ -345,7 +345,7 @@ export default {
 		 * not open with a complaint.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
 		 */
 		shownErrors() {
 			return Object.fromEntries(Object.entries(this.errors).filter(([field]) => this.touched[field]))
@@ -368,7 +368,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
 	 */
 	async created() {
 		// Clients and contacts are no longer fetched here: CnResourceSelect
@@ -404,7 +404,7 @@ export default {
 		 * Stop the running duration clock, so the saved duration is the time it shows, then save.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/adopt-library-duration-timer/specs/contactmomenten/spec.md#requirement-the-contact-moment-duration-runs-as-a-clock
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-duration-runs-as-a-clock
 		 */
 		stopClockAndSave() {
 			this.$refs.durationClock?.stop()
@@ -412,7 +412,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
 		 */
 		async onSave() {
 			if (!this.isValid) return

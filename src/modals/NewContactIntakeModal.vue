@@ -8,7 +8,7 @@
   - is open, name and phone, e-mail and organisation, notes, and what happens
   - after Create contact.
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.2
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.2
   -->
 <template>
 	<CnDialog

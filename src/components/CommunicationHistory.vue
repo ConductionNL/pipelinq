@@ -10,7 +10,7 @@
   - renders them as a CnDataTable. Rows link to the contactmoment detail
   - route.
   -
-  - @spec openspec/changes/entity-notes/tasks.md#task-5
+  - @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-5
   - @spec openspec/specs/entity-notes/spec.md
   -->
 
@@ -262,7 +262,7 @@ export default {
 		 *
 		 * @param {object} row The contactmoment row (a `ticket` object).
 		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 		 */
 		goToContactmoment(row, event) {
 			if (!row || !row.id) {

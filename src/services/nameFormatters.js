@@ -10,7 +10,7 @@
  * map, and returns it. The data widget calls formatters inside a computed, so
  * it re-renders by itself when the name arrives.
  *
- * @spec openspec/changes/review-finish/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 import { reactive } from 'vue'
@@ -23,7 +23,7 @@ export const PENDING_LABEL = '…'
  *
  * @param {object} object The object.
  * @return {string} Its name, or '' when it has none.
- * @spec openspec/changes/review-finish/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export function objectLabel(object) {
 	if (!object || typeof object !== 'object') {
@@ -40,7 +40,7 @@ export function objectLabel(object) {
  *
  * @param {Array<(id: string) => Promise<object|null>>} lookups Object fetchers.
  * @return {(value: unknown) => string} The formatter.
- * @spec openspec/changes/review-finish/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export function createNameFormatter(lookups) {
 	const names = reactive({})

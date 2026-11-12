@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\Service\Portal;
  * Per-customer read facade over posTransaction rows, owned by their client and
  * widened by the `view-invoices` delegation. Subclasses present the rows.
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 abstract class AbstractPosTransactionFacade extends AbstractPortalReadFacade {
 	/**

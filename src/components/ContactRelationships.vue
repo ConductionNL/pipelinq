@@ -383,14 +383,14 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-12
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-18
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-18
 		 */
 		typeOptions() {
 			return DEFAULT_RELATIONSHIP_TYPES.map((t) => ({
@@ -403,7 +403,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-17
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-17
 		 */
 		strengthOptions() {
 			return [
@@ -414,7 +414,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-8
 		 */
 		groupedRelationships() {
 			const groups = {}
@@ -441,7 +441,7 @@ export default {
 	/**
 	 * Loads the relationships.
 	 *
-	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
 	 */
 	async mounted() {
 		await this.fetchRelationships()
@@ -449,7 +449,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
 		 */
 		async fetchRelationships() {
 			this.loading = true
@@ -478,7 +478,7 @@ export default {
 		/**
 		 * @param {string} entityId Identifier of the linked entity.
 		 * @param {string} entityType Logical type of the linked entity (client, contact, …).
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-10
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-10
 		 */
 		async loadEntityName(entityId, entityType) {
 			const type = entityType === 'client' ? 'client' : 'contact'
@@ -491,7 +491,7 @@ export default {
 
 		/**
 		 * @param {object} rel The relationship row to test.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
 		 */
 		isEnded(rel) {
 			if (!rel.endDate) {
@@ -503,7 +503,7 @@ export default {
 		/**
 		 * @param {object} rel The relationship row whose entity to open.
 		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
 		 */
 		navigateToEntity(rel, event) {
 			const type = rel.toType === 'client' ? 'ClientDetail' : 'ContactDetail'
@@ -516,7 +516,7 @@ export default {
 
 		/**
 		 * @param {string} typeValue The relationship type the user picked.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
 		 */
 		onTypeSelect(typeValue) {
 			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(
@@ -531,7 +531,7 @@ export default {
 
 		/**
 		 * @param {string} query The search term typed by the user.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
 		 */
 		async searchEntities(query) {
 			if (this.searchTimeout) {
@@ -572,7 +572,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
 		 */
 		async saveRelationship() {
 			if (!this.addForm.toContact || !this.addForm.type) {
@@ -648,7 +648,7 @@ export default {
 
 		/**
 		 * @param {object} rel The relationship row to edit.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
 		 */
 		editRelationship(rel) {
 			this.editingRelationship = { ...rel }
@@ -674,7 +674,7 @@ export default {
 
 		/**
 		 * @param {object} rel The relationship row to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
 		 */
 		removeRelationship(rel) {
 			this.deletingRelationship = rel
@@ -682,7 +682,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-5
 		 */
 		async confirmRemove() {
 			if (!this.deletingRelationship) {
@@ -721,7 +721,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-4
 		 */
 		closeDialog() {
 			this.showAddDialog = false

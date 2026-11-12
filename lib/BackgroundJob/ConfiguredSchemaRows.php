@@ -34,7 +34,7 @@ use Psr\Container\ContainerInterface;
  * Built by the job that reads; a failure is thrown to that job, which logs it
  * in its own words and carries on with nothing.
  *
- * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-06-14-pos-end-of-day-bookkeeping-post/tasks.md#3.1
  */
 final class ConfiguredSchemaRows {
 	/**
@@ -58,7 +58,7 @@ final class ConfiguredSchemaRows {
 	 *
 	 * @throws \Throwable When OpenRegister cannot be reached or read.
 	 *
-	 * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-end-of-day-bookkeeping-post/tasks.md#3.1
 	 */
 	public function rows(string $schemaKey): mixed {
 		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');

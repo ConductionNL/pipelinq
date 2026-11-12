@@ -29,7 +29,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+ * @spec openspec/changes/archive/2026-06-23-pipelinq-avg-adopt-or-gdpr/design.md
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires only the OR container
  *  and a logger.
  *
- * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+ * @spec openspec/changes/archive/2026-06-23-pipelinq-avg-adopt-or-gdpr/design.md
  * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014-openregister-compliance-subsystem-consumption-boundary
  */
 class DataDeletionService {
@@ -152,7 +152,7 @@ class DataDeletionService {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 *
-	 * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+	 * @spec openspec/changes/archive/2026-06-23-pipelinq-avg-adopt-or-gdpr/design.md
 	 */
 	private function eraseViaOr(string $subjectId, ?string $type = null, bool $dryRun = false): array {
 		$service = $this->requestService();

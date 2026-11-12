@@ -36,7 +36,7 @@
  *
  * @link https://developers.facebook.com/docs/instagram-platform/content-publishing
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * An Instagram business account, published in two steps.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  *
  * @SuppressWarnings(PHPMD.StaticAccess) `SocialGatewayResult` and
  *  `SocialPublishOutcome` are value objects with NAMED CONSTRUCTORS
@@ -60,7 +60,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	 *
 	 * @return string The network name.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function network(): string {
 		return 'instagram';
@@ -71,7 +71,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	 *
 	 * @return int The character limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function bodyLimit(): int {
 		return 2200;
@@ -88,7 +88,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	 *
 	 * @return SocialAdapterCall The container request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishCall(SocialPublishRequest $request): SocialAdapterCall {
 		$media = $request->firstPublicMedia();
@@ -111,7 +111,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	 *
 	 * @return SocialAdapterCall The publish request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishContainerCall(SocialPublishRequest $request, string $containerId): SocialAdapterCall {
 		return new SocialAdapterCall(
@@ -128,7 +128,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	 *
 	 * @return SocialPublishOutcome The outcome.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publish(SocialPublishRequest $request): SocialPublishOutcome {
 		$refusal = $this->refuseWhenNotConfigured();
@@ -158,7 +158,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	 *
 	 * @return SocialAdapterCall|null The request, or null without an id.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) A media item is addressed
 	 *  by its own id.
@@ -184,7 +184,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	 *
 	 * @return array{views: int, likes: int, comments: int, shares: int, clicks: int} The normalised numbers.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Same as above.
 	 */
@@ -208,7 +208,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	 *
 	 * @return string An address that opens Instagram.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Instagram accepts no
 	 *  prefilled text on any address it publishes.

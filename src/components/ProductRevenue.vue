@@ -105,7 +105,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-3
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -118,7 +118,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-1
 		 */
 		async fetchData() {
 			this.loading = true
@@ -178,7 +178,7 @@ export default {
 
 		/**
 		 * @param {string} value The amount to format.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-2
 		 */
 		formatCurrency(value) {
 			return formatLocaleCurrency(value)

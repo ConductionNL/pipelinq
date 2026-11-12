@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCP\IRequest;
 /**
  * Prices an open sale: its lines, VAT per rate and total.
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
  */
 class PosCartController extends Controller {
 	/**
@@ -56,7 +56,7 @@ class PosCartController extends Controller {
 	 * @param IRequest        $request  The request.
 	 * @param PosCartRepricer $repricer Prices the sale.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
 	 */
 	public function __construct(
 		IRequest $request,
@@ -75,7 +75,7 @@ class PosCartController extends Controller {
 	 *
 	 * @return JSONResponse The sale and its lines, or the refusal.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function recalculate(string $id): JSONResponse {

@@ -142,7 +142,7 @@ class ContactVcardPropertyBuilder {
 	 *
 	 * @return array The updated properties.
 	 *
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-write-back-maps-channel-arrays-to-typed-vcard-properties
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-maps-channel-arrays-to-typed-vcard-properties
 	 */
 	private function addChannelProperties(array $properties, array $objData): array {
 		$emailEntries = $this->buildTypedVcardEntries(entries: ($objData['emails'] ?? []));

@@ -29,7 +29,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+ * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Aggregate one client's survey responses into a panel.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+ * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
  */
 class SatisfactionAggregationService {
 	/**
@@ -106,7 +106,7 @@ class SatisfactionAggregationService {
 	 *
 	 * @return float|null The score, or null when nobody answered the question.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+	 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	public function npsOf(array $responses): ?float {
 		$net = 0;
@@ -156,7 +156,7 @@ class SatisfactionAggregationService {
 	 * @return array<string, mixed> The panel, with `empty` true when there is
 	 *   nothing to show.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+	 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	public function forClient(string $clientId, ?DateTimeImmutable $now = null): array {
 		$responses = $this->responsesFor(clientId: $clientId);
@@ -174,7 +174,7 @@ class SatisfactionAggregationService {
 	 *
 	 * @return array<string, mixed> The panel.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+	 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	public function summarise(array $responses, ?DateTimeImmutable $now = null): array {
 		if ($responses === []) {

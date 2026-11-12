@@ -25,7 +25,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Throwable;
 /**
  * JourneyService: journeys, and the flows they compile into.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
 class JourneyService {
 
@@ -81,7 +81,7 @@ class JourneyService {
 	 * @param ITimeFactory $time Clock.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -99,7 +99,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The journey, or null.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function find(string $journeyId): ?array {
 		return $this->store->find(schemaSlug: $this->schema(), id: $journeyId);
@@ -110,7 +110,7 @@ class JourneyService {
 	 *
 	 * @return array<int, array<string, mixed>> The journeys.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function listJourneys(): array {
 		return $this->store->findAll(schemaSlug: $this->schema());
@@ -125,7 +125,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The stored journey, or null when the write failed.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function save(array $payload, string $createdByUid, ?string $journeyId = null): ?array {
 		$now = date('c', $this->time->getTime());
@@ -160,7 +160,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The journey with its flow status, or null when unknown.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function setStatus(string $journeyId, string $status, string $runAs = ''): ?array {
 		$journey = $this->find(journeyId: $journeyId);
@@ -189,7 +189,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The journey with its flow status, or null when unknown.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function compile(string $journeyId, string $runAs = ''): ?array {
 		$journey = $this->find(journeyId: $journeyId);
@@ -235,7 +235,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The stored run.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	public function recordRun(array $run): ?array {
 		$run['occurredAt'] = date('c', $this->time->getTime());
@@ -252,7 +252,7 @@ class JourneyService {
 	 *
 	 * @return array<int, array<string, mixed>> The runs.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	public function runsFor(string $journeyId): array {
 		$runs = [];

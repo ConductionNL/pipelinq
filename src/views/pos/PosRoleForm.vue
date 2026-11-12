@@ -4,7 +4,7 @@
   -
   - POS role admin form (create / edit).
   -
-  - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+  - @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.2
   -->
 <template>
 	<div class="pos-role-form">
@@ -168,7 +168,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.2
 		 */
 		async save() {
 			await this.saveRecord({
@@ -182,7 +182,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.2
 		 */
 		async performDelete() {
 			await this.deleteRecord(t('pipelinq', 'Failed to delete role'))

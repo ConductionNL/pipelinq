@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -55,7 +55,7 @@ use Throwable;
  *  task-lifecycle service legitimately needs (config, session, groups,
  *  notifications, OR container, logger, plus DateTime/exception value types).
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
 class ScheduledTaskService {
 	/**
@@ -133,7 +133,7 @@ class ScheduledTaskService {
 	 *
 	 * @return array{items: array<int, mixed>, total: int, page: int, pages: int} List envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function getScheduledTasks(array $params): array {
 		[$registerId, $schemaId] = $this->store->location();
@@ -251,7 +251,7 @@ class ScheduledTaskService {
 	 *
 	 * @throws RuntimeException If the task is not found.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function getScheduledTask(string $id): array {
 		[$registerId, $schemaId] = $this->store->location();
@@ -295,7 +295,7 @@ class ScheduledTaskService {
 	 *
 	 * @throws InvalidArgumentException On validation failure.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function createScheduledTask(array $data): array {
 		$this->validateTaskInput(data: $data);
@@ -365,7 +365,7 @@ class ScheduledTaskService {
 	 *
 	 * @return array<string, mixed> The updated task object.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function updateScheduledTask(string $id, array $data): array {
 		$existing = $this->getScheduledTask(id: $id);
@@ -414,7 +414,7 @@ class ScheduledTaskService {
 	 *
 	 * @throws RuntimeException When the task is not found or cannot be deleted.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function deleteScheduledTask(string $id): void {
 		$task = $this->getScheduledTask(id: $id);
@@ -437,7 +437,7 @@ class ScheduledTaskService {
 	 *
 	 * @return array<int, array<string, mixed>> The overdue tasks.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function getOverdueTasks(): array {
 		[$registerId, $schemaId] = $this->store->location();
@@ -487,7 +487,7 @@ class ScheduledTaskService {
 	 *
 	 * @return array<int, array<string, mixed>> The matching tasks.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function getPendingTasks(int $windowMinutes = 60): array {
 		if ($windowMinutes > self::MAX_WINDOW_MINUTES) {
@@ -549,7 +549,7 @@ class ScheduledTaskService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function processScheduledTasks(): void {
 		// Due-soon tasks (deadline within the next 4 hours) → notify + in_behandeling.
@@ -700,7 +700,7 @@ class ScheduledTaskService {
 	 *
 	 * @throws OCSForbiddenException When the user is not authorised.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function authorizeTaskMutation(array $task, string $userId): void {
 		$this->rights->authorizeTaskMutation(task: $task, userId: $userId);
@@ -745,7 +745,7 @@ class ScheduledTaskService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
 	 */
 	public function applyAcceptLanguage(string $acceptLanguage): void {
 		$this->store->applyAcceptLanguage(acceptLanguage: $acceptLanguage);
