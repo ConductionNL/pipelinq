@@ -4272,7 +4272,7 @@
 		{
 			"id": "work-quick-create",
 			"area": "work",
-			"name": "Create a ticket, lead or contact from your work list without leaving it",
+			"name": "Create a ticket or contact from your work list without leaving it; New lead is not offered there",
 			"pipelinq": "no",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
@@ -4287,7 +4287,8 @@
 				"state": "specified",
 				"evidence": "src/views/MyWork.vue has no create buttons; REQ-MW-100",
 				"owner": "ConductionNL/pipelinq",
-				"change": "my-work-roadmap"
+				"change": "my-work-roadmap",
+				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Quick actions on My work (REQ-MW-100)"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
@@ -5350,11 +5351,12 @@
 			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Service/Portal/DocumentSigningService.php:88",
+				"state": "specified",
+				"evidence": "Not built: DocumentSigningService only signs short-lived download URLs with an HMAC; there is no way for a client to sign a document (decision 389). Was: lib/Service/Portal/DocumentSigningService.php:88",
 				"owner": "ConductionNL/pipelinq",
 				"change": "2026-06-14-customer-portal",
-				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client signs a document from a link"
+				"requirement": "openspec/changes/specify-capability-rows/specs/customer-portal :: A client signs a document from a link",
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/quotes/use-e-signatures-with-quotes \"Use e-signatures to gain acceptance of a quote or legacy quote from a buyer\", the buyer signs from the quote link. Sales Hub Starter, Professional, Enterprise or Revenue Hub Professional, Enterprise. Limited to quotes.",
@@ -6391,7 +6393,7 @@
 		{
 			"id": "pos-refund-guard",
 			"area": "pos",
-			"name": "Require a manager for a refund above your limit",
+			"name": "Let any till user refund up to a configurable amount, and require a manager above it",
 			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
@@ -6403,10 +6405,12 @@
 			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Lifecycle/PosRefundManagerGuard.php",
+				"state": "specified",
+				"evidence": "Not built: PosRefundManagerGuard requires a manager for every refund, with no limit below which a till user may refund (decision 390). Was: lib/Lifecycle/PosRefundManagerGuard.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/pos-lifecycle-guard-adoption"
+				"spec": "openspec/specs/pos-lifecycle-guard-adoption",
+				"requirement": "openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption :: A refund up to the configured limit SHALL need no manager (REQ-PLG-007)",
+				"plan": "openspec/changes/pos-refund-limit"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers names permissions for branding but no refund limit or manager approval above an amount (read 2026-09-26). Note: Was no without a source.",
@@ -9062,7 +9066,7 @@
 		{
 			"id": "clients-undo-bulk-change",
 			"area": "clients",
-			"name": "Undo a bulk change you made by mistake, even weeks later",
+			"name": "Undo a bulk change you made by mistake, up to seven days later",
 			"pipelinq": "no",
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
@@ -9079,7 +9083,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-bulk-edit-and-undo"
+				"change": "clients-bulk-edit-and-undo",
+				"requirement": "openspec/changes/clients-bulk-edit-and-undo/specs/client-bulk-changes :: A user can undo their own bulk change (REQ-CBE-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/restore-crm-changes \"Restore CRM changes by rolling records back to a previous point within the last 14 days. This allows you to undo updates made by workflows, imports, or manual edits\". Marketing, Sales, Service or Data Hub Starter and up.",
@@ -10365,7 +10370,7 @@
 		{
 			"id": "plat-retention-destroy",
 			"area": "platform",
-			"name": "Have client records destroyed or anonymised by themselves when their retention period ends",
+			"name": "Have client records destroyed or anonymised when their retention period ends, after a records officer approves the destruction list",
 			"pipelinq": "partial",
 			"hubspot-crm": "partial",
 			"pipedrive": "unknown",
@@ -10382,7 +10387,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "background jobs (no page needed); tickets and tasks are the Tickets, Queue and Tasks pages",
 				"readOn": "2026-09-26",
-				"change": "platform-client-retention"
+				"change": "platform-client-retention",
+				"requirement": "openspec/changes/platform-client-retention/specs/client-retention :: A records officer approves each destruction (REQ-PCR-003)"
 			},
 			"note": "contact moments, tasks and BRP data expire by themselves; client and contact records have no retention term, and request/complaint tickets are set to P100Y. Specified 2026-09-28 in openspec/changes/platform-client-retention (OpenSpec pass).",
 			"evidence": {
