@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Requirements for capability matrix rows whose behaviour no requirement stated yet. Rows: `clients-party-kind`, `clients-opencorporates`.
+Requirements for capability matrix rows whose behaviour no requirement stated yet. Rows: `clients-party-kind`, `clients-opencorporates`, `clients-custom-fields`.
 
 ## ADDED Requirements
 
@@ -38,3 +38,16 @@ The client page SHALL show the record's history: every change with the date, the
 - THEN the history lists yesterday's change by Jeroen with the old and new phone number
 - AND the side column reads that the record was last changed by Jeroen
 - @e2e exclude history comes from the OpenRegister audit trail; covered by the manifest page config
+
+### Requirement: A field an administrator adds to the client schema shows on the client pages
+
+The system SHALL show a property that an administrator adds to the client schema in OpenRegister on the client form, the client page and the client list without a code change or a release of pipelinq. Pipelinq SHALL read the client schema at runtime through the register resolver, so the new property arrives with the client record.
+
+#### Scenario: An administrator adds a contract number to clients
+
+@e2e exclude the scenario changes the client schema in OpenRegister during the run; checked on a live instance (task 37.1)
+
+- GIVEN an administrator adds the text property "Contract number" to the client schema in OpenRegister and saves it
+- WHEN a user opens New client in pipelinq
+- THEN the form offers a "Contract number" field
+- AND a value saved there shows on the client page and can be shown as a column in the client list
