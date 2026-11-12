@@ -27,6 +27,7 @@
 .phpunit.result.cache
 /coverage/
 /coverage-frontend/
+/coverage-vitest/
 /phpmetrics/
 /quality-reports/
 /phpqa/
