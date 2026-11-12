@@ -129,9 +129,15 @@ function userFields() {
 	return users
 }
 
-const columnKey = (c) => (typeof c === 'string' ? c : c?.key)
-const isWired = (c) =>
-	c && typeof c === 'object' && (c.formatter === FORMATTER || !!c.widget)
+/** The field a column shows: its name, or its `key`. */
+function columnKey(c) {
+	return typeof c === 'string' ? c : c?.key
+}
+
+/** Whether a column shows its value through the formatter or a widget. */
+function isWired(c) {
+	return c && typeof c === 'object' && (c.formatter === FORMATTER || !!c.widget)
+}
 
 /** The user fields an index page shows without the formatter: its columns, or its default columns. */
 function indexPageGaps(file, node, config, fields) {
