@@ -4193,6 +4193,16 @@
 					"hint": "One column per value of the property. Drag a card to change its status.",
 					"moveHandler": "moveTicketStatus",
 					"moveTargetsHandler": "ticketStatusTargets",
+					"states": [
+						{ "key": "new", "label": "New" },
+						{ "key": "in_progress", "label": "In progress" },
+						{ "key": "awaiting_customer", "label": "Waiting for customer" },
+						{ "key": "completed", "label": "Completed" },
+						{ "key": "converted", "label": "Converted", "closed": true },
+						{ "key": "rejected", "label": "Rejected", "closed": true },
+						{ "key": "resolved", "label": "Resolved", "hidden": true },
+						{ "key": "closed", "label": "Closed", "hidden": true }
+					],
 					"card": { "title": "title", "sub": ["channel"], "pill": "ticketType", "due": "slaDeadline", "owner": "assignee" },
 					"columnFields": [
 						{ "field": "status", "label": "status" },
