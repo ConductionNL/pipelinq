@@ -61,7 +61,7 @@ class TouchpointService {
 	 *
 	 * @var array<int, string>
 	 */
-	public const KINDS = ['click', 'visit', 'submit', 'reply'];
+	public const KINDS = ['click', 'visit', 'submit', 'reply', 'attend'];
 
 	/**
 	 * Constructor.
