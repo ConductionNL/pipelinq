@@ -2362,7 +2362,10 @@ OC.L10N.register(
         "You have an unsaved contact moment from {time}.": "Tiene un contacto sin guardar de {time}.",
         "Restore draft": "Restaurar borrador",
         "Discard": "Descartar",
-        "Your session has ended. Log in again in a new tab, then press Save here.": "Su sesión ha caducado. Inicie sesión de nuevo en una pestaña nueva y luego pulse Guardar aquí."
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Su sesión ha caducado. Inicie sesión de nuevo en una pestaña nueva y luego pulse Guardar aquí.",
+        "Deal room": "Sala de la oportunidad",
+        "Client room": "Sala del cliente",
+        "Board": "Tablero"
     },
     "nplurals=2; plural=(n != 1);"
 )

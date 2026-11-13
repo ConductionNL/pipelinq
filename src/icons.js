@@ -44,6 +44,7 @@ import BellRingOutline from 'vue-material-design-icons/BellRingOutline.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
+import BulletinBoard from 'vue-material-design-icons/BulletinBoard.vue'
 import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarArrowRight from 'vue-material-design-icons/CalendarArrowRight.vue'
@@ -130,7 +131,9 @@ import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue
 import FormatListBulletedSquare from 'vue-material-design-icons/FormatListBulletedSquare.vue'
 import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
 import FormatListNumbered from 'vue-material-design-icons/FormatListNumbered.vue'
+import FormSelect from 'vue-material-design-icons/FormSelect.vue'
 import FormTextboxPassword from 'vue-material-design-icons/FormTextboxPassword.vue'
+import Forum from 'vue-material-design-icons/Forum.vue'
 import ForumOutline from 'vue-material-design-icons/ForumOutline.vue'
 import Gauge from 'vue-material-design-icons/Gauge.vue'
 import Gavel from 'vue-material-design-icons/Gavel.vue'
@@ -258,6 +261,7 @@ export default {
 	BookOpenPageVariant,
 	BookOpenVariantOutline,
 	BriefcaseOutline,
+	BulletinBoard,
 	BullhornOutline,
 	Calendar,
 	CalendarArrowRight,
@@ -339,11 +343,13 @@ export default {
 	FolderAccountOutline,
 	FolderOpen,
 	FolderOutline,
+	FormSelect,
 	FormTextboxPassword,
 	FormatListBulleted,
 	FormatListBulletedSquare,
 	FormatListChecks,
 	FormatListNumbered,
+	Forum,
 	ForumOutline,
 	Gauge,
 	Gavel,

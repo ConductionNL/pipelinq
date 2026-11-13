@@ -2,7 +2,7 @@
 
 ## 1. Register (linkedTypes)
 
-- [ ] 1.1 Add `"talk"` to `client.linkedTypes` and `lead.linkedTypes`
+- [x] 1.1 Add `"talk"` to `client.linkedTypes` and `lead.linkedTypes`
   - **spec_ref**: `specs/collaboration-leaves/spec.md#requirement-talk-rooms-on-client-and-lead-detail`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -12,7 +12,7 @@
 
 ## 2. Manifest widgets
 
-- [ ] 2.1 Mount `lead-deck`, `lead-talk`, `lead-forms` on LeadDetail
+- [x] 2.1 Mount `lead-deck`, `lead-talk`, `lead-forms` on LeadDetail
   - **spec_ref**: `specs/collaboration-leaves/spec.md#requirement-deck-leaf-widget-on-leaddetail`, `specs/collaboration-leaves/spec.md#requirement-talk-rooms-on-client-and-lead-detail`, `specs/collaboration-leaves/spec.md#requirement-forms-leaf-widget-on-leaddetail`
   - **files**: `src/manifest.json`
   - **acceptance_criteria**:
@@ -20,25 +20,28 @@
     - Layout rows appended below `lead-decisions` (gridY 19 + 4): `lead-talk` (0, 23, 8×4), `lead-deck` (8, 23, 4×4), `lead-forms` (0, 27, 12×4)
     - Body widgets only — `sidebar.tabs` stays audit-only
     - `npm run check:manifest` passes
+  - **built 2026-11-13**: LeadDetail's body is one tab strip (`lead-panels`, board PqLead) since this change was written, and its `layout` holds only that strip. So the three widgets are tabs of the strip (Deal room, Board, Intake forms, before History) rather than grid rows; a grid row under the strip would render a second copy outside the board's anatomy. Still body widgets, and the sidebar stays audit-only.
 
-- [ ] 2.2 Mount `client-talk` on ClientDetail
+- [x] 2.2 Mount `client-talk` on ClientDetail
   - **spec_ref**: `specs/collaboration-leaves/spec.md#requirement-talk-rooms-on-client-and-lead-detail`
   - **files**: `src/manifest.json`
   - **acceptance_criteria**:
     - `client-talk` widget (integrationId `talk`, title "Client room", icon `Forum`) + layout row appended below `client-notes` (currently gridY 23 + 4 ⇒ row at 0, 27, 12×4)
     - If `calendar-deepening` has landed first, the row is rebased below its `client-calendar` row instead (design R1)
+  - **built 2026-11-13**: as on LeadDetail, ClientDetail's body is the `client-panels` tab strip (boards PqKlant/PqOrganisatie), so `client-talk` is a "Client room" tab before History instead of a grid row. `calendar-deepening` has not landed, so there is no row to rebase under.
 
-- [ ] 2.3 Record the remaining deliberate exclusions in page `_note`s
+- [x] 2.3 Record the remaining deliberate exclusions in page `_note`s
   - **spec_ref**: `specs/collaboration-leaves/spec.md#requirement-declared-linkedtypes-are-mounted-or-recorded-as-deliberate-exclusions`
   - **files**: `src/manifest.json`
   - **acceptance_criteria**:
     - LeadDetail/ClientDetail `_note`s name `flow` and `time-tracker` as excluded and `xwiki` as mounted app-level on `xwiki-knowledge`
     - TicketDetail `_note` names `deck` and `forms` as deferred exclusions
     - The stale "Generic Deck/Flow/Time/Knowledge/Forms leaves dropped" sentence in the LeadDetail `_note` is updated — deck and forms are now mounted as body widgets
+  - **built 2026-11-13**: the exclusions are a dedicated `config._linkedTypesNote` on each page, each leaf type in backticks, which the conformance test reads. Measured against today's register, the list is longer than the spec's: `client` also declares `calendar` (owned by `calendar-deepening`), `forms` (mounted on the lead only) and `planninq-projects` (the client-projects list), and has `xwiki` as its Knowledge base sidebar tab; `ticket` also declares `email` and `calendar`, which TicketDetail does not mount. Each is recorded with its reason rather than mounted here.
 
 ## 3. Conformance test
 
-- [ ] 3.1 Declared-vs-mounted conformance unit test
+- [x] 3.1 Declared-vs-mounted conformance unit test
   - **spec_ref**: `specs/collaboration-leaves/spec.md#requirement-declared-linkedtypes-are-mounted-or-recorded-as-deliberate-exclusions`
   - **files**: `tests/Unit/LinkedTypesConformanceTest.php`
   - **acceptance_criteria**:
