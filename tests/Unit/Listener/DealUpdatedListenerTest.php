@@ -468,4 +468,43 @@ class DealUpdatedListenerTest extends TestCase {
 
 		$this->listener->runDeferredWork(entry: ['uuid' => 'lead-1', 'oldData' => []]);
 	}//end testAFailingSaveIsLogged()
+	/**
+	 * A slip without a reason is undone by restoring the old close date, not the category.
+	 *
+	 * @return void
+	 */
+	public function testDeferredWorkRevertsASlipWithoutAReason(): void {
+		$objects = $this->objects(found: $this->entity(schema: 'lead-schema', uuid: 'lead-1', data: ['forecast_category' => 'commit', 'expectedCloseDate' => '2026-07-15']));
+		$this->deals->method('validateTransition')->willReturn(value: 'forecast.error.slip_reason_required');
+		$this->deals->expects($this->never())->method('applySlip');
+
+		$this->listener->runDeferredWork(entry: ['uuid' => 'lead-1', 'oldData' => ['forecast_category' => 'best_case', 'expectedCloseDate' => '2026-06-30']]);
+
+		self::assertSame(
+			expected: [['id' => 'lead-1', 'forecast_category' => 'commit', 'expectedCloseDate' => '2026-06-30']],
+			actual: array_column(array: $objects->saves, column_key: 'object')
+		);
+	}//end testDeferredWorkRevertsASlipWithoutAReason()
+
+	/**
+	 * A valid slip is deferred and its record saved.
+	 *
+	 * @return void
+	 */
+	public function testAValidSlipIsDeferredAndSaved(): void {
+		$this->deals->method('validateTransition')->willReturn(value: null);
+		$this->deals->method('applyReopenReset')->willReturn(value: null);
+		$this->deals->method('applySlip')->willReturn(value: ['expectedCloseDate' => '2026-07-15', 'slipped_from' => '2026-06-30']);
+
+		$this->listener->handle(event: $this->update(old: ['expectedCloseDate' => '2026-06-30'], new: ['expectedCloseDate' => '2026-07-15']));
+		self::assertCount(expectedCount: 1, haystack: $this->deferral->entries);
+
+		$objects = $this->objects(found: $this->entity(schema: 'lead-schema', uuid: 'lead-1', data: ['expectedCloseDate' => '2026-07-15']));
+		$this->listener->runDeferredWork(entry: ['uuid' => 'lead-1', 'oldData' => ['expectedCloseDate' => '2026-06-30']]);
+
+		self::assertSame(
+			expected: [['expectedCloseDate' => '2026-07-15', 'slipped_from' => '2026-06-30']],
+			actual: array_column(array: $objects->saves, column_key: 'object')
+		);
+	}//end testAValidSlipIsDeferredAndSaved()
 }//end class

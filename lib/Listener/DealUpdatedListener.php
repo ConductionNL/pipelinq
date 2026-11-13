@@ -143,6 +143,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 		// no-op. Both decisions are re-taken against current state in the job.
 		if ($this->dealService->validateTransition(oldData: $oldData, newData: $newData) === null
 			&& $this->dealService->applyReopenReset(oldData: $oldData, newData: $newData) === null
+			&& $this->dealService->applySlip(oldData: $oldData, newData: $newData) === null
 		) {
 			return;
 		}
@@ -187,17 +188,44 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 				'Pipelinq: rejected forecast_category transition; reverting',
 				['uuid' => $uuid, 'reason' => $error]
 			);
-			$reverted = $current;
-			$reverted['forecast_category'] = ($oldData['forecast_category'] ?? ForecastDealService::DEFAULT_CATEGORY);
-			$this->persist(uuid: $uuid, data: $reverted);
+			$this->persist(uuid: $uuid, data: $this->reverted(error: $error, oldData: $oldData, current: $current));
 			return;
 		}
 
 		$reset = $this->dealService->applyReopenReset(oldData: $oldData, newData: $current);
 		if ($reset !== null) {
 			$this->persist(uuid: $uuid, data: $reset);
+			return;
+		}
+
+		$slipped = $this->dealService->applySlip(oldData: $oldData, newData: $current);
+		if ($slipped !== null) {
+			$this->persist(uuid: $uuid, data: $slipped);
 		}
 	}//end runDeferredWork()
+
+	/**
+	 * The deal with the refused part of the update undone.
+	 *
+	 * A slip without a reason keeps the old close date (REQ-FRC-012); any other
+	 * refusal keeps the old forecast category.
+	 *
+	 * @param string               $error   The refusal.
+	 * @param array<string, mixed> $oldData The deal before the update.
+	 * @param array<string, mixed> $current The deal as it is now.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function reverted(string $error, array $oldData, array $current): array {
+		$reverted = $current;
+		if ($error === 'forecast.error.slip_reason_required') {
+			$reverted['expectedCloseDate'] = ($oldData['expectedCloseDate'] ?? null);
+			return $reverted;
+		}
+
+		$reverted['forecast_category'] = ($oldData['forecast_category'] ?? ForecastDealService::DEFAULT_CATEGORY);
+		return $reverted;
+	}//end reverted()
 
 	/**
 	 * Whether the entity belongs to the lead (deal) schema.
