@@ -1482,9 +1482,6 @@ class ComplianceService {
 	 * @param string|null $sourceBlastId Blast UUID for audit context.
 	 *
 	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over queued rows; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential guard clauses over queued rows; extraction adds no clarity.
 	 */
 	private function transitionQueuedDeliveries(string $contactId, ?string $sourceBlastId): void {
 		$register = $this->getRegisterSlug();
@@ -1498,6 +1495,33 @@ class ComplianceService {
 			return;
 		}
 
+		$rows = $this->findContactDeliveries(objectService: $objectService, contactId: $contactId, register: $register, schema: $schema);
+		foreach ($rows as $row) {
+			$array = $this->toArray(value: $row);
+			if ($this->isTransitionable(delivery: $array, sourceBlastId: $sourceBlastId) === false) {
+				continue;
+			}
+
+			$id = $this->extractObjectId(payload: $array);
+			if ($id === '') {
+				continue;
+			}
+
+			$this->markUnsubscribedBeforeSend(objectService: $objectService, id: $id, delivery: $array, register: $register, schema: $schema);
+		}
+	}//end transitionQueuedDeliveries()
+
+	/**
+	 * Every BlastDelivery row of a contact, or none when the lookup fails.
+	 *
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $contactId     Contact UUID / slug.
+	 * @param string $register      Register slug.
+	 * @param string $schema        BlastDelivery schema slug.
+	 *
+	 * @return mixed The rows (a list from OpenRegister), or an empty array on failure.
+	 */
+	private function findContactDeliveries(object $objectService, string $contactId, string $register, string $schema): mixed {
 		try {
 			$rows = $objectService->findAll(
 				config: [
@@ -1516,55 +1540,75 @@ class ComplianceService {
 					'exception' => $e->getMessage(),
 				]
 			);
-			return;
+			return [];
 		}
 
-		foreach (($rows ?? []) as $row) {
-			$array = $this->toArray(value: $row);
-			if ($array === []) {
-				continue;
-			}
+		return ($rows ?? []);
+	}//end findContactDeliveries()
 
-			$status = strtolower((string)($array['status'] ?? ''));
-			if (in_array($status, self::QUEUED_DELIVERY_STATUSES, true) === false) {
-				continue;
-			}
+	/**
+	 * Whether a delivery is still queued and, when a sourcing blast is
+	 * pinned, does not belong to a different blast.
+	 *
+	 * @param array<string, mixed> $delivery      The delivery payload.
+	 * @param string|null          $sourceBlastId Blast UUID that triggered the withdrawal.
+	 *
+	 * @return bool True when the delivery should move to unsubscribed-before-send.
+	 */
+	private function isTransitionable(array $delivery, ?string $sourceBlastId): bool {
+		if ($delivery === []) {
+			return false;
+		}
 
-			if ($sourceBlastId !== null && $sourceBlastId !== '') {
-				$rowBlast = (string)($array['blastId'] ?? '');
-				if ($rowBlast !== '' && $rowBlast !== $sourceBlastId) {
-					// Sourcing blast pinned and delivery belongs to a
-					// different blast — leave it alone.
-					continue;
-				}
-			}
+		$status = strtolower((string)($delivery['status'] ?? ''));
+		if (in_array($status, self::QUEUED_DELIVERY_STATUSES, true) === false) {
+			return false;
+		}
 
-			$id = $this->extractObjectId(payload: $array);
-			if ($id === '') {
-				continue;
+		if ($sourceBlastId !== null && $sourceBlastId !== '') {
+			$rowBlast = (string)($delivery['blastId'] ?? '');
+			if ($rowBlast !== '' && $rowBlast !== $sourceBlastId) {
+				// Sourcing blast pinned and delivery belongs to a
+				// different blast — leave it alone.
+				return false;
 			}
+		}
 
-			$array['status'] = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
-			$array['unsubscribedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+		return true;
+	}//end isTransitionable()
 
-			try {
-				$objectService->updateObject(
-					id: $id,
-					object: $array,
-					register: $register,
-					schema: $schema,
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'ComplianceService.transitionQueuedDeliveries: updateObject failed',
-					[
-						'id' => $id,
-						'exception' => $e->getMessage(),
-					]
-				);
-			}
-		}//end foreach
-	}//end transitionQueuedDeliveries()
+	/**
+	 * Move one delivery to unsubscribed-before-send; a failed write is logged.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param string               $id            Delivery id.
+	 * @param array<string, mixed> $delivery      The delivery payload.
+	 * @param string               $register      Register slug.
+	 * @param string               $schema        BlastDelivery schema slug.
+	 *
+	 * @return void
+	 */
+	private function markUnsubscribedBeforeSend(object $objectService, string $id, array $delivery, string $register, string $schema): void {
+		$delivery['status'] = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
+		$delivery['unsubscribedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+
+		try {
+			$objectService->updateObject(
+				id: $id,
+				object: $delivery,
+				register: $register,
+				schema: $schema,
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'ComplianceService.transitionQueuedDeliveries: updateObject failed',
+				[
+					'id' => $id,
+					'exception' => $e->getMessage(),
+				]
+			);
+		}
+	}//end markUnsubscribedBeforeSend()
 
 	/**
 	 * Look up a ConsentRecord by (contactId, channel, list scope).
