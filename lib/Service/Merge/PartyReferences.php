@@ -76,6 +76,7 @@ final class PartyReferences implements PartyReferencesInterface {
 		['channelConversation', 'contactId'],
 		['channelMessage', 'contactId'],
 		['consentRecord', 'contactId'],
+		['crmTask', 'contactId'],
 		['enquiry', 'contact'],
 		['eventRegistration', 'contact'],
 		['journeyRun', 'contactId'],
