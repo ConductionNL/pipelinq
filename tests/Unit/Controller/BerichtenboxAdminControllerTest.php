@@ -318,6 +318,28 @@ class BerichtenboxAdminControllerTest extends TestCase {
 	 *
 	 * @return void
 	 */
+	/**
+	 * A message with no uuid is saved under the id the caller asked to retry.
+	 *
+	 * @return void
+	 */
+	public function testRetryFallsBackToTheRequestedId(): void {
+		$this->objectService->method('find')->willReturn($this->message(['deliveryStatus' => 'failed']));
+		$saves = [];
+		$this->objectService->expects(self::once())->method('saveObject')->willReturnCallback(
+			function (array $object, ?array $extend, string|int|null $register, string|int|null $schema, ?string $uuid) use (&$saves): ObjectEntityInterface {
+				$saves[] = $uuid;
+
+				return $this->createMock(ObjectEntityInterface::class);
+			}
+		);
+
+		$response = $this->controller()->retry(id: 'msg-1');
+
+		self::assertSame(Http::STATUS_OK, $response->getStatus());
+		self::assertSame(['msg-1'], $saves);
+	}//end testRetryFallsBackToTheRequestedId()
+
 	public function testRetrySaveFailureIsA500(): void {
 		$this->objectService->method('find')->willReturn($this->message(['deliveryStatus' => 'failed']));
 		$this->objectService->expects(self::once())->method('saveObject')
