@@ -60,6 +60,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TimeBillingHandoffServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -77,7 +78,7 @@ use Throwable;
  *
  * @spec openspec/specs/time-approval-workflow/spec.md
  */
-class TimeBillingHandoffService {
+class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	use CastingPayloadToArray;
 
 	/**

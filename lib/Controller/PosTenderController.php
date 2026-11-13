@@ -44,8 +44,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
 use OCA\Pipelinq\Service\InvalidTenderException;
-use OCA\Pipelinq\Service\PosTenderService;
 use OCA\Pipelinq\Service\TenderTypeNotFoundException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -80,13 +80,13 @@ class PosTenderController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosTenderService $service The tender service.
+	 * @param PosTenderServiceInterface $service The tender service.
 	 * @param IUserSession $session The user session.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosTenderService $service,
+		private PosTenderServiceInterface $service,
 		private IUserSession $session,
 		private LoggerInterface $logger,
 	) {

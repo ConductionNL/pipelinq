@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BudgetServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -53,7 +54,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Budget gating spans many period/threshold branches; complexity is inherent.
  */
-class BudgetService {
+class BudgetService implements BudgetServiceInterface {
 	use PayloadToArray;
 
 	/**

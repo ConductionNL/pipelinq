@@ -37,11 +37,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
 use OCA\Pipelinq\Service\Marketing\BlastSendRun;
 use OCA\Pipelinq\Service\Marketing\ListPage;
+use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\Marketing\ObjectQuery;
 use OCA\Pipelinq\Service\Marketing\ObjectSelection;
-use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -74,7 +75,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The REST controllers consume a
  *  cohesive public repository surface on top of the lifecycle operations.
  */
-class BlastService {
+class BlastService implements BlastServiceInterface {
 	use PayloadToArray;
 
 	/**

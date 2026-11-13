@@ -39,6 +39,7 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AnalyticsServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -59,7 +60,7 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.TooManyMethods)           One private helper per KPI figure keeps each figure testable on its own.
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Reads the stores and the forecast target of every KPI it aggregates.
  */
-class AnalyticsService {
+class AnalyticsService implements AnalyticsServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -68,13 +69,6 @@ class AnalyticsService {
 	 * @var array<int, string>
 	 */
 	public const ALLOWED_PERIODS = ['week', 'month', 'quarter'];
-
-	/**
-	 * Default period when caller supplies none.
-	 *
-	 * @var string
-	 */
-	public const DEFAULT_PERIOD = 'month';
 
 	/**
 	 * Allowed trend metric identifiers.

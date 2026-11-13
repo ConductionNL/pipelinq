@@ -44,7 +44,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\PosBookkeepingService;
+use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -83,14 +83,14 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	 * @param IAppManager $appManager The app manager.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContainerInterface $container The DI container (OR ObjectService).
-	 * @param PosBookkeepingService $service The bookkeeping service (registry raise).
+	 * @param PosBookkeepingServiceInterface $service The bookkeeping service (registry raise).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $appConfig,
 		private readonly ContainerInterface $container,
-		private readonly PosBookkeepingService $service,
+		private readonly PosBookkeepingServiceInterface $service,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

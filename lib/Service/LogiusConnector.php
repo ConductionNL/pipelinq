@@ -38,6 +38,7 @@ namespace OCA\Pipelinq\Service;
 
 use DOMDocument;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LogiusConnectorInterface;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
 use OCP\IAppConfig;
@@ -51,7 +52,7 @@ use RuntimeException;
  * @spec exclude infrastructure utility with no feature requirement of its own; it is
  *   exercised through the features that call it
  */
-class LogiusConnector {
+class LogiusConnector implements LogiusConnectorInterface {
 	/**
 	 * Maximum total attachment size (BBK 1.7).
 	 *

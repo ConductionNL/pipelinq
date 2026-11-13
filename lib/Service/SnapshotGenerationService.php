@@ -26,7 +26,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SnapshotGenerationServiceInterface;
 use OCA\Pipelinq\Service\Forecast\SnapshotLevel;
 use OCA\Pipelinq\Service\Forecast\SnapshotNode;
 use OCA\Pipelinq\Service\Forecast\SnapshotRun;
@@ -35,7 +37,6 @@ use OCP\IAppConfig;
 use OCP\IGroupManager;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Snapshot generation orchestration.
@@ -54,15 +55,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec exclude forecast snapshot generation; see the forecast gap above
  */
-class SnapshotGenerationService {
+class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 	use PayloadToArray;
-
-	/**
-	 * App-config key for the comma-separated list of forecast team group ids.
-	 *
-	 * @var string
-	 */
-	public const TEAMS_KEY = 'forecast_team_groups';
 
 	/**
 	 * App-config key for the JSON team=>division map.

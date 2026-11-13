@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -41,7 +42,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Attribution joins many payload shapes; complexity is inherent to the roll-up.
  */
-class AttributionService {
+class AttributionService implements AttributionServiceInterface {
 	use PayloadToArray;
 
 	/**

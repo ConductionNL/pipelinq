@@ -27,10 +27,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RoutingServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Read-aggregation service that produces a ranked shortlist of agents for an
@@ -48,7 +49,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
-class RoutingService {
+class RoutingService implements RoutingServiceInterface {
 	/**
 	 * Terminal statuses excluded from workload counts.
 	 *

@@ -34,9 +34,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportDestinationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
 use OCA\Pipelinq\Service\Export\ExportAccessPolicy;
-use OCA\Pipelinq\Service\Export\ExportDestinationService;
-use OCA\Pipelinq\Service\Export\ExportJobService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -60,8 +60,8 @@ class ExportJobController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ExportJobService $jobs The job service.
-	 * @param ExportDestinationService $destinations The destination service.
+	 * @param ExportJobServiceInterface $jobs The job service.
+	 * @param ExportDestinationServiceInterface $destinations The destination service.
 	 * @param ExportAccessPolicy $policy The export access policy.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
@@ -69,8 +69,8 @@ class ExportJobController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private ExportJobService $jobs,
-		private ExportDestinationService $destinations,
+		private ExportJobServiceInterface $jobs,
+		private ExportDestinationServiceInterface $destinations,
 		private ExportAccessPolicy $policy,
 		private IUserSession $userSession,
 		private IL10N $l10n,

@@ -26,12 +26,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SnapshotGenerationServiceInterface;
 use OCA\Pipelinq\Lifecycle\ForecastAccessPolicy;
 use OCA\Pipelinq\Service\ExchangeRateService;
 use OCA\Pipelinq\Service\ForecastDealService;
 use OCA\Pipelinq\Service\ForecastService;
 use OCA\Pipelinq\Service\QuotaService;
-use OCA\Pipelinq\Service\SnapshotGenerationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
@@ -110,7 +110,7 @@ class ForecastSettingsController extends Controller {
 	 */
 	private const GROUP_FIELDS = [
 		'manager_group' => ['type' => 'string', 'key' => ForecastAccessPolicy::MANAGER_GROUP_KEY],
-		'team_groups' => ['type' => 'string', 'key' => SnapshotGenerationService::TEAMS_KEY],
+		'team_groups' => ['type' => 'string', 'key' => SnapshotGenerationServiceInterface::TEAMS_KEY],
 	];
 
 	/**
@@ -164,7 +164,7 @@ class ForecastSettingsController extends Controller {
 				'rate_sources' => (object)$this->exchangeRate->describeRates(),
 				'max_rate_age_days' => $this->exchangeRate->getMaxRateAgeDays(),
 				'manager_group' => $this->appConfig->getValueString($app, ForecastAccessPolicy::MANAGER_GROUP_KEY, ''),
-				'team_groups' => $this->appConfig->getValueString($app, SnapshotGenerationService::TEAMS_KEY, ''),
+				'team_groups' => $this->appConfig->getValueString($app, SnapshotGenerationServiceInterface::TEAMS_KEY, ''),
 			]
 		);
 	}//end index()

@@ -32,8 +32,10 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -42,7 +44,6 @@ use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * BookingService — booking lifecycle service.
@@ -68,16 +69,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class BookingService {
+class BookingService implements BookingServiceInterface {
 	use EntityIdOf;
 	use NullablePayloadToArray;
-
-	/**
-	 * App-config key for the Booking schema id/slug.
-	 *
-	 * @var string
-	 */
-	public const BOOKING_SCHEMA_KEY = 'booking_schema';
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the Booking status graph.

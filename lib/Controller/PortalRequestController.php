@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
-use OCA\Pipelinq\Service\Portal\PortalRequestService;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -53,14 +53,14 @@ class PortalRequestController extends PortalApiController {
 	 * @param IRequest $request The request.
 	 * @param PortalRequestGuard $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param PortalRequestService $requests The request service.
+	 * @param PortalRequestServiceInterface $requests The request service.
 	 * @param PortalTenantService $tenant The tenant service.
 	 */
 	public function __construct(
 		IRequest $request,
 		PortalRequestGuard $guard,
 		LoggerInterface $logger,
-		private PortalRequestService $requests,
+		private PortalRequestServiceInterface $requests,
 		private PortalTenantService $tenant,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);

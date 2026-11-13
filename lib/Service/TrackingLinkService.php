@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TrackingLinkServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -59,7 +60,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1
  */
-class TrackingLinkService {
+class TrackingLinkService implements TrackingLinkServiceInterface {
 	use PayloadToArray;
 
 	/**

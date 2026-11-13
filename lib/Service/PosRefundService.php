@@ -28,7 +28,11 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
+use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -37,9 +41,6 @@ use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
-use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 
 /**
  * Service for POS refund business operations.
@@ -73,7 +74,7 @@ use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
  * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
  * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.2
  */
-class PosRefundService {
+class PosRefundService implements PosRefundServiceInterface {
 	use CastingPayloadToArray;
 
 	/**

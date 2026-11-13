@@ -29,10 +29,10 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
-use OCA\Pipelinq\Service\Portal\PortalRequestService;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
-use OCA\Pipelinq\Service\TicketService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -73,16 +73,16 @@ class ResidentViewController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                   $request  The request.
-	 * @param TicketService              $tickets  Register and schema of the ticket supertype, and OpenRegister.
-	 * @param PortalRequestService       $requests The resident portal's request presenter.
+	 * @param TicketServiceInterface              $tickets  Register and schema of the ticket supertype, and OpenRegister.
+	 * @param PortalRequestServiceInterface       $requests The resident portal's request presenter.
 	 * @param PortalContributionProvider $portal   pipelinq's contribution to portaliq.
 	 * @param PortalTenantService        $tenants  The portal tenant settings.
 	 * @param IAppManager                $apps     Whether portaliq is installed.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly TicketService $tickets,
-		private readonly PortalRequestService $requests,
+		private readonly TicketServiceInterface $tickets,
+		private readonly PortalRequestServiceInterface $requests,
 		private readonly PortalContributionProvider $portal,
 		private readonly PortalTenantService $tenants,
 		private readonly IAppManager $apps,

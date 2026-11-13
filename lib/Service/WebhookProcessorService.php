@@ -45,6 +45,7 @@ namespace OCA\Pipelinq\Service;
 
 use Closure;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -70,7 +71,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  */
-class WebhookProcessorService {
+class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	use PayloadToArray;
 
 	/**

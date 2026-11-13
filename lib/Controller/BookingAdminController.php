@@ -31,9 +31,9 @@ namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\AppointmentEmailService;
-use OCA\Pipelinq\Service\BookingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -64,8 +64,8 @@ class BookingAdminController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param BookingService $bookings The booking lifecycle service.
-	 * @param AppointmentEmailService $emailService The email service (reminder seam).
+	 * @param BookingServiceInterface $bookings The booking lifecycle service.
+	 * @param AppointmentEmailServiceInterface $emailService The email service (reminder seam).
 	 * @param IUserSession $userSession The current user session.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
 	 * @param IL10N $l10n Localization service.
@@ -73,8 +73,8 @@ class BookingAdminController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private BookingService $bookings,
-		private AppointmentEmailService $emailService,
+		private BookingServiceInterface $bookings,
+		private AppointmentEmailServiceInterface $emailService,
 		private IUserSession $userSession,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private IL10N $l10n,

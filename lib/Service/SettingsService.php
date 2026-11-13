@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Pipelinq\Service\Access\RegisterAccessSync;
 use OCA\Pipelinq\Service\Export\ExportJobService;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
@@ -45,7 +46,7 @@ use UnexpectedValueException;
  *  rather than a constant here so the rule and the service that depends on
  *  it cannot drift, and there is no state an injected instance could hold.
  */
-class SettingsService {
+class SettingsService implements SettingsServiceInterface {
 	private const CONFIG_KEYS = [
 		'register',
 		'currency',

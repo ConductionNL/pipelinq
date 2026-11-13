@@ -32,8 +32,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\AppointmentDepositService;
-use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\App\IAppManager;
@@ -102,8 +102,8 @@ class PortalController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param BookingService $bookingService Booking lifecycle service (member 04).
-	 * @param AppointmentDepositService $depositService Deposit payment orchestrator (member 08).
+	 * @param BookingServiceInterface $bookingService Booking lifecycle service (member 04).
+	 * @param AppointmentDepositServiceInterface $depositService Deposit payment orchestrator (member 08).
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppManager $appManager The app manager (OR-availability guard).
@@ -114,8 +114,8 @@ class PortalController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private BookingService $bookingService,
-		private AppointmentDepositService $depositService,
+		private BookingServiceInterface $bookingService,
+		private AppointmentDepositServiceInterface $depositService,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
 		private IAppManager $appManager,

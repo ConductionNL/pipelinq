@@ -37,7 +37,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
 use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
@@ -45,7 +47,6 @@ use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Berichtenbox message lifecycle service.
@@ -62,7 +63,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
-class BerichtenboxService {
+class BerichtenboxService implements BerichtenboxServiceInterface {
 	use OptionalPayloadToArray;
 
 	/**

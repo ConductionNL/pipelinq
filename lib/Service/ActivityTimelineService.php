@@ -41,6 +41,7 @@ use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ActivityTimelineServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -55,7 +56,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-05-11-activity-timeline/tasks.md#task-1
  */
-class ActivityTimelineService {
+class ActivityTimelineService implements ActivityTimelineServiceInterface {
 	/**
 	 * Maximum allowed page size for list endpoints.
 	 */

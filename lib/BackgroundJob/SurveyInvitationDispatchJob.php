@@ -36,7 +36,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\Service\SurveyDispatchService;
+use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
 use OCA\Pipelinq\Service\SurveyInvitationSender;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -60,13 +60,13 @@ class SurveyInvitationDispatchJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param SurveyDispatchService $dispatchService Reads and writes invitations.
+	 * @param SurveyDispatchServiceInterface $dispatchService Reads and writes invitations.
 	 * @param SurveyInvitationSender $sender Hands an invitation to its channel.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly SurveyDispatchService $dispatchService,
+		private readonly SurveyDispatchServiceInterface $dispatchService,
 		private readonly SurveyInvitationSender $sender,
 		private readonly LoggerInterface $logger,
 	) {

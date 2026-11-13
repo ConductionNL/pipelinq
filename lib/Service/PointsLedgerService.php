@@ -30,8 +30,11 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
 use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
 use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -40,8 +43,6 @@ use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Append-only points ledger.
@@ -57,7 +58,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *  movement's request/result type once. Splitting by movement would duplicate
  *  the append-and-update core five times.
  */
-class PointsLedgerService {
+class PointsLedgerService implements PointsLedgerServiceInterface {
 	use PayloadToArray;
 
 	/**

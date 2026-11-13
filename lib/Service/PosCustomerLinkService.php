@@ -39,14 +39,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosCustomerLinkServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Pipelinq contact lookup, attachment, history and consent sync for the POS.
@@ -71,22 +72,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
  */
-class PosCustomerLinkService {
+class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	use CastingPayloadToArray;
-
-	/**
-	 * Default search-result limit when the caller does not specify one.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_SEARCH_LIMIT = 20;
-
-	/**
-	 * Default purchase-history depth (configurable via admin settings).
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_HISTORY_LIMIT = 10;
 
 	/**
 	 * Hard upper bounds defensively applied to caller-supplied limits.

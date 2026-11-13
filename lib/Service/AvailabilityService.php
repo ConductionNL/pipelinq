@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
@@ -61,7 +62,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/appointment-booking/spec.md
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class AvailabilityService {
+class AvailabilityService implements AvailabilityServiceInterface {
 	use RowIdOf;
 	use NullablePayloadToArray;
 
@@ -80,25 +81,11 @@ class AvailabilityService {
 	public const CACHE_TTL_SECONDS = 86400;
 
 	/**
-	 * App-config key for the Resource schema id/slug.
-	 *
-	 * @var string
-	 */
-	public const RESOURCE_SCHEMA_KEY = 'resource_schema';
-
-	/**
 	 * App-config key for the Booking schema id/slug.
 	 *
 	 * @var string
 	 */
 	public const BOOKING_SCHEMA_KEY = 'booking_schema';
-
-	/**
-	 * App-config key for the Service schema id/slug.
-	 *
-	 * @var string
-	 */
-	public const SERVICE_SCHEMA_KEY = 'service_schema';
 
 	/**
 	 * App-config key for the AvailabilityCache schema id/slug.

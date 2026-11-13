@@ -42,9 +42,9 @@ namespace OCA\Pipelinq\Integration;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Service\ContactMomentFilingService;
 use OCA\Pipelinq\Service\PartyIndicatorService;
-use OCA\Pipelinq\Service\TicketService;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -86,14 +86,14 @@ class ContactMomentLeafProvider {
 	/**
 	 * Constructor.
 	 *
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
 	 * @param ContactMomentFilingService $filingService The case set a contact moment is filed on.
 	 * @param PartyIndicatorService $indicatorService The party's standing indicators.
 	 * @param IUserSession $userSession The acting user, stamped as the agent.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private readonly TicketService $ticketService,
+		private readonly TicketServiceInterface $ticketService,
 		private readonly ContactMomentFilingService $filingService,
 		private readonly PartyIndicatorService $indicatorService,
 		private readonly IUserSession $userSession,
@@ -128,7 +128,7 @@ class ContactMomentLeafProvider {
 		// absent row on the other two looks exactly like a case with no
 		// contact moments. Still bounded by `limit` per ADR-058.
 		$rows = $this->ticketService->findByType(
-			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			ticketType: TicketServiceInterface::TYPE_CONTACTMOMENT,
 			extraFilters: ['caseReferences' => $hostId],
 			limit: $limit,
 		);
@@ -229,7 +229,7 @@ class ContactMomentLeafProvider {
 	private function appended(string $hostId, array $ticket): array {
 		try {
 			$saved = $this->ticketService->save(
-				ticketType: TicketService::TYPE_CONTACTMOMENT,
+				ticketType: TicketServiceInterface::TYPE_CONTACTMOMENT,
 				payload: $ticket,
 			);
 		} catch (InvalidArgumentException $e) {

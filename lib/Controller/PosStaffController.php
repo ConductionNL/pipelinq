@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\PosStaffService;
+use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -58,7 +58,7 @@ class PosStaffController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosStaffService $service The POS staff service.
+	 * @param PosStaffServiceInterface $service The POS staff service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager (admin gate).
 	 * @param IL10N $l10n The localization service.
@@ -66,7 +66,7 @@ class PosStaffController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosStaffService $service,
+		private PosStaffServiceInterface $service,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
 		private IL10N $l10n,

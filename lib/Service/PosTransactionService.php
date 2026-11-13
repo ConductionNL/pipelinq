@@ -29,6 +29,7 @@ use DateTimeInterface;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosTransactionServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -82,7 +83,7 @@ use RuntimeException;
  * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
  * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
  */
-class PosTransactionService {
+class PosTransactionService implements PosTransactionServiceInterface {
 	use CastingPayloadToArray;
 
 	/**

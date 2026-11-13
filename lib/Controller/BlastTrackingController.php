@@ -31,7 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\TrackingLinkService;
+use OCA\Pipelinq\Kernel\Contracts\TrackingLinkServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -99,13 +99,13 @@ class BlastTrackingController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param TrackingLinkService $trackingLinkService Sign/verify/record.
+	 * @param TrackingLinkServiceInterface $trackingLinkService Sign/verify/record.
 	 * @param IThrottler $throttler Brute-force throttler for rejected tracking tokens.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private TrackingLinkService $trackingLinkService,
+		private TrackingLinkServiceInterface $trackingLinkService,
 		private IThrottler $throttler,
 		private LoggerInterface $logger,
 	) {

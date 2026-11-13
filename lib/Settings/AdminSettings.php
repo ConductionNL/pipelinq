@@ -24,9 +24,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Settings;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Pipelinq\Service\IntegrationDetector;
 use OCA\Pipelinq\Service\Settings\MenuStructure;
-use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
@@ -44,14 +44,14 @@ class AdminSettings implements IDelegatedSettings {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService The settings service.
+	 * @param SettingsServiceInterface $settingsService The settings service.
 	 * @param IAppManager $appManager The app manager.
 	 * @param IInitialState $initialState The initial state service.
 	 * @param MenuStructure $menuStructure How the stored structure settings read.
 	 * @param IntegrationDetector $integrations Detects Shillinq and XWiki for the read-only integrations card.
 	 */
 	public function __construct(
-		private SettingsService $settingsService,
+		private SettingsServiceInterface $settingsService,
 		private IAppManager $appManager,
 		private IInitialState $initialState,
 		private MenuStructure $menuStructure,

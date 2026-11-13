@@ -41,10 +41,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
+use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
 use OCA\Pipelinq\Service\CampaignService;
 use OCA\Pipelinq\Service\Marketing\EventEmailService;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
-use OCA\Pipelinq\Service\Marketing\EventRegistrationService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\TouchpointService;
 use OCP\EventDispatcher\Event;
@@ -96,7 +96,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * @param CampaignService $campaigns Resolves the campaign the form belongs to.
 	 * @param TouchpointService $touchpoints The touchpoint log and its nonce guard.
 	 * @param LoggerInterface $logger Logger.
-	 * @param EventRegistrationService|null $eventRegistrations Registers the sign-up for the campaign's event.
+	 * @param EventRegistrationServiceInterface|null $eventRegistrations Registers the sign-up for the campaign's event.
 	 * @param EventEmailService|null $eventMails Confirms the registration by mail.
 	 *
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
@@ -106,7 +106,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 		private CampaignService $campaigns,
 		private TouchpointService $touchpoints,
 		private LoggerInterface $logger,
-		private ?EventRegistrationService $eventRegistrations = null,
+		private ?EventRegistrationServiceInterface $eventRegistrations = null,
 		private ?EventEmailService $eventMails = null,
 	) {
 	}//end __construct()

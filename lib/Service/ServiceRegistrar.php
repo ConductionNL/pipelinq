@@ -49,6 +49,8 @@ class ServiceRegistrar {
 	 * @spec exclude Composition root wiring, no functional requirement.
 	 */
 	public function register(IRegistrationContext $context): void {
+		(new ContractBindings())->register(context: $context);
+
 		// Wave-4 external-API ports (low-volume families).
 		//
 		// - Logius Berichtenbox (burgerportaal-mijnoverheid-bridge):

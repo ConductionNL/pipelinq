@@ -29,7 +29,7 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\HaalCentraalClient;
+use OCA\Pipelinq\Kernel\Contracts\HaalCentraalClientInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -67,7 +67,7 @@ class BrpHealthCheckJob extends TimedJob {
 	 * @param IAppConfig $appConfig App config.
 	 * @param IGroupManager $groupManager Group manager (for admin enumeration).
 	 * @param INotificationManager $notificationManager Nextcloud notification manager.
-	 * @param HaalCentraalClient $client HaalCentraal client (cert reader).
+	 * @param HaalCentraalClientInterface $client HaalCentraal client (cert reader).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -75,7 +75,7 @@ class BrpHealthCheckJob extends TimedJob {
 		private IAppConfig $appConfig,
 		private IGroupManager $groupManager,
 		private INotificationManager $notificationManager,
-		private HaalCentraalClient $client,
+		private HaalCentraalClientInterface $client,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

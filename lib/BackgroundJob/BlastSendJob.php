@@ -32,8 +32,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\BlastService;
-use OCA\Pipelinq\Service\WebhookProcessorService;
+use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -78,8 +78,8 @@ class BlastSendJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContainerInterface $container DI container for lazy OR.
-	 * @param BlastService $blastService Dispatch service.
-	 * @param WebhookProcessorService $webhookProcessor Webhook event processor.
+	 * @param BlastServiceInterface $blastService Dispatch service.
+	 * @param WebhookProcessorServiceInterface $webhookProcessor Webhook event processor.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
@@ -88,8 +88,8 @@ class BlastSendJob extends TimedJob {
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
-		private BlastService $blastService,
-		private WebhookProcessorService $webhookProcessor,
+		private BlastServiceInterface $blastService,
+		private WebhookProcessorServiceInterface $webhookProcessor,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

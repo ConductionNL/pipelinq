@@ -23,23 +23,24 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use InvalidArgumentException;
 use OCA\Pipelinq\BackgroundJob\CallTranscriptionJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
 use OCA\Pipelinq\Service\CallReview\CallTranscriptionService;
-use OCP\BackgroundJob\IJobList;
 use OCA\Pipelinq\Service\Cti\AdapterRegistry;
+use OCA\Pipelinq\Service\Cti\CallAgent;
+use OCA\Pipelinq\Service\Cti\CallCompletion;
 use OCA\Pipelinq\Service\Cti\CallRecording;
-use OCA\Pipelinq\Service\Cti\EventLogQuery;
 use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
 use OCA\Pipelinq\Service\Cti\CtiWebhookDelivery;
-use OCA\Pipelinq\Service\Cti\CallAgent;
+use OCA\Pipelinq\Service\Cti\EventLogQuery;
 use OCA\Pipelinq\Service\Cti\PendingCall;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
-use OCA\Pipelinq\Service\Cti\CallCompletion;
-use InvalidArgumentException;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -70,7 +71,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
-class CtiService {
+class CtiService implements CtiServiceInterface {
 	use PayloadToArray;
 
 	/**

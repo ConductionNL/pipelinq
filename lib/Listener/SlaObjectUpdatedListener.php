@@ -31,10 +31,10 @@ use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\Sla\MergesBreachEvents;
-use OCA\Pipelinq\Service\SlaEngineService;
-use OCA\Pipelinq\Service\TicketService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -95,8 +95,8 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @var array<string, string>
 	 */
 	private const TICKET_TYPE_LABELS = [
-		TicketService::TYPE_REQUEST => 'request',
-		TicketService::TYPE_COMPLAINT => 'complaint',
+		TicketServiceInterface::TYPE_REQUEST => 'request',
+		TicketServiceInterface::TYPE_COMPLAINT => 'complaint',
 	];
 
 	/**
@@ -111,7 +111,7 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 	/**
 	 * Constructor.
 	 *
-	 * @param SlaEngineService $engine SLA engine.
+	 * @param SlaEngineServiceInterface $engine SLA engine.
 	 * @param SchemaMapService $schemaMapService Schema → entity-type map.
 	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig App config.
@@ -119,7 +119,7 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private SlaEngineService $engine,
+		private SlaEngineServiceInterface $engine,
 		private SchemaMapService $schemaMapService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
