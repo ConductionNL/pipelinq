@@ -35,6 +35,7 @@ use OCA\Pipelinq\Kernel\Contracts\VatRatesInterface;
 use OCA\Pipelinq\Lifecycle\LifecycleRegistrar;
 use OCA\Pipelinq\Listener\ListenerRegistrar;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
+use OCA\Pipelinq\Middleware\ApiContractMiddleware;
 use OCA\Pipelinq\Notification\NotificationRegistrar;
 use OCA\Pipelinq\Portal\PortalRegistrar;
 use OCA\Pipelinq\Service\ServiceRegistrar;
@@ -90,6 +91,10 @@ class Application extends App implements IBootstrap {
 	 *  avoid.
 	 */
 	public function register(IRegistrationContext $context): void {
+		// The API contract (version header, deprecation of unversioned paths,
+		// problem details). Registered first: Nextcloud runs afterController in
+		// reverse order, so it sees the final response of every other middleware.
+		$context->registerMiddleware(class: ApiContractMiddleware::class);
 
 		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never its
 		// concrete class, so this app's unit tests can mock a type they are able to
