@@ -9486,7 +9486,17 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "Sent Subject": "Verzonden onderwerp",
+        "Sent HTML": "Verzonden HTML",
+        "Sent Text": "Verzonden tekst",
+        "The subject the blast was sent with, kept from its template when sending started so a later template change does not alter it.": "Het onderwerp waarmee de mailing is verzonden, bewaard uit het sjabloon toen het verzenden begon, zodat een latere wijziging van het sjabloon het niet verandert.",
+        "The HTML body the blast was sent with, kept from its template when sending started.": "De HTML-inhoud waarmee de mailing is verzonden, bewaard uit het sjabloon toen het verzenden begon.",
+        "The text body the blast was sent with, kept from its template when sending started.": "De tekstinhoud waarmee de mailing is verzonden, bewaard uit het sjabloon toen het verzenden begon.",
+        "This template is used by the scheduled mailing %s": "Dit sjabloon wordt gebruikt door de geplande mailing %s",
+        "(the mailings could not be checked)": "(de mailings konden niet worden gecontroleerd)",
+        "Sent content": "Verzonden inhoud",
+        "As sent; later changes to the template do not alter it": "Zoals verzonden; latere wijzigingen in het sjabloon veranderen dit niet"
     },
     "nplurals=2; plural=(n != 1);"
 )

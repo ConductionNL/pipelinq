@@ -9472,7 +9472,17 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Sent Subject": "Sent Subject",
+        "Sent HTML": "Sent HTML",
+        "Sent Text": "Sent Text",
+        "The subject the blast was sent with, kept from its template when sending started so a later template change does not alter it.": "The subject the blast was sent with, kept from its template when sending started so a later template change does not alter it.",
+        "The HTML body the blast was sent with, kept from its template when sending started.": "The HTML body the blast was sent with, kept from its template when sending started.",
+        "The text body the blast was sent with, kept from its template when sending started.": "The text body the blast was sent with, kept from its template when sending started.",
+        "This template is used by the scheduled mailing %s": "This template is used by the scheduled mailing %s",
+        "(the mailings could not be checked)": "(the mailings could not be checked)",
+        "Sent content": "Sent content",
+        "As sent; later changes to the template do not alter it": "As sent; later changes to the template do not alter it"
     },
     "nplurals=2; plural=(n != 1);"
 )

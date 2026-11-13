@@ -26,6 +26,7 @@ use OCA\OpenRegister\Contract\RegisterSlugResolverInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\OpenRegister\Event\ObjectDeletingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
@@ -63,6 +64,7 @@ use OCA\Pipelinq\Listener\LeadStageCreatingListener;
 use OCA\Pipelinq\Listener\LineTotalsListener;
 use OCA\Pipelinq\Listener\SubmittedLeadListener;
 use OCA\Pipelinq\Listener\StageLimitGuard;
+use OCA\Pipelinq\Listener\TemplateInUseGuard;
 use OCA\Pipelinq\Listener\WebFormBindingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
@@ -262,6 +264,12 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatingEvent::class,
 			listener: StageLimitGuard::class
+		);
+		// A template a scheduled mailing uses cannot be deleted, from any screen
+		// (marketing-mail-templates REQ-MMT-001).
+		$context->registerEventListener(
+			event: ObjectDeletingEvent::class,
+			listener: TemplateInUseGuard::class
 		);
 		// A Nextcloud Forms answer creates the object its binding names (Q6).
 		// Forms is optional; a `::class` string does not autoload, and the guard
