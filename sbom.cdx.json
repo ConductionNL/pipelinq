@@ -9181,107 +9181,6 @@
     },
     {
       "type": "library",
-      "name": "asn1.js",
-      "version": "4.10.1",
-      "bom-ref": "pipelinq@0.1.0|asn1.js@4.10.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/asn1.js@4.10.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/asn1.js/-/asn1.js-4.10.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "a77d9c385e6ad19aacf6e06238d2982e6e810a50a80423393bd25f7944a59d02c14f161d4cafa95be9d77e59bc52429dd9462511b633e6a122d09b9947d7244b"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/asn1.js"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "bn.js",
-          "version": "4.12.5",
-          "bom-ref": "pipelinq@0.1.0|asn1.js@4.10.1|bn.js@4.12.5",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/bn.js@4.12.5",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/bn.js/-/bn.js-4.12.5.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "dda460ebf2717df7c50fe3a53a3385477568efd977f68a014c5b9cc71f8c4f77610adce7dc49a250f428fbafce66e2368db5e2dd82a09a24c50600a140cc0845"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/asn1.js/node_modules/bn.js"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "assert",
-      "version": "2.1.0",
-      "bom-ref": "pipelinq@0.1.0|assert@2.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/assert@2.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/assert/-/assert-2.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "78b1e948afd8e2784c274ee00da033a17fd700a4bc3d26a88e69773340cce09a55d4b022e49389fe9e87fd75ab97c2fe0f3544bd5096d73def580681f684ec43"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/assert"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "ast-kit",
       "version": "2.2.0",
       "bom-ref": "pipelinq@0.1.0|ast-kit@2.2.0",
@@ -9413,39 +9312,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/asynckit"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "available-typed-arrays",
-      "version": "1.0.7",
-      "bom-ref": "pipelinq@0.1.0|available-typed-arrays@1.0.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/available-typed-arrays@1.0.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/available-typed-arrays/-/available-typed-arrays-1.0.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "c2f52306d48637bfbb4a3369abff4cd93837e745190f7abad881592db4404756d23250a8d5969e5be049f83d3dd1ee2120864b05c4c359ee0c8788ef5036a3cd"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/available-typed-arrays"
         }
       ]
     },
@@ -9624,39 +9490,6 @@
     },
     {
       "type": "library",
-      "name": "base64-js",
-      "version": "1.5.1",
-      "bom-ref": "pipelinq@0.1.0|base64-js@1.5.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/base64-js@1.5.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/base64-js/-/base64-js-1.5.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "00aa5a6251e7f2de1255b3870b2f9be7e28a82f478bebb03f2f6efadb890269b3b7ca0d3923903af2ea38b4ad42630b49336cd78f2f0cf1abc8b2a68e35a9e58"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/base64-js"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "baseline-browser-mapping",
       "version": "2.11.20",
       "bom-ref": "pipelinq@0.1.0|baseline-browser-mapping@2.11.20",
@@ -9755,39 +9588,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/blurhash"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "bn.js",
-      "version": "5.2.5",
-      "bom-ref": "pipelinq@0.1.0|bn.js@5.2.5",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/bn.js@5.2.5",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/bn.js/-/bn.js-5.2.5.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "56af3ce9e5f292e3f913a1dc292492b4fddb260ac4e889f958ac5552f27c5c6a56598b36c591d6a94c330ad1a012d05cc72779eca0450cf16851f37375a1c236"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/bn.js"
         }
       ]
     },
@@ -9904,441 +9704,6 @@
     },
     {
       "type": "library",
-      "name": "brorand",
-      "version": "1.1.0",
-      "bom-ref": "pipelinq@0.1.0|brorand@1.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/brorand@1.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/brorand/-/brorand-1.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "70a57cb4c084a50b3884afe293bd5de8bacf3a7a64a46051d30cf1aabebc8369bf2c1d86c55610ae802330965154cd58e010a308a737bc06a6c52cce63644ffb"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/brorand"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "browser-resolve",
-      "version": "2.0.0",
-      "bom-ref": "pipelinq@0.1.0|browser-resolve@2.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/browser-resolve@2.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/browser-resolve/-/browser-resolve-2.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "eec5ac42560bdab18bcb62169bc58bf0309326f60b73faa53a7b1a90369cf3b48ea02775e962ec68031d0a202ab1334721ef925df6aacb1ca8e931e85aab3c59"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/browser-resolve"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "browserify-aes",
-      "version": "1.2.0",
-      "bom-ref": "pipelinq@0.1.0|browserify-aes@1.2.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/browserify-aes@1.2.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/browserify-aes/-/browserify-aes-1.2.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fbb0875ea1aeb29527fd297968eec46b4c56180b444cf5cd4808c7a38f097cb74f59c327837dd77b8ce716f4307aa73fbb3939cd2388dc7e760989e309f6f984"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/browserify-aes"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "browserify-cipher",
-      "version": "1.0.1",
-      "bom-ref": "pipelinq@0.1.0|browserify-cipher@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/browserify-cipher@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/browserify-cipher/-/browserify-cipher-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "b0f864cf401129b7f8ad142dda14e9007aa7e3b5f79652e45069fec442732e3c18f0b46cda9d2fee58ef239132a113bf99ec6b36e9cd1028ac66cfa0c36cf3d7"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/browserify-cipher"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "browserify-des",
-      "version": "1.0.2",
-      "bom-ref": "pipelinq@0.1.0|browserify-des@1.0.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/browserify-des@1.0.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/browserify-des/-/browserify-des-1.0.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "062a0ed717f7845c33e2473a881848de27831689a9321acc9670c50b8ff4fef779328929b8073747e2d86f04c0f40e5873da6af5460fa9f7caa56d8e6eec17e4"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/browserify-des"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "browserify-rsa",
-      "version": "4.1.1",
-      "bom-ref": "pipelinq@0.1.0|browserify-rsa@4.1.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/browserify-rsa@4.1.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/browserify-rsa/-/browserify-rsa-4.1.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "6018d20224ea334e1955e8bab178a086eebbf5add2a96391037a994c4a992269e5903205b4a73aa4dbada63c99f112538d0b6e61f79eb64c4cd751b0a185cc21"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/browserify-rsa"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "browserify-sign",
-      "version": "4.2.6",
-      "bom-ref": "pipelinq@0.1.0|browserify-sign@4.2.6",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC"
-          }
-        }
-      ],
-      "purl": "pkg:npm/browserify-sign@4.2.6",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/browserify-sign/-/browserify-sign-4.2.6.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "b1df90eb97e39560985ad64a5e229fad473c77ee23b69ffc7f45b6364c332eda16e1b23a5039d6bac2d622eac79e6bab5b45d2848471a7088e5f81283ed5d402"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/browserify-sign"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "readable-stream",
-          "version": "2.3.8",
-          "bom-ref": "pipelinq@0.1.0|browserify-sign@4.2.6|readable-stream@2.3.8",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/readable-stream@2.3.8",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.8.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "f29d00524e173838087b04a2d25f04a63b3e1159d688aecda03204194d07844efe67263c0f520c63ba1dbb9951ac55c683bd4bd79286f10acf9ae9b8e514ed74"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/browserify-sign/node_modules/readable-stream"
-            }
-          ],
-          "components": [
-            {
-              "type": "library",
-              "name": "safe-buffer",
-              "version": "5.1.2",
-              "bom-ref": "pipelinq@0.1.0|browserify-sign@4.2.6|readable-stream@2.3.8|safe-buffer@5.1.2",
-              "licenses": [
-                {
-                  "license": {
-                    "id": "MIT"
-                  }
-                }
-              ],
-              "purl": "pkg:npm/safe-buffer@5.1.2",
-              "externalReferences": [
-                {
-                  "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
-                  "type": "distribution",
-                  "hashes": [
-                    {
-                      "alg": "SHA-512",
-                      "content": "19dd94641243917958ec66c9c5fb04f3f9ef2a45045351b7f1cd6c88de903fa6bd3d3f4c98707c1a7a6c71298c252a05f0b388aedf2e77fc0fb688f2b381bafa"
-                    }
-                  ],
-                  "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-                }
-              ],
-              "properties": [
-                {
-                  "name": "cdx:npm:package:path",
-                  "value": "node_modules/browserify-sign/node_modules/readable-stream/node_modules/safe-buffer"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "isarray",
-          "version": "1.0.0",
-          "bom-ref": "pipelinq@0.1.0|browserify-sign@4.2.6|isarray@1.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/isarray@1.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "54b82121634ce842d0ce8ef3c26720d0d99357258a623bc878cf37ca3a74c110d39949eb33aefc7d06dc281a3a9f6089105d2cce81bfff2b60f932a56bcf402d"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/browserify-sign/node_modules/isarray"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "string_decoder",
-          "version": "1.1.1",
-          "bom-ref": "pipelinq@0.1.0|browserify-sign@4.2.6|string_decoder@1.1.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/string_decoder@1.1.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.1.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "9ff4a19ef0e2e851db6d57ef8aba3e5a88e2173bfeb3c30f30705ccd578f7d4a4324bc282d3d21b759786300426e2f29240bde104767907c8fc933ff9b345fc2"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/browserify-sign/node_modules/string_decoder"
-            }
-          ],
-          "components": [
-            {
-              "type": "library",
-              "name": "safe-buffer",
-              "version": "5.1.2",
-              "bom-ref": "pipelinq@0.1.0|browserify-sign@4.2.6|string_decoder@1.1.1|safe-buffer@5.1.2",
-              "licenses": [
-                {
-                  "license": {
-                    "id": "MIT"
-                  }
-                }
-              ],
-              "purl": "pkg:npm/safe-buffer@5.1.2",
-              "externalReferences": [
-                {
-                  "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
-                  "type": "distribution",
-                  "hashes": [
-                    {
-                      "alg": "SHA-512",
-                      "content": "19dd94641243917958ec66c9c5fb04f3f9ef2a45045351b7f1cd6c88de903fa6bd3d3f4c98707c1a7a6c71298c252a05f0b388aedf2e77fc0fb688f2b381bafa"
-                    }
-                  ],
-                  "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-                }
-              ],
-              "properties": [
-                {
-                  "name": "cdx:npm:package:path",
-                  "value": "node_modules/browserify-sign/node_modules/string_decoder/node_modules/safe-buffer"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "browserify-zlib",
-      "version": "0.2.0",
-      "bom-ref": "pipelinq@0.1.0|browserify-zlib@0.2.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/browserify-zlib@0.2.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/browserify-zlib/-/browserify-zlib-0.2.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "67de36472b075e626b86a93cf0598a055abfbf9b6a992903cfba79e06fcc1b28cc9c21459c2efd5d635b83e56d6bc5ba59bdaab526534b1206909ad1a4214488"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/browserify-zlib"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "browserslist",
       "version": "4.28.8",
       "bom-ref": "pipelinq@0.1.0|browserslist@4.28.8",
@@ -10408,105 +9773,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/buffer-from"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "buffer-xor",
-      "version": "1.0.3",
-      "bom-ref": "pipelinq@0.1.0|buffer-xor@1.0.3",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/buffer-xor@1.0.3",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/buffer-xor/-/buffer-xor-1.0.3.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e7bd6cd13ee76562babc1ebb1c8e5dc9417bc1788d71f68f3cf4e5eb3602340a4036322f6094e0ee196e77ff9c269740852edd573a8c2e67e17c7477ac070e8d"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/buffer-xor"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "buffer",
-      "version": "5.7.1",
-      "bom-ref": "pipelinq@0.1.0|buffer@5.7.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/buffer@5.7.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/buffer/-/buffer-5.7.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "10773220f050e0148696f8c1d7a9392a0009dbb088b0763fd8906609145ea38f32f6b43731a533597dca56505ae14eccc97d361dd563d0aec2dd6681de3bbb15"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/buffer"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "builtin-status-codes",
-      "version": "3.0.0",
-      "bom-ref": "pipelinq@0.1.0|builtin-status-codes@3.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/builtin-status-codes@3.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/builtin-status-codes/-/builtin-status-codes-3.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "1e9185c35f038055a59dc0df8d36b6adc4385bcf0ed660bc7bcc99d80bd06392836a4b524f0a3e2917fa9c72ba1512391724726ffe53ebe4d2c5f3fb4321ac99"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/builtin-status-codes"
         }
       ]
     },
@@ -10610,72 +9876,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/call-bind-apply-helpers"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "call-bind",
-      "version": "1.0.9",
-      "bom-ref": "pipelinq@0.1.0|call-bind@1.0.9",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/call-bind@1.0.9",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/call-bind/-/call-bind-1.0.9.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "6bf872fa936c1544d1f88cfc4c226f5ee74a54b027cff0f2792528d74239caf143409045536b3dbaa429a12ac996ba0750aa0aab383e7a9c723fd96a15dcdf05"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/call-bind"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "call-bound",
-      "version": "1.0.4",
-      "bom-ref": "pipelinq@0.1.0|call-bound@1.0.4",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/call-bound@1.0.4",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/call-bound/-/call-bound-1.0.4.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fb2b3df7b53dea9a382b1fc0069042aa103d12ec49690583420ef6f791f8841a61bf72198346e804abb0629b78617a7a319e4099942753fb72313951a5a49e8e"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/call-bound"
         }
       ]
     },
@@ -11057,39 +10257,6 @@
     },
     {
       "type": "library",
-      "name": "cipher-base",
-      "version": "1.0.7",
-      "bom-ref": "pipelinq@0.1.0|cipher-base@1.0.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/cipher-base@1.0.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/cipher-base/-/cipher-base-1.0.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "333f50313e5f25eedb288ecc1f7d548a54f97042b91071d109c730fd8445b11638ec0b8d81a57a1d8debb1ca74fc8e10fad4d6ff9ce8aa949e451239e1390358"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/cipher-base"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "clone",
       "version": "2.1.2",
       "bom-ref": "pipelinq@0.1.0|clone@2.1.2",
@@ -11366,65 +10533,6 @@
     },
     {
       "type": "library",
-      "name": "console-browserify",
-      "version": "1.2.0",
-      "bom-ref": "pipelinq@0.1.0|console-browserify@1.2.0",
-      "purl": "pkg:npm/console-browserify@1.2.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/console-browserify/-/console-browserify-1.2.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "64c9183bf2e4175ed0bc23ea334831c3cc94ce28003993925921e0f75147ea8ad2eef7048f975565389d3767d0d78c8149d83ded1aa148dc0b517227779d8e4c"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/console-browserify"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "constants-browserify",
-      "version": "1.0.0",
-      "bom-ref": "pipelinq@0.1.0|constants-browserify@1.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/constants-browserify@1.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/constants-browserify/-/constants-browserify-1.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "c45c4ec2a23347f7b593580b896128a6148232a5dcc151c81fb6a47fb6ffbf1714786ba7963de1bd969aab1c07b13827f889ddb64409812ced20359eba65890d"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/constants-browserify"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "core-js",
       "version": "3.50.0",
       "bom-ref": "pipelinq@0.1.0|core-js@3.50.0",
@@ -11453,39 +10561,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/core-js"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "core-util-is",
-      "version": "1.0.3",
-      "bom-ref": "pipelinq@0.1.0|core-util-is@1.0.3",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/core-util-is@1.0.3",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.3.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "65006f8b50dca49e060ea6a78ee719d878f7c043b9a590d2f3d0566e472bbddc64b09a2bc140c365a997f65745929f5ac369660432e090e6c40380d6349f4561"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/core-util-is"
         }
       ]
     },
@@ -11523,173 +10598,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/cosmiconfig"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "create-ecdh",
-      "version": "4.0.4",
-      "bom-ref": "pipelinq@0.1.0|create-ecdh@4.0.4",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/create-ecdh@4.0.4",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/create-ecdh/-/create-ecdh-4.0.4.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "99ff930b1f3059cf55a6ec5f3f686dd2248848b667b742605a5ace29988dab25195a78c868221535002b3079c264a7c461183a20cec0f8d789a0df207ff5acd0"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/create-ecdh"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "bn.js",
-          "version": "4.12.5",
-          "bom-ref": "pipelinq@0.1.0|create-ecdh@4.0.4|bn.js@4.12.5",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/bn.js@4.12.5",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/bn.js/-/bn.js-4.12.5.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "dda460ebf2717df7c50fe3a53a3385477568efd977f68a014c5b9cc71f8c4f77610adce7dc49a250f428fbafce66e2368db5e2dd82a09a24c50600a140cc0845"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/create-ecdh/node_modules/bn.js"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "create-hash",
-      "version": "1.2.0",
-      "bom-ref": "pipelinq@0.1.0|create-hash@1.2.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/create-hash@1.2.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/create-hash/-/create-hash-1.2.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "cf4d1b0863470c6f261c090fec2b53d6a56ef9b15050f8d8abfe08bf70b79168d3155d74cc88df4a87aa5e8f40b30b3c8304870c68ff865daee0e1888daa5e0a"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/create-hash"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "create-hmac",
-      "version": "1.1.7",
-      "bom-ref": "pipelinq@0.1.0|create-hmac@1.1.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/create-hmac@1.1.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/create-hmac/-/create-hmac-1.1.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "3091bd962899fa881ce13cd4c2ebdb111d4945d82f505481e7e551fe0e61f367c668845631675db4a0478bbfec5617e3419e927a197286f418adc6246942292e"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/create-hmac"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "create-require",
-      "version": "1.1.1",
-      "bom-ref": "pipelinq@0.1.0|create-require@1.1.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/create-require@1.1.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/create-require/-/create-require-1.1.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "75c2855f78e7d0ca486978e2b2846f7b12095442b36aaef3dab64ac5ff8c4abf5391d9879ac5389b695c2e88eb8ff14797c9a4e55c4c99803e7ed4643ffde829"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/create-require"
         }
       ]
     },
@@ -11793,39 +10701,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/crypt"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "crypto-browserify",
-      "version": "3.12.1",
-      "bom-ref": "pipelinq@0.1.0|crypto-browserify@3.12.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/crypto-browserify@3.12.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/crypto-browserify/-/crypto-browserify-3.12.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "af8112c3f225bac0f5ee58108b53b6d056b7a8d9ec724475dba4dd52e06002eec60584883ef74dc8e35ddd9af1874c42c00e3eeb0fd30c0ac13ec32f86eafe29"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/crypto-browserify"
         }
       ]
     },
@@ -12474,72 +11349,6 @@
     },
     {
       "type": "library",
-      "name": "define-data-property",
-      "version": "1.1.4",
-      "bom-ref": "pipelinq@0.1.0|define-data-property@1.1.4",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/define-data-property@1.1.4",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/define-data-property/-/define-data-property-1.1.4.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ac132f23396903cbfa13e489668a3ef87018aac2eb920ecc49f2229cc3c5866928af0ed7f9d39754942cf904faf731a4cccc9f0e720c3765a2775f8d6cbdd3f8"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/define-data-property"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "define-properties",
-      "version": "1.2.1",
-      "bom-ref": "pipelinq@0.1.0|define-properties@1.2.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/define-properties@1.2.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/define-properties/-/define-properties-1.2.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "f109902aa10048b7799f1d14d41d6890b1256d4baeb6d27f0276264576db6c60d687ab92db4f048c3e17aaafc8f702bbbb4bfa3b4f178535a7b795ed11b47a0e"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/define-properties"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "delayed-stream",
       "version": "1.0.0",
       "bom-ref": "pipelinq@0.1.0|delayed-stream@1.0.0",
@@ -12601,39 +11410,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/dequal"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "des.js",
-      "version": "1.1.0",
-      "bom-ref": "pipelinq@0.1.0|des.js@1.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/des.js@1.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/des.js/-/des.js-1.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "af5ec6c638540a3491cbc6a2269afcfd469d148ccccc919ec48dcd9b3e000e2f4b612171e204c1a7cd3e35a5ff62c5d658b86967bbffbffb9b11cfdb08d7cac2"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/des.js"
         }
       ]
     },
@@ -12742,74 +11518,6 @@
     },
     {
       "type": "library",
-      "name": "diffie-hellman",
-      "version": "5.0.3",
-      "bom-ref": "pipelinq@0.1.0|diffie-hellman@5.0.3",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/diffie-hellman@5.0.3",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/diffie-hellman/-/diffie-hellman-5.0.3.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "92a6a0fcd97e7f71b0c8adb97e150c623f350543ab67d22e26c8c870313989c34cf452470159b755c503c5d2cfa10b53b94ca55a6e992249d8270c1a3f1b14ce"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/diffie-hellman"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "bn.js",
-          "version": "4.12.5",
-          "bom-ref": "pipelinq@0.1.0|diffie-hellman@5.0.3|bn.js@4.12.5",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/bn.js@4.12.5",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/bn.js/-/bn.js-4.12.5.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "dda460ebf2717df7c50fe3a53a3385477568efd977f68a014c5b9cc71f8c4f77610adce7dc49a250f428fbafce66e2368db5e2dd82a09a24c50600a140cc0845"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/diffie-hellman/node_modules/bn.js"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "dom-serializer",
       "version": "2.0.0",
       "bom-ref": "pipelinq@0.1.0|dom-serializer@2.0.0",
@@ -12881,39 +11589,6 @@
               "value": "node_modules/dom-serializer/node_modules/entities"
             }
           ]
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "domain-browser",
-      "version": "4.22.0",
-      "bom-ref": "pipelinq@0.1.0|domain-browser@4.22.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/domain-browser@4.22.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/domain-browser/-/domain-browser-4.22.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "2060708c5eed364ddcc32a45347ffb6dfcc17204826da30e0f71ac698d4053f251ae71e762010cd3ef6442de76899c6336c8c1b4962d6a8d78e95f9ff2315937"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/domain-browser"
         }
       ]
     },
@@ -13126,74 +11801,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/electron-to-chromium"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "elliptic",
-      "version": "6.6.1",
-      "bom-ref": "pipelinq@0.1.0|elliptic@6.6.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/elliptic@6.6.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/elliptic/-/elliptic-6.6.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "45a75dbef31ab4ad8b247a8527e600e16cac54de48b5af44df96e8b6a218b294384e444094289c77328e8e5cafff565ae51c93367edd8bffde115d2e4c07dede"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/elliptic"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "bn.js",
-          "version": "4.12.5",
-          "bom-ref": "pipelinq@0.1.0|elliptic@6.6.1|bn.js@4.12.5",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/bn.js@4.12.5",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/bn.js/-/bn.js-4.12.5.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "dda460ebf2717df7c50fe3a53a3385477568efd977f68a014c5b9cc71f8c4f77610adce7dc49a250f428fbafce66e2368db5e2dd82a09a24c50600a140cc0845"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/elliptic/node_modules/bn.js"
-            }
-          ]
         }
       ]
     },
@@ -14336,41 +12943,12 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/events"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "evp_bytestokey",
-      "version": "1.0.3",
-      "bom-ref": "pipelinq@0.1.0|evp_bytestokey@1.0.3",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/evp_bytestokey@1.0.3",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/evp_bytestokey/-/evp_bytestokey-1.0.3.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fdfd86a384e88271ff2af08848fece52c1e7f39853f67524c7103d0445b1167f8e8fda3c64d2e6ff8d217658122f2b8e8a6b2b4ca2d4304a2b41ec69fda3d078"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/evp_bytestokey"
         }
       ]
     },
@@ -14964,6 +13542,10 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/find-up"
         }
@@ -15180,39 +13762,6 @@
     },
     {
       "type": "library",
-      "name": "for-each",
-      "version": "0.3.5",
-      "bom-ref": "pipelinq@0.1.0|for-each@0.3.5",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/for-each@0.3.5",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/for-each/-/for-each-0.3.5.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "74ac75d9e442548cea0b1146a65c8528930fbcb11682636d52ba53889211e6ef7bcc48511bcc92aed6e83c7657c7b75a2f1415ae5eb8ddc4f36da6f6b64423c6"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/for-each"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "form-data",
       "version": "4.0.6",
       "bom-ref": "pipelinq@0.1.0|form-data@4.0.6",
@@ -15307,39 +13856,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/function-bind"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "generator-function",
-      "version": "2.0.1",
-      "bom-ref": "pipelinq@0.1.0|generator-function@2.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/generator-function@2.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/generator-function/-/generator-function-2.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "485745988262fb26c2d2f8e51cdd191951877379601340f13c04f47638d583e9233a74aa725aa68f4290ef291338b3fa631a2a3afb8038319d707267fb8deade"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/generator-function"
         }
       ]
     },
@@ -15851,39 +14367,6 @@
     },
     {
       "type": "library",
-      "name": "has-property-descriptors",
-      "version": "1.0.2",
-      "bom-ref": "pipelinq@0.1.0|has-property-descriptors@1.0.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/has-property-descriptors@1.0.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/has-property-descriptors/-/has-property-descriptors-1.0.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e7924d2ae216fafab829ed418ce4e333661cb5022f093ec61731f099f64f1a8e709eb82489dd1842d9c095e152aae9999b86b3de7d814be7ab6f2e62a49760ae"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/has-property-descriptors"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "has-symbols",
       "version": "1.1.0",
       "bom-ref": "pipelinq@0.1.0|has-symbols@1.1.0",
@@ -15945,72 +14428,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/has-tostringtag"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "hash-base",
-      "version": "3.0.5",
-      "bom-ref": "pipelinq@0.1.0|hash-base@3.0.5",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/hash-base@3.0.5",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/hash-base/-/hash-base-3.0.5.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "bd79b4978e556dc1c45654c2cecf0cfacd15798b01da59e501a4e1a0b2865ebddb13f5560ce7a53549f27143c484a11a5c044bd931058c13b252233afb9e4a06"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/hash-base"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "hash.js",
-      "version": "1.1.7",
-      "bom-ref": "pipelinq@0.1.0|hash.js@1.1.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/hash.js@1.1.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/hash.js/-/hash.js-1.1.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "b5a39ab241ade33e1238034db1e3af8980ef8c42629c8911826a7b2db28fd984d3995c56065f3bb3fbb32bdafee3805c9414a9d97ecad61a9e35fcfd25b05e5c"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/hash.js"
         }
       ]
     },
@@ -16251,39 +14668,6 @@
     },
     {
       "type": "library",
-      "name": "hmac-drbg",
-      "version": "1.0.1",
-      "bom-ref": "pipelinq@0.1.0|hmac-drbg@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/hmac-drbg@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/hmac-drbg/-/hmac-drbg-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "4ed8b780ca8b7597e13906353337ff01a9cb8aa8755938898048f6e99b9843d7db90ba26cc67210b0b38172ad2778564a417e2361684d4e9fe94ecfcf788ef5e"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/hmac-drbg"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "hookable",
       "version": "5.5.3",
       "bom-ref": "pipelinq@0.1.0|hookable@5.5.3",
@@ -16500,39 +14884,6 @@
     },
     {
       "type": "library",
-      "name": "https-browserify",
-      "version": "1.0.0",
-      "bom-ref": "pipelinq@0.1.0|https-browserify@1.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/https-browserify@1.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/https-browserify/-/https-browserify-1.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "27e16449dc83fb4980d0dfbcd6d328b5a44c7d22fd4868bec690f74fa600a4ab1cddb1925c995f5eb8b757214e79891f2d1422b039355be8c814528179405b06"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/https-browserify"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "https-proxy-agent",
       "version": "5.0.1",
       "bom-ref": "pipelinq@0.1.0|https-proxy-agent@5.0.1",
@@ -16561,39 +14912,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/https-proxy-agent"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "ieee754",
-      "version": "1.2.1",
-      "bom-ref": "pipelinq@0.1.0|ieee754@1.2.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "BSD-3-Clause"
-          }
-        }
-      ],
-      "purl": "pkg:npm/ieee754@1.2.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/ieee754/-/ieee754-1.2.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "75ccaa843bd7d42e3a95765c56a0a92be16d31141574830debf0dfe63b36ce8b94b2a1bb23ab05c62b480beeca60adbd29d5ce2c776ef732f8b059e85509ea68"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/ieee754"
         }
       ]
     },
@@ -16784,39 +15102,6 @@
     },
     {
       "type": "library",
-      "name": "inherits",
-      "version": "2.0.4",
-      "bom-ref": "pipelinq@0.1.0|inherits@2.0.4",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC"
-          }
-        }
-      ],
-      "purl": "pkg:npm/inherits@2.0.4",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "93fbc6697e3f6256b75b3c8c0af4d039761e207bea38ab67a8176ecd31e9ce9419cc0b2428c859d8af849c189233dcc64a820578ca572b16b8758799210a9ec1"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/inherits"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "ini",
       "version": "1.3.8",
       "bom-ref": "pipelinq@0.1.0|ini@1.3.8",
@@ -16986,39 +15271,6 @@
     },
     {
       "type": "library",
-      "name": "is-arguments",
-      "version": "1.2.0",
-      "bom-ref": "pipelinq@0.1.0|is-arguments@1.2.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-arguments@1.2.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-arguments/-/is-arguments-1.2.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "edb55b8b486e8ffc2b2003b36fc5356acce0f64762dca37f0b2535f424c8eed028658119a0bf720835e96d737eb8fb2e5a73f4d9ccae8358257aaabe4d4f9808"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-arguments"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "is-arrayish",
       "version": "0.2.1",
       "bom-ref": "pipelinq@0.1.0|is-arrayish@0.2.1",
@@ -17084,72 +15336,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/is-buffer"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "is-callable",
-      "version": "1.2.7",
-      "bom-ref": "pipelinq@0.1.0|is-callable@1.2.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-callable@1.2.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-callable/-/is-callable-1.2.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "d410b40551614bfa74aadc3a7a7a7c7bef0e0f452b2b4a052f3b528cdce170a037583b89c7100f5f33ee3ed2a48c463d514a045a55fff1f80a7aed92f22f494c"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-callable"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "is-core-module",
-      "version": "2.16.2",
-      "bom-ref": "pipelinq@0.1.0|is-core-module@2.16.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-core-module@2.16.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-core-module/-/is-core-module-2.16.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "7af3abf317d72b113aa924748525cbdabdec77b00b8fcfbb8d0114bcf61c9b9b20645749f806334fac8d9897a7bc8610060206c1fc33d3cb0bf33a0bef2ab604"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-core-module"
         }
       ]
     },
@@ -17262,39 +15448,6 @@
     },
     {
       "type": "library",
-      "name": "is-generator-function",
-      "version": "1.1.2",
-      "bom-ref": "pipelinq@0.1.0|is-generator-function@1.1.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-generator-function@1.1.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-generator-function/-/is-generator-function-1.1.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ba9aadd5290690e0d6f6db06346e66b574d7b440a2cf0b52da4035eb533e8093dcd7175bfc0c7adbd69fe98ad3c1c39e4076dec2b3cd944e43c7b933bd74e2cc"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-generator-function"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "is-glob",
       "version": "4.0.3",
       "bom-ref": "pipelinq@0.1.0|is-glob@4.0.3",
@@ -17360,39 +15513,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/is-hexadecimal"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "is-nan",
-      "version": "1.3.2",
-      "bom-ref": "pipelinq@0.1.0|is-nan@1.3.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-nan@1.3.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-nan/-/is-nan-1.3.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "13ecc12a9436b7a304a3556ca2762696e93d3711ab6f3a5e78b0b6c48562b8ed848d4db1b17b013f04ebdd892ff65d3c51811511d59e459368b9a66a17a44dd3"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-nan"
         }
       ]
     },
@@ -17542,39 +15662,6 @@
     },
     {
       "type": "library",
-      "name": "is-regex",
-      "version": "1.2.1",
-      "bom-ref": "pipelinq@0.1.0|is-regex@1.2.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-regex@1.2.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-regex/-/is-regex-1.2.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "32362c2873b93bb982b26446c5670b5a1785a8df4327fd939a782f8ca5e285ee9e7d588fa9cdbbe3e171ff87d88ffaf4dfe112bc17535cad15ead037ae07b3d6"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-regex"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "is-svg",
       "version": "6.1.0",
       "bom-ref": "pipelinq@0.1.0|is-svg@6.1.0",
@@ -17603,39 +15690,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/is-svg"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "is-typed-array",
-      "version": "1.1.15",
-      "bom-ref": "pipelinq@0.1.0|is-typed-array@1.1.15",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-typed-array@1.1.15",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-typed-array/-/is-typed-array-1.1.15.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "a7711cb227178e2b7b49ab245c7b35840f75431813c38e85bfa10528a192e434452c3f322a7a218c5de1c688eef786ff39c319a10ba4ce93e9044f6e2d52b381"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-typed-array"
         }
       ]
     },
@@ -17674,39 +15728,6 @@
     },
     {
       "type": "library",
-      "name": "isarray",
-      "version": "2.0.5",
-      "bom-ref": "pipelinq@0.1.0|isarray@2.0.5",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/isarray@2.0.5",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/isarray/-/isarray-2.0.5.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "c478e10ebddc3412b40737542523d7667b50531fe6c0c4b9470e00ee53c9f745c600ee8848ffde3c336ea34be1a8e654f940f9268a1dc02000a1941ddc57802b"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/isarray"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "isexe",
       "version": "2.0.0",
       "bom-ref": "pipelinq@0.1.0|isexe@2.0.0",
@@ -17739,39 +15760,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/isexe"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "isomorphic-timers-promises",
-      "version": "1.0.1",
-      "bom-ref": "pipelinq@0.1.0|isomorphic-timers-promises@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/isomorphic-timers-promises@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/isomorphic-timers-promises/-/isomorphic-timers-promises-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "bb8b1e8fd0752cf4b14c6281fc78aecef1109d71f4102624495414dfd9284b0985031865100165f51753bcbbf84ce4d0520052e4edcee5fc14c64e9bc8167e21"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/isomorphic-timers-promises"
         }
       ]
     },
@@ -18826,6 +16814,10 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/locate-path"
         }
@@ -19166,39 +17158,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/mathml-tag-names"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "md5.js",
-      "version": "1.3.5",
-      "bom-ref": "pipelinq@0.1.0|md5.js@1.3.5",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/md5.js@1.3.5",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/md5.js/-/md5.js-1.3.5.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "c62b4ff96c4d3dc4d33a09d325cae1334c6f74f7a98a93d27f723c108a4629e14b8eddcf9492c80c6deef045f9dd922e6e46fee54dbedeb10b6291211e1cdd92"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/md5.js"
         }
       ]
     },
@@ -20552,74 +18511,6 @@
     },
     {
       "type": "library",
-      "name": "miller-rabin",
-      "version": "4.0.1",
-      "bom-ref": "pipelinq@0.1.0|miller-rabin@4.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/miller-rabin@4.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/miller-rabin/-/miller-rabin-4.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "d75e5f2e1bd956a5b01cf6c29729edc4455f5437e5f432cb4ee26fab78363bf3b18bc022368b801ef0d2cc74b4be250973e579be6ddeabdd57c2a9fd769e2344"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/miller-rabin"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "bn.js",
-          "version": "4.12.5",
-          "bom-ref": "pipelinq@0.1.0|miller-rabin@4.0.1|bn.js@4.12.5",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/bn.js@4.12.5",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/bn.js/-/bn.js-4.12.5.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "dda460ebf2717df7c50fe3a53a3385477568efd977f68a014c5b9cc71f8c4f77610adce7dc49a250f428fbafce66e2368db5e2dd82a09a24c50600a140cc0845"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/miller-rabin/node_modules/bn.js"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "mime-db",
       "version": "1.52.0",
       "bom-ref": "pipelinq@0.1.0|mime-db@1.52.0",
@@ -20681,72 +18572,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/mime-types"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "minimalistic-assert",
-      "version": "1.0.1",
-      "bom-ref": "pipelinq@0.1.0|minimalistic-assert@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC"
-          }
-        }
-      ],
-      "purl": "pkg:npm/minimalistic-assert@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/minimalistic-assert/-/minimalistic-assert-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "52d25c003e3211a1ad8cf7b35ae3bdc02e27c149d51fff3f226df210740fe1bebb717943fd0afd85d213094d710db4845e0d9728d68ff23b11795eef41dd34fc"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/minimalistic-assert"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "minimalistic-crypto-utils",
-      "version": "1.0.1",
-      "bom-ref": "pipelinq@0.1.0|minimalistic-crypto-utils@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/minimalistic-crypto-utils@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/minimalistic-crypto-utils/-/minimalistic-crypto-utils-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "2486256edea0f22e6329f277c73eeb1742d79afd93903c412d492205e67b6c0c781a79cd32bf311691a73b19fa1a14c41f1dd28d1ad912853e8f4e29ad7d64b6"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/minimalistic-crypto-utils"
         }
       ]
     },
@@ -21200,39 +19025,6 @@
     },
     {
       "type": "library",
-      "name": "node-polyfill-webpack-plugin",
-      "version": "4.1.0",
-      "bom-ref": "pipelinq@0.1.0|node-polyfill-webpack-plugin@4.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/node-polyfill-webpack-plugin@4.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/node-polyfill-webpack-plugin/-/node-polyfill-webpack-plugin-4.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "6f87a2e38e042a439a806ff216aa23ac3dd04d833920e5357fcb67f68eaec2b1b8a8bf9bac8ee85618cf55dd192f6c72f99e823f96eef70f174ef9568225c773"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/node-polyfill-webpack-plugin"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "node-releases",
       "version": "2.0.54",
       "bom-ref": "pipelinq@0.1.0|node-releases@2.0.54",
@@ -21265,107 +19057,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/node-releases"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "node-stdlib-browser",
-      "version": "1.3.1",
-      "bom-ref": "pipelinq@0.1.0|node-stdlib-browser@1.3.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/node-stdlib-browser@1.3.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/node-stdlib-browser/-/node-stdlib-browser-1.3.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "5fbe5937c0c22dfb4633988ac2860b037ae39eb004b3decc933bd2778ab6ef8e9382983c6fc5d68811a2046e19a60700a8182d80f1d388073c64c0af66e8a40f"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/node-stdlib-browser"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "pkg-dir",
-          "version": "5.0.0",
-          "bom-ref": "pipelinq@0.1.0|node-stdlib-browser@1.3.1|pkg-dir@5.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/pkg-dir@5.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/pkg-dir/-/pkg-dir-5.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "34f13c4c36f397fdd841863b0924b6dbcb37836a2595316773e422dedaa6a89a7d560da8bd4a62c5c244a361c949c376133fa411a6a5eb2ef47347a1a8904978"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/node-stdlib-browser/node_modules/pkg-dir"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "punycode",
-          "version": "1.4.1",
-          "bom-ref": "pipelinq@0.1.0|node-stdlib-browser@1.3.1|punycode@1.4.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/punycode@1.4.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/punycode/-/punycode-1.4.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "8e660d1255bbcaf3bb4d5df70a34a6bd2884db2728ddb576733bbf3b30ca74c35565059fc426e55112e17fee3bb32411067b637cb75dfc7d1e82bcc81bea1a15"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/node-stdlib-browser/node_modules/punycode"
-            }
-          ]
         }
       ]
     },
@@ -21478,138 +19169,6 @@
     },
     {
       "type": "library",
-      "name": "object-inspect",
-      "version": "1.13.4",
-      "bom-ref": "pipelinq@0.1.0|object-inspect@1.13.4",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/object-inspect@1.13.4",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/object-inspect/-/object-inspect-1.13.4.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "5baee22e5e09d845c41936df78709f7eb8c37e2b6f2c0360d14957df01545124f1f762974457a0307515812a84fb0be101b8b85aa8c683d733cac4d5d84a5b7b"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/object-inspect"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "object-is",
-      "version": "1.1.6",
-      "bom-ref": "pipelinq@0.1.0|object-is@1.1.6",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/object-is@1.1.6",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/object-is/-/object-is-1.1.6.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "17c719f8a7c69521a2d3d9494fbfcd77a28967dca0b6f602d3f51860b23d9e640a2cc9f276907dcaf6eff4ad6e4a412eec553dbd83e65702e0df6f2d5fea2ddd"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/object-is"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "object-keys",
-      "version": "1.1.1",
-      "bom-ref": "pipelinq@0.1.0|object-keys@1.1.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/object-keys@1.1.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/object-keys/-/object-keys-1.1.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "36e00449439432b9485ce7c72b30fa6e93eeded62ddf1be335d44843e15e4f494d6f82bc591ef409a0f186e360b92d971be1a39323303b3b0de5992d2267e12c"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/object-keys"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "object.assign",
-      "version": "4.1.7",
-      "bom-ref": "pipelinq@0.1.0|object.assign@4.1.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/object.assign@4.1.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/object.assign/-/object.assign-4.1.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "9cadbc58ea3e4088c190376e4c8344e09905fd42492b27f6109c6f24a7db943a7283443ea643873532f4430cba34fe85844fc49f357bdc1c71a9c25a5d8f5a9f"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/object.assign"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "optionator",
       "version": "0.9.4",
       "bom-ref": "pipelinq@0.1.0|optionator@0.9.4",
@@ -21680,39 +19239,6 @@
     },
     {
       "type": "library",
-      "name": "os-browserify",
-      "version": "0.3.0",
-      "bom-ref": "pipelinq@0.1.0|os-browserify@0.3.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/os-browserify@0.3.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/os-browserify/-/os-browserify-0.3.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "82372951cddc9417fdfb6d744d168359b7fead965912c859f8395731109e023a74c614eb9d0b0a1f2a48cb527777984a754ce3ebdb7bd3c107b54f0fe9b527d0"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/os-browserify"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "p-limit",
       "version": "3.1.0",
       "bom-ref": "pipelinq@0.1.0|p-limit@3.1.0",
@@ -21738,6 +19264,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/p-limit"
@@ -21771,6 +19301,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/p-locate"
@@ -21845,37 +19379,6 @@
     },
     {
       "type": "library",
-      "name": "pako",
-      "version": "1.0.11",
-      "bom-ref": "pipelinq@0.1.0|pako@1.0.11",
-      "licenses": [
-        {
-          "expression": "(MIT AND Zlib)"
-        }
-      ],
-      "purl": "pkg:npm/pako@1.0.11",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/pako/-/pako-1.0.11.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e212c1f0fcb8cd971ee6ce3277d5f3a29ab056fff218d855d4197c353982ab5efadc778adbe130553bfe95e19e2f5dc39e1db07dbaa8c153d70883b4cf8b5a63"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/pako"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "parent-module",
       "version": "1.0.1",
       "bom-ref": "pipelinq@0.1.0|parent-module@1.0.1",
@@ -21908,39 +19411,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/parent-module"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "parse-asn1",
-      "version": "5.1.9",
-      "bom-ref": "pipelinq@0.1.0|parse-asn1@5.1.9",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC"
-          }
-        }
-      ],
-      "purl": "pkg:npm/parse-asn1@5.1.9",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/parse-asn1/-/parse-asn1-5.1.9.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "7c860db99fc76acb526fcd1b6863ae3d1a353bd71fe1b696c395ac029edd06e5337930ff068686f2c5537653c592c044da5176d5d37e035027ae9223496a871e"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/parse-asn1"
         }
       ]
     },
@@ -22052,39 +19522,6 @@
     },
     {
       "type": "library",
-      "name": "path-browserify",
-      "version": "1.0.1",
-      "bom-ref": "pipelinq@0.1.0|path-browserify@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/path-browserify@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/path-browserify/-/path-browserify-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "6fbba8d9409439865c9c5ff7203d25ba53898bf6da7f16b5c4f7bb64fb1a9a6052a634964248cdc65b7adf96064b632247d1a3bee5c2b73d9e9abde36eccfdf2"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/path-browserify"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "path-exists",
       "version": "4.0.0",
       "bom-ref": "pipelinq@0.1.0|path-exists@4.0.0",
@@ -22110,6 +19547,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/path-exists"
@@ -22188,39 +19629,6 @@
     },
     {
       "type": "library",
-      "name": "path-parse",
-      "version": "1.0.7",
-      "bom-ref": "pipelinq@0.1.0|path-parse@1.0.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/path-parse@1.0.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/path-parse/-/path-parse-1.0.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "2c32733d510410f47ecb8f33f7703411dd325dbf29001c865a8fe4e5861d620a58dbfd84b0eb24b09aeaee5387c6bcab54e9f57a31baa00a7c6a1bce2100fcb3"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/path-parse"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "path-posix",
       "version": "1.0.0",
       "bom-ref": "pipelinq@0.1.0|path-posix@1.0.0",
@@ -22282,39 +19690,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/pathe"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "pbkdf2",
-      "version": "3.1.7",
-      "bom-ref": "pipelinq@0.1.0|pbkdf2@3.1.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/pbkdf2@3.1.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/pbkdf2/-/pbkdf2-3.1.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "9d2e26bc5815c14ade70f4d176976c78cd9fc2975f9d7d3f1e26c0f03801450b628540331d0609154da5f8e944b625eda6a92b32f08f0f0c973149c0483b7a43"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/pbkdf2"
         }
       ]
     },
@@ -22516,39 +19891,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/pkg-types"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "possible-typed-array-names",
-      "version": "1.1.0",
-      "bom-ref": "pipelinq@0.1.0|possible-typed-array-names@1.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/possible-typed-array-names@1.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/possible-typed-array-names/-/possible-typed-array-names-1.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ffee55153721243a158f76e1a2a8ba51eca6703d340c0c1bd672706a6ccfbc712ccc9e05a45e9234d6d46ce4bcc88e7aa87cdd57c78ad2a11f3928a87644ddc6"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/possible-typed-array-names"
         }
       ]
     },
@@ -22922,72 +20264,6 @@
     },
     {
       "type": "library",
-      "name": "process-nextick-args",
-      "version": "2.0.1",
-      "bom-ref": "pipelinq@0.1.0|process-nextick-args@2.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/process-nextick-args@2.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/process-nextick-args/-/process-nextick-args-2.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "de8b943a9421b60adb39ad7b27bfaec4e4e92136166863fbfc0868477f80fbfd5ef6c92bcde9468bf757cc4632bdbc6e6c417a5a7db2a6c7132a22891459f56a"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/process-nextick-args"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "process",
-      "version": "0.11.10",
-      "bom-ref": "pipelinq@0.1.0|process@0.11.10",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/process@0.11.10",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/process/-/process-0.11.10.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "71d19e7ff76b585a32743d49b0ccee15ff35d349d997e193fb269c7366c471e7797fd463938cfe5ad1544c1bbd3e13a2f63fe37e604fbb498c118e3021d005f0"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/process"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "property-information",
       "version": "7.2.0",
       "bom-ref": "pipelinq@0.1.0|property-information@7.2.0",
@@ -23318,74 +20594,6 @@
     },
     {
       "type": "library",
-      "name": "public-encrypt",
-      "version": "4.0.3",
-      "bom-ref": "pipelinq@0.1.0|public-encrypt@4.0.3",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/public-encrypt@4.0.3",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/public-encrypt/-/public-encrypt-4.0.3.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "cd5a5af282994b3e5b4cc4c50a57357d03a7cb2133a65e68ce98b507961cbc1adda213231f6adfb01b725dcb8dbb08ec0c85e6058945d8de45949621476f6df1"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/public-encrypt"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "bn.js",
-          "version": "4.12.5",
-          "bom-ref": "pipelinq@0.1.0|public-encrypt@4.0.3|bn.js@4.12.5",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/bn.js@4.12.5",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/bn.js/-/bn.js-4.12.5.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "dda460ebf2717df7c50fe3a53a3385477568efd977f68a014c5b9cc71f8c4f77610adce7dc49a250f428fbafce66e2368db5e2dd82a09a24c50600a140cc0845"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/public-encrypt/node_modules/bn.js"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "punycode",
       "version": "2.3.1",
       "bom-ref": "pipelinq@0.1.0|punycode@2.3.1",
@@ -23499,39 +20707,6 @@
     },
     {
       "type": "library",
-      "name": "qs",
-      "version": "6.16.0",
-      "bom-ref": "pipelinq@0.1.0|qs@6.16.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "BSD-3-Clause"
-          }
-        }
-      ],
-      "purl": "pkg:npm/qs@6.16.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/qs/-/qs-6.16.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "87a7e1388691ac80f609b118d9faacfbbb7e517668f8c2c09d4e60448abce6e16d76250f09db00a4c947857a202953381ccd8355b22318d4d3607d8e7263f5bc"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/qs"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "quansync",
       "version": "0.2.11",
       "bom-ref": "pipelinq@0.1.0|quansync@0.2.11",
@@ -23560,32 +20735,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/quansync"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "querystring-es3",
-      "version": "0.2.1",
-      "bom-ref": "pipelinq@0.1.0|querystring-es3@0.2.1",
-      "purl": "pkg:npm/querystring-es3@0.2.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/querystring-es3/-/querystring-es3-0.2.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "efbdf1843427641305a1b122cedbfc2c897bd1c87931217f8d4415961c05c8120baaaf7a6a79a872d548633f99469d2a6c22804d39fa7afd36337afb19ae6fa8"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/querystring-es3"
         }
       ]
     },
@@ -23656,105 +20805,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/queue-microtask"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "randombytes",
-      "version": "2.1.0",
-      "bom-ref": "pipelinq@0.1.0|randombytes@2.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/randombytes@2.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/randombytes/-/randombytes-2.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "bd897788e5fee022945aec468bd5248627ba7eca97a92f4513665a89ce2d3450f637641069738c15bb8a2b84260c70b424ee81d59a78d49d0ba53d2847af1a99"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/randombytes"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "randomfill",
-      "version": "1.0.4",
-      "bom-ref": "pipelinq@0.1.0|randomfill@1.0.4",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/randomfill@1.0.4",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/randomfill/-/randomfill-1.0.4.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "f3b95c6d1f3e321716714890fbd7be470c7c3324763fbaa7b75e729d495b9b74d4fdf8db833e06b2f7d25034de9ad082b550aa6f865c1059723cd4e1f5b0532f"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/randomfill"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "readable-stream",
-      "version": "3.6.2",
-      "bom-ref": "pipelinq@0.1.0|readable-stream@3.6.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/readable-stream@3.6.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "f6efec9e20ab6370f959db04447cc71381b66025eaa06e454c7522082e1221bafa5dc2d9058d39c9af442a361e93d3b9c4e0308c6abed497460404bb43d49ca0"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/readable-stream"
         }
       ]
     },
@@ -24127,39 +21177,6 @@
     },
     {
       "type": "library",
-      "name": "resolve",
-      "version": "1.22.12",
-      "bom-ref": "pipelinq@0.1.0|resolve@1.22.12",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/resolve@1.22.12",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/resolve/-/resolve-1.22.12.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "4f2789d7389fe7704f7c7a28b411b03d1613d5152dea8196b1a42bf14c995bf7809bd6caa228edbebb920c49991e6f760b04bd9e3eff7d6b6da8f0a0cdea7c08"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/resolve"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "reusify",
       "version": "1.1.0",
       "bom-ref": "pipelinq@0.1.0|reusify@1.1.0",
@@ -24192,243 +21209,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/reusify"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "ripemd160",
-      "version": "2.0.3",
-      "bom-ref": "pipelinq@0.1.0|ripemd160@2.0.3",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/ripemd160@2.0.3",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/ripemd160/-/ripemd160-2.0.3.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "e438bd502d3ef21d4be990f677b6b033b13f4f8b80d5f251971eb393f36f74209512802716abc7982b8d7882a809e222c415ffabcb8cfbac9c0ef17cc28aa8b0"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/ripemd160"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "hash-base",
-          "version": "3.1.2",
-          "bom-ref": "pipelinq@0.1.0|ripemd160@2.0.3|hash-base@3.1.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/hash-base@3.1.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/hash-base/-/hash-base-3.1.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "05bdf729ba30553223e6ceca79dd4eb2a1d4782a73fffb4fc11f84db326024aa3d6795e8959f5be9b7548239989709d68683902a84ddd53613a191a7e660183a"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/ripemd160/node_modules/hash-base"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "readable-stream",
-          "version": "2.3.8",
-          "bom-ref": "pipelinq@0.1.0|ripemd160@2.0.3|readable-stream@2.3.8",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/readable-stream@2.3.8",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.8.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "f29d00524e173838087b04a2d25f04a63b3e1159d688aecda03204194d07844efe67263c0f520c63ba1dbb9951ac55c683bd4bd79286f10acf9ae9b8e514ed74"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/ripemd160/node_modules/readable-stream"
-            }
-          ],
-          "components": [
-            {
-              "type": "library",
-              "name": "safe-buffer",
-              "version": "5.1.2",
-              "bom-ref": "pipelinq@0.1.0|ripemd160@2.0.3|readable-stream@2.3.8|safe-buffer@5.1.2",
-              "licenses": [
-                {
-                  "license": {
-                    "id": "MIT"
-                  }
-                }
-              ],
-              "purl": "pkg:npm/safe-buffer@5.1.2",
-              "externalReferences": [
-                {
-                  "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
-                  "type": "distribution",
-                  "hashes": [
-                    {
-                      "alg": "SHA-512",
-                      "content": "19dd94641243917958ec66c9c5fb04f3f9ef2a45045351b7f1cd6c88de903fa6bd3d3f4c98707c1a7a6c71298c252a05f0b388aedf2e77fc0fb688f2b381bafa"
-                    }
-                  ],
-                  "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-                }
-              ],
-              "properties": [
-                {
-                  "name": "cdx:npm:package:path",
-                  "value": "node_modules/ripemd160/node_modules/readable-stream/node_modules/safe-buffer"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "isarray",
-          "version": "1.0.0",
-          "bom-ref": "pipelinq@0.1.0|ripemd160@2.0.3|isarray@1.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/isarray@1.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "54b82121634ce842d0ce8ef3c26720d0d99357258a623bc878cf37ca3a74c110d39949eb33aefc7d06dc281a3a9f6089105d2cce81bfff2b60f932a56bcf402d"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/ripemd160/node_modules/isarray"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "string_decoder",
-          "version": "1.1.1",
-          "bom-ref": "pipelinq@0.1.0|ripemd160@2.0.3|string_decoder@1.1.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/string_decoder@1.1.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.1.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "9ff4a19ef0e2e851db6d57ef8aba3e5a88e2173bfeb3c30f30705ccd578f7d4a4324bc282d3d21b759786300426e2f29240bde104767907c8fc933ff9b345fc2"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/ripemd160/node_modules/string_decoder"
-            }
-          ],
-          "components": [
-            {
-              "type": "library",
-              "name": "safe-buffer",
-              "version": "5.1.2",
-              "bom-ref": "pipelinq@0.1.0|ripemd160@2.0.3|string_decoder@1.1.1|safe-buffer@5.1.2",
-              "licenses": [
-                {
-                  "license": {
-                    "id": "MIT"
-                  }
-                }
-              ],
-              "purl": "pkg:npm/safe-buffer@5.1.2",
-              "externalReferences": [
-                {
-                  "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
-                  "type": "distribution",
-                  "hashes": [
-                    {
-                      "alg": "SHA-512",
-                      "content": "19dd94641243917958ec66c9c5fb04f3f9ef2a45045351b7f1cd6c88de903fa6bd3d3f4c98707c1a7a6c71298c252a05f0b388aedf2e77fc0fb688f2b381bafa"
-                    }
-                  ],
-                  "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-                }
-              ],
-              "properties": [
-                {
-                  "name": "cdx:npm:package:path",
-                  "value": "node_modules/ripemd160/node_modules/string_decoder/node_modules/safe-buffer"
-                }
-              ]
-            }
-          ]
         }
       ]
     },
@@ -24536,72 +21316,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/run-parallel"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "safe-buffer",
-      "version": "5.2.1",
-      "bom-ref": "pipelinq@0.1.0|safe-buffer@5.2.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/safe-buffer@5.2.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ae9dd2a34eca71d9a629b1af81a37141226bedb1954959394bd12ad45fa9a5b468ef4f9879a0f1930e4377c34f37e183e9b8e7626d95b8fb825e6a6e62f9825d"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/safe-buffer"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "safe-regex-test",
-      "version": "1.1.0",
-      "bom-ref": "pipelinq@0.1.0|safe-regex-test@1.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/safe-regex-test@1.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/safe-regex-test/-/safe-regex-test-1.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "c7ff82cf862b8a643141c7097f998a11b21ad4dcde091348e44725fde92695869a9a974d2cf6a557221c09934d1f732f9aa06e815e53318657bf4963b255256b"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/safe-regex-test"
         }
       ]
     },
@@ -24747,103 +21461,6 @@
     },
     {
       "type": "library",
-      "name": "set-function-length",
-      "version": "1.2.2",
-      "bom-ref": "pipelinq@0.1.0|set-function-length@1.2.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/set-function-length@1.2.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/set-function-length/-/set-function-length-1.2.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "a6045ce21278fec363582492f409a74b8d31ddb34c0d39271e02f951a3014ccc899d4f741205a1d51cfe302f5e16ee01b8dfd4c198ca42e63fd6fdeb33b1cc7e"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/set-function-length"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "setimmediate",
-      "version": "1.0.5",
-      "bom-ref": "pipelinq@0.1.0|setimmediate@1.0.5",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/setimmediate@1.0.5",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "3004c9759a7cb0ba8397febc2df4266cff3328f2d0355e81219a0882bb1c14343e46cbcafc1c5e0d03a0cb128aa21d32ffc87706a5459c2a90fe077eade8885c"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/setimmediate"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "sha.js",
-      "version": "2.4.12",
-      "bom-ref": "pipelinq@0.1.0|sha.js@2.4.12",
-      "licenses": [
-        {
-          "expression": "(MIT AND BSD-3-Clause)"
-        }
-      ],
-      "purl": "pkg:npm/sha.js@2.4.12",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/sha.js/-/sha.js-2.4.12.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "f0bcc2e7e6ef238e418e97d753c5797dd53699f78a8907b50f5808327ed752517739352ba5d2693cf1f810c0271740ec1c775266a09d4acb39a829892ae88edf"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/sha.js"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "shebang-command",
       "version": "2.0.0",
       "bom-ref": "pipelinq@0.1.0|shebang-command@2.0.0",
@@ -24913,138 +21530,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/shebang-regex"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "side-channel-list",
-      "version": "1.0.1",
-      "bom-ref": "pipelinq@0.1.0|side-channel-list@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/side-channel-list@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/side-channel-list/-/side-channel-list-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "9a39ffd1b8bfa145118dce5797b21a5a2fce24926e9aea0915025f0c3c8ee3afa1056b1f69533ae53047ab67a864187397d11c8713a28e991b442f12541414d3"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/side-channel-list"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "side-channel-map",
-      "version": "1.0.1",
-      "bom-ref": "pipelinq@0.1.0|side-channel-map@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/side-channel-map@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/side-channel-map/-/side-channel-map-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "5428c235f80cb1bcb7b53768d369db8ed33f7b0adaea33c79a94e17a7913621f291bdb9c67fd4ff12a38bb814605e93f063a4e56c0c23282c0fe2b8128815744"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/side-channel-map"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "side-channel-weakmap",
-      "version": "1.0.2",
-      "bom-ref": "pipelinq@0.1.0|side-channel-weakmap@1.0.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/side-channel-weakmap@1.0.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/side-channel-weakmap/-/side-channel-weakmap-1.0.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "58f4bf1ef1d04d89c78ac2e8f4c72a0473899361641cefed969be5772ae77a6e1a790a7885a8b7832b61b3083aa74d684a84e5e7cadca621408c5d9baf6024d8"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/side-channel-weakmap"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "side-channel",
-      "version": "1.1.1",
-      "bom-ref": "pipelinq@0.1.0|side-channel@1.1.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/side-channel@1.1.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/side-channel/-/side-channel-1.1.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "eb1e9d2bacc97694f3178b1078d631c2dbc1cdfe848381ad95eb12f781cebd3b9d51ec8ad965c06887e60e0b32b2562b441785225b22e78018b05194ba19afad"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/side-channel"
         }
       ]
     },
@@ -25362,105 +21847,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/splitpanes"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "stream-browserify",
-      "version": "3.0.0",
-      "bom-ref": "pipelinq@0.1.0|stream-browserify@3.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/stream-browserify@3.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/stream-browserify/-/stream-browserify-3.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "1fbdd1007b1505aa5b8a6d2d536270c0e897523f9f8a47e26a86002871775497c0d297b6042ce48401c194b1ba444cc4fb658d65cc4e5e32bb964b28fbd7ae2c"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/stream-browserify"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "stream-http",
-      "version": "3.2.0",
-      "bom-ref": "pipelinq@0.1.0|stream-http@3.2.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/stream-http@3.2.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/stream-http/-/stream-http-3.2.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "3aad5b2ea8ac4f22b74d2097a4f6d3e2c75e60d766c9926fd4bc69126dafbb56612bcf64484e585f065cddc5a4d0c6a019a2ab88187d98215b546b4efaf636f4"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/stream-http"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "string_decoder",
-      "version": "1.3.0",
-      "bom-ref": "pipelinq@0.1.0|string_decoder@1.3.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/string_decoder@1.3.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.3.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "864457f14d568c915df0bb03276c90ff0596c5aa2912c0015355df90cf00fa3d3ef392401a9a6dd7a72bd56860e8a21b6f8a2453a32a97a04e8febaea7fc0a78"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/string_decoder"
         }
       ]
     },
@@ -26258,39 +22644,6 @@
     },
     {
       "type": "library",
-      "name": "supports-preserve-symlinks-flag",
-      "version": "1.0.0",
-      "bom-ref": "pipelinq@0.1.0|supports-preserve-symlinks-flag@1.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/supports-preserve-symlinks-flag@1.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "a2dd169d74bd7e076480871e3dee911cd935580f3e9ae3dae9c4a3791dd5f0adbbabd041d6b4c4dd1d69ec7bf4cf567201cf2ce95beff0323259febcd4c02dd3"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/supports-preserve-symlinks-flag"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "svg-tags",
       "version": "1.0.0",
       "bom-ref": "pipelinq@0.1.0|svg-tags@1.0.0",
@@ -26654,39 +23007,6 @@
     },
     {
       "type": "library",
-      "name": "timers-browserify",
-      "version": "2.0.12",
-      "bom-ref": "pipelinq@0.1.0|timers-browserify@2.0.12",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/timers-browserify@2.0.12",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/timers-browserify/-/timers-browserify-2.0.12.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "f69865efa0aa9ba161497f577b565400c2ed9b504b90a8f641de40a725a45f3b0c45a03b760afcd647f8c099907ff840be0f041322710e8dddbbfd0a9613e229"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/timers-browserify"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "tinyglobby",
       "version": "0.2.17",
       "bom-ref": "pipelinq@0.1.0|tinyglobby@0.2.17",
@@ -26715,39 +23035,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/tinyglobby"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "to-buffer",
-      "version": "1.2.2",
-      "bom-ref": "pipelinq@0.1.0|to-buffer@1.2.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/to-buffer@1.2.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/to-buffer/-/to-buffer-1.2.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "75bd04dd42637058690e1005e2d2e8d37a258b7a7097775b9f35ce5089512aba7e95d93f554c73a5661910db30d92662b818c7024ec37c1d1553b34a7696fab3"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/to-buffer"
         }
       ]
     },
@@ -26997,39 +23284,6 @@
     },
     {
       "type": "library",
-      "name": "tty-browserify",
-      "version": "0.0.1",
-      "bom-ref": "pipelinq@0.1.0|tty-browserify@0.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/tty-browserify@0.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/tty-browserify/-/tty-browserify-0.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "0b74da3bb2bcd58be30a0407f50d52dd1dcfdc1b4ddd120cf27f8ebd7e229752b5ce013c661234a29ee40a5824c6dbad204f2142b72b1c15ef2217aa294502c7"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/tty-browserify"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "type-check",
       "version": "0.4.0",
       "bom-ref": "pipelinq@0.1.0|type-check@0.4.0",
@@ -27062,70 +23316,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/type-check"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "type-fest",
-      "version": "4.41.0",
-      "bom-ref": "pipelinq@0.1.0|type-fest@4.41.0",
-      "licenses": [
-        {
-          "expression": "(MIT OR CC0-1.0)"
-        }
-      ],
-      "purl": "pkg:npm/type-fest@4.41.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/type-fest/-/type-fest-4.41.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "4de4d243a1f9607be9a95c0145c9cb0c20670ce1d662eec8bc66c74fa37c00eca672bf4f2468dcd464ed896653620d0d0a0630be761612454285002bf5b8dfc0"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/type-fest"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "typed-array-buffer",
-      "version": "1.0.3",
-      "bom-ref": "pipelinq@0.1.0|typed-array-buffer@1.0.3",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/typed-array-buffer@1.0.3",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/typed-array-buffer/-/typed-array-buffer-1.0.3.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "9c0618c1f637aa7cd7df422403a01066355bb4ae9db86a27b5c426d56486d4c0fde182ea2b4e75e46340a57928c4a39632eb15b2c00758b87d49e6a879f6051b"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/typed-array-buffer"
         }
       ]
     },
@@ -27778,74 +23968,6 @@
     },
     {
       "type": "library",
-      "name": "url",
-      "version": "0.11.4",
-      "bom-ref": "pipelinq@0.1.0|url@0.11.4",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/url@0.11.4",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/url/-/url-0.11.4.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "a02c1d542ee64ee5a23f28cb533fc23b3e532e4eb0829d110ac37ec076761249de69cf70f2eb95d278dc6db89ed8c13e56cf9de9dbb0998b91dc78105ecd5f3a"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/url"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "punycode",
-          "version": "1.4.1",
-          "bom-ref": "pipelinq@0.1.0|url@0.11.4|punycode@1.4.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/punycode@1.4.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/punycode/-/punycode-1.4.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "8e660d1255bbcaf3bb4d5df70a34a6bd2884db2728ddb576733bbf3b30ca74c35565059fc426e55112e17fee3bb32411067b637cb75dfc7d1e82bcc81bea1a15"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/url/node_modules/punycode"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "util-deprecate",
       "version": "1.0.2",
       "bom-ref": "pipelinq@0.1.0|util-deprecate@1.0.2",
@@ -27872,41 +23994,12 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/util-deprecate"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "util",
-      "version": "0.12.5",
-      "bom-ref": "pipelinq@0.1.0|util@0.12.5",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/util@0.12.5",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/util/-/util-0.12.5.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "9197ff2ba84422b58723a5ea38552288c6beefdc04fc3f10f8d08d0167259328376f877693bb344067a936388005cf9a4773753c0c872fba7a51c2d8e8b9ab9c"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/util"
         }
       ]
     },
@@ -28050,39 +24143,6 @@
               "value": "node_modules/vite/node_modules/fsevents"
             }
           ]
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "vm-browserify",
-      "version": "1.1.2",
-      "bom-ref": "pipelinq@0.1.0|vm-browserify@1.1.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/vm-browserify@1.1.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/vm-browserify/-/vm-browserify-1.1.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "da16a6f173d64ce35a8ce474a2138a3875e49b7fa0681986baddd246ebbbe712ddfd145a63abea821f0d058624efe456deee40b733d0646f05d742c7925d2501"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/vm-browserify"
         }
       ]
     },
@@ -28880,39 +24940,6 @@
     },
     {
       "type": "library",
-      "name": "which-typed-array",
-      "version": "1.1.22",
-      "bom-ref": "pipelinq@0.1.0|which-typed-array@1.1.22",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/which-typed-array@1.1.22",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/which-typed-array/-/which-typed-array-1.1.22.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "7ef3b813158c16cab2846dc088f00e6ccb98d65c5aaa061cc5b738f4235d5830c408e24d810cafb0e595c1b65cfaa7f7af346dc688c12be08c12fd0b779098a7"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/which-typed-array"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "which",
       "version": "2.0.2",
       "bom-ref": "pipelinq@0.1.0|which@2.0.2",
@@ -29094,39 +25121,6 @@
     },
     {
       "type": "library",
-      "name": "xtend",
-      "version": "4.0.2",
-      "bom-ref": "pipelinq@0.1.0|xtend@4.0.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/xtend@4.0.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/xtend/-/xtend-4.0.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "2ca614d620172575200179fd5118e2bbe3168725171ecbdfa7b99cb989bd75250a2b4fc28edad4c050310fcdbf98259bb4bb068c521a774c08b28778ceb4c011"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/xtend"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "yocto-queue",
       "version": "0.1.0",
       "bom-ref": "pipelinq@0.1.0|yocto-queue@0.1.0",
@@ -29152,6 +25146,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/yocto-queue"
