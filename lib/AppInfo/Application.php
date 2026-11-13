@@ -53,6 +53,7 @@ use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
+use OCA\Pipelinq\Listener\ClientMergeReferenceListener;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
@@ -692,6 +693,11 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
 			listener: ObjectsMergedSyncListener::class
+		);
+		// Before the stamp listener: a reversal reads the moved rows before the stamp is cleared.
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
+			listener: ClientMergeReferenceListener::class
 		);
 		$context->registerEventListener(
 			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
