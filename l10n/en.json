@@ -9558,6 +9558,12 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Lead cap per 30 days": "Lead cap per 30 days",
+        "The most leads this colleague receives through automatic assignment in 30 days. Empty means no cap.": "The most leads this colleague receives through automatic assignment in 30 days. Empty means no cap.",
+        "Pause lead assignment": "Pause lead assignment",
+        "While on, this colleague receives no leads through automatic assignment.": "While on, this colleague receives no leads through automatic assignment.",
+        "Assignment reason": "Assignment reason",
+        "Why automatic assignment gave this lead to its owner, or why it found nobody.": "Why automatic assignment gave this lead to its owner, or why it found nobody."
     }
 }

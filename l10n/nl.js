@@ -9486,7 +9486,13 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "Lead cap per 30 days": "Leadlimiet per 30 dagen",
+        "The most leads this colleague receives through automatic assignment in 30 days. Empty means no cap.": "Het hoogste aantal leads dat deze collega in 30 dagen via automatische toewijzing krijgt. Leeg betekent geen limiet.",
+        "Pause lead assignment": "Leadtoewijzing pauzeren",
+        "While on, this colleague receives no leads through automatic assignment.": "Zolang dit aan staat, krijgt deze collega geen leads via automatische toewijzing.",
+        "Assignment reason": "Reden van toewijzing",
+        "Why automatic assignment gave this lead to its owner, or why it found nobody.": "Waarom automatische toewijzing deze lead aan de eigenaar gaf, of waarom er niemand werd gevonden."
     },
     "nplurals=2; plural=(n != 1);"
 )
