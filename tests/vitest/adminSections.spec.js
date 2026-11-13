@@ -101,6 +101,7 @@ describe('the declared admin sections', () => {
 			shillinq: 'isAdmin && shillinqInstalled',
 			marketingIntel: 'isAdmin',
 			brpMonitor: 'isAdmin',
+			posRefunds: 'isAdmin',
 		}
 		expect(Object.keys(guards).sort()).toEqual(Object.keys(sections).sort())
 		for (const [id, guard] of Object.entries(guards)) {

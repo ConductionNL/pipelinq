@@ -2414,10 +2414,7 @@
                   "pending"
                 ],
                 "to": "completed",
-                "description": "Confirm a pending refund (emits reversal + stock events). Authorization: a POS manager or admin only. The cumulative over-refund cap is enforced and amounts are recomputed server-side.",
-                "authorization": [
-                  "pos_managers"
-                ],
+                "description": "Confirm a pending refund (emits reversal + stock events). Authorization lives in PosRefundManagerGuard: a POS manager or admin, or a till user who may act on the original transaction when the refund is at or below the configured refund limit (pos-refund-limit). The cumulative over-refund cap is enforced and amounts are recomputed server-side.",
                 "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard"
               },
               "reject": {

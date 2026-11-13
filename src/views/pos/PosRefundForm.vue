@@ -136,7 +136,7 @@
 
 				<CnDetailCard :title="t('pipelinq', 'After saving')">
 					<p class="pos-refund-form__text">
-						{{ t('pipelinq', 'The refund waits for confirmation. A manager confirms or rejects it.') }}
+						{{ approvalText }}
 					</p>
 					<div class="pos-refund-form__outcomes">
 						<span class="pos-refund-form__outcome">
@@ -181,8 +181,10 @@ import Check from 'vue-material-design-icons/Check.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import { collectionRows } from '../../services/collectionRows.js'
 import { formatDate } from '../../services/localeUtils.js'
+import { refundApprover, refundLimitFrom } from '../../services/posRefundLimit.js'
 import { computeRefundTotals, formatEur, refundLineAmounts } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 
 const TENDER_LABELS = {
 	cash: 'Cash',
@@ -468,6 +470,24 @@ export default {
 				.map((c) => ({ ...c, ...refundLineAmounts(this.originalLineFor(c.originalLine), c.returnedQuantity) }))
 		},
 
+		/**
+		 * Who confirms this refund, said before saving: a manager, or the till
+		 * user when the refund is at or below the refund limit (pos-refund-limit).
+		 *
+		 * @return {string} The sentence.
+		 */
+		approvalText() {
+			const limit = refundLimitFrom(useSettingsStore().getConfig)
+			const approver = refundApprover(computeRefundTotals(this.selectedLines).total, limit)
+			if (approver === 'tillUser') {
+				return t('pipelinq', 'The refund waits for confirmation. It is at or below the refund limit of {limit}, so you can confirm it yourself.', { limit: formatEur(limit) })
+			}
+			if (approver === 'aboveLimit') {
+				return t('pipelinq', 'The refund waits for confirmation. It is above the refund limit of {limit}, so a manager confirms or rejects it.', { limit: formatEur(limit) })
+			}
+			return t('pipelinq', 'The refund waits for confirmation. A manager confirms or rejects it.')
+		},
+
 		totalItems() {
 			const totals = computeRefundTotals(this.selectedLines)
 			const rates = [...new Set(this.selectedLines.map((c) => this.originalLineFor(c.originalLine).taxRate).filter((r) => r !== undefined && r !== null && r !== ''))]
@@ -499,6 +519,11 @@ export default {
 
 	async mounted() {
 		this.loading = true
+		const settings = useSettingsStore()
+		if (!settings.getConfig) {
+			// Only for the refund limit sentence; a failed read keeps the manager wording.
+			settings.fetchSettings().catch(() => {})
+		}
 		try {
 			await this.loadTransactions()
 			await this.loadReasons()

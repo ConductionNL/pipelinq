@@ -1,9 +1,9 @@
 ## 1. Build
 
-- [ ] 1.1 A refund limit setting (euros, empty by default) in the POS admin settings, read through the settings service.
-- [ ] 1.2 `lib/Lifecycle/PosRefundManagerGuard.php` allows refund and complete at or below the limit for a till user with access to the transaction; above it the manager rule stays (REQ-PLG-007).
-- [ ] 1.3 The refund screen says when a refund needs a manager.
-- [ ] 1.4 Unit tests in `tests/Unit/Lifecycle/` for below, above and no limit, with the over-refund cap still enforced.
+- [x] 1.1 A refund limit setting (euros, empty by default) in the POS admin settings, read through the settings service.
+- [x] 1.2 `lib/Lifecycle/PosRefundManagerGuard.php` allows refund and complete at or below the limit for a till user with access to the transaction; above it the manager rule stays (REQ-PLG-007).
+- [x] 1.3 The refund screen says when a refund needs a manager.
+- [x] 1.4 Unit tests in `tests/Unit/Lifecycle/` for below, above and no limit, with the over-refund cap still enforced.
 
 ## 2. Hand-over
 

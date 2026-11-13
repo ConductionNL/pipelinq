@@ -9486,7 +9486,13 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "The refund waits for confirmation. It is at or below the refund limit of {limit}, so you can confirm it yourself.": "De retour wacht op bevestiging. Hij valt binnen de retourlimiet van {limit}, dus je kunt hem zelf bevestigen.",
+        "The refund waits for confirmation. It is above the refund limit of {limit}, so a manager confirms or rejects it.": "De retour wacht op bevestiging. Hij ligt boven de retourlimiet van {limit}, dus een beheerder bevestigt of weigert hem.",
+        "A refund at or below this amount can be completed by any till user who may act on the receipt. Above it, or with no amount set, a POS manager completes the refund.": "Een retour tot en met dit bedrag kan elke kassamedewerker die de kassabon mag behandelen zelf afronden. Daarboven, of zonder bedrag, rondt een kassabeheerder de retour af.",
+        "Save refund settings": "Retourinstellingen opslaan",
+        "Refund limit (euros)": "Retourlimiet (euro)",
+        "Leave empty to have a manager complete every refund.": "Laat leeg om elke retour door een beheerder te laten afronden."
     },
     "nplurals=2; plural=(n != 1);"
 )

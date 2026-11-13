@@ -272,6 +272,9 @@ class SettingsService {
 		'pos_eod.z_report_time' => '23:59',
 		'pos_eod.alert_email' => '',
 		'pos_eod.max_retry_attempts' => '5',
+		// POS refund limit in euros (pos-refund-limit, REQ-PLG-007): a refund at or
+		// below it needs no manager. Empty means every refund needs a manager.
+		'pos.refund_limit' => '',
 		// XWiki integration (xwiki-integration). The XWiki base URL is detected,
 		// never typed (IntegrationDetector, pipelinq-setup-wizard-review).
 		'xwiki_default_space' => '',
