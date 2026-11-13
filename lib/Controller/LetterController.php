@@ -30,10 +30,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\FilinqLetterAdapterInterface;
+use OCA\Pipelinq\Kernel\Contracts\LetterLogInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\CallerObjectReader;
-use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
-use OCA\Pipelinq\Service\Letter\LetterLog;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -56,18 +56,18 @@ class LetterController extends Controller
      * Constructor.
      *
      * @param IRequest                $request      The request.
-     * @param FilinqLetterAdapter     $letters      filinq's side of the letter.
-     * @param LetterLog               $log          Logs the letter as a contact moment.
+     * @param FilinqLetterAdapterInterface     $letters      filinq's side of the letter.
+     * @param LetterLogInterface               $log          Logs the letter as a contact moment.
      * @param IUserSession            $userSession  The acting user.
-     * @param CallerObjectReader      $reader       Reads the client, contact and ticket.
+     * @param CallerObjectReaderInterface      $reader       Reads the client, contact and ticket.
      * @param ObjectOwnerAccessPolicy $accessPolicy Who may act on a client.
      */
     public function __construct(
         IRequest $request,
-        private readonly FilinqLetterAdapter $letters,
-        private readonly LetterLog $log,
+        private readonly FilinqLetterAdapterInterface $letters,
+        private readonly LetterLogInterface $log,
         private readonly IUserSession $userSession,
-        private readonly CallerObjectReader $reader,
+        private readonly CallerObjectReaderInterface $reader,
         private readonly ObjectOwnerAccessPolicy $accessPolicy,
     ) {
         parent::__construct(appName: AppIdentity::APP_ID, request: $request);

@@ -28,9 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
-use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -52,7 +52,7 @@ class EventAttendanceController extends Controller {
 	 * @param IRequest                 $request       The request.
 	 * @param EventRegistrationServiceInterface $registrations The registrations.
 	 * @param EventEmailServiceInterface        $mails         Confirms a hand-added registration.
-	 * @param CallerObjectReader       $reader        Reads as the caller, so access rules apply.
+	 * @param CallerObjectReaderInterface       $reader        Reads as the caller, so access rules apply.
 	 * @param IUserSession             $userSession   The caller.
 	 *
 	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
@@ -61,7 +61,7 @@ class EventAttendanceController extends Controller {
 		IRequest $request,
 		private EventRegistrationServiceInterface $registrations,
 		private EventEmailServiceInterface $mails,
-		private CallerObjectReader $reader,
+		private CallerObjectReaderInterface $reader,
 		private IUserSession $userSession,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

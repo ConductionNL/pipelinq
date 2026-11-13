@@ -28,13 +28,13 @@ use OCA\Pipelinq\Dashboard\DashboardRegistrar;
 use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\RoadmapFeatureCatalogInterface;
+use OCA\Pipelinq\Kernel\Contracts\VatRatesInterface;
 use OCA\Pipelinq\Lifecycle\LifecycleRegistrar;
 use OCA\Pipelinq\Listener\ListenerRegistrar;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Notification\NotificationRegistrar;
-use OCA\Pipelinq\Service\RoadmapFeatureCatalog;
 use OCA\Pipelinq\Service\ServiceRegistrar;
-use OCA\Pipelinq\Service\VatRates;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -284,7 +284,7 @@ class Application extends App implements IBootstrap {
 
 		try {
 			$initialState = $this->getContainer()->get(IInitialState::class);
-			$roadmap = $this->getContainer()->get(RoadmapFeatureCatalog::class);
+			$roadmap = $this->getContainer()->get(RoadmapFeatureCatalogInterface::class);
 			$initialState->provideInitialState('features_roadmap_features', $roadmap->load());
 			$initialState->provideInitialState('features_roadmap_categories', $roadmap->categories());
 
@@ -301,7 +301,7 @@ class Application extends App implements IBootstrap {
 				'config',
 				[
 					'currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR'),
-					'vat_rates' => (new VatRates(appConfig: $appConfig))->rates(),
+					'vat_rates' => $this->getContainer()->get(VatRatesInterface::class)->rates(),
 					'pipelineTarget' => $appConfig->getValueInt(self::APP_ID, ForecastServiceInterface::PIPELINE_TARGET_KEY, 0),
 				]
 			);
