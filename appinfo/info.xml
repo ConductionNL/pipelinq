@@ -118,6 +118,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\CtiEventLogCleanupJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BlastSendJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ReminderDispatchJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\EventReminderJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SurveyInvitationDispatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvailabilityCacheRefreshJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob</job>

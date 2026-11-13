@@ -132,6 +132,11 @@ return [
         // Letters from a filinq template (work-letter-from-filinq-template).
         // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
         ['name' => 'eventReminder#send', 'url' => '/api/campaign-events/{id}/reminder', 'verb' => 'POST'],
+        // Registrations for a campaign event: add by hand, record who came, and the public cancel page (marketing-events).
+        ['name' => 'eventAttendance#add', 'url' => '/api/campaign-events/{id}/registrations', 'verb' => 'POST'],
+        ['name' => 'eventAttendance#attendance', 'url' => '/api/event-registrations/{id}/attendance', 'verb' => 'POST'],
+        ['name' => 'eventCancel#show', 'url' => '/events/cancel', 'verb' => 'GET'],
+        ['name' => 'eventCancel#cancel', 'url' => '/events/cancel', 'verb' => 'POST'],
         ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
         ['name' => 'record_document#template', 'url' => '/api/records/{schema}/document-template', 'verb' => 'GET'],
         ['name' => 'record_document#document', 'url' => '/api/records/{schema}/{id}/document', 'verb' => 'GET'],
