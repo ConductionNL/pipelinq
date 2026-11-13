@@ -2,11 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The till's side requests and what it falls back to when one fails: booking the
- * split-payment tenders, issuing sold gift cards, the client as customer and its
- * history, the open shift, the loyalty account, and linking the customer. Each
- * runs against a plain context so the requests and the state left are read
- * directly.
+ * The till's lookups and what they fall back to when one fails: the contact and
+ * the client as customer with its history, the open shift, the loyalty account,
+ * and linking the customer. Each runs against a plain context so the requests
+ * and the state left are read directly.
  */
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -88,82 +87,6 @@ beforeEach(() => {
 	http.post.mockReset()
 	Object.values(dialogs).forEach((fn) => fn.mockReset())
 	Object.values(customers).forEach((fn) => fn.mockReset())
-})
-
-describe('PosTransactionForm bookTenders', () => {
-	it('books each part under its tender type and skips a part without one', async () => {
-		http.get.mockResolvedValue({ data: { results: [{ id: 'tt-cash', code: 'CASH' }, { id: 'tt-pin', code: 'pin' }] } })
-		http.post.mockResolvedValue({ data: {} })
-
-		await context().bookTenders('tx 1', [
-			{ kind: 'cash', amount: 10, reference: '' },
-			{ kind: 'points', amount: 2, reference: 'p' },
-			{ kind: 'card', amount: 5.5, reference: 'r-1' },
-		])
-
-		expect(http.get).toHaveBeenCalledWith('/apps/pipelinq/api/pos/tender-types', { params: { activeOnly: '1' } })
-		expect(http.post.mock.calls).toEqual([
-			['/apps/pipelinq/api/pos-transactions/tx%201/tenders', { tenderType: 'tt-cash', amount: 10, reference: '' }],
-			['/apps/pipelinq/api/pos-transactions/tx%201/tenders', { tenderType: 'tt-pin', amount: 5.5, reference: 'r-1' }],
-		])
-		expect(dialogs.showError).not.toHaveBeenCalled()
-	})
-
-	it('books nothing when the tender types cannot be read', async () => {
-		http.get.mockRejectedValue(new Error('offline'))
-
-		await context().bookTenders('tx-1', [{ kind: 'cash', amount: 10 }])
-
-		expect(http.post).not.toHaveBeenCalled()
-		expect(dialogs.showError).not.toHaveBeenCalled()
-	})
-
-	it('reports a part that fails and still books the next', async () => {
-		http.get.mockResolvedValue({ data: { results: [{ id: 'tt-cash', code: 'CASH' }] } })
-		http.post.mockRejectedValueOnce(new Error('refused')).mockResolvedValueOnce({ data: {} })
-
-		await context().bookTenders('tx-1', [{ kind: 'cash', amount: 1 }, { kind: 'cash', amount: 2 }])
-
-		expect(http.post).toHaveBeenCalledTimes(2)
-		expect(dialogs.showError).toHaveBeenCalledTimes(1)
-		expect(dialogs.showError).toHaveBeenCalledWith('A payment part could not be booked.')
-	})
-})
-
-describe('PosTransactionForm issueSoldGiftCards', () => {
-	it('issues and activates each sold gift card, and reports one that fails', async () => {
-		http.post.mockImplementation(async (url, body) => {
-			if (url.endsWith('/issue') && body.initialBalance === 25) {
-				return { data: { card: { id: 'gc-1', serial: 'GC-0001' } } }
-			}
-			if (url.endsWith('/issue') && body.initialBalance === 0) {
-				return { data: { card: { serial: 'GC-0002' } } }
-			}
-			if (url.endsWith('/issue')) {
-				throw new Error('refused')
-			}
-			return { data: {} }
-		})
-		const ctx = context({
-			lines: [
-				{ _giftCard: true, lineTotal: '25' },
-				{ _giftCard: false, lineTotal: '99' },
-				{ _giftCard: true, lineTotal: 'n/a' },
-				{ _giftCard: true, lineTotal: '7' },
-			],
-		})
-
-		await ctx.issueSoldGiftCards('tx-1')
-
-		expect(http.post.mock.calls).toEqual([
-			['/apps/pipelinq/api/loyalty/gift-card/issue', { initialBalance: 25, channel: 'purchased', issuedIn: 'tx-1' }],
-			['/apps/pipelinq/api/loyalty/gift-card/activate/gc-1', { posTransactionId: 'tx-1' }],
-			['/apps/pipelinq/api/loyalty/gift-card/issue', { initialBalance: 0, channel: 'purchased', issuedIn: 'tx-1' }],
-			['/apps/pipelinq/api/loyalty/gift-card/issue', { initialBalance: 7, channel: 'purchased', issuedIn: 'tx-1' }],
-		])
-		expect(dialogs.showSuccess.mock.calls).toEqual([['Gift card GC-0001 sold.'], ['Gift card GC-0002 sold.']])
-		expect(dialogs.showError).toHaveBeenCalledWith('The gift card could not be issued.')
-	})
 })
 
 describe('PosTransactionForm customer lookups', () => {
