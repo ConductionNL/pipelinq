@@ -4786,6 +4786,8 @@
         "Recipients": "Ontvangers",
         "The Nextcloud users and groups a mailed report goes to.": "De Nextcloud-gebruikers en -groepen naar wie een gemaild rapport gaat.",
         "on this deal": "op deze deal",
+        "Relationship ended": "Relatie beëindigd",
+        "When the account status last moved to inactive. Set by the account status lifecycle and cleared when the client becomes active again; the client's retention term counts from it.": "Wanneer de accountstatus voor het laatst naar inactief ging. Wordt gezet door de levenscyclus van de accountstatus en gewist zodra de klant weer actief wordt; de bewaartermijn van de klant telt vanaf deze datum.",
         "per interval": "per termijn",
         "open": "open",
         "open opportunities": "open kansen",

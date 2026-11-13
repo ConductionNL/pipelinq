@@ -4756,6 +4756,8 @@ OC.L10N.register(
         "Recipients": "Recipients",
         "The Nextcloud users and groups a mailed report goes to.": "The Nextcloud users and groups a mailed report goes to.",
         "closed deals": "closed deals",
+        "Relationship ended": "Relationship ended",
+        "When the account status last moved to inactive. Set by the account status lifecycle and cleared when the client becomes active again; the client's retention term counts from it.": "When the account status last moved to inactive. Set by the account status lifecycle and cleared when the client becomes active again; the client's retention term counts from it.",
         "complete": "complete",
         "day overdue": "day overdue",
         "days overdue": "days overdue",
