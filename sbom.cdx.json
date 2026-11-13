@@ -2997,6 +2997,40 @@
     },
     {
       "type": "library",
+      "name": "nonrecursive-glob-match",
+      "group": "@isaacs",
+      "version": "1.1.0",
+      "bom-ref": "pipelinq@0.1.0|@isaacs/nonrecursive-glob-match@1.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40isaacs/nonrecursive-glob-match@1.1.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@isaacs/nonrecursive-glob-match/-/nonrecursive-glob-match-1.1.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "18f9bf0dbbe4e512e68519f15c86bb9d3a4ad31b65e04d308f432c96cb8d889d45211394fb6fbd960502fdd805ec4cb84025a17c4b20c6294c44c09d1cf7c37f"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@isaacs/nonrecursive-glob-match"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "gen-mapping",
       "group": "@jridgewell",
       "version": "0.3.13",
@@ -9446,10 +9480,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/balanced-match"
         }
@@ -9655,10 +9685,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/brace-expansion"
@@ -13204,8 +13230,8 @@
     {
       "type": "library",
       "name": "fast-uri",
-      "version": "3.1.8",
-      "bom-ref": "pipelinq@0.1.0|fast-uri@3.1.8",
+      "version": "3.1.9",
+      "bom-ref": "pipelinq@0.1.0|fast-uri@3.1.9",
       "licenses": [
         {
           "license": {
@@ -13213,15 +13239,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/fast-uri@3.1.8",
+      "purl": "pkg:npm/fast-uri@3.1.9",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.8.tgz",
+          "url": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.9.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "19932d6544cd4693952040a85f02cd652e7150613e99535b4c1f21ffb4708764c559c05088fcd3832662d39045f543192a42c9bfc5c14494e553bce0f3e65f32"
+              "content": "852ff45addd86b4e37a0a5ecd2c231acca4a4084d784c2c8ad500a2978b8828cc60bdbfb6115959d7219ce334f4ced3633d05dc4b096a8ad7245780dce257225"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -24694,24 +24720,24 @@
         {
           "type": "library",
           "name": "minimatch",
-          "version": "9.0.9",
-          "bom-ref": "pipelinq@0.1.0|webdav@5.10.0|minimatch@9.0.9",
+          "version": "11.0.8",
+          "bom-ref": "pipelinq@0.1.0|webdav@5.10.0|minimatch@11.0.8",
           "licenses": [
             {
               "license": {
-                "id": "ISC"
+                "id": "BlueOak-1.0.0"
               }
             }
           ],
-          "purl": "pkg:npm/minimatch@9.0.9",
+          "purl": "pkg:npm/minimatch@11.0.8",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/minimatch/-/minimatch-9.0.9.tgz",
+              "url": "https://registry.npmjs.org/minimatch/-/minimatch-11.0.8.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "381c0137d00be1daa61139694b6cdab31faf4de59c956ce46e57d993b2930398f78de38e373fed4429d9a26532bcd83cdf02f966ff52b3a1cc2570202fc47662"
+                  "content": "9c542e6124d5ac6bf2b15069b39221fb405d9d814dfc28f70bcd7aafafa9ef22be147ad52c61383b837d005c3292b94d96f3361d8b7e45a775522ae8ea1f3c22"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -24721,72 +24747,6 @@
             {
               "name": "cdx:npm:package:path",
               "value": "node_modules/webdav/node_modules/minimatch"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "brace-expansion",
-          "version": "2.1.7",
-          "bom-ref": "pipelinq@0.1.0|webdav@5.10.0|brace-expansion@2.1.7",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/brace-expansion@2.1.7",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.1.7.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b996dec3536a7663c34cc27c6a1d72f9bfbd40426b7e45c593745c4d0c375f48d6ff1454bc52ac83509f41d49819d4db5d9584c6d53727771cc6d9dfc35162d2"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/webdav/node_modules/brace-expansion"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "balanced-match",
-          "version": "1.0.2",
-          "bom-ref": "pipelinq@0.1.0|webdav@5.10.0|balanced-match@1.0.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/balanced-match@1.0.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "de849e50ed13315ebb84dd4099b5ec2b8c9aa94eed8e21e56f144364ea47d0a5bdf82797e1b440697d009f1b74b71d8cae94695b041a3f02252121098585393f"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/webdav/node_modules/balanced-match"
             }
           ]
         }

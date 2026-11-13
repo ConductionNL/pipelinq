@@ -39,7 +39,10 @@
     "dompurify": "$dompurify",
     "follow-redirects": "^1.16.1",
     "pbkdf2": "^3.1.7",
-    "source-map-js": "^1.2.2"
+    "source-map-js": "^1.2.2",
+    "webdav": {
+      "minimatch": "^11.0.1"
+    }
   },
   "dependencies": {
     "@conduction/nextcloud-vue": "^2.180.0",
