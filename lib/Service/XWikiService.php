@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\XWikiServiceInterface;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -47,7 +48,7 @@ use Throwable;
  *  API with discovery, caching, XML parsing and sanitisation kept together as one
  *  cohesive read path
  */
-class XWikiService {
+class XWikiService implements XWikiServiceInterface {
 	/**
 	 * Default cache TTL (seconds) when admin has not configured a value.
 	 *

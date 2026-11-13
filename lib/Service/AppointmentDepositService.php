@@ -38,6 +38,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -63,7 +64,7 @@ use Throwable;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class AppointmentDepositService {
+class AppointmentDepositService implements AppointmentDepositServiceInterface {
 	use NullablePayloadToArray;
 
 	/**
@@ -76,16 +77,6 @@ class AppointmentDepositService {
 	 * @var string
 	 */
 	public const PAYMENT_SOURCE_KEY = 'appointment_payment_source';
-
-	/**
-	 * App-config key for the openconnector webhook shared secret.
-	 *
-	 * Used by {@see AppointmentPaymentWebhookController} to verify
-	 * inbound payment callbacks (HMAC-SHA256 over the raw body).
-	 *
-	 * @var string
-	 */
-	public const WEBHOOK_SECRET_KEY = 'appointment_payment_webhook_secret';
 
 	/**
 	 * Deposit-hold window in seconds (15 minutes per REQ-APT-010 S2).

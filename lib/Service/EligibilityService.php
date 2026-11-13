@@ -27,12 +27,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EligibilityServiceInterface;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Resolve which Resources are eligible to perform a Service.
@@ -54,7 +55,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class EligibilityService {
+class EligibilityService implements EligibilityServiceInterface {
 	use NullablePayloadToArray;
 	use RowIdOf;
 

@@ -28,7 +28,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\SnapshotGenerationService;
+use OCA\Pipelinq\Kernel\Contracts\SnapshotGenerationServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -78,13 +78,13 @@ class ForecastSnapshotJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param SnapshotGenerationService $generationService The snapshot generation service.
+	 * @param SnapshotGenerationServiceInterface $generationService The snapshot generation service.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private SnapshotGenerationService $generationService,
+		private SnapshotGenerationServiceInterface $generationService,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 	) {

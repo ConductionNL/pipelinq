@@ -26,9 +26,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyReportingServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\LoyaltyReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -49,12 +49,12 @@ class LoyaltyReportingController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param LoyaltyReportingService $reportingService The reporting service.
+	 * @param LoyaltyReportingServiceInterface $reportingService The reporting service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
-		private LoyaltyReportingService $reportingService,
+		private LoyaltyReportingServiceInterface $reportingService,
 		private CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

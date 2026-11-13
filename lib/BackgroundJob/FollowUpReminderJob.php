@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\NotificationService;
+use OCA\Pipelinq\Kernel\Contracts\NotificationServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -125,7 +125,7 @@ class FollowUpReminderJob extends TimedJob {
 	 *
 	 * @param ITimeFactory        $time                The time factory.
 	 * @param IAppConfig          $appConfig           The app config.
-	 * @param NotificationService $notificationService The notification service.
+	 * @param NotificationServiceInterface $notificationService The notification service.
 	 * @param ContainerInterface  $container           The container, to reach OpenRegister optionally.
 	 * @param IGroupManager       $groupManager        The group manager, for group assignees.
 	 * @param LoggerInterface     $logger              The logger.
@@ -133,7 +133,7 @@ class FollowUpReminderJob extends TimedJob {
 	public function __construct(
 		ITimeFactory $time,
 		private readonly IAppConfig $appConfig,
-		private readonly NotificationService $notificationService,
+		private readonly NotificationServiceInterface $notificationService,
 		private readonly ContainerInterface $container,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,

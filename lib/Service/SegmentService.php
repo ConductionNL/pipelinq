@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SegmentServiceInterface;
 use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -66,7 +67,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
  */
-class SegmentService {
+class SegmentService implements SegmentServiceInterface {
 	use PayloadToArray;
 
 	/**

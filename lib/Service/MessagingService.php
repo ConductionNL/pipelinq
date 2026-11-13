@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -51,7 +52,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive send-surface
  *  orchestration kept in small single-purpose methods.
  */
-class MessagingService {
+class MessagingService implements MessagingServiceInterface {
 	use PayloadToArray;
 
 	/**

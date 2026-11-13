@@ -29,8 +29,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\SmsAdapter;
-use OCA\Pipelinq\Service\WhatsAppAdapter;
+use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
+use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -66,8 +66,8 @@ class WebhookProcessorJob extends TimedJob {
 	 * @param ITimeFactory $time Time factory.
 	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig App config.
-	 * @param WhatsAppAdapter $whatsAppAdapter WhatsApp adapter.
-	 * @param SmsAdapter $smsAdapter SMS adapter.
+	 * @param WhatsAppAdapterInterface $whatsAppAdapter WhatsApp adapter.
+	 * @param SmsAdapterInterface $smsAdapter SMS adapter.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
@@ -76,8 +76,8 @@ class WebhookProcessorJob extends TimedJob {
 		ITimeFactory $time,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private WhatsAppAdapter $whatsAppAdapter,
-		private SmsAdapter $smsAdapter,
+		private WhatsAppAdapterInterface $whatsAppAdapter,
+		private SmsAdapterInterface $smsAdapter,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

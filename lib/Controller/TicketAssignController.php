@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -63,12 +63,12 @@ class TicketAssignController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest      $request     The request.
-	 * @param TicketService $tickets     Register and schema of the ticket supertype, and OpenRegister.
+	 * @param TicketServiceInterface $tickets     Register and schema of the ticket supertype, and OpenRegister.
 	 * @param IUserSession  $userSession The signed-in user.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly TicketService $tickets,
+		private readonly TicketServiceInterface $tickets,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

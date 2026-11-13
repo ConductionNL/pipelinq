@@ -48,6 +48,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ProgrammePortfolioServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -57,7 +58,7 @@ use Throwable;
  *
  * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
  */
-class ProgrammePortfolioService {
+class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 	/**
 	 * The app-config key holding the instance's default progress mode.
 	 *

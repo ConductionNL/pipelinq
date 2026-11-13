@@ -29,14 +29,15 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyReportingServiceInterface;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Read-only reporting service.
@@ -52,7 +53,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
  */
-class LoyaltyReportingService {
+class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	use OptionalPayloadToArray;
 
 	/**

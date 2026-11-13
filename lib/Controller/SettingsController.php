@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\SettingsService;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -56,7 +56,7 @@ class SettingsController extends Controller {
 	 * @param ContainerInterface $container The container.
 	 * @param IAppManager $appManager The app manager.
 	 * @param IGroupManager $groupManager The group manager.
-	 * @param SettingsService $settingsService The settings service.
+	 * @param SettingsServiceInterface $settingsService The settings service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
@@ -66,7 +66,7 @@ class SettingsController extends Controller {
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly IGroupManager $groupManager,
-		private SettingsService $settingsService,
+		private SettingsServiceInterface $settingsService,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,

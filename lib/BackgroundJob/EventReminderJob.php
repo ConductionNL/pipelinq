@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
+use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
 use OCA\Pipelinq\Service\Marketing\EventEmailService;
-use OCA\Pipelinq\Service\Marketing\EventRegistrationService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -66,7 +66,7 @@ class EventReminderJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory             $time          The clock.
-	 * @param EventRegistrationService $registrations The events and their registrations.
+	 * @param EventRegistrationServiceInterface $registrations The events and their registrations.
 	 * @param EventEmailService        $mails         Sends the reminder.
 	 * @param LoggerInterface          $logger        The logger.
 	 *
@@ -74,7 +74,7 @@ class EventReminderJob extends TimedJob {
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private EventRegistrationService $registrations,
+		private EventRegistrationServiceInterface $registrations,
 		private EventEmailService $mails,
 		private LoggerInterface $logger,
 	) {

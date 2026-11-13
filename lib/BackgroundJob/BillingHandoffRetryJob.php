@@ -41,7 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\TimeBillingHandoffService;
+use OCA\Pipelinq\Kernel\Contracts\TimeBillingHandoffServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -64,12 +64,12 @@ class BillingHandoffRetryJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param TimeBillingHandoffService $handoffService The billing handoff service.
+	 * @param TimeBillingHandoffServiceInterface $handoffService The billing handoff service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private TimeBillingHandoffService $handoffService,
+		private TimeBillingHandoffServiceInterface $handoffService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

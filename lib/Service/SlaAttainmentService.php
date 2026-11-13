@@ -30,6 +30,7 @@ use DateTimeInterface;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SlaAttainmentServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -49,7 +50,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Attainment aggregation is inherently branchy; split into small focused methods
  * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
-class SlaAttainmentService {
+class SlaAttainmentService implements SlaAttainmentServiceInterface {
 	public const VALID_BUCKETS = ['day', 'week', 'month', 'quarter'];
 
 	public const VALID_GROUPS = ['policy', 'customer', 'tier', 'team', 'target'];

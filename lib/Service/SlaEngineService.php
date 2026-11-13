@@ -37,6 +37,7 @@ use DateTimeInterface;
 use DateTimeZone;
 use Exception;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Service\Sla\SlaBreachEvent;
 use OCA\Pipelinq\Service\Sla\SlaEscalation;
 use OCA\Pipelinq\Service\Sla\SlaHeat;
@@ -68,7 +69,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods)           Outbound sms/whatsapp escalation legs add small single-purpose private helpers
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Policy + deadline + escalation logic, split into helpers, still one cohesive engine
  */
-class SlaEngineService {
+class SlaEngineService implements SlaEngineServiceInterface {
 	use EntityAccessorTrait;
 
 	public const STATUS_ON_TRACK = 'on-track';

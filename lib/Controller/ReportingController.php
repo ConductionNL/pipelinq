@@ -31,8 +31,8 @@ namespace OCA\Pipelinq\Controller;
 use DateInterval;
 use DateTimeImmutable;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ReportingServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -55,12 +55,12 @@ class ReportingController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ReportingService $reportingService The reporting service.
+	 * @param ReportingServiceInterface $reportingService The reporting service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ReportingService $reportingService,
+		private ReportingServiceInterface $reportingService,
 		private CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

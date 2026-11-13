@@ -49,7 +49,10 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -59,8 +62,6 @@ use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for the POS end-of-day pipeline + registry-mediated journal raise.
@@ -98,7 +99,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
-class PosBookkeepingService {
+class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	use CastingPayloadToArray;
 
 	/**

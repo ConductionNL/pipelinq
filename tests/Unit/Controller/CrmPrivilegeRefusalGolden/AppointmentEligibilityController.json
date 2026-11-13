@@ -34,7 +34,7 @@
                 ]
             },
             {
-                "EligibilityService::getMatchingResources": [
+                "EligibilityServiceInterface::getMatchingResources": [
                     "sample-id"
                 ]
             }
@@ -75,7 +75,7 @@
                 ]
             },
             {
-                "EligibilityService::matchingResourceCounts": []
+                "EligibilityServiceInterface::matchingResourceCounts": []
             }
         ]
     }

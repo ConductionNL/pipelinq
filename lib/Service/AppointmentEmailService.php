@@ -32,7 +32,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
@@ -40,7 +42,6 @@ use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * AppointmentEmailService — composes confirmation + reminder emails.
@@ -59,7 +60,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class AppointmentEmailService {
+class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	use NullablePayloadToArray;
 
 	/**

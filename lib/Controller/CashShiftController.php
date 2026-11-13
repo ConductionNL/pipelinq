@@ -31,7 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\CashShiftService;
+use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Service\CashShiftSummaryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -67,7 +67,7 @@ class CashShiftController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param CashShiftService $service The cash-shift service.
+	 * @param CashShiftServiceInterface $service The cash-shift service.
 	 * @param CashShiftSummaryService $summaries The cash-shift summary reader.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
@@ -75,7 +75,7 @@ class CashShiftController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private CashShiftService $service,
+		private CashShiftServiceInterface $service,
 		private CashShiftSummaryService $summaries,
 		private IUserSession $userSession,
 		private IL10N $l10n,

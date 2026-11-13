@@ -28,9 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SegmentServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ComplianceService;
-use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -49,17 +49,17 @@ class SegmentController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SegmentService $segmentService Segment service (member 02).
+	 * @param SegmentServiceInterface $segmentService Segment service (member 02).
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
-	 * @param ComplianceService $complianceService Consent per member, for a send.
+	 * @param ComplianceServiceInterface $complianceService Consent per member, for a send.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SegmentService $segmentService,
+		private readonly SegmentServiceInterface $segmentService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
-		private readonly ComplianceService $complianceService,
+		private readonly ComplianceServiceInterface $complianceService,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

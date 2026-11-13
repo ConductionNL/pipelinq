@@ -31,7 +31,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -42,7 +44,6 @@ use OCP\IL10N;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for receipt rendering, email delivery and thermal output.
@@ -60,7 +61,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/pos-receipt-engine/spec.md
  */
-class ReceiptDeliveryService {
+class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	use CastingPayloadToArray;
 
 	/**

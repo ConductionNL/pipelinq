@@ -29,16 +29,17 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
+use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\WhatsAppInbound;
 use OCA\Pipelinq\Service\Provider\WhatsAppMessage;
 use OCA\Pipelinq\Service\Provider\WhatsAppProviderAttempt;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendFailure;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
-use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateRequest;
+use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
 use OCA\Pipelinq\Util\PayloadToArray;
-use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -77,7 +78,7 @@ use Throwable;
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class WhatsAppAdapter {
+class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
 

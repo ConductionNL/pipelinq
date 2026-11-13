@@ -53,6 +53,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
@@ -82,7 +83,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
  */
-class PosTenderService {
+class PosTenderService implements PosTenderServiceInterface {
 	/**
 	 * Money comparison tolerance: floating-point amounts within this epsilon
 	 * are treated as exactly equal. €0.005 = half a cent; below the rounding

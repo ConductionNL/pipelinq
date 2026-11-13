@@ -24,11 +24,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
-use OCA\Pipelinq\Service\SettingsService;
-use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -78,7 +78,7 @@ class NotesController extends Controller {
 	 * @var array<string, string>
 	 */
 	private const OBJECT_TYPE_TO_TICKET_TYPE = [
-		'pipelinq_request' => TicketService::TYPE_REQUEST,
+		'pipelinq_request' => TicketServiceInterface::TYPE_REQUEST,
 	];
 
 	/**
@@ -92,8 +92,8 @@ class NotesController extends Controller {
 	 * @param LoggerInterface $logger The logger.
 	 * @param ContainerInterface $container The DI container.
 	 * @param IGroupManager $groupManager The group manager.
-	 * @param SettingsService $settingsService The settings service.
-	 * @param TicketService $ticketService The unified ticket resolver.
+	 * @param SettingsServiceInterface $settingsService The settings service.
+	 * @param TicketServiceInterface $ticketService The unified ticket resolver.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Nextcloud controllers are wired
 	 *  purely by constructor DI; every parameter is a collaborator the notes endpoint
@@ -108,8 +108,8 @@ class NotesController extends Controller {
 		private LoggerInterface $logger,
 		private ContainerInterface $container,
 		private IGroupManager $groupManager,
-		private SettingsService $settingsService,
-		private TicketService $ticketService,
+		private SettingsServiceInterface $settingsService,
+		private TicketServiceInterface $ticketService,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

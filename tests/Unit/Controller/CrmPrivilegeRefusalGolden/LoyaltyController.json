@@ -75,7 +75,7 @@
                 ]
             },
             {
-                "PointsLedgerService::getLedgerHistory": [
+                "PointsLedgerServiceInterface::getLedgerHistory": [
                     "sample-accountId"
                 ]
             }
@@ -116,7 +116,7 @@
                 ]
             },
             {
-                "RedemptionService::getValidRedemptionOptions": [
+                "RedemptionServiceInterface::getValidRedemptionOptions": [
                     "sample-accountId",
                     "sample-programmeId"
                 ]
@@ -156,7 +156,7 @@
                 ]
             },
             {
-                "RedemptionService::initiateRedemption": [
+                "RedemptionServiceInterface::initiateRedemption": [
                     "sample-accountId",
                     "sample-optionId"
                 ]
@@ -196,7 +196,7 @@
                 ]
             },
             {
-                "RedemptionService::validateCode": [
+                "RedemptionServiceInterface::validateCode": [
                     "sample-code"
                 ]
             }
@@ -237,7 +237,7 @@
                 ]
             },
             {
-                "RedemptionService::validateCode": [
+                "RedemptionServiceInterface::validateCode": [
                     "sample-code"
                 ]
             }
@@ -350,7 +350,7 @@
                 ]
             },
             {
-                "GiftCardService::activateGiftCard": [
+                "GiftCardServiceInterface::activateGiftCard": [
                     "sample-giftCardId"
                 ]
             }

@@ -40,8 +40,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ZgwApiClientInterface;
 use OCA\Pipelinq\Listener\NrcNotificationListener;
-use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
 use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -64,14 +64,14 @@ class ZgwNotificationController extends Controller {
 	 *
 	 * @param IRequest $request Request.
 	 * @param ZgwRegisterAccess $registers Register facade (NrcAbonnement lookup).
-	 * @param ZgwApiClient $api For vault-ref resolution on callbackAuth.
+	 * @param ZgwApiClientInterface $api For vault-ref resolution on callbackAuth.
 	 * @param NrcNotificationListener $listener Per-kanaal dispatcher.
 	 * @param LoggerInterface $logger PSR-3 logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private ZgwRegisterAccess $registers,
-		private ZgwApiClient $api,
+		private ZgwApiClientInterface $api,
 		private NrcNotificationListener $listener,
 		private LoggerInterface $logger,
 	) {

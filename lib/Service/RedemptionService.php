@@ -27,12 +27,13 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Redemption lifecycle service.
@@ -43,7 +44,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  redemption lifecycle (reserve/use/cancel/expire) across account + ledger
  *  services.
  */
-class RedemptionService {
+class RedemptionService implements RedemptionServiceInterface {
 	use PayloadToArray;
 
 	/**

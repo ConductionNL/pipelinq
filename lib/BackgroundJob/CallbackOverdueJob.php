@@ -22,7 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\NotificationService;
+use OCA\Pipelinq\Kernel\Contracts\NotificationServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -62,13 +62,13 @@ class CallbackOverdueJob extends TimedJob {
 	 *
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param NotificationService $notificationService The notification service.
+	 * @param NotificationServiceInterface $notificationService The notification service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
-		private NotificationService $notificationService,
+		private NotificationServiceInterface $notificationService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

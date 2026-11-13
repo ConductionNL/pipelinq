@@ -30,7 +30,7 @@ use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\AvailabilityService;
+use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -65,12 +65,12 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 	/**
 	 * Constructor.
 	 *
-	 * @param AvailabilityService $availability The availability engine that owns the cache.
+	 * @param AvailabilityServiceInterface $availability The availability engine that owns the cache.
 	 * @param IAppConfig $appConfig The app configuration (schema ids).
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 */
 	public function __construct(
-		private AvailabilityService $availability,
+		private AvailabilityServiceInterface $availability,
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
 	) {
@@ -175,8 +175,8 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 		}
 
 		$kinds = [
-			'resource' => AvailabilityService::RESOURCE_SCHEMA_KEY,
-			'service' => AvailabilityService::SERVICE_SCHEMA_KEY,
+			'resource' => AvailabilityServiceInterface::RESOURCE_SCHEMA_KEY,
+			'service' => AvailabilityServiceInterface::SERVICE_SCHEMA_KEY,
 		];
 		foreach ($kinds as $kind => $key) {
 			if ($this->appConfig->getValueString(AppIdentity::APP_ID, $key, '') === $schemaId) {

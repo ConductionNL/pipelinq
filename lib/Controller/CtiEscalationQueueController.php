@@ -27,8 +27,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\CtiService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -44,14 +44,14 @@ class CtiEscalationQueueController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                $request     The request.
-	 * @param CtiService              $ctiService  The CTI service.
+	 * @param CtiServiceInterface              $ctiService  The CTI service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		IRequest $request,
-		private CtiService $ctiService,
+		private CtiServiceInterface $ctiService,
 		private CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

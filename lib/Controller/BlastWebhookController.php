@@ -33,7 +33,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\BackgroundJob\BlastSendJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\WebhookProcessorService;
+use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -94,7 +94,7 @@ class BlastWebhookController extends Controller {
 	 * @param IRequest $request Request.
 	 * @param IAppConfig $appConfig App config — webhook secrets.
 	 * @param BlastSendJob $blastSendJob Queue tail (enqueueWebhookEvent).
-	 * @param WebhookProcessorService $webhookProcessor Synchronous fast-path helper.
+	 * @param WebhookProcessorServiceInterface $webhookProcessor Synchronous fast-path helper.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
@@ -103,7 +103,7 @@ class BlastWebhookController extends Controller {
 		IRequest $request,
 		private IAppConfig $appConfig,
 		private BlastSendJob $blastSendJob,
-		private WebhookProcessorService $webhookProcessor,
+		private WebhookProcessorServiceInterface $webhookProcessor,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

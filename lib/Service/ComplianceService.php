@@ -31,12 +31,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
 use OCA\Pipelinq\Service\Consent\ConsentWithdrawal;
-use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
-use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\Consent\SegmentConsentRun;
 use OCA\Pipelinq\Service\Consent\SendPermitRequest;
+use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -62,7 +63,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
  */
-class ComplianceService {
+class ComplianceService implements ComplianceServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -124,13 +125,6 @@ class ComplianceService {
 	 * @var string
 	 */
 	public const LAWFUL_BASIS_SOFT_OPT_IN = 'soft-opt-in';
-
-	/**
-	 * A send that promotes something. Suppression applies.
-	 *
-	 * @var string
-	 */
-	public const INTENT_PROMOTIONAL = 'promotional';
 
 	/**
 	 * A send the contact needs whatever their invoices say.

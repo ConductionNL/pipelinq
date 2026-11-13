@@ -27,7 +27,9 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\HaalCentraalClientInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
@@ -37,7 +39,6 @@ use OCA\Pipelinq\Service\BsnAudit\LookupResult;
 use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
 use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
-use OCA\Pipelinq\Service\HaalCentraalClient;
 use OCA\Pipelinq\Service\HaalCentraalException;
 use OCA\Pipelinq\Service\OptOutService;
 use OCA\Pipelinq\Service\PersonLookup\LookupLinks;
@@ -59,7 +60,6 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Controller for the BRP-lookup REST surface.
@@ -96,7 +96,7 @@ class BrpController extends Controller {
 	 * @param IAppConfig $appConfig App config.
 	 * @param BsnValidationService $validation 11-proef service.
 	 * @param BrpCacheService $cacheService BRP cache.
-	 * @param HaalCentraalClient $haalCentraal HaalCentraal client.
+	 * @param HaalCentraalClientInterface $haalCentraal HaalCentraal client.
 	 * @param BsnAuditService $audit Audit service.
 	 * @param OptOutService $optOut Opt-out service.
 	 * @param BrpMutationWebhookListener $webhookListener Webhook listener.
@@ -115,7 +115,7 @@ class BrpController extends Controller {
 		private IAppConfig $appConfig,
 		private BsnValidationService $validation,
 		private BrpCacheService $cacheService,
-		private HaalCentraalClient $haalCentraal,
+		private HaalCentraalClientInterface $haalCentraal,
 		private BsnAuditService $audit,
 		private OptOutService $optOut,
 		private BrpMutationWebhookListener $webhookListener,

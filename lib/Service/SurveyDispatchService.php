@@ -46,6 +46,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
@@ -56,7 +57,7 @@ use Throwable;
  *
  * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
  */
-class SurveyDispatchService {
+class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	/**
 	 * The app-config key holding the dispatch rules, as a JSON array.
 	 *

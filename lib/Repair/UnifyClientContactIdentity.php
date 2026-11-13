@@ -51,8 +51,8 @@ namespace OCA\Pipelinq\Repair;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Service\ContactVcardService;
-use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -89,7 +89,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ContactVcardService $contactVcardService The existing vCard sync service (reused, no new engine).
 	 * @param ContainerInterface $container The DI container (OR ObjectService + Contacts IManager).
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
@@ -97,7 +97,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 		private readonly IAppConfig $appConfig,
 		private readonly ContactVcardService $contactVcardService,
 		private readonly ContainerInterface $container,
-		private readonly TicketService $ticketService,
+		private readonly TicketServiceInterface $ticketService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -549,7 +549,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 			objectService: $objectService,
 			register: $register,
 			schema: $schema,
-			ticketType: TicketService::TYPE_CONTACTMOMENT
+			ticketType: TicketServiceInterface::TYPE_CONTACTMOMENT
 		);
 
 		$rekeyed = 0;

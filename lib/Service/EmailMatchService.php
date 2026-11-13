@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Service\EmailMessageRef;
 use OCA\OpenRegister\Service\LinkTarget;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EmailMatchServiceInterface;
 use OCA\Pipelinq\Util\AnyPayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
@@ -57,10 +58,9 @@ use Throwable;
  *
  * @spec openspec/specs/email-calendar-sync/spec.md
  */
-class EmailMatchService {
+class EmailMatchService implements EmailMatchServiceInterface {
 	use AnyPayloadToArray;
 	use RowIdOf;
-
 
 	/**
 	 * Public email-provider domains that should never trigger a

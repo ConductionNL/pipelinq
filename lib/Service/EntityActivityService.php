@@ -29,11 +29,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EntityActivityServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Builds the merged, paginated activity feed for an entity.
@@ -54,7 +55,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
  */
-class EntityActivityService {
+class EntityActivityService implements EntityActivityServiceInterface {
 	/**
 	 * Entity types the endpoint is allowed to expose. Anything outside this
 	 * list is rejected by the controller with a 400.

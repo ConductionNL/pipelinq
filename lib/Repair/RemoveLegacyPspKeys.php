@@ -41,7 +41,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\PosPaymentService;
+use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -87,8 +87,8 @@ class RemoveLegacyPspKeys implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		$removed = 0;
-		foreach (PosPaymentService::PROVIDERS as $provider) {
-			foreach (PosPaymentService::RETIRED_SECRET_FIELDS as $field) {
+		foreach (PosPaymentServiceInterface::PROVIDERS as $provider) {
+			foreach (PosPaymentServiceInterface::RETIRED_SECRET_FIELDS as $field) {
 				if ($this->removedKey(output: $output, retired: new RetiredPspKey(provider: $provider, field: $field)) === true) {
 					$removed++;
 				}

@@ -32,10 +32,10 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SemanticHandoffService;
-use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -110,7 +110,7 @@ class SemanticHandoffController extends Controller {
 	 * @param SemanticHandoffService $handoffService Kind resolution + emit wrapper.
 	 * @param ContainerInterface $container DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig App config (register/schema slugs).
-	 * @param TicketService $ticketService Unified ticket resolver.
+	 * @param TicketServiceInterface $ticketService Unified ticket resolver.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param LoggerInterface $logger Logger.
@@ -121,7 +121,7 @@ class SemanticHandoffController extends Controller {
 		private SemanticHandoffService $handoffService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private TicketService $ticketService,
+		private TicketServiceInterface $ticketService,
 		private CrmPrivilegeCheck $privilege,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private LoggerInterface $logger,
@@ -268,7 +268,7 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'invalid-case-type'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$request['ticketType'] = TicketService::TYPE_REQUEST;
+		$request['ticketType'] = TicketServiceInterface::TYPE_REQUEST;
 		$request['requestedCaseType'] = $caseType;
 		if ($this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request) === false) {
 			return new JSONResponse(['status' => 'handoff-failed', 'reason' => 'case-type-not-saved'], Http::STATUS_BAD_GATEWAY);
@@ -290,7 +290,7 @@ class SemanticHandoffController extends Controller {
 	private function closeConvertedRequest(string $id, array $request, array $result, bool $keepOpen): JSONResponse {
 		// Keep the discriminator pinned on the round-tripped payload so the
 		// write can never silently untype the ticket.
-		$request['ticketType'] = TicketService::TYPE_REQUEST;
+		$request['ticketType'] = TicketServiceInterface::TYPE_REQUEST;
 		if ($keepOpen === false) {
 			$request['status'] = 'converted';
 		}
@@ -456,7 +456,7 @@ class SemanticHandoffController extends Controller {
 			return null;
 		}
 
-		if ((string)($ticket['ticketType'] ?? '') !== TicketService::TYPE_REQUEST) {
+		if ((string)($ticket['ticketType'] ?? '') !== TicketServiceInterface::TYPE_REQUEST) {
 			return null;
 		}
 

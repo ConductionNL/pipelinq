@@ -32,6 +32,7 @@ use DateTimeZone;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WalkInQueueServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -59,7 +60,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class WalkInQueueService {
+class WalkInQueueService implements WalkInQueueServiceInterface {
 	use EntityIdOf;
 	use NullablePayloadToArray;
 

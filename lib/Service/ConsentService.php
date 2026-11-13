@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentSubject;
 use OCA\Pipelinq\Service\Consent\ConsentWish;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -58,7 +59,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The store's reads, writes, erasure, and the migration and replay into
  *   integriq (opt-out-before-send) read the same append-only log; splitting them would duplicate its ordering rules.
  */
-class ConsentService {
+class ConsentService implements ConsentServiceInterface {
 	use PayloadToArray;
 
 	/**

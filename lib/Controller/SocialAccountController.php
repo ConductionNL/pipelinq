@@ -41,9 +41,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SocialAccountServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ConnectionReportService;
-use OCA\Pipelinq\Service\SocialAccountService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -61,7 +61,7 @@ class SocialAccountController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SocialAccountService $accounts The account lifecycle.
+	 * @param SocialAccountServiceInterface $accounts The account lifecycle.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Privileged-group policy, for the list routes.
 	 * @param ConnectionReportService $connectionReports Reports each network's readiness to integriq's connection registry.
@@ -70,7 +70,7 @@ class SocialAccountController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SocialAccountService $accounts,
+		private readonly SocialAccountServiceInterface $accounts,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 		private readonly ConnectionReportService $connectionReports,
@@ -327,7 +327,7 @@ class SocialAccountController extends Controller {
 	 */
 	private function collectBody(): array {
 		$body = [];
-		foreach (SocialAccountService::CLIENT_WRITABLE as $key) {
+		foreach (SocialAccountServiceInterface::CLIENT_WRITABLE as $key) {
 			$value = $this->request->getParam($key);
 			if ($value !== null) {
 				$body[$key] = (string)$value;

@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\HaalCentraalClientInterface;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
@@ -46,7 +47,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) OR-first + legacy OAuth2/mTLS paths plus HAL normalisation live in one cohesive client.
  */
-class HaalCentraalClient {
+class HaalCentraalClient implements HaalCentraalClientInterface {
 	/**
 	 * Default base URL for the HaalCentraal Personen API.
 	 */

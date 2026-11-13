@@ -46,6 +46,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Zgw;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ZgwApiClientInterface;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -56,7 +57,7 @@ use Throwable;
  *
  * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
  */
-class ZgwApiClient {
+class ZgwApiClient implements ZgwApiClientInterface {
 	/**
 	 * Default request timeout in seconds. Tunable via the
 	 * `pipelinq.zgw.http_timeout` app config key.

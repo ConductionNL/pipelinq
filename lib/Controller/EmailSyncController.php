@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\EmailMatchService;
+use OCA\Pipelinq\Kernel\Contracts\EmailMatchServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -50,14 +50,14 @@ class EmailSyncController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param EmailMatchService $emailMatchService Matching service.
+	 * @param EmailMatchServiceInterface $emailMatchService Matching service.
 	 * @param IUserSession $userSession User session.
 	 * @param IL10N $l10n Localization service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private EmailMatchService $emailMatchService,
+		private EmailMatchServiceInterface $emailMatchService,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,

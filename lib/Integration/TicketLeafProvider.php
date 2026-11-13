@@ -31,7 +31,7 @@ namespace OCA\Pipelinq\Integration;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
@@ -58,7 +58,7 @@ class TicketLeafProvider {
 	 *
 	 * @var array<int, string>
 	 */
-	public const TICKET_TYPES = [TicketService::TYPE_REQUEST, TicketService::TYPE_COMPLAINT];
+	public const TICKET_TYPES = [TicketServiceInterface::TYPE_REQUEST, TicketServiceInterface::TYPE_COMPLAINT];
 
 	/**
 	 * The status filters a read may ask for: the open tickets, the closed

@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
 use OCA\Pipelinq\Service\TouchpointService;
 use OCP\AppFramework\Utility\ITimeFactory;
 
@@ -39,7 +40,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
  */
-class EventRegistrationService {
+class EventRegistrationService implements EventRegistrationServiceInterface {
 
 	/**
 	 * App-config key and default slug of the event schema.

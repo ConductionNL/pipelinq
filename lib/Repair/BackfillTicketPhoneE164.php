@@ -26,8 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Service\TicketPhoneNumber;
-use OCA\Pipelinq\Service\TicketService;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\Migration\IOutput;
@@ -53,13 +53,13 @@ class BackfillTicketPhoneE164 implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param TicketService     $ticketService Resolver for the unified `ticket` schema.
+	 * @param TicketServiceInterface     $ticketService Resolver for the unified `ticket` schema.
 	 * @param TicketPhoneNumber $phoneNumber   Reads and normalises a ticket's number.
 	 * @param IGroupManager     $groupManager  Resolves an admin to act as while saving.
 	 * @param LoggerInterface   $logger        PSR logger.
 	 */
 	public function __construct(
-		private readonly TicketService $ticketService,
+		private readonly TicketServiceInterface $ticketService,
 		private readonly TicketPhoneNumber $phoneNumber,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,

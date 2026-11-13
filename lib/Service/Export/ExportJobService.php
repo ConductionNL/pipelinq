@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Service\Export;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -47,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
-class ExportJobService extends AbstractExportService {
+class ExportJobService extends AbstractExportService implements ExportJobServiceInterface {
 	/**
 	 * The exportJob schema config key.
 	 *

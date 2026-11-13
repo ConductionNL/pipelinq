@@ -30,9 +30,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DemoSeedServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
-use OCA\Pipelinq\Service\DemoSeedService;
-use OCA\Pipelinq\Service\SettingsService;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -97,8 +97,8 @@ class SetupController extends Controller {
 	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
 	 * @param IAppConfig $appConfig App-config reader/writer.
-	 * @param SettingsService $settingsService Register/schema + default-data provisioning.
-	 * @param DemoSeedService $demoSeedService Optional demo-data seeding (same write path as occ).
+	 * @param SettingsServiceInterface $settingsService Register/schema + default-data provisioning.
+	 * @param DemoSeedServiceInterface $demoSeedService Optional demo-data seeding (same write path as occ).
 	 * @param IAppManager $appManager App installed/enabled lookup for integration detection.
 	 * @param LoggerInterface $logger Logger.
 	 * @param DemoRegisterImporter $registerImporter The example records descriptor, imported with the seed.
@@ -107,8 +107,8 @@ class SetupController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly IAppConfig $appConfig,
-		private readonly SettingsService $settingsService,
-		private readonly DemoSeedService $demoSeedService,
+		private readonly SettingsServiceInterface $settingsService,
+		private readonly DemoSeedServiceInterface $demoSeedService,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 		private readonly DemoRegisterImporter $registerImporter,
@@ -238,7 +238,7 @@ class SetupController extends Controller {
 	private function skipDemoData(): DataResponse {
 		// Skipping IS choosing "None", so both keys are written: an older
 		// runbook may read either one.
-		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedServiceInterface::NONE_DATASET);
 		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
 
 		return new DataResponse(
@@ -434,8 +434,8 @@ class SetupController extends Controller {
 			return new DataResponse(['success' => false, 'message' => 'Pick a dataset first.']);
 		}
 
-		if ($picked === DemoSeedService::NONE_DATASET) {
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
+		if ($picked === DemoSeedServiceInterface::NONE_DATASET) {
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedServiceInterface::NONE_DATASET);
 			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
 
 			return new DataResponse(['success' => true, 'message' => 'No example data was seeded.']);
@@ -465,7 +465,7 @@ class SetupController extends Controller {
 			// DEMO_DATA_DECIDED_KEY — an optional step the server can never
 			// report done covers the whole app with the setup wizard.
 			// Seeding IS choosing the set, so the pick is written too.
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedService::DEMO_DATASET);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedServiceInterface::DEMO_DATASET);
 			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
 
 			// The example records that used to ship inside the register descriptor.
