@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -156,6 +157,7 @@ class SegmentService {
 	 * @param ICacheFactory $cacheFactory NC cache factory.
 	 * @param LoggerInterface $logger Logger.
 	 * @param SegmentSignalService $signals The derived fields a rule may also use.
+	 * @param SegmentRuleTree $ruleTree Reads stored rules as one group tree and measures its depth.
 	 *
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
 	 */
@@ -166,6 +168,7 @@ class SegmentService {
 		private ICacheFactory $cacheFactory,
 		private LoggerInterface $logger,
 		private SegmentSignalService $signals,
+		private SegmentRuleTree $ruleTree = new SegmentRuleTree(),
 	) {
 	}//end __construct()
 
@@ -229,7 +232,18 @@ class SegmentService {
 		// stored one and would start reading a different value.
 		$properties = array_merge($this->signals->schemaProperties(), $properties);
 
-		return $this->validateNode(node: $rules, at: new SegmentRulePosition(path: '$', properties: $properties));
+		$tree = $this->ruleTree->normalise(rules: $rules);
+		if ($this->ruleTree->depth(node: $tree) > SegmentRuleTree::MAX_DEPTH) {
+			return sprintf('$: the rule tree is deeper than %d groups.', SegmentRuleTree::MAX_DEPTH);
+		}
+
+		// A lone condition reads as a group of one; it is checked where it stands,
+		// so its errors keep pointing at `$`.
+		if (($tree['children'] ?? null) === [$rules]) {
+			$tree = $rules;
+		}
+
+		return $this->validateNode(node: $tree, at: new SegmentRulePosition(path: '$', properties: $properties));
 	}//end validateRules()
 
 	/**
@@ -255,7 +269,7 @@ class SegmentService {
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
 	 */
 	public function evaluateRules(array $rules, array $entity): bool {
-		return $this->evaluateNode(node: $rules, entity: $entity);
+		return $this->evaluateNode(node: $this->ruleTree->normalise(rules: $rules), entity: $entity);
 	}//end evaluateRules()
 
 	/**
@@ -464,6 +478,8 @@ class SegmentService {
 			return ['error' => 'Invalid rule tree: ' . $error];
 		}
 
+		$rules = $this->ruleTree->normalise(rules: $rules);
+
 		return $this->persistSegment(payload: $payload, rules: $rules, entityType: $entityType, createdByUid: $createdByUid);
 	}//end createSegment()
 
@@ -513,6 +529,8 @@ class SegmentService {
 		if ($error !== null) {
 			return ['error' => 'Invalid rule tree: ' . $error];
 		}
+
+		$rules = $this->ruleTree->normalise(rules: $rules);
 
 		return $this->persistSegmentUpdate(
 			segmentId: $segmentId,
@@ -2463,11 +2481,11 @@ class SegmentService {
 	private function extractRules(array $segment): ?array {
 		$rules = ($segment['rules'] ?? null);
 		if (is_string($rules) === true && $rules !== '') {
-			return $this->decodedRules(json: $rules);
+			$rules = $this->decodedRules(json: $rules);
 		}
 
 		if (is_array($rules) === true) {
-			return $rules;
+			return $this->ruleTree->normalise(rules: $rules);
 		}
 
 		return null;
