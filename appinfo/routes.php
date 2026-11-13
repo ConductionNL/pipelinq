@@ -501,6 +501,11 @@ return [
         ['name' => 'bookingAdmin#sendReminder',   'url' => '/api/bookings/{id}/send-reminder',  'verb' => 'POST'],
         ['name' => 'bookingAdmin#confirmDeposit', 'url' => '/api/bookings/{id}/confirm-deposit', 'verb' => 'POST'],
 
+        // Which active, bookable resources match a service (REQ-SRG-002): one
+        // service, and the count per service for the services list.
+        ['name' => 'appointmentEligibility#eligibleResourceCounts', 'url' => '/api/appointment-services/eligible-resources', 'verb' => 'GET'],
+        ['name' => 'appointmentEligibility#eligibleResources',      'url' => '/api/appointment-services/{id}/eligible-resources', 'verb' => 'GET'],
+
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
         ['name' => 'loyalty#getAccountHistory',  'url' => '/api/loyalty/accounts/{accountId}/history',  'verb' => 'GET'],
