@@ -9486,7 +9486,17 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "Updated by {actor}": "Bijgewerkt door {actor}",
+        "Passed to {changed.assignee} by {actor}": "Overgedragen aan {changed.assignee} door {actor}",
+        "Set back to new by {actor}": "Teruggezet naar nieuw door {actor}",
+        "Taken in progress by {actor}": "In behandeling genomen door {actor}",
+        "Waiting for the customer by {actor}": "Wacht op de klant, gezet door {actor}",
+        "Resolved by {actor}": "Opgelost door {actor}",
+        "Completed by {actor}": "Afgerond door {actor}",
+        "Rejected by {actor}": "Afgewezen door {actor}",
+        "Converted by {actor}": "Omgezet door {actor}",
+        "Closed by {actor}": "Gesloten door {actor}"
     },
     "nplurals=2; plural=(n != 1);"
 )
