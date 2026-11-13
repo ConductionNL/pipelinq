@@ -51,6 +51,8 @@ return [
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
         ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],
+        // Paste a signature, get proposed contact fields; reads and stores nothing (clients-contact-capture REQ-CCC-001).
+        ['name' => 'contactCapture#parse', 'url' => '/api/contact-capture/parse', 'verb' => 'POST'],
         // A mail client's side pane (contact-moments-mail-add-in): sender lookup,
         // add as contact, log this mail. Called with an app password.
         ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
