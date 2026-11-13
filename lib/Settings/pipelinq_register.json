@@ -59,6 +59,9 @@
       "client": {
         "x-schema-org": "schema:Organization",
         "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
           "implements": [
             "https://openregister.app/ns#Customer",
             "https://schema.org/Organization"
@@ -390,6 +393,9 @@
           "forms"
         ],
         "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
           "linkedTypes": [
             "mail"
           ],
@@ -449,6 +455,31 @@
             }
           },
           "x-openregister-calculations": {
+            "isFinished": {
+              "type": "boolean",
+              "materialise": false,
+              "description": "Whether the lead is in a final lifecycle state (won or lost). Not materialised, so it is always fresh on read; the Lock action on LeadDetail shows only when it is true (platform-record-lock D3).",
+              "expression": {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "won"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "lost"
+                    ]
+                  }
+                ]
+              }
+            },
             "daysSinceActivity": {
               "type": "integer",
               "materialise": false,

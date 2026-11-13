@@ -119,7 +119,8 @@ describe('the ticket page declares a Decisions tab', () => {
 
 	it('shows the decisions in one place: no cell of their own on the overview', () => {
 		const placed = page.config.layout.map((cell) => cell.widgetId)
-		expect(placed).toEqual(['ticket-panels', 'ticket-related'])
+		// The locked line (platform-record-lock) is a banner above the strip, not a decisions cell.
+		expect(placed).toEqual(['ticket-locked', 'ticket-panels', 'ticket-related'])
 		// The strip renders its children; a cell would render them twice.
 		const children = panels.content.tabs.flatMap(
 			(tab) => tab.widgetIds || [tab.widgetId],

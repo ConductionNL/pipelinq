@@ -99,7 +99,9 @@ describe('lead detail', () => {
 	const lead = page('LeadDetail')
 
 	it('draws the board: one tab strip as the body and a side column of cards', () => {
+		// The locked line (platform-record-lock) sits above the strip and shows only on a locked lead.
 		expect(lead.config.layout.map((item) => item.widgetId)).toEqual([
+			'lead-locked',
 			'lead-panels',
 		])
 		expect(lead.config.sideColumn).toEqual([

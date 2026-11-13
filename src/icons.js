@@ -145,6 +145,8 @@ import Key from 'vue-material-design-icons/Key.vue'
 import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
 import Link from 'vue-material-design-icons/Link.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
+import LockOpenVariantOutline from 'vue-material-design-icons/LockOpenVariantOutline.vue'
+import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 import MapMarkerCheck from 'vue-material-design-icons/MapMarkerCheck.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
@@ -372,6 +374,8 @@ export default {
 	KeyVariant,
 	Link,
 	LinkVariant,
+	LockOpenVariantOutline,
+	LockOutline,
 	Magnify,
 	MapMarkerCheck,
 	MapMarkerPath,
