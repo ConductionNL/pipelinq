@@ -38,6 +38,7 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Pipelinq\Service\Portal\PortalObjectRepository
  * @uses   \OCA\Pipelinq\Service\Portal\PortalScopeResolver
  * @uses   \OCA\Pipelinq\Service\Portal\ScopedOwner
+ * @uses   \OCA\Pipelinq\Service\SettingsLoadService
  */
 class PortalOrderServiceTest extends TestCase {
 	/**
