@@ -191,4 +191,19 @@ class PortalMfaServiceTest extends TestCase {
 			actual: $this->service->provisioningUri(secret: 'ABC', accountLabel: 'jan@example.org', issuer: 'Gemeente Zuiddrecht')
 		);
 	}//end testBuildsTheProvisioningUri()
+
+	/**
+	 * A secret stored in lower case, grouped with spaces and dashes, and padded
+	 * still verifies: characters outside the base32 alphabet are skipped.
+	 *
+	 * @return void
+	 */
+	public function testIgnoresCharactersOutsideTheBase32Alphabet(): void {
+		$this->time->method('getTime')->willReturn(59);
+		$grouped = strtolower(implode(' ', str_split(self::RFC_SECRET, 4)));
+		$grouped = str_replace(' gy3t', '-gy3t', $grouped) . '==';
+
+		self::assertTrue(condition: $this->service->verifyCode(encryptedSecret: 'enc:' . $grouped, code: '287082'));
+		self::assertFalse(condition: $this->service->verifyCode(encryptedSecret: 'enc:' . $grouped, code: '287083'));
+	}//end testIgnoresCharactersOutsideTheBase32Alphabet()
 }//end class
