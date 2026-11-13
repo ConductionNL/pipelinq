@@ -93,6 +93,13 @@ class LabelRenameServiceTest extends TestCase {
 	private bool $lookedUp = false;
 
 	/**
+	 * What the fake's find() throws; null to answer from the store.
+	 *
+	 * @var \Throwable|null
+	 */
+	private ?\Throwable $findFailure = null;
+
+	/**
 	 * The job list mock.
 	 *
 	 * @var IJobList&MockObject
@@ -297,6 +304,26 @@ class LabelRenameServiceTest extends TestCase {
 	}//end testAnEmptyNameAndAnUnknownLabelAreRefused()
 
 	/**
+	 * A label OpenRegister fails to read is refused as unknown, before any write.
+	 *
+	 * @return void
+	 */
+	public function testALabelThatCannotBeReadIsRefusedAsUnknown(): void {
+		$this->findFailure = new \RuntimeException(message: 'object not found');
+		$this->jobList->expects($this->never())->method('add');
+
+		try {
+			$this->service()->rename(labelId: 'l3', name: 'nieuw');
+			$this->fail(message: 'the rename went through');
+		} catch (LabelRenameException $e) {
+			$this->assertSame(expected: 404, actual: $e->getStatus());
+			$this->assertSame(expected: 'This label does not exist.', actual: $e->getMessage());
+		}
+
+		$this->assertSame(expected: [], actual: $this->writes);
+	}//end testALabelThatCannotBeReadIsRefusedAsUnknown()
+
+	/**
 	 * A change in case only renames the label and its items.
 	 *
 	 * @return void
@@ -372,6 +399,10 @@ class LabelRenameServiceTest extends TestCase {
 	 * @return array<string, mixed>|null
 	 */
 	public function storeFind(string $schema, string $id): ?array {
+		if ($this->findFailure !== null) {
+			throw $this->findFailure;
+		}
+
 		return ($this->store[$schema][$id] ?? null);
 	}//end storeFind()
 
