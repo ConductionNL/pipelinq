@@ -212,6 +212,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
             -->
             <step>OCA\Pipelinq\Repair\BackfillTaskNames</step>
             <!--
+                requests-municipality-per-contact: existing tickets take their
+                client's municipality, silently; a ticket that has one keeps it.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillTicketMunicipality</step>
+            <!--
                 After InitializeSettings: a campaign form made before forms named
                 their destination gets `lead` as its destination, once. A form
                 that already names one is left alone.
