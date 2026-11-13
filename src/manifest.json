@@ -6925,7 +6925,7 @@
 						"type": "data",
 						"title": "Catalogue",
 						"icon": "BookOpenPageVariant",
-						"_note": "product-service-catalogue-public task 3.1 (PqProduct): what the public catalogue shows of a service, only for a product of type service. A service is public from publishFrom up to the day before publishUntil while it is active; the rules are on product in 99-zzz-register-access.json. The tariff table and the audience stay in the cards above, as for every product.",
+						"_note": "product-service-catalogue-public task 3.1 (PqProduct): what the public catalogue shows of a service, only for a product of type service. The publication window is what the public read rule will read once task 2.2's access decision is made; until then the card is staff-only like the rest of the page. The tariff table and the audience stay in the cards above, as for every product.",
 						"visibleWhen": {
 							"field": "type",
 							"op": "eq",

@@ -2,7 +2,7 @@
   "_meta": {
     "spdx-license": "EUPL-1.2",
     "spdx-copyright": "2026 Conduction B.V.",
-    "description": "product-service-catalogue-public task 1.1: the fields a service needs in the public catalogue. A service is a product of type service (one schema, not a second one). Tariffs, audience, publishedAt and languages already ship in 94-product-catalogue-fields.json and keep their shape; this fragment adds the rest, all optional, so every existing product stays valid. Who may read a service without signing in is decided by the public rules on product in 99-zzz-register-access.json, which read publishFrom and publishUntil."
+    "description": "product-service-catalogue-public task 1.1: the fields a service needs in the public catalogue. A service is a product of type service (one schema, not a second one). Tariffs, audience, publishedAt and languages already ship in 94-product-catalogue-fields.json and keep their shape; this fragment adds the rest, all optional, so every existing product stays valid. Who may read a service without signing in is an access decision left to the owner (task 2.2): the proposed rule is a conditional public read on product in 99-zzz-register-access.json that reads type, status, publishFrom and publishUntil. Until it lands, these fields are staff-only like the rest of product."
   },
   "components": {
     "schemas": {

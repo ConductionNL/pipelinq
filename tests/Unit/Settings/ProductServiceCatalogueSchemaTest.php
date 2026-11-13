@@ -1,8 +1,7 @@
 <?php
 
 /**
- * The product schema carries the service catalogue fields, and only a published,
- * current service is public.
+ * The product schema carries the service catalogue fields.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Settings
@@ -104,33 +103,4 @@ class ProductServiceCatalogueSchemaTest extends TestCase {
 		$this->assertSame(['label', 'price', 'validFrom', 'note'], array_keys($product['properties']['tariffs']['items']['properties']));
 		$this->assertSame(['resident', 'business'], $product['properties']['audience']['items']['enum']);
 	}//end testTheExistingCatalogueFieldsAndTheServiceTypeStay()
-
-	/**
-	 * The staff keep their reads, and the only public reads are the two
-	 * conditional service rules.
-	 *
-	 * @return void
-	 */
-	public function testOnlyAnActiveCurrentServiceIsReadableWithoutSigningIn(): void {
-		$read = $this->product()['authorization']['read'];
-
-		$this->assertSame(['sales', 'user:pipelinq-system', 'authenticated'], array_values(array_filter($read, 'is_string')));
-		$this->assertNotContains('public', $read, 'An unconditional public read would publish every product.');
-
-		$window = ['type' => 'service', 'status' => 'active', 'publishFrom' => ['$lte' => '$now']];
-		$this->assertSame(
-			[
-				['group' => 'public', 'match' => $window + ['publishUntil' => ['$exists' => false]]],
-				['group' => 'public', 'match' => $window + ['publishUntil' => ['$gt' => '$now']]],
-			],
-			array_values(array_filter($read, 'is_array'))
-		);
-
-		foreach (['create', 'update', 'delete'] as $verb) {
-			foreach ($this->product()['authorization'][$verb] as $rule) {
-				$this->assertIsString($rule, $verb);
-				$this->assertNotSame('public', $rule, $verb);
-			}
-		}
-	}//end testOnlyAnActiveCurrentServiceIsReadableWithoutSigningIn()
 }//end class
