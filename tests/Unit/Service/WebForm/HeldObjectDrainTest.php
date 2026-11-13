@@ -177,4 +177,45 @@ class HeldObjectDrainTest extends TestCase {
 		$this->assertSame('locked', $report['delivered'][0]['notRemoved']);
 		$this->assertSame(3, $report['pending']);
 	}//end testDeliveredButNotRemovedIsPending()
+
+	/**
+	 * Entity rows are read through jsonSerialize and judged against the open filter
+	 * themselves; rows without an id or of no usable shape are skipped.
+	 *
+	 * @return void
+	 */
+	public function testEntityRowsAreJudgedByTheirBody(): void {
+		$drain = $this->drain();
+		$entity = static fn (array $body): \JsonSerializable => new class ($body) implements \JsonSerializable {
+			/**
+			 * Constructor.
+			 *
+			 * @param array<string, mixed> $body The body.
+			 */
+			public function __construct(private readonly array $body) {
+			}
+
+			/**
+			 * The body.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function jsonSerialize(): array {
+				return $this->body;
+			}
+		};
+		$this->store->rows['26'] = [
+			$entity(['uuid' => 'e-uuid', 'message' => 'Via uuid', 'source' => 'website-support', 'status' => 'new']),
+			$entity(['id' => 'e-done', 'message' => 'Closed', 'source' => 'website-support', 'status' => 'converted']),
+			$entity(['message' => 'No id', 'source' => 'website-support', 'status' => 'new']),
+			new \stdClass(),
+			'not a row',
+		];
+
+		$report = $drain->drain(register: '20', schema: '26', keyProperty: 'source', openFilter: ['status' => 'new'], apply: false);
+
+		$this->assertSame(['e-uuid'], array_column($report['delivered'], 'id'));
+		$this->assertSame([], $report['unmapped']);
+		$this->assertSame(1, $report['pending']);
+	}//end testEntityRowsAreJudgedByTheirBody()
 }//end class
