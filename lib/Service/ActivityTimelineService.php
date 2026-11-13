@@ -227,8 +227,51 @@ class ActivityTimelineService {
 	private function collectActivities(TimelineRun $run, array $config): array {
 		$merged = $this->schemaActivities(run: $run, config: $config);
 
-		return array_merge($merged, $this->extraSourceActivities(run: $run, registerId: $config['register']));
+		return $this->withoutDuplicateEvents(
+			activities: array_merge($merged, $this->extraSourceActivities(run: $run, registerId: $config['register']))
+		);
 	}//end collectActivities()
+
+	/**
+	 * Drop calendar items whose event UID another item already shows.
+	 *
+	 * The calendar leaf's item wins: it is read live, the others may be stale
+	 * copies. Items without a UID are never dropped.
+	 *
+	 * @param array<int,array<string,mixed>> $activities The merged items.
+	 *
+	 * @return array<int,array<string,mixed>> The items, each event once.
+	 *
+	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+	 */
+	public function withoutDuplicateEvents(array $activities): array {
+		$leafUids = [];
+		foreach ($activities as $activity) {
+			if (($activity['metadata']['source'] ?? null) === 'calendar-leaf') {
+				$leafUids[(string)$activity['metadata']['uid']] = true;
+			}
+		}
+
+		$seen = [];
+		$kept = [];
+		foreach ($activities as $activity) {
+			$uid = (string)($activity['metadata']['uid'] ?? '');
+			if ($uid === '' || ($activity['type'] ?? '') !== 'calendar') {
+				$kept[] = $activity;
+				continue;
+			}
+
+			$fromLeaf = (($activity['metadata']['source'] ?? null) === 'calendar-leaf');
+			if (isset($seen[$uid]) === true || ($fromLeaf === false && isset($leafUids[$uid]) === true)) {
+				continue;
+			}
+
+			$seen[$uid] = true;
+			$kept[] = $activity;
+		}
+
+		return $kept;
+	}//end withoutDuplicateEvents()
 
 	/**
 	 * The activities of every configured schema the filter includes.
@@ -292,6 +335,7 @@ class ActivityTimelineService {
 			'message' => fn (): array => $this->reader->messages(entityType: $entityType, entityId: $entityId, registerId: $registerId),
 			'booking' => fn (): array => $this->reader->bookings(entityType: $entityType, entityId: $entityId, registerId: $registerId),
 			'linkedEmail' => fn (): array => $this->reader->linkedEmails(entityId: $entityId),
+			'leafEvent' => fn (): array => $this->reader->linkedEvents(entityId: $entityId),
 		];
 	}//end extraSources()
 
@@ -368,7 +412,7 @@ class ActivityTimelineService {
 			'interaction' => 'interaction',
 			'task' => 'task',
 			'emailLink', 'linkedEmail' => 'email',
-			'calendarLink', 'booking' => 'calendar',
+			'calendarLink', 'booking', 'leafEvent' => 'calendar',
 			default => $sourceType,
 		};
 	}//end sourceToActivityType()

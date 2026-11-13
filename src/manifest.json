@@ -2587,6 +2587,13 @@
 						"icon": "Email"
 					},
 					{
+						"id": "client-calendar",
+						"type": "integration",
+						"integrationId": "calendar",
+						"title": "Meetings",
+						"icon": "Calendar"
+					},
+					{
 						"id": "client-notes",
 						"type": "integration",
 						"integrationId": "notes",
@@ -3636,7 +3643,7 @@
 						}
 					]
 				},
-				"_sideColumnNote": "The side column in the boards' order with the cards dossiq's DqContact and DqOrganisatie draw: a resident reads Reachable via, Identity and Home address, an organisation KvK and address and Open tickets; both then Contact channels, Relations and Record history. Related, Emails and Notes stay under them until the Activity card carries mail and notes.",
+				"_sideColumnNote": "The side column in the boards' order with the cards dossiq's DqContact and DqOrganisatie draw: a resident reads Reachable via, Identity and Home address, an organisation KvK and address and Open tickets; both then Contact channels, Relations and Record history. Related, Emails, Meetings (the calendar leaf, calendar-deepening) and Notes stay under them until the Activity card carries mail and notes.",
 				"sideColumn": [
 					{
 						"id": "side-reach",
@@ -4070,6 +4077,7 @@
 						}
 					},
 					"client-email",
+					"client-calendar",
 					"client-notes",
 					{
 						"id": "side-knowledge",
@@ -5612,7 +5620,7 @@
 							"register": "pipelinq",
 							"schema": "crmTask",
 							"filter": {
-								"lead": "@objectId"
+								"leadId": "@objectId"
 							},
 							"sort": {
 								"field": "deadline",
