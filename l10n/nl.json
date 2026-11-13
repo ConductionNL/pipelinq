@@ -9587,6 +9587,15 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "Export job %1$s was switched off after %2$s failed runs in a row": "Exporttaak %1$s is uitgezet na %2$s mislukte runs op rij",
+        "Export job {title} was switched off after %1$s failed runs in a row": "Exporttaak {title} is uitgezet na %1$s mislukte runs op rij",
+        "Last error: %1$s. Fix the destination, then switch the job on again on the BI export page.": "Laatste fout: %1$s. Herstel de bestemming en zet de taak daarna weer aan op de pagina BI-export.",
+        "Failed runs in a row": "Mislukte runs op rij",
+        "How many runs in a row have failed. A succeeded run sets it back to 0.": "Hoeveel runs op rij zijn mislukt. Een geslaagde run zet dit terug op 0.",
+        "Switched off because": "Uitgezet omdat",
+        "Why the job was switched off automatically; empty while it was not.": "Waarom de taak automatisch is uitgezet; leeg zolang dat niet is gebeurd.",
+        "Switched off at": "Uitgezet op",
+        "When the job was switched off automatically.": "Wanneer de taak automatisch is uitgezet."
     }
 }

@@ -9558,6 +9558,15 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Export job %1$s was switched off after %2$s failed runs in a row": "Export job %1$s was switched off after %2$s failed runs in a row",
+        "Export job {title} was switched off after %1$s failed runs in a row": "Export job {title} was switched off after %1$s failed runs in a row",
+        "Last error: %1$s. Fix the destination, then switch the job on again on the BI export page.": "Last error: %1$s. Fix the destination, then switch the job on again on the BI export page.",
+        "Failed runs in a row": "Failed runs in a row",
+        "How many runs in a row have failed. A succeeded run sets it back to 0.": "How many runs in a row have failed. A succeeded run sets it back to 0.",
+        "Switched off because": "Switched off because",
+        "Why the job was switched off automatically; empty while it was not.": "Why the job was switched off automatically; empty while it was not.",
+        "Switched off at": "Switched off at",
+        "When the job was switched off automatically.": "When the job was switched off automatically."
     }
 }
