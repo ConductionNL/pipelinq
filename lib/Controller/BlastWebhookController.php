@@ -80,6 +80,7 @@ use Throwable;
  *  concern (provider event ingestion) across several files.
  *
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class BlastWebhookController extends Controller {
 	/**

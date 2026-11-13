@@ -111,7 +111,7 @@ use Throwable;
 /**
  * Main application class for the Pipelinq client and request management app.
  *
- * @spec exclude Main app bootstrap class; per-change spec coverage lives on the changed methods.
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-004
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)

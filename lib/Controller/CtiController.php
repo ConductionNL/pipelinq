@@ -56,6 +56,7 @@ use Psr\Log\LoggerInterface;
  *  CtiService surface to HTTP — coupling is unavoidable on a CRUD facade.
  *
  * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class CtiController extends Controller {
 	/**

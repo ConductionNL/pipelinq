@@ -70,6 +70,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class BrpController extends Controller {
 	/**

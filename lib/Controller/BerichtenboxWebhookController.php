@@ -49,6 +49,7 @@ use Throwable;
  * Inbound webhook controller for Logius Berichtenbox events.
  *
  * @spec openspec/specs/portal-contribution/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class BerichtenboxWebhookController extends Controller {
 	/**

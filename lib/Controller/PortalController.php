@@ -68,6 +68,7 @@ use RuntimeException;
  *  their input-validation / link-signing helpers belong together.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalController extends Controller {
 	use EntityIdOf;

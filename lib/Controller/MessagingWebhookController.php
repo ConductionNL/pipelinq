@@ -52,6 +52,7 @@ use Throwable;
  * the adapter.
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class MessagingWebhookController extends Controller {
 	/**

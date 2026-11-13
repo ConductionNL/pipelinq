@@ -54,6 +54,7 @@ use Throwable;
  * authentication boundary.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class AppointmentPaymentWebhookController extends Controller {
 	/**

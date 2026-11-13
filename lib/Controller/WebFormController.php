@@ -44,6 +44,7 @@ use Throwable;
  * Takes a form submit from a public website and creates its destination.
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-a-website-form-submits-into-the-destination-it-names
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class WebFormController extends Controller {
 
