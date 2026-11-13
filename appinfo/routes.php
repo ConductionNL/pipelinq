@@ -474,6 +474,8 @@ return [
         // history-filter and retry actions the generic API cannot express (REQ-BIE-001/002/003/011).
         // Static collection + action routes are declared before the {id} member routes so the
         // router never mistakes "test-run" or "destinations" for an {id} (ADR-016).
+        // Export all data in one archive (data-portability-full-export REQ-DPE-002), administrators only.
+        ['name' => 'fullExport#start',          'url' => '/api/export/full',                  'verb' => 'POST'],
         ['name' => 'exportJob#listDestinations',  'url' => '/api/export/destinations',          'verb' => 'GET'],
         ['name' => 'exportJob#createDestination', 'url' => '/api/export/destinations',          'verb' => 'POST'],
         ['name' => 'exportJob#updateDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'PUT'],

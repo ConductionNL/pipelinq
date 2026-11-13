@@ -1,6 +1,10 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Your data export is ready: %1$s": "Uw data-export staat klaar: %1$s",
+        "The archive with all Pipelinq data is in your Files.": "Het archief met alle Pipelinq-gegevens staat in uw Bestanden.",
+        "Your data export could not be built": "Uw data-export kon niet worden gemaakt",
+        "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.": "Er is niets opgeslagen. Probeer het opnieuw; lukt het weer niet, vraag dan uw beheerder het logboek na te kijken.",
         "Core CRM": "Basis-CRM",
         "Merged": "Samengevoegd",
         "Open the merged record": "Open het samengevoegde record",

@@ -1,6 +1,10 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Your data export is ready: %1$s": "Your data export is ready: %1$s",
+        "The archive with all Pipelinq data is in your Files.": "The archive with all Pipelinq data is in your Files.",
+        "Your data export could not be built": "Your data export could not be built",
+        "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.": "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.",
         "email, linked": "email, linked",
         "Merged": "Merged",
         "Open the merged record": "Open the merged record",
