@@ -9587,6 +9587,31 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "Change a field": "Een veld wijzigen",
+        "Field to change": "Veld om te wijzigen",
+        "%n record selected": [
+            "%n record geselecteerd",
+            "%n records geselecteerd"
+        ],
+        "%n records selected": "%n records geselecteerd",
+        "%n record will change": [
+            "%n record wordt gewijzigd",
+            "%n records worden gewijzigd"
+        ],
+        "%n records will change": "%n records worden gewijzigd",
+        "%n already has this value": [
+            "%n heeft deze waarde al",
+            "%n hebben deze waarde al"
+        ],
+        "%n already have this value": "%n hebben deze waarde al",
+        "%n record changed.": [
+            "%n record gewijzigd.",
+            "%n records gewijzigd."
+        ],
+        "%n records changed.": "%n records gewijzigd.",
+        "Could not read the fields of this list.": "Kon de velden van deze lijst niet lezen.",
+        "OpenRegister refused this change.": "OpenRegister heeft deze wijziging geweigerd.",
+        "The change could not be saved.": "De wijziging kon niet worden opgeslagen."
     }
 }

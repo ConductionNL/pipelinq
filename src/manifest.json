@@ -1951,6 +1951,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"selectable": true,
 				"pagination": { "limit": 8 },
 				"sortKey": "name",
 				"sortOrder": "asc",
@@ -2045,6 +2046,14 @@
 						"icon": "DatabaseSearchOutline",
 						"handler": "open-modal",
 						"target": "OrganisationEnrichDialog"
+					},
+					{
+						"id": "change-field",
+						"label": "Change a field",
+						"icon": "PencilOutline",
+						"handler": "open-modal",
+						"target": "BulkChangeFieldModal",
+						"props": { "register": "pipelinq", "schema": "client" }
 					}
 				]
 			}
@@ -4485,6 +4494,17 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"selectable": true,
+				"bulkActions": [
+					{
+						"id": "change-field",
+						"label": "Change a field",
+						"icon": "PencilOutline",
+						"handler": "open-modal",
+						"target": "BulkChangeFieldModal",
+						"props": { "register": "pipelinq", "schema": "contact" }
+					}
+				],
 				"pagination": { "limit": 5 },
 				"createOverride": "createContactContactAware",
 				"fieldOverrides": {

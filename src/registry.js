@@ -182,6 +182,7 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 import EmailReceiptModal from './modals/EmailReceiptModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
+import BulkChangeFieldModal from './modals/BulkChangeFieldModal.vue'
 import LinkSubmissionToClientModal from './modals/LinkSubmissionToClientModal.vue'
 import PrintReceiptModal from './modals/PrintReceiptModal.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
@@ -1365,6 +1366,12 @@ const registry = {
 		component: OrganisationEnrichDialog,
 		propsSchema: null,
 		_note: 'Fill in missing details from the KvK (PqOrganisatiesVerrijken). Target of the bulk action on the Clients list; receives the selection as selectedIds.',
+	},
+	BulkChangeFieldModal: {
+		kind: 'modal',
+		component: BulkChangeFieldModal,
+		propsSchema: null,
+		_note: 'Change one field on the selected clients or contacts through an OpenRegister bulk job (clients-bulk-edit-and-undo). Target of the Change a field bulk action on the Clients and Contacts lists; receives the selection as selectedIds and the register and schema slugs as props.',
 	},
 
 	// Pages' form-dialog slot (page.slots), not header-action modals: the
