@@ -2,7 +2,7 @@
   "_meta": {
     "spdx-license": "EUPL-1.2",
     "spdx-copyright": "2026 Conduction B.V.",
-    "description": "clients-reversible-merge D1: client and contact take part in OpenRegister's reversible merge (merge#preview, merge#execute, merge#reverse) with a thirty-day reversal window. accountStatus gains merged; contact gets a recordStatus for the same purpose. mergeMovedRows is the ledger ClientMergeReferenceListener keeps on the merged-away record (D2)."
+    "description": "clients-reversible-merge D1: client and contact take part in OpenRegister's reversible merge (merge#preview, merge#execute, merge#reverse) with a thirty-day reversal window. accountStatus gains merged; contact gets a recordStatus for the same purpose. mergeMovedRows is the ledger ClientMergeReferenceListener keeps on the merged-away record (D2). The client lifecycle gains a merge transition into merged, and a reversal leaves merged through the ordinary transitions, which stamp or clear relationshipEndedAt as any other move to that status does."
   },
   "components": {
     "schemas": {
@@ -15,6 +15,40 @@
           "survivorStatus": "active",
           "mergedStatus": "merged",
           "reversalWindowDays": 30
+        },
+        "x-openregister-lifecycle": {
+          "transitions": {
+            "mergeAway": {
+              "from": [
+                "active",
+                "inactive",
+                "blocked"
+              ],
+              "to": "merged",
+              "description": "OpenRegister merges this client into another one (x-openregister-merge). Nothing is stamped: the relationship did not end, the record was folded into its survivor."
+            },
+            "endRelationship": {
+              "from": [
+                "active",
+                "blocked",
+                "merged"
+              ]
+            },
+            "reactivate": {
+              "from": [
+                "inactive",
+                "blocked",
+                "merged"
+              ]
+            },
+            "block": {
+              "from": [
+                "active",
+                "inactive",
+                "merged"
+              ]
+            }
+          }
         },
         "properties": {
           "accountStatus": {
