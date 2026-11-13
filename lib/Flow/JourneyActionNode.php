@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Flow;
 
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
 use OCA\Pipelinq\Service\Marketing\JourneyStepRunner;
@@ -165,9 +166,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 * the items would make a later node read something a marketer never
 	 * authored.
 	 *
-	 * @param array<int, array<string, mixed>> $items The input items.
-	 * @param array<string, mixed> $config The step's authored configuration.
-	 * @param array<string, mixed> $context Run-level metadata.
+	 * @param FlowNodeCall $call The items, the step configuration and the run-level metadata.
 	 *
 	 * @return array<int, array<string, mixed>> The items, unchanged.
 	 *
@@ -175,7 +174,11 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
+		$context = $call->context;
+
 		// Re-checked here on purpose: validateConfig() only runs when a flow
 		// is SAVED, and a seeded or imported flow reaches this method having
 		// never passed through that path.

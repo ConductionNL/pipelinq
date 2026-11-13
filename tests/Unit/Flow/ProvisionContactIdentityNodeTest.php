@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Flow;
 
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
 use OCA\Pipelinq\Flow\ProvisionContactIdentityNode;
 use OCA\Pipelinq\Service\ContactVcardService;
@@ -101,9 +102,11 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 			->willReturn(['contactsUid' => 'uid-123', 'name' => 'Acme BV', 'email' => '', 'phone' => '']);
 
 		$out = $this->node->execute(
-			$this->items(['organisation' => 'Acme BV']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'clientContactsUid'],
-			[]
+			new FlowNodeCall(
+				items: $this->items(['organisation' => 'Acme BV']),
+				config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'clientContactsUid'],
+				context: [],
+			)
 		);
 
 		$this->assertSame('uid-123', $out[0]['json']['clientContactsUid']);
@@ -126,9 +129,11 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 			});
 
 		$this->node->execute(
-			$this->items(['organisation' => 'Acme BV']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
+			new FlowNodeCall(
+				items: $this->items(['organisation' => 'Acme BV']),
+				config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
+				context: [],
+			)
 		);
 
 		$this->assertSame('organization', $seen['form']['type']);
@@ -150,14 +155,16 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 			});
 
 		$this->node->execute(
-			$this->items(['contactName' => 'Jane Doe', 'contactEmail' => 'jane@x.test']),
-			[
+			new FlowNodeCall(
+				items: $this->items(['contactName' => 'Jane Doe', 'contactEmail' => 'jane@x.test']),
+				config: [
 				'objectType' => 'contact',
 				'nameFrom' => 'contactName',
 				'emailFrom' => 'contactEmail',
 				'output' => 'u',
 			],
-			[]
+				context: [],
+			)
 		);
 
 		$this->assertSame('person', $seen['form']['type']);
@@ -183,10 +190,12 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 			});
 
 		$this->node->execute(
-			// The record HOLDS an email; the config does not name it.
+			new FlowNodeCall(
+				items: // The record HOLDS an email; the config does not name it.
 			$this->items(['organisation' => 'Acme BV', 'contactEmail' => 'jane@x.test']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
+				config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
+				context: [],
+			)
 		);
 
 		$this->assertSame('', $seen['email'], 'an unnamed field must not reach the matcher');
@@ -205,9 +214,11 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 
 		$this->expectException(RuntimeException::class);
 		$this->node->execute(
-			$this->items(['organisation' => 'Acme BV']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
+			new FlowNodeCall(
+				items: $this->items(['organisation' => 'Acme BV']),
+				config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
+				context: [],
+			)
 		);
 	}//end testThrowsWhenTheIdentityCannotBeProvisioned()
 
@@ -223,9 +234,11 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 
 		$this->expectException(RuntimeException::class);
 		$this->node->execute(
-			$this->items(['organisation' => 'Acme BV']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
+			new FlowNodeCall(
+				items: $this->items(['organisation' => 'Acme BV']),
+				config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
+				context: [],
+			)
 		);
 	}//end testThrowsOnAnEmptyUid()
 
@@ -239,9 +252,11 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 
 		$this->expectException(RuntimeException::class);
 		$this->node->execute(
-			$this->items(['message' => 'hello']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
+			new FlowNodeCall(
+				items: $this->items(['message' => 'hello']),
+				config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
+				context: [],
+			)
 		);
 	}//end testRefusesAnItemWithNoNameAndNoEmail()
 
@@ -277,7 +292,7 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 		$this->vcards->expects($this->never())->method('provisionContactFromForm');
 
 		$this->expectException(UnexpectedValueException::class);
-		$this->node->execute($this->items(['organisation' => 'Acme BV']), ['objectType' => 'nonsense'], []);
+		$this->node->execute(new FlowNodeCall(items: $this->items(['organisation' => 'Acme BV']), config: ['objectType' => 'nonsense'], context: []));
 	}//end testExecuteRevalidatesTheConfig()
 
 	/**
