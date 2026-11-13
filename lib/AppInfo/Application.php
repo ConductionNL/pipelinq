@@ -77,6 +77,7 @@ use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
 use OCA\Pipelinq\Listener\QuoteNumberCreatingListener;
 use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
+use OCA\Pipelinq\Listener\TicketPhoneE164Listener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Listener\PosLinePricingListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
@@ -597,6 +598,16 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
 			listener: TicketReferenceCreatingListener::class
+		);
+		// A ticket carries the number it is about in E.164, whoever wrote it
+		// (contact-moments-phone-lookup D2).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: TicketPhoneE164Listener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: TicketPhoneE164Listener::class
 		);
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
