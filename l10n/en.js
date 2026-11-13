@@ -9472,7 +9472,12 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Call summary": "Call summary",
+        "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "A few sentences on what the call was about. Written from the transcript; the agent can correct it.",
+        "Transcript": "Transcript",
+        "Transcript status": "Transcript status",
+        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording."
     },
     "nplurals=2; plural=(n != 1);"
 )
