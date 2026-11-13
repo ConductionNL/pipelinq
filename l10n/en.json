@@ -9558,6 +9558,15 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Campaign record": "Campaign record",
+        "How this client first found you: the campaign parameters, campaign and landing page of the first form submission by one of its contacts. Written once.": "How this client first found you: the campaign parameters, campaign and landing page of the first form submission by one of its contacts. Written once.",
+        "How this person first found you: the campaign parameters, campaign and landing page of their first form submission. Written once.": "How this person first found you: the campaign parameters, campaign and landing page of their first form submission. Written once.",
+        "The campaign parameters, campaign and landing page of the latest form submission by one of its contacts.": "The campaign parameters, campaign and landing page of the latest form submission by one of its contacts.",
+        "The campaign parameters, campaign and landing page of their latest form submission.": "The campaign parameters, campaign and landing page of their latest form submission.",
+        "The client of the contact who submitted the form, when the contact belongs to one.": "The client of the contact who submitted the form, when the contact belongs to one.",
+        "The page the form was submitted on.": "The page the form was submitted on.",
+        "The pipelinq campaign the submission belonged to, when one was resolved.": "The pipelinq campaign the submission belonged to, when one was resolved.",
+        "When the form was submitted.": "When the form was submitted."
     }
 }

@@ -9486,7 +9486,16 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "Campaign record": "Campagnerecord",
+        "How this client first found you: the campaign parameters, campaign and landing page of the first form submission by one of its contacts. Written once.": "Hoe deze klant u voor het eerst vond: de campagneparameters, campagne en landingspagina van het eerste formulier dat een van zijn contactpersonen indiende. Wordt één keer vastgelegd.",
+        "How this person first found you: the campaign parameters, campaign and landing page of their first form submission. Written once.": "Hoe deze persoon u voor het eerst vond: de campagneparameters, campagne en landingspagina van het eerste formulier dat hij of zij indiende. Wordt één keer vastgelegd.",
+        "The campaign parameters, campaign and landing page of the latest form submission by one of its contacts.": "De campagneparameters, campagne en landingspagina van het laatste formulier dat een van zijn contactpersonen indiende.",
+        "The campaign parameters, campaign and landing page of their latest form submission.": "De campagneparameters, campagne en landingspagina van het laatste formulier dat deze persoon indiende.",
+        "The client of the contact who submitted the form, when the contact belongs to one.": "De klant van de contactpersoon die het formulier indiende, als die bij een klant hoort.",
+        "The page the form was submitted on.": "De pagina waarop het formulier werd ingediend.",
+        "The pipelinq campaign the submission belonged to, when one was resolved.": "De pipelinq-campagne waar de inzending bij hoorde, als die gevonden werd.",
+        "When the form was submitted.": "Wanneer het formulier werd ingediend."
     },
     "nplurals=2; plural=(n != 1);"
 )

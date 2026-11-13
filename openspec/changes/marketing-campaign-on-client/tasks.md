@@ -1,11 +1,14 @@
 # Tasks: marketing-campaign-on-client
 
-- [ ] 1.1 Schema: `touchpoint.clientId`, `touchpoint.landingPage`; fragment giving `contact` and `client` `firstTouch` and `lastTouch` (read only in forms)
+- [x] 1.1 Schema: `touchpoint.clientId`, `touchpoint.landingPage`; fragment giving `contact` and `client` `firstTouch` and `lastTouch` (read only in forms)
   - Verify: register import logs no `PARTIAL IMPORT`; `npm run check:schema-l10n` exit 0
-- [ ] 1.2 `TouchpointService::recordSubmission()` per D1 and D2: first touch written once, last touch replaced, client resolved from the contact
+  - done: `lib/Settings/register.d/99-zzzzzzz-marketing-origin-on-client.json` (touchpoint 1.1.0, contact 1.3.0, client 1.8.0; the touches are the lead's shape plus `campaignId`, `landingPage`, `at`, `readOnly`). The nine new schema strings are in `l10n/en.json` and `l10n/nl.json`; `check:schema-l10n` reports only the 2 strings development already had uncovered. The PARTIAL IMPORT check is a live import, not run here.
+- [x] 1.2 `TouchpointService::recordSubmission()` per D1 and D2: first touch written once, last touch replaced, client resolved from the contact
   - Verify: PHPUnit `tests/Unit/Service/TouchpointServiceTest.php`: first submission sets both touches, second changes only the last, a contact without a client writes only the contact
-- [ ] 1.3 `LandingPageFormSubmittedListener::ingest()` calls it with the event's UTM values and page route
+  - done: `TouchpointService::recordSubmission(touchpoint, landingPage)`; the contact's `client` is read as a plain uuid or an expanded object. Tests in `tests/Unit/Service/TouchpointServiceTest.php`.
+- [x] 1.3 `LandingPageFormSubmittedListener::ingest()` calls it with the event's UTM values and page route
   - Verify: PHPUnit on the listener with a real `LandingPageFormSubmittedEvent`
+  - done: the listener calls `recordSubmission()` with the landing page `<portal>/<route>`; `LandingPageSubmissionGoldenTest` (real event, real TouchpointService over the in-memory store) regenerated: the touchpoint now carries `clientId` and `landingPage`, the contact and client their touches.
 - [ ] 1.4 `EnquiryIntakeService`: UTM fields in `SUBMITTER_FIELDS`, capped and trimmed; `recordSubmission()` when the email matches a contact
   - Verify: PHPUnit: a 500 character `utmCampaign` is capped; `source` from the payload is still ignored; hydra gates route-auth and route-reachability pass on the diff
 - [ ] 1.5 How they found us widget and Touchpoints list on ContactDetail and ClientDetail
