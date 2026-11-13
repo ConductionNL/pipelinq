@@ -35,7 +35,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -379,7 +379,7 @@ class EventEmailService {
 				$message->attach($this->mailer->createAttachment($ics, 'event.ics', 'text/calendar; method=REQUEST; charset=UTF-8'));
 			}
 
-			$sender = $this->appConfig->getValueString(Application::APP_ID, self::SENDER_KEY, '');
+			$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SENDER_KEY, '');
 			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
 				$message->setFrom([$sender]);
 			}
@@ -388,7 +388,7 @@ class EventEmailService {
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: an event mail could not be sent',
-				['app' => Application::APP_ID, 'exception' => $e->getMessage()]
+				['app' => AppIdentity::APP_ID, 'exception' => $e->getMessage()]
 			);
 			return false;
 		}//end try
@@ -400,13 +400,13 @@ class EventEmailService {
 	 * @return string The secret.
 	 */
 	private function secret(): string {
-		$secret = $this->appConfig->getValueString(Application::APP_ID, self::SECRET_KEY, '');
+		$secret = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SECRET_KEY, '');
 		if ($secret !== '') {
 			return $secret;
 		}
 
 		$secret = bin2hex(random_bytes(32));
-		$this->appConfig->setValueString(Application::APP_ID, self::SECRET_KEY, $secret, sensitive: true);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::SECRET_KEY, $secret, sensitive: true);
 		return $secret;
 	}//end secret()
 

@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 
 /**
@@ -103,6 +103,6 @@ class VatRates {
 	 * @spec openspec/specs/product-catalog/spec.md
 	 */
 	public function rates(): array {
-		return self::parse(stored: $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, ''));
+		return self::parse(stored: $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, ''));
 	}//end rates()
 }//end class

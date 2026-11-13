@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -152,7 +152,7 @@ class FollowUpReminderJob extends TimedJob {
 	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
 	 */
 	protected function run(mixed $argument): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$this->logger->info('FollowUpReminderJob: no register configured, skipping');
 			return;
@@ -180,7 +180,7 @@ class FollowUpReminderJob extends TimedJob {
 	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
 	 */
 	public function windowHours(): int {
-		$hours = (int)$this->appConfig->getValueString(Application::APP_ID, self::WINDOW_KEY, (string)self::DEFAULT_WINDOW_HOURS);
+		$hours = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, self::WINDOW_KEY, (string)self::DEFAULT_WINDOW_HOURS);
 		if ($hours <= 0) {
 			return self::DEFAULT_WINDOW_HOURS;
 		}
@@ -222,7 +222,7 @@ class FollowUpReminderJob extends TimedJob {
 	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
 	 */
 	public function wasRecentlyNotified(string $occurrence): bool {
-		return $this->appConfig->getValueString(Application::APP_ID, $this->markerKey(occurrence: $occurrence), '') !== '';
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $this->markerKey(occurrence: $occurrence), '') !== '';
 	}//end wasRecentlyNotified()
 
 	/**
@@ -236,7 +236,7 @@ class FollowUpReminderJob extends TimedJob {
 	 */
 	public function markNotified(string $occurrence): void {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->markerKey(occurrence: $occurrence),
 			(string)$this->time->getTime()
 		);
@@ -436,7 +436,7 @@ class FollowUpReminderJob extends TimedJob {
 	 * @return array<int, array<string, mixed>> The rows.
 	 */
 	private function rows(object $objectService, string $register, string $schemaKey): array {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($schema === '') {
 			return [];
 		}
@@ -525,14 +525,14 @@ class FollowUpReminderJob extends TimedJob {
 	private function pruneStaleMarkers(int $now): void {
 		try {
 			$cutoff = ($now - (2 * $this->windowHours() * 3600));
-			foreach ($this->appConfig->getKeys(Application::APP_ID) as $key) {
+			foreach ($this->appConfig->getKeys(AppIdentity::APP_ID) as $key) {
 				if (str_starts_with($key, self::NOTIFIED_KEY_PREFIX) === false) {
 					continue;
 				}
 
-				$marked = (int)$this->appConfig->getValueString(Application::APP_ID, $key, '0');
+				$marked = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, $key, '0');
 				if ($marked > 0 && $marked < $cutoff) {
-					$this->appConfig->deleteKey(Application::APP_ID, $key);
+					$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 				}
 			}
 		} catch (Throwable $e) {

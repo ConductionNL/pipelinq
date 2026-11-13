@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Letter;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\TicketService;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -95,7 +95,7 @@ class LetterLog
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: the letter is made but its contact moment was not saved',
-                ['app' => Application::APP_ID, 'clientId' => $clientId, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'clientId' => $clientId, 'exception' => $e->getMessage()]
             );
             return null;
         }

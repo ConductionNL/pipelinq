@@ -36,7 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Marketing\BlastSendRun;
 use OCA\Pipelinq\Service\Marketing\ListPage;
 use OCA\Pipelinq\Service\Marketing\ObjectQuery;
@@ -756,7 +756,7 @@ class BlastService {
 	 * @return string Schema slug.
 	 */
 	private function getMailingListSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailing_list_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'mailing_list_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1378,7 +1378,7 @@ class BlastService {
 	 */
 	private function resolveBatchSize(): int {
 		$configured = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'blast.dispatch_batch_size',
 			(string)self::DEFAULT_DISPATCH_BATCH_SIZE,
 		);
@@ -1742,7 +1742,7 @@ class BlastService {
 	 * @return string Slug.
 	 */
 	private function getBlastSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blast_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1756,7 +1756,7 @@ class BlastService {
 	 * @return string Slug.
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1770,7 +1770,7 @@ class BlastService {
 	 * @return string Slug.
 	 */
 	private function getCampaignTemplateSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'campaignTemplate_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignTemplate_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1784,7 +1784,7 @@ class BlastService {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}

@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\BrpCacheService;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Service\BsnAudit\LookupReason;
@@ -113,7 +113,7 @@ class BrpMutationWebhookListener {
 	 * @return bool
 	 */
 	private function isSignatureAccepted(string $rawBody, string $signature): bool {
-		$secret = $this->appConfig->getValueString(Application::APP_ID, 'brp.webhook_secret', '');
+		$secret = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.webhook_secret', '');
 		if ($secret === '') {
 			$this->logger->warning('BRP webhook secret not configured; dropping delivery');
 			return false;

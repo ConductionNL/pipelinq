@@ -39,7 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -395,7 +395,7 @@ class PosCustomerLinkService {
 	 * @return int The number of lines; 0 when they cannot be read.
 	 */
 	private function countLines(string $transactionId, string $register): int {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransactionLine_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransactionLine_schema', '');
 		if ($transactionId === '' || $schema === '') {
 			return 0;
 		}
@@ -626,7 +626,7 @@ class PosCustomerLinkService {
 	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
 	public function enabledSearchFields(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, 'customerSearchFields', 'name,email,phone');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, 'customerSearchFields', 'name,email,phone');
 		$parts = array_filter(array_map('trim', explode(',', $raw)));
 
 		$allowed = ['name', 'email', 'phone'];
@@ -651,7 +651,7 @@ class PosCustomerLinkService {
 	 */
 	public function historyDepth(): int {
 		$value = (int)$this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'customerHistoryDepth',
 			(string)self::DEFAULT_HISTORY_LIMIT
 		);
@@ -673,7 +673,7 @@ class PosCustomerLinkService {
 	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
 	public function isSyncEnabled(): bool {
-		$value = $this->appConfig->getValueString(Application::APP_ID, 'enablePipelinqSync', 'true');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, 'enablePipelinqSync', 'true');
 		return strtolower($value) !== 'false';
 	}//end isSyncEnabled()
 
@@ -687,7 +687,7 @@ class PosCustomerLinkService {
 	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
 	public function requiresCustomerForOnAccount(): bool {
-		$value = $this->appConfig->getValueString(Application::APP_ID, 'requireCustomerForOnAccount', 'true');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, 'requireCustomerForOnAccount', 'true');
 		return strtolower($value) !== 'false';
 	}//end requiresCustomerForOnAccount()
 
@@ -765,8 +765,8 @@ class PosCustomerLinkService {
 	 * @throws OCSNotFoundException When config is missing.
 	 */
 	private function configContact(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Contact register of schema is niet geconfigureerd.');
@@ -783,8 +783,8 @@ class PosCustomerLinkService {
 	 * @throws OCSNotFoundException When config is missing.
 	 */
 	private function configTransaction(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransaction_schema', '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');

@@ -37,7 +37,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DOMDocument;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
 use OCP\IAppConfig;
@@ -158,7 +158,7 @@ class LogiusConnector {
 		}
 
 		$tokenUrl = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::CONFIG_TOKEN_URL,
 			self::DEFAULT_BASE_URL . '/oauth/token'
 		);
@@ -180,8 +180,8 @@ class LogiusConnector {
 	 * @throws RuntimeException When either is not configured.
 	 */
 	private function clientCredentials(): array {
-		$clientId = $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_CLIENT_ID, '');
-		$clientSecret = $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_CLIENT_SECRET, '');
+		$clientId = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_CLIENT_ID, '');
+		$clientSecret = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_CLIENT_SECRET, '');
 
 		if ($clientId === '' || $clientSecret === '') {
 			throw new RuntimeException('Logius client credentials are not configured.');
@@ -244,7 +244,7 @@ class LogiusConnector {
 		$body = $this->outboundBody(message: $message);
 
 		$baseUrl = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::CONFIG_BASE_URL,
 			self::DEFAULT_BASE_URL
 		);
@@ -505,7 +505,7 @@ class LogiusConnector {
 		string $bsn,
 	): bool {
 		$baseUrl = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::CONFIG_BASE_URL,
 			self::DEFAULT_BASE_URL
 		);
@@ -550,7 +550,7 @@ class LogiusConnector {
 	 */
 	public function handleWebhookSignature(IRequest $request, string $rawBody): bool {
 		$secret = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::CONFIG_WEBHOOK_SECRET,
 			''
 		);

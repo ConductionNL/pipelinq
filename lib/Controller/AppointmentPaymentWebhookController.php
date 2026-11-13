@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -73,7 +73,7 @@ class AppointmentPaymentWebhookController extends Controller {
 		private AppointmentDepositService $deposit,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -233,7 +233,7 @@ class AppointmentPaymentWebhookController extends Controller {
 		}
 
 		$secret = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			AppointmentDepositService::WEBHOOK_SECRET_KEY,
 			''
 		);

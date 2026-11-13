@@ -39,7 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\IAppConfig;
 
@@ -380,7 +380,7 @@ class CampaignService {
 	 * @return array<int, string> Lowercase, trimmed, unique, in order.
 	 */
 	private function vocabulary(string $configKey, array $defaults): array {
-		$raw = trim($this->appConfig->getValueString(Application::APP_ID, $configKey, ''));
+		$raw = trim($this->appConfig->getValueString(AppIdentity::APP_ID, $configKey, ''));
 		if ($raw === '') {
 			return $defaults;
 		}

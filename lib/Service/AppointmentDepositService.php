@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -207,7 +207,7 @@ class AppointmentDepositService {
 					'returnUrl' => $returnUrl,
 					'webhookUrl' => $callbackUrl,
 					'metadata' => [
-						'app' => Application::APP_ID,
+						'app' => AppIdentity::APP_ID,
 						'kind' => 'appointment-deposit',
 						'bookingId' => $bookingId,
 					],
@@ -429,7 +429,7 @@ class AppointmentDepositService {
 	 */
 	private function paymentSourceSlug(): string {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::PAYMENT_SOURCE_KEY,
 			''
 		);
@@ -443,13 +443,13 @@ class AppointmentDepositService {
 	private function callbackUrl(): string {
 		try {
 			return $this->urlGenerator->linkToOCSRouteAbsolute(
-				routeName: Application::APP_ID . '.appointmentPaymentWebhook.callback'
+				routeName: AppIdentity::APP_ID . '.appointmentPaymentWebhook.callback'
 			);
 		} catch (Throwable $e) {
 			// Fall back to a relative path when the URL generator cannot
 			// build an absolute URL (no request context); openconnector
 			// resolves relative against its own base.
-			return '/index.php/apps/' . Application::APP_ID . '/api/appointment-payment-webhook';
+			return '/index.php/apps/' . AppIdentity::APP_ID . '/api/appointment-payment-webhook';
 		}
 	}//end callbackUrl()
 
@@ -465,9 +465,9 @@ class AppointmentDepositService {
 	 * @return void
 	 */
 	private function markDepositPaid(string $bookingId): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			BookingService::BOOKING_SCHEMA_KEY,
 			''
 		);

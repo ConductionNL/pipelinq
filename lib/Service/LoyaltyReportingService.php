@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -467,8 +467,8 @@ class LoyaltyReportingService {
 	 * @return ?array<string, mixed>
 	 */
 	private function getOption(string $optionId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'redemptionOption_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'redemptionOption_schema', '');
 		if ($register === '' || $schema === '' || $optionId === '') {
 			return null;
 		}
@@ -519,8 +519,8 @@ class LoyaltyReportingService {
 	 * @throws RuntimeException When the register or schema is not configured.
 	 */
 	private function accountConfig(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'klantLoyaltyAccount_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'klantLoyaltyAccount_schema', '');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('CustomerLoyaltyAccount register/schema is not configured.');
 		}

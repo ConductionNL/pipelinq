@@ -45,7 +45,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
@@ -109,7 +109,7 @@ class SurveyDispatchService {
 	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
 	 */
 	public function rules(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, self::RULES_KEY, '[]');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::RULES_KEY, '[]');
 
 		try {
 			$rules = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
@@ -388,8 +388,8 @@ class SurveyDispatchService {
 	 * @return array<int, array<string, mixed>> The rows.
 	 */
 	public function read(array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'surveyInvitation_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'surveyInvitation_schema', '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug('SurveyDispatchService: the survey surface is not configured');
 
@@ -439,8 +439,8 @@ class SurveyDispatchService {
 	 * @return bool True when the write landed.
 	 */
 	public function write(array $invitation, ?string $uuid = null): bool {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'surveyInvitation_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'surveyInvitation_schema', '');
 		if ($register === '' || $schema === '') {
 			return false;
 		}

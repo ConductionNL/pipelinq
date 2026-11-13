@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\WhatsAppInbound;
 use OCA\Pipelinq\Service\Provider\WhatsAppMessage;
@@ -223,7 +223,7 @@ class WhatsAppAdapter {
 			return ['status' => self::STATUS_CONSENT_MISSING];
 		}
 
-		$language = (string)$this->appConfig->getValueString(Application::APP_ID, 'whatsapp.default_language', 'nl');
+		$language = (string)$this->appConfig->getValueString(AppIdentity::APP_ID, 'whatsapp.default_language', 'nl');
 		$resolved = $this->resolveSendContext(
 			request: new WhatsAppTemplateRequest(templateId: $templateId, parameters: $parameters, language: $language),
 			contactId: $contactId
@@ -1231,7 +1231,7 @@ class WhatsAppAdapter {
 	private function sendOptOutAcknowledgement(string $phone, array $providerRow): void {
 		try {
 			$body = (string)$this->appConfig->getValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'whatsapp.opt_out_ack_body',
 				'Bedankt. U bent uitgeschreven en ontvangt geen verdere berichten via dit kanaal.'
 			);
@@ -1496,7 +1496,7 @@ class WhatsAppAdapter {
 	 * @return string Tenant id.
 	 */
 	private function getTenantId(): string {
-		$tenantId = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
+		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
 		if ($tenantId !== '') {
 			return $tenantId;
 		}
@@ -1513,7 +1513,7 @@ class WhatsAppAdapter {
 	 * @return string Slug.
 	 */
 	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1527,7 +1527,7 @@ class WhatsAppAdapter {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}

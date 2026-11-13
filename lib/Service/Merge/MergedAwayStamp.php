@@ -31,7 +31,7 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 
 /**
@@ -97,8 +97,8 @@ class MergedAwayStamp {
 		}
 
 		$schemas = [
-			$this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
-			$this->appConfig->getValueString(Application::APP_ID, 'contact_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', ''),
 		];
 		return in_array((string)$record->getSchema(), array_filter($schemas), true);
 	}//end isParty()

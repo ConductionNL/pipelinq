@@ -31,7 +31,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
 use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -455,7 +455,7 @@ class PointsLedgerService {
 	 * @throws RuntimeException When another movement on the account holds the lock.
 	 */
 	private function underAccountLock(string $accountId, callable $write): array {
-		$key = Application::APP_ID . '/loyalty-account/' . $accountId;
+		$key = AppIdentity::APP_ID . '/loyalty-account/' . $accountId;
 		try {
 			$this->locking->acquireLock($key, ILockingProvider::LOCK_EXCLUSIVE);
 		} catch (LockedException $e) {
@@ -625,8 +625,8 @@ class PointsLedgerService {
 	 *                                     when unconfigured.
 	 */
 	private function config(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'pointsLedgerEntry_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pointsLedgerEntry_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/pointsLedgerEntry_schema not configured; OpenRegister calls are refused, not run unscoped'

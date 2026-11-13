@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\SemanticHandoffService;
 use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCP\App\IAppManager;
@@ -60,7 +60,7 @@ class DashboardController extends Controller {
 		private readonly IAppManager $appManager,
 		private readonly SemanticHandoffService $handoffService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -93,19 +93,19 @@ class DashboardController extends Controller {
 		$this->initialState->provideInitialState(
 			MenuStructure::KEY,
 			$this->menuStructure->normalise(
-				stored: $this->appConfig->getValueString(Application::APP_ID, MenuStructure::KEY, '')
+				stored: $this->appConfig->getValueString(AppIdentity::APP_ID, MenuStructure::KEY, '')
 			)
 		);
 		$this->initialState->provideInitialState(
 			MenuStructure::MODULES_KEY,
 			$this->menuStructure->normaliseModules(
-				stored: $this->appConfig->getValueString(Application::APP_ID, MenuStructure::MODULES_KEY, '')
+				stored: $this->appConfig->getValueString(AppIdentity::APP_ID, MenuStructure::MODULES_KEY, '')
 			)
 		);
 
 		$this->initialState->provideInitialState(
 			'version',
-			$this->appManager->getAppVersion(appId: Application::APP_ID)
+			$this->appManager->getAppVersion(appId: AppIdentity::APP_ID)
 		);
 
 		$caseTarget = [];
@@ -116,6 +116,6 @@ class DashboardController extends Controller {
 
 		$this->initialState->provideInitialState('case_target', $caseTarget);
 
-		return new TemplateResponse(Application::APP_ID, 'index');
+		return new TemplateResponse(AppIdentity::APP_ID, 'index');
 	}//end page()
 }//end class

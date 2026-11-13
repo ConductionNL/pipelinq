@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -93,9 +93,9 @@ class CtiContactMatcher {
 			return ['matches' => [], 'totalMatches' => 0];
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$contactSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 
 		if ($register === '') {
 			return ['matches' => [], 'totalMatches' => 0];
@@ -241,9 +241,9 @@ class CtiContactMatcher {
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
 	 */
 	public function normaliseStoredPhoneNumbers(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$contactSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '') {
 			return ['updated' => 0, 'skipped' => 0];
 		}

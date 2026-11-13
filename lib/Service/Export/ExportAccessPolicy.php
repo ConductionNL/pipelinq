@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -85,7 +85,7 @@ class ExportAccessPolicy {
 			return true;
 		}
 
-		$group = $this->appConfig->getValueString(Application::APP_ID, self::ANALYST_GROUP_KEY, '');
+		$group = $this->appConfig->getValueString(AppIdentity::APP_ID, self::ANALYST_GROUP_KEY, '');
 		if ($group === '') {
 			return false;
 		}

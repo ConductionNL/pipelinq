@@ -38,7 +38,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -363,8 +363,8 @@ class SurveyResponseService {
 	 * @return array<string, mixed> The object, or [].
 	 */
 	private function readPublic(string $uuid, string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if (trim($uuid) === '' || $register === '' || $schema === '') {
 			return [];
 		}
@@ -415,8 +415,8 @@ class SurveyResponseService {
 	 * @return string The response's uuid, or '' when it could not be written.
 	 */
 	private function writeResponse(array $response): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'surveyResponse_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'surveyResponse_schema', '');
 		if ($register === '' || $schema === '') {
 			return '';
 		}

@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IUserManager;
 use OCP\L10N\IFactory;
 use OCP\Mail\IMailer;
@@ -93,7 +93,7 @@ class ReportMailDelivery {
 			return self::outcome(userId: $userId, status: self::FAILED, reason: 'The recipient has no email address.');
 		}
 
-		$l = $this->l10nFactory->get(Application::APP_ID, $this->l10nFactory->getUserLanguage($user));
+		$l = $this->l10nFactory->get(AppIdentity::APP_ID, $this->l10nFactory->getUserLanguage($user));
 		$name = (string)($job['name'] ?? '');
 
 		try {

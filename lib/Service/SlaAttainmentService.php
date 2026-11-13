@@ -29,7 +29,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -326,8 +326,8 @@ class SlaAttainmentService {
 	 * @return array<int, array<string, mixed>> Events.
 	 */
 	private function loadBreachEventsInRange(array $range): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_breach_event_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_breach_event_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -531,8 +531,8 @@ class SlaAttainmentService {
 	 * @return array<int, mixed> Rows ([] when unconfigured/unavailable).
 	 */
 	private function findConfiguredObjects(string $registerKey, string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, $registerKey, '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, $registerKey, '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schemaId === '') {
 			return [];
 		}

@@ -40,7 +40,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -108,7 +108,7 @@ class GenerateZReportJob extends TimedJob {
 	 */
 	protected function run(mixed $argument): void {
 		$configured = trim(
-			$this->appConfig->getValueString(Application::APP_ID, 'pos_eod.z_report_time', '23:59')
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'pos_eod.z_report_time', '23:59')
 		);
 
 		if ($this->isDueNow(configured: $configured) === false) {

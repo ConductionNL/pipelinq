@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -102,10 +102,10 @@ class RetentionMetadataBackfillService {
 	public function backfill(array $schemaKeys): array {
 		$counts = ['status' => 'done', 'applied' => 0, 'skipped' => 0, 'failed' => 0];
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schemas = [];
 		foreach ($schemaKeys as $key) {
-			$schema = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 			if ($schema !== '') {
 				$schemas[] = $schema;
 			}

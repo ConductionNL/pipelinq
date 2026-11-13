@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 
@@ -279,7 +279,7 @@ class ForecastDealService {
 	 */
 	public function getCommitThreshold(): int {
 		$configured = $this->appConfig->getValueInt(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::COMMIT_THRESHOLD_KEY,
 			self::COMMIT_THRESHOLD_DEFAULT
 		);

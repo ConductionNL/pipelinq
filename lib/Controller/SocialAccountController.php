@@ -40,7 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ConnectionReportService;
 use OCA\Pipelinq\Service\SocialAccountService;
@@ -75,7 +75,7 @@ class SocialAccountController extends Controller {
 		private readonly ObjectOwnerAccessPolicy $policy,
 		private readonly ConnectionReportService $connectionReports,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -280,7 +280,7 @@ class SocialAccountController extends Controller {
 	 * @return string The return path.
 	 */
 	private function returnUrl(string $accountId): string {
-		return '/apps/' . Application::APP_ID . '/social-accounts/' . rawurlencode($accountId);
+		return '/apps/' . AppIdentity::APP_ID . '/social-accounts/' . rawurlencode($accountId);
 	}//end returnUrl()
 
 	/**

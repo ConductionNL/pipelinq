@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Letter;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -130,7 +130,7 @@ class FilinqLetterAdapter
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: filinq refused the letter template listing',
-                ['app' => Application::APP_ID, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'exception' => $e->getMessage()]
             );
             throw new RuntimeException('filinq_failed: '.$e->getMessage(), 0, $e);
         }
@@ -225,7 +225,7 @@ class FilinqLetterAdapter
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: filinq refused a letter render',
-                ['app' => Application::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
             );
             throw new RuntimeException('filinq_render_failed: '.$e->getMessage(), 0, $e);
         }
@@ -280,7 +280,7 @@ class FilinqLetterAdapter
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: filinq refused a letter preview',
-                ['app' => Application::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
             );
             throw new RuntimeException('filinq_preview_failed: '.$e->getMessage(), 0, $e);
         }

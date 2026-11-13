@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service\Mdm;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -96,7 +96,7 @@ class MdmObjectRepository {
 	 * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
 	 */
 	public function register(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, self::REGISTER_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, self::REGISTER_KEY, '');
 		if ($register === '') {
 			throw new RuntimeException('Pipelinq register is not configured.');
 		}
@@ -115,7 +115,7 @@ class MdmObjectRepository {
 	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function schema(string $schemaSlug): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaSlug . '_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaSlug . '_schema', '');
 		if ($schema === '') {
 			throw new RuntimeException("MDM schema '{$schemaSlug}' is not configured.");
 		}

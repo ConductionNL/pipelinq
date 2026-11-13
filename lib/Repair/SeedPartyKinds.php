@@ -33,7 +33,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\PartyKindRegistryService;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -156,8 +156,8 @@ class SeedPartyKinds implements IRepairStep {
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function run(IOutput $output): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'partyKind_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'partyKind_schema', '');
 		if ($register === '' || $schema === '') {
 			$output->info('Party kind registry not configured — skipping the seed.');
 			return;

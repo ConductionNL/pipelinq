@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\CallReview;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\Files\File;
@@ -210,7 +210,7 @@ class CallTranscriptionService {
 	 * @return string
 	 */
 	private function speechToText(File $file, array $ticket): string {
-		$task   = new Task(self::TASK_TYPE, ['input' => $file->getId()], Application::APP_ID, null, 'ticket:'.($ticket['id'] ?? ''));
+		$task   = new Task(self::TASK_TYPE, ['input' => $file->getId()], AppIdentity::APP_ID, null, 'ticket:'.($ticket['id'] ?? ''));
 		$done   = $this->taskProcessing->runTask($task);
 		$output = $done->getOutput();
 		if ($done->getStatus() !== Task::STATUS_SUCCESSFUL || is_array($output) === false || is_string($output['output'] ?? null) === false) {

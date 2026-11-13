@@ -27,8 +27,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Db\SchemaMapper;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\PosStockMovedEvent;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -799,8 +799,8 @@ class PosTransactionService {
 			return ['', ''];
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'product_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'product_schema', '');
 		if ($register === '' || $schema === '') {
 			return ['', ''];
 		}
@@ -1421,8 +1421,8 @@ class PosTransactionService {
 	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		// A deployed app-config frequently leaves the numeric POS schema ids
 		// empty (the OpenRegister schema exists under its canonical slug but the

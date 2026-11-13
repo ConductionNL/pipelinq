@@ -36,7 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -391,7 +391,7 @@ class ZtcClient {
 	 * @return int
 	 */
 	private function ttl(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.ztc_cache_ttl', self::DEFAULT_TTL_S);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'zgw.ztc_cache_ttl', self::DEFAULT_TTL_S);
 		if ($value > 0) {
 			return $value;
 		}

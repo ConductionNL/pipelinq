@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\SettingsService;
@@ -177,7 +177,7 @@ class SetupController extends Controller {
 		$integrationsDone = $this->anyConfigured(keys: ['billing_handoff_manager_group']);
 
 		if ($currencyDone === true) {
-			$this->appConfig->setValueString(Application::APP_ID, 'setup_completed_version', (string)self::SETUP_VERSION);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'setup_completed_version', (string)self::SETUP_VERSION);
 		}
 
 		return new DataResponse(
@@ -238,8 +238,8 @@ class SetupController extends Controller {
 	private function skipDemoData(): DataResponse {
 		// Skipping IS choosing "None", so both keys are written: an older
 		// runbook may read either one.
-		$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
-		$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
 
 		return new DataResponse(
 			['success' => true, 'message' => 'Demo data skipped. You can seed it later with `occ pipelinq:demo:seed`.']
@@ -275,7 +275,7 @@ class SetupController extends Controller {
 				$stored = (string)$value;
 			}
 
-			$this->appConfig->setValueString(Application::APP_ID, (string)$key, $stored);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, (string)$key, $stored);
 		}
 
 		return new DataResponse(['success' => true]);
@@ -435,8 +435,8 @@ class SetupController extends Controller {
 		}
 
 		if ($picked === DemoSeedService::NONE_DATASET) {
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
 
 			return new DataResponse(['success' => true, 'message' => 'No example data was seeded.']);
 		}
@@ -465,8 +465,8 @@ class SetupController extends Controller {
 			// DEMO_DATA_DECIDED_KEY — an optional step the server can never
 			// report done covers the whole app with the setup wizard.
 			// Seeding IS choosing the set, so the pick is written too.
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::DEMO_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedService::DEMO_DATASET);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
 
 			// The example records that used to ship inside the register descriptor.
 			$example = $this->registerImporter->import();
@@ -503,7 +503,7 @@ class SetupController extends Controller {
 	 */
 	private function dismissSetup(): DataResponse {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::DISMISSED_VERSION_KEY,
 			(string)self::SETUP_VERSION
 		);
@@ -535,6 +535,6 @@ class SetupController extends Controller {
 	 * @return string The value, or '' when unset.
 	 */
 	private function config(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end config()
 }//end class

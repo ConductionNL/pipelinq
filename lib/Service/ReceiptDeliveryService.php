@@ -31,7 +31,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -277,7 +277,7 @@ class ReceiptDeliveryService {
 			$message->setPlainBody($text);
 			$message->setHtmlBody($html);
 
-			$sender = $this->appConfig->getValueString(Application::APP_ID, 'receipt_email_sender', '');
+			$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_email_sender', '');
 			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
 				$message->setFrom([$sender]);
 			}
@@ -357,8 +357,8 @@ class ReceiptDeliveryService {
 		$transaction = $this->ensureInvoiceNumber(transaction: $transaction);
 
 		$bytes = $this->receiptService->renderEscPos(transaction: $transaction, template: $template);
-		$device = $this->appConfig->getValueString(Application::APP_ID, 'receipt_printer_host', '');
-		$port = $this->appConfig->getValueString(Application::APP_ID, 'receipt_printer_port', '9100');
+		$device = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_printer_host', '');
+		$port = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_printer_port', '9100');
 		$target = '';
 		if ($device !== '') {
 			$target = $device . ':' . $port;
@@ -746,8 +746,8 @@ class ReceiptDeliveryService {
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 */
 	private function resolveSchema(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
 		}

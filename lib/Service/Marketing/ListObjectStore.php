@@ -34,7 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -83,7 +83,7 @@ class ListObjectStore {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 	 */
 	public function schemaSlug(string $configKey, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $configKey, '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $configKey, '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -307,7 +307,7 @@ class ListObjectStore {
 			return null;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$register = self::DEFAULT_REGISTER_SLUG;
 		}

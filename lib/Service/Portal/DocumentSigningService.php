@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
@@ -169,10 +169,10 @@ class DocumentSigningService {
 	 * @return string The signing key.
 	 */
 	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(Application::APP_ID, self::SIGNING_KEY, '');
+		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SIGNING_KEY, '');
 		if ($key === '') {
 			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(Application::APP_ID, self::SIGNING_KEY, $key, false, true);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SIGNING_KEY, $key, false, true);
 		}
 
 		return $key;

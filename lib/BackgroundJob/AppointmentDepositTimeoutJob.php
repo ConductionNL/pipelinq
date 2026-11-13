@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCA\Pipelinq\Service\BookingService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -137,9 +137,9 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 	 * @return array<int, mixed>
 	 */
 	private function loadPendingDeposits(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			BookingService::BOOKING_SCHEMA_KEY,
 			''
 		);

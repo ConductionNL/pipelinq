@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -2322,7 +2322,7 @@ class SegmentService {
 	 */
 	private function configuredSchemaSlug(array $keys): ?string {
 		foreach ($keys as $key) {
-			$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 			if ($slug !== '') {
 				return $slug;
 			}
@@ -2434,7 +2434,7 @@ class SegmentService {
 	 * @return string Schema slug.
 	 */
 	private function getSegmentSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'segment_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'segment_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -2464,7 +2464,7 @@ class SegmentService {
 	 * @return string Register slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -2531,7 +2531,7 @@ class SegmentService {
 	 */
 	private function getEstimateTtl(): int {
 		$configured = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'segment.estimate_ttl_seconds',
 			(string)self::DEFAULT_ESTIMATE_TTL_SECONDS
 		);

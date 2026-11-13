@@ -29,8 +29,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\SlaEngineService;
 use OCA\Pipelinq\Service\TicketService;
@@ -270,7 +270,7 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null Object data, or null when it is gone.
 	 */
 	private function fetch(string $uuid, string $schemaId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			return null;
 		}
@@ -305,7 +305,7 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 */
 	private function persist(string $uuid, string $schemaId, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '' || $schemaId === '' || $uuid === '') {
 			return;
 		}

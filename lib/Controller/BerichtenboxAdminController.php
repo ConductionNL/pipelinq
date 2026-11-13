@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -67,7 +67,7 @@ class BerichtenboxAdminController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly ObjectServiceInterface $objectService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -86,8 +86,8 @@ class BerichtenboxAdminController extends Controller {
 			$service = $this->getObjectService();
 			$message = $service->find(
 				id: $id,
-				register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', '')
+				register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+				schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', '')
 			);
 		} catch (Throwable $e) {
 			return new JSONResponse(
@@ -114,8 +114,8 @@ class BerichtenboxAdminController extends Controller {
 				->saveObject(
 					object: $data,
 					extend: [],
-					register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-					schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', ''),
+					register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+					schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', ''),
 					uuid: ($data['uuid'] ?? $id)
 				);
 		} catch (Throwable $e) {
@@ -138,8 +138,8 @@ class BerichtenboxAdminController extends Controller {
 	 * @spec openspec/changes/berichtenbox-admin-stats-pagination-and-tests/specs/berichtenbox-integration/spec.md
 	 */
 	public function stats(): JSONResponse {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', '');
 		$counters = [
 			'queued' => 0,
 			'sent' => 0,

@@ -33,7 +33,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Merge\PartyReferenceMover;
 use OCA\Pipelinq\Service\Merge\PartyReferences;
 use OCP\EventDispatcher\Event;
@@ -147,7 +147,7 @@ class ClientMergeReferenceListener implements IEventListener {
 
 		$schema = (string)$record->getSchema();
 		foreach (['client', 'contact'] as $type) {
-			$configured = $this->appConfig->getValueString(Application::APP_ID, $type.'_schema', '');
+			$configured = $this->appConfig->getValueString(AppIdentity::APP_ID, $type.'_schema', '');
 			if ($configured !== '' && $configured === $schema) {
 				return $type;
 			}

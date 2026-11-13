@@ -32,7 +32,7 @@ namespace OCA\Pipelinq\Service\Event;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -126,7 +126,7 @@ class EventReminderService
     private function stamp(string $eventId, array $event): void
     {
         $register = $this->reader->register();
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'campaignEvent_schema', '');
+        $schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignEvent_schema', '');
         try {
             $this->objectService->saveObject(
                 object: array_merge($event, ['reminderSentAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM)]),
@@ -151,7 +151,7 @@ class EventReminderService
     private function confirmedRegistrations(string $eventId): array
     {
         $register = $this->reader->register();
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'eventRegistration_schema', '');
+        $schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'eventRegistration_schema', '');
         if ($register === '' || $schema === '') {
             return [];
         }
@@ -211,7 +211,7 @@ class EventReminderService
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: an event reminder could not be sent',
-                ['app' => Application::APP_ID, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'exception' => $e->getMessage()]
             );
             return false;
         }

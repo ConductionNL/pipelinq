@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\SmsAdapter;
 use OCA\Pipelinq\Service\WhatsAppAdapter;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -294,7 +294,7 @@ class WebhookProcessorJob extends TimedJob {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -308,7 +308,7 @@ class WebhookProcessorJob extends TimedJob {
 	 * @return string Slug.
 	 */
 	private function getSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'webhookQueue_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'webhookQueue_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}

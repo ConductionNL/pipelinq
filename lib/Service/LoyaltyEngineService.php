@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Loyalty\LoyaltyPurchase;
 use OCA\Pipelinq\Service\Loyalty\PointsCreditRun;
 use OCA\Pipelinq\Service\Loyalty\PointsGrant;
@@ -402,8 +402,8 @@ class LoyaltyEngineService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function getActiveProgrammes(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'loyaltyProgramme_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'loyaltyProgramme_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}

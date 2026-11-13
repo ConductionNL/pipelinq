@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
 use OCA\Pipelinq\Service\Portal\PortalRequestService;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
@@ -87,7 +87,7 @@ class ResidentViewController extends Controller {
 		private readonly PortalTenantService $tenants,
 		private readonly IAppManager $apps,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

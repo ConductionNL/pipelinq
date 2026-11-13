@@ -31,7 +31,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SemanticHandoffService;
@@ -127,7 +127,7 @@ class SemanticHandoffController extends Controller {
 		private LoggerInterface $logger,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -166,17 +166,17 @@ class SemanticHandoffController extends Controller {
 				'caseReference' => (string)($request['caseReference'] ?? ''),
 				'caseTypeSource' => [
 					'register' => $this->appConfig->getValueString(
-						app: Application::APP_ID,
+						app: AppIdentity::APP_ID,
 						key: 'handoff_case_type_register',
 						default: 'dossiq'
 					),
 					'schema' => $this->appConfig->getValueString(
-						app: Application::APP_ID,
+						app: AppIdentity::APP_ID,
 						key: 'handoff_case_type_schema',
 						default: 'caseType'
 					),
 				],
-				'portalName' => $this->appConfig->getValueString(app: Application::APP_ID, key: 'portal_name', default: ''),
+				'portalName' => $this->appConfig->getValueString(app: AppIdentity::APP_ID, key: 'portal_name', default: ''),
 			]
 		);
 	}//end requestAvailability()
@@ -663,7 +663,7 @@ class SemanticHandoffController extends Controller {
 	 * @return string Slug; never empty.
 	 */
 	private function registerSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -680,7 +680,7 @@ class SemanticHandoffController extends Controller {
 	 * @return string Slug.
 	 */
 	private function schemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($slug !== '') {
 			return $slug;
 		}

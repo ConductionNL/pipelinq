@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\PointsLedgerService;
@@ -77,7 +77,7 @@ class PointsExpiryBatchJob extends TimedJob {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'loyalty.expiry.poll_interval_seconds',
 				self::DEFAULT_INTERVAL
 			)

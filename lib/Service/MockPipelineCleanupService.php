@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -251,7 +251,7 @@ class MockPipelineCleanupService {
 	 * @throws RuntimeException When the key is not set.
 	 */
 	private function config(string $key): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($value === '') {
 			throw new RuntimeException('Pipelinq is not configured: '.$key.' is empty');
 		}

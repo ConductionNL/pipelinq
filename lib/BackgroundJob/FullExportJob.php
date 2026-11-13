@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Export\FullExportService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
@@ -105,7 +105,7 @@ class FullExportJob extends QueuedJob {
 	private function notify(string $userId, string $subject, array $parameters): void {
 		try {
 			$notification = $this->notifications->createNotification();
-			$notification->setApp(Application::APP_ID)
+			$notification->setApp(AppIdentity::APP_ID)
 				->setUser($userId)
 				->setDateTime($this->time->getDateTime())
 				->setObject('export', (string) ($parameters['fileId'] ?? 'full'))

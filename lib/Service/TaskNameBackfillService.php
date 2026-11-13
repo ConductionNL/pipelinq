@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -100,8 +100,8 @@ class TaskNameBackfillService {
 	public function backfill(): array {
 		$counts = ['status' => 'done', 'named' => 0, 'skipped' => 0, 'failed' => 0];
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		if ($register === '' || $schema === '') {
 			$counts['status'] = 'not-configured';
 			return $counts;

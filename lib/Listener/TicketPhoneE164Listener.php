@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\TicketPhoneNumber;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -83,7 +83,7 @@ class TicketPhoneE164Listener implements IEventListener {
 			return;
 		}
 
-		$ticketSchema = $this->appConfig->getValueString(Application::APP_ID, 'ticket_schema', '');
+		$ticketSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
 		if ($ticketSchema === '' || (string) $entity->getSchema() !== $ticketSchema) {
 			return;
 		}

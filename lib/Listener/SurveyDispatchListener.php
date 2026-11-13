@@ -31,8 +31,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\SurveyDispatchService;
 use OCP\EventDispatcher\Event;
@@ -241,7 +241,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 
 		$contact = $this->read(
 			uuid: $uuid,
-			schema: $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '')
+			schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '')
 		);
 		if ($contact === null) {
 			return $client;
@@ -259,7 +259,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null The data.
 	 */
 	private function read(string $uuid, string $schema): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($uuid === '' || $schema === '' || $register === '') {
 			return null;
 		}

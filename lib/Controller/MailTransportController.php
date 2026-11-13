@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Marketing\DeliverabilityCheckService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -58,7 +58,7 @@ class MailTransportController extends Controller {
 		IRequest $request,
 		private DeliverabilityCheckService $deliverabilityCheckService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -74,7 +74,7 @@ class MailTransportController extends Controller {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $refresh is the documented
 	 *  cache-bypass request from the "Check now" button, not a behaviour switch.
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function checkDeliverability(string $id = '', bool $refresh = false): JSONResponse {
 		$verdict = $this->deliverabilityCheckService->checkTransportById(id: $id, forceRefresh: $refresh);
 		if ($verdict === null) {

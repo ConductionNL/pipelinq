@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Sla;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -90,7 +90,7 @@ class SlaSweepSource {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function register(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 	}//end register()
 
 	/**
@@ -102,7 +102,7 @@ class SlaSweepSource {
 	 */
 	public function interval(): int {
 		$configured = (int) $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'sla_sweep_interval_seconds',
 			'300',
 		);
@@ -138,7 +138,7 @@ class SlaSweepSource {
 	public function surfaces(SlaSweepRun $run): array {
 		$surfaces = $this->ticketSurfaces(run: $run);
 		foreach (self::SCHEMA_TYPES as $schemaConfigKey => $type) {
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaConfigKey, '');
+			$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaConfigKey, '');
 			if ($schemaId !== '') {
 				$surfaces[] = new SlaSweepSurface(run: $run, schemaId: $schemaId, type: $type, extraFilters: []);
 			}

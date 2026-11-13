@@ -46,6 +46,7 @@ use OCA\Pipelinq\Dashboard\StartRequestWidget;
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
@@ -117,7 +118,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
 class Application extends App implements IBootstrap {
-	public const APP_ID = 'pipelinq';
+	public const APP_ID = AppIdentity::APP_ID;
 
 	/**
 	 * Constructor for the Application class.

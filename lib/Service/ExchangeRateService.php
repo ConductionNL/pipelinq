@@ -25,8 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 
@@ -152,7 +152,7 @@ class ExchangeRateService {
 	 */
 	public function getReportingCurrency(): string {
 		foreach ([self::REPORTING_CURRENCY_KEY, self::LEGACY_REPORTING_CURRENCY_KEY] as $key) {
-			$currency = strtoupper(trim($this->appConfig->getValueString(Application::APP_ID, $key, '')));
+			$currency = strtoupper(trim($this->appConfig->getValueString(AppIdentity::APP_ID, $key, '')));
 			if ($currency !== '') {
 				return $currency;
 			}
@@ -257,7 +257,7 @@ class ExchangeRateService {
 	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-a-stale-rate-is-shown-as-stale-req-dxr-002
 	 */
 	public function getMaxRateAgeDays(): int {
-		$days = $this->appConfig->getValueInt(Application::APP_ID, self::MAX_RATE_AGE_KEY, self::MAX_RATE_AGE_DEFAULT);
+		$days = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::MAX_RATE_AGE_KEY, self::MAX_RATE_AGE_DEFAULT);
 		if ($days < 1) {
 			return self::MAX_RATE_AGE_DEFAULT;
 		}
@@ -273,7 +273,7 @@ class ExchangeRateService {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function getRates(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, self::RATES_KEY, '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::RATES_KEY, '');
 		$table = json_decode($raw, true);
 		if (is_array($table) === false) {
 			return [];

@@ -44,7 +44,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\NullableRowIdOf;
@@ -107,9 +107,9 @@ class PortalObjectRepository {
 	 *   audit are all unspecified
 	 */
 	public function registerId(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, self::PORTAL_REGISTER_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PORTAL_REGISTER_KEY, '');
 		if ($register === '') {
-			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+			$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		}
 
 		if ($register === '') {
@@ -136,7 +136,7 @@ class PortalObjectRepository {
 	 */
 	public function schemaId(string $schemaSlug): string {
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaSlug] ?? $schemaSlug . '_schema'),
 			''
 		);

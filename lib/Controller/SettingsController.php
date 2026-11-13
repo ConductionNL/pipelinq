@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -71,7 +71,7 @@ class SettingsController extends Controller {
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -135,7 +135,7 @@ class SettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function update(): JSONResponse {
 		$data = $this->request->getParams();
 
@@ -174,7 +174,7 @@ class SettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function create(): JSONResponse {
 		return $this->update();
 	}//end create()
@@ -186,7 +186,7 @@ class SettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function reimport(): JSONResponse {
 		try {
 			$result = $this->settingsService->loadSettings(force: true);

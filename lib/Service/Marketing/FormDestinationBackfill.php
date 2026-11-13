@@ -36,7 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\CampaignService;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -146,7 +146,7 @@ class FormDestinationBackfill {
 		do {
 			$page = $objects->findAll(
 				config: [
-					'filters' => ['register' => self::FORM_REGISTER, 'schema' => self::FORM_SCHEMA, 'sourceApp' => Application::APP_ID],
+					'filters' => ['register' => self::FORM_REGISTER, 'schema' => self::FORM_SCHEMA, 'sourceApp' => AppIdentity::APP_ID],
 					'limit' => self::PAGE,
 					'offset' => $offset,
 				],
@@ -161,7 +161,7 @@ class FormDestinationBackfill {
 			foreach ($page as $row) {
 				$count++;
 				$form = $this->formOf(row: $row);
-				if ($form !== null && (string)($form['data']['sourceApp'] ?? '') === Application::APP_ID) {
+				if ($form !== null && (string)($form['data']['sourceApp'] ?? '') === AppIdentity::APP_ID) {
 					$forms[] = $form;
 				}
 			}

@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -257,7 +257,7 @@ class Customer360SummaryService {
 	 * @return string Resolved schema slug, or empty string when missing.
 	 */
 	private function getSchema(string $schemaKey): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 	}//end getSchema()
 
 	/**

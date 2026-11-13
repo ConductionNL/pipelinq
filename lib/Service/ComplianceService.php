@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
 use OCA\Pipelinq\Service\Consent\ConsentWithdrawal;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
@@ -305,7 +305,7 @@ class ComplianceService {
 			return false;
 		}
 
-		if ($this->appConfig->getValueBool(Application::APP_ID, 'marketing.suppress_late_payers', true) === false) {
+		if ($this->appConfig->getValueBool(AppIdentity::APP_ID, 'marketing.suppress_late_payers', true) === false) {
 			return false;
 		}
 
@@ -323,7 +323,7 @@ class ComplianceService {
 	 * @return array<int, string> The configured states, or the default pair.
 	 */
 	private function suppressingStates(): array {
-		$raw = trim($this->appConfig->getValueString(Application::APP_ID, 'marketing.suppression_states', ''));
+		$raw = trim($this->appConfig->getValueString(AppIdentity::APP_ID, 'marketing.suppression_states', ''));
 		if ($raw === '') {
 			return SegmentSignalService::SUPPRESSING_DUNNING_STATES;
 		}
@@ -1156,7 +1156,7 @@ class ComplianceService {
 	 * @return string Schema slug.
 	 */
 	private function getCampaignTemplateSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'campaignTemplate_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignTemplate_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1705,7 +1705,7 @@ class ComplianceService {
 	 * @return string Register slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1719,7 +1719,7 @@ class ComplianceService {
 	 * @return string Schema slug.
 	 */
 	private function getConsentRecordSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'consent_record_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'consent_record_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1733,7 +1733,7 @@ class ComplianceService {
 	 * @return string Schema slug.
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blast_delivery_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_delivery_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}

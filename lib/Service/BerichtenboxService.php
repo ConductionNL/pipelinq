@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
 use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
@@ -141,7 +141,7 @@ class BerichtenboxService {
 		$template  = $this->templateFor(message: $message, options: $options);
 		$variables = $options->variablesOver(
 			defaults: $message->variables(
-				gemeente: $this->appConfig->getValueString(Application::APP_ID, 'tenant_display_name', 'Gemeente'),
+				gemeente: $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_display_name', 'Gemeente'),
 				messageId: $this->logius->newUuidV4()
 			)
 		);
@@ -454,8 +454,8 @@ class BerichtenboxService {
 
 		$total = 0;
 		foreach (['berichtenboxMessage_schema', 'berichtenboxReply_schema', 'mailboxResolution_schema'] as $schemaKey) {
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-			$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+			$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
+			$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 			if ($schemaId === '' || $registerId === '') {
 				continue;
 			}
@@ -534,8 +534,8 @@ class BerichtenboxService {
 		// signing silently deactivated. The empty default is the permissive
 		// value here, so refuse the dispatch and let the normal retry/fail path
 		// record it instead of shipping an unsigned citizen message.
-		$cert = $this->appConfig->getValueString(Application::APP_ID, 'pki_cert', '');
-		$key = $this->appConfig->getValueString(Application::APP_ID, 'pki_key', '');
+		$cert = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pki_cert', '');
+		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pki_key', '');
 		if ($cert === '' || $key === '') {
 			$this->logger->error(
 				'Pipelinq Berichtenbox: refusing to dispatch — tenant PKI-overheid cert/key is not configured, '
@@ -856,9 +856,9 @@ class BerichtenboxService {
 	 * @return array{register: string, schema: string}|null The scope.
 	 */
 	private function templateScope(): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'berichtenboxTemplate_schema',
 			''
 		);
@@ -1017,9 +1017,9 @@ class BerichtenboxService {
 	 * @return array
 	 */
 	private function saveReply(array $payload): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'berichtenboxReply_schema',
 			''
 		);
@@ -1043,9 +1043,9 @@ class BerichtenboxService {
 	 * @return array{0: string, 1: string}
 	 */
 	private function messageConfig(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'berichtenboxMessage_schema',
 			''
 		);
@@ -1062,7 +1062,7 @@ class BerichtenboxService {
 	 * @return string
 	 */
 	private function resolveTenantId(): string {
-		$tenant = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
+		$tenant = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
 		if ($tenant === '') {
 			return self::DEFAULT_TENANT_ID;
 		}

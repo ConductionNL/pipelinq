@@ -45,7 +45,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -293,7 +293,7 @@ class ZgwApiClient {
 		$path = substr($reference, strlen('vault://'));
 		$key = 'zgw.vault.' . $path;
 
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end resolveClientSecret()
 
 	/**
@@ -525,7 +525,7 @@ class ZgwApiClient {
 	 * @return int
 	 */
 	private function getTimeout(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.http_timeout', self::DEFAULT_TIMEOUT);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'zgw.http_timeout', self::DEFAULT_TIMEOUT);
 		if ($value > 0) {
 			return $value;
 		}

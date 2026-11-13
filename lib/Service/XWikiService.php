@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -566,7 +566,7 @@ class XWikiService {
 	 * @return int
 	 */
 	private function getCacheTtl(): int {
-		$raw = (int)$this->appConfig->getValueString(Application::APP_ID, 'xwiki_cache_ttl', (string)self::DEFAULT_CACHE_TTL);
+		$raw = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, 'xwiki_cache_ttl', (string)self::DEFAULT_CACHE_TTL);
 		if ($raw > 0) {
 			return $raw;
 		}

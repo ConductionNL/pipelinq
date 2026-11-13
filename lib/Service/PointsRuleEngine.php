@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -485,8 +485,8 @@ class PointsRuleEngine {
 	 */
 	private function config(): array {
 		return [
-			$this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-			$this->appConfig->getValueString(Application::APP_ID, 'pointsRule_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'pointsRule_schema', ''),
 		];
 	}//end config()
 

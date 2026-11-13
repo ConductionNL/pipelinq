@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\FullExportJob;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -63,7 +63,7 @@ class FullExportController extends Controller {
 		private readonly IGroupManager $groups,
 		private readonly IJobList $jobs,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

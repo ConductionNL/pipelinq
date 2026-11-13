@@ -50,7 +50,7 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -133,7 +133,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 			return;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$output->warning('Pipelinq register not configured — skipping client/contact identity unification.');
 			return;
@@ -177,8 +177,8 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 */
 	public function migrate(object $objectService, string $register): array {
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
+		$contactSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 
 		// Contactmomenten live in the unified `ticket` schema and are narrowed by
 		// the `ticketType` discriminator (unify-ticket-supertype).
@@ -617,7 +617,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 		string $currentMasterEntity,
 		array $object,
 	): void {
-		$sourceRecordSchema = $this->appConfig->getValueString(Application::APP_ID, 'sourceRecord_schema', '');
+		$sourceRecordSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sourceRecord_schema', '');
 		if ($sourceRecordSchema === '') {
 			// MDM source-record schema not configured; provenance is best-effort.
 			return;
