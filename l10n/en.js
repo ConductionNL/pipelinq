@@ -1,6 +1,10 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Your data export is ready: %1$s": "Your data export is ready: %1$s",
+        "The archive with all Pipelinq data is in your Files.": "The archive with all Pipelinq data is in your Files.",
+        "Your data export could not be built": "Your data export could not be built",
+        "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.": "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.",
         "email, linked": "email, linked",
         "Merged": "Merged",
         "Open the merged record": "Open the merged record",
@@ -9472,11 +9476,7 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
-        "Your data export is ready: %1$s": "Your data export is ready: %1$s",
-        "The archive with all Pipelinq data is in your Files.": "The archive with all Pipelinq data is in your Files.",
-        "Your data export could not be built": "Your data export could not be built",
-        "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.": "Nothing was stored. Try again; if it fails again, ask your administrator to check the log."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
     },
     "nplurals=2; plural=(n != 1);"
 )

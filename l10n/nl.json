@@ -1,5 +1,9 @@
 {
     "translations": {
+        "Your data export is ready: %1$s": "Uw data-export staat klaar: %1$s",
+        "The archive with all Pipelinq data is in your Files.": "Het archief met alle Pipelinq-gegevens staat in uw Bestanden.",
+        "Your data export could not be built": "Uw data-export kon niet worden gemaakt",
+        "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.": "Er is niets opgeslagen. Probeer het opnieuw; lukt het weer niet, vraag dan uw beheerder het logboek na te kijken.",
         "Core CRM": "Basis-CRM",
         "Merged": "Samengevoegd",
         "Open the merged record": "Open het samengevoegde record",
@@ -9587,10 +9591,6 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
-        "Your data export is ready: %1$s": "Uw data-export staat klaar: %1$s",
-        "The archive with all Pipelinq data is in your Files.": "Het archief met alle Pipelinq-gegevens staat in uw Bestanden.",
-        "Your data export could not be built": "Uw data-export kon niet worden gemaakt",
-        "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.": "Er is niets opgeslagen. Probeer het opnieuw; lukt het weer niet, vraag dan uw beheerder het logboek na te kijken."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
     }
 }
