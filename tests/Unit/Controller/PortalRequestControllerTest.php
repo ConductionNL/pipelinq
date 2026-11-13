@@ -122,6 +122,13 @@ class PortalRequestControllerTest extends TestCase {
 	private array $saved = [];
 
 	/**
+	 * The tenant config the tenant service answers with.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private ?array $tenantConfig = null;
+
+	/**
 	 * The main-register reader mock.
 	 *
 	 * @var MainRegisterReader&MockObject
@@ -187,11 +194,14 @@ class PortalRequestControllerTest extends TestCase {
 			fn (string $key, mixed $default = null): mixed => ($this->params[$key] ?? $default)
 		);
 
+		$tenant = $this->createMock(PortalTenantService::class);
+		$tenant->method('getConfig')->with('tenant-a')->willReturnCallback(fn (): ?array => $this->tenantConfig);
+
 		return new PortalRequestController($request,
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			$requests,
-			$this->createMock(PortalTenantService::class)
+			$tenant
 		);
 	}//end build()
 
@@ -445,4 +455,120 @@ class PortalRequestControllerTest extends TestCase {
 		$this->assertSame('unauthenticated', $response->getData()['errorCode']);
 		$this->assertSame([], $this->saved);
 	}//end testReplyReturnsUnauthorizedWithoutASession()
+
+	/**
+	 * The list carries only the customer's own requests, with the paging asked for.
+	 *
+	 * @return void
+	 */
+	public function testIndexListsOnlyTheCustomersOwnRequests(): void {
+		$this->authenticate();
+		$this->reader->method('findAll')->willReturn([self::OWN_REQUEST, self::FOREIGN_REQUEST]);
+		$this->params = ['page' => '1', 'perPage' => '5'];
+
+		$response = $this->build()->index();
+		$body = $response->getData();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame([1, 1, 5], [$body['total'], $body['page'], $body['perPage']]);
+		$this->assertSame(['req-own'], array_column($body['items'], 'id'));
+		$this->assertStringNotContainsString('Confidential complaint', (string)json_encode($body));
+	}//end testIndexListsOnlyTheCustomersOwnRequests()
+
+	/**
+	 * Without a session the list is refused and nothing is read.
+	 *
+	 * @return void
+	 */
+	public function testIndexReturnsUnauthorizedWithoutASession(): void {
+		$this->guard->method('authenticate')->willThrowException(new PortalException(Http::STATUS_UNAUTHORIZED, 'unauthenticated', 'Niet ingelogd.'));
+		$this->reader->expects($this->never())->method('findAll');
+
+		$response = $this->build()->index();
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame('unauthenticated', $response->getData()['errorCode']);
+	}//end testIndexReturnsUnauthorizedWithoutASession()
+
+	/**
+	 * The customer's own request comes back without internal notes; the
+	 * assignee stays hidden unless the tenant exposes it.
+	 *
+	 * @return void
+	 */
+	public function testShowReturnsTheOwnRequestAndHidesTheAssigneeByDefault(): void {
+		$this->authenticate();
+		$this->reader->method('find')->willReturn(self::OWN_REQUEST);
+
+		$hidden = $this->build()->show('req-own');
+		$this->tenantConfig = ['exposeAssigneeName' => 'yes'];
+		$stillHidden = $this->build()->show('req-own')->getData();
+		$this->tenantConfig = ['exposeAssigneeName' => true];
+		$exposed = $this->build()->show('req-own')->getData();
+
+		$this->assertSame(Http::STATUS_OK, $hidden->getStatus());
+		$this->assertSame('req-own', $hidden->getData()['id']);
+		$this->assertTrue($hidden->getData()['assigneeHidden']);
+		$this->assertArrayNotHasKey('assignee', $hidden->getData());
+		$this->assertStringNotContainsString('churn watchlist', (string)json_encode($hidden->getData()));
+		$this->assertTrue($stillHidden['assigneeHidden']);
+		$this->assertSame('agent-nine', $exposed['assignee']);
+		$this->assertArrayNotHasKey('assigneeHidden', $exposed);
+	}//end testShowReturnsTheOwnRequestAndHidesTheAssigneeByDefault()
+
+	/**
+	 * Another customer's request and an unknown id answer the same 404.
+	 *
+	 * @return void
+	 */
+	public function testShowReturnsNotFoundForForeignAndUnknownRequests(): void {
+		$this->authenticate();
+		$this->reader->method('find')->willReturnOnConsecutiveCalls(self::FOREIGN_REQUEST, null);
+
+		$foreign = $this->build()->show('req-foreign');
+		$unknown = $this->build()->show('req-nope');
+
+		foreach ([$foreign, $unknown] as $response) {
+			$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+			$this->assertSame(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], $response->getData());
+		}
+	}//end testShowReturnsNotFoundForForeignAndUnknownRequests()
+
+	/**
+	 * A submitted request is stored as a new portal ticket from this account
+	 * and answered 201 with its receipt; a non-list attachments value is ignored.
+	 *
+	 * @return void
+	 */
+	public function testCreateStoresTheRequestAndAnswersCreated(): void {
+		$this->authenticate();
+		$this->params = ['subject' => '  Printer jams ', 'body' => ' Every second page. ', 'attachments' => 'evil', 'categoryId' => 'cat-hardware'];
+
+		$response = $this->build()->create();
+		$body = $response->getData();
+
+		$this->assertSame(Http::STATUS_CREATED, $response->getStatus());
+		$this->assertSame('new', $body['status']);
+		$this->assertCount(1, $this->saved);
+		$record = $this->saved[0][1];
+		$this->assertSame(null, $this->saved[0][0]);
+		$this->assertSame(['request', 'cat-hardware', 'new', 'portal', 'acct-1', []], [$record['ticketType'], $record['category'], $record['status'], $record['channel'], $record['reporterAccountId'], $record['attachmentIds']]);
+		$this->assertSame('Printer jams', $record['title']);
+	}//end testCreateStoresTheRequestAndAnswersCreated()
+
+	/**
+	 * A request without a subject or body is refused and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testCreateRejectsMissingFields(): void {
+		$this->authenticate();
+		$this->params = ['subject' => ' ', 'body' => 'Only a body.'];
+
+		$response = $this->build()->create();
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame('missingFields', $response->getData()['errorCode']);
+		$this->assertSame([], $this->saved);
+	}//end testCreateRejectsMissingFields()
 }//end class
