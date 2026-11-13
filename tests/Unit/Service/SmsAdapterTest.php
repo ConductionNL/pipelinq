@@ -45,6 +45,13 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class SmsAdapterTest extends TestCase {
+
+	/**
+	 * The ticket intake, when a test registers one.
+	 *
+	 * @var \OCA\Pipelinq\Service\InboundTicketService|null
+	 */
+	private ?\OCA\Pipelinq\Service\InboundTicketService $intake = null;
 	private ContainerInterface $container;
 	private IAppConfig $appConfig;
 	private ChannelProviderRepository $providerRepo;
@@ -150,6 +157,9 @@ class SmsAdapterTest extends TestCase {
 				}
 				if ($id === 'OCA\\Pipelinq\\Service\\MessagingServiceAccount') {
 					return $this->messaging->account;
+				}
+				if ($id === 'OCA\\Pipelinq\\Service\\InboundTicketService' && $this->intake !== null) {
+					return $this->intake;
 				}
 				throw new \RuntimeException('not registered: ' . $id);
 			}
@@ -698,4 +708,86 @@ class SmsAdapterTest extends TestCase {
 			$this->assertNotSame('saveObject', $access['call'], 'something was written without the service account');
 		}
 	}//end testWithoutAServiceAccountNothingIsWritten()
+	/**
+	 * Send one inbound message from a known contact.
+	 *
+	 * @param string $body The text.
+	 *
+	 * @return array<string, mixed> The webhook outcome.
+	 */
+	private function inboundFromKnownContact(string $body): array {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+
+		return $this->adapter->handleInboundWebhook((string)json_encode(['from' => '+31611119999', 'body' => $body]), 'sig', 'prov-1');
+	}//end inboundFromKnownContact()
+
+	/**
+	 * A known contact's message goes to the ticket intake on its conversation's thread.
+	 *
+	 * @return void
+	 */
+	public function testAKnownContactsMessageReachesTheTicketIntake(): void {
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$sent = [];
+		$this->intake = $this->createMock(\OCA\Pipelinq\Service\InboundTicketService::class);
+		$this->intake->expects($this->once())->method('tryReceive')->willReturnCallback(
+			static function (array $message) use (&$sent): string {
+				$sent = $message;
+				return 'ticket-7';
+			}
+		);
+
+		$result = $this->inboundFromKnownContact(body: 'Is my permit ready?');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertSame('ticket-7', $result['ticket']);
+		$this->assertNotSame('', $result['conversationId']);
+		$this->assertSame(
+			[
+				'channel' => 'sms',
+				'threadKey' => 'conversation:' . $result['conversationId'],
+				'contact' => 'c-gert',
+				'text' => 'Is my permit ready?',
+				'fromAddress' => '+31611119999',
+			],
+			$sent
+		);
+	}//end testAKnownContactsMessageReachesTheTicketIntake()
+
+	/**
+	 * A STOP or an opt-in keyword opens no ticket.
+	 *
+	 * @return void
+	 */
+	public function testKeywordsOpenNoTicket(): void {
+		$this->consentService->method('isOptOutKeyword')->willReturnCallback(static fn (string $body): bool => $body === 'STOP');
+		$this->consentService->method('isOptInKeyword')->willReturnCallback(static fn (string $body): bool => $body === 'START');
+		$this->consentService->method('recordOptOut')->willReturn(['store' => 'integriq']);
+		$this->intake = $this->createMock(\OCA\Pipelinq\Service\InboundTicketService::class);
+		$this->intake->expects($this->never())->method('tryReceive');
+
+		$this->assertArrayNotHasKey('ticket', $this->inboundFromKnownContact(body: 'STOP'));
+		$this->assertArrayNotHasKey('ticket', $this->inboundFromKnownContact(body: 'START'));
+	}//end testKeywordsOpenNoTicket()
+
+	/**
+	 * A failed intake still answers received, so the provider does not deliver the message again.
+	 *
+	 * @return void
+	 */
+	public function testAFailedIntakeStillAnswersReceived(): void {
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$this->intake = $this->createMock(\OCA\Pipelinq\Service\InboundTicketService::class);
+		$this->intake->method('tryReceive')->willReturn('');
+
+		$result = $this->inboundFromKnownContact(body: 'hallo');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertSame('', $result['ticket']);
+	}//end testAFailedIntakeStillAnswersReceived()
 }//end class
