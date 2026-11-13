@@ -202,6 +202,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\RelinkOrphanedLeads</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
+            <!-- After InitializeSettings, which imports the ticket phoneE164 property it fills (contact-moments-phone-lookup). -->
+            <step>OCA\Pipelinq\Repair\BackfillTicketPhoneE164</step>
             <!--
                 After InitializeSettings, which imports 97-task-name.json: the
                 name comes from crmTask's objectNameField, so a save before the
@@ -269,6 +271,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 without integriq; idempotent by legacyRef.
             -->
             <step>OCA\Pipelinq\Repair\MigrateConsentToIntegriq</step>
+            <!--
+                brp-monitor-moves-to-integriq: hands the BRP connection settings
+                and secrets to integriq and clears pipelinq's keys only after
+                integriq confirms every part. A no-op without integriq or settings.
+            -->
+            <step>OCA\Pipelinq\Repair\MoveBrpConnectionToIntegriq</step>
             <!-- The group the portal schemas grant; never picks an account. -->
             <step>OCA\Pipelinq\Repair\CreatePortalServiceGroup</step>
             <!-- The group the SMS and WhatsApp webhooks write with; never picks an account. -->

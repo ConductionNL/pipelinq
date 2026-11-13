@@ -9487,7 +9487,12 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Earlier contacts could not be loaded.": "Earlier contacts could not be loaded.",
+        "Earlier contacts from this number": "Earlier contacts from this number",
+        "Looking up earlier contacts…": "Looking up earlier contacts…",
+        "possible match": "possible match",
+        "There are no earlier contacts from this number.": "There are no earlier contacts from this number."
     },
     "nplurals=2; plural=(n != 1);"
 )
