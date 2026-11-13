@@ -38,6 +38,7 @@ namespace OCA\Pipelinq\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\FullExportServiceInterface;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -51,7 +52,7 @@ use ZipArchive;
  *
  * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
  */
-class FullExportService {
+class FullExportService implements FullExportServiceInterface {
 	use CastingPayloadToArray {
 		toArray as private;
 	}

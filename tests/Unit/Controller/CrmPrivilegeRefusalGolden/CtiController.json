@@ -335,7 +335,7 @@
                 "CtiServiceInterface::testConnection": []
             },
             {
-                "ConnectionReportService::reportCtiCheck": [
+                "ConnectionReportServiceInterface::reportCtiCheck": [
                     []
                 ]
             }
@@ -355,7 +355,7 @@
                 "CtiServiceInterface::testConnection": []
             },
             {
-                "ConnectionReportService::reportCtiCheck": [
+                "ConnectionReportServiceInterface::reportCtiCheck": [
                     []
                 ]
             }

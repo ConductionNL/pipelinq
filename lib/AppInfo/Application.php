@@ -27,10 +27,10 @@ use OCA\Pipelinq\Adapter\AdapterRegistrar;
 use OCA\Pipelinq\Dashboard\DashboardRegistrar;
 use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
 use OCA\Pipelinq\Lifecycle\LifecycleRegistrar;
 use OCA\Pipelinq\Listener\ListenerRegistrar;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
-use OCA\Pipelinq\Service\ForecastService;
 use OCA\Pipelinq\Service\RoadmapFeatureCatalog;
 use OCA\Pipelinq\Service\ServiceRegistrar;
 use OCA\Pipelinq\Service\VatRates;
@@ -303,7 +303,7 @@ class Application extends App implements IBootstrap {
 				[
 					'currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR'),
 					'vat_rates' => (new VatRates(appConfig: $appConfig))->rates(),
-					'pipelineTarget' => $appConfig->getValueInt(self::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0),
+					'pipelineTarget' => $appConfig->getValueInt(self::APP_ID, ForecastServiceInterface::PIPELINE_TARGET_KEY, 0),
 				]
 			);
 		} catch (\Exception $e) {

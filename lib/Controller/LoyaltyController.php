@@ -29,12 +29,12 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyProgrammeServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\LoyaltyAccountService;
-use OCA\Pipelinq\Service\LoyaltyProgrammeService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -61,21 +61,21 @@ class LoyaltyController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param LoyaltyAccountService $accountService The account service.
+	 * @param LoyaltyAccountServiceInterface $accountService The account service.
 	 * @param PointsLedgerServiceInterface $ledgerService The ledger service.
 	 * @param RedemptionServiceInterface $redemptionService The redemption service.
 	 * @param GiftCardServiceInterface $giftCardService The gift card service.
-	 * @param LoyaltyProgrammeService $programmeService The programme service.
+	 * @param LoyaltyProgrammeServiceInterface $programmeService The programme service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N $l10n The localiser.
 	 */
 	public function __construct(
 		IRequest $request,
-		private LoyaltyAccountService $accountService,
+		private LoyaltyAccountServiceInterface $accountService,
 		private PointsLedgerServiceInterface $ledgerService,
 		private RedemptionServiceInterface $redemptionService,
 		private GiftCardServiceInterface $giftCardService,
-		private LoyaltyProgrammeService $programmeService,
+		private LoyaltyProgrammeServiceInterface $programmeService,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {

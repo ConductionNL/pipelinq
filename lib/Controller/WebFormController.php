@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\WebForm\WebFormIntakeService;
+use OCA\Pipelinq\Kernel\Contracts\WebFormIntakeServiceInterface;
 use OCA\Pipelinq\Service\WebForm\WebFormSubmitException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -52,14 +52,14 @@ class WebFormController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest             $request The current request.
-	 * @param WebFormIntakeService $intake  The website form intake.
+	 * @param WebFormIntakeServiceInterface $intake  The website form intake.
 	 * @param LoggerInterface      $logger  Logger.
 	 *
 	 * @spec exclude constructor wiring only; it makes no decision a requirement can describe
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly WebFormIntakeService $intake,
+		private readonly WebFormIntakeServiceInterface $intake,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
@@ -152,7 +152,7 @@ class WebFormController extends Controller {
 			$this->logger->error('Pipelinq: website form submit failed.', ['exception' => $e]);
 
 			return $this->cors(
-				response: new JSONResponse(['error' => WebFormIntakeService::TRY_LATER], Http::STATUS_SERVICE_UNAVAILABLE)
+				response: new JSONResponse(['error' => WebFormIntakeServiceInterface::TRY_LATER], Http::STATUS_SERVICE_UNAVAILABLE)
 			);
 		}//end try
 

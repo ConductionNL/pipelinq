@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\Service\Sla\SlaEntitySweeper;
+use OCA\Pipelinq\Kernel\Contracts\SlaEntitySweeperInterface;
 use OCA\Pipelinq\Service\Sla\SlaSweepRun;
 use OCA\Pipelinq\Service\Sla\SlaSweepSource;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -53,13 +53,13 @@ class SlaDeadlineSweepJob extends TimedJob {
 	 *
 	 * @param ITimeFactory     $time    Time factory.
 	 * @param SlaSweepSource   $source  Register, interval, surfaces and store.
-	 * @param SlaEntitySweeper $sweeper Walks the surfaces and escalates.
+	 * @param SlaEntitySweeperInterface $sweeper Walks the surfaces and escalates.
 	 * @param LoggerInterface  $logger  PSR logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private SlaSweepSource $source,
-		private SlaEntitySweeper $sweeper,
+		private SlaEntitySweeperInterface $sweeper,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

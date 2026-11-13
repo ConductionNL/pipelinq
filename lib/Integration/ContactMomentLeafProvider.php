@@ -42,9 +42,9 @@ namespace OCA\Pipelinq\Integration;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
-use OCA\Pipelinq\Service\ContactMomentFilingService;
-use OCA\Pipelinq\Service\PartyIndicatorService;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -87,15 +87,15 @@ class ContactMomentLeafProvider {
 	 * Constructor.
 	 *
 	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
-	 * @param ContactMomentFilingService $filingService The case set a contact moment is filed on.
-	 * @param PartyIndicatorService $indicatorService The party's standing indicators.
+	 * @param ContactMomentFilingServiceInterface $filingService The case set a contact moment is filed on.
+	 * @param PartyIndicatorServiceInterface $indicatorService The party's standing indicators.
 	 * @param IUserSession $userSession The acting user, stamped as the agent.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private readonly TicketServiceInterface $ticketService,
-		private readonly ContactMomentFilingService $filingService,
-		private readonly PartyIndicatorService $indicatorService,
+		private readonly ContactMomentFilingServiceInterface $filingService,
+		private readonly PartyIndicatorServiceInterface $indicatorService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {

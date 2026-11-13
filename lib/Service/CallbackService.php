@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTime;
+use OCA\Pipelinq\Kernel\Contracts\CallbackServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IGroupManager;
 use OCP\IUserSession;
@@ -38,7 +39,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
  * @spec openspec/specs/callback-management/spec.md#requirement-callback-service
  */
-class CallbackService {
+class CallbackService implements CallbackServiceInterface {
 	/**
 	 * Maximum unsuccessful attempts before suggesting closure.
 	 *

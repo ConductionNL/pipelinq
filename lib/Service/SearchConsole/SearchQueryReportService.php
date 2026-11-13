@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service\SearchConsole;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SearchQueryReportServiceInterface;
 use OCA\Pipelinq\Service\ObjectPageReader;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -42,7 +43,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
-class SearchQueryReportService {
+class SearchQueryReportService implements SearchQueryReportServiceInterface {
 	use SerialisedToArray;
 
 	/**

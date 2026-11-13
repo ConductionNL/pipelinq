@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\Export\FullExportService;
+use OCA\Pipelinq\Kernel\Contracts\FullExportServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use OCP\Notification\IManager;
@@ -47,7 +47,7 @@ class FullExportJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory      $time          The clock.
-	 * @param FullExportService $export        Builds and stores the archive.
+	 * @param FullExportServiceInterface $export        Builds and stores the archive.
 	 * @param IManager          $notifications Nextcloud notifications.
 	 * @param LoggerInterface   $logger        The logger.
 	 *
@@ -55,7 +55,7 @@ class FullExportJob extends QueuedJob {
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly FullExportService $export,
+		private readonly FullExportServiceInterface $export,
 		private readonly IManager $notifications,
 		private readonly LoggerInterface $logger,
 	) {

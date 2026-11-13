@@ -28,8 +28,8 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TierServiceInterface;
-use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -52,7 +52,7 @@ class TierDowngradeJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ContainerInterface $container The DI container.
-	 * @param LoyaltyAccountService $loyaltyService The account service.
+	 * @param LoyaltyAccountServiceInterface $loyaltyService The account service.
 	 * @param TierServiceInterface $tierService The tier service.
 	 * @param LoggerInterface $logger The logger.
 	 */
@@ -60,7 +60,7 @@ class TierDowngradeJob extends TimedJob {
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
-		private LoyaltyAccountService $loyaltyService,
+		private LoyaltyAccountServiceInterface $loyaltyService,
 		private TierServiceInterface $tierService,
 		private LoggerInterface $logger,
 	) {

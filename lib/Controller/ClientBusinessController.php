@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\ClientBusinessReader;
+use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -41,11 +41,11 @@ class ClientBusinessController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest             $request The request.
-	 * @param ClientBusinessReader $reader  The reader.
+	 * @param ClientBusinessReaderInterface $reader  The reader.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ClientBusinessReader $reader,
+		private readonly ClientBusinessReaderInterface $reader,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

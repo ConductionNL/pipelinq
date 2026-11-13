@@ -26,12 +26,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExchangeRateServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\QuotaServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SnapshotGenerationServiceInterface;
 use OCA\Pipelinq\Lifecycle\ForecastAccessPolicy;
-use OCA\Pipelinq\Service\ExchangeRateService;
-use OCA\Pipelinq\Service\ForecastDealService;
-use OCA\Pipelinq\Service\ForecastService;
-use OCA\Pipelinq\Service\QuotaService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
@@ -58,14 +58,14 @@ class ForecastSettingsController extends Controller {
 	private const FORECAST_FIELDS = [
 		'commit_threshold' => [
 			'type' => 'int',
-			'key' => ForecastDealService::COMMIT_THRESHOLD_KEY,
+			'key' => ForecastDealServiceInterface::COMMIT_THRESHOLD_KEY,
 			'min' => 0,
 			'max' => PHP_INT_MAX,
 			'error' => 'commit_threshold must be non-negative.',
 		],
 		'pipeline_target' => [
 			'type' => 'int',
-			'key' => ForecastService::PIPELINE_TARGET_KEY,
+			'key' => ForecastServiceInterface::PIPELINE_TARGET_KEY,
 			'min' => 0,
 			'max' => PHP_INT_MAX,
 			'error' => 'pipeline_target must be non-negative.',
@@ -85,18 +85,18 @@ class ForecastSettingsController extends Controller {
 			'max' => 23,
 			'error' => 'generation_hour must be 0-23.',
 		],
-		'accuracy_green' => ['type' => 'float', 'key' => ForecastService::ACCURACY_GREEN_KEY],
-		'accuracy_amber' => ['type' => 'float', 'key' => ForecastService::ACCURACY_AMBER_KEY],
+		'accuracy_green' => ['type' => 'float', 'key' => ForecastServiceInterface::ACCURACY_GREEN_KEY],
+		'accuracy_amber' => ['type' => 'float', 'key' => ForecastServiceInterface::ACCURACY_AMBER_KEY],
 		'at_risk_percent' => [
 			'type' => 'int',
-			'key' => QuotaService::AT_RISK_PERCENT_KEY,
+			'key' => QuotaServiceInterface::AT_RISK_PERCENT_KEY,
 			'min' => PHP_INT_MIN,
 			'max' => PHP_INT_MAX,
 			'error' => '',
 		],
 		'at_risk_days' => [
 			'type' => 'int',
-			'key' => QuotaService::AT_RISK_DAYS_KEY,
+			'key' => QuotaServiceInterface::AT_RISK_DAYS_KEY,
 			'min' => PHP_INT_MIN,
 			'max' => PHP_INT_MAX,
 			'error' => '',
@@ -118,12 +118,12 @@ class ForecastSettingsController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param ExchangeRateService $exchangeRate The reporting currency and rate table.
+	 * @param ExchangeRateServiceInterface $exchangeRate The reporting currency and rate table.
 	 */
 	public function __construct(
 		IRequest $request,
 		private IAppConfig $appConfig,
-		private ExchangeRateService $exchangeRate,
+		private ExchangeRateServiceInterface $exchangeRate,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
@@ -140,24 +140,24 @@ class ForecastSettingsController extends Controller {
 	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function index(): JSONResponse {
 		$app = AppIdentity::APP_ID;
-		$greenDefault = (string)ForecastService::ACCURACY_GREEN_DEFAULT;
-		$amberDefault = (string)ForecastService::ACCURACY_AMBER_DEFAULT;
-		$thresholdKey = ForecastDealService::COMMIT_THRESHOLD_KEY;
-		$thresholdValue = ForecastDealService::COMMIT_THRESHOLD_DEFAULT;
-		$atRiskPctKey = QuotaService::AT_RISK_PERCENT_KEY;
-		$atRiskPctValue = QuotaService::AT_RISK_PERCENT_DEFAULT;
+		$greenDefault = (string)ForecastServiceInterface::ACCURACY_GREEN_DEFAULT;
+		$amberDefault = (string)ForecastServiceInterface::ACCURACY_AMBER_DEFAULT;
+		$thresholdKey = ForecastDealServiceInterface::COMMIT_THRESHOLD_KEY;
+		$thresholdValue = ForecastDealServiceInterface::COMMIT_THRESHOLD_DEFAULT;
+		$atRiskPctKey = QuotaServiceInterface::AT_RISK_PERCENT_KEY;
+		$atRiskPctValue = QuotaServiceInterface::AT_RISK_PERCENT_DEFAULT;
 
 		return new JSONResponse(
 			[
 				'commit_threshold' => $this->appConfig->getValueInt($app, $thresholdKey, $thresholdValue),
-				'pipeline_target' => $this->appConfig->getValueInt($app, ForecastService::PIPELINE_TARGET_KEY, 0),
+				'pipeline_target' => $this->appConfig->getValueInt($app, ForecastServiceInterface::PIPELINE_TARGET_KEY, 0),
 				'generation_timezone' => $this->appConfig->getValueString($app, 'forecast_generation_timezone', 'UTC'),
 				'generation_day' => $this->appConfig->getValueInt($app, 'forecast_generation_day', 1),
 				'generation_hour' => $this->appConfig->getValueInt($app, 'forecast_generation_hour', 6),
-				'accuracy_green' => $this->appConfig->getValueString($app, ForecastService::ACCURACY_GREEN_KEY, $greenDefault),
-				'accuracy_amber' => $this->appConfig->getValueString($app, ForecastService::ACCURACY_AMBER_KEY, $amberDefault),
+				'accuracy_green' => $this->appConfig->getValueString($app, ForecastServiceInterface::ACCURACY_GREEN_KEY, $greenDefault),
+				'accuracy_amber' => $this->appConfig->getValueString($app, ForecastServiceInterface::ACCURACY_AMBER_KEY, $amberDefault),
 				'at_risk_percent' => $this->appConfig->getValueInt($app, $atRiskPctKey, $atRiskPctValue),
-				'at_risk_days' => $this->appConfig->getValueInt($app, QuotaService::AT_RISK_DAYS_KEY, QuotaService::AT_RISK_DAYS_DEFAULT),
+				'at_risk_days' => $this->appConfig->getValueInt($app, QuotaServiceInterface::AT_RISK_DAYS_KEY, QuotaServiceInterface::AT_RISK_DAYS_DEFAULT),
 				'reporting_currency' => $this->exchangeRate->getReportingCurrency(),
 				'exchange_rates' => (object)$this->exchangeRate->getRates(),
 				'rate_overrides' => (object)$this->exchangeRate->overrideStore()->getOverrides(),
@@ -296,7 +296,7 @@ class ForecastSettingsController extends Controller {
 			return 'reporting_currency must be a three-letter currency code.';
 		}
 
-		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateService::REPORTING_CURRENCY_KEY, $currency);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateServiceInterface::REPORTING_CURRENCY_KEY, $currency);
 		return null;
 	}//end saveReportingCurrency()
 
@@ -319,8 +319,8 @@ class ForecastSettingsController extends Controller {
 		}
 
 		$dates = $this->exchangeRate->overrideStore()->rateDatesFor(rates: $rates, previousRates: $this->exchangeRate->getRates());
-		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateService::RATES_KEY, (string)json_encode($rates));
-		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateService::RATE_DATES_KEY, (string)json_encode($dates));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateServiceInterface::RATES_KEY, (string)json_encode($rates));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateServiceInterface::RATE_DATES_KEY, (string)json_encode($dates));
 		return null;
 	}//end saveExchangeRates()
 
@@ -343,7 +343,7 @@ class ForecastSettingsController extends Controller {
 			return 'max_rate_age_days must be at least 1.';
 		}
 
-		$this->appConfig->setValueInt(AppIdentity::APP_ID, ExchangeRateService::MAX_RATE_AGE_KEY, $days);
+		$this->appConfig->setValueInt(AppIdentity::APP_ID, ExchangeRateServiceInterface::MAX_RATE_AGE_KEY, $days);
 		return null;
 	}//end saveMaxRateAge()
 
@@ -367,7 +367,7 @@ class ForecastSettingsController extends Controller {
 			return $e->getMessage();
 		}
 
-		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateService::OVERRIDES_KEY, (string)json_encode($overrides));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateServiceInterface::OVERRIDES_KEY, (string)json_encode($overrides));
 		return null;
 	}//end saveRateOverrides()
 }//end class

@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KccWerkplekServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -48,7 +49,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  */
-class KccWerkplekService {
+class KccWerkplekService implements KccWerkplekServiceInterface {
 	/**
 	 * Request statuses considered "open" for the inbox (REQ-KWP-020).
 	 *

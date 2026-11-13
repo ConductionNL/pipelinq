@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RecurringRevenueServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  */
-class RecurringRevenueService {
+class RecurringRevenueService implements RecurringRevenueServiceInterface {
 	/**
 	 * Statuses that contribute to live recurring revenue.
 	 *

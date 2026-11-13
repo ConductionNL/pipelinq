@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service\WebForm;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WebFormFinderInterface;
 use OCP\IAppConfig;
 use RuntimeException;
 
@@ -36,7 +37,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-a-website-form-submits-into-the-destination-it-names
  */
-class WebFormFinder {
+class WebFormFinder implements WebFormFinderInterface {
 
 	/**
 	 * The status a form takes submits in.

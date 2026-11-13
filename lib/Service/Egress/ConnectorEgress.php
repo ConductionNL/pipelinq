@@ -39,6 +39,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Egress;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConnectorEgressInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCA\Pipelinq\Util\SerialisedToArray;
@@ -59,7 +60,7 @@ use Throwable;
  *  alternative is a constructor call whose argument order says less than
  *  the method name does.
  */
-class ConnectorEgress {
+class ConnectorEgress implements ConnectorEgressInterface {
 	use SerialisedToArray;
 
 	/**

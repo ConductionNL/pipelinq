@@ -22,9 +22,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallbackServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\NotificationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
-use OCA\Pipelinq\Service\CallbackService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,7 +51,7 @@ class CallbackController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param CallbackService $callbackService The callback service.
+	 * @param CallbackServiceInterface $callbackService The callback service.
 	 * @param NotificationServiceInterface $notificationService The notification service.
 	 * @param ScheduledTaskServiceInterface $scheduledTaskService The scheduled task service.
 	 * @param IGroupManager $groupManager The group manager.
@@ -61,7 +61,7 @@ class CallbackController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private CallbackService $callbackService,
+		private CallbackServiceInterface $callbackService,
 		private NotificationServiceInterface $notificationService,
 		private ScheduledTaskServiceInterface $scheduledTaskService,
 		private IGroupManager $groupManager,

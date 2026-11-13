@@ -27,19 +27,20 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Cache wrapper around the brpPersoon schema.
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004
  */
-class BrpCacheService {
+class BrpCacheService implements BrpCacheServiceInterface {
 	/**
 	 * Default TTL in hours (24h per design.md).
 	 */

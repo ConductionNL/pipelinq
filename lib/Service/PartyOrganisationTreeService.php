@@ -45,6 +45,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyOrganisationTreeServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -54,7 +55,7 @@ use Throwable;
  *
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
  */
-class PartyOrganisationTreeService {
+class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterface {
 	/**
 	 * The default depth cap, used when the instance has not set one.
 	 *

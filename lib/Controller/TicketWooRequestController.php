@@ -30,9 +30,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MainRegisterReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\WooRequestConversionServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Portal\MainRegisterReader;
-use OCA\Pipelinq\Service\WooRequestConversionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,16 +57,16 @@ class TicketWooRequestController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                    $request      The request.
-	 * @param WooRequestConversionService $conversion   Calls dossiq's intake.
-	 * @param MainRegisterReader          $tickets      Reads the ticket under the user's RBAC.
+	 * @param WooRequestConversionServiceInterface $conversion   Calls dossiq's intake.
+	 * @param MainRegisterReaderInterface          $tickets      Reads the ticket under the user's RBAC.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly WooRequestConversionService $conversion,
-		private readonly MainRegisterReader $tickets,
+		private readonly WooRequestConversionServiceInterface $conversion,
+		private readonly MainRegisterReaderInterface $tickets,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

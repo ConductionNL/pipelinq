@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\Marketing\DeliverabilityCheckService;
+use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -49,14 +49,14 @@ class MailTransportController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request HTTP request.
-	 * @param DeliverabilityCheckService $deliverabilityCheckService SPF/DKIM/DMARC lookup.
+	 * @param DeliverabilityCheckServiceInterface $deliverabilityCheckService SPF/DKIM/DMARC lookup.
 	 *
 	 * @SuppressWarnings(PHPMD.LongVariable) $deliverabilityCheckService mirrors the
 	 *  class it holds; renaming would obscure what it is.
 	 */
 	public function __construct(
 		IRequest $request,
-		private DeliverabilityCheckService $deliverabilityCheckService,
+		private DeliverabilityCheckServiceInterface $deliverabilityCheckService,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

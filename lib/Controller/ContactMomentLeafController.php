@@ -35,7 +35,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Integration\ContactMomentLeafProvider;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\ContactMomentFilingService;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -74,12 +74,12 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ContactMomentLeafProvider $provider The leaf's data provider.
-	 * @param ContactMomentFilingService $filingService The two filing acts.
+	 * @param ContactMomentFilingServiceInterface $filingService The two filing acts.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly ContactMomentLeafProvider $provider,
-		private readonly ContactMomentFilingService $filingService,
+		private readonly ContactMomentFilingServiceInterface $filingService,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

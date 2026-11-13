@@ -28,13 +28,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MainRegisterReaderInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Reads objects from the main pipelinq register.
@@ -47,7 +48,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class MainRegisterReader {
+class MainRegisterReader implements MainRegisterReaderInterface {
 	use CastingPayloadToArray;
 
 	/**

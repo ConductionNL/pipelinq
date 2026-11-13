@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
  */
-class EventEmailService {
+class EventEmailService implements EventEmailServiceInterface {
 
 	/**
 	 * The signed-link action name of a cancel link.

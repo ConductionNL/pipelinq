@@ -43,6 +43,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CorrespondenceLanguageServiceInterface;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\L10N\IFactory;
@@ -54,7 +55,7 @@ use Throwable;
  *
  * @spec openspec/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
  */
-class CorrespondenceLanguageService {
+class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInterface {
 	/**
 	 * The rule that produced an answer: the party asked for it.
 	 *

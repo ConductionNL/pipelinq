@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\CampaignReportServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 
@@ -47,7 +48,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
-class CampaignReportService {
+class CampaignReportService implements CampaignReportServiceInterface {
 
 	/**
 	 * The blast schema slug.

@@ -26,7 +26,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
@@ -34,7 +36,6 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Append-only audit-trail service for BSN bevragingen.
@@ -47,7 +48,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005
  */
-class BsnAuditService {
+class BsnAuditService implements BsnAuditServiceInterface {
 	use EntityAccessorTrait;
 
 	/**

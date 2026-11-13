@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\CallReview\CallTranscriptionService;
+use OCA\Pipelinq\Kernel\Contracts\CallTranscriptionServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -44,12 +44,12 @@ class CallTranscriptionJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory             $time          Time factory.
-	 * @param CallTranscriptionService $transcription Transcribes the call.
+	 * @param CallTranscriptionServiceInterface $transcription Transcribes the call.
 	 * @param LoggerInterface          $logger        PSR logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly CallTranscriptionService $transcription,
+		private readonly CallTranscriptionServiceInterface $transcription,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

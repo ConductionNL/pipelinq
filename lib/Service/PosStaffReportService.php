@@ -26,14 +26,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosStaffReportServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Service that aggregates posTransaction objects per staff member.
@@ -46,7 +47,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *
  * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
-class PosStaffReportService {
+class PosStaffReportService implements PosStaffReportServiceInterface {
 	use CastingPayloadToArray;
 
 	/**

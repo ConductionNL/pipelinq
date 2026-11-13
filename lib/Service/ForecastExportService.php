@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastExportServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -41,7 +42,7 @@ use Psr\Log\LoggerInterface;
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
-class ForecastExportService {
+class ForecastExportService implements ForecastExportServiceInterface {
 	use PayloadToArray;
 
 	/**

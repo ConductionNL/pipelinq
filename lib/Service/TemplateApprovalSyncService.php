@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TemplateApprovalSyncServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -48,7 +49,7 @@ use Throwable;
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class TemplateApprovalSyncService {
+class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterface {
 	use PayloadToArray;
 
 	/**

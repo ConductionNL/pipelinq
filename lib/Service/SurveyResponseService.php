@@ -39,6 +39,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SurveyResponseServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -48,7 +49,7 @@ use Throwable;
  *
  * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
-class SurveyResponseService {
+class SurveyResponseService implements SurveyResponseServiceInterface {
 	/**
 	 * App-config key of the satisfaction survey schema.
 	 *

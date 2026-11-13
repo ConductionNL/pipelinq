@@ -30,11 +30,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
 use OCA\Pipelinq\Service\Portal\PortalException;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
-use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -66,7 +66,7 @@ class PortalAdminController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalTenantService $tenant The tenant service.
+	 * @param PortalTenantServiceInterface $tenant The tenant service.
 	 * @param PortalAuditService $audit The audit service.
 	 * @param PortalObjectRepository $repository The portal object repository.
 	 * @param IUserSession $userSession The user session.
@@ -76,7 +76,7 @@ class PortalAdminController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private PortalTenantService $tenant,
+		private PortalTenantServiceInterface $tenant,
 		private PortalAuditService $audit,
 		private PortalObjectRepository $repository,
 		private IUserSession $userSession,
@@ -209,12 +209,12 @@ class PortalAdminController extends Controller {
 	 * @return string The tenant id.
 	 */
 	private function tenantId(): string {
-		$value = $this->request->getParam('tenantId', PortalTenantService::DEFAULT_TENANT);
+		$value = $this->request->getParam('tenantId', PortalTenantServiceInterface::DEFAULT_TENANT);
 		if (is_string($value) === true && trim($value) !== '') {
 			return trim($value);
 		}
 
-		return PortalTenantService::DEFAULT_TENANT;
+		return PortalTenantServiceInterface::DEFAULT_TENANT;
 	}//end tenantId()
 
 	/**

@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Portal\PortalDelegationService;
+use OCA\Pipelinq\Kernel\Contracts\PortalDelegationServiceInterface;
 use OCA\Pipelinq\Service\Portal\PortalException;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Http;
@@ -52,13 +52,13 @@ class PortalDelegationController extends PortalApiController {
 	 * @param IRequest $request The request.
 	 * @param PortalRequestGuard $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param PortalDelegationService $delegations The delegation service.
+	 * @param PortalDelegationServiceInterface $delegations The delegation service.
 	 */
 	public function __construct(
 		IRequest $request,
 		PortalRequestGuard $guard,
 		LoggerInterface $logger,
-		private PortalDelegationService $delegations,
+		private PortalDelegationServiceInterface $delegations,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()

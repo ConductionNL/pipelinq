@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\Customer360SummaryService;
+use OCA\Pipelinq\Kernel\Contracts\Customer360SummaryServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -71,7 +71,7 @@ class Customer360Controller extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param Customer360SummaryService $summaryService The customer 360 summary aggregator.
+	 * @param Customer360SummaryServiceInterface $summaryService The customer 360 summary aggregator.
 	 * @param IUserSession $userSession Current user.
 	 * @param IAppConfig $appConfig App config (register/schema resolution for the read guard).
 	 * @param ContainerInterface $container DI container (OpenRegister ObjectService).
@@ -80,7 +80,7 @@ class Customer360Controller extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private Customer360SummaryService $summaryService,
+		private Customer360SummaryServiceInterface $summaryService,
 		private IUserSession $userSession,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,

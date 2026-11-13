@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CtiContactMatcherInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -43,7 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
  */
-class CtiContactMatcher {
+class CtiContactMatcher implements CtiContactMatcherInterface {
 	use PayloadToArray;
 
 	/**

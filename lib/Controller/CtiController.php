@@ -24,9 +24,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ConnectionReportService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -67,7 +67,7 @@ class CtiController extends Controller {
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ConnectionReportService $connectionReports Reports the CTI check to integriq's connection registry.
+	 * @param ConnectionReportServiceInterface $connectionReports Reports the CTI check to integriq's connection registry.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -75,7 +75,7 @@ class CtiController extends Controller {
 		private CrmPrivilegeCheck $privilege,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
-		private ConnectionReportService $connectionReports,
+		private ConnectionReportServiceInterface $connectionReports,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

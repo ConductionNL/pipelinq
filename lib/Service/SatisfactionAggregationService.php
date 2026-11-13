@@ -39,6 +39,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SatisfactionAggregationServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -48,7 +49,7 @@ use Throwable;
  *
  * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
  */
-class SatisfactionAggregationService {
+class SatisfactionAggregationService implements SatisfactionAggregationServiceInterface {
 	/**
 	 * The window each half of the trend covers, in days.
 	 *

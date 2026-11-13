@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\PosRoleService;
+use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,7 +55,7 @@ class PosRoleController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosRoleService $service The POS role service.
+	 * @param PosRoleServiceInterface $service The POS role service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager (admin gate).
 	 * @param IL10N $l10n The localization service.
@@ -63,7 +63,7 @@ class PosRoleController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosRoleService $service,
+		private PosRoleServiceInterface $service,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
 		private IL10N $l10n,

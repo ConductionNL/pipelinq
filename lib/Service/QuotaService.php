@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\QuotaServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -39,36 +40,8 @@ use Psr\Log\LoggerInterface;
  * @spec exclude infrastructure utility with no feature requirement of its own; it is
  *   exercised through the features that call it
  */
-class QuotaService {
+class QuotaService implements QuotaServiceInterface {
 	use PayloadToArray;
-
-	/**
-	 * App-config key for the at-risk quota-attainment threshold (percent).
-	 *
-	 * @var string
-	 */
-	public const AT_RISK_PERCENT_KEY = 'forecast_at_risk_percent';
-
-	/**
-	 * App-config key for the at-risk days-remaining threshold.
-	 *
-	 * @var string
-	 */
-	public const AT_RISK_DAYS_KEY = 'forecast_at_risk_days';
-
-	/**
-	 * Default at-risk attainment threshold (90%).
-	 *
-	 * @var int
-	 */
-	public const AT_RISK_PERCENT_DEFAULT = 90;
-
-	/**
-	 * Default at-risk days-remaining threshold (30 days).
-	 *
-	 * @var int
-	 */
-	public const AT_RISK_DAYS_DEFAULT = 30;
 
 	/**
 	 * Best-case weighting used in the projected-attainment formula.

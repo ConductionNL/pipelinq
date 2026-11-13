@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CampaignServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\IAppConfig;
 
@@ -48,7 +49,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
  */
-class CampaignService {
+class CampaignService implements CampaignServiceInterface {
 
 	/**
 	 * The schema slug the register fragment declares.

@@ -41,8 +41,8 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ZgwApiClientInterface;
+use OCA\Pipelinq\Kernel\Contracts\ZgwRegisterAccessInterface;
 use OCA\Pipelinq\Listener\NrcNotificationListener;
-use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -63,14 +63,14 @@ class ZgwNotificationController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
-	 * @param ZgwRegisterAccess $registers Register facade (NrcAbonnement lookup).
+	 * @param ZgwRegisterAccessInterface $registers Register facade (NrcAbonnement lookup).
 	 * @param ZgwApiClientInterface $api For vault-ref resolution on callbackAuth.
 	 * @param NrcNotificationListener $listener Per-kanaal dispatcher.
 	 * @param LoggerInterface $logger PSR-3 logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ZgwRegisterAccess $registers,
+		private ZgwRegisterAccessInterface $registers,
 		private ZgwApiClientInterface $api,
 		private NrcNotificationListener $listener,
 		private LoggerInterface $logger,
@@ -163,7 +163,7 @@ class ZgwNotificationController extends Controller {
 	 * @return array<string, mixed>|null Matching abonnement, or null.
 	 */
 	private function resolveAbonnementByBearer(string $token): ?array {
-		$rows = $this->registers->findAll(ZgwRegisterAccess::SCHEMA_ABONN, ['active' => true]);
+		$rows = $this->registers->findAll(ZgwRegisterAccessInterface::SCHEMA_ABONN, ['active' => true]);
 		foreach ($rows as $row) {
 			if ((bool)($row['active'] ?? false) === false) {
 				continue;

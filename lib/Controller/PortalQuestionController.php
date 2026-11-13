@@ -38,8 +38,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DossierQuestionServiceInterface;
 use OCA\Pipelinq\Portal\PortalAssertionVerifier;
-use OCA\Pipelinq\Service\DossierQuestionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -85,7 +85,7 @@ class PortalQuestionController extends Controller {
 	 *
 	 * @param IRequest                $request   The request.
 	 * @param PortalAssertionVerifier $verifier  Verifies portaliq's assertion.
-	 * @param DossierQuestionService  $questions Files questions and replies.
+	 * @param DossierQuestionServiceInterface  $questions Files questions and replies.
 	 * @param IThrottler              $throttler Counts rejected calls.
 	 * @param LoggerInterface         $logger    Logger.
 	 *
@@ -94,7 +94,7 @@ class PortalQuestionController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly PortalAssertionVerifier $verifier,
-		private readonly DossierQuestionService $questions,
+		private readonly DossierQuestionServiceInterface $questions,
 		private readonly IThrottler $throttler,
 		private readonly LoggerInterface $logger,
 	) {

@@ -29,11 +29,12 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use Exception;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\Customer360SummaryServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Aggregates a client's open tickets (all `ticketType`s), SLA status,
@@ -53,7 +54,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
  */
-class Customer360SummaryService {
+class Customer360SummaryService implements Customer360SummaryServiceInterface {
 	/**
 	 * Ticket statuses considered "open" (mirrors KccWerkplekService::OPEN_REQUEST_STATUSES
 	 * and the ticket schema's `x-openregister-lifecycle` non-final states).

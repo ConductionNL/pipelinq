@@ -24,20 +24,21 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyProgrammeServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Programme activation + validation service.
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001
  */
-class LoyaltyProgrammeService {
+class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 	use PayloadToArray;
 
 	/**

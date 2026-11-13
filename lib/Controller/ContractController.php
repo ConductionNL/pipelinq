@@ -33,11 +33,11 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContractServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\RecurringRevenueServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContractFiguresService;
-use OCA\Pipelinq\Service\ContractService;
-use OCA\Pipelinq\Service\RecurringRevenueService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -59,8 +59,8 @@ class ContractController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ContractService $contractService Contract lifecycle service.
-	 * @param RecurringRevenueService $revenueService Recurring-revenue service.
+	 * @param ContractServiceInterface $contractService Contract lifecycle service.
+	 * @param RecurringRevenueServiceInterface $revenueService Recurring-revenue service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param ContainerInterface $container The DI container.
@@ -69,8 +69,8 @@ class ContractController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private ContractService $contractService,
-		private RecurringRevenueService $revenueService,
+		private ContractServiceInterface $contractService,
+		private RecurringRevenueServiceInterface $revenueService,
 		private CrmPrivilegeCheck $privilege,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private ContainerInterface $container,

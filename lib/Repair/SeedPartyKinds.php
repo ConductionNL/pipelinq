@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\PartyKindRegistryService;
+use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -104,13 +104,13 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param PartyKindRegistryService $registry Reads the kinds already declared.
+	 * @param PartyKindRegistryServiceInterface $registry Reads the kinds already declared.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private ObjectServiceInterface $objectService,
-		private PartyKindRegistryService $registry,
+		private PartyKindRegistryServiceInterface $registry,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()

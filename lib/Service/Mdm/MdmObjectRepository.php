@@ -29,11 +29,12 @@ namespace OCA\Pipelinq\Service\Mdm;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Repository helper for MDM OpenRegister objects.
@@ -50,7 +51,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
  */
-class MdmObjectRepository {
+class MdmObjectRepository implements MdmObjectRepositoryInterface {
 	/**
 	 * App-config key holding the Pipelinq register id.
 	 *

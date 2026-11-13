@@ -26,12 +26,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\BrpCacheService;
+use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Service\BsnAudit\LookupReason;
 use OCA\Pipelinq\Service\BsnAudit\LookupResult;
 use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
-use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -54,14 +54,14 @@ class BrpMutationWebhookListener {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig App config (webhook secret).
-	 * @param BrpCacheService $cacheService Cache service.
-	 * @param BsnAuditService $auditService Audit service.
+	 * @param BrpCacheServiceInterface $cacheService Cache service.
+	 * @param BsnAuditServiceInterface $auditService Audit service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private BrpCacheService $cacheService,
-		private BsnAuditService $auditService,
+		private BrpCacheServiceInterface $cacheService,
+		private BsnAuditServiceInterface $auditService,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()

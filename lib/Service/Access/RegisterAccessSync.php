@@ -48,6 +48,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Access;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RegisterAccessSyncInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -60,7 +61,7 @@ use Throwable;
  * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
  * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-a-configured-read-group-reads-the-parties-and-contact-moments-and-writes-nothing
  */
-class RegisterAccessSync {
+class RegisterAccessSync implements RegisterAccessSyncInterface {
 
 	/**
 	 * The built-in staff group the register fragment grants.
