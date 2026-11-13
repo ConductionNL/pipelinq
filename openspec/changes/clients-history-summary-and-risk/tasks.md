@@ -2,11 +2,11 @@
 
 ## 1. Risk
 
-- [ ] 1.1 Fragment adding `churnRisk` (`level`, `score`, `reasons[]`, `computedAt`) to `client`, read only in forms
+- [x] 1.1 Fragment adding `churnRisk` (`level`, `score`, `reasons[]`, `computedAt`) to `client`, read only in forms
   - Verify: register import logs no `PARTIAL IMPORT`; `npm run check:schema-l10n` exit 0
-- [ ] 1.2 `lib/Service/ClientRiskService.php::assess()` with the five signals and weights from app config
+- [x] 1.2 `lib/Service/ClientRiskService.php::assess()` with the five signals and weights from app config
   - Verify: PHPUnit `tests/Unit/Service/ClientRiskServiceTest.php` per signal, per cap and per level boundary
-- [ ] 1.3 `lib/BackgroundJob/ClientRiskJob.php` daily, writing only on change; recompute on contract status change and on detractor classification
+- [x] 1.3 `lib/BackgroundJob/ClientRiskJob.php` daily, writing only on change; recompute on contract status change and on detractor classification
   - Verify: PHPUnit on the job and on the two triggers, asserting no write when nothing changed
 - [ ] 1.4 Clients Risk column and At risk quick filter; ClientDetail Risk badge with reasons
   - Verify: Playwright `tests/e2e/client-risk.spec.ts` with a seeded churned contract sees the client under At risk with that reason

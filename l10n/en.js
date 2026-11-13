@@ -9472,7 +9472,13 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Risk": "Risk",
+        "Risk level": "Risk level",
+        "Risk score": "Risk score",
+        "Reasons": "Reasons",
+        "Computed at": "Computed at",
+        "How likely the client is to leave: low, medium or high, with the signals behind it. Recomputed by pipelinq.": "How likely the client is to leave: low, medium or high, with the signals behind it. Recomputed by pipelinq."
     },
     "nplurals=2; plural=(n != 1);"
 )

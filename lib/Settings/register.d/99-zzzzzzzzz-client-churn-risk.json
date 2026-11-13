@@ -1,0 +1,51 @@
+{
+    "$comment": "clients-history-summary-and-risk (design D1): every client carries its churn risk, a level with the named signals that produced it, written by ClientRiskService (daily through ClientRiskJob, and at once when a contract status or a survey classification changes). Stored rather than computed on read, because the Clients list sorts and filters on it. Never typed by hand, so read only in forms. client 1.6.0 -> 1.7.0.",
+    "components": {
+        "schemas": {
+            "client": {
+                "slug": "client",
+                "version": "1.7.0",
+                "properties": {
+                    "churnRisk": {
+                        "type": "object",
+                        "title": "Risk",
+                        "description": "How likely the client is to leave: low, medium or high, with the signals behind it. Recomputed by pipelinq.",
+                        "readOnly": true,
+                        "facetable": false,
+                        "properties": {
+                            "level": {
+                                "type": "string",
+                                "title": "Risk level",
+                                "enum": ["low", "medium", "high"],
+                                "facetable": true
+                            },
+                            "score": {
+                                "type": "integer",
+                                "title": "Risk score",
+                                "minimum": 0
+                            },
+                            "reasons": {
+                                "type": "array",
+                                "title": "Reasons",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "signal": {"type": "string", "enum": ["contract-expiring", "contract-churned", "detractor", "open-complaints", "sla-breached", "no-recent-contact"]},
+                                        "points": {"type": "integer"},
+                                        "schema": {"type": "string"},
+                                        "records": {"type": "array", "items": {"type": "string"}}
+                                    }
+                                }
+                            },
+                            "computedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "title": "Computed at"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
