@@ -32,9 +32,9 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Kernel\Contracts\PasswordResetServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalAuthServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalMfaServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalSessionManagerInterface;
-use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
@@ -71,7 +71,7 @@ class PortalAuthController extends PortalApiController {
 	 * @param PortalSessionManagerInterface $sessions The session manager.
 	 * @param PortalMfaServiceInterface $mfa The MFA service.
 	 * @param PasswordResetServiceInterface $reset The password-reset service.
-	 * @param PortalObjectRepository $repository The portal object repository.
+	 * @param PortalObjectRepositoryInterface $repository The portal object repository.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -81,7 +81,7 @@ class PortalAuthController extends PortalApiController {
 		private PortalSessionManagerInterface $sessions,
 		private PortalMfaServiceInterface $mfa,
 		private PasswordResetServiceInterface $reset,
-		private PortalObjectRepository $repository,
+		private PortalObjectRepositoryInterface $repository,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()

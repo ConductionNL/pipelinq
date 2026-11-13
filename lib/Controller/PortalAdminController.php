@@ -31,9 +31,9 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
 use OCA\Pipelinq\Service\Portal\PortalException;
-use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -68,7 +68,7 @@ class PortalAdminController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param PortalTenantServiceInterface $tenant The tenant service.
 	 * @param PortalAuditServiceInterface $audit The audit service.
-	 * @param PortalObjectRepository $repository The portal object repository.
+	 * @param PortalObjectRepositoryInterface $repository The portal object repository.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
@@ -78,7 +78,7 @@ class PortalAdminController extends Controller {
 		IRequest $request,
 		private PortalTenantServiceInterface $tenant,
 		private PortalAuditServiceInterface $audit,
-		private PortalObjectRepository $repository,
+		private PortalObjectRepositoryInterface $repository,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,

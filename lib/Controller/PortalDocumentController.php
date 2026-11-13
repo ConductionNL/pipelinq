@@ -32,9 +32,9 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Kernel\Contracts\DocumentSigningServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalExportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
 use OCA\Pipelinq\Service\Portal\PortalInvoiceService;
-use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -71,7 +71,7 @@ class PortalDocumentController extends PortalApiController {
 	 * @param LoggerInterface $logger The logger.
 	 * @param DocumentSigningServiceInterface $signing The signing service.
 	 * @param PortalInvoiceService $invoices The invoice facade (access re-check).
-	 * @param PortalObjectRepository $repository The portal object repository.
+	 * @param PortalObjectRepositoryInterface $repository The portal object repository.
 	 * @param PortalAuditServiceInterface $audit The audit service.
 	 * @param PortalExportServiceInterface $exports Builds the AVG art. 15 data export.
 	 */
@@ -81,7 +81,7 @@ class PortalDocumentController extends PortalApiController {
 		LoggerInterface $logger,
 		private DocumentSigningServiceInterface $signing,
 		private PortalInvoiceService $invoices,
-		private PortalObjectRepository $repository,
+		private PortalObjectRepositoryInterface $repository,
 		private PortalAuditServiceInterface $audit,
 		private PortalExportServiceInterface $exports,
 	) {

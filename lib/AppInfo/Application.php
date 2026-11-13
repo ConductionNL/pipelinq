@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Contract\RegisterSlugResolverInterface;
 use OCA\Pipelinq\Adapter\AdapterRegistrar;
+use OCA\Pipelinq\BackgroundJob\JobRegistrar;
 use OCA\Pipelinq\Dashboard\DashboardRegistrar;
 use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
 use OCA\Pipelinq\Integration\IntegrationRegistrar;
@@ -185,6 +186,7 @@ class Application extends App implements IBootstrap {
 		(new AdapterRegistrar())->register(context: $context);
 		(new PortalRegistrar())->register(context: $context);
 		(new IntegrationRegistrar())->register(context: $context);
+		(new JobRegistrar())->register(context: $context);
 	}//end register()
 
 	/**

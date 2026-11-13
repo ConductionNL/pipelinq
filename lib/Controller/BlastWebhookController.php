@@ -31,8 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\BackgroundJob\BlastSendJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BlastSendJobInterface;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -93,7 +93,7 @@ class BlastWebhookController extends Controller {
 	 *
 	 * @param IRequest $request Request.
 	 * @param IAppConfig $appConfig App config — webhook secrets.
-	 * @param BlastSendJob $blastSendJob Queue tail (enqueueWebhookEvent).
+	 * @param BlastSendJobInterface $blastSendJob Queue tail (enqueueWebhookEvent).
 	 * @param WebhookProcessorServiceInterface $webhookProcessor Synchronous fast-path helper.
 	 * @param LoggerInterface $logger Logger.
 	 *
@@ -102,7 +102,7 @@ class BlastWebhookController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private IAppConfig $appConfig,
-		private BlastSendJob $blastSendJob,
+		private BlastSendJobInterface $blastSendJob,
 		private WebhookProcessorServiceInterface $webhookProcessor,
 		private LoggerInterface $logger,
 	) {
