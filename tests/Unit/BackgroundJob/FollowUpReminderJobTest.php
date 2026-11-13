@@ -41,6 +41,10 @@ use RuntimeException;
  * Window edges, the once-per-occurrence marker, the no-op without the leaf or register, and group assignees.
  *
  * @covers \OCA\Pipelinq\BackgroundJob\FollowUpReminderJob
+ * @uses   \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses   \OCA\Pipelinq\Util\EntityPayload
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses   \OCA\Pipelinq\Util\SerialisedToArray
  */
 class FollowUpReminderJobTest extends TestCase {
 
