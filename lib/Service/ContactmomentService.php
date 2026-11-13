@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactmomentServiceInterface;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
@@ -31,7 +33,6 @@ use OCP\IGroupManager;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for contactmoment business operations.
@@ -47,7 +48,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
-class ContactmomentService {
+class ContactmomentService implements ContactmomentServiceInterface {
 	use EntityAccessorTrait;
 
 	/**

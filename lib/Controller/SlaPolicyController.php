@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -72,7 +72,7 @@ class SlaPolicyController extends Controller {
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -82,7 +82,7 @@ class SlaPolicyController extends Controller {
 	 *
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function create(): JSONResponse {
 		$payload = $this->request->getParams();
 		unset($payload['_route']);
@@ -95,8 +95,8 @@ class SlaPolicyController extends Controller {
 			);
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_policy_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_policy_schema', '');
 		if ($register === '' || $schema === '') {
 			return new JSONResponse(['error' => 'slaRegisterNotConfigured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
@@ -129,7 +129,7 @@ class SlaPolicyController extends Controller {
 	 *
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function update(string $id): JSONResponse {
 		$payload = $this->request->getParams();
 		unset($payload['_route'], $payload['id']);
@@ -142,8 +142,8 @@ class SlaPolicyController extends Controller {
 			);
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_policy_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_policy_schema', '');
 		if ($register === '' || $schema === '') {
 			return new JSONResponse(['error' => 'slaRegisterNotConfigured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}

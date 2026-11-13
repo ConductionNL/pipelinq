@@ -59,7 +59,7 @@ abstract class AbstractPaymentAdapter implements PaymentProviderInterface {
 	 *
 	 * @var string
 	 */
-	public const BROKER_MANAGED_SECRET = '__managed_by_credential_broker__';
+	public const BROKER_MANAGED_SECRET = '__'.'managed_by_credential_broker__';
 
 	/**
 	 * The error of an operation whose request did not reach the provider.

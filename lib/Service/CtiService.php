@@ -23,16 +23,24 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use InvalidArgumentException;
+use OCA\Pipelinq\BackgroundJob\CallTranscriptionJob;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
+use OCA\Pipelinq\Service\CallReview\CallTranscriptionService;
 use OCA\Pipelinq\Service\Cti\AdapterRegistry;
 use OCA\Pipelinq\Service\Cti\CallAgent;
+use OCA\Pipelinq\Service\Cti\CallCompletion;
+use OCA\Pipelinq\Service\Cti\CallRecording;
+use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
+use OCA\Pipelinq\Service\Cti\CtiWebhookDelivery;
+use OCA\Pipelinq\Service\Cti\EventLogQuery;
 use OCA\Pipelinq\Service\Cti\PendingCall;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
-use OCA\Pipelinq\Service\Cti\CallCompletion;
-use InvalidArgumentException;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -63,7 +71,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
-class CtiService {
+class CtiService implements CtiServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -115,11 +123,6 @@ class CtiService {
 		?string $signature = null,
 	): array {
 		$adapter = $this->adapterRegistry->get($platform);
-		$rawForSig = ($rawBody ?? json_encode($payload));
-		$rawForSigString = '';
-		if ($rawForSig !== false) {
-			$rawForSigString = (string)$rawForSig;
-		}
 
 		// 🔴 ALWAYS VERIFY, INCLUDING WHEN NO SIGNATURE ARRIVED.
 		//
@@ -139,7 +142,7 @@ class CtiService {
 		// and now rejects them with 422. That is the point of the change, and
 		// the fix for such an instance is to configure the secret the adapter
 		// already reads.
-		$valid = $adapter->verifyWebhookSignature($rawForSigString, ($signature ?? ''));
+		$valid = $adapter->verifyWebhookSignature($this->signedBody(payload: $payload, rawBody: $rawBody), ($signature ?? ''));
 
 		// 🔴 A MALFORMED BODY IS THE EXPECTED CASE ON A PUBLIC ROUTE.
 		//
@@ -152,47 +155,90 @@ class CtiService {
 		//
 		// Wrapped as InvalidArgumentException so the controller can answer 400:
 		// the delivery is the caller's problem, not the server's.
-		try {
-			$normalised = $adapter->handleInboundWebhook($payload);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'CTI webhook: adapter could not parse the payload',
-				['platform' => $platform, 'error' => $e->getMessage()]
-			);
-			throw new InvalidArgumentException('The webhook payload could not be parsed.', 0, $e);
-		}
-		$interactionId = null;
-		$processingError = null;
+		$event = $this->parseWebhook(adapter: $adapter, delivery: new CtiWebhookDelivery(platform: $platform, payload: $payload));
 
-		if ($valid === false) {
-			$processingError = 'Invalid signature';
-		}
-
+		$outcome = ['interactionId' => null, 'processingError' => 'Invalid signature'];
 		if ($valid === true) {
-			try {
-				$interactionId = $this->dispatchEvent(platform: $platform, event: $normalised);
-			} catch (\Throwable $e) {
-				$this->logger->error(
-					'CTI webhook dispatch failed',
-					['exception' => $e->getMessage(), 'platform' => $platform]
-				);
-				$processingError = $e->getMessage();
-			}
+			$outcome = $this->dispatchVerifiedEvent(platform: $platform, event: $event);
 		}
 
 		$this->logEvent(
 			platform: $platform,
-			event: $normalised,
+			event: $event,
 			signatureValid: $valid,
-			processingError: $processingError,
+			processingError: $outcome['processingError'],
 		);
 
 		return [
 			'logged' => true,
 			'valid' => $valid,
-			'interactionId' => $interactionId,
+			'interactionId' => $outcome['interactionId'],
 		];
 	}//end handleWebhook()
+
+	/**
+	 * The body a webhook signature is checked against: the raw body when the
+	 * controller has it, otherwise the re-encoded payload, or an empty string
+	 * when that cannot be encoded.
+	 *
+	 * @param array<string,mixed> $payload Decoded webhook body.
+	 * @param string|null         $rawBody Raw request body.
+	 *
+	 * @return string The signed body.
+	 */
+	private function signedBody(array $payload, ?string $rawBody): string {
+		$rawForSig = ($rawBody ?? json_encode($payload));
+		$rawForSigString = '';
+		if ($rawForSig !== false) {
+			$rawForSigString = (string)$rawForSig;
+		}
+
+		return $rawForSigString;
+	}//end signedBody()
+
+	/**
+	 * Let the platform adapter normalise a delivery; a payload it cannot
+	 * parse is logged and refused as the caller's problem.
+	 *
+	 * @param CtiAdapterInterface $adapter  The platform adapter.
+	 * @param CtiWebhookDelivery  $delivery The platform and decoded body.
+	 *
+	 * @return CtiWebhookResult The normalised event.
+	 *
+	 * @throws InvalidArgumentException When the payload could not be parsed.
+	 */
+	private function parseWebhook(CtiAdapterInterface $adapter, CtiWebhookDelivery $delivery): CtiWebhookResult {
+		try {
+			return $adapter->handleInboundWebhook($delivery->payload);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'CTI webhook: adapter could not parse the payload',
+				['platform' => $delivery->platform, 'error' => $e->getMessage()]
+			);
+			throw new InvalidArgumentException('The webhook payload could not be parsed.', 0, $e);
+		}
+	}//end parseWebhook()
+
+	/**
+	 * Dispatch a verified event; a dispatch that fails is logged and its
+	 * error recorded for the event log.
+	 *
+	 * @param string           $platform Platform identifier.
+	 * @param CtiWebhookResult $event    The normalised event.
+	 *
+	 * @return array{interactionId: string|null, processingError: string|null} The outcome.
+	 */
+	private function dispatchVerifiedEvent(string $platform, CtiWebhookResult $event): array {
+		try {
+			return ['interactionId' => $this->dispatchEvent(platform: $platform, event: $event), 'processingError' => null];
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'CTI webhook dispatch failed',
+				['exception' => $e->getMessage(), 'platform' => $platform]
+			);
+			return ['interactionId' => null, 'processingError' => $e->getMessage()];
+		}
+	}//end dispatchVerifiedEvent()
 
 	/**
 	 * Dispatch a normalised event to the appropriate handler.
@@ -385,15 +431,54 @@ class CtiService {
 			return false;
 		}
 
+		$saved = $this->saveRecording(
+			interactionId: $interactionId,
+			recording: new CallRecording(recordingUrl: $recordingUrl, expiresAt: $expiresAt)
+		);
+		if ($saved === true) {
+			$this->queueTranscription(interactionId: $interactionId);
+		}
+
+		return $saved;
+	}//end attachRecording()
+
+	/**
+	 * Queue the transcription of a call whose recording was just attached,
+	 * when an administrator has switched it on (contact-moments-call-review D1).
+	 * Queuing never fails the attach: the recording is already stored.
+	 *
+	 * @param string $interactionId Contactmoment ticket UUID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/contact-moments-call-review/tasks.md#task-1.2
+	 */
+	private function queueTranscription(string $interactionId): void {
+		if ($this->appConfig->getValueString(AppIdentity::APP_ID, CallTranscriptionService::ENABLED_KEY, 'false') !== 'true') {
+			return;
+		}
+
 		try {
-			$this->ticketService->save(
-				ticketType: TicketService::TYPE_CONTACTMOMENT,
-				payload: [
-					'recording_url' => $recordingUrl,
-					'recording_retention_expires_at' => $expiresAt,
-				],
-				uuid: $interactionId,
+			$this->container->get(IJobList::class)->add(CallTranscriptionJob::class, ['ticketId' => $interactionId]);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'CTI attachRecording: the transcription could not be queued',
+				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
 			);
+		}
+	}//end queueTranscription()
+
+	/**
+	 * Write a recording on a contactmoment ticket; a failed write is logged.
+	 *
+	 * @param string        $interactionId Contactmoment ticket UUID.
+	 * @param CallRecording $recording     The recording URL and its retention expiry.
+	 *
+	 * @return bool True when the recording was written.
+	 */
+	private function saveRecording(string $interactionId, CallRecording $recording): bool {
+		try {
+			$this->writeRecording(interactionId: $interactionId, recording: $recording);
 			return true;
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -402,7 +487,26 @@ class CtiService {
 			);
 			return false;
 		}
-	}//end attachRecording()
+	}//end saveRecording()
+
+	/**
+	 * Write the recording fields on a contactmoment ticket.
+	 *
+	 * @param string        $interactionId Contactmoment ticket UUID.
+	 * @param CallRecording $recording     The recording URL and its retention expiry.
+	 *
+	 * @return void
+	 */
+	private function writeRecording(string $interactionId, CallRecording $recording): void {
+		$this->ticketService->save(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			payload: [
+				'recording_url' => $recording->recordingUrl,
+				'recording_retention_expires_at' => $recording->expiresAt,
+			],
+			uuid: $interactionId,
+		);
+	}//end writeRecording()
 
 	/**
 	 * Originate an outbound call via the active adapter.
@@ -478,8 +582,8 @@ class CtiService {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function syncPresence(string $userId, string $presenceState, ?string $extension = null, ?string $platform = null): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiAgentPresence_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAgentPresence_schema', '');
 		if ($register === '' || $schema === '') {
 			return;
 		}
@@ -542,8 +646,8 @@ class CtiService {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function loadConfig(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiAdapterConfig_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAdapterConfig_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -582,8 +686,8 @@ class CtiService {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function saveConfig(array $config): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiAdapterConfig_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAdapterConfig_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -659,39 +763,28 @@ class CtiService {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function listEventLog(array $filters = [], int $limit = 50, int $offset = 0): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiEventLog_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiEventLog_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
+		$query = new EventLogQuery(filters: $filters, limit: $limit, offset: $offset);
+		return $this->readEventLog(config: $query->config(register: $register, schema: $schema));
+	}//end listEventLog()
+
+	/**
+	 * Read event log rows as plain arrays; a failed read is logged and a
+	 * non-list answer gives none.
+	 *
+	 * @param array<string,mixed> $config The findAll config.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function readEventLog(array $config): array {
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$result = $objectService->findAll(
-				[
-					'filters' => array_merge(
-						['register' => $register, 'schema' => $schema],
-						array_filter(
-							$filters,
-							static fn ($v): bool => ($v !== null && $v !== '')
-						)
-					),
-					'limit' => $limit,
-					'offset' => $offset,
-					'sort' => ['received_at' => 'desc'],
-				]
-			);
-
-			if (is_array($result) === false) {
-				return [];
-			}
-
-			return array_values(
-				array_map(
-					fn ($obj) => $this->toArray(value: $obj),
-					$result
-				)
-			);
+			return $this->rowsToArrays(rows: $objectService->findAll($config));
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'CTI listEventLog failed',
@@ -699,7 +792,27 @@ class CtiService {
 			);
 			return [];
 		}//end try
-	}//end listEventLog()
+	}//end readEventLog()
+
+	/**
+	 * Event log rows as a list of plain arrays; a non-list answer gives none.
+	 *
+	 * @param mixed $rows What findAll answered.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function rowsToArrays(mixed $rows): array {
+		if (is_array($rows) === false) {
+			return [];
+		}
+
+		return array_values(
+			array_map(
+				fn ($obj) => $this->toArray(value: $obj),
+				$rows
+			)
+		);
+	}//end rowsToArrays()
 
 	/**
 	 * Purge event-log entries older than 30 days.
@@ -711,8 +824,8 @@ class CtiService {
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over the fetch/filter/delete loop; extraction adds no clarity.
 	 */
 	public function purgeOldEventLog(): int {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiEventLog_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiEventLog_schema', '');
 		if ($register === '' || $schema === '') {
 			return 0;
 		}
@@ -785,8 +898,8 @@ class CtiService {
 		bool $signatureValid,
 		?string $processingError,
 	): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiEventLog_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiEventLog_schema', '');
 		if ($register === '' || $schema === '') {
 			return;
 		}

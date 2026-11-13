@@ -182,7 +182,7 @@ export default {
 }
 
 .channel-comparison__sla--red {
-	color: #e53e3e;
+	color: var(--color-error, #e53e3e);
 }
 
 .channel-comparison__empty {

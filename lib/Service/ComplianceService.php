@@ -30,13 +30,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
 use OCA\Pipelinq\Service\Consent\ConsentWithdrawal;
-use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
-use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\Consent\SegmentConsentRun;
 use OCA\Pipelinq\Service\Consent\SendPermitRequest;
+use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -62,7 +63,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
  */
-class ComplianceService {
+class ComplianceService implements ComplianceServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -101,7 +102,7 @@ class ComplianceService {
 	 * The token every compliant email body must embed (the renderer
 	 * substitutes the unsubscribe URL on send).
 	 */
-	private const UNSUBSCRIBE_TOKEN = '{{unsubscribe_link}}';
+	private const UNSUBSCRIBE_TOKEN = '{{'.'unsubscribe_link}}';
 
 	/**
 	 * Lawful-basis values that DO satisfy marketing consent gating.
@@ -124,13 +125,6 @@ class ComplianceService {
 	 * @var string
 	 */
 	public const LAWFUL_BASIS_SOFT_OPT_IN = 'soft-opt-in';
-
-	/**
-	 * A send that promotes something. Suppression applies.
-	 *
-	 * @var string
-	 */
-	public const INTENT_PROMOTIONAL = 'promotional';
 
 	/**
 	 * A send the contact needs whatever their invoices say.
@@ -305,7 +299,7 @@ class ComplianceService {
 			return false;
 		}
 
-		if ($this->appConfig->getValueBool(Application::APP_ID, 'marketing.suppress_late_payers', true) === false) {
+		if ($this->appConfig->getValueBool(AppIdentity::APP_ID, 'marketing.suppress_late_payers', true) === false) {
 			return false;
 		}
 
@@ -323,7 +317,7 @@ class ComplianceService {
 	 * @return array<int, string> The configured states, or the default pair.
 	 */
 	private function suppressingStates(): array {
-		$raw = trim($this->appConfig->getValueString(Application::APP_ID, 'marketing.suppression_states', ''));
+		$raw = trim($this->appConfig->getValueString(AppIdentity::APP_ID, 'marketing.suppression_states', ''));
 		if ($raw === '') {
 			return SegmentSignalService::SUPPRESSING_DUNNING_STATES;
 		}
@@ -1156,7 +1150,7 @@ class ComplianceService {
 	 * @return string Schema slug.
 	 */
 	private function getCampaignTemplateSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'campaignTemplate_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignTemplate_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1482,9 +1476,6 @@ class ComplianceService {
 	 * @param string|null $sourceBlastId Blast UUID for audit context.
 	 *
 	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over queued rows; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential guard clauses over queued rows; extraction adds no clarity.
 	 */
 	private function transitionQueuedDeliveries(string $contactId, ?string $sourceBlastId): void {
 		$register = $this->getRegisterSlug();
@@ -1498,6 +1489,33 @@ class ComplianceService {
 			return;
 		}
 
+		$rows = $this->findContactDeliveries(objectService: $objectService, contactId: $contactId, register: $register, schema: $schema);
+		foreach ($rows as $row) {
+			$array = $this->toArray(value: $row);
+			if ($this->isTransitionable(delivery: $array, sourceBlastId: $sourceBlastId) === false) {
+				continue;
+			}
+
+			$id = $this->extractObjectId(payload: $array);
+			if ($id === '') {
+				continue;
+			}
+
+			$this->markUnsubscribedBeforeSend(objectService: $objectService, id: $id, delivery: $array, register: $register, schema: $schema);
+		}
+	}//end transitionQueuedDeliveries()
+
+	/**
+	 * Every BlastDelivery row of a contact, or none when the lookup fails.
+	 *
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $contactId     Contact UUID / slug.
+	 * @param string $register      Register slug.
+	 * @param string $schema        BlastDelivery schema slug.
+	 *
+	 * @return mixed The rows (a list from OpenRegister), or an empty array on failure.
+	 */
+	private function findContactDeliveries(object $objectService, string $contactId, string $register, string $schema): mixed {
 		try {
 			$rows = $objectService->findAll(
 				config: [
@@ -1516,55 +1534,75 @@ class ComplianceService {
 					'exception' => $e->getMessage(),
 				]
 			);
-			return;
+			return [];
 		}
 
-		foreach (($rows ?? []) as $row) {
-			$array = $this->toArray(value: $row);
-			if ($array === []) {
-				continue;
-			}
+		return ($rows ?? []);
+	}//end findContactDeliveries()
 
-			$status = strtolower((string)($array['status'] ?? ''));
-			if (in_array($status, self::QUEUED_DELIVERY_STATUSES, true) === false) {
-				continue;
-			}
+	/**
+	 * Whether a delivery is still queued and, when a sourcing blast is
+	 * pinned, does not belong to a different blast.
+	 *
+	 * @param array<string, mixed> $delivery      The delivery payload.
+	 * @param string|null          $sourceBlastId Blast UUID that triggered the withdrawal.
+	 *
+	 * @return bool True when the delivery should move to unsubscribed-before-send.
+	 */
+	private function isTransitionable(array $delivery, ?string $sourceBlastId): bool {
+		if ($delivery === []) {
+			return false;
+		}
 
-			if ($sourceBlastId !== null && $sourceBlastId !== '') {
-				$rowBlast = (string)($array['blastId'] ?? '');
-				if ($rowBlast !== '' && $rowBlast !== $sourceBlastId) {
-					// Sourcing blast pinned and delivery belongs to a
-					// different blast — leave it alone.
-					continue;
-				}
-			}
+		$status = strtolower((string)($delivery['status'] ?? ''));
+		if (in_array($status, self::QUEUED_DELIVERY_STATUSES, true) === false) {
+			return false;
+		}
 
-			$id = $this->extractObjectId(payload: $array);
-			if ($id === '') {
-				continue;
+		if ($sourceBlastId !== null && $sourceBlastId !== '') {
+			$rowBlast = (string)($delivery['blastId'] ?? '');
+			if ($rowBlast !== '' && $rowBlast !== $sourceBlastId) {
+				// Sourcing blast pinned and delivery belongs to a
+				// different blast — leave it alone.
+				return false;
 			}
+		}
 
-			$array['status'] = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
-			$array['unsubscribedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+		return true;
+	}//end isTransitionable()
 
-			try {
-				$objectService->updateObject(
-					id: $id,
-					object: $array,
-					register: $register,
-					schema: $schema,
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'ComplianceService.transitionQueuedDeliveries: updateObject failed',
-					[
-						'id' => $id,
-						'exception' => $e->getMessage(),
-					]
-				);
-			}
-		}//end foreach
-	}//end transitionQueuedDeliveries()
+	/**
+	 * Move one delivery to unsubscribed-before-send; a failed write is logged.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param string               $id            Delivery id.
+	 * @param array<string, mixed> $delivery      The delivery payload.
+	 * @param string               $register      Register slug.
+	 * @param string               $schema        BlastDelivery schema slug.
+	 *
+	 * @return void
+	 */
+	private function markUnsubscribedBeforeSend(object $objectService, string $id, array $delivery, string $register, string $schema): void {
+		$delivery['status'] = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
+		$delivery['unsubscribedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+
+		try {
+			$objectService->updateObject(
+				id: $id,
+				object: $delivery,
+				register: $register,
+				schema: $schema,
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'ComplianceService.transitionQueuedDeliveries: updateObject failed',
+				[
+					'id' => $id,
+					'exception' => $e->getMessage(),
+				]
+			);
+		}
+	}//end markUnsubscribedBeforeSend()
 
 	/**
 	 * Look up a ConsentRecord by (contactId, channel, list scope).
@@ -1661,7 +1699,7 @@ class ComplianceService {
 	 * @return string Register slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1675,7 +1713,7 @@ class ComplianceService {
 	 * @return string Schema slug.
 	 */
 	private function getConsentRecordSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'consent_record_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'consent_record_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1689,7 +1727,7 @@ class ComplianceService {
 	 * @return string Schema slug.
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blast_delivery_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_delivery_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}

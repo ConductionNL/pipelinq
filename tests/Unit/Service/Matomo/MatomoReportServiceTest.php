@@ -51,6 +51,7 @@ class MatomoReportServiceTest extends TestCase {
 	 * @param string $credentialStatus What the broker says about it.
 	 * @param array<int, array<string, mixed>> $campaigns Our own campaigns.
 	 * @param string $body What Matomo answers.
+	 * @param string $siteId The configured site id setting.
 	 *
 	 * @return MatomoReportService
 	 */
@@ -60,6 +61,7 @@ class MatomoReportServiceTest extends TestCase {
 		string $credentialStatus,
 		array $campaigns = [],
 		string $body = '[]',
+		string $siteId = '7',
 	): MatomoReportService {
 		$egress = $this->createMock(ConnectorEgress::class);
 		$egress->method('isConfigured')->willReturn($sourceConfigured);
@@ -79,13 +81,13 @@ class MatomoReportServiceTest extends TestCase {
 
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
-			static function (string $app, string $key, string $default = '') use ($credentialRef): string {
+			static function (string $app, string $key, string $default = '') use ($credentialRef, $siteId): string {
 				if ($key === MatomoReportService::CREDENTIAL_KEY) {
 					return $credentialRef;
 				}
 
 				if ($key === MatomoReportService::SITE_KEY) {
-					return '7';
+					return $siteId;
 				}
 
 				return $default;
@@ -192,6 +194,55 @@ class MatomoReportServiceTest extends TestCase {
 		$this->assertSame('7', $query['idSite']);
 		$this->assertSame('2026-08-01,2026-08-31', $query['date']);
 	}//end testRequestsCarryFormatJsonAndTheConfiguredSite()
+
+	/**
+	 * Without a configured site (or only whitespace) the first site, `1`, is read.
+	 *
+	 * @return void
+	 */
+	public function testRequestsDefaultToSiteOneWhenNoSiteIsConfigured(): void {
+		foreach (['', '   '] as $siteId) {
+			$this->requests = [];
+			$this->service(sourceConfigured: true, credentialRef: 'c-1', credentialStatus: 'active', siteId: $siteId)
+				->report(from: '2026-08-01', to: '2026-08-31');
+
+			$this->assertCount(3, $this->requests);
+			foreach ($this->requests as $request) {
+				$this->assertSame('1', $request['config']['query']['idSite'], 'site setting ' . var_export($siteId, true));
+			}
+		}
+	}//end testRequestsDefaultToSiteOneWhenNoSiteIsConfigured()
+
+	/**
+	 * A body that is not a JSON array leaves every report empty rather than failing.
+	 *
+	 * @return void
+	 */
+	public function testANonJsonAnswerGivesEmptyReports(): void {
+		foreach (['not json', '"text"', ''] as $body) {
+			$report = $this->service(
+				sourceConfigured: true,
+				credentialRef: 'c-1',
+				credentialStatus: 'active',
+				campaigns: [['id' => 'camp-1', 'name' => 'Webinar', 'utmCampaign' => 'webinar-ai']],
+				body: $body
+			)->report(from: '2026-08-01', to: '2026-08-31');
+
+			$this->assertSame(
+				[
+					'connected' => true,
+					'reason' => '',
+					'from' => '2026-08-01',
+					'to' => '2026-08-31',
+					'campaigns' => [],
+					'referrerTypes' => [],
+					'goals' => [],
+				],
+				$report,
+				'body ' . var_export($body, true)
+			);
+		}
+	}//end testANonJsonAnswerGivesEmptyReports()
 
 	/**
 	 * A campaign row whose label equals one of our `utmCampaign` values is

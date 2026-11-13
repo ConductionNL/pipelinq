@@ -23,9 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\IncomingCallFinderInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Cti\IncomingCallFinder;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -45,14 +45,14 @@ class IncomingCallController extends Controller {
 	 *
 	 * @param IRequest $request The HTTP request.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
-	 * @param IncomingCallFinder $incomingCalls Finds the open inbound call on an agent's line.
+	 * @param IncomingCallFinderInterface $incomingCalls Finds the open inbound call on an agent's line.
 	 */
 	public function __construct(
 		IRequest $request,
 		private CrmPrivilegeCheck $privilege,
-		private IncomingCallFinder $incomingCalls,
+		private IncomingCallFinderInterface $incomingCalls,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

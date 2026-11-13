@@ -27,9 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Portal\PortalDelegationService;
+use OCA\Pipelinq\Kernel\Contracts\PortalDelegationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
 use OCA\Pipelinq\Service\Portal\PortalException;
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
@@ -43,21 +43,22 @@ use Psr\Log\LoggerInterface;
  *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalDelegationController extends PortalApiController {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param PortalRequestGuardInterface $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param PortalDelegationService $delegations The delegation service.
+	 * @param PortalDelegationServiceInterface $delegations The delegation service.
 	 */
 	public function __construct(
 		IRequest $request,
-		PortalRequestGuard $guard,
+		PortalRequestGuardInterface $guard,
 		LoggerInterface $logger,
-		private PortalDelegationService $delegations,
+		private PortalDelegationServiceInterface $delegations,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()

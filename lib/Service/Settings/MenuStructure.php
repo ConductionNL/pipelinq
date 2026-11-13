@@ -42,19 +42,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Settings;
 
+use OCA\Pipelinq\Kernel\Contracts\MenuStructureInterface;
+
 /**
  * The structure settings: their keys, their values and how a stored value reads.
  *
  * @spec openspec/specs/navigation-ia/spec.md
  */
-class MenuStructure {
-
-	/**
-	 * The appconfig key, and the initial-state key the frontend reads.
-	 *
-	 * @var string
-	 */
-	public const KEY = 'menu_structure';
+class MenuStructure implements MenuStructureInterface {
 
 	/**
 	 * The default structure.
@@ -69,13 +64,6 @@ class MenuStructure {
 	 * @var string
 	 */
 	public const FULL = 'full';
-
-	/**
-	 * The appconfig key that lists the modules shown in the simple menu.
-	 *
-	 * @var string
-	 */
-	public const MODULES_KEY = 'menu_modules';
 
 	/**
 	 * The modules an administrator can switch into the simple menu.

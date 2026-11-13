@@ -37,8 +37,12 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\OpenRegister\Service\WebhookService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -47,9 +51,6 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Service for POS cash-drawer (shift / drop / count / diff) operations.
@@ -76,7 +77,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *
  * @spec openspec/specs/pos-cash-management/spec.md
  */
-class CashShiftService {
+class CashShiftService implements CashShiftServiceInterface {
 	use CastingPayloadToArray;
 
 	/**
@@ -842,8 +843,8 @@ class CashShiftService {
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Kassalade-register of -schema is niet geconfigureerd.');

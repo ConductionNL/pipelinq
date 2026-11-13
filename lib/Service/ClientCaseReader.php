@@ -34,7 +34,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Exception\NotAuthorizedException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/changes/client-page-as-the-relation-boards/specs/client-detail/spec.md#requirement-the-client-page-lists-the-clients-cases
  */
-class ClientCaseReader {
+class ClientCaseReader implements ClientCaseReaderInterface {
 	/**
 	 * Dossiq's case leaf, resolved by name: it exists exactly when dossiq is installed.
 	 *
@@ -118,8 +119,8 @@ class ClientCaseReader {
 	 * @return array<string, mixed> `client`, or `status` and `message`.
 	 */
 	private function client(string $clientId): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($clientId === '' || $register === '' || $schema === '') {
 			return ['status' => 400, 'message' => 'Missing client'];
 		}

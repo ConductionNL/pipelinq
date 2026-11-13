@@ -59,6 +59,7 @@
 import { NcSelect, NcTextField } from '@nextcloud/vue'
 import BookingRowsEditor from './BookingRowsEditor.vue'
 import { workingHoursError } from '../../utils/resourceValidation.js'
+import resourceRowsFieldMixin from './resourceRowsFieldMixin.js'
 
 let instanceCount = 0
 
@@ -66,19 +67,7 @@ export default {
 	name: 'ResourceHoursEditor',
 	components: { BookingRowsEditor, NcSelect, NcTextField },
 
-	props: {
-		/** The rows: `{ day, openTime, closeTime }[]`. */
-		modelValue: {
-			type: Array,
-			default: () => [],
-		},
-
-		/** An error from the host form, shown instead of the live rule check. */
-		error: {
-			type: String,
-			default: '',
-		},
-	},
+	mixins: [resourceRowsFieldMixin],
 
 	emits: ['update:modelValue'],
 
@@ -88,17 +77,6 @@ export default {
 	},
 
 	computed: {
-		/**
-		 * The working-hours rows, or none when the value is not an array.
-		 *
-		 * @return {Array<object>}
-		 *
-		 * @spec openspec/specs/appointment-booking/spec.md
-		 */
-		rows() {
-			return Array.isArray(this.modelValue) ? this.modelValue : []
-		},
-
 		/**
 		 * The first rule the rows break, or an empty string.
 		 *

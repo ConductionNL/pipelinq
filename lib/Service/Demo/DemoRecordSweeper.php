@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\Service\Demo;
 
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 
 /**
@@ -71,7 +71,7 @@ class DemoRecordSweeper {
 	 * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function removeMatching(array $objects): ?array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			return null;
 		}

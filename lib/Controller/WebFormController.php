@@ -27,8 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\WebForm\WebFormIntakeService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WebFormIntakeServiceInterface;
 use OCA\Pipelinq\Service\WebForm\WebFormSubmitException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -44,6 +44,7 @@ use Throwable;
  * Takes a form submit from a public website and creates its destination.
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-a-website-form-submits-into-the-destination-it-names
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class WebFormController extends Controller {
 
@@ -51,17 +52,17 @@ class WebFormController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest             $request The current request.
-	 * @param WebFormIntakeService $intake  The website form intake.
+	 * @param WebFormIntakeServiceInterface $intake  The website form intake.
 	 * @param LoggerInterface      $logger  Logger.
 	 *
 	 * @spec exclude constructor wiring only; it makes no decision a requirement can describe
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly WebFormIntakeService $intake,
+		private readonly WebFormIntakeServiceInterface $intake,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -151,7 +152,7 @@ class WebFormController extends Controller {
 			$this->logger->error('Pipelinq: website form submit failed.', ['exception' => $e]);
 
 			return $this->cors(
-				response: new JSONResponse(['error' => WebFormIntakeService::TRY_LATER], Http::STATUS_SERVICE_UNAVAILABLE)
+				response: new JSONResponse(['error' => WebFormIntakeServiceInterface::TRY_LATER], Http::STATUS_SERVICE_UNAVAILABLE)
 			);
 		}//end try
 

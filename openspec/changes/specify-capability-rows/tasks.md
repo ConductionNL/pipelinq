@@ -71,3 +71,7 @@
   - Verify: PHPUnit for a busy hour not offered; the booking lands in the user's calendar
 - [ ] 35.1 List the client's real invoices in the portal: read shillinq sales invoices through the integration registry, leave out draft and parked POS carts, and offer each invoice as a PDF (`lib/Service/Portal/PortalInvoiceService.php`, `lib/Service/Portal/AbstractPortalReadFacade.php`; row `portal-invoices`, requirement "A client sees their own invoices, contracts, orders and quotes")
   - Verify: PHPUnit: a draft cart is not listed, a shillinq invoice is, its PDF downloads
+- [ ] 36.1 Put the click-to-dial button next to every phone number on the client, contact and lead pages: mount `src/components/CtiClickToDialButton.vue`, which no page mounts today, where those pages render a phone number, and hide it when no telephony platform is configured (row `cm-click-to-call`, requirement "Click-to-Dial Outbound (REQ-CTI-003)" in `openspec/specs/cti-screenpop-adapter`)
+  - Verify: vitest that the button renders beside a phone number and calls `ctiApi.clickToDial()` with that number; no button without a configured platform
+- [ ] 37.1 Check row `clients-custom-fields` against "A field an administrator adds to the client schema shows on the client pages"
+  - Verify: the scenario holds on a live instance; evidence on the row: `lib/Service/RegisterResolverService.php`

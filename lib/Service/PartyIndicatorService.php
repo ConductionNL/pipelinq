@@ -47,7 +47,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -58,7 +59,7 @@ use Throwable;
  *
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
  */
-class PartyIndicatorService {
+class PartyIndicatorService implements PartyIndicatorServiceInterface {
 	/**
 	 * The acts a caller can ask about, and the effect each one reads.
 	 *
@@ -442,7 +443,7 @@ class PartyIndicatorService {
 	 * @return string The register id ('' when unconfigured).
 	 */
 	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'PartyIndicatorService: app-config "register" is not configured; indicator reads and writes are refused, not run unscoped'
@@ -460,7 +461,7 @@ class PartyIndicatorService {
 	 * @return string The schema id ('' when unconfigured).
 	 */
 	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaId()
 
 	/**

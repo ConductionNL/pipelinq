@@ -32,10 +32,10 @@
                 ]
             },
             {
-                "WeeklyReviewService::latest": []
+                "WeeklyReviewServiceInterface::latest": []
             },
             {
-                "WeeklyReviewService::compose": []
+                "WeeklyReviewServiceInterface::compose": []
             }
         ]
     },
@@ -74,7 +74,7 @@
                 ]
             },
             {
-                "WeeklyReviewService::generate": [
+                "WeeklyReviewServiceInterface::generate": [
                     "sample-weekStarting"
                 ]
             }

@@ -51,7 +51,7 @@
         },
         "trace": [
             {
-                "ContractService::getRegisterAndSchema": []
+                "ContractServiceInterface::getRegisterAndSchema": []
             },
             {
                 "ContainerInterface::get": [
@@ -76,7 +76,7 @@
         },
         "trace": [
             {
-                "ContractService::getRegisterAndSchema": []
+                "ContractServiceInterface::getRegisterAndSchema": []
             },
             {
                 "ContainerInterface::get": [
@@ -109,7 +109,7 @@
         },
         "trace": [
             {
-                "ContractService::getRegisterAndSchema": []
+                "ContractServiceInterface::getRegisterAndSchema": []
             },
             {
                 "ContainerInterface::get": [
@@ -134,7 +134,7 @@
         },
         "trace": [
             {
-                "ContractService::getRegisterAndSchema": []
+                "ContractServiceInterface::getRegisterAndSchema": []
             },
             {
                 "ContainerInterface::get": [
@@ -184,7 +184,7 @@
                 ]
             },
             {
-                "RecurringRevenueService::getSummary": []
+                "RecurringRevenueServiceInterface::getSummary": []
             }
         ]
     },
@@ -221,10 +221,10 @@
                 ]
             },
             {
-                "ContractService::loadAll": []
+                "ContractServiceInterface::loadAll": []
             },
             {
-                "RecurringRevenueService::computeRenewalMetrics": [
+                "RecurringRevenueServiceInterface::computeRenewalMetrics": [
                     [],
                     "(time)",
                     "(time)"

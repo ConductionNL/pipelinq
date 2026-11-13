@@ -41,6 +41,7 @@ use Throwable;
  * @covers \OCA\Pipelinq\Repair\IngestProductVendorMaster
  * @covers \OCA\Pipelinq\Repair\Support\SourceRecordLink
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses   \OCA\Pipelinq\Repair\Support\SupplierTarget
  *
  * @spec openspec/specs/product-vendor-master/spec.md
  */
@@ -134,6 +135,14 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			'vendor, no source record schema'     => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'config' => ['sourceRecord_schema' => '']],
 			'vendor, source record save throws'   => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'throwOn' => 'schema-src'],
 			'vendor, contacts unavailable'        => ['export' => ['vendors' => [$vendor]], 'contactsDisabled' => true],
+			'vendor, not configured'              => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'config' => ['supplier_schema' => '']],
+			'vendor, contact match without uid'   => [
+				'export'   => ['vendors' => [$vendor]],
+				'contacts' => ['123' => [['FN' => 'No uid']], 'a@acme.test' => [['UID' => '']]],
+				'vcardUid' => 'uid-after-miss',
+			],
+			'vendor without ref or id'            => ['export' => ['vendors' => [['name' => 'Anon']]]],
+			'vendor, supplier save throws'        => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'throwOn' => 'schema-supplier'],
 			'both lists'                          => [
 				'export'   => ['products' => [$product, ['id' => 'sp-2', 'sku' => 'SKU-2']], 'vendors' => [$vendor]],
 				'contacts' => $acme,

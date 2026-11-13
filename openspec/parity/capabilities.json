@@ -1330,7 +1330,8 @@
 				"board": [
 					"PqKlant",
 					"PqContacten",
-					"PqContactenImporteren"
+					"PqContactenImporteren",
+					"PqContactpersoon"
 				]
 			}
 		},
@@ -1404,7 +1405,9 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqImporteren"
+				"board": [
+					"PqContactenImporteren"
+				]
 			}
 		},
 		{
@@ -1437,7 +1440,9 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqTicketsSelectie"
+				"board": [
+					"PqContacten"
+				]
 			}
 		},
 		{
@@ -1583,7 +1588,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqProspects"
+				"board": [
+					"PqProspects",
+					"PqOrganisatiesVerrijken"
+				]
 			}
 		},
 		{
@@ -1641,7 +1649,8 @@
 				"spec": "openregister:openspec/specs/runtime-schema-api",
 				"requirement": [
 					"openregister:openspec/specs/runtime-schema-api :: Runtime schema update invalidates cache and reloads affected engines",
-					"openregister:openspec/specs/register-resolver-service :: The system MUST expose `resolveSchema` with the same shape"
+					"openregister:openspec/specs/register-resolver-service :: The system MUST expose `resolveSchema` with the same shape",
+					"openspec/changes/specify-capability-rows/specs/client-management :: A field an administrator adds to the client schema shows on the client pages"
 				],
 				"note": "An admin adds a property to the client schema in OpenRegister at runtime (PUT/PATCH /api/schemas/{id}, no code or restart); pipelinq resolves that schema through RegisterResolverService, so the new field arrives with the client record."
 			},
@@ -1692,7 +1701,8 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
 					"PqKlant",
-					"PqOrganisatie"
+					"PqOrganisatie",
+					"PqKlantNieuw"
 				]
 			}
 		},
@@ -2109,7 +2119,7 @@
 		{
 			"id": "forecast-category",
 			"area": "pipeline",
-			"name": "Mark a lead as commit or best case, and say why when it slips",
+			"name": "Mark a lead as commit or best case, and say why when a large deal is committed",
 			"pipelinq": "yes",
 			"hubspot-crm": "partial",
 			"pipedrive": "unknown",
@@ -2125,7 +2135,10 @@
 				"evidence": "lib/Service/ForecastDealService.php:268",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/forecast-roll-up-and-categories",
-				"requirement": "openspec/specs/forecast-roll-up-and-categories :: Forecast category field on deal (REQ-FRC-001)"
+				"requirement": [
+					"openspec/specs/forecast-roll-up-and-categories :: Forecast category field on deal (REQ-FRC-001)",
+					"openspec/specs/forecast-roll-up-and-categories :: Commit category requires confidence justification (REQ-FRC-003)"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/set-up-the-forecast-tool categories \"Pipeline\", \"Best case\" and \"Commit: deals that have a high likelihood of closing\", set per deal; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite shows \"Forecast Moved Backward\" and \"Close Date Pushed\". Sales Hub Professional, Enterprise. No slip reason field is documented; a custom property would carry the why.",
@@ -2137,7 +2150,43 @@
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqLead"
-			}
+			},
+			"note": "Decision 411 (13 Nov 2026): the commit reason for deals above the threshold (default EUR 50K) is built; the reason asked when a deal slips out of its forecast period is a separate row, forecast-slip-reason, not built."
+		},
+		{
+			"id": "forecast-slip-reason",
+			"area": "pipeline",
+			"name": "Say why when a committed or best-case deal slips out of its forecast period",
+			"pipelinq": "no",
+			"hubspot-crm": "no",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "looked in lib/Service/ForecastDealService.php validateTransition(): it checks closed-deal locks and the commit justification, nothing on a moved close date; grep -i slip over lib and src finds nothing",
+			"feature": "commercial-dashboard",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "Not built: moving a deal's expectedCloseDate past its forecast period asks for nothing and stores no reason (ForecastDealService::validateTransition() has no close-date rule; grep -i slip over lib and src: no hits). Planned in openspec/changes/forecast-slip-reason (decision 411, 13 Nov 2026).",
+				"owner": "ConductionNL/pipelinq",
+				"change": "forecast-slip-reason",
+				"plan": "openspec/changes/forecast-slip-reason",
+				"requirement": "openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories :: A deal that slips out of its forecast period needs a slip reason (REQ-FRC-012)"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/forecast/set-up-the-forecast-tool categories \"Pipeline\", \"Best case\" and \"Commit: deals that have a high likelihood of closing\", set per deal; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite shows \"Forecast Moved Backward\" and \"Close Date Pushed\". Sales Hub Professional, Enterprise. No slip reason field is documented; a custom property would carry the why.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a case-insensitive grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales or marketing code (only the NL Design paragraph modifier \"utrecht-paragraphlead\")",
+				"espocrm": "Opportunity field list in application/Espo/Modules/Crm/Resources/metadata/entityDefs/Opportunity.json has stage, probability, closeDate, leadSource but no forecast category and no slip reason; search for \"forecast\" across application/ and client/ returned nothing",
+				"pipedrive": "not checked: the forecast articles (https://support.pipedrive.com/en/article/the-forecast-view-revenue-projection, https://support.pipedrive.com/en/article/insights-reports-revenue-forecast) describe stage and deal probability only; no commit or best case category and no slip reason is named (read 2026-09-26). Note: Was no without a source. Read from the web.archive.org copy (the-forecast-view-revenue-projection 2026-08-24; insights-reports-revenue-forecast 2026-06-07) because the live knowledge base answered 429.",
+				"odoo-crm": "addons/crm/models/crm_lead.py:127 priority stars and :222 probability are the only confidence fields; searched addons/crm/models for forecast_category, best_case and commit: no field, and the lost reason (:234) applies only to lost leads, not to a slipped date."
+			},
+			"screen": {
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqLead"
+			},
+			"note": "Split from forecast-category by decision 411 (13 Nov 2026): the slip reason is specified, not built."
 		},
 		{
 			"id": "forecast-trend",
@@ -2755,11 +2804,12 @@
 			"feature": "telephony",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Service/CtiService.php:404",
+				"state": "specified",
+				"evidence": "Not built: src/components/CtiClickToDialButton.vue exists and POST /api/cti/click-to-dial works, but no page mounts the button, so no phone number can be clicked to call (decision 389, verify round 12 Nov). Was: lib/Service/CtiService.php:404",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/cti-screenpop-adapter",
-				"requirement": "openspec/specs/cti-screenpop-adapter :: Click-to-Dial Outbound (REQ-CTI-003)"
+				"requirement": "openspec/specs/cti-screenpop-adapter :: Click-to-Dial Outbound (REQ-CTI-003)",
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/calling/make-calls-in-the-hubspot-browser \"make calls directly from the Contacts index page, a contact record, the calling remote, or the conversations inbox\" with a HubSpot number or a third party provider. Sales Hub or Service Hub Starter, Professional, Enterprise.",
@@ -2935,7 +2985,11 @@
 				"evidence": "lib/Service/WhatsAppAdapter.php:177",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/whatsapp-sms-channel-adapter",
-				"requirement": "openspec/specs/whatsapp-sms-channel-adapter :: WhatsApp template message send (REQ-WSA-001)"
+				"requirement": [
+					"openspec/specs/whatsapp-sms-channel-adapter :: WhatsApp template message send (REQ-WSA-001)",
+					"openspec/specs/whatsapp-sms-channel-adapter :: Inbound webhook routing to KCC (REQ-WSA-003)",
+					"openspec/specs/whatsapp-sms-channel-adapter :: Two-way conversation threading (REQ-WSA-010)"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/connect-whatsapp-to-the-conversations-inbox \"You can start a WhatsApp conversation with individual contacts in HubSpot from the contact record\" and incoming messages open a thread in the inbox. Marketing Hub or Service Hub Professional, Enterprise, with a WhatsApp Business account. Note: Was partial for the tier; rated by what a buyer can get.",
@@ -3141,11 +3195,15 @@
 			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Service/TouchpointService.php:164",
+				"state": "specified",
+				"evidence": "Not built: TouchpointService records the touchpoint, but no client or contact page shows which campaign the client came through; the change marketing-campaign-on-client has 0 of 6 tasks done (decision 389, verify round 12 Nov). Was: lib/Service/TouchpointService.php:164",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/marketing-campaigns",
-				"requirement": "openspec/specs/marketing-campaigns :: A landing-page submission becomes a contact, a lead and a touchpoint"
+				"requirement": [
+					"openspec/specs/marketing-campaigns :: A landing-page submission becomes a contact, a lead and a touchpoint",
+					"openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client :: Contacts and clients show how they found you (REQ-MOC-001)"
+				],
+				"plan": "openspec/changes/marketing-campaign-on-client"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/campaigns/review-and-manage-campaign-associations-using-crm-cards the Campaigns card on a contact, deal or ticket record shows its campaigns, and \"Influenced contacts refer to contacts that have engaged with assets related to a campaign\" (https://knowledge.hubspot.com/campaigns/campaign-influenced-contacts). Marketing Hub Professional, Enterprise.",
@@ -3222,7 +3280,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"change": "website-forms-submit-into-tickets",
 				"spec": "openspec/changes/website-forms-submit-into-tickets",
-				"requirement": "openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms :: A public pipelinq form names its destination and is checked when published",
+				"requirement": [
+					"openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms :: A public pipelinq form names its destination and is checked when published",
+					"openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake :: A website form submits into the destination it names"
+				],
 				"readOn": "2026-10-30"
 			},
 			"evidence": {
@@ -4438,7 +4499,10 @@
 			"source": "spec-round-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "PqMijnWerkIndelen"
+				"board": [
+					"PqMijnWerkIndelen",
+					"PqMijnWerk"
+				]
 			}
 		},
 		{
@@ -4576,7 +4640,10 @@
 			"source": "spec-round-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "PqMijnWerkIndelen"
+				"board": [
+					"PqMijnWerkIndelen",
+					"PqMijnWerk"
+				]
 			}
 		},
 		{
@@ -4595,7 +4662,7 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/ProgrammePortfolioService.php and lib/Service/ProgrammeEstimationService.php keep the programme, programmeTask and programmeTeamMember records with progress, estimates and cycles behind lib/Controller/ProgrammeController.php; src/manifest.json and src/manifest.d/ declare no page for them, so it is reachable through the API only",
+				"evidence": "lib/Service/ProgrammePortfolioService.php and lib/Service/ProgrammeEstimationService.php keep the programme, programmeTask and programmeTeamMember records with progress, estimates and cycles behind lib/Controller/ProgrammeController.php; src/manifest.d/83-programmes.json declares the pages Programmes (/programmes, title Projects) and ProgrammeDetail (/programmes/:id) with progress, tasks, team and plan",
 				"owner": "ConductionNL/pipelinq",
 				"readOn": "2026-10-08",
 				"spec": "openspec/specs/project-portfolio",
@@ -4606,7 +4673,7 @@
 					"openspec/specs/project-portfolio :: Unfinished work SHALL be carried into the next cycle in one act (REQ-PRJ-007)"
 				]
 			},
-			"note": "Rated partial: the records, progress and cycles are built, but no pipelinq page shows a project yet. Board PqProject draws the detail page the spec implies.",
+			"note": "Re-read 12 Nov 2026 (verify round): the project pages exist now (src/manifest.d/83-programmes.json), so the earlier note that no pipelinq page shows a project no longer holds. Board PqProject draws the detail page.",
 			"source": "screens-round-2026-10-08",
 			"screen": {
 				"canvas": "design-system",
@@ -4931,7 +4998,10 @@
 				"evidence": "lib/Service/ComplianceService.php:387",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/marketing-integrated-campaigns",
-				"requirement": "openspec/specs/marketing-integrated-campaigns :: A journey refuses a send without consent and names the contact"
+				"requirement": [
+					"openspec/specs/marketing-integrated-campaigns :: A journey refuses a send without consent and names the contact",
+					"openspec/specs/marketing-compliance :: Blast Cannot Send Without Lawful Basis"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/segments/review-segment-predicted-email-recipients-and-engagement \"Prior to sending a marketing email to a segment of contacts, review how many included contacts are eligible to get marketing emails\", with the reasons for ineligible contacts. All products and plans. Note: Was partial; this is the documented pre send check.",
@@ -6777,7 +6847,10 @@
 				"evidence": "lib/Service/PosBookkeepingService.php:183",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/pipelinq-bookkeeping-to-shillinq",
-				"requirement": "openspec/specs/pipelinq-bookkeeping-to-shillinq :: The system SHALL keep a thin shillinq outcome projection on the Z-report (REQ-PBTS-002)"
+				"requirement": [
+					"openspec/specs/pipelinq-bookkeeping-to-shillinq :: The system SHALL keep a thin shillinq outcome projection on the Z-report (REQ-PBTS-002)",
+					"openspec/specs/pipelinq-bookkeeping-to-shillinq :: The Z-report's day figures are three tiles"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no end of day or Z report in the docs; https://knowledge.hubspot.com/payments/manage-payouts lists daily payouts \"minus any fees, refunds, or chargebacks\", which is a processor payout, not a till close (read 2026-09-26). Note: Was no without a source.",
@@ -7368,7 +7441,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqVerkoopoverzicht"
+				"board": [
+					"PqVerkoopoverzicht",
+					"PqForecast"
+				]
 			}
 		},
 		{
@@ -7687,7 +7763,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqDashboard"
+				"board": [
+					"PqDashboard",
+					"PqOperationeel"
+				]
 			}
 		},
 		{
@@ -7858,7 +7937,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqBeheer"
+				"board": [
+					"PqBeheer",
+					"PqInstellen"
+				]
 			}
 		},
 		{
@@ -7916,7 +7998,8 @@
 				"spec": "openspec/specs/brp-lookup",
 				"requirement": [
 					"openspec/specs/brp-lookup :: A BRP lookup can verify a client's identity",
-					"openspec/specs/brp-lookup :: The lookup reads the person it asked for"
+					"openspec/specs/brp-lookup :: The lookup reads the person it asked for",
+					"openspec/specs/brp-lookup :: BRP person lookup is OR-first with a behaviour-preserving legacy fallback and an identical Wet-BRP audit trail"
 				],
 				"change": "openspec/changes/brp-monitor-moves-to-integriq"
 			},
@@ -7988,7 +8071,10 @@
 				"evidence": "lib/Service/BsnAuditService.php:246",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/bsn-validatie-en-brp-lookup",
-				"requirement": "openspec/specs/bsn-validatie-en-brp-lookup :: Configureerbare retentie en Right-to-be-forgotten (REQ-BSN-008)"
+				"requirement": [
+					"openspec/specs/bsn-validatie-en-brp-lookup :: Configureerbare retentie en Right-to-be-forgotten (REQ-BSN-008)",
+					"openspec/specs/bsn-validatie-en-brp-lookup :: BSN-veld nooit in plain-text in logs of URLs (REQ-BSN-009)"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BSN pseudonymisation and found no article or app; https://knowledge.hubspot.com/account-security/store-sensitive-data lets Enterprise hubs store \"Highly Sensitive Data (e.g., social security numbers)\" in special properties, which is protected storage, not pseudonymisation. Note: Was no without a source; the docs do not state the absence.",
@@ -8632,7 +8718,10 @@
 				"evidence": "lib/Service/EncryptionService.php",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/berichtenbox",
-				"requirement": "openspec/specs/berichtenbox :: Encryption Key Management (REQ-KEYVAULT-015)",
+				"requirement": [
+					"openspec/specs/berichtenbox :: Encryption Key Management (REQ-KEYVAULT-015)",
+					"openspec/specs/pos-payment-provider-adapter :: Provider Credential Storage & Encryption (REQ-PAY-002)"
+				],
 				"change": "openspec/changes/pos-psp-keys-via-broker"
 			},
 			"evidence": {
@@ -9014,10 +9103,16 @@
 			"built": {
 				"state": "specified",
 				"evidence": "some integrations tell people when they fail: lib/Notification/Notifier.php:239 'forecast_snapshot_partial_failure', :250 'wip_sync_failed', :261 'billing_handoff_failed', :289 'social_relink_needed', with lib/BackgroundJob/BillingHandoffRetryJob.php:95 re-notifying admins while a batch stays failed; failed export runs show on ExportRuns with a retry (appinfo/routes.php:440). Nothing switches an automation off after repeated failure (grep for circuit breaker, consecutive, auto disable finds only POS PIN lockout)",
-				"owner": "ConductionNL/openregister",
+				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Nextcloud notifications; ExportRuns, ExportRunDetail",
 				"readOn": "2026-09-26",
-				"change": "exports-switch-off-after-repeated-failure"
+				"change": "exports-switch-off-after-repeated-failure",
+				"requirement": [
+					"openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off :: An export job switches off after repeated failed runs (REQ-EFS-001)",
+					"openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off :: Administrators are told once when a job is switched off (REQ-EFS-002)"
+				],
+				"spec": "openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off",
+				"plan": "openspec/changes/exports-switch-off-after-repeated-failure"
 			},
 			"note": "alerts for a few integrations, no automatic switch off; flow failures are OpenRegister's and were not checked. Decided no 2026-09-28 (OpenSpec pass): Pipelinq stopped owning an automation engine (archived migrate-automation-to-flow-leaf); automations run on the OpenRegister flow engine, so alerting on and switching off a failing flow is that engine's job. The pipelinq integration alerts already cited stay built. Owner corrected to ConductionNL/openregister. Corrections round 9 (2026-09-28): built.state decided-no to none, deferred by openregister: the owner-moves pass recorded defer in openregister openspec/parity/gap-decisions.json (one competitor yes, outside pipelinq's core area, and no OpenRegister change covers alerting on or switching off a failing flow).",
 			"evidence": {
@@ -9099,7 +9194,9 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqTicketsSelectie"
+				"board": [
+					"PqKlantenSelectie"
+				]
 			}
 		},
 		{
@@ -9427,7 +9524,9 @@
 			"note": "Specified 2026-09-28 in openspec/changes/clients-bulk-edit-and-undo (OpenSpec pass).",
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqTicketsSelectie"
+				"board": [
+					"PqKlantenSelectie"
+				]
 			}
 		},
 		{
@@ -9539,7 +9638,8 @@
 				"board": [
 					"PqKlant",
 					"PqOrganisatie",
-					"PqContactpersoon"
+					"PqContactpersoon",
+					"PqLead"
 				]
 			}
 		},
@@ -11131,7 +11231,12 @@
 				"owner": "ConductionNL/openregister",
 				"change": "openregister/modelling-field-names-per-language",
 				"reachedOn": "every index and detail page",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"requirement": [
+					"openregister:openspec/changes/modelling-field-names-per-language/specs/schema-property-exploration :: A property can carry its name in several languages"
+				],
+				"spec": "openregister:openspec/changes/modelling-field-names-per-language/specs/schema-property-exploration",
+				"plan": "openregister:openspec/changes/modelling-field-names-per-language"
 			},
 			"note": "shipped fields yes, your own field names no. Decided no 2026-09-28 (OpenSpec pass): A field an administrator adds is an OpenRegister schema property (matrix row clients-custom-fields, owner openregister) rendered by nextcloud-vue; a label per language needs the property model to carry one, which pipelinq cannot add. Shipped fields are translated already. Owner corrected to ConductionNL/openregister. Corrections round 9 (2026-09-28): built.state decided-no to specified. The owner-moves pass decided the row build in OpenRegister, which carries it in the open change openspec/changes/modelling-field-names-per-language (openregister#4112, recorded in openregister openspec/parity/gap-decisions.json). The decided-no above stands for pipelinq itself.",
 			"evidence": {
@@ -11205,7 +11310,12 @@
 				"owner": "ConductionNL/portaliq",
 				"change": "integriq/portal-idp-broker-config",
 				"reachedOn": "nothing (portaliq's re-read of 2026-10-07: a live start ends on integriq's error page)",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-07",
+				"requirement": [
+					"portaliq:openspec/specs/portal-broker-envelope-login :: The envelope becomes an ordinary portal session (REQ-BEL-005)",
+					"portaliq:openspec/changes/signin-eherkenning-eidas-and-the-token-fragment/specs/portal-broker-envelope-login :: An eHerkenning sign-in is a business sign-in (REQ-SEE-001)"
+				],
+				"spec": "portaliq:openspec/specs/portal-broker-envelope-login"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base list for DigiD, eHerkenning and SAML login for portal members; https://knowledge.hubspot.com/inbox/manage-customer-portal-settings describes portal access by email login only (read 2026-09-26).",

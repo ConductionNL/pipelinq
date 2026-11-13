@@ -36,7 +36,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Service\Sla\SlaBreachEvent;
 use OCA\Pipelinq\Service\Sla\SlaEscalation;
 use OCA\Pipelinq\Service\Sla\SlaHeat;
@@ -68,7 +69,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods)           Outbound sms/whatsapp escalation legs add small single-purpose private helpers
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Policy + deadline + escalation logic, split into helpers, still one cohesive engine
  */
-class SlaEngineService {
+class SlaEngineService implements SlaEngineServiceInterface {
 	use EntityAccessorTrait;
 
 	public const STATUS_ON_TRACK = 'on-track';
@@ -640,8 +641,8 @@ class SlaEngineService {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function loadActivePolicies(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_policy_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_policy_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -838,7 +839,7 @@ class SlaEngineService {
 		$level = $escalation->level;
 		try {
 			$notification = $this->notifications->createNotification();
-			$notification->setApp(Application::APP_ID)
+			$notification->setApp(AppIdentity::APP_ID)
 				->setUser($actor)
 				->setDateTime(new DateTime())
 				->setObject($escalation->object->type, $escalation->object->id)
@@ -1070,7 +1071,7 @@ class SlaEngineService {
 	 * @return string
 	 */
 	private function configuredSchema(string $key, string $default): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($schema === '') {
 			return $default;
 		}
@@ -1091,7 +1092,7 @@ class SlaEngineService {
 			return null;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			return null;
 		}
@@ -1153,12 +1154,12 @@ class SlaEngineService {
 	private function resolveActor(string $role, array $policy): ?string {
 		unset($policy);
 		$key = 'sla_actor_' . preg_replace('/[^a-z0-9_-]/i', '_', $role);
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($value !== '') {
 			return $value;
 		}
 
-		$fallback = $this->appConfig->getValueString(Application::APP_ID, 'sla_actor_fallback', '');
+		$fallback = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_actor_fallback', '');
 		if ($fallback === '') {
 			return null;
 		}
@@ -1174,8 +1175,8 @@ class SlaEngineService {
 	 * @return ?string Breach event UUID, or null on failure.
 	 */
 	private function writeBreachEvent(SlaBreachEvent $event): ?string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_breach_event_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_breach_event_schema', '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug('SlaEngineService: breach register/schema not configured; skipping audit row');
 			return null;
