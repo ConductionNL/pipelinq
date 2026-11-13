@@ -209,9 +209,9 @@
     },
     "exportCsv privileged": {
         "class": "OCP\\AppFramework\\Http\\JSONResponse",
-        "status": 501,
+        "status": 400,
         "data": {
-            "message": "Export not yet implemented"
+            "message": "Missing required parameters: from, to (or period)"
         },
         "trace": [
             {
