@@ -187,6 +187,14 @@
       "contact": {
         "x-schema-org": "schema:Person",
         "slug": "contact",
+        "archive": {
+          "enabled": true,
+          "afleidingswijze": "gerelateerde_zaak",
+          "sourceRelation": "client",
+          "sourceRelationProperty": "relationshipEndedAt",
+          "defaultBewaartermijn": "P2Y",
+          "defaultNominatie": "vernietigen"
+        },
         "x-openregister-notifications": {
           "newContact": {
             "trigger": {

@@ -212,6 +212,15 @@ Vrij en open source onder de EUPL-1.2-licentie.
             -->
             <step>OCA\Pipelinq\Repair\BackfillTaskNames</step>
             <!--
+                After InitializeSettings, which imports the client and contact
+                `archive` blocks: OpenRegister writes retention metadata on
+                create only, so clients and contact persons made before then
+                get it here, once. Idempotent: a record with a nomination is
+                not written. Without OpenRegister's retention service it
+                writes nothing.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillClientRetention</step>
+            <!--
                 After InitializeSettings: a campaign form made before forms named
                 their destination gets `lead` as its destination, once. A form
                 that already names one is left alone.

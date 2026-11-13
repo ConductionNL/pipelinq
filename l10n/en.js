@@ -9472,7 +9472,9 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Relationship ended": "Relationship ended",
+        "When the account status last moved to inactive. Set by the account status lifecycle and cleared when the client becomes active again; the client's retention term counts from it.": "When the account status last moved to inactive. Set by the account status lifecycle and cleared when the client becomes active again; the client's retention term counts from it."
     },
     "nplurals=2; plural=(n != 1);"
 )
