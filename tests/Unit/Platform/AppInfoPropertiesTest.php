@@ -114,6 +114,9 @@ class AppInfoPropertiesTest extends TestCase {
 		'BerichtenboxWebhookController::readReceipt' => 'the Berichtenbox webhook signature (signedPayload)',
 		'BerichtenboxWebhookController::inboundReply' => 'the Berichtenbox webhook signature (signedPayload)',
 		'BrpController::mutationWebhook' => 'the BRP mutation feed\'s X-Signature header',
+		'EventCancelController::show' => 'the signed per-registration cancel token (EventEmailService)',
+		'EventCancelController::cancel' => 'the signed per-registration cancel token (EventEmailService)',
+		'OpenApiController::show' => 'none: serves the static OpenAPI document, no record data',
 	];
 
 	/**
@@ -141,6 +144,10 @@ class AppInfoPropertiesTest extends TestCase {
 		'posPayment#show',
 		'posPayment#update',
 		'posPayment#test',
+		'messagingAdmin#getServiceAccount',
+		'messagingAdmin#saveServiceAccount',
+		'berichtenboxAdmin#retry',
+		'berichtenboxAdmin#stats',
 		'portalAdmin#getConfig',
 		'portalAdmin#saveConfig',
 		'portalAdmin#accounts',
@@ -148,10 +155,6 @@ class AppInfoPropertiesTest extends TestCase {
 		'portalAdmin#auditEvents',
 		'portalAdmin#getServiceAccount',
 		'portalAdmin#saveServiceAccount',
-		'messagingAdmin#getServiceAccount',
-		'messagingAdmin#saveServiceAccount',
-		'berichtenboxAdmin#retry',
-		'berichtenboxAdmin#stats',
 	];
 
 	/**
