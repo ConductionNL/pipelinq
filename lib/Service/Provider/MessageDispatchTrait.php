@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Provider;
 
+use OCA\OpenRegister\Service\Integration\Providers\OutboundMessage;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -82,7 +83,10 @@ trait MessageDispatchTrait {
 		$provider = $this->resolveDispatchProvider();
 
 		try {
-			$result = $provider->dispatch(source: $source, body: $body, path: $path, headers: $headers);
+			$result = $provider->dispatch(
+				source: $source,
+				message: new OutboundMessage(path: $path, body: $body, headers: $headers),
+			);
 		} catch (TransientSmsProviderException|PermanentSmsProviderException $e) {
 			throw $e;
 		} catch (Throwable $e) {
