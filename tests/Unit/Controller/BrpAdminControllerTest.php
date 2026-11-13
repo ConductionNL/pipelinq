@@ -161,4 +161,73 @@ final class BrpAdminControllerTest extends TestCase {
 			$this->assertSame([200, ['result' => 'ok'], []], $this->save(body: ['rotatePseudonymSecret' => $flag]));
 		}
 	}//end testRotatesThePseudonymSecretOnlyWhenAsked()
+	/**
+	 * The controller over the given stored settings.
+	 *
+	 * @param array<string,string> $stored Stored app-config values by key.
+	 * @param IAppConfig|null      $appConfig An app config to use instead.
+	 * @param ISecureRandom|null   $random The random source.
+	 *
+	 * @return BrpAdminController
+	 */
+	private function controllerOver(array $stored, ?IAppConfig $appConfig = null, ?ISecureRandom $random = null): BrpAdminController {
+		if ($appConfig === null) {
+			$appConfig = $this->createMock(IAppConfig::class);
+		}
+
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => ($stored[$key] ?? $default)
+		);
+
+		return new BrpAdminController(
+			$this->createMock(IRequest::class),
+			$appConfig,
+			$this->createMock(ICrypto::class),
+			($random ?? $this->createMock(ISecureRandom::class)),
+			$this->createMock(IL10N::class),
+			$this->createMock(LoggerInterface::class)
+		);
+	}//end controllerOver()
+
+	/**
+	 * The settings read masks both secrets to a set/unset flag and applies the defaults.
+	 *
+	 * @return void
+	 */
+	public function testGetMasksSecretsAndAppliesDefaults(): void {
+		$data = $this->controllerOver([
+			'brp.base_url' => 'https://brp.example',
+			'brp.client_id' => 'pipelinq',
+			'brp.client_secret_encrypted' => 'cipher',
+			'brp.cache_ttl_hours' => '12',
+		])->get()->getData();
+
+		self::assertSame('https://brp.example', $data['baseUrl']);
+		self::assertSame('pipelinq', $data['clientId']);
+		self::assertTrue($data['clientSecretSet']);
+		self::assertFalse($data['webhookSecretSet']);
+		self::assertSame(12, $data['cacheTtlHours']);
+		self::assertSame(7, $data['retentionDays']);
+		self::assertSame('UTC', $data['healthTimezone']);
+		self::assertArrayNotHasKey('clientSecret', $data);
+		self::assertNotContains('cipher', $data);
+	}//end testGetMasksSecretsAndAppliesDefaults()
+
+	/**
+	 * Rotating the webhook secret stores a fresh 64-character alphanumeric secret and returns it once.
+	 *
+	 * @return void
+	 */
+	public function testRotateWebhookSecretStoresAndReturnsTheNewSecret(): void {
+		$random = $this->createMock(ISecureRandom::class);
+		$random->expects(self::once())->method('generate')->with(64, ISecureRandom::CHAR_ALPHANUMERIC)->willReturn('s3cr3t');
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->expects(self::once())->method('setValueString')->with('pipelinq', 'brp.webhook_secret', 's3cr3t');
+
+		$response = $this->controllerOver([], appConfig: $appConfig, random: $random)->rotateWebhookSecret();
+
+		self::assertSame(200, $response->getStatus());
+		self::assertSame(['secret' => 's3cr3t'], $response->getData());
+	}//end testRotateWebhookSecretStoresAndReturnsTheNewSecret()
+
 }//end class
