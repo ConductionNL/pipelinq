@@ -9587,6 +9587,12 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "Slip reason": "Reden van verschuiving",
+        "Slipped at": "Verschoven op",
+        "Slipped from": "Verschoven van",
+        "The expected close date before the deal last slipped.": "De verwachte sluitingsdatum voordat de deal voor het laatst verschoof.",
+        "When the deal last slipped out of its forecast period.": "Wanneer de deal voor het laatst uit de prognoseperiode schoof.",
+        "Why the expected close date moved past the end of the forecast period. Required when a commit or best-case deal slips.": "Waarom de verwachte sluitingsdatum na het einde van de prognoseperiode is komen te liggen. Verplicht als een commit- of best-case-deal verschuift."
     }
 }

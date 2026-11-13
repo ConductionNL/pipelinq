@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
@@ -109,14 +111,21 @@ class ForecastDealService {
 	public const JUSTIFICATION_MIN_LENGTH = 10;
 
 	/**
+	 * The open categories whose deals must say why they slip out of their period (REQ-FRC-012).
+	 */
+	public const SLIP_CATEGORIES = ForecastSlipRule::CATEGORIES;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param SchemaLifecycleGraph $lifecycleGraph Reads the forecast-category partition from the lead schema.
+	 * @param ForecastSlipRule $slipRule Whether a close date slipped out of its fiscal period.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private SchemaLifecycleGraph $lifecycleGraph = new SchemaLifecycleGraph(),
+		private ForecastSlipRule $slipRule = new ForecastSlipRule(),
 	) {
 	}//end __construct()
 
@@ -251,8 +260,72 @@ class ForecastDealService {
 			}
 		}
 
-		return null;
+		return $this->slipError(oldData: $oldData, newData: $newData);
 	}//end validateTransition()
+
+	/**
+	 * The refusal of a slip without a reason (REQ-FRC-012).
+	 *
+	 * @param array<string, mixed> $oldData The deal before the update.
+	 * @param array<string, mixed> $newData The deal after the update.
+	 *
+	 * @return string|null `forecast.error.slip_reason_required`, or null.
+	 */
+	private function slipError(array $oldData, array $newData): ?string {
+		if ($this->slips(oldData: $oldData, newData: $newData) === true
+			&& mb_strlen(trim((string)($newData['slip_reason'] ?? ''))) < self::JUSTIFICATION_MIN_LENGTH
+		) {
+			return 'forecast.error.slip_reason_required';
+		}
+
+		return null;
+	}//end slipError()
+
+	/**
+	 * Whether an update moves a commit or best-case deal's expected close date past
+	 * the end of the fiscal period its old close date was in (REQ-FRC-012).
+	 *
+	 * @param array<string, mixed> $oldData The deal before the update.
+	 * @param array<string, mixed> $newData The deal after the update.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/forecast-slip-reason/proposal.md
+	 */
+	public function slips(array $oldData, array $newData): bool {
+		return $this->slipRule->slips(oldData: $oldData, newData: $newData);
+	}//end slips()
+
+	/**
+	 * Record a valid slip on the deal: where the close date slipped from and when.
+	 *
+	 * @param array<string, mixed>   $oldData The deal before the update.
+	 * @param array<string, mixed>   $newData The deal after the update.
+	 * @param DateTimeInterface|null $now     The moment of the slip; now when omitted.
+	 *
+	 * @return array<string, mixed>|null The deal with `slipped_from` and `slipped_at`,
+	 *                                    or null when the update is no slip or is already recorded.
+	 *
+	 * @spec openspec/changes/forecast-slip-reason/proposal.md
+	 */
+	public function applySlip(array $oldData, array $newData, ?DateTimeInterface $now = null): ?array {
+		if ($this->slips(oldData: $oldData, newData: $newData) === false
+			|| $this->validateTransition(oldData: $oldData, newData: $newData) !== null
+		) {
+			return null;
+		}
+
+		$from = substr(trim((string)$oldData['expectedCloseDate']), 0, 10);
+		if (($newData['slipped_from'] ?? null) === $from) {
+			return null;
+		}
+
+		$newData['slipped_from'] = $from;
+		$newData['slipped_at'] = ($now ?? new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+
+		return $newData;
+	}//end applySlip()
+
 
 	/**
 	 * Whether a commit on this deal requires a justification.

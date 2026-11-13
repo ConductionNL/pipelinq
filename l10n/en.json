@@ -9558,6 +9558,12 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Slip reason": "Slip reason",
+        "Slipped at": "Slipped at",
+        "Slipped from": "Slipped from",
+        "The expected close date before the deal last slipped.": "The expected close date before the deal last slipped.",
+        "When the deal last slipped out of its forecast period.": "When the deal last slipped out of its forecast period.",
+        "Why the expected close date moved past the end of the forecast period. Required when a commit or best-case deal slips.": "Why the expected close date moved past the end of the forecast period. Required when a commit or best-case deal slips."
     }
 }

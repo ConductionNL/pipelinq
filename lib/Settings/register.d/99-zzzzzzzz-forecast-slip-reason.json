@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "forecast-slip-reason (REQ-FRC-012): a commit or best-case deal whose expected close date moves past the end of its fiscal period says why. ForecastDealService refuses the slip without a reason; DealUpdatedListener stamps where the close date slipped from and when. A late fragment so the lead version moves past the other lead fragments."
+  },
+  "components": {
+    "schemas": {
+      "lead": {
+        "slug": "lead",
+        "version": "1.8.0",
+        "properties": {
+          "slip_reason": {
+            "type": "string",
+            "title": "Slip reason",
+            "description": "Why the expected close date moved past the end of the forecast period. Required when a commit or best-case deal slips."
+          },
+          "slipped_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Slipped from",
+            "description": "The expected close date before the deal last slipped.",
+            "readOnly": true
+          },
+          "slipped_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Slipped at",
+            "description": "When the deal last slipped out of its forecast period.",
+            "readOnly": true
+          }
+        }
+      }
+    }
+  }
+}
