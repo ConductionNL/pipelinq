@@ -53,7 +53,6 @@ use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
-use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;

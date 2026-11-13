@@ -31,6 +31,7 @@ use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
 use OCA\Pipelinq\Lifecycle\LifecycleRegistrar;
 use OCA\Pipelinq\Listener\ListenerRegistrar;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
+use OCA\Pipelinq\Notification\NotificationRegistrar;
 use OCA\Pipelinq\Service\RoadmapFeatureCatalog;
 use OCA\Pipelinq\Service\ServiceRegistrar;
 use OCA\Pipelinq\Service\VatRates;
@@ -140,9 +141,7 @@ class Application extends App implements IBootstrap {
 		// Preferences / repair plumbing stays bespoke.
 		$this->registerAppHost(context: $context);
 
-		// Notifier registration. A <notification> element in info.xml is never read by core
-		// (and app-info.xsd rejects it); the IBootstrap registration below is the canonical path.
-		$context->registerNotifierService(\OCA\Pipelinq\Notification\Notifier::class);
+		(new NotificationRegistrar())->register(context: $context);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\PortalServiceAccountCheck::class);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\MessagingServiceAccountCheck::class);
 
