@@ -41,6 +41,9 @@ use RuntimeException;
  * A recorded call is transcribed into its contact moment, and its audio never stays.
  *
  * @covers \OCA\Pipelinq\Service\CallReview\CallTranscriptionService
+ * @uses   \OCA\Pipelinq\Util\PayloadToArray
+ * @uses   \OCA\Pipelinq\Util\EntityPayload
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  *
  * @spec openspec/changes/contact-moments-call-review/tasks.md#task-1.3
  */
@@ -264,4 +267,205 @@ class CallTranscriptionServiceTest extends TestCase {
 		$this->assertSame('', $this->service($this->call())->transcribe(''));
 		$this->assertSame([], $this->saved);
 	}//end testAnUnreadableTicketIsLeftAlone()
+
+	/**
+	 * A tailored service for the failure and edge branches.
+	 *
+	 * @param array<string, mixed>|null $ticket       The ticket jsonSerialize returns, null to make find() throw.
+	 * @param mixed                     $downloadBody What the HTTP body getBody() returns.
+	 * @param object|null               $newFileReturns What folder->newFile() returns; null keeps a real File mock.
+	 * @param object|null               $folderGetReturns What root->get() returns; null keeps a real Folder mock.
+	 * @param bool                      $deleteThrows Whether deleting the temporary file throws.
+	 * @param bool                      $saveThrows   Whether saveObject throws.
+	 * @param LoggerInterface|null      $logger       The logger to observe, or a silent one.
+	 *
+	 * @return CallTranscriptionService
+	 */
+	private function build(
+		?array $ticket = [
+			'id' => 'cm-1',
+			'ticketType' => 'contactmoment',
+			'assignee' => 'anna',
+			'recording_url' => 'https://rec/1',
+			'recording_retention_expires_at' => '2026-12-01T00:00:00Z',
+		],
+		mixed $downloadBody = 'RIFF-audio',
+		?object $newFileReturns = null,
+		?object $folderGetReturns = null,
+		bool $deleteThrows = false,
+		bool $saveThrows = false,
+		?LoggerInterface $logger = null,
+	): CallTranscriptionService {
+		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects->method('find')->willReturnCallback(function () use ($ticket): ObjectEntityInterface {
+			if ($ticket === null) {
+				throw new RuntimeException('gone');
+			}
+
+			$entity = $this->createMock(ObjectEntityInterface::class);
+			$entity->method('jsonSerialize')->willReturn($ticket);
+			return $entity;
+		});
+		$objects->method('saveObject')->willReturnCallback(function (...$args) use ($saveThrows): ObjectEntityInterface {
+			if ($saveThrows === true) {
+				throw new RuntimeException('db down');
+			}
+
+			$this->saved[] = [$args[0], $args[4], $args[5]];
+			return $this->createMock(ObjectEntityInterface::class);
+		});
+
+		$tickets = $this->createMock(TicketService::class);
+		$tickets->method('isConfigured')->willReturn(true);
+		$tickets->method('getObjectService')->willReturn($objects);
+		$tickets->method('getRegisterId')->willReturn('r');
+		$tickets->method('getSchemaId')->willReturn('ticket');
+		$tickets->method('sanitizeForSave')->willReturnArgument(0);
+
+		$response = $this->createMock(IResponse::class);
+		$response->method('getBody')->willReturn($downloadBody);
+		$client = $this->createMock(IClient::class);
+		$client->method('get')->willReturn($response);
+		$clients = $this->createMock(IClientService::class);
+		$clients->method('newClient')->willReturn($client);
+
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(4242);
+		$file->method('delete')->willReturnCallback(function () use ($deleteThrows): void {
+			if ($deleteThrows === true) {
+				throw new RuntimeException('locked');
+			}
+
+			$this->deleted++;
+		});
+		$folder = $this->createMock(Folder::class);
+		$folder->method('newFile')->willReturnCallback(function (string $name, $content) use ($file, $newFileReturns): object {
+			$this->written[] = [$name, (string) $content];
+			return ($newFileReturns ?? $file);
+		});
+		$root = $this->createMock(IRootFolder::class);
+		$root->method('getAppDataDirectoryName')->willReturn('appdata_x');
+		$root->method('get')->willReturn($folderGetReturns ?? $folder);
+
+		$manager = $this->createMock(IManager::class);
+		$manager->method('getAvailableTaskTypeIds')->willReturn(['core:audio2text']);
+		$manager->method('runTask')->willReturnCallback(function (Task $task): Task {
+			$this->tasks[] = $task;
+			$task->setStatus(Task::STATUS_SUCCESSFUL);
+			$task->setOutput(['output' => 'Tekst.']);
+			return $task;
+		});
+
+		$writer = $this->createMock(CallSummaryWriter::class);
+		$writer->method('summarise')->willReturn('Samenvatting.');
+
+		return new CallTranscriptionService($tickets, $clients, $root, $manager, $writer, ($logger ?? $this->createMock(LoggerInterface::class)));
+	}//end build()
+
+	/**
+	 * A recording with no retention date is not treated as expired and is transcribed.
+	 *
+	 * @return void
+	 */
+	public function testARecordingWithoutARetentionDateIsNotExpired(): void {
+		$service = $this->build(ticket: ['id' => 'cm-2', 'recording_url' => 'https://rec/2']);
+
+		$this->assertSame('done', $service->transcribe('cm-2', new DateTimeImmutable(self::NOW)));
+		$this->assertSame('done', $this->saved[0][0]['transcriptStatus']);
+	}//end testARecordingWithoutARetentionDateIsNotExpired()
+
+	/**
+	 * An unparseable retention date is treated as not expired, so the call is still transcribed.
+	 *
+	 * @return void
+	 */
+	public function testAnUnparseableRetentionDateIsNotExpired(): void {
+		$service = $this->build(ticket: ['id' => 'cm-3', 'recording_url' => 'https://rec/3', 'recording_retention_expires_at' => 'never']);
+
+		$this->assertSame('done', $service->transcribe('cm-3', new DateTimeImmutable(self::NOW)));
+	}//end testAnUnparseableRetentionDateIsNotExpired()
+
+	/**
+	 * A streamed HTTP body is read to the end before it is written to disk.
+	 *
+	 * @return void
+	 */
+	public function testAStreamedBodyIsReadBeforeItIsWritten(): void {
+		$stream = fopen('php://memory', 'r+');
+		fwrite($stream, 'STREAM-audio');
+		rewind($stream);
+		$service = $this->build(downloadBody: $stream);
+
+		$this->assertSame('done', $service->transcribe('cm-1', new DateTimeImmutable(self::NOW)));
+		$this->assertSame('STREAM-audio', $this->written[0][1]);
+	}//end testAStreamedBodyIsReadBeforeItIsWritten()
+
+	/**
+	 * A temporary file that is not a File fails the transcription, and nothing is deleted.
+	 *
+	 * @return void
+	 */
+	public function testANonFileTemporaryIsAFailure(): void {
+		$service = $this->build(newFileReturns: $this->createMock(Folder::class));
+
+		$this->assertSame('failed', $service->transcribe('cm-1', new DateTimeImmutable(self::NOW)));
+		$this->assertSame(0, $this->deleted);
+		$this->assertSame('failed', $this->saved[0][0]['transcriptStatus']);
+	}//end testANonFileTemporaryIsAFailure()
+
+	/**
+	 * A temporary folder that is not a Folder fails the transcription.
+	 *
+	 * @return void
+	 */
+	public function testANonFolderTemporaryIsAFailure(): void {
+		$service = $this->build(folderGetReturns: $this->createMock(File::class));
+
+		$this->assertSame('failed', $service->transcribe('cm-1', new DateTimeImmutable(self::NOW)));
+		$this->assertSame('failed', $this->saved[0][0]['transcriptStatus']);
+	}//end testANonFolderTemporaryIsAFailure()
+
+	/**
+	 * A delete that fails is logged, and does not change the stored outcome.
+	 *
+	 * @return void
+	 */
+	public function testAFailingDeleteIsLogged(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('error')
+			->with('CallTranscriptionService: the temporary audio could not be deleted', ['exception' => 'locked']);
+		$service = $this->build(deleteThrows: true, logger: $logger);
+
+		$this->assertSame('done', $service->transcribe('cm-1', new DateTimeImmutable(self::NOW)));
+	}//end testAFailingDeleteIsLogged()
+
+	/**
+	 * A contact moment that reads as an empty object is left alone.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyContactMomentIsLeftAlone(): void {
+		$service = $this->build(ticket: []);
+
+		$this->assertSame('', $service->transcribe('cm-1', new DateTimeImmutable(self::NOW)));
+		$this->assertSame([], $this->saved);
+	}//end testAnEmptyContactMomentIsLeftAlone()
+
+	/**
+	 * A store that refuses the save logs the failure without throwing.
+	 *
+	 * @return void
+	 */
+	public function testAFailingSaveIsLogged(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('error')
+			->with('CallTranscriptionService: the transcript could not be stored', ['ticket' => 'cm-1', 'exception' => 'db down']);
+		$service = $this->build(saveThrows: true, logger: $logger);
+
+		$this->assertSame('done', $service->transcribe('cm-1', new DateTimeImmutable(self::NOW)));
+		$this->assertSame([], $this->saved);
+	}//end testAFailingSaveIsLogged()
+
 }//end class
