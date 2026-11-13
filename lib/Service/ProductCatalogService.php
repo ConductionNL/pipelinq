@@ -249,6 +249,22 @@ class ProductCatalogService {
 			);
 		}
 
+		return $this->resolveOwnPrice(product: $product, quantity: $quantity, variantSku: $variantSku);
+	}//end resolveEffectivePrice()
+
+	/**
+	 * The product's own price: its variant's or base price, a quantity tier
+	 * when no variant is asked for, and its VAT.
+	 *
+	 * @param array<string, mixed> $product    The product object.
+	 * @param float                $quantity   The ordered quantity, at least 0.
+	 * @param string|null          $variantSku Optional variant SKU.
+	 *
+	 * @return array<string, mixed> The resolution.
+	 *
+	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 */
+	private function resolveOwnPrice(array $product, float $quantity, ?string $variantSku): array {
 		$price = $this->variantOrBasePrice(product: $product, variantSku: $variantSku);
 		// Quantity tier override (tiers price the line, not the variant).
 		if ($variantSku === null) {
@@ -262,7 +278,7 @@ class ProductCatalogService {
 			'quantity' => $quantity,
 			...$this->vatOf(product: $product),
 		];
-	}//end resolveEffectivePrice()
+	}//end resolveOwnPrice()
 
 	/**
 	 * The price for a client: a price list's when one prices the product,
@@ -279,29 +295,56 @@ class ProductCatalogService {
 	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
 	 */
 	private function resolveForClient(array $product, float $quantity, ?string $variantSku, array $client, ?string $currency): array {
-		$currency = strtoupper(trim((string)$currency));
-		if ($currency === '') {
-			$currency = 'EUR';
-		}
-
 		$match = (new PriceListResolver())->select(
 			lists: $this->fetchPriceLists(),
 			client: $client,
 			productId: (string)($product['id'] ?? ($product['@self']['id'] ?? ($product['uuid'] ?? ''))),
 			variantSku: $variantSku,
 			quantity: $quantity,
-			currency: $currency,
+			currency: self::currencyCode(currency: $currency),
 			day: new DateTimeImmutable('today')
 		);
 
 		if ($match === null) {
 			return [
-				...$this->resolveEffectivePrice(product: $product, quantity: $quantity, variantSku: $variantSku),
+				...$this->resolveOwnPrice(product: $product, quantity: $quantity, variantSku: $variantSku),
 				'priceListId' => null,
 				'priceListTitle' => '',
 			];
 		}
 
+		return $this->priceListAnswer(product: $product, quantity: $quantity, variantSku: $variantSku, match: $match);
+	}//end resolveForClient()
+
+	/**
+	 * A quote's currency as compared: trimmed, upper case, EUR when empty.
+	 *
+	 * @param string|null $currency The quote's currency.
+	 *
+	 * @return string The currency code.
+	 */
+	private static function currencyCode(?string $currency): string {
+		$code = strtoupper(trim((string)$currency));
+		if ($code === '') {
+			return 'EUR';
+		}
+
+		return $code;
+	}//end currencyCode()
+
+	/**
+	 * The resolution for a line a price list prices.
+	 *
+	 * @param array<string, mixed> $product    The product object.
+	 * @param float                $quantity   The ordered quantity, at least 0.
+	 * @param string|null          $variantSku Optional variant SKU.
+	 * @param array<string, mixed> $match      The list's price, id and title.
+	 *
+	 * @return array<string, mixed> The resolution.
+	 *
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 */
+	private function priceListAnswer(array $product, float $quantity, ?string $variantSku, array $match): array {
 		if ($variantSku !== null && $variantSku !== '') {
 			// The variant must still exist and be active, as without a list.
 			$this->resolveVariantPrice(product: $product, sku: $variantSku, basePrice: 0.0);
@@ -316,7 +359,7 @@ class ProductCatalogService {
 			'priceListId' => $match['priceListId'],
 			'priceListTitle' => $match['priceListTitle'],
 		];
-	}//end resolveForClient()
+	}//end priceListAnswer()
 
 	/**
 	 * Every price list in this app's register; none when the schema is not set up or the read fails.

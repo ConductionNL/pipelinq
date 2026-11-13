@@ -156,27 +156,14 @@ class ProductCatalogController extends Controller {
 				Http::STATUS_BAD_REQUEST
 			);
 		}
-		$variantSku = $this->request->getParam('variantSku');
-		if ($variantSku !== null) {
-			$variantSku = (string)$variantSku;
+		$variantSku = $this->optionalStringParam(name: 'variantSku');
+
+		$client = $this->clientParam();
+		if ($client instanceof JSONResponse) {
+			return $client;
 		}
 
-		// A client prices from its price lists (products-price-lists D3). It is
-		// read with the caller's rights: a client the caller cannot read is
-		// answered as not found, and never priced.
-		$client = null;
-		$clientId = trim((string)$this->request->getParam('clientId', ''));
-		if ($clientId !== '') {
-			$client = $this->reader->read(id: $clientId, schemaKey: 'client_schema');
-			if ($client === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Client not found')], Http::STATUS_NOT_FOUND);
-			}
-		}
-
-		$currency = $this->request->getParam('currency');
-		if ($currency !== null) {
-			$currency = (string)$currency;
-		}
+		$currency = $this->optionalStringParam(name: 'currency');
 
 		return $this->run(
 			action: fn (): array => $this->service->resolveEffectivePrice(
@@ -189,6 +176,48 @@ class ProductCatalogController extends Controller {
 			label: 'resolvePrice'
 		);
 	}//end resolvePrice()
+
+	/**
+	 * A request parameter as a string, or null when it is absent.
+	 *
+	 * @param string $name The parameter.
+	 *
+	 * @return string|null The value.
+	 */
+	private function optionalStringParam(string $name): ?string {
+		$value = $this->request->getParam($name);
+		if ($value === null) {
+			return null;
+		}
+
+		return (string)$value;
+	}//end optionalStringParam()
+
+	/**
+	 * The client named by the clientId parameter, read with the caller's rights.
+	 *
+	 * A client prices from its price lists (products-price-lists D3). A client
+	 * the caller cannot read is answered as not found, and never priced.
+	 *
+	 * @return array<string, mixed>|JSONResponse|null The client; null when no
+	 *                                                clientId is given; a 404
+	 *                                                when it cannot be read.
+	 *
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 */
+	private function clientParam(): array|JSONResponse|null {
+		$clientId = trim((string)$this->request->getParam('clientId', ''));
+		if ($clientId === '') {
+			return null;
+		}
+
+		$client = $this->reader->read(id: $clientId, schemaKey: 'client_schema');
+		if ($client === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Client not found')], Http::STATUS_NOT_FOUND);
+		}
+
+		return $client;
+	}//end clientParam()
 
 	/**
 	 * Require an authenticated POS operator, returning their UID.

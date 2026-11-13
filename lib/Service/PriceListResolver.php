@@ -75,20 +75,51 @@ class PriceListResolver {
 			)
 		);
 
-		foreach ($this->candidates(lists: $usable, client: $client) as $list) {
-			$entry = $this->entryFor(list: $list, productId: $productId, variantSku: $variantSku, quantity: $quantity);
-			if ($entry !== null) {
-				return [
-					'unitPrice'      => round(max(0.0, (float) $entry['unitPrice']), 2),
-					'priceListId'    => self::idOf(list: $list),
-					'priceListTitle' => (string) ($list['title'] ?? ''),
-					'minQuantity'    => self::minQuantity(entry: $entry),
-				];
+		return self::firstMatch(
+			lists: $this->candidates(lists: $usable, client: $client),
+			productId: $productId,
+			sku: trim((string) $variantSku),
+			quantity: $quantity
+		);
+	}//end select()
+
+	/**
+	 * The answer of the first list, in order, with an entry that prices the line.
+	 *
+	 * @param list<array<string, mixed>> $lists     The candidate lists, in order.
+	 * @param string                     $productId The product's id.
+	 * @param string                     $sku       The variant SKU; empty for none.
+	 * @param float                      $quantity  The quantity.
+	 *
+	 * @return array{unitPrice: float, priceListId: string, priceListTitle: string, minQuantity: float}|null
+	 */
+	private static function firstMatch(array $lists, string $productId, string $sku, float $quantity): ?array {
+		foreach ($lists as $list) {
+			$entry = self::entryFor(list: $list, productId: $productId, sku: $sku, quantity: $quantity);
+			if ($entry !== []) {
+				return self::matchOf(list: $list, entry: $entry);
 			}
 		}
 
 		return null;
-	}//end select()
+	}//end firstMatch()
+
+	/**
+	 * The answer for a list entry that prices the line.
+	 *
+	 * @param array<string, mixed> $list  The list.
+	 * @param array<string, mixed> $entry The entry of that list.
+	 *
+	 * @return array{unitPrice: float, priceListId: string, priceListTitle: string, minQuantity: float}
+	 */
+	private static function matchOf(array $list, array $entry): array {
+		return [
+			'unitPrice'      => round(max(0.0, (float) $entry['unitPrice']), 2),
+			'priceListId'    => self::idOf(list: $list),
+			'priceListTitle' => (string) ($list['title'] ?? ''),
+			'minQuantity'    => self::minQuantity(entry: $entry),
+		];
+	}//end matchOf()
 
 	/**
 	 * The lists to try, in order: the client's own, then its segment's, then its country's.
@@ -99,35 +130,59 @@ class PriceListResolver {
 	 * @return list<array<string, mixed>> The lists in the order they are tried.
 	 */
 	private function candidates(array $lists, array $client): array {
-		$ordered = [];
-		$ownId   = self::referenceId(value: ($client['priceList'] ?? null));
-		if ($ownId !== '') {
-			foreach ($lists as $list) {
-				if (self::idOf(list: $list) === $ownId) {
-					$ordered[] = $list;
-				}
-			}
-		}
+		$ordered = self::ownLists(lists: $lists, ownId: self::referenceId(value: ($client['priceList'] ?? null)));
 
 		$segment = self::normalise(value: ($client['segment'] ?? ''));
 		$country = self::normalise(value: ($client['country'] ?? ''));
 		foreach ([['segments', $segment], ['countries', $country]] as [$field, $value]) {
-			if ($value === '') {
-				continue;
-			}
-
-			$matching = array_values(
-				array_filter(
-					$lists,
-					static fn (array $list): bool => in_array($value, array_map([self::class, 'normalise'], (array) ($list[$field] ?? [])), true)
-				)
-			);
-			usort($matching, [self::class, 'compareLists']);
-			array_push($ordered, ...$matching);
+			array_push($ordered, ...self::listsFor(lists: $lists, field: $field, value: $value));
 		}
 
 		return $ordered;
 	}//end candidates()
+
+	/**
+	 * The lists whose id is the client's own list; none when it names none.
+	 *
+	 * @param array<int, array<string, mixed>> $lists The usable lists.
+	 * @param string                           $ownId The client's list id, or empty.
+	 *
+	 * @return list<array<string, mixed>> The client's own lists.
+	 */
+	private static function ownLists(array $lists, string $ownId): array {
+		if ($ownId === '') {
+			return [];
+		}
+
+		return array_values(
+			array_filter($lists, static fn (array $list): bool => self::idOf(list: $list) === $ownId)
+		);
+	}//end ownLists()
+
+	/**
+	 * The lists naming a segment or country, best first; none for an empty value.
+	 *
+	 * @param array<int, array<string, mixed>> $lists The usable lists.
+	 * @param string                           $field segments or countries.
+	 * @param string                           $value The client's normalised value.
+	 *
+	 * @return list<array<string, mixed>> The matching lists, ordered.
+	 */
+	private static function listsFor(array $lists, string $field, string $value): array {
+		if ($value === '') {
+			return [];
+		}
+
+		$matching = array_values(
+			array_filter(
+				$lists,
+				static fn (array $list): bool => in_array($value, array_map([self::class, 'normalise'], (array) ($list[$field] ?? [])), true)
+			)
+		);
+		usort($matching, [self::class, 'compareLists']);
+
+		return $matching;
+	}//end listsFor()
 
 	/**
 	 * Whether a list may price anything: active, in the currency and valid on the day.
@@ -147,6 +202,18 @@ class PriceListResolver {
 			return false;
 		}
 
+		return self::isValidOn(list: $list, day: $day);
+	}//end isUsable()
+
+	/**
+	 * Whether the day falls within a list's validFrom and validUntil, either open.
+	 *
+	 * @param array<string, mixed> $list The list.
+	 * @param DateTimeImmutable    $day  The day.
+	 *
+	 * @return bool True when valid on the day.
+	 */
+	private static function isValidOn(array $list, DateTimeImmutable $day): bool {
 		$date = $day->format('Y-m-d');
 		$from = substr((string) ($list['validFrom'] ?? ''), 0, 10);
 		$till = substr((string) ($list['validUntil'] ?? ''), 0, 10);
@@ -155,49 +222,78 @@ class PriceListResolver {
 		}
 
 		return ($till === '' || $till >= $date);
-	}//end isUsable()
+	}//end isValidOn()
 
 	/**
-	 * The entry of a list that prices the product at the quantity, or null.
+	 * The entry of a list that prices the product at the quantity: one for
+	 * the variant first, else one for the product itself; empty when none.
 	 *
-	 * @param array<string, mixed> $list       The list.
-	 * @param string               $productId  The product's id.
-	 * @param string|null          $variantSku The variant, if any.
-	 * @param float                $quantity   The quantity.
+	 * @param array<string, mixed> $list      The list.
+	 * @param string               $productId The product's id.
+	 * @param string               $sku       The variant SKU; empty for none.
+	 * @param float                $quantity  The quantity.
 	 *
-	 * @return array<string, mixed>|null The entry.
+	 * @return array<string, mixed> The entry; empty when none.
 	 */
-	private function entryFor(array $list, string $productId, ?string $variantSku, float $quantity): ?array {
-		$variantSku = trim((string) $variantSku);
-		$skus       = [''];
-		if ($variantSku !== '') {
-			$skus = [$variantSku, ''];
+	private static function entryFor(array $list, string $productId, string $sku, float $quantity): array {
+		$skus = [''];
+		if ($sku !== '') {
+			$skus = [$sku, ''];
 		}
 
-		foreach ($skus as $sku) {
-			$best = null;
-			foreach ((array) ($list['entries'] ?? []) as $entry) {
-				$entry = (array) $entry;
-				if (self::referenceId(value: ($entry['product'] ?? null)) !== $productId
-					|| trim((string) ($entry['variantSku'] ?? '')) !== $sku
-					|| is_numeric($entry['unitPrice'] ?? null) === false
-					|| self::minQuantity(entry: $entry) > $quantity
-				) {
-					continue;
-				}
-
-				if ($best === null || self::minQuantity(entry: $entry) > self::minQuantity(entry: $best)) {
-					$best = $entry;
-				}
-			}
-
-			if ($best !== null) {
+		foreach ($skus as $candidate) {
+			$best = self::bestEntry(list: $list, productId: $productId, sku: $candidate, quantity: $quantity);
+			if ($best !== []) {
 				return $best;
 			}
-		}//end foreach
+		}
 
-		return null;
+		return [];
 	}//end entryFor()
+
+	/**
+	 * Among a list's entries for the product and exact SKU at the quantity,
+	 * the one with the highest minimum quantity; the first such on a tie.
+	 *
+	 * @param array<string, mixed> $list      The list.
+	 * @param string               $productId The product's id.
+	 * @param string               $sku       The variant SKU; empty for the product itself.
+	 * @param float                $quantity  The quantity.
+	 *
+	 * @return array<string, mixed> The entry; empty when none.
+	 */
+	private static function bestEntry(array $list, string $productId, string $sku, float $quantity): array {
+		$best = [];
+		foreach ((array) ($list['entries'] ?? []) as $entry) {
+			$entry = (array) $entry;
+			if (self::prices(entry: $entry, productId: $productId, sku: $sku, quantity: $quantity) === false) {
+				continue;
+			}
+
+			if ($best === [] || self::minQuantity(entry: $entry) > self::minQuantity(entry: $best)) {
+				$best = $entry;
+			}
+		}
+
+		return $best;
+	}//end bestEntry()
+
+	/**
+	 * Whether an entry prices the product and exact SKU at the quantity.
+	 *
+	 * @param array<string, mixed> $entry     The entry.
+	 * @param string               $productId The product's id.
+	 * @param string               $sku       The variant SKU; empty for the product itself.
+	 * @param float                $quantity  The quantity.
+	 *
+	 * @return bool True when it does.
+	 */
+	private static function prices(array $entry, string $productId, string $sku, float $quantity): bool {
+		return self::referenceId(value: ($entry['product'] ?? null)) === $productId
+			&& trim((string) ($entry['variantSku'] ?? '')) === $sku
+			&& is_numeric($entry['unitPrice'] ?? null) === true
+			&& self::minQuantity(entry: $entry) <= $quantity;
+	}//end prices()
 
 	/**
 	 * Order lists highest priority first, then newest validFrom, then lowest id.
