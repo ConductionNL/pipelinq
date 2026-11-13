@@ -71,6 +71,7 @@
 					}
 				],
 				"columns": [
+					{ "key": "queueNumber", "label": "Number", "cellClass": "cn-cell--strong" },
 					{ "key": "displayName", "label": "Customer", "cellClass": "cn-cell--strong" },
 					{ "key": "serviceId", "label": "Service", "formatter": "bookingServiceName" },
 					{ "key": "arrivedAt", "label": "Arrived", "widget": "date", "widgetProps": { "timeOnly": true, "showTime": true } },
