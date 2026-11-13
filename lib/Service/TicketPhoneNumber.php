@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\TicketPhoneNumberInterface;
+
 /**
  * Reads the number a ticket is about from whichever field its writer filled,
  * and normalises it the way the screen pop does (design D2).
@@ -37,12 +39,7 @@ namespace OCA\Pipelinq\Service;
  *
  * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.2
  */
-class TicketPhoneNumber {
-
-	/**
-	 * The field the normalised number is stored in.
-	 */
-	public const FIELD = 'phoneE164';
+class TicketPhoneNumber implements TicketPhoneNumberInterface {
 
 	/**
 	 * Constructor.

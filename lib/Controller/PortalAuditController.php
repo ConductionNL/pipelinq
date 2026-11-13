@@ -27,8 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Portal\PortalAuditService;
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
+use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
@@ -49,15 +49,15 @@ class PortalAuditController extends PortalApiController {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param PortalRequestGuardInterface $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param PortalAuditService $audit The audit service.
+	 * @param PortalAuditServiceInterface $audit The audit service.
 	 */
 	public function __construct(
 		IRequest $request,
-		PortalRequestGuard $guard,
+		PortalRequestGuardInterface $guard,
 		LoggerInterface $logger,
-		private PortalAuditService $audit,
+		private PortalAuditServiceInterface $audit,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()

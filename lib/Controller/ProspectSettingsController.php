@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\IcpConfigService;
+use OCA\Pipelinq\Kernel\Contracts\IcpConfigServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -46,13 +46,13 @@ class ProspectSettingsController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param ContainerInterface $container The container.
 	 * @param IAppManager $appManager The app manager.
-	 * @param IcpConfigService $icpConfig The ICP config service.
+	 * @param IcpConfigServiceInterface $icpConfig The ICP config service.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
-		private IcpConfigService $icpConfig,
+		private IcpConfigServiceInterface $icpConfig,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

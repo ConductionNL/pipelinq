@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DocumentSigningServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
@@ -42,20 +43,13 @@ use OCP\Security\ISecureRandom;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class DocumentSigningService {
+class DocumentSigningService implements DocumentSigningServiceInterface {
 	/**
 	 * App-config key holding the per-instance signing secret.
 	 *
 	 * @var string
 	 */
 	private const SIGNING_KEY = 'portal_document_signing_key';
-
-	/**
-	 * Default token TTL in minutes.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_TTL_MINUTES = 5;
 
 	/**
 	 * Constructor.

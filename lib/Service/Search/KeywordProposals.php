@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Search;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KeywordProposalsInterface;
 use OCA\Pipelinq\Service\SearchConsole\SearchQueryReportService;
 use OCP\IAppConfig;
 
@@ -36,13 +37,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
  */
-class KeywordProposals {
-	/**
-	 * App-config key overriding the impression floor every derivation uses.
-	 *
-	 * @var string
-	 */
-	public const FLOOR_KEY = 'search.striking_min_impressions';
+class KeywordProposals implements KeywordProposalsInterface {
 
 	/**
 	 * Constructor.

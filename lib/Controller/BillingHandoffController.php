@@ -31,9 +31,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\IntegrationDetectorInterface;
 use OCA\Pipelinq\Kernel\Contracts\TimeBillingHandoffServiceInterface;
 use OCA\Pipelinq\Lifecycle\BillingHandoffAccessPolicy;
-use OCA\Pipelinq\Service\IntegrationDetector;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -58,14 +58,14 @@ class BillingHandoffController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param TimeBillingHandoffServiceInterface $handoffService The billing handoff service.
 	 * @param BillingHandoffAccessPolicy $accessPolicy The manager access policy.
-	 * @param IntegrationDetector $integrations Detects Shillinq for the deep-link fallback.
+	 * @param IntegrationDetectorInterface $integrations Detects Shillinq for the deep-link fallback.
 	 * @param IUserSession $userSession The user session.
 	 */
 	public function __construct(
 		IRequest $request,
 		private TimeBillingHandoffServiceInterface $handoffService,
 		private BillingHandoffAccessPolicy $accessPolicy,
-		private IntegrationDetector $integrations,
+		private IntegrationDetectorInterface $integrations,
 		private IUserSession $userSession,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

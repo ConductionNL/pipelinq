@@ -37,6 +37,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Marketing;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\FormDestinationBackfillInterface;
 use OCA\Pipelinq\Service\CampaignService;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -47,7 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
  */
-class FormDestinationBackfill {
+class FormDestinationBackfill implements FormDestinationBackfillInterface {
 
 	/**
 	 * The register the hosted forms live in.

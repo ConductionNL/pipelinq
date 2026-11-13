@@ -29,17 +29,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Merge;
 
+use OCA\Pipelinq\Kernel\Contracts\PartyReferencesInterface;
+
 /**
  * The client and contact reference properties, by schema slug.
  *
  * @spec openspec/changes/clients-reversible-merge/specs/client-reversible-merge/spec.md
  */
-final class PartyReferences {
-
-	/**
-	 * The field on a merged-away client or contact that lists the rows a merge moved.
-	 */
-	public const LEDGER_FIELD = 'mergeMovedRows';
+final class PartyReferences implements PartyReferencesInterface {
 
 	/**
 	 * The properties that hold a client uuid, as [schema slug, property].

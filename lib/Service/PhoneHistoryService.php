@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\PhoneHistoryServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -43,7 +44,7 @@ use Throwable;
  *
  * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.4
  */
-class PhoneHistoryService {
+class PhoneHistoryService implements PhoneHistoryServiceInterface {
 	use PayloadToArray;
 
 	/**

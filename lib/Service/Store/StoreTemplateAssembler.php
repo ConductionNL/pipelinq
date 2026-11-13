@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Service\Store;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\StoreTemplateAssemblerInterface;
 use OCA\Pipelinq\Service\RegisterResolverService;
 use OCA\Pipelinq\Service\Settings\SchemaSlugMap;
 use OCP\IAppConfig;
@@ -38,7 +39,7 @@ use OCP\IAppConfig;
 /**
  * Offers local configuration for a store item and assembles its components.
  */
-class StoreTemplateAssembler {
+class StoreTemplateAssembler implements StoreTemplateAssemblerInterface {
 
 	/**
 	 * The schemas a store item of each kind may carry.

@@ -30,9 +30,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DemoRegisterImporterInterface;
 use OCA\Pipelinq\Kernel\Contracts\DemoSeedServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -101,7 +101,7 @@ class SetupController extends Controller {
 	 * @param DemoSeedServiceInterface $demoSeedService Optional demo-data seeding (same write path as occ).
 	 * @param IAppManager $appManager App installed/enabled lookup for integration detection.
 	 * @param LoggerInterface $logger Logger.
-	 * @param DemoRegisterImporter $registerImporter The example records descriptor, imported with the seed.
+	 * @param DemoRegisterImporterInterface $registerImporter The example records descriptor, imported with the seed.
 	 */
 	public function __construct(
 		string $appName,
@@ -111,7 +111,7 @@ class SetupController extends Controller {
 		private readonly DemoSeedServiceInterface $demoSeedService,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
-		private readonly DemoRegisterImporter $registerImporter,
+		private readonly DemoRegisterImporterInterface $registerImporter,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()

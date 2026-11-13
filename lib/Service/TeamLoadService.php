@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TeamLoadServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
  */
-class TeamLoadService {
+class TeamLoadService implements TeamLoadServiceInterface {
 
 	/**
 	 * Capacity of a profile that sets no maxConcurrent, as routing reads it.

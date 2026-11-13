@@ -42,8 +42,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PreferenceCentreServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SubscriptionServiceInterface;
-use OCA\Pipelinq\Service\Marketing\PreferenceCentreService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -90,7 +90,7 @@ class ListPublicController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param SubscriptionServiceInterface $subscriptions Membership service.
-	 * @param PreferenceCentreService $preferences The preference centre.
+	 * @param PreferenceCentreServiceInterface $preferences The preference centre.
 	 * @param IThrottler $throttler Brute-force throttler for rejected tokens.
 	 * @param IL10N $l10n Localisation for the rendered pages.
 	 * @param LoggerInterface $logger Logger.
@@ -98,7 +98,7 @@ class ListPublicController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private SubscriptionServiceInterface $subscriptions,
-		private PreferenceCentreService $preferences,
+		private PreferenceCentreServiceInterface $preferences,
 		private IThrottler $throttler,
 		private IL10N $l10n,
 		private LoggerInterface $logger,

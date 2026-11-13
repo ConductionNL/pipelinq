@@ -40,7 +40,7 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
-use OCA\Pipelinq\Service\Mdm\OpenRegisterSyncService;
+use OCA\Pipelinq\Kernel\Contracts\OpenRegisterSyncServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -73,13 +73,13 @@ class ObjectsMergedSyncListener implements IEventListener {
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR WebhookService resolve).
 	 * @param MdmObjectRepositoryInterface $repository The MDM object repository (survivor read).
-	 * @param OpenRegisterSyncService $orSync Golden-record → OR schema projection.
+	 * @param OpenRegisterSyncServiceInterface $orSync Golden-record → OR schema projection.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
 		private MdmObjectRepositoryInterface $repository,
-		private OpenRegisterSyncService $orSync,
+		private OpenRegisterSyncServiceInterface $orSync,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()

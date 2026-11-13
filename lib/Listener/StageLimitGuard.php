@@ -28,7 +28,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -60,7 +60,7 @@ class StageLimitGuard implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param SchemaMapService $schemaMap Resolves a schema id to its object type.
+	 * @param SchemaMapServiceInterface $schemaMap Resolves a schema id to its object type.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param IL10N $l10n Words the refusal in the user's language.
 	 * @param LoggerInterface $logger The logger.
@@ -69,7 +69,7 @@ class StageLimitGuard implements IEventListener {
 	 */
 	public function __construct(
 		private ObjectServiceInterface $objectService,
-		private SchemaMapService $schemaMap,
+		private SchemaMapServiceInterface $schemaMap,
 		private IAppConfig $appConfig,
 		private IL10N $l10n,
 		private LoggerInterface $logger,

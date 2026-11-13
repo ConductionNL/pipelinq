@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCP\Contacts\IManager as IContactsManager;
 use Psr\Log\LoggerInterface;
 
@@ -31,7 +32,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
-class ContactVcardService {
+class ContactVcardService implements ContactVcardServiceInterface {
 	/**
 	 * Constructor.
 	 *

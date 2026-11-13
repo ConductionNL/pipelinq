@@ -23,7 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\FirstTicketService;
+use OCA\Pipelinq\Kernel\Contracts\FirstTicketServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -41,12 +41,12 @@ class FirstTicketController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param FirstTicketService $firstTicket Picks the ticket.
+	 * @param FirstTicketServiceInterface $firstTicket Picks the ticket.
 	 * @param IUserSession $userSession The current user.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly FirstTicketService $firstTicket,
+		private readonly FirstTicketServiceInterface $firstTicket,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

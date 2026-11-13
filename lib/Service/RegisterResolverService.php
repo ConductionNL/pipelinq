@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RegisterResolverServiceInterface;
 use OCP\IAppConfig;
 
 /**
@@ -46,7 +47,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/changes/archive/2026-05-31-pipelinq-or-register-resolver/tasks.md#task-1.1
  */
-class RegisterResolverService {
+class RegisterResolverService implements RegisterResolverServiceInterface {
 	/**
 	 * The app-config key holding the register id.
 	 *

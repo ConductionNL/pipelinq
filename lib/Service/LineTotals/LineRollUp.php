@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service\LineTotals;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LineRollUpInterface;
 use OCP\IAppConfig;
 
 /**
@@ -36,7 +37,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
-class LineRollUp {
+class LineRollUp implements LineRollUpInterface {
 	/**
 	 * The property each line schema points at its parent with.
 	 */

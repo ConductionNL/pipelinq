@@ -24,9 +24,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Settings;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\IntegrationDetectorInterface;
+use OCA\Pipelinq\Kernel\Contracts\MenuStructureInterface;
 use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Pipelinq\Service\IntegrationDetector;
-use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
@@ -47,15 +47,15 @@ class AdminSettings implements IDelegatedSettings {
 	 * @param SettingsServiceInterface $settingsService The settings service.
 	 * @param IAppManager $appManager The app manager.
 	 * @param IInitialState $initialState The initial state service.
-	 * @param MenuStructure $menuStructure How the stored structure settings read.
-	 * @param IntegrationDetector $integrations Detects Shillinq and XWiki for the read-only integrations card.
+	 * @param MenuStructureInterface $menuStructure How the stored structure settings read.
+	 * @param IntegrationDetectorInterface $integrations Detects Shillinq and XWiki for the read-only integrations card.
 	 */
 	public function __construct(
 		private SettingsServiceInterface $settingsService,
 		private IAppManager $appManager,
 		private IInitialState $initialState,
-		private MenuStructure $menuStructure,
-		private IntegrationDetector $integrations,
+		private MenuStructureInterface $menuStructure,
+		private IntegrationDetectorInterface $integrations,
 	) {
 	}//end __construct()
 
@@ -74,12 +74,12 @@ class AdminSettings implements IDelegatedSettings {
 
 		$this->initialState->provideInitialState('version', $version);
 		$this->initialState->provideInitialState(
-			MenuStructure::KEY,
-			$this->menuStructure->normalise(stored: (string)($config[MenuStructure::KEY] ?? ''))
+			MenuStructureInterface::KEY,
+			$this->menuStructure->normalise(stored: (string)($config[MenuStructureInterface::KEY] ?? ''))
 		);
 		$this->initialState->provideInitialState(
-			MenuStructure::MODULES_KEY,
-			$this->menuStructure->normaliseModules(stored: (string)($config[MenuStructure::MODULES_KEY] ?? ''))
+			MenuStructureInterface::MODULES_KEY,
+			$this->menuStructure->normaliseModules(stored: (string)($config[MenuStructureInterface::MODULES_KEY] ?? ''))
 		);
 
 		// Detected, never typed: the admin page shows what this instance has.

@@ -31,13 +31,14 @@ namespace OCA\Pipelinq\Service\Store;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\StoreInstallLedgerInterface;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 
 /**
  * The installed store items and the last registry check.
  */
-class StoreInstallLedger {
+class StoreInstallLedger implements StoreInstallLedgerInterface {
 
 	/**
 	 * App config key of the installed items.

@@ -47,8 +47,8 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\Service\ClientManagementIntegration;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\Contracts\ClientManagementIntegrationInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 
@@ -64,12 +64,12 @@ class ContactErasedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ClientManagementIntegration $integration Erases the consent history.
-	 * @param SchemaMapService            $schemaMap   Tells a contact from other objects.
+	 * @param ClientManagementIntegrationInterface $integration Erases the consent history.
+	 * @param SchemaMapServiceInterface            $schemaMap   Tells a contact from other objects.
 	 */
 	public function __construct(
-		private readonly ClientManagementIntegration $integration,
-		private readonly SchemaMapService $schemaMap,
+		private readonly ClientManagementIntegrationInterface $integration,
+		private readonly SchemaMapServiceInterface $schemaMap,
 	) {
 	}//end __construct()
 

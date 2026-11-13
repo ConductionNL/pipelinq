@@ -26,8 +26,8 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactSyncSettingsServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ContactSyncSettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -46,7 +46,7 @@ class ContactSyncController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ContactSyncServiceInterface $contactSyncService The contact sync service.
-	 * @param ContactSyncSettingsService $syncSettings The user's write-back switch.
+	 * @param ContactSyncSettingsServiceInterface $syncSettings The user's write-back switch.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
@@ -54,7 +54,7 @@ class ContactSyncController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private ContactSyncServiceInterface $contactSyncService,
-		private ContactSyncSettingsService $syncSettings,
+		private ContactSyncSettingsServiceInterface $syncSettings,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 		private LoggerInterface $logger,

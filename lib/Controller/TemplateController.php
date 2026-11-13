@@ -30,9 +30,9 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PhysicalAddressRendererInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
-use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,7 +55,7 @@ class TemplateController extends Controller {
 	 * @param ArticleServiceInterface $articleService Article reader and `{{articles}}` renderer.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
-	 * @param PhysicalAddressRenderer $addressRenderer Puts the template's physical address into the preview.
+	 * @param PhysicalAddressRendererInterface $addressRenderer Puts the template's physical address into the preview.
 	 * @param MailBlockRenderer $blockRenderer Renders Blocks-mode templates to the bodies that are sent.
 	 * @param Defaults|null $defaults The theming colour for buttons.
 	 */
@@ -65,7 +65,7 @@ class TemplateController extends Controller {
 		private readonly ArticleServiceInterface $articleService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
-		private readonly PhysicalAddressRenderer $addressRenderer,
+		private readonly PhysicalAddressRendererInterface $addressRenderer,
 		private readonly MailBlockRenderer $blockRenderer = new MailBlockRenderer(),
 		private readonly ?Defaults $defaults = null,
 	) {

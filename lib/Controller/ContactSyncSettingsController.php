@@ -25,8 +25,8 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactSyncSettingsServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ContactSyncSettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,13 +44,13 @@ class ContactSyncSettingsController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                   $request     The request.
-	 * @param ContactSyncSettingsService $settings    The settings and the run.
+	 * @param ContactSyncSettingsServiceInterface $settings    The settings and the run.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N                      $l10n        Translations.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ContactSyncSettingsService $settings,
+		private ContactSyncSettingsServiceInterface $settings,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {

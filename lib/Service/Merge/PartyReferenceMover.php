@@ -31,13 +31,14 @@ namespace OCA\Pipelinq\Service\Merge;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyReferenceMoverInterface;
 
 /**
  * Moves client and contact references for a merge and back for its reversal.
  *
  * @spec openspec/changes/clients-reversible-merge/specs/client-reversible-merge/spec.md
  */
-class PartyReferenceMover {
+class PartyReferenceMover implements PartyReferenceMoverInterface {
 
 	/**
 	 * The register every reference lives in.

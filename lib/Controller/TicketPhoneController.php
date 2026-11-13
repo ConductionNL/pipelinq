@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\PhoneHistoryService;
+use OCA\Pipelinq\Kernel\Contracts\PhoneHistoryServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -45,12 +45,12 @@ class TicketPhoneController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest            $request      The request.
-	 * @param PhoneHistoryService $phoneHistory The phone search over tickets.
+	 * @param PhoneHistoryServiceInterface $phoneHistory The phone search over tickets.
 	 * @param IUserSession        $userSession  The signed-in user.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PhoneHistoryService $phoneHistory,
+		private readonly PhoneHistoryServiceInterface $phoneHistory,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

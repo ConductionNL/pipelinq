@@ -30,8 +30,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
-use OCA\Pipelinq\Service\Portal\PortalAuditService;
 use OCA\Pipelinq\Service\Portal\PortalException;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
@@ -67,7 +67,7 @@ class PortalAdminController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param PortalTenantServiceInterface $tenant The tenant service.
-	 * @param PortalAuditService $audit The audit service.
+	 * @param PortalAuditServiceInterface $audit The audit service.
 	 * @param PortalObjectRepository $repository The portal object repository.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager.
@@ -77,7 +77,7 @@ class PortalAdminController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private PortalTenantServiceInterface $tenant,
-		private PortalAuditService $audit,
+		private PortalAuditServiceInterface $audit,
 		private PortalObjectRepository $repository,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,

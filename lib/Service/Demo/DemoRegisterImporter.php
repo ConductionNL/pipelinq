@@ -38,6 +38,7 @@ namespace OCA\Pipelinq\Service\Demo;
 
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DemoRegisterImporterInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -45,7 +46,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
-class DemoRegisterImporter {
+class DemoRegisterImporter implements DemoRegisterImporterInterface {
 	/**
 	 * Configuration identity for the example import, never the app id.
 	 *

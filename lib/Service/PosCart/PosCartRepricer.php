@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\PosCart;
 
+use OCA\Pipelinq\Kernel\Contracts\PosCartRepricerInterface;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -36,7 +37,7 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
  *
  * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
  */
-class PosCartRepricer {
+class PosCartRepricer implements PosCartRepricerInterface {
 	/**
 	 * Constructor.
 	 *
