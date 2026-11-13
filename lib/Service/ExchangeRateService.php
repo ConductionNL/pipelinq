@@ -27,6 +27,7 @@ use DateTimeImmutable;
 use Exception;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExchangeRateServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 
@@ -45,17 +46,7 @@ use OCP\IAppConfig;
  * @spec exclude infrastructure utility with no feature requirement of its own; it is
  *   exercised through the features that call it
  */
-class ExchangeRateService {
-	/**
-	 * App-config key for the org reporting currency.
-	 *
-	 * The one the setup wizard stores and manifest dashboards format with
-	 * (`@config.currency`). The forecast used to keep a second setting for the
-	 * same thing (pipelinq#2040); that key is still read as a fallback.
-	 *
-	 * @var string
-	 */
-	public const REPORTING_CURRENCY_KEY = 'currency';
+class ExchangeRateService implements ExchangeRateServiceInterface {
 
 	/**
 	 * The forecast's former reporting-currency key, read only when the setup
@@ -71,34 +62,6 @@ class ExchangeRateService {
 	 * @var string
 	 */
 	public const REPORTING_CURRENCY_DEFAULT = 'EUR';
-
-	/**
-	 * App-config key for the JSON rate table (source currency => rate).
-	 *
-	 * @var string
-	 */
-	public const RATES_KEY = 'forecast_exchange_rates';
-
-	/**
-	 * App-config key for administrator overrides.
-	 *
-	 * @var string
-	 */
-	public const OVERRIDES_KEY = RateOverrideStore::OVERRIDES_KEY;
-
-	/**
-	 * App-config key for the typed dates of the rate table.
-	 *
-	 * @var string
-	 */
-	public const RATE_DATES_KEY = RateOverrideStore::RATE_DATES_KEY;
-
-	/**
-	 * App-config key for the age in days past which a rate is stale.
-	 *
-	 * @var string
-	 */
-	public const MAX_RATE_AGE_KEY = 'forecast_max_rate_age_days';
 
 	/**
 	 * Default stale limit in days.

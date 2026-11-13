@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service\CallReview;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallTranscriptionServiceInterface;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\Files\File;
@@ -51,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/changes/contact-moments-call-review/tasks.md#task-1.3
  */
-class CallTranscriptionService {
+class CallTranscriptionService implements CallTranscriptionServiceInterface {
 	use PayloadToArray;
 
 	/**

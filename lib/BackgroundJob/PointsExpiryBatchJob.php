@@ -29,9 +29,9 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\NotificationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
-use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -60,7 +60,7 @@ class PointsExpiryBatchJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ContainerInterface $container The DI container.
-	 * @param LoyaltyAccountService $loyaltyService The account service.
+	 * @param LoyaltyAccountServiceInterface $loyaltyService The account service.
 	 * @param PointsLedgerServiceInterface $ledgerService The ledger service.
 	 * @param NotificationServiceInterface $notificationService The notification service.
 	 * @param LoggerInterface $logger The logger.
@@ -69,7 +69,7 @@ class PointsExpiryBatchJob extends TimedJob {
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
-		private LoyaltyAccountService $loyaltyService,
+		private LoyaltyAccountServiceInterface $loyaltyService,
 		private PointsLedgerServiceInterface $ledgerService,
 		private NotificationServiceInterface $notificationService,
 		private LoggerInterface $logger,

@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\Export\ExportExecutionService;
-use OCA\Pipelinq\Service\Export\ExportRunService;
+use OCA\Pipelinq\Kernel\Contracts\ExportExecutionServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -59,14 +59,14 @@ class ExportWorkerJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory (required by TimedJob).
-	 * @param ExportRunService $runs The run service.
-	 * @param ExportExecutionService $execution The run executor.
+	 * @param ExportRunServiceInterface $runs The run service.
+	 * @param ExportExecutionServiceInterface $execution The run executor.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private ExportRunService $runs,
-		private ExportExecutionService $execution,
+		private ExportRunServiceInterface $runs,
+		private ExportExecutionServiceInterface $execution,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

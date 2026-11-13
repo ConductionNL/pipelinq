@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RetentionMetadataBackfillServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -51,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/changes/platform-client-retention/tasks.md#3-review-and-back-fill
  */
-class RetentionMetadataBackfillService {
+class RetentionMetadataBackfillService implements RetentionMetadataBackfillServiceInterface {
 
 	/**
 	 * Rows listed per page.

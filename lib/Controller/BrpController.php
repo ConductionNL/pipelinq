@@ -29,18 +29,18 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\HaalCentraalClientInterface;
+use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
-use OCA\Pipelinq\Service\BrpCacheService;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Service\BsnAudit\LookupReason;
 use OCA\Pipelinq\Service\BsnAudit\LookupResult;
 use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
-use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCA\Pipelinq\Service\HaalCentraalException;
-use OCA\Pipelinq\Service\OptOutService;
 use OCA\Pipelinq\Service\PersonLookup\LookupLinks;
 use OCA\Pipelinq\Service\PersonLookup\LookupQuery;
 use OCA\Pipelinq\Service\PersonLookup\LookupRun;
@@ -95,10 +95,10 @@ class BrpController extends Controller {
 	 * @param IL10N $l10n i18n.
 	 * @param IAppConfig $appConfig App config.
 	 * @param BsnValidationService $validation 11-proef service.
-	 * @param BrpCacheService $cacheService BRP cache.
+	 * @param BrpCacheServiceInterface $cacheService BRP cache.
 	 * @param HaalCentraalClientInterface $haalCentraal HaalCentraal client.
-	 * @param BsnAuditService $audit Audit service.
-	 * @param OptOutService $optOut Opt-out service.
+	 * @param BsnAuditServiceInterface $audit Audit service.
+	 * @param OptOutServiceInterface $optOut Opt-out service.
 	 * @param BrpMutationWebhookListener $webhookListener Webhook listener.
 	 * @param LoggerInterface $logger Logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister object service.
@@ -114,10 +114,10 @@ class BrpController extends Controller {
 		private IL10N $l10n,
 		private IAppConfig $appConfig,
 		private BsnValidationService $validation,
-		private BrpCacheService $cacheService,
+		private BrpCacheServiceInterface $cacheService,
 		private HaalCentraalClientInterface $haalCentraal,
-		private BsnAuditService $audit,
-		private OptOutService $optOut,
+		private BsnAuditServiceInterface $audit,
+		private OptOutServiceInterface $optOut,
 		private BrpMutationWebhookListener $webhookListener,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,

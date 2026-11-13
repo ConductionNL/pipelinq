@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportExecutionServiceInterface;
 use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
@@ -43,7 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
  */
-class ExportExecutionService {
+class ExportExecutionService implements ExportExecutionServiceInterface {
 	/**
 	 * Distributed lock TTL (seconds) — a stuck run releases after this.
 	 *

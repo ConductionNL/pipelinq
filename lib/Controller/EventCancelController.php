@@ -29,8 +29,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
-use OCA\Pipelinq\Service\Marketing\EventEmailService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -52,7 +52,7 @@ class EventCancelController extends Controller {
 	 *
 	 * @param IRequest                 $request       The request.
 	 * @param EventRegistrationServiceInterface $registrations The registrations.
-	 * @param EventEmailService        $mails         Verifies the token and mails whoever moves up.
+	 * @param EventEmailServiceInterface        $mails         Verifies the token and mails whoever moves up.
 	 * @param IURLGenerator            $urls          Builds the form action.
 	 *
 	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
@@ -60,7 +60,7 @@ class EventCancelController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private EventRegistrationServiceInterface $registrations,
-		private EventEmailService $mails,
+		private EventEmailServiceInterface $mails,
 		private IURLGenerator $urls,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

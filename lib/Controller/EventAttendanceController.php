@@ -28,9 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
 use OCA\Pipelinq\Service\CallerObjectReader;
-use OCA\Pipelinq\Service\Marketing\EventEmailService;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -51,7 +51,7 @@ class EventAttendanceController extends Controller {
 	 *
 	 * @param IRequest                 $request       The request.
 	 * @param EventRegistrationServiceInterface $registrations The registrations.
-	 * @param EventEmailService        $mails         Confirms a hand-added registration.
+	 * @param EventEmailServiceInterface        $mails         Confirms a hand-added registration.
 	 * @param CallerObjectReader       $reader        Reads as the caller, so access rules apply.
 	 * @param IUserSession             $userSession   The caller.
 	 *
@@ -60,7 +60,7 @@ class EventAttendanceController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private EventRegistrationServiceInterface $registrations,
-		private EventEmailService $mails,
+		private EventEmailServiceInterface $mails,
 		private CallerObjectReader $reader,
 		private IUserSession $userSession,
 	) {

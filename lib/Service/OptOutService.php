@@ -26,12 +26,13 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Opt-out lookup + recording service.
@@ -42,7 +43,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  side-effect-free hashing utility shared across BSN-handling services; injecting
  *  it as a collaborator would not change behaviour.
  */
-class OptOutService {
+class OptOutService implements OptOutServiceInterface {
 	/**
 	 * Constructor.
 	 *

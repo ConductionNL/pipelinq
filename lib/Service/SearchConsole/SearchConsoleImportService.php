@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\SearchConsole;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SearchConsoleImportServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
@@ -44,7 +45,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
-class SearchConsoleImportService {
+class SearchConsoleImportService implements SearchConsoleImportServiceInterface {
 
 	/**
 	 * App-config key holding the property list (site URLs), one per line

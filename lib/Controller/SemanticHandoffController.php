@@ -32,10 +32,10 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SemanticHandoffServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\SemanticHandoffService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -107,7 +107,7 @@ class SemanticHandoffController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request HTTP request.
-	 * @param SemanticHandoffService $handoffService Kind resolution + emit wrapper.
+	 * @param SemanticHandoffServiceInterface $handoffService Kind resolution + emit wrapper.
 	 * @param ContainerInterface $container DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig App config (register/schema slugs).
 	 * @param TicketServiceInterface $ticketService Unified ticket resolver.
@@ -118,7 +118,7 @@ class SemanticHandoffController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private SemanticHandoffService $handoffService,
+		private SemanticHandoffServiceInterface $handoffService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private TicketServiceInterface $ticketService,

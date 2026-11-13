@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
-use OCA\Pipelinq\Service\Marketing\EventEmailService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -67,7 +67,7 @@ class EventReminderJob extends TimedJob {
 	 *
 	 * @param ITimeFactory             $time          The clock.
 	 * @param EventRegistrationServiceInterface $registrations The events and their registrations.
-	 * @param EventEmailService        $mails         Sends the reminder.
+	 * @param EventEmailServiceInterface        $mails         Sends the reminder.
 	 * @param LoggerInterface          $logger        The logger.
 	 *
 	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
@@ -75,7 +75,7 @@ class EventReminderJob extends TimedJob {
 	public function __construct(
 		ITimeFactory $time,
 		private EventRegistrationServiceInterface $registrations,
-		private EventEmailService $mails,
+		private EventEmailServiceInterface $mails,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

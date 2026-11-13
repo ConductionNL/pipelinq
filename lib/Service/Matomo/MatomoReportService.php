@@ -42,6 +42,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Matomo;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MatomoReportServiceInterface;
 use OCA\Pipelinq\Service\CampaignService;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
@@ -53,7 +54,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
  */
-class MatomoReportService {
+class MatomoReportService implements MatomoReportServiceInterface {
 
 	/**
 	 * App-config key naming the OpenConnector source that reaches Matomo.

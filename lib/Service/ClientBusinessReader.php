@@ -28,9 +28,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\OpenRegister\Exception\NotAuthorizedException;
 use DateTime;
+use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -43,7 +44,7 @@ use Throwable;
  *
  * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
  */
-class ClientBusinessReader {
+class ClientBusinessReader implements ClientBusinessReaderInterface {
 
 	private const OBJECT_SERVICE = 'OCA\OpenRegister\Service\ObjectService';
 

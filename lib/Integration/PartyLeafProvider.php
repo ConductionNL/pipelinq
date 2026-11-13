@@ -35,7 +35,7 @@ namespace OCA\Pipelinq\Integration;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\PartyIndicatorService;
+use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -72,13 +72,13 @@ class PartyLeafProvider {
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param PartyIndicatorService $indicatorService Resolves a party's indicators.
+	 * @param PartyIndicatorServiceInterface $indicatorService Resolves a party's indicators.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly ObjectServiceInterface $objectService,
-		private readonly PartyIndicatorService $indicatorService,
+		private readonly PartyIndicatorServiceInterface $indicatorService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

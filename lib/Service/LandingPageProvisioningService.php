@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LandingPageProvisioningServiceInterface;
 use OCA\Pipelinq\Service\Marketing\CampaignFormDestination;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -50,7 +51,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
  */
-class LandingPageProvisioningService {
+class LandingPageProvisioningService implements LandingPageProvisioningServiceInterface {
 
 	/**
 	 * Portaliq's request event. A string, never a `use`: importing it

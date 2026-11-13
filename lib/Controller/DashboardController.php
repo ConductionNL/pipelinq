@@ -22,7 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\SemanticHandoffService;
+use OCA\Pipelinq\Kernel\Contracts\SemanticHandoffServiceInterface;
 use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -50,7 +50,7 @@ class DashboardController extends Controller {
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param MenuStructure $menuStructure How the stored structure settings read.
 	 * @param IAppManager $appManager Reads the installed app version.
-	 * @param SemanticHandoffService $handoffService Finds where the installed case app keeps its cases.
+	 * @param SemanticHandoffServiceInterface $handoffService Finds where the installed case app keeps its cases.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -58,7 +58,7 @@ class DashboardController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly MenuStructure $menuStructure,
 		private readonly IAppManager $appManager,
-		private readonly SemanticHandoffService $handoffService,
+		private readonly SemanticHandoffServiceInterface $handoffService,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

@@ -29,19 +29,20 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * CustomerLoyaltyAccount lifecycle service.
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
-class LoyaltyAccountService {
+class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 	use PayloadToArray;
 
 	/**

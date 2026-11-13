@@ -36,8 +36,8 @@ namespace OCA\Pipelinq\Controller;
 use InvalidArgumentException;
 use OCA\Pipelinq\Integration\PartyLeafProvider;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\PartyIndicatorService;
-use OCA\Pipelinq\Service\PartyOrganisationTreeService;
+use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyOrganisationTreeServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -54,14 +54,14 @@ class PartyLeafController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param PartyLeafProvider $provider The leaf's data provider.
-	 * @param PartyIndicatorService $indicatorService Resolves and answers about indicators.
-	 * @param PartyOrganisationTreeService $treeService The guarded organisation tree.
+	 * @param PartyIndicatorServiceInterface $indicatorService Resolves and answers about indicators.
+	 * @param PartyOrganisationTreeServiceInterface $treeService The guarded organisation tree.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly PartyLeafProvider $provider,
-		private readonly PartyIndicatorService $indicatorService,
-		private readonly PartyOrganisationTreeService $treeService,
+		private readonly PartyIndicatorServiceInterface $indicatorService,
+		private readonly PartyOrganisationTreeServiceInterface $treeService,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

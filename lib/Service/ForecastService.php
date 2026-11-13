@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
 use OCA\Pipelinq\Service\Forecast\CategoryOverride;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -41,44 +42,8 @@ use Psr\Log\LoggerInterface;
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
-class ForecastService {
+class ForecastService implements ForecastServiceInterface {
 	use PayloadToArray;
-
-	/**
-	 * App-config key for the open-pipeline target the dashboard gauge
-	 * measures against, in the reporting currency. 0 means no target.
-	 *
-	 * @var string
-	 */
-	public const PIPELINE_TARGET_KEY = 'pipeline_target';
-
-	/**
-	 * App-config key for the accuracy green band threshold.
-	 *
-	 * @var string
-	 */
-	public const ACCURACY_GREEN_KEY = 'forecast_accuracy_green';
-
-	/**
-	 * App-config key for the accuracy amber band threshold.
-	 *
-	 * @var string
-	 */
-	public const ACCURACY_AMBER_KEY = 'forecast_accuracy_amber';
-
-	/**
-	 * Default accuracy green band threshold (0.90).
-	 *
-	 * @var float
-	 */
-	public const ACCURACY_GREEN_DEFAULT = 0.90;
-
-	/**
-	 * Default accuracy amber band threshold (0.75).
-	 *
-	 * @var float
-	 */
-	public const ACCURACY_AMBER_DEFAULT = 0.75;
 
 	/**
 	 * Constructor.

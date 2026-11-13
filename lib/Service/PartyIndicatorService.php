@@ -48,6 +48,7 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -58,7 +59,7 @@ use Throwable;
  *
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
  */
-class PartyIndicatorService {
+class PartyIndicatorService implements PartyIndicatorServiceInterface {
 	/**
 	 * The acts a caller can ask about, and the effect each one reads.
 	 *

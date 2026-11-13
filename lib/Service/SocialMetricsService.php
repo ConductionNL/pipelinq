@@ -48,6 +48,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
 use OCA\Pipelinq\Service\Social\MeteredRead;
 use OCA\Pipelinq\Service\Social\NetworkTotals;
 use OCA\Pipelinq\Service\Social\SocialAdapterCall;
@@ -73,7 +74,7 @@ use OCP\IAppConfig;
  *  definition, and the alternative PHPMD is asking for, a factory injected
  *  into every adapter, would add a collaborator that constructs a struct.
  */
-class SocialMetricsService {
+class SocialMetricsService implements SocialMetricsServiceInterface {
 	/**
 	 * Constructor.
 	 *

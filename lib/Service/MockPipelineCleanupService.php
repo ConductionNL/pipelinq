@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MockPipelineCleanupServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -39,7 +40,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
  */
-class MockPipelineCleanupService {
+class MockPipelineCleanupService implements MockPipelineCleanupServiceInterface {
 	/**
 	 * Slugs of the mock register's pipelines (lib/Settings/pipelinq_mock_register.json).
 	 */

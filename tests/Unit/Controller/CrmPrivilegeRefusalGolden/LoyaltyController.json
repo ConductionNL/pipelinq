@@ -34,7 +34,7 @@
                 ]
             },
             {
-                "LoyaltyAccountService::getAccount": [
+                "LoyaltyAccountServiceInterface::getAccount": [
                     "sample-accountId"
                 ]
             }
@@ -425,7 +425,7 @@
                 ]
             },
             {
-                "LoyaltyProgrammeService::activate": [
+                "LoyaltyProgrammeServiceInterface::activate": [
                     "sample-programmeId",
                     "crm-user"
                 ]

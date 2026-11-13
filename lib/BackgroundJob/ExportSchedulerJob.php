@@ -33,7 +33,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTimeImmutable;
 use OCA\Pipelinq\Kernel\Contracts\CronExpressionHelperInterface;
 use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
-use OCA\Pipelinq\Service\Export\ExportRunService;
+use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -63,14 +63,14 @@ class ExportSchedulerJob extends TimedJob {
 	 *
 	 * @param ITimeFactory $time The time factory (required by TimedJob).
 	 * @param ExportJobServiceInterface $jobs The job service.
-	 * @param ExportRunService $runs The run service.
+	 * @param ExportRunServiceInterface $runs The run service.
 	 * @param CronExpressionHelperInterface $cron The cron helper.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private ExportJobServiceInterface $jobs,
-		private ExportRunService $runs,
+		private ExportRunServiceInterface $runs,
 		private CronExpressionHelperInterface $cron,
 		private LoggerInterface $logger,
 	) {

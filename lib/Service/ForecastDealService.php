@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 
@@ -48,7 +49,7 @@ use OCP\IAppConfig;
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
-class ForecastDealService {
+class ForecastDealService implements ForecastDealServiceInterface {
 	/**
 	 * Schema slug whose `x-pipelinq-forecast-lifecycle` declares the partition.
 	 *
@@ -72,34 +73,12 @@ class ForecastDealService {
 	public const CLOSED_CATEGORIES = ['closed_won', 'closed_lost'];
 
 	/**
-	 * Fallback default forecast category assigned to a new deal. The canonical
-	 * source of truth is `x-pipelinq-forecast-lifecycle.default`.
-	 *
-	 * @var string
-	 */
-	public const DEFAULT_CATEGORY = 'pipeline';
-
-	/**
 	 * Fallback open forecast categories a rep may freely choose. The canonical
 	 * source of truth is `x-pipelinq-forecast-lifecycle.open`.
 	 *
 	 * @var array<int, string>
 	 */
 	public const OPEN_CATEGORIES = ['commit', 'best_case', 'pipeline', 'omitted'];
-
-	/**
-	 * App-config key for the commit justification threshold (in reporting currency).
-	 *
-	 * @var string
-	 */
-	public const COMMIT_THRESHOLD_KEY = 'forecast_commit_threshold';
-
-	/**
-	 * Default commit justification threshold when none is configured.
-	 *
-	 * @var int
-	 */
-	public const COMMIT_THRESHOLD_DEFAULT = 50000;
 
 	/**
 	 * Minimum number of characters required in a commit justification.

@@ -37,10 +37,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
-use OCA\Pipelinq\Service\SocialMetricsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -63,7 +63,7 @@ class SocialPostController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param SocialPostServiceInterface $posts The post lifecycle and publishing.
 	 * @param SocialPublicationStore $publications The per-account result rows.
-	 * @param SocialMetricsService $metrics The ranking.
+	 * @param SocialMetricsServiceInterface $metrics The ranking.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Privileged-group policy.
 	 *
@@ -73,7 +73,7 @@ class SocialPostController extends Controller {
 		IRequest $request,
 		private readonly SocialPostServiceInterface $posts,
 		private readonly SocialPublicationStore $publications,
-		private readonly SocialMetricsService $metrics,
+		private readonly SocialMetricsServiceInterface $metrics,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {

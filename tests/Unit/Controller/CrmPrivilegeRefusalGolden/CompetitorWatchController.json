@@ -38,15 +38,15 @@
                 ]
             },
             {
-                "ConnectorEgress::isConfigured": [
+                "ConnectorEgressInterface::isConfigured": [
                     "competitor.egress_source"
                 ]
             },
             {
-                "CompetitorWatchService::competitors": []
+                "CompetitorWatchServiceInterface::competitors": []
             },
             {
-                "CompetitorWatchService::watches": []
+                "CompetitorWatchServiceInterface::watches": []
             },
             {
                 "WatchEventStore::all": []
@@ -88,7 +88,7 @@
                 ]
             },
             {
-                "CompetitorWatchService::watch": [
+                "CompetitorWatchServiceInterface::watch": [
                     "sample-id"
                 ]
             }

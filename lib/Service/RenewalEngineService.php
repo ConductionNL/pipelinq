@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RenewalEngineServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -46,7 +47,7 @@ use Throwable;
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
  */
-class RenewalEngineService {
+class RenewalEngineService implements RenewalEngineServiceInterface {
 	/**
 	 * Hard fallback renewal lead time (days) when nothing is configured.
 	 *

@@ -27,7 +27,7 @@ use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\ForecastDealService;
+use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -81,7 +81,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * Constructor.
 	 *
 	 * @param SchemaMapService $schemaMapService The schema map service.
-	 * @param ForecastDealService $dealService The forecast deal lifecycle service.
+	 * @param ForecastDealServiceInterface $dealService The forecast deal lifecycle service.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
@@ -89,7 +89,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 */
 	public function __construct(
 		private SchemaMapService $schemaMapService,
-		private ForecastDealService $dealService,
+		private ForecastDealServiceInterface $dealService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
@@ -188,7 +188,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 				['uuid' => $uuid, 'reason' => $error]
 			);
 			$reverted = $current;
-			$reverted['forecast_category'] = ($oldData['forecast_category'] ?? ForecastDealService::DEFAULT_CATEGORY);
+			$reverted['forecast_category'] = ($oldData['forecast_category'] ?? ForecastDealServiceInterface::DEFAULT_CATEGORY);
 			$this->persist(uuid: $uuid, data: $reverted);
 			return;
 		}

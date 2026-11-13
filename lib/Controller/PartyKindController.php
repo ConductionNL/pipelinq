@@ -31,7 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\PartyKindRegistryService;
+use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
 use OCA\Pipelinq\Service\PartyLinkService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,12 +48,12 @@ class PartyKindController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PartyKindRegistryService $registry The vocabulary and the rule.
+	 * @param PartyKindRegistryServiceInterface $registry The vocabulary and the rule.
 	 * @param PartyLinkService $linkService The one write path for a link.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PartyKindRegistryService $registry,
+		private readonly PartyKindRegistryServiceInterface $registry,
 		private readonly PartyLinkService $linkService,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

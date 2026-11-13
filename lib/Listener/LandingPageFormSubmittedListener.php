@@ -41,11 +41,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
+use OCA\Pipelinq\Kernel\Contracts\CampaignServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
-use OCA\Pipelinq\Service\CampaignService;
-use OCA\Pipelinq\Service\Marketing\EventEmailService;
+use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\TouchpointService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -92,22 +92,22 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore $store Register-scoped object access.
-	 * @param CampaignService $campaigns Resolves the campaign the form belongs to.
+	 * @param ListObjectStoreInterface $store Register-scoped object access.
+	 * @param CampaignServiceInterface $campaigns Resolves the campaign the form belongs to.
 	 * @param TouchpointService $touchpoints The touchpoint log and its nonce guard.
 	 * @param LoggerInterface $logger Logger.
 	 * @param EventRegistrationServiceInterface|null $eventRegistrations Registers the sign-up for the campaign's event.
-	 * @param EventEmailService|null $eventMails Confirms the registration by mail.
+	 * @param EventEmailServiceInterface|null $eventMails Confirms the registration by mail.
 	 *
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function __construct(
-		private ListObjectStore $store,
-		private CampaignService $campaigns,
+		private ListObjectStoreInterface $store,
+		private CampaignServiceInterface $campaigns,
 		private TouchpointService $touchpoints,
 		private LoggerInterface $logger,
 		private ?EventRegistrationServiceInterface $eventRegistrations = null,
-		private ?EventEmailService $eventMails = null,
+		private ?EventEmailServiceInterface $eventMails = null,
 	) {
 	}//end __construct()
 

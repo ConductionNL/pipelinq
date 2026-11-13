@@ -34,8 +34,8 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ProgrammeEstimationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammePortfolioServiceInterface;
-use OCA\Pipelinq\Service\ProgrammeEstimationService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -54,14 +54,14 @@ class ProgrammeController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ProgrammePortfolioServiceInterface $portfolio Work items and progress.
-	 * @param ProgrammeEstimationService $estimation Scales, estimates and cycles.
+	 * @param ProgrammeEstimationServiceInterface $estimation Scales, estimates and cycles.
 	 * @param ObjectServiceInterface $objectService Reads one programme or cycle.
 	 * @param IAppManager $appManager Answers which apps this instance has.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly ProgrammePortfolioServiceInterface $portfolio,
-		private readonly ProgrammeEstimationService $estimation,
+		private readonly ProgrammeEstimationServiceInterface $estimation,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly IAppManager $appManager,
 	) {

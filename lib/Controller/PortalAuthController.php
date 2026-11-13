@@ -29,12 +29,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalAuthServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalSessionManagerInterface;
 use OCA\Pipelinq\Service\Portal\PasswordResetService;
-use OCA\Pipelinq\Service\Portal\PortalAuthService;
 use OCA\Pipelinq\Service\Portal\PortalMfaService;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
-use OCA\Pipelinq\Service\Portal\PortalSessionManager;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
@@ -67,8 +67,8 @@ class PortalAuthController extends PortalApiController {
 	 * @param IRequest $request The request.
 	 * @param PortalRequestGuard $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param PortalAuthService $auth The auth service.
-	 * @param PortalSessionManager $sessions The session manager.
+	 * @param PortalAuthServiceInterface $auth The auth service.
+	 * @param PortalSessionManagerInterface $sessions The session manager.
 	 * @param PortalMfaService $mfa The MFA service.
 	 * @param PasswordResetService $reset The password-reset service.
 	 * @param PortalObjectRepository $repository The portal object repository.
@@ -77,8 +77,8 @@ class PortalAuthController extends PortalApiController {
 		IRequest $request,
 		PortalRequestGuard $guard,
 		LoggerInterface $logger,
-		private PortalAuthService $auth,
-		private PortalSessionManager $sessions,
+		private PortalAuthServiceInterface $auth,
+		private PortalSessionManagerInterface $sessions,
 		private PortalMfaService $mfa,
 		private PasswordResetService $reset,
 		private PortalObjectRepository $repository,

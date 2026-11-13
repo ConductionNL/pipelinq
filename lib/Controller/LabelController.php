@@ -29,8 +29,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LabelRenameServiceInterface;
 use OCA\Pipelinq\Service\Labels\LabelRenameException;
-use OCA\Pipelinq\Service\Labels\LabelRenameService;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -50,14 +50,14 @@ class LabelController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest           $request The request.
-	 * @param LabelRenameService $service The rename pass.
+	 * @param LabelRenameServiceInterface $service The rename pass.
 	 * @param LoggerInterface    $logger  Logger.
 	 *
 	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
 	 */
 	public function __construct(
 		IRequest $request,
-		private LabelRenameService $service,
+		private LabelRenameServiceInterface $service,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
