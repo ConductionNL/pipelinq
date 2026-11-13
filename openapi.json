@@ -44,6 +44,10 @@
             "description": "Controller for the Klantbeeld 360 cross-module analytics summary plus the dashboard analytics overview/trends/funnels endpoints."
         },
         {
+            "name": "appointment-eligibility",
+            "description": "The appointment eligibility endpoints."
+        },
+        {
             "name": "article",
             "description": "REST controller for articles."
         },
@@ -100,6 +104,10 @@
             "description": "Watch events, and a manual run."
         },
         {
+            "name": "contact-capture",
+            "description": "The contact capture endpoints."
+        },
+        {
             "name": "contact-moment-leaf",
             "description": "Routes for the contact moments leaf."
         },
@@ -144,6 +152,10 @@
             "description": "Exposes `GET /api/activity/{entityType}/{entityId}`."
         },
         {
+            "name": "event-attendance",
+            "description": "The event attendance endpoints."
+        },
+        {
             "name": "event-reminder",
             "description": "Sends an event's reminder."
         },
@@ -170,6 +182,10 @@
         {
             "name": "forecast-settings",
             "description": "Admin settings controller for the forecast feature."
+        },
+        {
+            "name": "full-export",
+            "description": "The full export endpoints."
         },
         {
             "name": "incoming-call",
@@ -450,6 +466,10 @@
         {
             "name": "ticket-assign",
             "description": "Assigns a ticket to the signed-in user."
+        },
+        {
+            "name": "ticket-phone",
+            "description": "The ticket phone endpoints."
         },
         {
             "name": "ticket-woo-request",
@@ -890,6 +910,67 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/appointment-services/eligible-resources": {
+            "get": {
+                "operationId": "appointment-eligibility-eligible-resource-counts",
+                "summary": "The matching-resource count per service, for the services list",
+                "description": "The matching-resource count per service, for the services list. With a `services` query parameter (comma-separated ids) only those are counted; without it every service is. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "appointment-eligibility"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/appointment-services/{id}/eligible-resources": {
+            "get": {
+                "operationId": "appointment-eligibility-eligible-resources",
+                "summary": "The resources that match one service",
+                "description": "The resources that match one service. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "appointment-eligibility"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The service UUID/slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
                     }
                 }
             }
@@ -2705,6 +2786,54 @@
                 }
             }
         },
+        "/campaign-events/{id}/registrations": {
+            "post": {
+                "operationId": "event-attendance-add",
+                "summary": "Add a person to an event by hand: a place while one is free, else the waiting list",
+                "description": "Add a person to an event by hand: a place while one is free, else the waiting list. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "event-attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The event id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                }
+            }
+        },
         "/campaign-events/{id}/reminder": {
             "post": {
                 "operationId": "event-reminder-send",
@@ -3157,6 +3286,37 @@
                     },
                     "502": {
                         "$ref": "#/components/responses/Problem502"
+                    }
+                }
+            }
+        },
+        "/contact-capture/parse": {
+            "post": {
+                "operationId": "contact-capture-parse",
+                "summary": "Propose fields for the posted `text`",
+                "description": "Propose fields for the posted `text`. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "contact-capture"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     }
                 }
             }
@@ -4570,6 +4730,48 @@
                 }
             }
         },
+        "/event-registrations/{id}/attendance": {
+            "post": {
+                "operationId": "event-attendance-attendance",
+                "summary": "Mark a registration attended or no-show",
+                "description": "Mark a registration attended or no-show. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "event-attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The registration id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
         "/exchange-rates/convert": {
             "get": {
                 "operationId": "exchange-rate-convert",
@@ -4837,6 +5039,37 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/export/full": {
+            "post": {
+                "operationId": "full-export-start",
+                "summary": "Queue the export for the calling administrator",
+                "description": "Queue the export for the calling administrator. A delegated admin setting is not enough: the archive bypasses every per-user read rule, so the caller must be a Nextcloud administrator. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "full-export"
+                ],
+                "responses": {
+                    "202": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 }
             }
@@ -16413,6 +16646,37 @@
                     },
                     "503": {
                         "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
+        "/tickets/by-phone": {
+            "get": {
+                "operationId": "ticket-phone-by-phone",
+                "summary": "The tickets about a number, newest first",
+                "description": "The tickets about a number, newest first. No guard beyond a session: every ticket is read through OpenRegister as the caller, so the answer holds only tickets the caller may read. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "ticket-phone"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     }
                 }
             }
