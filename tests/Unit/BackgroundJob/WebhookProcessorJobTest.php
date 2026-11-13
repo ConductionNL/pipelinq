@@ -309,4 +309,20 @@ class WebhookProcessorJobTest extends TestCase {
 
 		$this->drain();
 	}//end testWithoutOpenRegisterNothingRuns()
+
+	/**
+	 * An empty queue processes nothing and saves nothing.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyQueueProcessesNothing(): void {
+		$service = $this->objectService([]);
+		$this->whatsApp->expects($this->never())->method('handleInboundWebhook');
+		$this->sms->expects($this->never())->method('handleInboundWebhook');
+
+		$this->drain();
+
+		$this->assertCount(1, $service->findConfigs);
+		$this->assertSame([], $service->saved);
+	}//end testAnEmptyQueueProcessesNothing()
 }//end class
