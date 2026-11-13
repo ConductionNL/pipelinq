@@ -60,6 +60,7 @@ use Psr\Container\ContainerInterface;
  * @psalm-suppress UnusedClass
  *
  * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class HealthController extends Controller {
 

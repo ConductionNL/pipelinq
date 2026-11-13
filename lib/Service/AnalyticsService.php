@@ -257,6 +257,7 @@ class AnalyticsService {
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
 	 */
 	public function getOverview(string $period = self::DEFAULT_PERIOD): array {
 		if (in_array($period, self::ALLOWED_OVERVIEW_PERIODS, true) === false) {
@@ -306,6 +307,8 @@ class AnalyticsService {
 	 * @param array<string, array<int, array<string, mixed>>> $rows Rows under leads, requests, cms (contactmoment tickets) and responses (survey).
 	 *
 	 * @return array<string, float|int|null>
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
 	 */
 	private function aggregateOverviewWindow(array $window, array $rows): array {
 		return [

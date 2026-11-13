@@ -56,6 +56,7 @@ use RuntimeException;
  * Receives portaliq's forwarded question actions.
  *
  * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalQuestionController extends Controller {
 	/**

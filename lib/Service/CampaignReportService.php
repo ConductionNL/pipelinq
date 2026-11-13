@@ -293,6 +293,7 @@ class CampaignReportService {
 			'visit' => 0,
 			'submit' => 0,
 			'reply' => 0,
+			'attend' => 0,
 			'reported' => false,
 		];
 	}//end emptyChannel()

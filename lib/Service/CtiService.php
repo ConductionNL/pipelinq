@@ -23,6 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\BackgroundJob\CallTranscriptionJob;
+use OCA\Pipelinq\Service\CallReview\CallTranscriptionService;
+use OCP\BackgroundJob\IJobList;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Cti\AdapterRegistry;
 use OCA\Pipelinq\Service\Cti\CallRecording;
@@ -427,11 +430,42 @@ class CtiService {
 			return false;
 		}
 
-		return $this->saveRecording(
+		$saved = $this->saveRecording(
 			interactionId: $interactionId,
 			recording: new CallRecording(recordingUrl: $recordingUrl, expiresAt: $expiresAt)
 		);
+		if ($saved === true) {
+			$this->queueTranscription(interactionId: $interactionId);
+		}
+
+		return $saved;
 	}//end attachRecording()
+
+	/**
+	 * Queue the transcription of a call whose recording was just attached,
+	 * when an administrator has switched it on (contact-moments-call-review D1).
+	 * Queuing never fails the attach: the recording is already stored.
+	 *
+	 * @param string $interactionId Contactmoment ticket UUID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/contact-moments-call-review/tasks.md#task-1.2
+	 */
+	private function queueTranscription(string $interactionId): void {
+		if ($this->appConfig->getValueString(Application::APP_ID, CallTranscriptionService::ENABLED_KEY, 'false') !== 'true') {
+			return;
+		}
+
+		try {
+			$this->container->get(IJobList::class)->add(CallTranscriptionJob::class, ['ticketId' => $interactionId]);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'CTI attachRecording: the transcription could not be queued',
+				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
+			);
+		}
+	}//end queueTranscription()
 
 	/**
 	 * Write a recording on a contactmoment ticket; a failed write is logged.

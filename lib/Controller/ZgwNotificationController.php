@@ -56,6 +56,7 @@ use Psr\Log\LoggerInterface;
  * Public NRC callback controller.
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class ZgwNotificationController extends Controller {
 	/**

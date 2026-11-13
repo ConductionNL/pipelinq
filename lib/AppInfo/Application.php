@@ -53,6 +53,7 @@ use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
+use OCA\Pipelinq\Listener\ClientMergeReferenceListener;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
@@ -77,6 +78,7 @@ use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
 use OCA\Pipelinq\Listener\QuoteNumberCreatingListener;
 use OCA\Pipelinq\Listener\TicketReferenceCreatingListener;
+use OCA\Pipelinq\Listener\TicketPhoneE164Listener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Listener\PosLinePricingListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
@@ -109,7 +111,7 @@ use Throwable;
 /**
  * Main application class for the Pipelinq client and request management app.
  *
- * @spec exclude Main app bootstrap class; per-change spec coverage lives on the changed methods.
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-004
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
@@ -598,6 +600,16 @@ class Application extends App implements IBootstrap {
 			event: ObjectCreatingEvent::class,
 			listener: TicketReferenceCreatingListener::class
 		);
+		// A ticket carries the number it is about in E.164, whoever wrote it
+		// (contact-moments-phone-lookup D2).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: TicketPhoneE164Listener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: TicketPhoneE164Listener::class
+		);
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
 			listener: QuoteNumberCreatingListener::class
@@ -692,6 +704,11 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
 			listener: ObjectsMergedSyncListener::class
+		);
+		// Before the stamp listener: a reversal reads the moved rows before the stamp is cleared.
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
+			listener: ClientMergeReferenceListener::class
 		);
 		$context->registerEventListener(
 			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,

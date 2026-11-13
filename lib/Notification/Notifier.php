@@ -49,6 +49,8 @@ class Notifier implements INotifier {
 		'lead_lost' => 'assignment',
 		'task_completed' => 'task',
 		'task_expired' => 'task',
+		'followup_event_upcoming' => 'reminder',
+		'followup_task_due' => 'reminder',
 		'lead_stage_changed' => 'change',
 		'request_status_changed' => 'change',
 		'note_added' => 'change',
@@ -56,8 +58,20 @@ class Notifier implements INotifier {
 		'forecast_snapshot_partial_failure' => 'system',
 		'wip_sync_failed' => 'system',
 		'billing_handoff_failed' => 'system',
+		'export_job_switched_off' => 'system',
 		'social_share_requested' => 'social',
 		'social_relink_needed' => 'social',
+		'full_export_ready' => 'export',
+		'full_export_failed' => 'export',
+	];
+
+	/**
+	 * The route path of an object type whose page is not at `#/<type>s/<id>`.
+	 *
+	 * @var array<string, string>
+	 */
+	private const OBJECT_PATHS = [
+		'exportJob' => 'export/jobs',
 	];
 
 	/**
@@ -123,8 +137,16 @@ class Notifier implements INotifier {
 				$this->urlGenerator->imagePath(appName: Application::APP_ID, file: 'app-dark.svg')
 			)
 		);
+		$fileId = (string)($params['fileId'] ?? '');
+		if ($notification->getSubject() === 'full_export_ready' && $fileId !== '') {
+			// The archive itself, opened in Files (data-portability REQ-DPE-002).
+			$notification->setLink($this->urlGenerator->linkToRouteAbsolute('files.viewcontroller.showFile', ['fileid' => $fileId]));
+			return $notification;
+		}
+
 		$baseUrl = $this->urlGenerator->linkToRouteAbsolute('pipelinq.dashboard.page');
-		$objectPath = '#/' . $notification->getObjectType() . 's/' . $notification->getObjectId();
+		$objectType = $notification->getObjectType();
+		$objectPath = '#/' . (self::OBJECT_PATHS[$objectType] ?? $objectType . 's') . '/' . $notification->getObjectId();
 		$notification->setLink($baseUrl . $objectPath);
 
 		return $notification;
@@ -153,9 +175,11 @@ class Notifier implements INotifier {
 		match (self::SUBJECT_GROUPS[$notification->getSubject()] ?? null) {
 			'assignment' => $this->applyAssignmentSubject(notification: $notification, context: $context),
 			'task' => $this->applyTaskSubject(notification: $notification, context: $context),
+			'reminder' => $this->applyReminderSubject(notification: $notification, context: $context),
 			'change' => $this->applyChangeSubject(notification: $notification, context: $context),
 			'system' => $this->applySystemSubject(notification: $notification, context: $context),
 			'social' => $this->applySocialSubject(notification: $notification, context: $context),
+			'export' => $this->applyExportSubject(notification: $notification, context: $context),
 			default => throw new UnknownNotificationException(),
 		};
 	}//end applyNotificationSubject()
@@ -200,6 +224,30 @@ class Notifier implements INotifier {
 		$notification->setParsedSubject($parsed);
 		$notification->setRichSubject(subject: $rich, parameters: $context['richParams']);
 	}//end applyAssignmentSubject()
+
+	/**
+	 * A follow-up reminder: a meeting linked to a lead starts soon, or a follow-up task falls due.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 */
+	private function applyReminderSubject(INotification $notification, array $context): void {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		if ($notification->getSubject() === 'followup_event_upcoming') {
+			$notification->setParsedSubject(
+				$l->t('Upcoming meeting for %1$s: %2$s at %3$s', [$params['lead'] ?? '', $title, $params['start'] ?? ''])
+			);
+			$notification->setRichSubject(subject: $l->t('Upcoming meeting: {title}'), parameters: $context['richParams']);
+			return;
+		}
+
+		$notification->setParsedSubject($l->t('Follow-up due: %1$s (deadline: %2$s)', [$title, $params['deadline'] ?? '']));
+		$notification->setRichSubject(subject: $l->t('Follow-up due: {title}'), parameters: $context['richParams']);
+	}//end applyReminderSubject()
 
 	/**
 	 * A task completed (with its result) or expired (with its deadline).
@@ -255,7 +303,8 @@ class Notifier implements INotifier {
 	}//end applyChangeSubject()
 
 	/**
-	 * A background job reporting a failure: forecast snapshots, WIP sync, billing handoff.
+	 * A background job reporting a failure: forecast snapshots, WIP sync,
+	 * billing handoff, an export job switched off.
 	 *
 	 * @param INotification $notification The notification.
 	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
@@ -279,6 +328,11 @@ class Notifier implements INotifier {
 			return;
 		}
 
+		if ($subject === 'export_job_switched_off') {
+			$this->applyExportSwitchOffSubject(notification: $notification, context: $context);
+			return;
+		}
+
 		$batchId = (string)($params['batchId'] ?? '');
 		$notification->setParsedSubject($l->t('Billing handoff failed for %1$s', [$title]));
 		$notification->setParsedMessage(
@@ -286,6 +340,35 @@ class Notifier implements INotifier {
 		);
 		$notification->setRichSubject($l->t('Billing handoff failed for {title}'), $context['richParams']);
 	}//end applySystemSubject()
+
+	/**
+	 * An export job switched off after repeated failed runs: the job, the
+	 * number of failures and the last error.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-administrators-are-told-once-when-a-job-is-switched-off-req-efs-002
+	 */
+	private function applyExportSwitchOffSubject(INotification $notification, array $context): void {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		$failures = (string)(int)($params['failures'] ?? 0);
+		$notification->setParsedSubject(
+			$l->t('Export job %1$s was switched off after %2$s failed runs in a row', [$title, $failures])
+		);
+		$notification->setRichSubject(
+			$l->t('Export job {title} was switched off after %1$s failed runs in a row', [$failures]),
+			$context['richParams']
+		);
+		$notification->setParsedMessage(
+			$l->t(
+				'Last error: %1$s. Fix the destination, then switch the job on again on the BI export page.',
+				[(string)($params['error'] ?? '')]
+			)
+		);
+	}//end applyExportSwitchOffSubject()
 
 	/**
 	 * A social post to share by hand, or an account to reconnect.
@@ -319,4 +402,26 @@ class Notifier implements INotifier {
 			)
 		);
 	}//end applySocialSubject()
+	/**
+	 * The full data export: the archive is ready, or it could not be built.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`) and the parameters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
+	 */
+	private function applyExportSubject(INotification $notification, array $context): void {
+		$l = $context['l'];
+		$name = (string)($context['params']['name'] ?? '');
+		if ($notification->getSubject() === 'full_export_ready') {
+			$notification->setParsedSubject($l->t('Your data export is ready: %1$s', [$name]));
+			$notification->setParsedMessage($l->t('The archive with all Pipelinq data is in your Files.'));
+			return;
+		}
+
+		$notification->setParsedSubject($l->t('Your data export could not be built'));
+		$notification->setParsedMessage($l->t('Nothing was stored. Try again; if it fails again, ask your administrator to check the log.'));
+	}//end applyExportSubject()
 }//end class

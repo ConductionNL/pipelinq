@@ -24,6 +24,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for the WCAG contrast calculator.
+ *
+ * @covers \OCA\Pipelinq\Util\ContrastRatioCalculator
  */
 class ContrastRatioCalculatorTest extends TestCase {
 	/**

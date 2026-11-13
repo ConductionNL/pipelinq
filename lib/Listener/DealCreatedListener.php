@@ -28,6 +28,7 @@ use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Service\ForecastDealService;
+use OCA\Pipelinq\Service\LeadRotationService;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -86,6 +87,7 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param LeadRotationService|null $rotation Assigns a new lead in turn when switched on.
 	 */
 	public function __construct(
 		private SchemaMapService $schemaMapService,
@@ -94,6 +96,7 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
 		private LoggerInterface $logger,
+		private ?LeadRotationService $rotation=null,
 	) {
 	}//end __construct()
 
@@ -165,12 +168,35 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 		}
 
 		$mutated = $this->dealService->applyDefaultCategory($data);
+		$rotated = $this->rotate(data: ($mutated ?? $data));
+		if ($rotated !== null) {
+			$mutated = $rotated;
+		}
+
 		if ($mutated === null) {
 			return;
 		}
 
 		$this->persist(uuid: $uuid, data: $mutated);
 	}//end runDeferredWork()
+
+	/**
+	 * Assign a new lead without an assignee in turn, when an administrator
+	 * switched automatic lead assignment on.
+	 *
+	 * @param array<string, mixed> $data The deal's current data.
+	 *
+	 * @return array<string, mixed>|null The assigned deal, or null when nothing changes.
+	 *
+	 * @spec openspec/changes/pipeline-lead-rotation/specs/lead-rotation/spec.md#requirement-new-unassigned-leads-are-assigned-in-turn-req-lrt-001
+	 */
+	private function rotate(array $data): ?array {
+		if ($this->rotation === null || $this->rotation->isEnabled() === false) {
+			return null;
+		}
+
+		return $this->rotation->assign(lead: $data);
+	}//end rotate()
 
 	/**
 	 * Whether the entity belongs to the lead (deal) schema.

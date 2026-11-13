@@ -51,6 +51,8 @@ return [
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
         ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],
+        // Paste a signature, get proposed contact fields; reads and stores nothing (clients-contact-capture REQ-CCC-001).
+        ['name' => 'contactCapture#parse', 'url' => '/api/contact-capture/parse', 'verb' => 'POST'],
         // A mail client's side pane (contact-moments-mail-add-in): sender lookup,
         // add as contact, log this mail. Called with an app password.
         ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
@@ -132,6 +134,11 @@ return [
         // Letters from a filinq template (work-letter-from-filinq-template).
         // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
         ['name' => 'eventReminder#send', 'url' => '/api/campaign-events/{id}/reminder', 'verb' => 'POST'],
+        // Registrations for a campaign event: add by hand, record who came, and the public cancel page (marketing-events).
+        ['name' => 'eventAttendance#add', 'url' => '/api/campaign-events/{id}/registrations', 'verb' => 'POST'],
+        ['name' => 'eventAttendance#attendance', 'url' => '/api/event-registrations/{id}/attendance', 'verb' => 'POST'],
+        ['name' => 'eventCancel#show', 'url' => '/events/cancel', 'verb' => 'GET'],
+        ['name' => 'eventCancel#cancel', 'url' => '/events/cancel', 'verb' => 'POST'],
         ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
         ['name' => 'record_document#template', 'url' => '/api/records/{schema}/document-template', 'verb' => 'GET'],
         ['name' => 'record_document#document', 'url' => '/api/records/{schema}/{id}/document', 'verb' => 'GET'],
@@ -472,6 +479,8 @@ return [
         // history-filter and retry actions the generic API cannot express (REQ-BIE-001/002/003/011).
         // Static collection + action routes are declared before the {id} member routes so the
         // router never mistakes "test-run" or "destinations" for an {id} (ADR-016).
+        // Export all data in one archive (data-portability-full-export REQ-DPE-002), administrators only.
+        ['name' => 'fullExport#start',          'url' => '/api/export/full',                  'verb' => 'POST'],
         ['name' => 'exportJob#listDestinations',  'url' => '/api/export/destinations',          'verb' => 'GET'],
         ['name' => 'exportJob#createDestination', 'url' => '/api/export/destinations',          'verb' => 'POST'],
         ['name' => 'exportJob#updateDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'PUT'],
@@ -500,6 +509,11 @@ return [
         ['name' => 'bookingAdmin#markNoShow',     'url' => '/api/bookings/{id}/no-show',        'verb' => 'POST'],
         ['name' => 'bookingAdmin#sendReminder',   'url' => '/api/bookings/{id}/send-reminder',  'verb' => 'POST'],
         ['name' => 'bookingAdmin#confirmDeposit', 'url' => '/api/bookings/{id}/confirm-deposit', 'verb' => 'POST'],
+
+        // Which active, bookable resources match a service (REQ-SRG-002): one
+        // service, and the count per service for the services list.
+        ['name' => 'appointmentEligibility#eligibleResourceCounts', 'url' => '/api/appointment-services/eligible-resources', 'verb' => 'GET'],
+        ['name' => 'appointmentEligibility#eligibleResources',      'url' => '/api/appointment-services/{id}/eligible-resources', 'verb' => 'GET'],
 
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
@@ -607,6 +621,8 @@ return [
         ['name' => 'ticketWooRequest#availability',   'url' => '/api/tickets/{id}/woo-request/availability', 'verb' => 'GET'],
         ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
         // "Assign to me" on TicketDetail and the Queue (detail-pages-read-at-a-glance).
+        // The phone search over tickets (contact-moments-phone-lookup).
+        ['name' => 'ticketPhone#byPhone',             'url' => '/api/tickets/by-phone',                     'verb' => 'GET'],
         ['name' => 'ticketAssign#assignOldest',       'url' => '/api/tickets/assign-oldest',                 'verb' => 'POST'],
         ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
         // What the resident reads of a ticket, for the preview on TicketDetail (portal-resident-view-preview).

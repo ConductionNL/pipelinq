@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Access\RegisterAccessSync;
+use OCA\Pipelinq\Service\Export\ExportJobService;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -260,11 +261,17 @@ class SettingsService {
 		// Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
 		// spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.
 		'lead_stale_threshold_days' => '14',
+		// Assign new leads without an assignee in turn (pipeline-lead-rotation,
+		// LeadRotationService). Default off: a handler assigns from the suggestion.
+		'lead_rotation_enabled' => 'false',
 		// BI export + data-warehouse sink — admin settings (bi-export-and-data-warehouse-sink#14.1).
 		'export.retention_days' => '365',
 		'export.default_compression' => 'none',
 		'export.failure_notification_email' => '',
 		'export.at_risk_warning_hours' => '24',
+		// Failed export runs in a row that switch a job off, 1 to 10
+		// (exports-switch-off-after-repeated-failure, ExportJobService::failureThreshold).
+		'export_failure_threshold' => '3',
 		// POS end-of-day Z-report generation + alerting (pos-end-of-day-bookkeeping-post).
 		// The journal raise itself goes to the detected shillinq app
 		// (pipelinq-bookkeeping-to-shillinq); these keys only tune the operational
@@ -455,6 +462,7 @@ class SettingsService {
 	 */
 	public function updateSettings(array $data): array {
 		$this->refuseAMatomoToken(data: $data);
+		$this->refuseAnExportThresholdOutOfRange(data: $data);
 
 		foreach (self::CONFIG_KEYS as $key) {
 			if (isset($data[$key]) === true) {
@@ -517,6 +525,31 @@ class SettingsService {
 			. 'so Pipelinq never holds the secret.'
 		);
 	}//end refuseAMatomoToken()
+
+	/**
+	 * Refuse an export failure threshold that is not a whole number from 1 to 10,
+	 * so the stored threshold stays as it was.
+	 *
+	 * @param array $data The settings data being written.
+	 *
+	 * @return void
+	 *
+	 * @throws UnexpectedValueException When the threshold is out of range.
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-administrator-sets-the-threshold-req-efs-004
+	 */
+	private function refuseAnExportThresholdOutOfRange(array $data): void {
+		if (isset($data[ExportJobService::FAILURE_THRESHOLD_KEY]) === false) {
+			return;
+		}
+
+		$value = trim((string)$data[ExportJobService::FAILURE_THRESHOLD_KEY]);
+		if (ExportJobService::isValidThreshold(value: $value) === true) {
+			return;
+		}
+
+		throw new UnexpectedValueException('Enter a number from 1 to 10');
+	}//end refuseAnExportThresholdOutOfRange()
 
 	/**
 	 * Load settings by importing the register JSON via ConfigurationService.

@@ -89,7 +89,7 @@ describe('ProspectWidget', () => {
 	async function widget(expanded = true) {
 		const w = mount(ProspectWidget, { global: { mocks } })
 		if (expanded) {
-			await w.find('.prospect-widget__header').trigger('click')
+			await w.find('.prospect-widget__expand-toggle').trigger('click')
 		}
 		return w
 	}
@@ -108,8 +108,13 @@ describe('ProspectWidget', () => {
 
 		expect(w.find('.prospect-widget__preview').text()).toBe('Top match: Bakkerij Jansen')
 		expect(w.find('.prospect-count').text()).toBe('2 found')
-		await w.find('.prospect-widget__header').trigger('keydown', { key: 'Enter' })
+		// The expand control is a native <button>, so a keyboard Enter/Space is
+		// delivered as a click; it carries aria-expanded for assistive tech.
+		const toggle = w.find('.prospect-widget__expand-toggle')
+		expect(toggle.attributes('aria-expanded')).toBe('false')
+		await toggle.trigger('click')
 		expect(w.vm.expanded).toBe(true)
+		expect(w.find('.prospect-widget__expand-toggle').attributes('aria-expanded')).toBe('true')
 		expect(w.find('.prospect-widget__preview').exists()).toBe(false)
 	})
 
