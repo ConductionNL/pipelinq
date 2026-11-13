@@ -6678,6 +6678,12 @@
 						}
 					},
 					{
+						"key": "publishFrom",
+						"label": "Published from",
+						"formatter": "date",
+						"_note": "product-service-catalogue-public task 3.2 (PqProducten): the day a service enters the public catalogue; empty for goods and unpublished services."
+					},
+					{
 						"key": "onDeals",
 						"label": "On deals",
 						"sortable": false,
@@ -6789,6 +6795,7 @@
 										"product-tariffs",
 										"product-variants",
 										"product-publication",
+										"product-catalogue",
 										"product-lines",
 										"product-files"
 									],
@@ -6907,6 +6914,41 @@
 									"formatter": "languageCodes"
 								},
 								"audience": {
+									"formatter": "labelList"
+								}
+							},
+							"hideEmpty": false
+						}
+					},
+					{
+						"id": "product-catalogue",
+						"type": "data",
+						"title": "Catalogue",
+						"icon": "BookOpenPageVariant",
+						"_note": "product-service-catalogue-public task 3.1 (PqProduct): what the public catalogue shows of a service, only for a product of type service. A service is public from publishFrom up to the day before publishUntil while it is active; the rules are on product in 99-zzz-register-access.json. The tariff table and the audience stay in the cards above, as for every product.",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "service"
+						},
+						"content": {
+							"columns": 3,
+							"include": [
+								"summary",
+								"uplReference",
+								"publishFrom",
+								"publishUntil",
+								"applyUrl",
+								"channels"
+							],
+							"overrides": {
+								"publishFrom": {
+									"formatter": "longDate"
+								},
+								"publishUntil": {
+									"formatter": "longDate"
+								},
+								"channels": {
 									"formatter": "labelList"
 								}
 							},
