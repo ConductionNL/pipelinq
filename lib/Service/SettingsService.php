@@ -261,6 +261,9 @@ class SettingsService {
 		// Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
 		// spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.
 		'lead_stale_threshold_days' => '14',
+		// Assign new leads without an assignee in turn (pipeline-lead-rotation,
+		// LeadRotationService). Default off: a handler assigns from the suggestion.
+		'lead_rotation_enabled' => 'false',
 		// BI export + data-warehouse sink — admin settings (bi-export-and-data-warehouse-sink#14.1).
 		'export.retention_days' => '365',
 		'export.default_compression' => 'none',
