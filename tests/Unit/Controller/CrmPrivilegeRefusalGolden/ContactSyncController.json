@@ -189,7 +189,7 @@
                 ]
             },
             {
-                "ContactSyncSettingsService::writesBack": [
+                "ContactSyncSettingsServiceInterface::writesBack": [
                     "crm-user"
                 ]
             }

@@ -29,7 +29,7 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyEngineServiceInterface;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -51,13 +51,13 @@ class PosTransactionCompletedListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param LoyaltyEngineServiceInterface $loyaltyEngineService The loyalty engine.
-	 * @param SchemaMapService $schemaMapService The schema map service.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private LoyaltyEngineServiceInterface $loyaltyEngineService,
-		private SchemaMapService $schemaMapService,
+		private SchemaMapServiceInterface $schemaMapService,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 	) {

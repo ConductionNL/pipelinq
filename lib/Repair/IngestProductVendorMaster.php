@@ -48,9 +48,9 @@ namespace OCA\Pipelinq\Repair;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCA\Pipelinq\Repair\Support\SourceRecordLink;
 use OCA\Pipelinq\Repair\Support\SupplierTarget;
-use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -134,14 +134,14 @@ class IngestProductVendorMaster implements IRepairStep {
 	 *
 	 * @param IAppManager $appManager The app manager.
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param ContactVcardService $contactVcardService The vCard sync service.
+	 * @param ContactVcardServiceInterface $contactVcardService The vCard sync service.
 	 * @param ContainerInterface $container The DI container (ObjectService lookup).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $appConfig,
-		private readonly ContactVcardService $contactVcardService,
+		private readonly ContactVcardServiceInterface $contactVcardService,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 	) {

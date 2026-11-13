@@ -36,7 +36,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\Marketing\SubmittedLeadIntake;
+use OCA\Pipelinq\Kernel\Contracts\SubmittedLeadIntakeInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -56,14 +56,14 @@ class SubmittedLeadListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param IAppConfig          $appConfig App config, source of the lead schema id.
-	 * @param SubmittedLeadIntake $intake    Matches the people and logs the touchpoint.
+	 * @param SubmittedLeadIntakeInterface $intake    Matches the people and logs the touchpoint.
 	 * @param LoggerInterface     $logger    PSR logger.
 	 *
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly SubmittedLeadIntake $intake,
+		private readonly SubmittedLeadIntakeInterface $intake,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

@@ -40,6 +40,7 @@ namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\QuestionAnsweredNoticeInterface;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
@@ -51,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
  */
-class QuestionAnsweredNotice {
+class QuestionAnsweredNotice implements QuestionAnsweredNoticeInterface {
 
 	/**
 	 * The language of the message.

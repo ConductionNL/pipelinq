@@ -45,8 +45,8 @@ use OCA\Pipelinq\Kernel\Contracts\CampaignServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
+use OCA\Pipelinq\Kernel\Contracts\TouchpointServiceInterface;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
-use OCA\Pipelinq\Service\TouchpointService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -94,7 +94,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 *
 	 * @param ListObjectStoreInterface $store Register-scoped object access.
 	 * @param CampaignServiceInterface $campaigns Resolves the campaign the form belongs to.
-	 * @param TouchpointService $touchpoints The touchpoint log and its nonce guard.
+	 * @param TouchpointServiceInterface $touchpoints The touchpoint log and its nonce guard.
 	 * @param LoggerInterface $logger Logger.
 	 * @param EventRegistrationServiceInterface|null $eventRegistrations Registers the sign-up for the campaign's event.
 	 * @param EventEmailServiceInterface|null $eventMails Confirms the registration by mail.
@@ -104,7 +104,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	public function __construct(
 		private ListObjectStoreInterface $store,
 		private CampaignServiceInterface $campaigns,
-		private TouchpointService $touchpoints,
+		private TouchpointServiceInterface $touchpoints,
 		private LoggerInterface $logger,
 		private ?EventRegistrationServiceInterface $eventRegistrations = null,
 		private ?EventEmailServiceInterface $eventMails = null,

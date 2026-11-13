@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\OrphanedLeadRepairServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
  */
-class OrphanedLeadRepairService {
+class OrphanedLeadRepairService implements OrphanedLeadRepairServiceInterface {
 	/**
 	 * Upper bound on the objects read per schema in one run.
 	 */

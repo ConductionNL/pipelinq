@@ -28,8 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\Contracts\PortalDelegationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
 use OCA\Pipelinq\Service\Portal\PortalException;
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
@@ -50,13 +50,13 @@ class PortalDelegationController extends PortalApiController {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param PortalRequestGuardInterface $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
 	 * @param PortalDelegationServiceInterface $delegations The delegation service.
 	 */
 	public function __construct(
 		IRequest $request,
-		PortalRequestGuard $guard,
+		PortalRequestGuardInterface $guard,
 		LoggerInterface $logger,
 		private PortalDelegationServiceInterface $delegations,
 	) {

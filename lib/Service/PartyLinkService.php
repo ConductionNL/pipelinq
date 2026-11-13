@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyLinkServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -40,7 +41,7 @@ use Throwable;
  *
  * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-kind-declared-single-shall-refuse-a-second-holder-on-one-record-req-pkr-005
  */
-class PartyLinkService {
+class PartyLinkService implements PartyLinkServiceInterface {
 	/**
 	 * Constructor.
 	 *

@@ -29,10 +29,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
@@ -83,14 +83,14 @@ class MessagingController extends Controller {
 	 *
 	 * @param IRequest $request HTTP request.
 	 * @param MessagingServiceInterface $messagingService Send-surface orchestration.
-	 * @param ChannelProviderRepository $providerRepo Provider read-side.
+	 * @param ChannelProviderRepositoryInterface $providerRepo Provider read-side.
 	 * @param ConsentServiceInterface $consentService Consent records.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
 		private MessagingServiceInterface $messagingService,
-		private ChannelProviderRepository $providerRepo,
+		private ChannelProviderRepositoryInterface $providerRepo,
 		private ConsentServiceInterface $consentService,
 		private CrmPrivilegeCheck $privilege,
 	) {

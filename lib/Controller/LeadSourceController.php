@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\SystemTagService;
+use OCA\Pipelinq\Kernel\Contracts\SystemTagServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -45,13 +45,13 @@ class LeadSourceController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SystemTagService $systemTagService The system tag service.
+	 * @param SystemTagServiceInterface $systemTagService The system tag service.
 	 * @param IUserSession $userSession The user session.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private SystemTagService $systemTagService,
+		private SystemTagServiceInterface $systemTagService,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 	) {

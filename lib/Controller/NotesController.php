@@ -24,11 +24,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\NoteEventServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\NotesServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\NoteEventService;
-use OCA\Pipelinq\Service\NotesService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -85,8 +85,8 @@ class NotesController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param NotesService $notesService The notes service.
-	 * @param NoteEventService $noteEventService The note event service.
+	 * @param NotesServiceInterface $notesService The notes service.
+	 * @param NoteEventServiceInterface $noteEventService The note event service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
@@ -101,8 +101,8 @@ class NotesController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private NotesService $notesService,
-		private NoteEventService $noteEventService,
+		private NotesServiceInterface $notesService,
+		private NoteEventServiceInterface $noteEventService,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
@@ -245,7 +245,7 @@ class NotesController extends Controller {
 			return $refusal;
 		}
 
-		if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
+		if (in_array($objectType, NotesServiceInterface::VALID_TYPES, true) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
 		}
 
@@ -285,7 +285,7 @@ class NotesController extends Controller {
 			return $refusal;
 		}
 
-		if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
+		if (in_array($objectType, NotesServiceInterface::VALID_TYPES, true) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
 		}
 
@@ -347,7 +347,7 @@ class NotesController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Admin privileges required')], Http::STATUS_FORBIDDEN);
 		}
 
-		if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
+		if (in_array($objectType, NotesServiceInterface::VALID_TYPES, true) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
 		}
 

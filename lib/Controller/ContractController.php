@@ -33,11 +33,11 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContractFiguresServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContractServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RecurringRevenueServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ContractFiguresService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -65,7 +65,7 @@ class ContractController extends Controller {
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param ContainerInterface $container The DI container.
 	 * @param LoggerInterface $logger PSR logger.
-	 * @param ContractFiguresService $figuresService Reads a contract's figures.
+	 * @param ContractFiguresServiceInterface $figuresService Reads a contract's figures.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -75,7 +75,7 @@ class ContractController extends Controller {
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
-		private ContractFiguresService $figuresService,
+		private ContractFiguresServiceInterface $figuresService,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

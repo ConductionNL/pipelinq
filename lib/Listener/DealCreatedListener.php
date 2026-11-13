@@ -29,7 +29,7 @@ use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\LeadRotationServiceInterface;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -81,7 +81,7 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService $schemaMapService The schema map service.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
 	 * @param ForecastDealServiceInterface $dealService The forecast deal lifecycle service.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
@@ -90,7 +90,7 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @param LeadRotationServiceInterface|null $rotation Assigns a new lead in turn when switched on.
 	 */
 	public function __construct(
-		private SchemaMapService $schemaMapService,
+		private SchemaMapServiceInterface $schemaMapService,
 		private ForecastDealServiceInterface $dealService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,

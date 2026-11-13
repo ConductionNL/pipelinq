@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\ConsentMigrationService;
+use OCA\Pipelinq\Kernel\Contracts\ConsentMigrationServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -43,10 +43,10 @@ class ConsentMigrateCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param ConsentMigrationService $migration The migration.
+	 * @param ConsentMigrationServiceInterface $migration The migration.
 	 */
 	public function __construct(
-		private readonly ConsentMigrationService $migration,
+		private readonly ConsentMigrationServiceInterface $migration,
 	) {
 		parent::__construct();
 	}//end __construct()

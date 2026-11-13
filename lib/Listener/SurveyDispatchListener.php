@@ -33,8 +33,8 @@ use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
-use OCA\Pipelinq\Service\SchemaMapService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -87,7 +87,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	 * Constructor.
 	 *
 	 * @param SurveyDispatchServiceInterface $dispatchService Matches rules and writes invitations.
-	 * @param SchemaMapService $schemaMapService Schema id to entity type.
+	 * @param SchemaMapServiceInterface $schemaMapService Schema id to entity type.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
 	 * @param IAppConfig $appConfig App config, holding the register and contact schema.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
@@ -95,7 +95,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	 */
 	public function __construct(
 		private readonly SurveyDispatchServiceInterface $dispatchService,
-		private readonly SchemaMapService $schemaMapService,
+		private readonly SchemaMapServiceInterface $schemaMapService,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly IAppConfig $appConfig,
 		private readonly ListenerDeferralService $deferral,

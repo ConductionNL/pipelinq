@@ -33,6 +33,13 @@ use ReflectionNamedType;
  */
 class Autowire {
 	/**
+	 * Contract => implementation, read once from Service\ContractBindings.
+	 *
+	 * @var array<string, string>|null
+	 */
+	private static ?array $bindings = null;
+
+	/**
 	 * Build a class from leaf doubles.
 	 *
 	 * @param string               $class   The class to build.
@@ -59,6 +66,8 @@ class Autowire {
 				$arguments[] = $doubles[self::implementationKey(typeName: $typeName, doubles: $doubles)];
 			} elseif (str_starts_with($typeName, 'OCA\\Pipelinq\\') === true && (new ReflectionClass($typeName))->isInstantiable() === true) {
 				$arguments[] = self::build(class: $typeName, doubles: $doubles);
+			} elseif (self::boundImplementation(contract: $typeName) !== null) {
+				$arguments[] = self::build(class: self::boundImplementation(contract: $typeName), doubles: $doubles);
 			} elseif ($param->isDefaultValueAvailable() === true) {
 				$arguments[] = $param->getDefaultValue();
 			} else {
@@ -78,6 +87,34 @@ class Autowire {
 	 *
 	 * @return string|null The matching key, or null when none implements it.
 	 */
+	/**
+	 * The class Service\ContractBindings binds a Kernel contract to, so a
+	 * contract-typed collaborator without a double is built the way the
+	 * container would build it.
+	 *
+	 * @param string $contract The contract (interface) name.
+	 *
+	 * @return string|null The implementation, or null when the contract is not bound.
+	 */
+	private static function boundImplementation(string $contract): ?string {
+		if (self::$bindings === null) {
+			self::$bindings = [];
+			$source = (string)file_get_contents(dirname(__DIR__, 3).'/lib/Service/ContractBindings.php');
+			$uses = [];
+			preg_match_all('/^use ([\\w\\\\]+);/m', $source, $useMatches);
+			foreach ($useMatches[1] as $fqcn) {
+				$uses[substr((string)strrchr('\\'.$fqcn, '\\'), 1)] = $fqcn;
+			}
+
+			preg_match_all('/registerServiceAlias\((\w+)::class, (\w+)::class\)/', $source, $pairs, PREG_SET_ORDER);
+			foreach ($pairs as $pair) {
+				self::$bindings[$uses[$pair[1]] ?? ''] = $uses[$pair[2]] ?? 'OCA\\Pipelinq\\Service\\'.$pair[2];
+			}
+		}
+
+		return self::$bindings[$contract] ?? null;
+	}//end boundImplementation()
+
 	private static function implementationKey(string $typeName, array $doubles): ?string {
 		if ($typeName === '' || interface_exists($typeName) === false) {
 			return null;

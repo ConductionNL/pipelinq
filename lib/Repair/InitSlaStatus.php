@@ -33,8 +33,8 @@ namespace OCA\Pipelinq\Repair;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SlaSweepSourceInterface;
 use OCA\Pipelinq\Service\Sla\SlaSweepRun;
-use OCA\Pipelinq\Service\Sla\SlaSweepSource;
 use OCA\Pipelinq\Service\Sla\SlaSweepSurface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -61,13 +61,13 @@ class InitSlaStatus implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param SlaEngineServiceInterface $engine SLA engine.
-	 * @param SlaSweepSource $source The register and the SLA-tracked surfaces.
+	 * @param SlaSweepSourceInterface $source The register and the SLA-tracked surfaces.
 	 * @param ContainerInterface $container DI container.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private SlaEngineServiceInterface $engine,
-		private SlaSweepSource $source,
+		private SlaSweepSourceInterface $source,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {

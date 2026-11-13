@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\TicketPhoneNumber;
+use OCA\Pipelinq\Kernel\Contracts\TicketPhoneNumberInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -55,12 +55,12 @@ class TicketPhoneE164Listener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param IAppConfig        $appConfig   App config, source of the ticket schema id.
-	 * @param TicketPhoneNumber $phoneNumber Reads and normalises the ticket's number.
+	 * @param TicketPhoneNumberInterface $phoneNumber Reads and normalises the ticket's number.
 	 * @param LoggerInterface   $logger      PSR logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly TicketPhoneNumber $phoneNumber,
+		private readonly TicketPhoneNumberInterface $phoneNumber,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -100,11 +100,11 @@ class TicketPhoneE164Listener implements IEventListener {
 			return;
 		}
 
-		if ($e164 === null || ($ticket[TicketPhoneNumber::FIELD] ?? null) === $e164) {
+		if ($e164 === null || ($ticket[TicketPhoneNumberInterface::FIELD] ?? null) === $e164) {
 			return;
 		}
 
 		// Merge, never replace: another listener may already have modified the data.
-		$event->setModifiedData(array_merge($event->getModifiedData(), [TicketPhoneNumber::FIELD => $e164]));
+		$event->setModifiedData(array_merge($event->getModifiedData(), [TicketPhoneNumberInterface::FIELD => $e164]));
 	}//end handle()
 }//end class

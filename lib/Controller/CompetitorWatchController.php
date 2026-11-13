@@ -33,8 +33,8 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\Contracts\CompetitorWatchServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ConnectorEgressInterface;
+use OCA\Pipelinq\Kernel\Contracts\WatchEventStoreInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Competitor\WatchEventStore;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -61,7 +61,7 @@ class CompetitorWatchController extends Controller {
 	 * @param string $appName App name.
 	 * @param IRequest $request Request.
 	 * @param CompetitorWatchServiceInterface $watches The watch service.
-	 * @param WatchEventStore $events The event store.
+	 * @param WatchEventStoreInterface $events The event store.
 	 * @param ConnectorEgressInterface $egress Whether an egress source is configured at all.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
@@ -71,7 +71,7 @@ class CompetitorWatchController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly CompetitorWatchServiceInterface $watches,
-		private readonly WatchEventStore $events,
+		private readonly WatchEventStoreInterface $events,
 		private readonly ConnectorEgressInterface $egress,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {

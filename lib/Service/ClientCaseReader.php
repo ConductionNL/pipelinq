@@ -35,6 +35,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/changes/client-page-as-the-relation-boards/specs/client-detail/spec.md#requirement-the-client-page-lists-the-clients-cases
  */
-class ClientCaseReader {
+class ClientCaseReader implements ClientCaseReaderInterface {
 	/**
 	 * Dossiq's case leaf, resolved by name: it exists exactly when dossiq is installed.
 	 *

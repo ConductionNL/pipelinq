@@ -28,7 +28,7 @@ use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -80,7 +80,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService $schemaMapService The schema map service.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
 	 * @param ForecastDealServiceInterface $dealService The forecast deal lifecycle service.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
@@ -88,7 +88,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private SchemaMapService $schemaMapService,
+		private SchemaMapServiceInterface $schemaMapService,
 		private ForecastDealServiceInterface $dealService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,

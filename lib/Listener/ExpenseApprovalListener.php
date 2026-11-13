@@ -29,9 +29,9 @@ use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Event\ExpenseApprovedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\ApSyncNotifier;
-use OCA\Pipelinq\Service\SchemaMapService;
-use OCA\Pipelinq\Service\ShillinqApService;
+use OCA\Pipelinq\Kernel\Contracts\ApSyncNotifierInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ShillinqApServiceInterface;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -99,9 +99,9 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService $schemaMapService The schema map service.
-	 * @param ShillinqApService $apService The Shillinq AP service.
-	 * @param ApSyncNotifier $notifier The admin failure notifier.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
+	 * @param ShillinqApServiceInterface $apService The Shillinq AP service.
+	 * @param ApSyncNotifierInterface $notifier The admin failure notifier.
 	 * @param IEventDispatcher $eventDispatcher The event dispatcher (for ExpenseApprovedEvent fan-out).
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
@@ -109,9 +109,9 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private SchemaMapService $schemaMapService,
-		private ShillinqApService $apService,
-		private ApSyncNotifier $notifier,
+		private SchemaMapServiceInterface $schemaMapService,
+		private ShillinqApServiceInterface $apService,
+		private ApSyncNotifierInterface $notifier,
 		private IEventDispatcher $eventDispatcher,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,

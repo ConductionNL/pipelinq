@@ -31,9 +31,9 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
-use OCA\Pipelinq\Service\SchemaMapService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -95,7 +95,7 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 * Constructor.
 	 *
 	 * @param SlaEngineServiceInterface $engine SLA engine.
-	 * @param SchemaMapService $schemaMapService Schema → entity-type map.
+	 * @param SchemaMapServiceInterface $schemaMapService Schema → entity-type map.
 	 * @param ContainerInterface $container DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig App config.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
@@ -103,7 +103,7 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 */
 	public function __construct(
 		private SlaEngineServiceInterface $engine,
-		private SchemaMapService $schemaMapService,
+		private SchemaMapServiceInterface $schemaMapService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,

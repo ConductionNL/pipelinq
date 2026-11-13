@@ -49,7 +49,7 @@
                 "CompetitorWatchServiceInterface::watches": []
             },
             {
-                "WatchEventStore::all": []
+                "WatchEventStoreInterface::all": []
             }
         ]
     },

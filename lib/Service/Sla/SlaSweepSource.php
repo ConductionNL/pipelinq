@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Sla;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SlaSweepSourceInterface;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -43,7 +44,7 @@ use Throwable;
  *
  * @spec openspec/specs/sla-engine-and-escalation/spec.md
  */
-class SlaSweepSource {
+class SlaSweepSource implements SlaSweepSourceInterface {
 	/**
 	 * Ticket subtypes that carry SLA tracking, mapped to the tracked-object
 	 * "type" label the SLA engine escalates on.

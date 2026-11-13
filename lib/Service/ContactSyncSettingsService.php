@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactSyncSettingsServiceInterface;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
@@ -33,7 +34,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
-class ContactSyncSettingsService {
+class ContactSyncSettingsService implements ContactSyncSettingsServiceInterface {
 
 	/**
 	 * The user setting that turns write-back on or off.

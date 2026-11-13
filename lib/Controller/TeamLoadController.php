@@ -26,8 +26,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TeamLoadServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\TeamLoadService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -47,13 +47,13 @@ class TeamLoadController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                $request      The request.
-	 * @param TeamLoadService         $teamLoad     The team's load.
+	 * @param TeamLoadServiceInterface         $teamLoad     The team's load.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface         $logger       The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly TeamLoadService $teamLoad,
+		private readonly TeamLoadServiceInterface $teamLoad,
 		private readonly CrmPrivilegeCheck $privilege,
 		private readonly LoggerInterface $logger,
 	) {

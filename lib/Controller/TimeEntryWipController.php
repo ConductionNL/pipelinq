@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\ShillinqWipService;
+use OCA\Pipelinq\Kernel\Contracts\ShillinqWipServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
@@ -50,14 +50,14 @@ class TimeEntryWipController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ShillinqWipService $wipService The Shillinq WIP service.
+	 * @param ShillinqWipServiceInterface $wipService The Shillinq WIP service.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ShillinqWipService $wipService,
+		private ShillinqWipServiceInterface $wipService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,

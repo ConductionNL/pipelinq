@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service\Lead;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LeadRelatedSummaryInterface;
 use OCP\IAppConfig;
 use OCP\IL10N;
 
@@ -38,7 +39,7 @@ use OCP\IL10N;
  *
  * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
  */
-class LeadRelatedSummary {
+class LeadRelatedSummary implements LeadRelatedSummaryInterface {
 
 	/**
 	 * How many rows a summary reads at most.
