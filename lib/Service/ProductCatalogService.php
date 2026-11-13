@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTimeImmutable;
+
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -208,18 +210,45 @@ class ProductCatalogService {
 	 * The returned figure is rounded to cents and never derived from
 	 * client-supplied price data.
 	 *
-	 * @param array<string, mixed> $product The product object.
-	 * @param float $quantity The ordered quantity (clamped to >= 0).
-	 * @param string|null $variantSku Optional variant SKU.
+	 * With a client, a price list goes first (products-price-lists D3): the
+	 * client's own list, else the highest-priority active list for its segment,
+	 * else for its country, among lists in the currency and valid today. The
+	 * answer then also carries priceListId and priceListTitle, and source is
+	 * price-list when a list priced the line. Without a client the answer is
+	 * the product's own price, as before.
+	 *
+	 * @param array<string, mixed>      $product    The product object.
+	 * @param float                     $quantity   The ordered quantity (clamped to >= 0).
+	 * @param string|null               $variantSku Optional variant SKU.
+	 * @param array<string, mixed>|null $client     The client the line is for, read with the caller's rights.
+	 * @param string|null               $currency   The quote's currency; EUR when empty.
 	 *
 	 * @return array<string, mixed> The resolution: unitPrice, source
-	 *                              (base|tier|variant), tierLabel, btwClass,
-	 *                              taxRate.
+	 *                              (base|tier|variant|price-list), tierLabel,
+	 *                              btwClass, taxRate; with a client also
+	 *                              priceListId and priceListTitle.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
 	 */
-	public function resolveEffectivePrice(array $product, float $quantity, ?string $variantSku = null): array {
+	public function resolveEffectivePrice(
+		array $product,
+		float $quantity,
+		?string $variantSku = null,
+		?array $client = null,
+		?string $currency = null
+	): array {
 		$quantity = max(0.0, $quantity);
+		if ($client !== null) {
+			return $this->resolveForClient(
+				product: $product,
+				quantity: $quantity,
+				variantSku: $variantSku,
+				client: $client,
+				currency: $currency
+			);
+		}
+
 		$price = $this->variantOrBasePrice(product: $product, variantSku: $variantSku);
 		// Quantity tier override (tiers price the line, not the variant).
 		if ($variantSku === null) {
@@ -234,6 +263,96 @@ class ProductCatalogService {
 			...$this->vatOf(product: $product),
 		];
 	}//end resolveEffectivePrice()
+
+	/**
+	 * The price for a client: a price list's when one prices the product,
+	 * else the product's own price, with the list it came from.
+	 *
+	 * @param array<string, mixed> $product    The product object.
+	 * @param float                $quantity   The ordered quantity, at least 0.
+	 * @param string|null          $variantSku Optional variant SKU.
+	 * @param array<string, mixed> $client     The client.
+	 * @param string|null          $currency   The quote's currency.
+	 *
+	 * @return array<string, mixed> The resolution.
+	 *
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 */
+	private function resolveForClient(array $product, float $quantity, ?string $variantSku, array $client, ?string $currency): array {
+		$currency = strtoupper(trim((string)$currency));
+		if ($currency === '') {
+			$currency = 'EUR';
+		}
+
+		$match = (new PriceListResolver())->select(
+			lists: $this->fetchPriceLists(),
+			client: $client,
+			productId: (string)($product['id'] ?? ($product['@self']['id'] ?? ($product['uuid'] ?? ''))),
+			variantSku: $variantSku,
+			quantity: $quantity,
+			currency: $currency,
+			day: new DateTimeImmutable('today')
+		);
+
+		if ($match === null) {
+			return [
+				...$this->resolveEffectivePrice(product: $product, quantity: $quantity, variantSku: $variantSku),
+				'priceListId' => null,
+				'priceListTitle' => '',
+			];
+		}
+
+		if ($variantSku !== null && $variantSku !== '') {
+			// The variant must still exist and be active, as without a list.
+			$this->resolveVariantPrice(product: $product, sku: $variantSku, basePrice: 0.0);
+		}
+
+		return [
+			'unitPrice' => $match['unitPrice'],
+			'source' => 'price-list',
+			'tierLabel' => '',
+			'quantity' => $quantity,
+			...$this->vatOf(product: $product),
+			'priceListId' => $match['priceListId'],
+			'priceListTitle' => $match['priceListTitle'],
+		];
+	}//end resolveForClient()
+
+	/**
+	 * Every price list in this app's register; none when the schema is not set up or the read fails.
+	 *
+	 * @return array<int, array<string, mixed>> The lists.
+	 *
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 */
+	private function fetchPriceLists(): array {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, 'priceList_schema', '');
+		if ($register === '' || $schema === '') {
+			return [];
+		}
+
+		try {
+			$results = $this->getObjectService()->findAll(
+				config: [
+					'filters' => [
+						'register' => $register,
+						'schema' => $schema,
+					],
+				]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: failed to fetch price lists', ['exception' => $e->getMessage()]);
+			return [];
+		}
+
+		$lists = [];
+		foreach (($results ?? []) as $result) {
+			$lists[] = $this->toArray(object: $result);
+		}
+
+		return $lists;
+	}//end fetchPriceLists()
 
 	/**
 	 * The product's base price, or the requested variant's (validated, and

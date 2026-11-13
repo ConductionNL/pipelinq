@@ -9472,7 +9472,25 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "An inactive list prices nothing.": "An inactive list prices nothing.",
+        "Countries": "Countries",
+        "Customer segments": "Customer segments",
+        "Empty prices the product itself.": "Empty prices the product itself.",
+        "Price list": "Price list",
+        "Prices": "Prices",
+        "The ISO 3166-1 alpha-2 countries of the clients the list applies to.": "The ISO 3166-1 alpha-2 countries of the clients the list applies to.",
+        "The ISO 3166-1 alpha-2 country of the client, such as NL; price lists for that country apply to it.": "The ISO 3166-1 alpha-2 country of the client, such as NL; price lists for that country apply to it.",
+        "The ISO 4217 currency of the list's prices; a quote in another currency does not use it.": "The ISO 4217 currency of the list's prices; a quote in another currency does not use it.",
+        "The client segments the list applies to, such as public-sector.": "The client segments the list applies to, such as public-sector.",
+        "The client's own price list; it goes before any list for its segment or country.": "The client's own price list; it goes before any list for its segment or country.",
+        "The first day the list applies; empty means from the start.": "The first day the list applies; empty means from the start.",
+        "The last day the list applies; empty means without end.": "The last day the list applies; empty means without end.",
+        "The list's name, shown on a quote line it priced.": "The list's name, shown on a quote line it priced.",
+        "The price of a product, optionally for one variant and from a minimum quantity.": "The price of a product, optionally for one variant and from a minimum quantity.",
+        "Variant SKU": "Variant SKU",
+        "What the list is for.": "What the list is for.",
+        "When several lists match, the highest priority prices the line.": "When several lists match, the highest priority prices the line."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\ProductCatalogService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -64,6 +65,7 @@ class ProductCatalogController extends Controller {
 	 * @param PosAccessPolicy $policy The shared POS access policy.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param CallerObjectReader $reader Reads a client with the caller's rights.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -72,6 +74,7 @@ class ProductCatalogController extends Controller {
 		private PosAccessPolicy $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
+		private CallerObjectReader $reader,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -120,11 +123,14 @@ class ProductCatalogController extends Controller {
 	 * Accepts a product object payload plus quantity and optional variantSku,
 	 * and returns the resolved unitPrice, source, tax rate and BTW class. The
 	 * client-supplied price is ignored; the figure is derived from the product's
-	 * own tiers / variant overrides and BTW class.
+	 * own tiers / variant overrides and BTW class. With a clientId (and an
+	 * optional currency) the client's price lists go first; a client the
+	 * caller cannot read gives 404.
 	 *
 	 * @return JSONResponse The resolved price.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
 	 */
 	#[NoAdminRequired]
 	public function resolvePrice(): JSONResponse {
@@ -155,11 +161,30 @@ class ProductCatalogController extends Controller {
 			$variantSku = (string)$variantSku;
 		}
 
+		// A client prices from its price lists (products-price-lists D3). It is
+		// read with the caller's rights: a client the caller cannot read is
+		// answered as not found, and never priced.
+		$client = null;
+		$clientId = trim((string)$this->request->getParam('clientId', ''));
+		if ($clientId !== '') {
+			$client = $this->reader->read(id: $clientId, schemaKey: 'client_schema');
+			if ($client === null) {
+				return new JSONResponse(['error' => $this->l10n->t('Client not found')], Http::STATUS_NOT_FOUND);
+			}
+		}
+
+		$currency = $this->request->getParam('currency');
+		if ($currency !== null) {
+			$currency = (string)$currency;
+		}
+
 		return $this->run(
 			action: fn (): array => $this->service->resolveEffectivePrice(
 				product: $product,
 				quantity: $quantity,
-				variantSku: $variantSku
+				variantSku: $variantSku,
+				client: $client,
+				currency: $currency
 			),
 			label: 'resolvePrice'
 		);

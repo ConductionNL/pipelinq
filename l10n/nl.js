@@ -9486,7 +9486,25 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "An inactive list prices nothing.": "Een inactieve lijst bepaalt geen prijzen.",
+        "Countries": "Landen",
+        "Customer segments": "Klantsegmenten",
+        "Empty prices the product itself.": "Leeg geeft de prijs van het product zelf.",
+        "Price list": "Prijslijst",
+        "Prices": "Prijzen",
+        "The ISO 3166-1 alpha-2 countries of the clients the list applies to.": "De ISO 3166-1 alpha-2-landen van de klanten waarvoor de lijst geldt.",
+        "The ISO 3166-1 alpha-2 country of the client, such as NL; price lists for that country apply to it.": "Het ISO 3166-1 alpha-2-land van de klant, zoals NL; prijslijsten voor dat land gelden voor deze klant.",
+        "The ISO 4217 currency of the list's prices; a quote in another currency does not use it.": "De ISO 4217-valuta van de prijzen in de lijst; een offerte in een andere valuta gebruikt de lijst niet.",
+        "The client segments the list applies to, such as public-sector.": "De klantsegmenten waarvoor de lijst geldt, zoals public-sector.",
+        "The client's own price list; it goes before any list for its segment or country.": "De eigen prijslijst van de klant; die gaat voor elke lijst voor het segment of land van de klant.",
+        "The first day the list applies; empty means from the start.": "De eerste dag waarop de lijst geldt; leeg betekent vanaf het begin.",
+        "The last day the list applies; empty means without end.": "De laatste dag waarop de lijst geldt; leeg betekent zonder einde.",
+        "The list's name, shown on a quote line it priced.": "De naam van de lijst, getoond op een offerteregel waarvan de lijst de prijs bepaalde.",
+        "The price of a product, optionally for one variant and from a minimum quantity.": "De prijs van een product, eventueel voor één variant en vanaf een minimale hoeveelheid.",
+        "Variant SKU": "Variant-SKU",
+        "What the list is for.": "Waarvoor de lijst is.",
+        "When several lists match, the highest priority prices the line.": "Als meerdere lijsten passen, bepaalt de lijst met de hoogste prioriteit de prijs."
     },
     "nplurals=2; plural=(n != 1);"
 )
