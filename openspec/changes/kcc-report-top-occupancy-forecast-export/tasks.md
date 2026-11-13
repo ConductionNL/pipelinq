@@ -1,0 +1,7 @@
+- [ ] Top subjects route, with tests
+- [ ] Occupancy route, with tests
+- [ ] Forecast route, with tests
+- [ ] Excel export, with tests
+- [ ] PDF export, with tests
+- [ ] Access check before every read, with a test per route
+- [ ] Dossiq: the KCC panel on the reports page, as manifest config over these routes
