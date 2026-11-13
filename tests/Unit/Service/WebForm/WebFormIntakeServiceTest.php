@@ -384,4 +384,71 @@ class WebFormIntakeServiceTest extends TestCase {
 
 		$this->assertSame([], $this->submitter->calls);
 	}//end testFormWithoutDestinationAnswers503()
+
+	/**
+	 * Strings are trimmed, plain numbers and booleans pass, blanks and other shapes are dropped, lists keep their filled items.
+	 *
+	 * @return void
+	 */
+	public function testAnswersAreCleanedByShape(): void {
+		$this->service()->submitByKey(
+			key: 'website-support',
+			payload: [
+				'message' => '  Hello  ',
+				'count' => 3,
+				'score' => 1.5,
+				'consent' => false,
+				'nothing' => null,
+				'topics' => [' billing ', '', 'login', 7],
+				'blanks' => ['', '  '],
+				'nested' => ['a', ['b']],
+				'emptyList' => [],
+			]
+		);
+
+		$payload = $this->submitter->calls[0]['payload'];
+		$this->assertSame('Hello', $payload['message']);
+		$this->assertSame(3, $payload['count']);
+		$this->assertSame(1.5, $payload['score']);
+		$this->assertFalse($payload['consent']);
+		$this->assertSame(['billing', 'login', 7], $payload['topics']);
+		foreach (['nothing', 'blanks', 'nested', 'emptyList'] as $dropped) {
+			$this->assertArrayNotHasKey($dropped, $payload, $dropped . ' must be dropped');
+		}
+	}//end testAnswersAreCleanedByShape()
+
+	/**
+	 * One list item over the limit refuses the whole submit.
+	 *
+	 * @return void
+	 */
+	public function testOversizedListItemIsRefused(): void {
+		$service = $this->service();
+		try {
+			$service->submitByKey(key: 'website-support', payload: ['message' => 'Hi', 'topics' => ['ok', str_repeat('a', 20001)]]);
+			$this->fail('An oversized list item must be refused');
+		} catch (WebFormSubmitException $e) {
+			$this->assertSame(400, $e->getStatus());
+			$this->assertSame(WebFormIntakeService::REFUSED, $e->getMessage());
+		}
+
+		$this->assertSame([], $this->submitter->calls);
+	}//end testOversizedListItemIsRefused()
+
+	/**
+	 * A honeypot sent as a list is a shape no form produces and is refused.
+	 *
+	 * @return void
+	 */
+	public function testListHoneypotIsRefused(): void {
+		$service = $this->service();
+		try {
+			$service->submitByKey(key: 'website-support', payload: ['message' => 'Hi', '_hp' => ['']]);
+			$this->fail('A list honeypot must be refused');
+		} catch (WebFormSubmitException $e) {
+			$this->assertSame(400, $e->getStatus());
+		}
+
+		$this->assertSame([], $this->submitter->calls);
+	}//end testListHoneypotIsRefused()
 }//end class
