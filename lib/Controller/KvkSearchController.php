@@ -80,10 +80,10 @@ class KvkSearchController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Type a company name or KVK number')], Http::STATUS_BAD_REQUEST);
 		}
 
-		$results = preg_match('/^\d{8}$/', $query) === 1
-			? $this->kvk->companyByNumber(kvkNumber: $query)
-			: $this->kvk->searchByName(name: $query);
+		if (preg_match('/^\d{8}$/', $query) === 1) {
+			return new JSONResponse(['results' => array_values($this->kvk->companyByNumber(kvkNumber: $query))]);
+		}
 
-		return new JSONResponse(['results' => array_values($results)]);
+		return new JSONResponse(['results' => array_values($this->kvk->searchByName(name: $query))]);
 	}//end search()
 }//end class
