@@ -30,11 +30,11 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BrpMutationWebhookListenerInterface;
 use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\HaalCentraalClientInterface;
 use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Service\BsnAudit\LookupReason;
 use OCA\Pipelinq\Service\BsnAudit\LookupResult;
@@ -99,7 +99,7 @@ class BrpController extends Controller {
 	 * @param HaalCentraalClientInterface $haalCentraal HaalCentraal client.
 	 * @param BsnAuditServiceInterface $audit Audit service.
 	 * @param OptOutServiceInterface $optOut Opt-out service.
-	 * @param BrpMutationWebhookListener $webhookListener Webhook listener.
+	 * @param BrpMutationWebhookListenerInterface $webhookListener Webhook listener.
 	 * @param LoggerInterface $logger Logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 *
@@ -118,7 +118,7 @@ class BrpController extends Controller {
 		private HaalCentraalClientInterface $haalCentraal,
 		private BsnAuditServiceInterface $audit,
 		private OptOutServiceInterface $optOut,
-		private BrpMutationWebhookListener $webhookListener,
+		private BrpMutationWebhookListenerInterface $webhookListener,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 	) {
@@ -723,11 +723,11 @@ class BrpController extends Controller {
 		$outcome = $this->webhookListener->handle($rawBody, $signature);
 
 		$status = Http::STATUS_OK;
-		if ($outcome['result'] === BrpMutationWebhookListener::RESULT_FORBIDDEN) {
+		if ($outcome['result'] === BrpMutationWebhookListenerInterface::RESULT_FORBIDDEN) {
 			$status = Http::STATUS_FORBIDDEN;
 		}
 
-		if ($outcome['result'] === BrpMutationWebhookListener::RESULT_BAD_REQUEST) {
+		if ($outcome['result'] === BrpMutationWebhookListenerInterface::RESULT_BAD_REQUEST) {
 			$status = Http::STATUS_BAD_REQUEST;
 		}
 

@@ -27,6 +27,8 @@ use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
+use OCA\Pipelinq\Kernel\Contracts\BrpMutationWebhookListenerInterface;
+use OCA\Pipelinq\Kernel\Contracts\NrcNotificationListenerInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
@@ -52,6 +54,9 @@ class ListenerRegistrar {
 	 * @spec exclude Composition root wiring, no functional requirement.
 	 */
 	public function register(IRegistrationContext $context): void {
+		$context->registerServiceAlias(BrpMutationWebhookListenerInterface::class, BrpMutationWebhookListener::class);
+		$context->registerServiceAlias(NrcNotificationListenerInterface::class, NrcNotificationListener::class);
+
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,
 			listener: ObjectEventListener::class

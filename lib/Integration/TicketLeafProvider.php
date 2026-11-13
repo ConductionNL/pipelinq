@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Integration;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketLeafProviderInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserManager;
@@ -45,20 +46,13 @@ use Throwable;
  *
  * @spec openspec/specs/ticket-leaf/spec.md
  */
-class TicketLeafProvider {
+class TicketLeafProvider implements TicketLeafProviderInterface {
 	/**
 	 * The statuses in which a ticket is no longer open.
 	 *
 	 * @var array<int, string>
 	 */
 	public const CLOSED_STATUSES = ['closed', 'completed', 'converted', 'rejected', 'resolved'];
-
-	/**
-	 * The ticket subtypes that count as tickets; an interaction is a contact moment.
-	 *
-	 * @var array<int, string>
-	 */
-	public const TICKET_TYPES = [TicketServiceInterface::TYPE_REQUEST, TicketServiceInterface::TYPE_COMPLAINT];
 
 	/**
 	 * The status filters a read may ask for: the open tickets, the closed

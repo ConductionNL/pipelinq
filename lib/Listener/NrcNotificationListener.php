@@ -44,6 +44,7 @@ namespace OCA\Pipelinq\Listener;
 use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\Pipelinq\Kernel\Contracts\NrcNotificationListenerInterface;
 use OCA\Pipelinq\Kernel\Contracts\ZgwRegisterAccessInterface;
 use OCA\Pipelinq\Kernel\Contracts\ZrcClientInterface;
 use OCA\Pipelinq\Kernel\Contracts\ZtcClientInterface;
@@ -55,7 +56,7 @@ use Throwable;
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
-class NrcNotificationListener {
+class NrcNotificationListener implements NrcNotificationListenerInterface {
 	/**
 	 * Notifications MUST complete within this many milliseconds (REQ-ZGW-007).
 	 */

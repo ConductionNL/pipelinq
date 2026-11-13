@@ -43,6 +43,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentLeafProviderInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IUserSession;
@@ -54,7 +55,7 @@ use Throwable;
  *
  * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
-class ContactMomentLeafProvider {
+class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 	/**
 	 * The leaf id a host declares in its schema's `linkedTypes`.
 	 *
@@ -68,13 +69,6 @@ class ContactMomentLeafProvider {
 	 * @var string
 	 */
 	public const PANEL_ID = 'pipelinq-contact-moments-panel';
-
-	/**
-	 * Default page size for a host's contact moments.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_LIMIT = 50;
 
 	/**
 	 * Hard ceiling on a page, per ADR-058: a leaf never scans a whole schema.

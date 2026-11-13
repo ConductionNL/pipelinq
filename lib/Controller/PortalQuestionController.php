@@ -39,7 +39,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\DossierQuestionServiceInterface;
-use OCA\Pipelinq\Portal\PortalAssertionVerifier;
+use OCA\Pipelinq\Kernel\Contracts\PortalAssertionVerifierInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -84,7 +84,7 @@ class PortalQuestionController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                $request   The request.
-	 * @param PortalAssertionVerifier $verifier  Verifies portaliq's assertion.
+	 * @param PortalAssertionVerifierInterface $verifier  Verifies portaliq's assertion.
 	 * @param DossierQuestionServiceInterface  $questions Files questions and replies.
 	 * @param IThrottler              $throttler Counts rejected calls.
 	 * @param LoggerInterface         $logger    Logger.
@@ -93,7 +93,7 @@ class PortalQuestionController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PortalAssertionVerifier $verifier,
+		private readonly PortalAssertionVerifierInterface $verifier,
 		private readonly DossierQuestionServiceInterface $questions,
 		private readonly IThrottler $throttler,
 		private readonly LoggerInterface $logger,
@@ -188,7 +188,7 @@ class PortalQuestionController extends Controller {
 	 * @return string|JSONResponse
 	 */
 	private function subjectRef(): string|JSONResponse {
-		$claims = $this->verifier->verify((string)$this->request->getHeader(PortalAssertionVerifier::HEADER));
+		$claims = $this->verifier->verify((string)$this->request->getHeader(PortalAssertionVerifierInterface::HEADER));
 		if ($claims === null) {
 			$this->registerRejected();
 			return new JSONResponse(['error' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
