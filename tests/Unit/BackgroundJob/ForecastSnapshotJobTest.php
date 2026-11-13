@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for ForecastSnapshotJob: the weekly forecast snapshot runs once on the configured day, from the configured hour, in the organisation's time zone.
+ * Unit tests for ForecastSnapshotJob: configuration guard, weekly run window, timezone and failure handling.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\BackgroundJob
@@ -10,12 +10,12 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -23,130 +23,206 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use DateTimeImmutable;
+use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\ForecastSnapshotJob;
 use OCA\Pipelinq\Service\SnapshotGenerationService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use ReflectionMethod;
-use RuntimeException;
 
 /**
- * Tests for ForecastSnapshotJob.
- *
- * @covers \OCA\Pipelinq\BackgroundJob\ForecastSnapshotJob
+ * When the weekly forecast snapshot runs, and what it records.
  */
+#[CoversClass(ForecastSnapshotJob::class)]
 class ForecastSnapshotJobTest extends TestCase {
 
 	/**
-	 * App config values.
-	 *
-	 * @var array<string, string|int>
+	 * @var SnapshotGenerationService&MockObject
 	 */
-	private array $config = [];
+	private SnapshotGenerationService&MockObject $generation;
 
 	/**
-	 * Run the job at a moment.
-	 *
-	 * @param string                    $at        The moment, ISO 8601 with offset.
-	 * @param SnapshotGenerationService $generator The generator.
-	 * @param LoggerInterface|null      $logger    The logger.
-	 *
-	 * @return void
+	 * @var IAppConfig&MockObject
 	 */
-	private function runAt(string $at, SnapshotGenerationService $generator, ?LoggerInterface $logger = null): void {
-		$time = $this->createMock(ITimeFactory::class);
-		$time->method('getTime')->willReturn((new DateTimeImmutable($at))->getTimestamp());
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnCallback(fn (string $app, string $key, string $default = ''): string => (string)($this->config[$key] ?? $default));
-		$appConfig->method('getValueInt')->willReturnCallback(fn (string $app, string $key, int $default = 0): int => (int)($this->config[$key] ?? $default));
-		$appConfig->method('setValueString')->willReturnCallback(
-			function (string $app, string $key, string $value): bool {
-				$this->config[$key] = $value;
-				return true;
-			}
-		);
-
-		$job = new ForecastSnapshotJob($time, $generator, $appConfig, ($logger ?? $this->createMock(LoggerInterface::class)));
-		(new ReflectionMethod(ForecastSnapshotJob::class, 'run'))->invoke($job, null);
-	}//end runAt()
+	private IAppConfig&MockObject $appConfig;
 
 	/**
-	 * Set up a configured register and schema.
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface&MockObject $logger;
+
+	/**
+	 * String config values by key.
+	 *
+	 * @var array<string, string>
+	 */
+	private array $strings = [];
+
+	/**
+	 * Int config values by key.
+	 *
+	 * @var array<string, int>
+	 */
+	private array $ints = [];
+
+	/**
+	 * Set up mocks; the app config answers from the arrays above, else the default.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->config = ['register' => 'reg', 'forecastSnapshot_schema' => 'snap'];
+		parent::setUp();
+		$this->generation = $this->createMock(SnapshotGenerationService::class);
+		$this->appConfig  = $this->createMock(IAppConfig::class);
+		$this->logger     = $this->createMock(LoggerInterface::class);
+		$this->strings    = ['register' => 'crm', 'forecastSnapshot_schema' => 'forecast'];
+		$this->ints       = [];
+
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = ''): string {
+				$this->assertSame(Application::APP_ID, $app);
+				return $this->strings[$key] ?? $default;
+			}
+		);
+		$this->appConfig->method('getValueInt')->willReturnCallback(
+			function (string $app, string $key, int $default = 0): int {
+				$this->assertSame(Application::APP_ID, $app);
+				return $this->ints[$key] ?? $default;
+			}
+		);
 	}//end setUp()
 
 	/**
-	 * On Monday from 06:00 the snapshot is generated once and the day recorded.
+	 * Run the job at the given UTC moment.
+	 *
+	 * @param string $utc The moment, e.g. "2026-11-16 06:30:00".
 	 *
 	 * @return void
 	 */
-	public function testItRunsOnceOnMondayFromSix(): void {
-		$generator = $this->createMock(SnapshotGenerationService::class);
-		$generator->expects($this->once())->method('generate')
-			->with($this->callback(static fn (DateTimeImmutable $d): bool => $d->format('Y-m-d H:i') === '2026-11-16 07:15'))
-			->willReturn(['written' => 3]);
+	private function runAt(string $utc): void {
+		$time = $this->createMock(ITimeFactory::class);
+		$time->method('getTime')->willReturn((new DateTimeImmutable($utc . ' UTC'))->getTimestamp());
 
-		$this->runAt('2026-11-16T05:59:00+00:00', $generator);
-		$this->runAt('2026-11-16T07:15:00+00:00', $generator);
-		$this->runAt('2026-11-16T09:00:00+00:00', $generator);
-
-		$this->assertSame('2026-11-16', $this->config[ForecastSnapshotJob::LAST_RUN_KEY]);
-	}//end testItRunsOnceOnMondayFromSix()
+		$job = new ForecastSnapshotJob($time, $this->generation, $this->appConfig, $this->logger);
+		$run = new \ReflectionMethod($job, 'run');
+		$run->setAccessible(true);
+		$run->invoke($job, null);
+	}//end runAt()
 
 	/**
-	 * Another day, or a missing register or schema, generates nothing.
+	 * Without a register or schema the job skips before reading the clock.
 	 *
 	 * @return void
 	 */
-	public function testOtherDaysAndAnUnconfiguredAppGenerateNothing(): void {
-		$generator = $this->createMock(SnapshotGenerationService::class);
-		$generator->expects($this->never())->method('generate');
+	public function testSkipsWhenSchemaIsNotConfigured(): void {
+		$this->strings['forecastSnapshot_schema'] = '';
+		$this->generation->expects($this->never())->method('generate');
+		$this->logger->expects($this->once())->method('debug')
+			->with('ForecastSnapshotJob: skipping — register or forecastSnapshot_schema not configured');
 
-		$this->runAt('2026-11-17T08:00:00+00:00', $generator);
-		$this->config['forecastSnapshot_schema'] = '';
-		$this->runAt('2026-11-16T08:00:00+00:00', $generator);
-	}//end testOtherDaysAndAnUnconfiguredAppGenerateNothing()
+		$this->runAt('2026-11-16 06:30:00');
+	}//end testSkipsWhenSchemaIsNotConfigured()
 
 	/**
-	 * The configured day, hour and time zone decide; an unknown zone falls back to UTC.
+	 * On Monday from 06:00 (the defaults) it generates once and records today's date.
 	 *
 	 * @return void
 	 */
-	public function testTheConfiguredScheduleAndZoneDecide(): void {
-		$this->config += [ForecastSnapshotJob::DAY_KEY => 5, ForecastSnapshotJob::HOUR_KEY => 9, ForecastSnapshotJob::TIMEZONE_KEY => 'Europe/Amsterdam'];
-		$generator = $this->createMock(SnapshotGenerationService::class);
-		$generator->expects($this->once())->method('generate')->willReturn([]);
+	public function testGeneratesOnMondayFromSixAndRecordsTheDate(): void {
+		$this->generation->expects($this->once())->method('generate')
+			->with($this->callback(static fn (DateTimeImmutable $asOf): bool => $asOf->format('Y-m-d H:i') === '2026-11-16 06:00'))
+			->willReturn(['created' => 3]);
+		$this->appConfig->expects($this->once())->method('setValueString')
+			->with(Application::APP_ID, ForecastSnapshotJob::LAST_RUN_KEY, '2026-11-16');
 
-		// 08:30 UTC is 09:30 in Amsterdam on a Friday.
-		$this->runAt('2026-11-13T07:30:00+00:00', $generator);
-		$this->runAt('2026-11-13T08:30:00+00:00', $generator);
-
-		$this->config[ForecastSnapshotJob::TIMEZONE_KEY] = 'Not/AZone';
-		$this->config[ForecastSnapshotJob::LAST_RUN_KEY] = '';
-		$other = $this->createMock(SnapshotGenerationService::class);
-		$other->expects($this->once())->method('generate')->with($this->callback(static fn (DateTimeImmutable $d): bool => $d->getTimezone()->getName() === 'UTC'))->willReturn([]);
-		$this->runAt('2026-11-20T09:30:00+00:00', $other);
-	}//end testTheConfiguredScheduleAndZoneDecide()
+		$this->runAt('2026-11-16 06:00:00');
+	}//end testGeneratesOnMondayFromSixAndRecordsTheDate()
 
 	/**
-	 * A failed generation is logged and the day is not recorded, so it is tried again.
+	 * Before the configured hour, or on another day, nothing is generated.
 	 *
 	 * @return void
 	 */
-	public function testAFailedGenerationIsRetried(): void {
-		$generator = $this->createMock(SnapshotGenerationService::class);
-		$generator->expects($this->exactly(2))->method('generate')->willThrowException(new RuntimeException('register down'));
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->exactly(2))->method('error')->with('ForecastSnapshotJob: generation failed', ['exception' => 'register down']);
+	public function testDoesNotRunBeforeTheHourOrOnAnotherDay(): void {
+		$this->generation->expects($this->never())->method('generate');
+		$this->appConfig->expects($this->never())->method('setValueString');
 
-		$this->runAt('2026-11-16T07:00:00+00:00', $generator, $logger);
-		$this->runAt('2026-11-16T08:00:00+00:00', $generator, $logger);
-		$this->assertArrayNotHasKey(ForecastSnapshotJob::LAST_RUN_KEY, $this->config);
-	}//end testAFailedGenerationIsRetried()
+		$this->runAt('2026-11-16 05:59:59');
+		$this->runAt('2026-11-17 09:00:00');
+	}//end testDoesNotRunBeforeTheHourOrOnAnotherDay()
+
+	/**
+	 * A run already recorded for today is not repeated.
+	 *
+	 * @return void
+	 */
+	public function testDoesNotRunTwiceOnTheSameDay(): void {
+		$this->strings[ForecastSnapshotJob::LAST_RUN_KEY] = '2026-11-16';
+		$this->generation->expects($this->never())->method('generate');
+
+		$this->runAt('2026-11-16 10:00:00');
+	}//end testDoesNotRunTwiceOnTheSameDay()
+
+	/**
+	 * The configured day, hour and timezone are applied: Friday 08:00 in
+	 * Amsterdam is 07:00 UTC in November.
+	 *
+	 * @return void
+	 */
+	public function testAppliesConfiguredDayHourAndTimezone(): void {
+		$this->ints[ForecastSnapshotJob::DAY_KEY]          = 5;
+		$this->ints[ForecastSnapshotJob::HOUR_KEY]         = 8;
+		$this->strings[ForecastSnapshotJob::TIMEZONE_KEY]  = 'Europe/Amsterdam';
+		$this->generation->expects($this->once())->method('generate')
+			->with($this->callback(static fn (DateTimeImmutable $asOf): bool => $asOf->format('Y-m-d H:i e') === '2026-11-20 08:00 Europe/Amsterdam'))
+			->willReturn([]);
+
+		$this->runAt('2026-11-20 06:59:00');
+		$this->runAt('2026-11-20 07:00:00');
+	}//end testAppliesConfiguredDayHourAndTimezone()
+
+	/**
+	 * An unknown or empty timezone falls back to UTC.
+	 *
+	 * @return void
+	 */
+	public function testAnInvalidTimezoneFallsBackToUtc(): void {
+		$this->strings[ForecastSnapshotJob::TIMEZONE_KEY] = 'Mars/Olympus';
+		$this->generation->expects($this->once())->method('generate')
+			->with($this->callback(static fn (DateTimeImmutable $asOf): bool => $asOf->getTimezone()->getName() === 'UTC'))
+			->willReturn([]);
+
+		$this->runAt('2026-11-16 06:00:00');
+	}//end testAnInvalidTimezoneFallsBackToUtc()
+
+	/**
+	 * An empty timezone setting also means UTC.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyTimezoneMeansUtc(): void {
+		$this->strings[ForecastSnapshotJob::TIMEZONE_KEY] = '';
+		$this->generation->expects($this->once())->method('generate')
+			->with($this->callback(static fn (DateTimeImmutable $asOf): bool => $asOf->getTimezone()->getName() === 'UTC'))
+			->willReturn([]);
+
+		$this->runAt('2026-11-16 23:00:00');
+	}//end testAnEmptyTimezoneMeansUtc()
+
+	/**
+	 * A failed generation is logged and the date is not recorded, so the next hour retries.
+	 *
+	 * @return void
+	 */
+	public function testAFailedGenerationIsLoggedAndNotRecorded(): void {
+		$this->generation->method('generate')->willThrowException(new \RuntimeException('register offline'));
+		$this->appConfig->expects($this->never())->method('setValueString');
+		$this->logger->expects($this->once())->method('error')
+			->with('ForecastSnapshotJob: generation failed', ['exception' => 'register offline']);
+
+		$this->runAt('2026-11-16 07:00:00');
+	}//end testAFailedGenerationIsLoggedAndNotRecorded()
 }//end class

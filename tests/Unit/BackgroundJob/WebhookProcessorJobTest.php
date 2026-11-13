@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for WebhookProcessorJob: queued inbound webhooks are handed to their channel adapter and the outcome is written back on the queue row.
+ * Unit tests for WebhookProcessorJob: draining the queued inbound webhooks per channel and saving each outcome.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\BackgroundJob
@@ -10,217 +10,319 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
-use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
+use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\WebhookProcessorJob;
 use OCA\Pipelinq\Service\SmsAdapter;
 use OCA\Pipelinq\Service\WhatsAppAdapter;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use ReflectionMethod;
-use RuntimeException;
 
 /**
- * Tests for WebhookProcessorJob.
- *
- * @covers \OCA\Pipelinq\BackgroundJob\WebhookProcessorJob
- * @uses \OCA\Pipelinq\Util\PayloadToArray
- * @uses \OCA\Pipelinq\Util\EntityPayload
- * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * The webhook queue drain.
  */
 class WebhookProcessorJobTest extends TestCase {
 
 	/**
-	 * A fake ObjectService answering the queue and recording saves.
+	 * @var ContainerInterface&MockObject
+	 */
+	private ContainerInterface&MockObject $container;
+
+	/**
+	 * @var IAppConfig&MockObject
+	 */
+	private IAppConfig&MockObject $appConfig;
+
+	/**
+	 * @var WhatsAppAdapter&MockObject
+	 */
+	private WhatsAppAdapter&MockObject $whatsApp;
+
+	/**
+	 * @var SmsAdapter&MockObject
+	 */
+	private SmsAdapter&MockObject $sms;
+
+	/**
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface&MockObject $logger;
+
+	/**
+	 * Configured register and schema slugs.
 	 *
-	 * @param mixed      $rows      What findAll answers, or a Throwable.
-	 * @param bool       $saveFails Whether saveObject throws.
+	 * @var array<string, string>
+	 */
+	private array $config = [];
+
+	/**
+	 * Set up mocks.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->appConfig = $this->createMock(IAppConfig::class);
+		$this->whatsApp  = $this->createMock(WhatsAppAdapter::class);
+		$this->sms       = $this->createMock(SmsAdapter::class);
+		$this->logger    = $this->createMock(LoggerInterface::class);
+		$this->config    = [];
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			fn (string $app, string $key, string $default = ''): string => $this->config[$key] ?? $default
+		);
+	}//end setUp()
+
+	/**
+	 * A recording object service holding the queued rows.
+	 *
+	 * @param array<int, mixed> $rows     What findAll answers.
+	 * @param \Throwable|null   $findFail Thrown by findAll when set.
+	 * @param \Throwable|null   $saveFail Thrown by saveObject when set.
 	 *
 	 * @return object
 	 */
-	private static function objects(mixed $rows, bool $saveFails = false): object {
-		return new class ($rows, $saveFails) {
-			/** @var array<int, array<string, mixed>> */
-			public array $saves = [];
+	private function objectService(array $rows, ?\Throwable $findFail = null, ?\Throwable $saveFail = null): object {
+		$service = new class {
+			/** @var array<int, mixed> */
+			public array $rows = [];
 
 			/** @var array<int, array<string, mixed>> */
-			public array $queries = [];
+			public array $findConfigs = [];
+
+			/** @var array<int, array<string, mixed>> */
+			public array $saved = [];
+
+			public ?\Throwable $findFail = null;
+
+			public ?\Throwable $saveFail = null;
 
 			/**
-			 * Constructor.
+			 * @param array<string, mixed> $config The query config.
 			 *
-			 * @param mixed $rows      The rows.
-			 * @param bool  $saveFails Whether saves fail.
+			 * @return array<int, mixed>
 			 */
-			public function __construct(private mixed $rows, private bool $saveFails) {
-			}//end __construct()
-
-			/**
-			 * @param array<string, mixed> $config The query.
-			 *
-			 * @return mixed
-			 */
-			public function findAll(array $config): mixed {
-				$this->queries[] = $config;
-				if ($this->rows instanceof \Throwable) {
-					throw $this->rows;
+			public function findAll(array $config): array {
+				$this->findConfigs[] = $config;
+				if ($this->findFail !== null) {
+					throw $this->findFail;
 				}
 
 				return $this->rows;
-			}//end findAll()
+			}
 
 			/**
-			 * @param array<string, mixed> $object   The row.
+			 * @param array<string, mixed> $object   The object.
 			 * @param string               $register The register.
 			 * @param string               $schema   The schema.
-			 * @param string|null          $uuid     The row id.
+			 * @param string|null          $uuid     The uuid.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, string $register, string $schema, ?string $uuid = null): array {
-				if ($this->saveFails === true) {
-					throw new RuntimeException('save refused');
+			public function saveObject(array $object, string $register, string $schema, ?string $uuid): array {
+				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+				if ($this->saveFail !== null) {
+					throw $this->saveFail;
 				}
 
-				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				return $object;
-			}//end saveObject()
+			}
 		};
-	}//end objects()
+		$service->rows     = $rows;
+		$service->findFail = $findFail;
+		$service->saveFail = $saveFail;
+		$this->container->method('get')->with('OCA\\OpenRegister\\Service\\ObjectService')->willReturn($service);
+		return $service;
+	}//end objectService()
 
 	/**
-	 * Run the job once.
-	 *
-	 * @param object|\Throwable     $objects  The ObjectService, or what resolving it throws.
-	 * @param array<string, string> $config   App config strings.
-	 * @param WhatsAppAdapter|null  $whatsApp The WhatsApp adapter.
-	 * @param SmsAdapter|null       $sms      The SMS adapter.
-	 * @param LoggerInterface|null  $logger   The logger.
+	 * Run one drain.
 	 *
 	 * @return void
 	 */
-	private function runJob(object $objects, array $config = [], ?WhatsAppAdapter $whatsApp = null, ?SmsAdapter $sms = null, ?LoggerInterface $logger = null): void {
-		$container = $this->createMock(ContainerInterface::class);
-		if ($objects instanceof \Throwable) {
-			$container->method('get')->willThrowException($objects);
-		} else {
-			$container->method('get')->with('OCA\\OpenRegister\\Service\\ObjectService')->willReturn($objects);
-		}
-
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default = ''): string => ($config[$key] ?? $default));
-
+	private function drain(): void {
 		$job = new WebhookProcessorJob(
 			$this->createMock(ITimeFactory::class),
-			$container,
-			$appConfig,
-			($whatsApp ?? $this->createMock(WhatsAppAdapter::class)),
-			($sms ?? $this->createMock(SmsAdapter::class)),
-			($logger ?? $this->createMock(LoggerInterface::class))
+			$this->container,
+			$this->appConfig,
+			$this->whatsApp,
+			$this->sms,
+			$this->logger
 		);
-		(new ReflectionMethod(WebhookProcessorJob::class, 'run'))->invoke($job, null);
-	}//end runJob()
+		$run = new \ReflectionMethod($job, 'run');
+		$run->setAccessible(true);
+		$run->invoke($job, null);
+	}//end drain()
 
 	/**
-	 * Each queued row goes to its channel's adapter and is saved back with the outcome, under its own id.
+	 * Queued rows are read with the default slugs and each is routed to its channel adapter.
 	 *
 	 * @return void
 	 */
-	public function testQueuedRowsAreDispatchedAndSavedBack(): void {
-		$objects = self::objects(
-			[
-				['uuid' => 'w-1', 'channel' => 'whatsapp', 'rawBody' => '{"a":1}', 'signature' => 'sig-1', 'providerId' => 'meta'],
-				['@self' => ['id' => 'w-2'], 'channel' => 'sms', 'rawBody' => 'b', 'signature' => 'sig-2', 'providerId' => 'twilio'],
-				['channel' => 'fax'],
-			]
+	public function testRoutesEachRowToItsChannelAndSavesTheOutcome(): void {
+		$service = $this->objectService([
+			['uuid' => 'w-1', 'channel' => 'whatsapp', 'rawBody' => '{"a":1}', 'signature' => 'sig-1', 'providerId' => 'meta'],
+			['@self' => ['id' => 's-1'], 'channel' => 'sms', 'rawBody' => 'Body=hi', 'signature' => 'sig-2', 'providerId' => 'twilio'],
+		]);
+		$this->whatsApp->expects($this->once())->method('handleInboundWebhook')
+			->with('{"a":1}', 'sig-1', 'meta')
+			->willReturn(['status' => 'processed', 'messages' => 1]);
+		$this->sms->expects($this->once())->method('handleInboundWebhook')
+			->with('Body=hi', 'sig-2', 'twilio')
+			->willReturn(['status' => 'rejected']);
+
+		$this->drain();
+
+		$this->assertSame(
+			[['filters' => ['status' => 'queued', 'register' => 'pipelinq', 'schema' => 'webhookQueue']]],
+			$service->findConfigs
 		);
-		$whatsApp = $this->createMock(WhatsAppAdapter::class);
-		$whatsApp->expects($this->once())->method('handleInboundWebhook')->with('{"a":1}', 'sig-1', 'meta')->willReturn(['status' => 'processed', 'messages' => 1]);
-		$sms = $this->createMock(SmsAdapter::class);
-		$sms->expects($this->once())->method('handleInboundWebhook')->with('b', 'sig-2', 'twilio')->willReturn(['status' => 'rejected']);
-
-		$this->runJob($objects, ['register' => 'reg', 'webhookQueue_schema' => 'queue'], $whatsApp, $sms);
-
-		$this->assertSame([['filters' => ['status' => 'queued', 'register' => 'reg', 'schema' => 'queue']]], $objects->queries);
-		$this->assertSame(['w-1', 'w-2', null], array_column($objects->saves, 'uuid'));
-		$this->assertSame(['processed', 'rejected', 'unknownChannel'], array_map(static fn (array $s): string => $s['object']['status'], $objects->saves));
-		$this->assertSame(['status' => 'processed', 'messages' => 1], $objects->saves[0]['object']['result']);
-		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $objects->saves[0]['object']['processedAt']);
-		$this->assertSame(['reg', 'queue'], [$objects->saves[0]['register'], $objects->saves[0]['schema']]);
-	}//end testQueuedRowsAreDispatchedAndSavedBack()
+		$this->assertCount(2, $service->saved);
+		$first = $service->saved[0];
+		$this->assertSame('w-1', $first['uuid']);
+		$this->assertSame('pipelinq', $first['register']);
+		$this->assertSame('webhookQueue', $first['schema']);
+		$this->assertSame('processed', $first['object']['status']);
+		$this->assertSame(['status' => 'processed', 'messages' => 1], $first['object']['result']);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $first['object']['processedAt']);
+		$this->assertSame('s-1', $service->saved[1]['uuid']);
+		$this->assertSame('rejected', $service->saved[1]['object']['status']);
+	}//end testRoutesEachRowToItsChannelAndSavesTheOutcome()
 
 	/**
-	 * Without configured slugs the default register and queue schema are read.
+	 * The configured register and queue schema replace the defaults for read and save.
 	 *
 	 * @return void
 	 */
-	public function testTheDefaultQueueIsReadWithoutConfiguration(): void {
-		$objects = self::objects([]);
-		$this->runJob($objects);
-		$this->assertSame([['filters' => ['status' => 'queued', 'register' => 'pipelinq', 'schema' => 'webhookQueue']]], $objects->queries);
-		$this->assertSame([], $objects->saves);
-	}//end testTheDefaultQueueIsReadWithoutConfiguration()
+	public function testUsesTheConfiguredSlugs(): void {
+		$this->config = ['register' => 'crm', 'webhookQueue_schema' => 'inbound'];
+		$service      = $this->objectService([['id' => 'x', 'channel' => 'email']]);
+
+		$this->drain();
+
+		$this->assertSame('crm', $service->findConfigs[0]['filters']['register']);
+		$this->assertSame('inbound', $service->findConfigs[0]['filters']['schema']);
+		$this->assertSame('crm', $service->saved[0]['register']);
+		$this->assertSame('inbound', $service->saved[0]['schema']);
+	}//end testUsesTheConfiguredSlugs()
 
 	/**
-	 * An adapter that throws marks the row processingFailed with the reason.
+	 * An unknown channel is saved as unknownChannel without calling an adapter,
+	 * and a row without an id is saved without a uuid.
 	 *
 	 * @return void
 	 */
-	public function testAFailingAdapterMarksTheRowFailed(): void {
-		$objects = self::objects([['id' => 'w-9', 'channel' => 'sms', 'rawBody' => 'x']]);
-		$sms = $this->createMock(SmsAdapter::class);
-		$sms->method('handleInboundWebhook')->willThrowException(new RuntimeException('bad signature'));
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('warning')->with('WebhookProcessorJob.drain: processing failed', ['id' => 'w-9', 'exception' => 'bad signature']);
+	public function testAnUnknownChannelIsMarkedAndARowWithoutIdIsSavedNew(): void {
+		$service = $this->objectService([['channel' => 'fax', 'id' => '']]);
+		$this->whatsApp->expects($this->never())->method('handleInboundWebhook');
+		$this->sms->expects($this->never())->method('handleInboundWebhook');
 
-		$this->runJob($objects, [], null, $sms, $logger);
-		$this->assertSame(['status' => 'processingFailed', 'error' => 'bad signature'], $objects->saves[0]['object']['result']);
-		$this->assertSame('processingFailed', $objects->saves[0]['object']['status']);
-	}//end testAFailingAdapterMarksTheRowFailed()
+		$this->drain();
+
+		$this->assertNull($service->saved[0]['uuid']);
+		$this->assertSame('unknownChannel', $service->saved[0]['object']['status']);
+		$this->assertSame(['status' => 'unknownChannel'], $service->saved[0]['object']['result']);
+	}//end testAnUnknownChannelIsMarkedAndARowWithoutIdIsSavedNew()
 
 	/**
-	 * A failed save, a failed read and a missing OpenRegister are each logged.
+	 * A throwing adapter marks the row processingFailed with the error, and the next row still runs.
 	 *
 	 * @return void
 	 */
-	public function testStoreFailuresAreLogged(): void {
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('warning')->with('WebhookProcessorJob.drain: save failed', ['id' => 'w-1', 'exception' => 'save refused']);
-		$this->runJob(self::objects([['slug' => 'w-1', 'channel' => 'fax']], true), [], null, null, $logger);
+	public function testAThrowingAdapterMarksTheRowFailed(): void {
+		$service = $this->objectService([
+			['uuid' => 'w-1', 'channel' => 'whatsapp'],
+			['uuid' => 's-1', 'channel' => 'sms'],
+		]);
+		$this->whatsApp->method('handleInboundWebhook')->willThrowException(new \RuntimeException('bad signature'));
+		$this->sms->method('handleInboundWebhook')->willReturn(['status' => 'processed']);
+		$this->logger->expects($this->once())->method('warning')
+			->with('WebhookProcessorJob.drain: processing failed', ['id' => 'w-1', 'exception' => 'bad signature']);
 
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('warning')->with('WebhookProcessorJob.drain: findAll failed', ['exception' => 'db down']);
-		$this->runJob(self::objects(new RuntimeException('db down')), [], null, null, $logger);
+		$this->drain();
 
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('warning')->with('WebhookProcessorJob.getObjectService: OpenRegister unavailable', ['exception' => 'not installed']);
-		$this->runJob(new RuntimeException('not installed'), [], null, null, $logger);
-	}//end testStoreFailuresAreLogged()
+		$this->assertSame('processingFailed', $service->saved[0]['object']['status']);
+		$this->assertSame(['status' => 'processingFailed', 'error' => 'bad signature'], $service->saved[0]['object']['result']);
+		$this->assertSame('processed', $service->saved[1]['object']['status']);
+	}//end testAThrowingAdapterMarksTheRowFailed()
 
 	/**
-	 * A non-list answer from the queue processes nothing.
+	 * A failing save is logged per row and does not stop the drain.
 	 *
 	 * @return void
 	 */
-	public function testANonListAnswerProcessesNothing(): void {
-		$objects = self::objects('nothing');
-		$sms = $this->createMock(SmsAdapter::class);
-		$sms->expects($this->never())->method('handleInboundWebhook');
-		$this->runJob($objects, [], null, $sms);
-		$this->assertSame([], $objects->saves);
-	}//end testANonListAnswerProcessesNothing()
+	public function testAFailingSaveIsLogged(): void {
+		$service = $this->objectService(
+			[['uuid' => 'a', 'channel' => 'x'], ['uuid' => 'b', 'channel' => 'x']],
+			null,
+			new \RuntimeException('locked')
+		);
+		$this->logger->expects($this->exactly(2))->method('warning')
+			->with('WebhookProcessorJob.drain: save failed', $this->callback(static fn (array $c): bool => $c['exception'] === 'locked'));
+
+		$this->drain();
+
+		$this->assertCount(2, $service->saved);
+	}//end testAFailingSaveIsLogged()
+
+	/**
+	 * A failing queue read is logged and nothing is processed.
+	 *
+	 * @return void
+	 */
+	public function testAFailingQueueReadIsLogged(): void {
+		$service = $this->objectService([], new \RuntimeException('no table'));
+		$this->logger->expects($this->once())->method('warning')
+			->with('WebhookProcessorJob.drain: findAll failed', ['exception' => 'no table']);
+
+		$this->drain();
+
+		$this->assertSame([], $service->saved);
+	}//end testAFailingQueueReadIsLogged()
+
+	/**
+	 * Without OpenRegister the drain logs and stops.
+	 *
+	 * @return void
+	 */
+	public function testWithoutOpenRegisterNothingRuns(): void {
+		$this->container->method('get')->willThrowException(new \RuntimeException('not installed'));
+		$this->whatsApp->expects($this->never())->method('handleInboundWebhook');
+		$this->logger->expects($this->once())->method('warning')
+			->with('WebhookProcessorJob.getObjectService: OpenRegister unavailable', ['exception' => 'not installed']);
+		$this->logger->expects($this->never())->method('error');
+
+		$this->drain();
+	}//end testWithoutOpenRegisterNothingRuns()
+
+	/**
+	 * An empty queue processes nothing and saves nothing.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyQueueProcessesNothing(): void {
+		$service = $this->objectService([]);
+		$this->whatsApp->expects($this->never())->method('handleInboundWebhook');
+		$this->sms->expects($this->never())->method('handleInboundWebhook');
+
+		$this->drain();
+
+		$this->assertCount(1, $service->findConfigs);
+		$this->assertSame([], $service->saved);
+	}//end testAnEmptyQueueProcessesNothing()
 }//end class

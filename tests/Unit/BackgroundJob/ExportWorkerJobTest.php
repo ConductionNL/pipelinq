@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for ExportWorkerJob: pending export runs are executed, at most ten per tick.
+ * Unit tests for ExportWorkerJob: pending runs are executed in batches of ten, failures isolated.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\BackgroundJob
@@ -10,12 +10,12 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -26,96 +26,148 @@ use OCA\Pipelinq\BackgroundJob\ExportWorkerJob;
 use OCA\Pipelinq\Service\Export\ExportExecutionService;
 use OCA\Pipelinq\Service\Export\ExportRunService;
 use OCP\AppFramework\Utility\ITimeFactory;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use ReflectionMethod;
-use RuntimeException;
 
 /**
- * Tests for ExportWorkerJob.
- *
- * @covers \OCA\Pipelinq\BackgroundJob\ExportWorkerJob
+ * The export worker's pass over pending runs.
  */
+#[CoversClass(ExportWorkerJob::class)]
 class ExportWorkerJobTest extends TestCase {
 
 	/**
-	 * Build and run the job.
-	 *
-	 * @param ExportRunService       $runs      The run store.
-	 * @param ExportExecutionService $execution The executor.
-	 * @param LoggerInterface        $logger    The logger.
-	 *
-	 * @return void
+	 * @var ExportRunService&MockObject
 	 */
-	private function runJob(ExportRunService $runs, ExportExecutionService $execution, LoggerInterface $logger): void {
-		$job = new ExportWorkerJob($this->createMock(ITimeFactory::class), $runs, $execution, $logger);
-		(new ReflectionMethod(ExportWorkerJob::class, 'run'))->invoke($job, null);
-	}//end runJob()
+	private ExportRunService&MockObject $runs;
 
 	/**
-	 * Pending runs are executed in order, at most ten per tick, and a failing run does not stop the rest.
+	 * @var ExportExecutionService&MockObject
+	 */
+	private ExportExecutionService&MockObject $execution;
+
+	/**
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface&MockObject $logger;
+
+	/**
+	 * Set up mocks.
 	 *
 	 * @return void
 	 */
-	public function testPendingRunsAreExecutedTenAtATime(): void {
-		$pending = [];
-		for ($i = 1; $i <= 12; $i++) {
-			$pending[] = ['id' => 'run-'.$i];
-		}
+	protected function setUp(): void {
+		parent::setUp();
+		$this->runs      = $this->createMock(ExportRunService::class);
+		$this->execution = $this->createMock(ExportExecutionService::class);
+		$this->logger    = $this->createMock(LoggerInterface::class);
+	}//end setUp()
 
-		$runs = $this->createMock(ExportRunService::class);
-		$runs->expects($this->once())->method('listRuns')->with(['status' => 'pending'])->willReturn($pending);
-		$executed = [];
-		$execution = $this->createMock(ExportExecutionService::class);
-		$execution->method('executeRun')->willReturnCallback(
-			static function (array $run) use (&$executed): array {
-				$executed[] = $run['id'];
-				if ($run['id'] === 'run-2') {
-					throw new RuntimeException('disk full');
+	/**
+	 * Run one pass.
+	 *
+	 * @return void
+	 */
+	private function pass(): void {
+		$job = new ExportWorkerJob($this->createMock(ITimeFactory::class), $this->runs, $this->execution, $this->logger);
+		$run = new \ReflectionMethod($job, 'run');
+		$run->setAccessible(true);
+		$run->invoke($job, null);
+	}//end pass()
+
+	/**
+	 * The worker asks only for pending runs and executes each, then logs the count.
+	 *
+	 * @return void
+	 */
+	public function testExecutesEveryPendingRun(): void {
+		$pending = [['id' => 'r1'], ['id' => 'r2']];
+		$this->runs->expects($this->once())->method('listRuns')->with(['status' => 'pending'])->willReturn($pending);
+		$seen = [];
+		$this->execution->expects($this->exactly(2))->method('executeRun')
+			->willReturnCallback(function (array $run) use (&$seen): array {
+				$seen[] = $run['id'];
+				return [];
+			});
+		$this->logger->expects($this->once())->method('info')
+			->with('ExportWorkerJob: processed pending export runs', ['count' => 2]);
+
+		$this->pass();
+
+		$this->assertSame(['r1', 'r2'], $seen);
+	}//end testExecutesEveryPendingRun()
+
+	/**
+	 * At most ten runs are executed per pass.
+	 *
+	 * @return void
+	 */
+	public function testExecutesAtMostTenRunsPerPass(): void {
+		$pending = array_map(static fn (int $i): array => ['id' => 'r' . $i], range(1, 13));
+		$this->runs->method('listRuns')->willReturn($pending);
+		$this->execution->expects($this->exactly(10))->method('executeRun')->willReturn([]);
+		$this->logger->expects($this->once())->method('info')->with($this->anything(), ['count' => 10]);
+
+		$this->pass();
+	}//end testExecutesAtMostTenRunsPerPass()
+
+	/**
+	 * A failing run is logged with its id (or uuid) and the others still run.
+	 *
+	 * @return void
+	 */
+	public function testAFailingRunDoesNotStopTheOthers(): void {
+		$this->runs->method('listRuns')->willReturn([['uuid' => 'u-1'], ['id' => 'r2'], []]);
+		$this->execution->expects($this->exactly(3))->method('executeRun')
+			->willReturnCallback(static function (array $run): array {
+				if (($run['uuid'] ?? '') === 'u-1' || $run === []) {
+					throw new \RuntimeException('disk full');
 				}
 
-				return $run;
-			}
+				return [];
+			});
+		$errors = [];
+		$this->logger->method('error')->willReturnCallback(function (string $message, array $context) use (&$errors): void {
+			$errors[] = [$message, $context];
+		});
+		$this->logger->expects($this->once())->method('info')->with($this->anything(), ['count' => 3]);
+
+		$this->pass();
+
+		$this->assertSame(
+			[
+				['ExportWorkerJob: run execution failed', ['runId' => 'u-1', 'error' => 'disk full']],
+				['ExportWorkerJob: run execution failed', ['runId' => '', 'error' => 'disk full']],
+			],
+			$errors
 		);
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('error')->with('ExportWorkerJob: run execution failed', ['runId' => 'run-2', 'error' => 'disk full']);
-		$logger->expects($this->once())->method('info')->with('ExportWorkerJob: processed pending export runs', ['count' => 10]);
-
-		$this->runJob($runs, $execution, $logger);
-		$this->assertSame(['run-1', 'run-2', 'run-3', 'run-4', 'run-5', 'run-6', 'run-7', 'run-8', 'run-9', 'run-10'], $executed);
-	}//end testPendingRunsAreExecutedTenAtATime()
+	}//end testAFailingRunDoesNotStopTheOthers()
 
 	/**
-	 * A failing run without an id is logged by its uuid, and nothing pending logs nothing.
+	 * No pending runs: nothing executed and nothing logged.
 	 *
 	 * @return void
 	 */
-	public function testARunIsNamedByUuidAndAnEmptyQueueIsQuiet(): void {
-		$runs = $this->createMock(ExportRunService::class);
-		$runs->method('listRuns')->willReturnOnConsecutiveCalls([['uuid' => 'u-1']], []);
-		$execution = $this->createMock(ExportExecutionService::class);
-		$execution->method('executeRun')->willThrowException(new RuntimeException('x'));
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('error')->with('ExportWorkerJob: run execution failed', ['runId' => 'u-1', 'error' => 'x']);
-		$logger->expects($this->once())->method('info');
+	public function testNoPendingRunsLogsNothing(): void {
+		$this->runs->method('listRuns')->willReturn([]);
+		$this->execution->expects($this->never())->method('executeRun');
+		$this->logger->expects($this->never())->method('info');
 
-		$this->runJob($runs, $execution, $logger);
-		$this->runJob($runs, $execution, $logger);
-	}//end testARunIsNamedByUuidAndAnEmptyQueueIsQuiet()
+		$this->pass();
+	}//end testNoPendingRunsLogsNothing()
 
 	/**
-	 * When the pending runs cannot be listed, nothing is executed.
+	 * When the pending runs cannot be listed, the error is logged and nothing runs.
 	 *
 	 * @return void
 	 */
-	public function testAFailedListingExecutesNothing(): void {
-		$runs = $this->createMock(ExportRunService::class);
-		$runs->method('listRuns')->willThrowException(new RuntimeException('db down'));
-		$execution = $this->createMock(ExportExecutionService::class);
-		$execution->expects($this->never())->method('executeRun');
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('error')->with('ExportWorkerJob: failed to list pending runs', ['error' => 'db down']);
+	public function testAFailedListingIsLoggedAndStops(): void {
+		$this->runs->method('listRuns')->willThrowException(new \RuntimeException('register missing'));
+		$this->execution->expects($this->never())->method('executeRun');
+		$this->logger->expects($this->once())->method('error')
+			->with('ExportWorkerJob: failed to list pending runs', ['error' => 'register missing']);
 
-		$this->runJob($runs, $execution, $logger);
-	}//end testAFailedListingExecutesNothing()
+		$this->pass();
+	}//end testAFailedListingIsLoggedAndStops()
 }//end class

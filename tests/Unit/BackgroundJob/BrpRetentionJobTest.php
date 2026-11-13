@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for BrpRetentionJob: BRP person records past their retention date are deleted and their contact loses the verified BSN.
+ * Unit tests for BrpRetentionJob: deleting BRP person records past their retention date and resetting the linked contact.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\BackgroundJob
@@ -10,58 +10,111 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @version GIT: <git-id>
  *
  * @link https://pipelinq.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
-use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
+use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\BrpRetentionJob;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use ReflectionMethod;
-use RuntimeException;
 
 /**
- * Tests for BrpRetentionJob.
- *
- * @covers \OCA\Pipelinq\BackgroundJob\BrpRetentionJob
+ * The BRP retention sweep. Dates are far in the past or future so the
+ * outcome does not depend on the clock.
  */
+#[CoversClass(BrpRetentionJob::class)]
 class BrpRetentionJobTest extends TestCase {
 
+	private const PAST = '2001-01-01T00:00:00Z';
+
+	private const FUTURE = '2999-01-01T00:00:00Z';
+
 	/**
-	 * Record a fake ObjectService's calls.
+	 * @var IAppConfig&MockObject
+	 */
+	private IAppConfig&MockObject $appConfig;
+
+	/**
+	 * @var ContainerInterface&MockObject
+	 */
+	private ContainerInterface&MockObject $container;
+
+	/**
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface&MockObject $logger;
+
+	/**
+	 * Configured string values.
 	 *
-	 * @param array<int, mixed>                   $records  The person records findAll answers.
-	 * @param array<string, array<string, mixed>> $contacts Contacts by id for find().
-	 * @param array<string, bool>                 $failing  Which operations throw (delete, find, save).
+	 * @var array<string, string>
+	 */
+	private array $config = [];
+
+	/**
+	 * Set up mocks.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->appConfig = $this->createMock(IAppConfig::class);
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->logger    = $this->createMock(LoggerInterface::class);
+		$this->config    = ['register' => 'crm', 'brpPersoon_schema' => 'brpPerson', 'contact_schema' => 'contact'];
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			fn (string $app, string $key, string $default = ''): string => $this->config[$key] ?? $default
+		);
+		$this->appConfig->method('getValueInt')->willReturnCallback(
+			static fn (string $app, string $key, int $default = 0): int => $default
+		);
+	}//end setUp()
+
+	/**
+	 * A recording object service.
+	 *
+	 * @param array<int, mixed>         $persons  What findAll answers.
+	 * @param array<string, mixed>      $contacts Contact id => what find answers.
+	 * @param array<int, string>        $failOn   Uuids whose delete throws.
 	 *
 	 * @return object
 	 */
-	private static function objects(array $records, array $contacts = [], array $failing = []): object {
-		return new class ($records, $contacts, $failing) {
-			/** @var array<int, array<mixed>> */
-			public array $calls = [];
+	private function objects(array $persons, array $contacts = [], array $failOn = []): object {
+		$objects = new class {
+			/** @var array<int, mixed> */
+			public array $persons = [];
 
-			/**
-			 * Constructor.
-			 *
-			 * @param array<int, mixed>                   $records  The records.
-			 * @param array<string, array<string, mixed>> $contacts The contacts.
-			 * @param array<string, bool>                 $failing  The failing operations.
-			 */
-			public function __construct(private array $records, private array $contacts, private array $failing) {
-			}//end __construct()
+			/** @var array<string, mixed> */
+			public array $contacts = [];
+
+			/** @var array<int, string> */
+			public array $failOn = [];
+
+			/** @var array<int, array<string, mixed>> */
+			public array $findAllConfigs = [];
+
+			/** @var array<int, string> */
+			public array $deleted = [];
+
+			/** @var array<int, array<string, mixed>> */
+			public array $saved = [];
+
+			/** @var array<int, string> */
+			public array $scope = [];
 
 			/**
 			 * @param array<string, mixed> $config The query.
@@ -69,203 +122,267 @@ class BrpRetentionJobTest extends TestCase {
 			 * @return array<int, mixed>
 			 */
 			public function findAll(array $config): array {
-				$this->calls[] = ['findAll', $config];
-				return $this->records;
-			}//end findAll()
+				$this->findAllConfigs[] = $config;
+				return $this->persons;
+			}
 
 			/**
 			 * @param string $register The register.
 			 *
-			 * @return static
+			 * @return self
 			 */
-			public function setRegister(string $register): static {
-				$this->calls[] = ['setRegister', $register];
+			public function setRegister(string $register): self {
+				$this->scope[] = 'register:' . $register;
 				return $this;
-			}//end setRegister()
+			}
 
 			/**
 			 * @param string $schema The schema.
 			 *
-			 * @return static
+			 * @return self
 			 */
-			public function setSchema(string $schema): static {
-				$this->calls[] = ['setSchema', $schema];
+			public function setSchema(string $schema): self {
+				$this->scope[] = 'schema:' . $schema;
 				return $this;
-			}//end setSchema()
+			}
 
 			/**
-			 * @param string $uuid The object.
+			 * @param string $uuid The uuid.
 			 *
 			 * @return bool
 			 */
 			public function deleteObject(string $uuid): bool {
-				if (isset($this->failing['delete']) === true) {
-					throw new RuntimeException('delete refused');
+				if (in_array($uuid, $this->failOn, true) === true) {
+					throw new \RuntimeException('locked ' . $uuid);
 				}
 
-				$this->calls[] = ['deleteObject', $uuid];
+				$this->deleted[] = $uuid;
 				return true;
-			}//end deleteObject()
+			}
 
 			/**
-			 * @param string $id       The object.
+			 * @param string $id       The id.
 			 * @param string $register The register.
 			 * @param string $schema   The schema.
 			 *
-			 * @return array<string, mixed>|null
+			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): ?array {
-				if (isset($this->failing['find']) === true) {
-					throw new RuntimeException('contact unreadable');
+			public function find(string $id, string $register, string $schema): mixed {
+				$found = $this->contacts[$id] ?? null;
+				if ($found instanceof \Throwable) {
+					throw $found;
 				}
 
-				return ($this->contacts[$id] ?? null);
-			}//end find()
+				return $found;
+			}
 
 			/**
 			 * @param array<string, mixed> $object   The object.
-			 * @param array<int, string>   $extend   Extensions.
+			 * @param array<int, string>   $extend   Extends.
 			 * @param string               $register The register.
 			 * @param string               $schema   The schema.
-			 * @param string               $uuid     The object.
+			 * @param string               $uuid     The uuid.
 			 *
 			 * @return array<string, mixed>
 			 */
 			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
-				$this->calls[] = ['saveObject', $object, $register, $schema, $uuid];
+				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				return $object;
-			}//end saveObject()
+			}
 		};
+		$objects->persons  = $persons;
+		$objects->contacts = $contacts;
+		$objects->failOn   = $failOn;
+		$this->container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objects);
+		return $objects;
 	}//end objects()
 
 	/**
-	 * Run the job with app config and an ObjectService.
-	 *
-	 * @param array<string, string> $config  App config strings.
-	 * @param object|null           $objects The ObjectService.
-	 * @param LoggerInterface|null  $logger  The logger.
+	 * Run one sweep.
 	 *
 	 * @return void
 	 */
-	private function runJob(array $config, ?object $objects, ?LoggerInterface $logger = null): void {
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueInt')->willReturnArgument(2);
-		$appConfig->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default = ''): string => ($config[$key] ?? $default));
-		$container = $this->createMock(ContainerInterface::class);
-		if ($objects === null) {
-			$container->expects($this->never())->method('get');
-		} else {
-			$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objects);
-		}
-
-		$job = new BrpRetentionJob($this->createMock(ITimeFactory::class), $appConfig, $container, ($logger ?? $this->createMock(LoggerInterface::class)));
-		(new ReflectionMethod(BrpRetentionJob::class, 'run'))->invoke($job, null);
-	}//end runJob()
-
-	private const CONFIG = ['register' => 'reg', 'brpPersoon_schema' => 'persoon', 'contact_schema' => 'contact'];
+	private function sweep(): void {
+		$job = new BrpRetentionJob($this->createMock(ITimeFactory::class), $this->appConfig, $this->container, $this->logger);
+		$run = new \ReflectionMethod($job, 'run');
+		$run->setAccessible(true);
+		$run->invoke($job, null);
+	}//end sweep()
 
 	/**
-	 * Expired persons are deleted and their linked contact loses the verified BSN; the rest stay.
+	 * Without a register or person schema the sweep skips and never resolves OpenRegister.
 	 *
 	 * @return void
 	 */
-	public function testExpiredPersonsAreDeletedAndTheirContactReset(): void {
-		$serialisable = new class () implements \JsonSerializable {
-			/** @return array<string, string> */
+	public function testSkipsWhenThePersonSchemaIsNotConfigured(): void {
+		$this->config['brpPersoon_schema'] = '';
+		$this->container->expects($this->never())->method('get');
+		$this->logger->expects($this->once())->method('info')->with('BRP retention: schemas not configured; skipping');
+
+		$this->sweep();
+	}//end testSkipsWhenThePersonSchemaIsNotConfigured()
+
+	/**
+	 * Only persons whose retention date has passed are deleted; others and
+	 * those without or with an unreadable date are kept.
+	 *
+	 * @return void
+	 */
+	public function testDeletesOnlyExpiredPersons(): void {
+		$objects = $this->objects([
+			['id' => 'p-old', 'retentionTo' => self::PAST],
+			['id' => 'p-new', 'retentionTo' => self::FUTURE],
+			['id' => 'p-none'],
+			['id' => 'p-bad', 'retentionTo' => 'not a date'],
+			['@self' => ['id' => 'p-self'], 'id' => 'ignored', 'retentionTo' => self::PAST],
+		]);
+		$this->logger->expects($this->once())->method('info')->with('BRP retention sweep complete', ['deleted' => 2]);
+
+		$this->sweep();
+
+		$this->assertSame([['filters' => ['register' => 'crm', 'schema' => 'brpPerson']]], $objects->findAllConfigs);
+		$this->assertSame(['p-old', 'p-self'], $objects->deleted);
+		$this->assertSame(['register:crm', 'schema:brpPerson', 'register:crm', 'schema:brpPerson'], $objects->scope);
+	}//end testDeletesOnlyExpiredPersons()
+
+	/**
+	 * A serialisable entity is read through jsonSerialize.
+	 *
+	 * @return void
+	 */
+	public function testReadsEntitiesThroughJsonSerialize(): void {
+		$entity = new class implements \JsonSerializable {
+			/**
+			 * @return array<string, string>
+			 */
 			public function jsonSerialize(): array {
-				return ['id' => 'p-2', 'retentionTo' => '2001-01-01T00:00:00Z'];
-			}//end jsonSerialize()
+				return ['id' => 'p-entity', 'retentionTo' => '2001-06-01'];
+			}
 		};
-		$objects = self::objects(
-			[
-				['@self' => ['id' => 'p-1'], 'retentionTo' => '2000-01-01', 'gekoppeldContact' => 'c-1'],
-				$serialisable,
-				['id' => 'p-3', 'retentionTo' => '2999-01-01'],
-				['id' => 'p-4'],
-				['id' => 'p-5', 'retentionTo' => 'not a date'],
-				'junk',
-			],
-			['c-1' => ['brpPersonId' => 'p-1', 'verifiedBSN' => true, 'name' => 'Anna']]
-		);
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('info')->with('BRP retention sweep complete', ['deleted' => 2]);
+		$objects = $this->objects([$entity, new \stdClass()]);
 
-		$this->runJob(self::CONFIG, $objects, $logger);
+		$this->sweep();
 
-		$this->assertSame(['findAll', ['filters' => ['register' => 'reg', 'schema' => 'persoon']]], $objects->calls[0]);
-		$deleted = array_values(array_map(static fn (array $c): string => $c[1], array_filter($objects->calls, static fn (array $c): bool => $c[0] === 'deleteObject')));
-		$this->assertSame(['p-1', 'p-2'], $deleted);
-		$saves = array_values(array_filter($objects->calls, static fn (array $c): bool => $c[0] === 'saveObject'));
-		$this->assertSame([['saveObject', ['brpPersonId' => 'p-1', 'verifiedBSN' => false, 'name' => 'Anna'], 'reg', 'contact', 'c-1']], $saves);
-	}//end testExpiredPersonsAreDeletedAndTheirContactReset()
+		$this->assertSame(['p-entity'], $objects->deleted);
+	}//end testReadsEntitiesThroughJsonSerialize()
 
 	/**
-	 * A contact now linked to another person, or one that is gone, is left alone.
+	 * The linked contact pointing at the deleted person loses its verified BSN flag
+	 * and keeps its pointer.
 	 *
 	 * @return void
 	 */
-	public function testAContactLinkedElsewhereIsLeftAlone(): void {
-		$objects = self::objects(
-			[
-				['id' => 'p-1', 'retentionTo' => '2000-01-01', 'gekoppeldContact' => 'c-1'],
-				['id' => 'p-2', 'retentionTo' => '2000-01-01', 'gekoppeldContact' => 'c-gone'],
-			],
-			['c-1' => ['brpPersonId' => 'p-other', 'verifiedBSN' => true]]
+	public function testResetsTheLinkedContact(): void {
+		$objects = $this->objects(
+			[['id' => 'p-1', 'retentionTo' => self::PAST, 'gekoppeldContact' => 'c-1']],
+			['c-1' => ['id' => 'c-1', 'brpPersonId' => 'p-1', 'verifiedBSN' => true, 'name' => 'Jan']]
 		);
 
-		$this->runJob(self::CONFIG, $objects);
-		$this->assertSame([], array_filter($objects->calls, static fn (array $c): bool => $c[0] === 'saveObject'));
-	}//end testAContactLinkedElsewhereIsLeftAlone()
+		$this->sweep();
+
+		$this->assertSame(
+			[[
+				'object' => ['id' => 'c-1', 'brpPersonId' => 'p-1', 'verifiedBSN' => false, 'name' => 'Jan'],
+				'register' => 'crm',
+				'schema' => 'contact',
+				'uuid' => 'c-1',
+			]],
+			$objects->saved
+		);
+	}//end testResetsTheLinkedContact()
 
 	/**
-	 * Without a contact schema the person is deleted and no contact is read.
+	 * A contact that now points at another person, or that is gone, is left alone.
 	 *
 	 * @return void
 	 */
-	public function testWithoutAContactSchemaOnlyThePersonIsDeleted(): void {
-		$objects = self::objects([['id' => 'p-1', 'retentionTo' => '2000-01-01', 'gekoppeldContact' => 'c-1']], [], ['find' => true]);
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->never())->method('warning');
+	public function testLeavesAContactPointingElsewhereAlone(): void {
+		$objects = $this->objects(
+			[
+				['id' => 'p-1', 'retentionTo' => self::PAST, 'gekoppeldContact' => 'c-1'],
+				['id' => 'p-2', 'retentionTo' => self::PAST, 'gekoppeldContact' => 'c-gone'],
+			],
+			['c-1' => ['id' => 'c-1', 'brpPersonId' => 'p-9', 'verifiedBSN' => true]]
+		);
 
-		$this->runJob(['register' => 'reg', 'brpPersoon_schema' => 'persoon'], $objects, $logger);
-		$this->assertContains(['deleteObject', 'p-1'], $objects->calls);
-	}//end testWithoutAContactSchemaOnlyThePersonIsDeleted()
+		$this->sweep();
+
+		$this->assertSame(['p-1', 'p-2'], $objects->deleted);
+		$this->assertSame([], $objects->saved);
+	}//end testLeavesAContactPointingElsewhereAlone()
 
 	/**
-	 * A refused delete is logged and not counted; a failing contact reset is logged.
+	 * Without a contact schema the contact is not touched.
 	 *
 	 * @return void
 	 */
-	public function testFailuresAreLoggedPerRecord(): void {
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('warning')->with('BRP retention: delete failed', ['uuid' => 'p-1', 'error' => 'delete refused']);
-		$logger->expects($this->once())->method('info')->with('BRP retention sweep complete', ['deleted' => 0]);
-		$this->runJob(self::CONFIG, self::objects([['id' => 'p-1', 'retentionTo' => '2000-01-01']], [], ['delete' => true]), $logger);
+	public function testWithoutAContactSchemaTheContactIsNotTouched(): void {
+		$this->config['contact_schema'] = '';
+		$objects = $this->objects(
+			[['id' => 'p-1', 'retentionTo' => self::PAST, 'gekoppeldContact' => 'c-1']],
+			['c-1' => ['id' => 'c-1', 'brpPersonId' => 'p-1']]
+		);
 
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('warning')->with('BRP retention: contact reset failed', ['contactId' => 'c-1', 'error' => 'contact unreadable']);
-		$logger->expects($this->once())->method('info')->with('BRP retention sweep complete', ['deleted' => 1]);
-		$this->runJob(self::CONFIG, self::objects([['id' => 'p-1', 'retentionTo' => '2000-01-01', 'gekoppeldContact' => 'c-1']], [], ['find' => true]), $logger);
-	}//end testFailuresAreLoggedPerRecord()
+		$this->sweep();
+
+		$this->assertSame(['p-1'], $objects->deleted);
+		$this->assertSame([], $objects->saved);
+	}//end testWithoutAContactSchemaTheContactIsNotTouched()
 
 	/**
-	 * Without the register or person schema nothing is read; a failing store is logged.
+	 * A failing delete is logged, not counted, and leaves the contact alone; the sweep continues.
 	 *
 	 * @return void
 	 */
-	public function testAnUnconfiguredOrUnavailableStoreDeletesNothing(): void {
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('info')->with('BRP retention: schemas not configured; skipping');
-		$this->runJob(['register' => 'reg'], null, $logger);
+	public function testAFailingDeleteIsLoggedAndNotCounted(): void {
+		$objects  = $this->objects(
+			[
+				['id' => 'p-1', 'retentionTo' => self::PAST, 'gekoppeldContact' => 'c-1'],
+				['id' => 'p-2', 'retentionTo' => self::PAST],
+			],
+			['c-1' => ['id' => 'c-1', 'brpPersonId' => 'p-1']],
+			['p-1']
+		);
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(function (string $m, array $c) use (&$warnings): void {
+			$warnings[] = [$m, $c];
+		});
+		$this->logger->expects($this->once())->method('info')->with('BRP retention sweep complete', ['deleted' => 1]);
 
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueInt')->willReturnArgument(2);
-		$appConfig->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default = ''): string => (self::CONFIG[$key] ?? $default));
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willThrowException(new RuntimeException('no OpenRegister'));
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('error')->with('BRP retention job failed', ['error' => 'no OpenRegister']);
-		$job = new BrpRetentionJob($this->createMock(ITimeFactory::class), $appConfig, $container, $logger);
-		(new ReflectionMethod(BrpRetentionJob::class, 'run'))->invoke($job, null);
-	}//end testAnUnconfiguredOrUnavailableStoreDeletesNothing()
+		$this->sweep();
+
+		$this->assertSame([['BRP retention: delete failed', ['uuid' => 'p-1', 'error' => 'locked p-1']]], $warnings);
+		$this->assertSame(['p-2'], $objects->deleted);
+		$this->assertSame([], $objects->saved);
+	}//end testAFailingDeleteIsLoggedAndNotCounted()
+
+	/**
+	 * A failing contact lookup is logged; the person still counts as deleted.
+	 *
+	 * @return void
+	 */
+	public function testAFailingContactResetIsLogged(): void {
+		$this->objects(
+			[['id' => 'p-1', 'retentionTo' => self::PAST, 'gekoppeldContact' => 'c-1']],
+			['c-1' => new \RuntimeException('contact schema gone')]
+		);
+		$this->logger->expects($this->once())->method('warning')
+			->with('BRP retention: contact reset failed', ['contactId' => 'c-1', 'error' => 'contact schema gone']);
+		$this->logger->expects($this->once())->method('info')->with('BRP retention sweep complete', ['deleted' => 1]);
+
+		$this->sweep();
+	}//end testAFailingContactResetIsLogged()
+
+	/**
+	 * When OpenRegister cannot be resolved the job logs one error.
+	 *
+	 * @return void
+	 */
+	public function testAnUnavailableOpenRegisterIsLoggedAsError(): void {
+		$this->container->method('get')->willThrowException(new \RuntimeException('not installed'));
+		$this->logger->expects($this->once())->method('error')
+			->with('BRP retention job failed', ['error' => 'not installed']);
+
+		$this->sweep();
+	}//end testAnUnavailableOpenRegisterIsLoggedAsError()
 }//end class
