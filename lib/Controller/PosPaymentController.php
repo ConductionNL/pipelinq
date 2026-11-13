@@ -67,6 +67,7 @@ use Throwable;
  *  request + logger); splitting them would add indirection.
  *
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PosPaymentController extends Controller {
 	/**

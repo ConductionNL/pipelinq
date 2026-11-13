@@ -50,6 +50,7 @@ use Throwable;
  * Controller for /api/blast/track/* — first-party open/click tracking.
  *
  * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#2
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class BlastTrackingController extends Controller {
 

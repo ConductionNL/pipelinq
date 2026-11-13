@@ -100,18 +100,18 @@ export default {
 }
 
 .score--high {
-	background: #dcfce7;
-	color: #166534;
+	background: var(--color-success-light, #dcfce7);
+	color: var(--color-success-text, #166534);
 }
 
 .score--medium {
-	background: #fef3c7;
-	color: #92400e;
+	background: var(--color-warning-light, #fef3c7);
+	color: var(--color-warning-text, #92400e);
 }
 
 .score--low {
-	background: #fee2e2;
-	color: #991b1b;
+	background: var(--color-error-light, #fee2e2);
+	color: var(--color-error-text, #991b1b);
 }
 
 .prospect-card__details {

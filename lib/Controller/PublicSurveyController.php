@@ -47,6 +47,7 @@ use OCP\IRequest;
  * Open and answer a survey by its per-invitation token.
  *
  * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PublicSurveyController extends Controller {
 	/**

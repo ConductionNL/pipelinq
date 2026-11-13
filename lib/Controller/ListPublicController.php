@@ -66,6 +66,7 @@ use Throwable;
  *  four endpoints share all of them.
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-public-list-endpoints-are-throttled-and-fail-closed
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class ListPublicController extends Controller {
 	/**
