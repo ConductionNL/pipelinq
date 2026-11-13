@@ -58,6 +58,8 @@ class Notifier implements INotifier {
 		'billing_handoff_failed' => 'system',
 		'social_share_requested' => 'social',
 		'social_relink_needed' => 'social',
+		'followup_event_upcoming' => 'reminder',
+		'followup_task_due' => 'reminder',
 	];
 
 	/**
@@ -156,6 +158,7 @@ class Notifier implements INotifier {
 			'change' => $this->applyChangeSubject(notification: $notification, context: $context),
 			'system' => $this->applySystemSubject(notification: $notification, context: $context),
 			'social' => $this->applySocialSubject(notification: $notification, context: $context),
+			'reminder' => $this->applyReminderSubject(notification: $notification, context: $context),
 			default => throw new UnknownNotificationException(),
 		};
 	}//end applyNotificationSubject()
@@ -200,6 +203,30 @@ class Notifier implements INotifier {
 		$notification->setParsedSubject($parsed);
 		$notification->setRichSubject(subject: $rich, parameters: $context['richParams']);
 	}//end applyAssignmentSubject()
+
+	/**
+	 * A follow-up reminder: a meeting linked to a lead starts soon, or a follow-up task falls due.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 */
+	private function applyReminderSubject(INotification $notification, array $context): void {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		if ($notification->getSubject() === 'followup_event_upcoming') {
+			$notification->setParsedSubject(
+				$l->t('Upcoming meeting for %1$s: %2$s at %3$s', [$params['lead'] ?? '', $title, $params['start'] ?? ''])
+			);
+			$notification->setRichSubject(subject: $l->t('Upcoming meeting: {title}'), parameters: $context['richParams']);
+			return;
+		}
+
+		$notification->setParsedSubject($l->t('Follow-up due: %1$s (deadline: %2$s)', [$title, $params['deadline'] ?? '']));
+		$notification->setRichSubject(subject: $l->t('Follow-up due: {title}'), parameters: $context['richParams']);
+	}//end applyReminderSubject()
 
 	/**
 	 * A task completed (with its result) or expired (with its deadline).

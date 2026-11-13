@@ -9587,6 +9587,10 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "Upcoming meeting for %1$s: %2$s at %3$s": "Komende afspraak voor %1$s: %2$s om %3$s",
+        "Upcoming meeting: {title}": "Komende afspraak: {title}",
+        "Follow-up due: %1$s (deadline: %2$s)": "Opvolgtaak verloopt: %1$s (deadline: %2$s)",
+        "Follow-up due: {title}": "Opvolgtaak verloopt: {title}"
     }
 }

@@ -1664,6 +1664,20 @@
             "x-relation-filter": { "client": "@object.clientId" },
             "title": "Request"
           },
+          "leadId": {
+            "type": "string",
+            "description": "The lead this task follows up, if any.",
+            "format": "uuid",
+            "$ref": "lead",
+            "title": "Lead"
+          },
+          "contactId": {
+            "type": "string",
+            "description": "The contact person this task follows up, if any.",
+            "format": "uuid",
+            "$ref": "contact",
+            "title": "Contact"
+          },
           "contactMomentSummary": {
             "type": "string",
             "description": "Summary text from the originating contact moment",

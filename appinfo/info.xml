@@ -109,6 +109,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\ScheduledTaskJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SyncRegisterAccessJob</job>
         <job>OCA\Pipelinq\BackgroundJob\CallbackOverdueJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\FollowUpReminderJob</job>
         <job>OCA\Pipelinq\BackgroundJob\PortalCleanupJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportSchedulerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportWorkerJob</job>

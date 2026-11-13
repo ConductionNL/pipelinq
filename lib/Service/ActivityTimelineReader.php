@@ -55,6 +55,12 @@ class ActivityTimelineReader {
 	private const EMAIL_LINK_READER = 'OCA\\OpenRegister\\Contract\\EmailLinkReaderInterface';
 
 	/**
+	 * OpenRegister's calendar leaf read service. Looked up by name, so an
+	 * OpenRegister without it leaves the leaf's meetings off the timeline.
+	 */
+	private const CALENDAR_LEAF = 'OCA\\OpenRegister\\Service\\CalendarLinkService';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config service.
@@ -281,6 +287,41 @@ class ActivityTimelineReader {
 
 		return array_values(array_filter($page['items'] ?? [], 'is_array'));
 	}//end linkedEmails()
+
+	/**
+	 * The calendar events linked to a record, read live through OpenRegister's
+	 * calendar leaf. Never stored: the leaf's link table is the record. An
+	 * OpenRegister without the leaf, or a failing read, gives none.
+	 *
+	 * @param string $entityId The record's uuid.
+	 *
+	 * @return array<int,array<string,mixed>> The leaf's event rows.
+	 *
+	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+	 */
+	public function linkedEvents(string $entityId): array {
+		try {
+			if ($this->container->has(self::CALENDAR_LEAF) === false) {
+				return [];
+			}
+
+			$leaf = $this->container->get(self::CALENDAR_LEAF);
+			if (is_object($leaf) === false || method_exists($leaf, 'getLinkedEvents') === false) {
+				return [];
+			}
+
+			$events = $leaf->getLinkedEvents(objectUuid: $entityId);
+		} catch (Throwable $e) {
+			$this->logger->error('ActivityTimelineReader: failed to read linked calendar events', ['exception' => $e->getMessage()]);
+			return [];
+		}
+
+		if (is_array($events) === false) {
+			return [];
+		}
+
+		return array_values(array_filter($events, 'is_array'));
+	}//end linkedEvents()
 
 	/**
 	 * The name of an appointment service, or null when it cannot be read.

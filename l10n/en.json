@@ -9558,6 +9558,10 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "Upcoming meeting for %1$s: %2$s at %3$s": "Upcoming meeting for %1$s: %2$s at %3$s",
+        "Upcoming meeting: {title}": "Upcoming meeting: {title}",
+        "Follow-up due: %1$s (deadline: %2$s)": "Follow-up due: %1$s (deadline: %2$s)",
+        "Follow-up due: {title}": "Follow-up due: {title}"
     }
 }
