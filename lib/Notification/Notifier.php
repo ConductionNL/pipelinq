@@ -58,6 +58,8 @@ class Notifier implements INotifier {
 		'billing_handoff_failed' => 'system',
 		'social_share_requested' => 'social',
 		'social_relink_needed' => 'social',
+		'full_export_ready' => 'export',
+		'full_export_failed' => 'export',
 	];
 
 	/**
@@ -123,6 +125,13 @@ class Notifier implements INotifier {
 				$this->urlGenerator->imagePath(appName: Application::APP_ID, file: 'app-dark.svg')
 			)
 		);
+		$fileId = (string)($params['fileId'] ?? '');
+		if ($notification->getSubject() === 'full_export_ready' && $fileId !== '') {
+			// The archive itself, opened in Files (data-portability REQ-DPE-002).
+			$notification->setLink($this->urlGenerator->linkToRouteAbsolute('files.viewcontroller.showFile', ['fileid' => $fileId]));
+			return $notification;
+		}
+
 		$baseUrl = $this->urlGenerator->linkToRouteAbsolute('pipelinq.dashboard.page');
 		$objectPath = '#/' . $notification->getObjectType() . 's/' . $notification->getObjectId();
 		$notification->setLink($baseUrl . $objectPath);
@@ -156,6 +165,7 @@ class Notifier implements INotifier {
 			'change' => $this->applyChangeSubject(notification: $notification, context: $context),
 			'system' => $this->applySystemSubject(notification: $notification, context: $context),
 			'social' => $this->applySocialSubject(notification: $notification, context: $context),
+			'export' => $this->applyExportSubject(notification: $notification, context: $context),
 			default => throw new UnknownNotificationException(),
 		};
 	}//end applyNotificationSubject()
@@ -319,4 +329,26 @@ class Notifier implements INotifier {
 			)
 		);
 	}//end applySocialSubject()
+	/**
+	 * The full data export: the archive is ready, or it could not be built.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`) and the parameters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
+	 */
+	private function applyExportSubject(INotification $notification, array $context): void {
+		$l = $context['l'];
+		$name = (string)($context['params']['name'] ?? '');
+		if ($notification->getSubject() === 'full_export_ready') {
+			$notification->setParsedSubject($l->t('Your data export is ready: %1$s', [$name]));
+			$notification->setParsedMessage($l->t('The archive with all Pipelinq data is in your Files.'));
+			return;
+		}
+
+		$notification->setParsedSubject($l->t('Your data export could not be built'));
+		$notification->setParsedMessage($l->t('Nothing was stored. Try again; if it fails again, ask your administrator to check the log.'));
+	}//end applyExportSubject()
 }//end class
