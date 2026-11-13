@@ -4389,6 +4389,78 @@
 						}
 					},
 					{
+						"id": "ticket-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"_note": "Board PqTicket History tab (change ticket-handover-history, spec_ref openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001): OpenRegister's audit trail of the ticket in words, newest first. A handover reads \"Passed to <assignee> by <actor>\", a status change the state it reached; any other update reads \"Updated by <actor>\" with the fields it changed. The change rules are limited to updates, so the creation entry keeps \"Created by <actor>\". The ticket schema has no team field, so there is no team rule.",
+						"content": {
+							"layout": "stacked",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated by {actor}"
+							},
+							"changeLabels": [
+								{
+									"action": "update",
+									"field": "assignee",
+									"label": "Passed to {changed.assignee} by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "new",
+									"label": "Set back to new by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "in_progress",
+									"label": "Taken in progress by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "awaiting_customer",
+									"label": "Waiting for the customer by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "resolved",
+									"label": "Resolved by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "completed",
+									"label": "Completed by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "rejected",
+									"label": "Rejected by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "converted",
+									"label": "Converted by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "closed",
+									"label": "Closed by {actor}"
+								}
+							],
+							"excludeActions": [
+								"read"
+							]
+						}
+					},
+					{
 						"id": "ticket-panels",
 						"type": "tabs",
 						"title": "Ticket panels",
@@ -4411,6 +4483,10 @@
 									"visibleWhen": {
 										"appInstalled": "decidiq"
 									}
+								},
+								{
+									"widgetId": "ticket-history",
+									"label": "History"
 								}
 							]
 						}
