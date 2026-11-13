@@ -4746,6 +4746,8 @@ OC.L10N.register(
         "none": "geen",
         "noreply@example.org, mailer@example.org": "noreply@voorbeeld.nl, mailer@voorbeeld.nl",
         "on this deal": "op deze deal",
+        "Relationship ended": "Relatie beëindigd",
+        "When the account status last moved to inactive. Set by the account status lifecycle and cleared when the client becomes active again; the client's retention term counts from it.": "Wanneer de accountstatus voor het laatst naar inactief ging. Wordt gezet door de levenscyclus van de accountstatus en gewist zodra de klant weer actief wordt; de bewaartermijn van de klant telt vanaf deze datum.",
         "per interval": "per termijn",
         "open": "open",
         "open opportunities": "open kansen",
@@ -9486,9 +9488,7 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
-        "Relationship ended": "Relatie beëindigd",
-        "When the account status last moved to inactive. Set by the account status lifecycle and cleared when the client becomes active again; the client's retention term counts from it.": "Wanneer de accountstatus voor het laatst naar inactief ging. Wordt gezet door de levenscyclus van de accountstatus en gewist zodra de klant weer actief wordt; de bewaartermijn van de klant telt vanaf deze datum."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
     },
     "nplurals=2; plural=(n != 1);"
 )
