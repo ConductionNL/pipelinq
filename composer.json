@@ -31,7 +31,7 @@
         "roave/security-advisories": "dev-latest",
         "squizlabs/php_codesniffer": "^4.0",
         "symfony/http-foundation": "^6.4",
-        "vimeo/psalm": "^5.26"
+        "vimeo/psalm": "^7.2"
     },
     "scripts": {
         "coverage:publish": [
