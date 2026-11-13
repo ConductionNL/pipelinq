@@ -101,7 +101,7 @@ class ComplianceService {
 	 * The token every compliant email body must embed (the renderer
 	 * substitutes the unsubscribe URL on send).
 	 */
-	private const UNSUBSCRIBE_TOKEN = '{{unsubscribe_link}}';
+	private const UNSUBSCRIBE_TOKEN = '{{'.'unsubscribe_link}}';
 
 	/**
 	 * Lawful-basis values that DO satisfy marketing consent gating.
