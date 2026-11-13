@@ -6316,6 +6316,12 @@ OC.L10N.register(
         "Reference to the BerichtenboxTemplate used.": "Reference to the BerichtenboxTemplate used.",
         "Reference to the owning ZgwEndpoint id": "Reference to the owning ZgwEndpoint id",
         "Reference to the parent ZgwEndpoint id": "Reference to the parent ZgwEndpoint id",
+        "Lead cap per 30 days": "Lead cap per 30 days",
+        "The most leads this colleague receives through automatic assignment in 30 days. Empty means no cap.": "The most leads this colleague receives through automatic assignment in 30 days. Empty means no cap.",
+        "Pause lead assignment": "Pause lead assignment",
+        "While on, this colleague receives no leads through automatic assignment.": "While on, this colleague receives no leads through automatic assignment.",
+        "Assignment reason": "Assignment reason",
+        "Why automatic assignment gave this lead to its owner, or why it found nobody.": "Why automatic assignment gave this lead to its owner, or why it found nobody.",
         "Reference to the zgwClient id used for this endpoint": "Reference to the zgwClient id used for this endpoint",
         "References to zgwResourceMapping rows linking this ticket (ticketType=request) to one or more ZGW zaak/besluit/rol/informatieobject URLs (zgw-api-bridge spec). Retargeted from the retired `request` schema.": "References to zgwResourceMapping rows linking this ticket (ticketType=request) to one or more ZGW zaak/besluit/rol/informatieobject URLs (zgw-api-bridge spec). Retargeted from the retired `request` schema.",
         "Referentienummer Rule": "Referentienummer Rule",
@@ -9472,13 +9478,7 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
-        "Lead cap per 30 days": "Lead cap per 30 days",
-        "The most leads this colleague receives through automatic assignment in 30 days. Empty means no cap.": "The most leads this colleague receives through automatic assignment in 30 days. Empty means no cap.",
-        "Pause lead assignment": "Pause lead assignment",
-        "While on, this colleague receives no leads through automatic assignment.": "While on, this colleague receives no leads through automatic assignment.",
-        "Assignment reason": "Assignment reason",
-        "Why automatic assignment gave this lead to its owner, or why it found nobody.": "Why automatic assignment gave this lead to its owner, or why it found nobody."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
     },
     "nplurals=2; plural=(n != 1);"
 )
