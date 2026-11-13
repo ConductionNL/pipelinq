@@ -7628,6 +7628,13 @@
         "Link (https://)": "Link (https://)",
         "Link (optional)": "Link (optioneel)",
         "Move {block} down": "{block} omlaag verplaatsen",
+        "Municipality": "Gemeente",
+        "Municipality code": "Gemeentecode",
+        "The OpenRegister organisation of this municipality, when each municipality has its own.": "De OpenRegister-organisatie van deze gemeente, als elke gemeente een eigen organisatie heeft.",
+        "The four digit CBS municipality code, such as 0664.": "De viercijferige CBS-gemeentecode, zoals 0664.",
+        "The municipality this record belongs to, when one desk serves several.": "De gemeente waar dit record bij hoort, als één balie meerdere gemeenten bedient.",
+        "The municipality's name, such as Goes.": "De naam van de gemeente, zoals Goes.",
+        "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own.": "De portaalomgeving waarvan de aanvragen bij deze gemeente horen; leeg als de gemeente geen eigen portaal heeft.",
         "Move {block} up": "{block} omhoog verplaatsen",
         "Preview width": "Breedte van het voorbeeld",
         "Remove {block}": "{block} verwijderen",
@@ -9587,13 +9594,6 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
-        "Municipality": "Gemeente",
-        "Municipality code": "Gemeentecode",
-        "The OpenRegister organisation of this municipality, when each municipality has its own.": "De OpenRegister-organisatie van deze gemeente, als elke gemeente een eigen organisatie heeft.",
-        "The four digit CBS municipality code, such as 0664.": "De viercijferige CBS-gemeentecode, zoals 0664.",
-        "The municipality this record belongs to, when one desk serves several.": "De gemeente waar dit record bij hoort, als één balie meerdere gemeenten bedient.",
-        "The municipality's name, such as Goes.": "De naam van de gemeente, zoals Goes.",
-        "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own.": "De portaalomgeving waarvan de aanvragen bij deze gemeente horen; leeg als de gemeente geen eigen portaal heeft."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
     }
 }

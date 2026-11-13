@@ -7602,6 +7602,13 @@ OC.L10N.register(
         "Create a lead": "Create a lead",
         "The pipeline": "The pipeline",
         "Quote the lead": "Quote the lead",
+        "Municipality": "Municipality",
+        "Municipality code": "Municipality code",
+        "The OpenRegister organisation of this municipality, when each municipality has its own.": "The OpenRegister organisation of this municipality, when each municipality has its own.",
+        "The four digit CBS municipality code, such as 0664.": "The four digit CBS municipality code, such as 0664.",
+        "The municipality this record belongs to, when one desk serves several.": "The municipality this record belongs to, when one desk serves several.",
+        "The municipality's name, such as Goes.": "The municipality's name, such as Goes.",
+        "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own.": "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own.",
         "Add contact person": "Add contact person",
         "This service has one step.": "This service has one step.",
         "Prospect": "Prospect",
@@ -9472,14 +9479,7 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
-        "Municipality": "Municipality",
-        "Municipality code": "Municipality code",
-        "The OpenRegister organisation of this municipality, when each municipality has its own.": "The OpenRegister organisation of this municipality, when each municipality has its own.",
-        "The four digit CBS municipality code, such as 0664.": "The four digit CBS municipality code, such as 0664.",
-        "The municipality this record belongs to, when one desk serves several.": "The municipality this record belongs to, when one desk serves several.",
-        "The municipality's name, such as Goes.": "The municipality's name, such as Goes.",
-        "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own.": "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
     },
     "nplurals=2; plural=(n != 1);"
 )
