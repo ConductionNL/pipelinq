@@ -33,6 +33,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EventReminderServiceInterface;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -46,14 +47,13 @@ use Throwable;
  *
  * @spec openspec/specs/campaign-events/spec.md
  */
-class EventReminderService
+class EventReminderService implements EventReminderServiceInterface
 {
 
     /**
      * Most registrations read for one event.
      */
     private const LIMIT = 1000;
-
 
     /**
      * Constructor.
@@ -75,7 +75,6 @@ class EventReminderService
     ) {
 
     }//end __construct()
-
 
     /**
      * Send the reminder to every confirmed registration with an e-mail address.
@@ -112,7 +111,6 @@ class EventReminderService
 
     }//end send()
 
-
     /**
      * Write reminderSentAt on the event, as the caller.
      *
@@ -139,7 +137,6 @@ class EventReminderService
         }
 
     }//end stamp()
-
 
     /**
      * The event's registrations with a confirmed place.
@@ -179,7 +176,6 @@ class EventReminderService
 
     }//end confirmedRegistrations()
 
-
     /**
      * Mail one registration.
      *
@@ -218,7 +214,6 @@ class EventReminderService
 
     }//end mail()
 
-
     /**
      * The event's start in the user's language, or '' without one.
      *
@@ -240,6 +235,5 @@ class EventReminderService
         }
 
     }//end when()
-
 
 }//end class

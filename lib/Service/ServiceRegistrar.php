@@ -40,6 +40,17 @@ use Throwable;
  */
 class ServiceRegistrar {
 	/**
+	 * The services whose `#[McpTool]`-attributed methods the AI Chat Companion
+	 * reflects (see Mcp\PipelinqScannableServices).
+	 *
+	 * @var array<int, class-string>
+	 */
+	public const MCP_SCANNABLE_SERVICES = [
+		LeadService::class,
+		TicketService::class,
+	];
+
+	/**
 	 * Register the service bindings and factories.
 	 *
 	 * @param IRegistrationContext $context The registration context.

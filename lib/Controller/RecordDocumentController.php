@@ -30,9 +30,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\FilinqLetterAdapterInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\CallerObjectReader;
-use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -62,17 +62,17 @@ class RecordDocumentController extends Controller
      * Constructor.
      *
      * @param IRequest                $request      The request.
-     * @param FilinqLetterAdapter     $documents    filinq's side: templates and the render.
+     * @param FilinqLetterAdapterInterface     $documents    filinq's side: templates and the render.
      * @param IUserSession            $userSession  The acting user.
-     * @param CallerObjectReader      $reader       Reads the record as the caller.
+     * @param CallerObjectReaderInterface      $reader       Reads the record as the caller.
      * @param ObjectOwnerAccessPolicy $accessPolicy Who may act on a record.
      * @param IAppConfig              $appConfig    The configured templates.
      */
     public function __construct(
         IRequest $request,
-        private readonly FilinqLetterAdapter $documents,
+        private readonly FilinqLetterAdapterInterface $documents,
         private readonly IUserSession $userSession,
-        private readonly CallerObjectReader $reader,
+        private readonly CallerObjectReaderInterface $reader,
         private readonly ObjectOwnerAccessPolicy $accessPolicy,
         private readonly IAppConfig $appConfig,
     ) {

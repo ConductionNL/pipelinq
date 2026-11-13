@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,9 +41,8 @@ use Throwable;
  *
  * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
-class CallerObjectReader
+class CallerObjectReader implements CallerObjectReaderInterface
 {
-
 
     /**
      * Constructor.
@@ -59,7 +59,6 @@ class CallerObjectReader
 
     }//end __construct()
 
-
     /**
      * This app's register id, or '' when unconfigured.
      *
@@ -72,7 +71,6 @@ class CallerObjectReader
         return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 
     }//end register()
-
 
     /**
      * One object's data, or null.
@@ -89,7 +87,6 @@ class CallerObjectReader
         return $this->readFromSchema(id: $id, schema: $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, ''));
 
     }//end read()
-
 
     /**
      * One object's data from a schema named by id or slug, or null.
@@ -127,7 +124,6 @@ class CallerObjectReader
 
     }//end readFromSchema()
 
-
     /**
      * The data of an OpenRegister object, whether it came back as an entity or an array.
      *
@@ -152,6 +148,5 @@ class CallerObjectReader
         return [];
 
     }//end data()
-
 
 }//end class
