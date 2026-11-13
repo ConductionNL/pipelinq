@@ -26,6 +26,7 @@ use OCA\OpenRegister\Contract\RegisterSlugResolverInterface;
 use OCA\Pipelinq\Adapter\AdapterRegistrar;
 use OCA\Pipelinq\Dashboard\DashboardRegistrar;
 use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
+use OCA\Pipelinq\Integration\IntegrationRegistrar;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RoadmapFeatureCatalogInterface;
@@ -34,6 +35,7 @@ use OCA\Pipelinq\Lifecycle\LifecycleRegistrar;
 use OCA\Pipelinq\Listener\ListenerRegistrar;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Notification\NotificationRegistrar;
+use OCA\Pipelinq\Portal\PortalRegistrar;
 use OCA\Pipelinq\Service\ServiceRegistrar;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
@@ -181,6 +183,8 @@ class Application extends App implements IBootstrap {
 		(new ServiceRegistrar())->register(context: $context);
 		(new LifecycleRegistrar())->register(context: $context);
 		(new AdapterRegistrar())->register(context: $context);
+		(new PortalRegistrar())->register(context: $context);
+		(new IntegrationRegistrar())->register(context: $context);
 	}//end register()
 
 	/**

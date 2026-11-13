@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Integration;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyLeafProviderInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
  */
-class PartyLeafProvider {
+class PartyLeafProvider implements PartyLeafProviderInterface {
 	/**
 	 * The leaf id a host declares in its schema's `linkedTypes`.
 	 *

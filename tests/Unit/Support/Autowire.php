@@ -33,7 +33,7 @@ use ReflectionNamedType;
  */
 class Autowire {
 	/**
-	 * Contract => implementation, read once from Service\ContractBindings.
+	 * Contract => implementation, read once from the contract bindings.
 	 *
 	 * @var array<string, string>|null
 	 */
@@ -88,9 +88,10 @@ class Autowire {
 	 * @return string|null The matching key, or null when none implements it.
 	 */
 	/**
-	 * The class Service\ContractBindings binds a Kernel contract to, so a
-	 * contract-typed collaborator without a double is built the way the
-	 * container would build it.
+	 * The class the contract bindings (Service\ContractBindings and the
+	 * component registrars) bind a Kernel contract to, so a contract-typed
+	 * collaborator without a double is built the way the container would
+	 * build it.
 	 *
 	 * @param string $contract The contract (interface) name.
 	 *
@@ -99,7 +100,11 @@ class Autowire {
 	private static function boundImplementation(string $contract): ?string {
 		if (self::$bindings === null) {
 			self::$bindings = [];
-			$source = (string)file_get_contents(dirname(__DIR__, 3).'/lib/Service/ContractBindings.php');
+			$lib = dirname(__DIR__, 3).'/lib/';
+			$source = '';
+			foreach (array_merge([$lib.'Service/ContractBindings.php'], glob($lib.'*/*Registrar.php') ?: []) as $file) {
+				$source .= (string)file_get_contents($file)."\n";
+			}
 			$uses = [];
 			preg_match_all('/^use ([\\w\\\\]+);/m', $source, $useMatches);
 			foreach ($useMatches[1] as $fqcn) {

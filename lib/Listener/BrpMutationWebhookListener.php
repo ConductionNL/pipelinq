@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BrpMutationWebhookListenerInterface;
 use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Service\BsnAudit\LookupReason;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-03
  */
-class BrpMutationWebhookListener {
+class BrpMutationWebhookListener implements BrpMutationWebhookListenerInterface {
 	/**
 	 * Constructor.
 	 *
@@ -70,16 +71,6 @@ class BrpMutationWebhookListener {
 	 * Result codes for handle().
 	 */
 	public const RESULT_OK = 'ok';
-
-	/**
-	 * Result code: signature mismatch.
-	 */
-	public const RESULT_FORBIDDEN = 'forbidden';
-
-	/**
-	 * Result code: payload was malformed / missing BSN.
-	 */
-	public const RESULT_BAD_REQUEST = 'bad-request';
 
 	/**
 	 * Process a single webhook delivery.
