@@ -33,7 +33,6 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
-use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -258,7 +257,7 @@ class ReminderDispatchJob extends TimedJob {
 	 * @return AppointmentEmailServiceInterface
 	 */
 	private function emailService(): AppointmentEmailServiceInterface {
-		return $this->container->get(AppointmentEmailService::class);
+		return $this->container->get(AppointmentEmailServiceInterface::class);
 	}//end emailService()
 
 	/**
