@@ -56,10 +56,20 @@ class Notifier implements INotifier {
 		'forecast_snapshot_partial_failure' => 'system',
 		'wip_sync_failed' => 'system',
 		'billing_handoff_failed' => 'system',
+		'export_job_switched_off' => 'system',
 		'social_share_requested' => 'social',
 		'social_relink_needed' => 'social',
 		'full_export_ready' => 'export',
 		'full_export_failed' => 'export',
+	];
+
+	/**
+	 * The route path of an object type whose page is not at `#/<type>s/<id>`.
+	 *
+	 * @var array<string, string>
+	 */
+	private const OBJECT_PATHS = [
+		'exportJob' => 'export/jobs',
 	];
 
 	/**
@@ -133,7 +143,8 @@ class Notifier implements INotifier {
 		}
 
 		$baseUrl = $this->urlGenerator->linkToRouteAbsolute('pipelinq.dashboard.page');
-		$objectPath = '#/' . $notification->getObjectType() . 's/' . $notification->getObjectId();
+		$objectType = $notification->getObjectType();
+		$objectPath = '#/' . (self::OBJECT_PATHS[$objectType] ?? $objectType . 's') . '/' . $notification->getObjectId();
 		$notification->setLink($baseUrl . $objectPath);
 
 		return $notification;
@@ -265,7 +276,8 @@ class Notifier implements INotifier {
 	}//end applyChangeSubject()
 
 	/**
-	 * A background job reporting a failure: forecast snapshots, WIP sync, billing handoff.
+	 * A background job reporting a failure: forecast snapshots, WIP sync,
+	 * billing handoff, an export job switched off.
 	 *
 	 * @param INotification $notification The notification.
 	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
@@ -289,6 +301,11 @@ class Notifier implements INotifier {
 			return;
 		}
 
+		if ($subject === 'export_job_switched_off') {
+			$this->applyExportSwitchOffSubject(notification: $notification, context: $context);
+			return;
+		}
+
 		$batchId = (string)($params['batchId'] ?? '');
 		$notification->setParsedSubject($l->t('Billing handoff failed for %1$s', [$title]));
 		$notification->setParsedMessage(
@@ -296,6 +313,35 @@ class Notifier implements INotifier {
 		);
 		$notification->setRichSubject($l->t('Billing handoff failed for {title}'), $context['richParams']);
 	}//end applySystemSubject()
+
+	/**
+	 * An export job switched off after repeated failed runs: the job, the
+	 * number of failures and the last error.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-administrators-are-told-once-when-a-job-is-switched-off-req-efs-002
+	 */
+	private function applyExportSwitchOffSubject(INotification $notification, array $context): void {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		$failures = (string)(int)($params['failures'] ?? 0);
+		$notification->setParsedSubject(
+			$l->t('Export job %1$s was switched off after %2$s failed runs in a row', [$title, $failures])
+		);
+		$notification->setRichSubject(
+			$l->t('Export job {title} was switched off after %1$s failed runs in a row', [$failures]),
+			$context['richParams']
+		);
+		$notification->setParsedMessage(
+			$l->t(
+				'Last error: %1$s. Fix the destination, then switch the job on again on the BI export page.',
+				[(string)($params['error'] ?? '')]
+			)
+		);
+	}//end applyExportSwitchOffSubject()
 
 	/**
 	 * A social post to share by hand, or an account to reconnect.
