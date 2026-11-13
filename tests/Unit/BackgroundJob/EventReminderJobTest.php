@@ -67,10 +67,11 @@ class EventReminderJobTest extends TestCase {
 	 *
 	 * @param array<int, array<string, mixed>> $events        The events.
 	 * @param array<int, array<string, mixed>> $registrations The registrations.
+	 * @param LoggerInterface|null             $logger        The logger, or a silent one.
 	 *
 	 * @return EventReminderJob
 	 */
-	private function job(array $events, array $registrations): EventReminderJob {
+	private function job(array $events, array $registrations, ?LoggerInterface $logger = null): EventReminderJob {
 		$this->store = new InMemoryListObjectStore(['campaignEvent' => $events, 'eventRegistration' => $registrations]);
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(self::NOW);
@@ -80,7 +81,7 @@ class EventReminderJobTest extends TestCase {
 			$time,
 			new EventRegistrationService($this->store, new TouchpointService($this->store), $time),
 			$this->mails,
-			$this->createMock(LoggerInterface::class)
+			($logger ?? $this->createMock(LoggerInterface::class))
 		);
 	}//end job()
 
@@ -141,4 +142,64 @@ class EventReminderJobTest extends TestCase {
 
 		$this->assertArrayNotHasKey('reminderSentAt', $this->store->rows['eventRegistration']['r-1']);
 	}//end testAFailedMailIsTriedAgain()
+
+	/**
+	 * A throwing mail is logged, left unstamped, and does not stop the
+	 * reminders of the other registrations.
+	 *
+	 * @return void
+	 */
+	public function testAThrowingMailIsLoggedAndTheRestStillGoOut(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')
+			->with('Pipelinq: an event reminder could not be sent', ['registration' => 'r-1', 'reason' => 'smtp refused']);
+		$job = $this->job(
+			events: [['uuid' => 'soon', 'signupStatus' => 'open', 'startAt' => gmdate('c', (self::NOW + 84600))]],
+			registrations: [
+				['uuid' => 'r-1', 'event' => 'soon', 'email' => 'a@example.nl', 'status' => 'confirmed'],
+				['uuid' => 'r-2', 'event' => 'soon', 'email' => 'b@example.nl', 'status' => 'confirmed'],
+			],
+			logger: $logger
+		);
+		$this->mails->method('sendReminder')->willReturnCallback(
+			static function (array $event, array $registration): bool {
+				if ($registration['uuid'] === 'r-1') {
+					throw new \RuntimeException('smtp refused');
+				}
+
+				return true;
+			}
+		);
+
+		$this->runJob(job: $job);
+
+		$this->assertArrayNotHasKey('reminderSentAt', $this->store->rows['eventRegistration']['r-1']);
+		$this->assertSame('2026-11-01T10:00:00+00:00', $this->store->rows['eventRegistration']['r-2']['reminderSentAt']);
+	}//end testAThrowingMailIsLoggedAndTheRestStillGoOut()
+
+	/**
+	 * One run sends at most BATCH reminders; the rest go out on the next run.
+	 *
+	 * @return void
+	 */
+	public function testOneRunSendsAtMostOneBatch(): void {
+		$registrations = [];
+		for ($i = 0; $i < (EventReminderJob::BATCH + 3); $i++) {
+			$registrations[] = ['uuid' => 'r-' . $i, 'event' => 'soon', 'email' => 'p' . $i . '@example.nl', 'status' => 'confirmed'];
+		}
+
+		$job = $this->job(
+			events: [['uuid' => 'soon', 'signupStatus' => 'open', 'startAt' => gmdate('c', (self::NOW + 84600))]],
+			registrations: $registrations
+		);
+		$this->mails->expects($this->exactly(EventReminderJob::BATCH + 3))->method('sendReminder')->willReturn(true);
+
+		$this->runJob(job: $job);
+		$stamped = array_filter($this->store->rows['eventRegistration'], static fn (array $row): bool => isset($row['reminderSentAt']));
+		$this->assertCount(EventReminderJob::BATCH, $stamped);
+
+		$this->runJob(job: $job);
+		$stamped = array_filter($this->store->rows['eventRegistration'], static fn (array $row): bool => isset($row['reminderSentAt']));
+		$this->assertCount(EventReminderJob::BATCH + 3, $stamped);
+	}//end testOneRunSendsAtMostOneBatch()
 }//end class
