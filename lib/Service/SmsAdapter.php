@@ -60,6 +60,7 @@ use Throwable;
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class SmsAdapter {
+	use OpensInboundTickets;
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
 
@@ -527,7 +528,15 @@ class SmsAdapter {
 			return $result;
 		}
 
-		$this->recordInboundOptIn(inbound: $inbound);
+		if ($this->recordInboundOptIn(inbound: $inbound) === false) {
+			$result['ticket'] = $this->openInboundTicket(
+				channel: 'sms',
+				conversationId: (string)$result['conversationId'],
+				contactId: $inbound->contactId,
+				body: $inbound->body,
+				from: $inbound->from,
+			);
+		}
 
 		return $result;
 	}//end actOnInbound()
@@ -571,11 +580,11 @@ class SmsAdapter {
 	 *
 	 * @param SmsInbound $inbound The message of a known contact.
 	 *
-	 * @return void
+	 * @return bool Whether the message was an opt-in keyword (it then opens no ticket).
 	 */
-	private function recordInboundOptIn(SmsInbound $inbound): void {
+	private function recordInboundOptIn(SmsInbound $inbound): bool {
 		if ($this->consentService->isOptInKeyword(body: $inbound->body) === false) {
-			return;
+			return false;
 		}
 
 		$this->consentService->recordOptIn(
@@ -585,6 +594,7 @@ class SmsAdapter {
 			evidence: sprintf('Inbound SMS body "%s" matched opt-in keyword', $inbound->body),
 			address: $inbound->from,
 		);
+		return true;
 	}//end recordInboundOptIn()
 
 	/**

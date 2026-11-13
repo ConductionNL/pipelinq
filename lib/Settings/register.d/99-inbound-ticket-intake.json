@@ -1,0 +1,21 @@
+{
+    "_note": "requests-inbound-to-queue D2 and D8. `inboundThreadKey` is written by InboundTicketService only: `conversation:<channelConversation id>` for WhatsApp and SMS, `mail:<account id>:<threadRootId>` for mail, `meta:<conversation id>` for Facebook and Instagram. A top-level property keeps the follow-up lookup a plain equality filter; the sender, domain, mailbox and source link go in `channelMetadata`. `category` becomes facetable so a team opens the Queue on its own category. Fragments are deep-merged onto pipelinq_register.json in filename order, so this one only adds these two keys to `ticket`.",
+    "components": {
+        "schemas": {
+            "ticket": {
+                "slug": "ticket",
+                "properties": {
+                    "inboundThreadKey": {
+                        "type": "string",
+                        "title": "Inbound thread",
+                        "description": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
+                        "maxLength": 255
+                    },
+                    "category": {
+                        "facetable": true
+                    }
+                }
+            }
+        }
+    }
+}
