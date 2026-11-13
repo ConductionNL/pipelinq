@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Search;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\SearchConsole\SearchQueryReportService;
 use OCP\IAppConfig;
 
@@ -99,7 +99,7 @@ class KeywordProposals {
 	 * @return int
 	 */
 	private function floor(): int {
-		$configured = (int)$this->appConfig->getValueString(Application::APP_ID, self::FLOOR_KEY, '');
+		$configured = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, self::FLOOR_KEY, '');
 		if ($configured < 1) {
 			return KeywordAnalysisService::DEFAULT_MIN_IMPRESSIONS;
 		}

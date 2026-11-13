@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\HaalCentraalClient;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -81,7 +81,7 @@ class BrpHealthCheckJob extends TimedJob {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'brp.health_check_interval_seconds',
 				self::DEFAULT_INTERVAL_SECONDS
 			)
@@ -163,7 +163,7 @@ class BrpHealthCheckJob extends TimedJob {
 	 */
 	private function saveStatus(array $status): void {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'brp.cert_health',
 			json_encode($status, JSON_THROW_ON_ERROR)
 		);
@@ -187,7 +187,7 @@ class BrpHealthCheckJob extends TimedJob {
 		foreach ($admins->getUsers() as $admin) {
 			try {
 				$n = $this->notificationManager->createNotification();
-				$n->setApp(Application::APP_ID)
+				$n->setApp(AppIdentity::APP_ID)
 					->setUser($admin->getUID())
 					->setObject('brp-cert', $status)
 					->setSubject(

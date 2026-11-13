@@ -47,7 +47,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Social\MeteredRead;
 use OCA\Pipelinq\Service\Social\NetworkTotals;
 use OCA\Pipelinq\Service\Social\SocialAdapterCall;
@@ -419,7 +419,7 @@ class SocialMetricsService {
 	 * @return string The tenant id.
 	 */
 	private function tenantId(): string {
-		$tenantId = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
+		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
 		if ($tenantId !== '') {
 			return $tenantId;
 		}

@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\LogiusConnector;
 use OCP\AppFramework\Controller;
@@ -67,7 +67,7 @@ class BerichtenboxWebhookController extends Controller {
 		private readonly LogiusConnector $logius,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

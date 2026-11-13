@@ -47,7 +47,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -100,7 +100,7 @@ class ProgrammePortfolioService {
 	 */
 	private function defaultMode(): string {
 		$configured = trim(
-			$this->appConfig->getValueString(Application::APP_ID, self::DEFAULT_MODE_KEY, 'fromTasks')
+			$this->appConfig->getValueString(AppIdentity::APP_ID, self::DEFAULT_MODE_KEY, 'fromTasks')
 		);
 
 		if (in_array($configured, self::MODES, true) === true) {
@@ -411,8 +411,8 @@ class ProgrammePortfolioService {
 	 * @return array<int, array<string, mixed>> The rows.
 	 */
 	public function read(string $schemaKey, array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug(
 				'ProgrammePortfolioService: the programme surface is not configured',
@@ -466,8 +466,8 @@ class ProgrammePortfolioService {
 	 * @return bool True when the write landed.
 	 */
 	public function write(string $schemaKey, array $object, ?string $uuid = null): bool {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return false;
 		}

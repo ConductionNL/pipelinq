@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Activity;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Activity\Exceptions\UnknownActivityException;
 use OCP\Activity\IEvent;
 use OCP\Activity\IProvider;
@@ -80,7 +80,7 @@ class Provider implements IProvider {
 	 * @spec openspec/specs/notifications-activity/spec.md
 	 */
 	public function parse($language, IEvent $event, ?IEvent $previousEvent = null): IEvent {
-		if ($event->getApp() !== Application::APP_ID) {
+		if ($event->getApp() !== AppIdentity::APP_ID) {
 			throw new UnknownActivityException();
 		}
 
@@ -88,7 +88,7 @@ class Provider implements IProvider {
 			throw new UnknownActivityException();
 		}
 
-		$l = $this->l10nFactory->get(Application::APP_ID, $language);
+		$l = $this->l10nFactory->get(AppIdentity::APP_ID, $language);
 		$params = $event->getSubjectParameters();
 
 		$this->subjectHandler->applySubjectText(
@@ -99,7 +99,7 @@ class Provider implements IProvider {
 
 		$event->setIcon(
 			$this->urlGenerator->getAbsoluteURL(
-				$this->urlGenerator->imagePath(appName: Application::APP_ID, file: 'app.svg')
+				$this->urlGenerator->imagePath(appName: AppIdentity::APP_ID, file: 'app.svg')
 			)
 		);
 

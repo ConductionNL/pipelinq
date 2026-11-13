@@ -39,7 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Listener\NrcNotificationListener;
 use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
 use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
@@ -75,7 +75,7 @@ class ZgwNotificationController extends Controller {
 		private NrcNotificationListener $listener,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

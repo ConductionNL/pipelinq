@@ -32,8 +32,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\BrpConnectionHandoverEvent;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -146,7 +146,7 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 		}
 
 		foreach (array_keys($values) as $key) {
-			$this->appConfig->deleteKey(Application::APP_ID, $key);
+			$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 		}
 
 		$this->logger->info('MoveBrpConnectionToIntegriq: integriq confirmed every part; the BRP connection keys are cleared');
@@ -162,7 +162,7 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 		$keys   = array_merge(array_keys(self::SETTING_KEYS), [self::SECRET_KEY], array_keys(self::FILE_KEYS));
 		$values = [];
 		foreach ($keys as $key) {
-			$values[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$values[$key] = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		}
 
 		return $values;

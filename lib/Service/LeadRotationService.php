@@ -33,7 +33,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -102,7 +102,7 @@ class LeadRotationService {
 	 * @spec openspec/changes/pipeline-lead-rotation/specs/lead-rotation/spec.md#requirement-new-unassigned-leads-are-assigned-in-turn-req-lrt-001
 	 */
 	public function isEnabled(): bool {
-		return $this->appConfig->getValueString(Application::APP_ID, self::ENABLED_KEY, 'false') === 'true';
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, self::ENABLED_KEY, 'false') === 'true';
 	}//end isEnabled()
 
 	/**
@@ -229,8 +229,8 @@ class LeadRotationService {
 	 * @return array{0: int, 1: string}
 	 */
 	private function recentLeads(string $userId, DateTimeImmutable $cutoff): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($register === '' || $schema === '') {
 			return [0, ''];
 		}

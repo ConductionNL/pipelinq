@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
@@ -122,7 +122,7 @@ class BrpController extends Controller {
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -775,7 +775,7 @@ class BrpController extends Controller {
 	 * @return array<string, mixed>|null
 	 */
 	private function storedJsonObject(string $key): ?array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($raw === '') {
 			return null;
 		}
@@ -821,7 +821,7 @@ class BrpController extends Controller {
 	 */
 	private function allowedLookupGroups(): array {
 		$configured = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'brp.allowed_groups',
 			''
 		);
@@ -859,8 +859,8 @@ class BrpController extends Controller {
 	 * @return array<string,mixed>
 	 */
 	private function saveLookupRequest(array $request): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brpLookupVerzoek_schema', '');
 		if ($register === '' || $schema === '') {
 			return $request;
 		}
@@ -895,8 +895,8 @@ class BrpController extends Controller {
 	 * @return array<string,mixed>
 	 */
 	private function saveBrpPerson(array $person): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brpPersoon_schema', '');
 		$uuid = (string)($person['@self']['id'] ?? $person['id'] ?? '');
 		if ($register === '' || $schema === '') {
 			return $person;
@@ -944,8 +944,8 @@ class BrpController extends Controller {
 	private function stampClientIdentity(LookupLinks $links, DateTimeImmutable $verifiedAt): void {
 		$clientId = $links->clientId;
 		$identityCheck = $links->identityCheck;
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '' || $schema === '') {
 			return;
 		}
@@ -990,8 +990,8 @@ class BrpController extends Controller {
 			return;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 		if ($register === '' || $schema === '') {
 			return;
 		}
@@ -1061,8 +1061,8 @@ class BrpController extends Controller {
 	 * @return array<string, string>|null
 	 */
 	private function linkedPersonFilters(string $contactId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brpPersoon_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}

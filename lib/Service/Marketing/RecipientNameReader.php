@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -118,13 +118,13 @@ class RecipientNameReader {
 	 * @return array<string, mixed>|null The record's data.
 	 */
 	private function recordFor(string $recipientId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($recipientId === '' || $register === '') {
 			return null;
 		}
 
 		foreach (self::SCHEMA_KEYS as $schemaKey) {
-			$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 			if ($schema === '') {
 				continue;
 			}

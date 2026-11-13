@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\TierService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -67,7 +67,7 @@ class TierDowngradeJob extends TimedJob {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'loyalty.tier_downgrade.poll_interval_seconds',
 				self::DEFAULT_INTERVAL
 			)

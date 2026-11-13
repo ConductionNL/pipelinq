@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ShillinqWipService;
 use OCA\Pipelinq\Service\WipSyncNotifier;
 use OCP\EventDispatcher\Event;
@@ -129,8 +129,8 @@ class TimeApprovalListener implements IEventListener {
 	 * @return void
 	 */
 	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'timeEntry_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'timeEntry_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return;
 		}

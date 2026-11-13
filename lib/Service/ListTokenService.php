@@ -40,7 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -396,10 +396,10 @@ class ListTokenService {
 	 * @return string The signing key.
 	 */
 	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, '');
+		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, '');
 		if ($key === '') {
 			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
 		}
 
 		return $key;
@@ -414,7 +414,7 @@ class ListTokenService {
 	 * @return int Lifetime in seconds.
 	 */
 	private function ttlSeconds(string $key, int $default): int {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, $key, (string)$default);
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, (string)$default);
 		if (is_numeric($raw) === false) {
 			return ($default * 86400);
 		}

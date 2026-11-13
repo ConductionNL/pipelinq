@@ -40,7 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\PosPaymentService;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -116,13 +116,13 @@ class RemoveLegacyPspKeys implements IRepairStep {
 	 */
 	private function removedKey(IOutput $output, RetiredPspKey $retired): bool {
 		$key = $retired->configKey();
-		$stored = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$stored = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($stored === '') {
 			return false;
 		}
 
 		try {
-			$this->appConfig->deleteKey(Application::APP_ID, $key);
+			$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 			return true;
 		} catch (Throwable $e) {
 			// Never fatal: failing to delete leaves the row exactly as it was,

@@ -28,8 +28,8 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -179,7 +179,7 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 			'service' => AvailabilityService::SERVICE_SCHEMA_KEY,
 		];
 		foreach ($kinds as $kind => $key) {
-			if ($this->appConfig->getValueString(Application::APP_ID, $key, '') === $schemaId) {
+			if ($this->appConfig->getValueString(AppIdentity::APP_ID, $key, '') === $schemaId) {
 				return $kind;
 			}
 		}

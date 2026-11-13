@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Marketing\CampaignFormDestination;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -412,12 +412,12 @@ class LandingPageProvisioningService {
 	 * @return string The slug, or an empty string when none is configured.
 	 */
 	private function configuredPortal(): string {
-		$portal = trim($this->appConfig->getValueString(Application::APP_ID, self::PORTAL_CONFIG_KEY, ''));
+		$portal = trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::PORTAL_CONFIG_KEY, ''));
 		if ($portal !== '') {
 			return $portal;
 		}
 
-		return trim($this->appConfig->getValueString(Application::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
 	}//end configuredPortal()
 
 	/**

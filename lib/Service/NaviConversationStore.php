@@ -55,7 +55,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
@@ -147,7 +147,7 @@ class NaviConversationStore {
 	 * @return array<string, mixed>|null
 	 */
 	private function storedRecord(string $userId): ?array {
-		$raw = $this->config->getUserValue(userId: $userId, appName: Application::APP_ID, key: self::PREFERENCE_KEY, default: '');
+		$raw = $this->config->getUserValue(userId: $userId, appName: AppIdentity::APP_ID, key: self::PREFERENCE_KEY, default: '');
 		if ($raw === '') {
 			return null;
 		}
@@ -198,7 +198,7 @@ class NaviConversationStore {
 			'turns' => $this->recentTurns(history: $history, turn: $turn),
 		];
 
-		$this->config->setUserValue(userId: $userId, appName: Application::APP_ID, key: self::PREFERENCE_KEY, value: (string)json_encode($record));
+		$this->config->setUserValue(userId: $userId, appName: AppIdentity::APP_ID, key: self::PREFERENCE_KEY, value: (string)json_encode($record));
 	}//end append()
 
 	/**

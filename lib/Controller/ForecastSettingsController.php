@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\ForecastAccessPolicy;
 use OCA\Pipelinq\Service\ExchangeRateService;
 use OCA\Pipelinq\Service\ForecastDealService;
@@ -125,7 +125,7 @@ class ForecastSettingsController extends Controller {
 		private IAppConfig $appConfig,
 		private ExchangeRateService $exchangeRate,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -137,9 +137,9 @@ class ForecastSettingsController extends Controller {
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function index(): JSONResponse {
-		$app = Application::APP_ID;
+		$app = AppIdentity::APP_ID;
 		$greenDefault = (string)ForecastService::ACCURACY_GREEN_DEFAULT;
 		$amberDefault = (string)ForecastService::ACCURACY_AMBER_DEFAULT;
 		$thresholdKey = ForecastDealService::COMMIT_THRESHOLD_KEY;
@@ -182,7 +182,7 @@ class ForecastSettingsController extends Controller {
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function update(): JSONResponse {
 		$params = $this->request->getParams();
 
@@ -255,7 +255,7 @@ class ForecastSettingsController extends Controller {
 			$value = (float)$value;
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, $field['key'], (string)$value);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $field['key'], (string)$value);
 		return null;
 	}//end saveField()
 
@@ -272,7 +272,7 @@ class ForecastSettingsController extends Controller {
 			return $field['error'];
 		}
 
-		$this->appConfig->setValueInt(Application::APP_ID, $field['key'], $value);
+		$this->appConfig->setValueInt(AppIdentity::APP_ID, $field['key'], $value);
 		return null;
 	}//end saveBoundedInt()
 
@@ -296,7 +296,7 @@ class ForecastSettingsController extends Controller {
 			return 'reporting_currency must be a three-letter currency code.';
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::REPORTING_CURRENCY_KEY, $currency);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateService::REPORTING_CURRENCY_KEY, $currency);
 		return null;
 	}//end saveReportingCurrency()
 
@@ -319,8 +319,8 @@ class ForecastSettingsController extends Controller {
 		}
 
 		$dates = $this->exchangeRate->overrideStore()->rateDatesFor(rates: $rates, previousRates: $this->exchangeRate->getRates());
-		$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATES_KEY, (string)json_encode($rates));
-		$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATE_DATES_KEY, (string)json_encode($dates));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateService::RATES_KEY, (string)json_encode($rates));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateService::RATE_DATES_KEY, (string)json_encode($dates));
 		return null;
 	}//end saveExchangeRates()
 
@@ -343,7 +343,7 @@ class ForecastSettingsController extends Controller {
 			return 'max_rate_age_days must be at least 1.';
 		}
 
-		$this->appConfig->setValueInt(Application::APP_ID, ExchangeRateService::MAX_RATE_AGE_KEY, $days);
+		$this->appConfig->setValueInt(AppIdentity::APP_ID, ExchangeRateService::MAX_RATE_AGE_KEY, $days);
 		return null;
 	}//end saveMaxRateAge()
 
@@ -367,7 +367,7 @@ class ForecastSettingsController extends Controller {
 			return $e->getMessage();
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::OVERRIDES_KEY, (string)json_encode($overrides));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ExchangeRateService::OVERRIDES_KEY, (string)json_encode($overrides));
 		return null;
 	}//end saveRateOverrides()
 }//end class

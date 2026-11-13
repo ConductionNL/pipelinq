@@ -29,8 +29,8 @@ use DateTimeInterface;
 use DateTimeZone;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\Sla\MergesBreachEvents;
 use OCA\Pipelinq\Service\SlaEngineService;
@@ -331,7 +331,7 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 		}
 
 		$resolvedRaw = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'sla_resolved_statuses',
 			implode(',', self::DEFAULT_RESOLVED_STATUSES),
 		);
@@ -389,7 +389,7 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null Object data, or null when it is gone.
 	 */
 	private function fetch(string $uuid, string $schemaId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			return null;
 		}
@@ -421,7 +421,7 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 */
 	private function persist(string $uuid, string $schemaId, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '' || $schemaId === '' || $uuid === '') {
 			return;
 		}

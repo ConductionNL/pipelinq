@@ -43,7 +43,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
@@ -124,7 +124,7 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 			return;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$output->warning('Pipelinq register not configured — skipping POS bookkeeping migration.');
 			return;

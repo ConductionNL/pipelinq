@@ -47,7 +47,7 @@ use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -206,7 +206,7 @@ class TicketService {
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getRegisterId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; ticket reads/writes are refused, not run unscoped'
@@ -232,7 +232,7 @@ class TicketService {
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getSchemaId(): string {
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'ticket_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
 		if ($schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "ticket_schema" is not configured; ticket reads/writes are refused, not run unscoped'

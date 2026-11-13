@@ -31,8 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\BlastSendJob;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\WebhookProcessorService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -106,7 +106,7 @@ class BlastWebhookController extends Controller {
 		private WebhookProcessorService $webhookProcessor,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -623,7 +623,7 @@ class BlastWebhookController extends Controller {
 		}
 
 		$secret = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::SECRET_KEY_PREFIX . $provider,
 			'',
 		);

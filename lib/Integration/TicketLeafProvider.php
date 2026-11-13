@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Integration;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use OCP\IUserManager;
@@ -185,7 +185,7 @@ class TicketLeafProvider {
 	private function surfaceIds(): array {
 		$ids = [];
 		foreach (['register', 'client_schema', 'ticket_schema'] as $key) {
-			$ids[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$ids[$key] = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		}
 
 		return $ids;
@@ -263,8 +263,8 @@ class TicketLeafProvider {
 	 */
 	public function clientIdsOf(string $ref): array {
 		$ref = trim($ref);
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($ref === '' || $register === '' || $clientSchema === '') {
 			return [];
 		}

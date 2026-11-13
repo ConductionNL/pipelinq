@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Forecast\CategoryOverride;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -259,8 +259,8 @@ class ForecastService {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-007-04
 	 */
 	public function accuracyBand(float $score): string {
-		$green = $this->appConfig->getValueString(Application::APP_ID, self::ACCURACY_GREEN_KEY, (string)self::ACCURACY_GREEN_DEFAULT);
-		$amber = $this->appConfig->getValueString(Application::APP_ID, self::ACCURACY_AMBER_KEY, (string)self::ACCURACY_AMBER_DEFAULT);
+		$green = $this->appConfig->getValueString(AppIdentity::APP_ID, self::ACCURACY_GREEN_KEY, (string)self::ACCURACY_GREEN_DEFAULT);
+		$amber = $this->appConfig->getValueString(AppIdentity::APP_ID, self::ACCURACY_AMBER_KEY, (string)self::ACCURACY_AMBER_DEFAULT);
 
 		$greenThreshold = self::ACCURACY_GREEN_DEFAULT;
 		if ($green !== '') {
@@ -357,8 +357,8 @@ class ForecastService {
 	 * @return array<int, array<string, mixed>> The matching objects as arrays.
 	 */
 	private function findObjects(string $schemaKey, array $filters, array $sort = [], ?int $limit = null): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}

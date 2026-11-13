@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Settings;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\IntegrationDetector;
 use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCA\Pipelinq\Service\SettingsService;
@@ -70,7 +70,7 @@ class AdminSettings implements IDelegatedSettings {
 	 */
 	public function getForm(): TemplateResponse {
 		$config = $this->settingsService->getSettings();
-		$version = $this->appManager->getAppVersion(appId: Application::APP_ID);
+		$version = $this->appManager->getAppVersion(appId: AppIdentity::APP_ID);
 
 		$this->initialState->provideInitialState('version', $version);
 		$this->initialState->provideInitialState(
@@ -86,7 +86,7 @@ class AdminSettings implements IDelegatedSettings {
 		$this->initialState->provideInitialState('detected_integrations', $this->integrations->all());
 
 		return new TemplateResponse(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'settings/admin',
 			[
 				'config' => json_encode($config),

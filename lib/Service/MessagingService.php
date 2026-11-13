@@ -32,7 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -596,7 +596,7 @@ class MessagingService {
 	 * @return string Slug; never empty.
 	 */
 	private function registerSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -613,7 +613,7 @@ class MessagingService {
 	 * @return string Slug.
 	 */
 	private function schemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($slug !== '') {
 			return $slug;
 		}

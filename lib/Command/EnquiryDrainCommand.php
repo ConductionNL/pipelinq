@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\WebForm\HeldObjectDrain;
 use OCP\IAppConfig;
 use Symfony\Component\Console\Command\Command;
@@ -104,8 +104,8 @@ class EnquiryDrainCommand extends Command {
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$apply = (bool)$input->getOption('apply');
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$enquiry = $this->appConfig->getValueString(Application::APP_ID, 'enquiry_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$enquiry = $this->appConfig->getValueString(AppIdentity::APP_ID, 'enquiry_schema', '');
 		if ($register === '') {
 			$output->writeln('<error>The pipelinq register is not configured.</error>');
 			return 1;

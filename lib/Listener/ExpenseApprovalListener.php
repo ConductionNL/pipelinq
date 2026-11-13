@@ -26,9 +26,9 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Event\ExpenseApprovedEvent;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ApSyncNotifier;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\ShillinqApService;
@@ -340,7 +340,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 		}
 
 		// Fallback: direct compare against app-config expense_schema (REQ-AP-002).
-		$expenseSchema = $this->appConfig->getValueString(Application::APP_ID, 'expense_schema', '');
+		$expenseSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
 		return $expenseSchema !== '' && $schemaId === $expenseSchema;
 	}//end isExpense()
 
@@ -352,8 +352,8 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null The expense data, or null when it is gone.
 	 */
 	private function fetch(string $uuid): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'expense_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return null;
 		}
@@ -384,8 +384,8 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 */
 	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'expense_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return;
 		}

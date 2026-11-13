@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Util\AnyPayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
@@ -296,7 +296,7 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @return string
 	 */
 	private function registerSlug(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 	}//end registerSlug()
 
 	/**
@@ -307,7 +307,7 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @return string
 	 */
 	private function schemaSlug(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaSlug()
 
 	/**

@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -86,7 +86,7 @@ class Customer360Controller extends Controller {
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -172,8 +172,8 @@ class Customer360Controller extends Controller {
 	 * @spec openspec/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
 	 */
 	private function clientAccess(string $clientId): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '' || $schema === '') {
 			return self::ACCESS_FAILED;
 		}

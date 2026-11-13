@@ -47,7 +47,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Access;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -174,8 +174,8 @@ class RegisterAccessSync {
 			$written += $this->syncRegister(registers: $registers, schemas: $schemas, register: $register, groups: $groups);
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, ObjectOwnerAccessPolicy::CRM_GROUP_KEY.self::APPLIED, $crm);
-		$this->appConfig->setValueString(Application::APP_ID, self::READ_GROUP_KEY.self::APPLIED, $read);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ObjectOwnerAccessPolicy::CRM_GROUP_KEY.self::APPLIED, $crm);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::READ_GROUP_KEY.self::APPLIED, $read);
 
 		return $written;
 	}//end sync()
@@ -314,7 +314,7 @@ class RegisterAccessSync {
 	 * @return string
 	 */
 	private function setting(string $key): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, $key, ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, $key, ''));
 	}//end setting()
 
 	/**

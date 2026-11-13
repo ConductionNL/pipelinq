@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
 use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCA\Pipelinq\Service\BerichtenboxService;
@@ -190,7 +190,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 		}
 
 		$caseSchema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'zaak_schema',
 			''
 		);

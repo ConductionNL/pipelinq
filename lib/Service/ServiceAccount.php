@@ -35,7 +35,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -134,7 +134,7 @@ abstract class ServiceAccount {
 	 * @spec exclude shared plumbing of the portal and messaging service accounts; no requirement owns the acting identity
 	 */
 	public function configuredUserId(): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, $this->configKey(), ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, $this->configKey(), ''));
 	}//end configuredUserId()
 
 	/**
@@ -225,7 +225,7 @@ abstract class ServiceAccount {
 			$group->addUser($account);
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, $this->configKey(), $userId);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $this->configKey(), $userId);
 
 		return $this->status();
 	}//end assign()
@@ -247,7 +247,7 @@ abstract class ServiceAccount {
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'Pipelinq: could not create a service group',
-				['app' => Application::APP_ID, 'group' => $this->group(), 'exception' => $e->getMessage()]
+				['app' => AppIdentity::APP_ID, 'group' => $this->group(), 'exception' => $e->getMessage()]
 			);
 			return null;
 		}

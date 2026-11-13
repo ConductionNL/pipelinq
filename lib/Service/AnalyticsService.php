@@ -38,7 +38,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -187,8 +187,8 @@ class AnalyticsService {
 	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
 	 */
 	private function findObjects(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			$this->logger->info(
 				message: '[AnalyticsService] register or schema not configured',
@@ -960,7 +960,7 @@ class AnalyticsService {
 	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-gives-the-pipeline-cover
 	 */
 	private function pipelineCover(float $openValue, float $wonValue): array {
-		$target = $this->appConfig->getValueInt(Application::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0);
+		$target = $this->appConfig->getValueInt(AppIdentity::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0);
 		if ($target <= 0) {
 			return ['targetRemaining' => null, 'pipelineCover' => null];
 		}

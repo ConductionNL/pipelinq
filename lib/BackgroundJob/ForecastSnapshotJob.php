@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\SnapshotGenerationService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -107,8 +107,8 @@ class ForecastSnapshotJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function run($argument): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'forecastSnapshot_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'forecastSnapshot_schema', '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug('ForecastSnapshotJob: skipping — register or forecastSnapshot_schema not configured');
 			return;
@@ -124,7 +124,7 @@ class ForecastSnapshotJob extends TimedJob {
 
 		try {
 			$summary = $this->generationService->generate(asOf: $now);
-			$this->appConfig->setValueString(Application::APP_ID, self::LAST_RUN_KEY, $today);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::LAST_RUN_KEY, $today);
 			$this->logger->info('ForecastSnapshotJob: completed', $summary);
 		} catch (Exception $e) {
 			$this->logger->error('ForecastSnapshotJob: generation failed', ['exception' => $e->getMessage()]);
@@ -139,8 +139,8 @@ class ForecastSnapshotJob extends TimedJob {
 	 * @return bool True when generation should proceed.
 	 */
 	private function shouldRun(DateTimeImmutable $now): bool {
-		$day = $this->appConfig->getValueInt(Application::APP_ID, self::DAY_KEY, 1);
-		$hour = $this->appConfig->getValueInt(Application::APP_ID, self::HOUR_KEY, 6);
+		$day = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::DAY_KEY, 1);
+		$hour = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::HOUR_KEY, 6);
 
 		if ((int)$now->format('N') !== $day) {
 			return false;
@@ -150,7 +150,7 @@ class ForecastSnapshotJob extends TimedJob {
 			return false;
 		}
 
-		$lastRun = $this->appConfig->getValueString(Application::APP_ID, self::LAST_RUN_KEY, '');
+		$lastRun = $this->appConfig->getValueString(AppIdentity::APP_ID, self::LAST_RUN_KEY, '');
 		return $lastRun !== $now->format('Y-m-d');
 	}//end shouldRun()
 
@@ -160,7 +160,7 @@ class ForecastSnapshotJob extends TimedJob {
 	 * @return DateTimeImmutable The current time.
 	 */
 	private function orgNow(): DateTimeImmutable {
-		$tz = $this->appConfig->getValueString(Application::APP_ID, self::TIMEZONE_KEY, 'UTC');
+		$tz = $this->appConfig->getValueString(AppIdentity::APP_ID, self::TIMEZONE_KEY, 'UTC');
 		$now = (new DateTimeImmutable())->setTimestamp($this->time->getTime());
 		if ($tz === '') {
 			$tz = 'UTC';

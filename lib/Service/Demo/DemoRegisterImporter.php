@@ -37,7 +37,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Demo;
 
 use OCA\OpenRegister\Service\ConfigurationService;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -51,7 +51,7 @@ class DemoRegisterImporter {
 	 *
 	 * @var string
 	 */
-	public const CONFIG_APP_ID = Application::APP_ID . '.demo';
+	public const CONFIG_APP_ID = AppIdentity::APP_ID . '.demo';
 
 	/**
 	 * Constructor.

@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
@@ -70,7 +70,7 @@ class LetterController extends Controller
         private readonly CallerObjectReader $reader,
         private readonly ObjectOwnerAccessPolicy $accessPolicy,
     ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+        parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
     }//end __construct()
 

@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateInterval;
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Service\ReportingService;
 use OCP\AppFramework\Controller;
@@ -63,7 +63,7 @@ class ReportingController extends Controller {
 		private ReportingService $reportingService,
 		private CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -182,7 +182,7 @@ class ReportingController extends Controller {
 	 *
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function updateSla(): JSONResponse {
 		try {
 			return $this->savedSlaTargets(targets: $this->request->getParam('targets', []));

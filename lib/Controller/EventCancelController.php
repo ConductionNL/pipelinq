@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Marketing\EventEmailService;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationService;
 use OCP\AppFramework\Controller;
@@ -63,7 +63,7 @@ class EventCancelController extends Controller {
 		private EventEmailService $mails,
 		private IURLGenerator $urls,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -147,7 +147,7 @@ class EventCancelController extends Controller {
 	 */
 	private function page(string $state, array $event, string $token, int $status = Http::STATUS_OK): TemplateResponse {
 		$response = new TemplateResponse(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'event-cancel',
 			[
 				'state' => $state,

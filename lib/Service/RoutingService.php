@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -90,11 +90,11 @@ class RoutingService {
 	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.2
 	 */
 	public function getSuggestedAgents(string $entityType, string $entityId): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 
 		$schemaId = $this->ticketService->getSchemaId();
 		if ($entityType === 'lead') {
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+			$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		}
 
 		if ($registerId === '' || $schemaId === '') {
@@ -190,8 +190,8 @@ class RoutingService {
 			return 0;
 		}
 
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$leadSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 
 		if ($registerId === '') {
 			return 0;
@@ -261,9 +261,9 @@ class RoutingService {
 			return [];
 		}
 
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$skillSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
-		$agentProfileSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'agentProfile_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$skillSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'skill_schema', '');
+		$agentProfileSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'agentProfile_schema', '');
 
 		if ($registerId === '' || $skillSchemaId === '' || $agentProfileSchemaId === '') {
 			return [];

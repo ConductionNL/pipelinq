@@ -40,7 +40,7 @@ namespace OCA\Pipelinq\Service;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -102,10 +102,10 @@ class ActivityTimelineService {
 	 * @return array<string,string> Map of source-key => value.
 	 */
 	private function getConfig(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$task = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
-		$emailLink = $this->appConfig->getValueString(Application::APP_ID, 'emailLink_schema', '');
-		$calendarLink = $this->appConfig->getValueString(Application::APP_ID, 'calendarLink_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$task = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
+		$emailLink = $this->appConfig->getValueString(AppIdentity::APP_ID, 'emailLink_schema', '');
+		$calendarLink = $this->appConfig->getValueString(AppIdentity::APP_ID, 'calendarLink_schema', '');
 		if ($register === '') {
 			$this->logger->warning('Pipelinq: "register" is not configured; the activity timeline is refused, not run unscoped');
 		}

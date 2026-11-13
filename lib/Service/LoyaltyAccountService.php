@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -395,8 +395,8 @@ class LoyaltyAccountService {
 	 *                                     when unconfigured.
 	 */
 	private function config(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'klantLoyaltyAccount_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'klantLoyaltyAccount_schema', '');
 
 		// Spelled as in_array() rather than `$a === '' || $b === ''` to keep
 		// this class under the PHPMD complexity ceiling; the check is identical.

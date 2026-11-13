@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -228,7 +228,7 @@ class QuotaService {
 	 *   exercised through the features that call it
 	 */
 	public function getAtRiskPercent(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, self::AT_RISK_PERCENT_KEY, self::AT_RISK_PERCENT_DEFAULT);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::AT_RISK_PERCENT_KEY, self::AT_RISK_PERCENT_DEFAULT);
 		if ($value > 0) {
 			return $value;
 		}
@@ -244,7 +244,7 @@ class QuotaService {
 	 *   exercised through the features that call it
 	 */
 	public function getAtRiskDays(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, self::AT_RISK_DAYS_KEY, self::AT_RISK_DAYS_DEFAULT);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::AT_RISK_DAYS_KEY, self::AT_RISK_DAYS_DEFAULT);
 		if ($value > 0) {
 			return $value;
 		}
@@ -261,8 +261,8 @@ class QuotaService {
 	 * @return array<int, array<string, mixed>> The matching objects as arrays.
 	 */
 	private function findObjects(string $schemaKey, array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}

@@ -35,7 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -157,7 +157,7 @@ class ConnectionReportService {
 
 		try {
 			$event = new $eventClass(
-				app: Application::APP_ID,
+				app: AppIdentity::APP_ID,
 				key: $key,
 				status: $status,
 				message: $message,

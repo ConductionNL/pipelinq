@@ -25,8 +25,8 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ForecastDealService;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCP\EventDispatcher\Event;
@@ -219,8 +219,8 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null The deal data, or null when it is gone.
 	 */
 	private function fetch(string $uuid): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return null;
 		}
@@ -251,8 +251,8 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 */
 	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return;
 		}

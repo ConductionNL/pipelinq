@@ -35,7 +35,7 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Marketing\SubmittedLeadIntake;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -87,7 +87,7 @@ class SubmittedLeadListener implements IEventListener {
 			return;
 		}
 
-		$leadSchema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		$entity = $event->getObject();
 		if ($leadSchema === '' || (string)$entity->getSchema() !== $leadSchema) {
 			return;

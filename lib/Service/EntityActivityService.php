@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -159,7 +159,7 @@ class EntityActivityService {
 		$window = new ActivityPage(page: max(1, $page), limit: $this->normaliseLimit(rawLimit: $limit));
 
 		$registerId = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'register',
 			''
 		);
@@ -448,7 +448,7 @@ class EntityActivityService {
 		}
 
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$entityType . '_schema',
 			''
 		);

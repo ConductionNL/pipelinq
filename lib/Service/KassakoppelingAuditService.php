@@ -41,7 +41,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -678,8 +678,8 @@ class KassakoppelingAuditService {
 	 * @throws OCSNotFoundException When the register or schema is unset.
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, self::SCHEMA_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SCHEMA_KEY, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Kassakoppeling register of schema is niet geconfigureerd.');

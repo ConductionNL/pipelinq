@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -127,7 +127,7 @@ class KccWerkplekService {
 	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function getSchema(string $schemaKey): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 	}//end getSchema()
 
 	/**
@@ -145,7 +145,7 @@ class KccWerkplekService {
 	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function getRegister(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'

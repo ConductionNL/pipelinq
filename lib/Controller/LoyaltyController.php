@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\GiftCardService;
@@ -79,7 +79,7 @@ class LoyaltyController extends Controller {
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -402,7 +402,7 @@ class LoyaltyController extends Controller {
 	 *
 	* @spec exclude Reinstates loyalty gift-card issuance (money-and-bridge-fixes); loyalty-program canonical spec archived 2026-06-14.
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function issueGiftCard(): JSONResponse {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
@@ -446,7 +446,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001-01
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function activateProgramme(string $programmeId): JSONResponse {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on

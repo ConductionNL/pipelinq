@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -201,8 +201,8 @@ class PartyLinkService {
 	 * @return bool True when the write landed.
 	 */
 	private function write(array $object, ?string $uuid = null): bool {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'partyLink_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'partyLink_schema', '');
 		if ($register === '' || $schema === '') {
 			$this->logger->warning('PartyLinkService: the party link surface is not configured');
 

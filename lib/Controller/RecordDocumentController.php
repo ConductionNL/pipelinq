@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
@@ -76,7 +76,7 @@ class RecordDocumentController extends Controller
         private readonly ObjectOwnerAccessPolicy $accessPolicy,
         private readonly IAppConfig $appConfig,
     ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+        parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
     }//end __construct()
 
@@ -225,7 +225,7 @@ class RecordDocumentController extends Controller
      */
     private function configFor(string $schema): ?array
     {
-        $map = json_decode($this->appConfig->getValueString(Application::APP_ID, self::TEMPLATES_KEY, ''), true);
+        $map = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, self::TEMPLATES_KEY, ''), true);
         if (is_array($map) === false || isset($map[$schema]) === false || is_array($map[$schema]) === false) {
             return null;
         }

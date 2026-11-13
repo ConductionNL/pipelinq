@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Egress;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCA\Pipelinq\Util\SerialisedToArray;
@@ -292,7 +292,7 @@ class ConnectorEgress {
 	 * @return string The id, or an empty string.
 	 */
 	private function sourceId(string $configKey): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, $configKey, ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, $configKey, ''));
 	}//end sourceId()
 
 	/**

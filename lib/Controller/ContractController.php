@@ -32,7 +32,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContractFiguresService;
@@ -77,7 +77,7 @@ class ContractController extends Controller {
 		private LoggerInterface $logger,
 		private ContractFiguresService $figuresService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

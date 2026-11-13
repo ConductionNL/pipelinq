@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -69,7 +69,7 @@ class CallerObjectReader
      */
     public function register(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 
     }//end register()
 
@@ -86,7 +86,7 @@ class CallerObjectReader
      */
     public function read(string $id, string $schemaKey): ?array
     {
-        return $this->readFromSchema(id: $id, schema: $this->appConfig->getValueString(Application::APP_ID, $schemaKey, ''));
+        return $this->readFromSchema(id: $id, schema: $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, ''));
 
     }//end read()
 
@@ -114,7 +114,7 @@ class CallerObjectReader
         } catch (Throwable $e) {
             $this->logger->warning(
                 'Pipelinq: a read-guard refused an object',
-                ['app' => Application::APP_ID, 'id' => $id, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'id' => $id, 'exception' => $e->getMessage()]
             );
             return null;
         }

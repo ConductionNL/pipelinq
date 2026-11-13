@@ -39,7 +39,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
@@ -139,9 +139,9 @@ class QuestionAnsweredNotice {
 		}
 
 		try {
-			$l10n = $this->l10nFactory->get(Application::APP_ID, self::LANGUAGE);
+			$l10n = $this->l10nFactory->get(AppIdentity::APP_ID, self::LANGUAGE);
 			$link = $this->urlGenerator->getAbsoluteURL(self::SITE)
-				.'#open='.Application::APP_ID.'/'.self::COLLECTION.'/'.rawurlencode($ticketId);
+				.'#open='.AppIdentity::APP_ID.'/'.self::COLLECTION.'/'.rawurlencode($ticketId);
 
 			$message = [
 				'subjectRef' => $subjectRef,
@@ -151,7 +151,7 @@ class QuestionAnsweredNotice {
 				'read' => false,
 				'receivedAt' => gmdate('c'),
 				'ruleKey' => PortalContributionProvider::RULE_QUESTION_ANSWERED,
-				'recordLink' => ['app' => Application::APP_ID, 'collection' => self::COLLECTION, 'id' => $ticketId],
+				'recordLink' => ['app' => AppIdentity::APP_ID, 'collection' => self::COLLECTION, 'id' => $ticketId],
 			];
 
 			$this->objectService->runAsSystem(
@@ -166,7 +166,7 @@ class QuestionAnsweredNotice {
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'QuestionAnsweredNotice: the resident could not be told their question was answered',
-				['app' => Application::APP_ID, 'ticket' => $ticketId, 'error' => $e->getMessage()]
+				['app' => AppIdentity::APP_ID, 'ticket' => $ticketId, 'error' => $e->getMessage()]
 			);
 			return false;
 		}//end try

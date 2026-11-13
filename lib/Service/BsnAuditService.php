@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
@@ -133,7 +133,7 @@ class BsnAuditService {
 			'outcome' => $lookup->result->outcome,
 			'responseCode' => $lookup->result->responseCode,
 			'ipAddress' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
-			'userAgent' => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
+			'userAgent' => 'Pipelinq/' . (AppIdentity::APP_ID) . ' (Nextcloud)',
 			'haalcentraalCorrelationId' => $lookup->result->correlationId,
 			'linkedRequest' => $lookup->reason->linkedRequest,
 			'vogScreening' => $lookup->reason->vogScreening,
@@ -235,7 +235,7 @@ class BsnAuditService {
 			$oldHash = BsnValidationService::hash($rawBsn);
 			// Pseudonym = HMAC(bsn, secret) — caller-side; we just bump it once.
 			$secret = $this->appConfig->getValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'brp.pseudonym_secret',
 				''
 			);
@@ -344,8 +344,8 @@ class BsnAuditService {
 	 * @throws RuntimeException If configuration is missing.
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'bsnAuditRecord_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'bsnAuditRecord_schema', '');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('bsnAuditRecord register/schema not configured.');
 		}

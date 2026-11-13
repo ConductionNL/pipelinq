@@ -37,7 +37,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -189,7 +189,7 @@ class FullExportService {
 		}
 
 		$manifest = [
-			'app'        => Application::APP_ID,
+			'app'        => AppIdentity::APP_ID,
 			'exportedAt' => $exportedAt,
 			'formats'    => array_values(self::FORMATS),
 			'schemas'    => $entries,
@@ -214,8 +214,8 @@ class FullExportService {
 	 * @throws RuntimeException When a page cannot be read.
 	 */
 	private function rowsOf(string $slug): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, $slug . '_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, $slug . '_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}

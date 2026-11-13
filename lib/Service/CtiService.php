@@ -24,9 +24,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\BackgroundJob\CallTranscriptionJob;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\CallReview\CallTranscriptionService;
 use OCP\BackgroundJob\IJobList;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Cti\AdapterRegistry;
 use OCA\Pipelinq\Service\Cti\CallRecording;
 use OCA\Pipelinq\Service\Cti\EventLogQuery;
@@ -453,7 +453,7 @@ class CtiService {
 	 * @spec openspec/changes/contact-moments-call-review/tasks.md#task-1.2
 	 */
 	private function queueTranscription(string $interactionId): void {
-		if ($this->appConfig->getValueString(Application::APP_ID, CallTranscriptionService::ENABLED_KEY, 'false') !== 'true') {
+		if ($this->appConfig->getValueString(AppIdentity::APP_ID, CallTranscriptionService::ENABLED_KEY, 'false') !== 'true') {
 			return;
 		}
 
@@ -581,8 +581,8 @@ class CtiService {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function syncPresence(string $userId, string $presenceState, ?string $extension = null, ?string $platform = null): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiAgentPresence_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAgentPresence_schema', '');
 		if ($register === '' || $schema === '') {
 			return;
 		}
@@ -645,8 +645,8 @@ class CtiService {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function loadConfig(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiAdapterConfig_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAdapterConfig_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -685,8 +685,8 @@ class CtiService {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function saveConfig(array $config): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiAdapterConfig_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAdapterConfig_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -762,8 +762,8 @@ class CtiService {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function listEventLog(array $filters = [], int $limit = 50, int $offset = 0): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiEventLog_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiEventLog_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -823,8 +823,8 @@ class CtiService {
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over the fetch/filter/delete loop; extraction adds no clarity.
 	 */
 	public function purgeOldEventLog(): int {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiEventLog_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiEventLog_schema', '');
 		if ($register === '' || $schema === '') {
 			return 0;
 		}
@@ -897,8 +897,8 @@ class CtiService {
 		bool $signatureValid,
 		?string $processingError,
 	): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ctiEventLog_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiEventLog_schema', '');
 		if ($register === '' || $schema === '') {
 			return;
 		}
