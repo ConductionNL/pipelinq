@@ -27,6 +27,9 @@
               "blocked",
               "merged"
             ],
+            "x-enum-labels": {
+              "merged": "Merged"
+            },
             "default": "active",
             "facetable": true
           },
