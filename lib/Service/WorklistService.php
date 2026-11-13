@@ -48,6 +48,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use InvalidArgumentException;
+use OCA\Pipelinq\Service\Worklist\WeekStats;
 use OCA\Pipelinq\Service\Worklist\WorkBuckets;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -534,6 +536,39 @@ class WorklistService {
 
 		return $rows;
 	}//end taskRows()
+
+	/**
+	 * The figures of My work's "Your week so far" tiles for the user's own
+	 * tickets over the current calendar week (Monday to now): answered (and
+	 * answered today), the share answered within the deadline, the average
+	 * answer time in days and the tickets converted to a case.
+	 *
+	 * Only the `mine` scope exists: the team and organisation scopes come with
+	 * role-based content (REQ-MW-180), and until then any other scope is refused
+	 * rather than silently answered with the user's own figures.
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 * @param string $scope  The scope; only `mine`.
+	 *
+	 * @return array<string, mixed> The figures (see WeekStats::of()) and the scope.
+	 *
+	 * @throws InvalidArgumentException For a scope other than `mine`.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
+	 */
+	public function getWeekStats(string $userId, string $scope='mine'): array {
+		if ($scope !== 'mine') {
+			throw new InvalidArgumentException(message: 'Unknown scope');
+		}
+
+		$tickets = [];
+		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
+			$found   = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId], limit: self::REQUEST_FETCH_LIMIT);
+			$tickets = array_merge($tickets, $found);
+		}
+
+		return (new WeekStats())->of(tickets: $tickets, now: new DateTimeImmutable()) + ['scope' => $scope];
+	}//end getWeekStats()
 
 	/**
 	 * One sentence on the user's open work, for My work's header: how many
