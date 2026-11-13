@@ -83,4 +83,27 @@ class SegmentRuleTreeTest extends TestCase {
 
 		self::assertGreaterThan(SegmentRuleTree::MAX_DEPTH, $tree->depth(node: $deep));
 	}//end testDepthCountsTheDeepestBranch()
+
+	/**
+	 * The path past the cap names the first group beyond five, in the
+	 * validator's path notation; a tree that fits has none.
+	 *
+	 * @return void
+	 */
+	public function testThePathPastTheCapNamesTheSixthGroup(): void {
+		$tree = new SegmentRuleTree();
+		$leaf = ['field' => 'a', 'operator' => 'equals', 'value' => 1];
+
+		$five = $leaf;
+		for ($level = 0; $level < 5; $level++) {
+			$five = ['type' => 'AND', 'children' => [$five]];
+		}
+
+		self::assertNull($tree->pathPastDepth(node: $leaf));
+		self::assertNull($tree->pathPastDepth(node: $five));
+		self::assertSame(
+			'$.children[1].children[0].children[0].children[0].children[0]',
+			$tree->pathPastDepth(node: ['type' => 'or', 'children' => [$leaf, $five, ['type' => 'AND', 'children' => [$five]]]])
+		);
+	}//end testThePathPastTheCapNamesTheSixthGroup()
 }//end class

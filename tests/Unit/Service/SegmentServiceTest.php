@@ -996,7 +996,7 @@ class SegmentServiceTest extends TestCase {
 
 		$this->assertNull($this->service->validateRules($tree, 'contact'));
 		$this->assertSame(
-			'$: the rule tree is deeper than 5 groups.',
+			'$.children[0].children[0].children[0].children[0].children[0]: the rule tree is deeper than 5 groups.',
 			$this->service->validateRules(['type' => 'AND', 'children' => [$tree]], 'contact')
 		);
 	}//end testTreeDeeperThanFiveGroupsIsRefused()

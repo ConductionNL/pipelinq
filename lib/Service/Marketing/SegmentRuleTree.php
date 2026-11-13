@@ -91,6 +91,55 @@ class SegmentRuleTree {
 	}//end depth()
 
 	/**
+	 * The path of the first group past MAX_DEPTH, or null when the tree fits.
+	 *
+	 * Paths are written as the validator writes them: `$` for the root, then
+	 * `.children[i]` per level, so the sixth group of a single chain reads
+	 * `$.children[0].children[0].children[0].children[0].children[0]`.
+	 *
+	 * @param array<string, mixed> $node The tree.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/segment-groups-its-rules/specs/marketing-segmentation/spec.md#requirement-stored-rules-read-as-one-group
+	 */
+	public function pathPastDepth(array $node): ?string {
+		return $this->pathPastDepthAt(node: $node, level: 0, path: '$');
+	}//end pathPastDepth()
+
+	/**
+	 * The path of the first group past MAX_DEPTH at or under a node.
+	 *
+	 * @param array<string, mixed> $node  The node.
+	 * @param int                  $level The groups above it.
+	 * @param string               $path  The node's path.
+	 *
+	 * @return string|null
+	 */
+	private function pathPastDepthAt(array $node, int $level, string $path): ?string {
+		if ($this->groupType(node: $node) === null) {
+			return null;
+		}
+
+		if ($level >= self::MAX_DEPTH) {
+			return $path;
+		}
+
+		foreach ((array)($node['children'] ?? []) as $index => $child) {
+			if (is_array($child) === false) {
+				continue;
+			}
+
+			$found = $this->pathPastDepthAt(node: $child, level: ($level + 1), path: sprintf('%s.children[%d]', $path, $index));
+			if ($found !== null) {
+				return $found;
+			}
+		}
+
+		return null;
+	}//end pathPastDepthAt()
+
+	/**
 	 * The depth of a node found at a given level.
 	 *
 	 * @param array<string, mixed> $node  The node.

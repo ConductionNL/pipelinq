@@ -233,8 +233,9 @@ class SegmentService {
 		$properties = array_merge($this->signals->schemaProperties(), $properties);
 
 		$tree = $this->ruleTree->normalise(rules: $rules);
-		if ($this->ruleTree->depth(node: $tree) > SegmentRuleTree::MAX_DEPTH) {
-			return sprintf('$: the rule tree is deeper than %d groups.', SegmentRuleTree::MAX_DEPTH);
+		$pastCap = $this->ruleTree->pathPastDepth(node: $tree);
+		if ($pastCap !== null) {
+			return sprintf('%s: the rule tree is deeper than %d groups.', $pastCap, SegmentRuleTree::MAX_DEPTH);
 		}
 
 		// A lone condition reads as a group of one; it is checked where it stands,
