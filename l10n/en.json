@@ -4370,6 +4370,8 @@
         "Up to and including (date)": "Up to and including (date)",
         "Up to and including date": "Up to and including date",
         "Upcoming": "Upcoming",
+        "Upcoming meeting for %1$s: %2$s at %3$s": "Upcoming meeting for %1$s: %2$s at %3$s",
+        "Upcoming meeting: {title}": "Upcoming meeting: {title}",
         "Update field": "Update field",
         "Update tag": "Update tag",
         "Updated at": "Updated at",
@@ -5550,6 +5552,8 @@
         "Float Amount": "Float Amount",
         "Float At": "Float At",
         "Follow-up assignee": "Follow-up assignee",
+        "Follow-up due: %1$s (deadline: %2$s)": "Follow-up due: %1$s (deadline: %2$s)",
+        "Follow-up due: {title}": "Follow-up due: {title}",
         "Footer Override": "Footer Override",
         "For a contactmoment: UUID of the parent request-ticket this interaction belongs to (migrated from contactmoment.request).": "For a contactmoment: UUID of the parent request-ticket this interaction belongs to (migrated from contactmoment.request).",
         "For incremental runs: end of the watermark range (max value observed this run).": "For incremental runs: end of the watermark range (max value observed this run).",
@@ -9558,10 +9562,6 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
-        "Upcoming meeting for %1$s: %2$s at %3$s": "Upcoming meeting for %1$s: %2$s at %3$s",
-        "Upcoming meeting: {title}": "Upcoming meeting: {title}",
-        "Follow-up due: %1$s (deadline: %2$s)": "Follow-up due: %1$s (deadline: %2$s)",
-        "Follow-up due: {title}": "Follow-up due: {title}"
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
     }
 }

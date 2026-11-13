@@ -49,6 +49,8 @@ class Notifier implements INotifier {
 		'lead_lost' => 'assignment',
 		'task_completed' => 'task',
 		'task_expired' => 'task',
+		'followup_event_upcoming' => 'reminder',
+		'followup_task_due' => 'reminder',
 		'lead_stage_changed' => 'change',
 		'request_status_changed' => 'change',
 		'note_added' => 'change',
@@ -58,8 +60,6 @@ class Notifier implements INotifier {
 		'billing_handoff_failed' => 'system',
 		'social_share_requested' => 'social',
 		'social_relink_needed' => 'social',
-		'followup_event_upcoming' => 'reminder',
-		'followup_task_due' => 'reminder',
 	];
 
 	/**
@@ -155,10 +155,10 @@ class Notifier implements INotifier {
 		match (self::SUBJECT_GROUPS[$notification->getSubject()] ?? null) {
 			'assignment' => $this->applyAssignmentSubject(notification: $notification, context: $context),
 			'task' => $this->applyTaskSubject(notification: $notification, context: $context),
+			'reminder' => $this->applyReminderSubject(notification: $notification, context: $context),
 			'change' => $this->applyChangeSubject(notification: $notification, context: $context),
 			'system' => $this->applySystemSubject(notification: $notification, context: $context),
 			'social' => $this->applySocialSubject(notification: $notification, context: $context),
-			'reminder' => $this->applyReminderSubject(notification: $notification, context: $context),
 			default => throw new UnknownNotificationException(),
 		};
 	}//end applyNotificationSubject()
