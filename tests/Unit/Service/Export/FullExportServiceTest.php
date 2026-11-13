@@ -45,6 +45,9 @@ use ZipArchive;
  * @uses   \OCA\Pipelinq\Service\Export\ExportDataService
  * @uses   \OCA\Pipelinq\Service\Export\AbstractExportService
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses   \OCA\Pipelinq\Service\ConfigFragmentValue
+ * @uses   \OCA\Pipelinq\Util\EntityPayload
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  */
 class FullExportServiceTest extends TestCase {
 
@@ -282,4 +285,54 @@ class FullExportServiceTest extends TestCase {
 
 		$this->assertSame([], $this->service(loader: $loader, objects: $this->createMock(ObjectServiceInterface::class))->schemaSlugs());
 	}//end testNoSchemaListIsNothingToExport()
+
+	/**
+	 * A schema whose definition is not an object still produces a minimal JSON Schema.
+	 *
+	 * @return void
+	 */
+	public function testANonArraySchemaDefinitionIsExportedAsAMinimalSchema(): void {
+		$service = $this->service(
+			loader: $this->loader(['lead' => 'not-an-object']),
+			objects: $this->createMock(ObjectServiceInterface::class)
+		);
+		$path = $this->archivePath();
+
+		$service->writeArchive(path: $path, exportedAt: 'now');
+
+		$zip = new ZipArchive();
+		$this->assertTrue($zip->open($path));
+		$this->assertSame(
+			[
+				'$schema' => 'https://json-schema.org/draft/2020-12/schema',
+				'$id' => 'lead',
+				'title' => 'lead',
+				'type' => 'object',
+			],
+			json_decode((string) $zip->getFromName('schemas/lead.schema.json'), true)
+		);
+		$zip->close();
+	}//end testANonArraySchemaDefinitionIsExportedAsAMinimalSchema()
+
+	/**
+	 * An archive path whose directory does not exist fails the export when it is written.
+	 *
+	 * @return void
+	 */
+	public function testAnArchivePathInAMissingDirectoryFailsTheExport(): void {
+		$service = $this->service(loader: $this->loader([]), objects: $this->createMock(ObjectServiceInterface::class));
+
+		$path = sys_get_temp_dir() . '/no-such-dir-' . bin2hex(random_bytes(4)) . '/archive.zip';
+
+		// ZipArchive::close() emits a PHP warning before it reports the failure; swallow it so the assertion is on the exception alone.
+		set_error_handler(static fn (): bool => true);
+		try {
+			$this->expectException(RuntimeException::class);
+			$this->expectExceptionMessage('The export archive could not be written.');
+			$service->writeArchive(path: $path, exportedAt: 'now');
+		} finally {
+			restore_error_handler();
+		}
+	}//end testAnArchivePathInAMissingDirectoryFailsTheExport()
+
 }//end class
