@@ -159,6 +159,7 @@ class ExportDataService extends AbstractExportService {
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005
 	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006
+	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-001
 	 */
 	public function extractSchema(array $job, string $schemaSlug, ?string $watermarkFrom = null, ?int $rowCap = null): array {
 		$schemaKey = $this->requireSchemaKey(slug: $schemaSlug);
@@ -272,6 +273,7 @@ class ExportDataService extends AbstractExportService {
 	 * @return string The formatted payload.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-007
+	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-001
 	 */
 	public function format(array $rows, string $format): string {
 		switch ($format) {

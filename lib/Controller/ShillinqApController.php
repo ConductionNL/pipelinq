@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ShillinqApService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ShillinqApServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
@@ -49,19 +49,19 @@ class ShillinqApController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ShillinqApService $apService The Shillinq AP service.
+	 * @param ShillinqApServiceInterface $apService The Shillinq AP service.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ShillinqApService $apService,
+		private ShillinqApServiceInterface $apService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -78,14 +78,14 @@ class ShillinqApController extends Controller {
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function retry(string $id): JSONResponse {
 		if ($this->apService->shouldDispatch() === false) {
 			return new JSONResponse(['error' => 'Shillinq is not installed.'], 400);
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'expense_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
 		if ($register === '' || $schema === '' || $id === '') {
 			return new JSONResponse(['error' => 'Expense schema configuration is incomplete.'], 400);
 		}

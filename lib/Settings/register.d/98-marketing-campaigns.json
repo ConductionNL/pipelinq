@@ -258,9 +258,9 @@
                 "slug": "touchpoint",
                 "title": "Touchpoint",
                 "icon": "ChartTimelineVariantShimmer",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "One attributable interaction between a person and a campaign.",
-                "description": "The ledger the attribution models read. A touchpoint is written when someone clicks a link in a mailing, lands on a campaign page, submits its form or replies. Attribution is computed over these rows at report time and is never written back, so a model can change without rewriting history. The nonce carries the id portaliq stamped on a form submission and is what makes the submission listener idempotent: a redelivered submission finds its own touchpoint and writes nothing.",
+                "description": "The ledger the attribution models read. A touchpoint is written when someone clicks a link in a mailing, lands on a campaign page, submits its form, replies or attends its event. Attribution is computed over these rows at report time and is never written back, so a model can change without rewriting history. The nonce carries the id portaliq stamped on a form submission and is what makes the submission listener idempotent: a redelivered submission finds its own touchpoint and writes nothing.",
                 "x-schema-org": "schema:InteractAction",
                 "required": [
                     "campaignId",
@@ -297,7 +297,8 @@
                             "click",
                             "visit",
                             "submit",
-                            "reply"
+                            "reply",
+                            "attend"
                         ],
                         "facetable": true,
                         "example": "submit"

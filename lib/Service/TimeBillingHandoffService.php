@@ -59,7 +59,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TimeBillingHandoffServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -77,7 +78,7 @@ use Throwable;
  *
  * @spec openspec/specs/time-approval-workflow/spec.md
  */
-class TimeBillingHandoffService {
+class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	use CastingPayloadToArray;
 
 	/**
@@ -145,7 +146,7 @@ class TimeBillingHandoffService {
 	 * @spec openspec/specs/time-approval-workflow/spec.md
 	 */
 	public function handoffAvailable(): bool {
-		$flag = $this->appConfig->getValueString(Application::APP_ID, 'shillinq_time_intake_enabled', 'false');
+		$flag = $this->appConfig->getValueString(AppIdentity::APP_ID, 'shillinq_time_intake_enabled', 'false');
 		if ($flag !== 'true') {
 			return false;
 		}
@@ -179,8 +180,8 @@ class TimeBillingHandoffService {
 		}
 
 		$objectService = $this->objectService();
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'timeEntry_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'timeEntry_schema', '');
 		if ($objectService === null || $register === '' || $schema === '') {
 			return [];
 		}
@@ -285,8 +286,8 @@ class TimeBillingHandoffService {
 	 */
 	public function notifyPendingFailures(): array {
 		$objectService = $this->objectService();
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'timeEntry_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'timeEntry_schema', '');
 		if ($objectService === null || $register === '' || $schema === '') {
 			return [];
 		}
@@ -462,7 +463,7 @@ class TimeBillingHandoffService {
 		string $periodEnd,
 		array $entries,
 	): array {
-		$currency = $this->appConfig->getValueString(Application::APP_ID, 'currency', 'EUR');
+		$currency = $this->appConfig->getValueString(AppIdentity::APP_ID, 'currency', 'EUR');
 
 		$entryPayloads = [];
 		foreach ($entries as $entry) {
@@ -582,8 +583,8 @@ class TimeBillingHandoffService {
 	 * @return void
 	 */
 	private function persistEntry(array $entry): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'timeEntry_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'timeEntry_schema', '');
 		$uuid = (string)($entry['id'] ?? '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return;
@@ -623,8 +624,8 @@ class TimeBillingHandoffService {
 		}
 
 		$objectService = $this->objectService();
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($objectService === null || $register === '' || $schema === '') {
 			return null;
 		}

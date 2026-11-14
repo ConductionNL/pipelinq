@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
@@ -255,7 +255,7 @@ class EmailFallbackSender {
 	private function withBody(IMessage $msg, string $html): IMessage {
 		$msg->setHtmlBody($html);
 		$msg->setPlainBody(strip_tags($html));
-		$from = $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_FROM_ADDRESS, '');
+		$from = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_FROM_ADDRESS, '');
 		if ($from !== '' && $this->mailer->validateMailAddress($from) === true) {
 			$msg->setFrom([$from]);
 		}

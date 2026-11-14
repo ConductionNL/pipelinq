@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\WebForm;
 
 use DateTimeInterface;
+use OCA\Pipelinq\Kernel\Contracts\FormsQuestionReaderInterface;
 use Psr\Container\ContainerInterface;
 use Throwable;
 
@@ -42,7 +43,7 @@ use Throwable;
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-nextcloud-forms-form-feeds-pipelinq-only-through-a-checked-binding
  */
-class FormsQuestionReader {
+class FormsQuestionReader implements FormsQuestionReaderInterface {
 
 	/**
 	 * Forms' question mapper.

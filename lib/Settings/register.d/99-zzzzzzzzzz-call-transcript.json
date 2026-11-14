@@ -1,0 +1,32 @@
+{
+    "$comment": "contact-moments-call-review (design D1, D2): a recorded call's contact moment carries its transcript, a short summary and how far the transcription got. Written by CallTranscriptionService; the transcript is read only, the summary is the agent's to correct. They are fields on the contact moment, so they follow its retention. ticket -> 1.9.0.",
+    "components": {
+        "schemas": {
+            "ticket": {
+                "slug": "ticket",
+                "version": "1.9.0",
+                "properties": {
+                    "transcript": {
+                        "type": "string",
+                        "title": "Transcript",
+                        "description": "What was said on the call, transcribed from its recording.",
+                        "readOnly": true
+                    },
+                    "callSummary": {
+                        "type": "string",
+                        "title": "Call summary",
+                        "description": "A few sentences on what the call was about. Written from the transcript; the agent can correct it.",
+                        "maxLength": 4000
+                    },
+                    "transcriptStatus": {
+                        "type": "string",
+                        "title": "Transcript status",
+                        "enum": ["pending", "done", "failed", "unavailable", "expired"],
+                        "readOnly": true,
+                        "facetable": true
+                    }
+                }
+            }
+        }
+    }
+}

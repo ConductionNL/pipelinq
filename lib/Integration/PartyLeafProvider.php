@@ -34,8 +34,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Integration;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PartyIndicatorService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyLeafProviderInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
  */
-class PartyLeafProvider {
+class PartyLeafProvider implements PartyLeafProviderInterface {
 	/**
 	 * The leaf id a host declares in its schema's `linkedTypes`.
 	 *
@@ -72,13 +73,13 @@ class PartyLeafProvider {
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param PartyIndicatorService $indicatorService Resolves a party's indicators.
+	 * @param PartyIndicatorServiceInterface $indicatorService Resolves a party's indicators.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly ObjectServiceInterface $objectService,
-		private readonly PartyIndicatorService $indicatorService,
+		private readonly PartyIndicatorServiceInterface $indicatorService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -181,8 +182,8 @@ class PartyLeafProvider {
 	 * @return array<int, array<string, mixed>> The declared fields.
 	 */
 	private function declaredFields(string $kind): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'partyFieldSet_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'partyFieldSet_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}

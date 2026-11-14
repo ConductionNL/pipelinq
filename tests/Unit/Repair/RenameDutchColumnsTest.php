@@ -360,4 +360,87 @@ final class RenameDutchColumnsTest extends TestCase {
 		);
 		self::assertSame(['RenameDutchColumns: 1 renamed, 1 back-filled, 0 refused, across 2 shard table(s).'], $infos);
 	}//end testRunIssuesExactlyTheseStatements()
+	/**
+	 * A step over a logger that records its warnings, with one register resolved.
+	 *
+	 * @param array<int,string> $warnings Captured warning messages.
+	 *
+	 * @return RenameDutchColumns
+	 */
+	private function stepRecordingWarnings(array &$warnings): RenameDutchColumns {
+		$registers = $this->createMock(\OCP\DB\IResult::class);
+		$registers->method('fetchAll')->willReturn([7]);
+		$this->db->method('executeQuery')->willReturn($registers);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			static function (string $message) use (&$warnings): void {
+				$warnings[] = $message;
+			}
+		);
+
+		return new RenameDutchColumns($this->db, $logger);
+	}//end stepRecordingWarnings()
+
+	/**
+	 * A table listing that fails is warned about and nothing is altered.
+	 *
+	 * @return void
+	 */
+	public function testAFailedTableListingSkipsTheRun(): void {
+		$warnings = [];
+		$step = $this->stepRecordingWarnings($warnings);
+		$this->db->method('prepare')->willThrowException(new \RuntimeException('no information_schema'));
+		$this->db->expects(self::never())->method('executeStatement');
+
+		$step->run($this->createMock(IOutput::class));
+
+		self::assertSame(['RenameDutchColumns: could not list tables; skipping.'], $warnings);
+	}//end testAFailedTableListingSkipsTheRun()
+
+	/**
+	 * No openregister tables means nothing is read or altered.
+	 *
+	 * @return void
+	 */
+	public function testNoShardTablesAltersNothing(): void {
+		$warnings = [];
+		$step = $this->stepRecordingWarnings($warnings);
+		$tables = $this->createMock(\OCP\DB\IPreparedStatement::class);
+		$tables->method('fetch')->willReturnOnConsecutiveCalls(['table_name' => ''], false);
+		$this->db->expects(self::once())->method('prepare')->willReturn($tables);
+		$this->db->expects(self::never())->method('executeStatement');
+
+		$step->run($this->createMock(IOutput::class));
+
+		self::assertSame([], $warnings);
+	}//end testNoShardTablesAltersNothing()
+
+	/**
+	 * A column listing that fails skips that table with a warning.
+	 *
+	 * @return void
+	 */
+	public function testAFailedColumnListingSkipsTheTable(): void {
+		$warnings = [];
+		$step = $this->stepRecordingWarnings($warnings);
+		$tables = $this->createMock(\OCP\DB\IPreparedStatement::class);
+		$tables->method('fetch')->willReturnOnConsecutiveCalls(['table_name' => 'oc_openregister_table_7_42'], false);
+		$calls = 0;
+		$this->db->method('prepare')->willReturnCallback(
+			static function () use (&$calls, $tables) {
+				$calls++;
+				if ($calls === 1) {
+					return $tables;
+				}
+
+				throw new \RuntimeException('columns unreadable');
+			}
+		);
+		$this->db->expects(self::never())->method('executeStatement');
+
+		$step->run($this->createMock(IOutput::class));
+
+		self::assertContains('RenameDutchColumns: could not read columns; skipping table.', $warnings);
+	}//end testAFailedColumnListingSkipsTheTable()
+
 }//end class

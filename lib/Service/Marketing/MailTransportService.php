@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
@@ -455,7 +455,7 @@ class MailTransportService {
 	 */
 	private function firstPartyTrackingEnabled(): bool {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'blast.first_party_tracking',
 			'false',
 		) === 'true';
@@ -853,7 +853,7 @@ class MailTransportService {
 	 * @return string
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -867,7 +867,7 @@ class MailTransportService {
 	 * @return string
 	 */
 	private function getMailTransportSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailTransport_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'mailTransport_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -881,7 +881,7 @@ class MailTransportService {
 	 * @return string
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}

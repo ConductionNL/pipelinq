@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -63,7 +63,7 @@ class BrpRetentionJob extends TimedJob {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'brp.retention_interval_seconds',
 				self::DEFAULT_INTERVAL_SECONDS
 			)
@@ -83,9 +83,9 @@ class BrpRetentionJob extends TimedJob {
 	 */
 	protected function run(mixed $argument): void {
 		try {
-			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			$personSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
-			$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+			$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+			$personSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brpPersoon_schema', '');
+			$contactSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 			if ($register === '' || $personSchema === '') {
 				$this->logger->info('BRP retention: schemas not configured; skipping');
 				return;

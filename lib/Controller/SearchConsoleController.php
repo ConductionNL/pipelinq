@@ -27,9 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Kernel\Contracts\SearchConsoleImportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SearchQueryReportServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\SearchConsole\SearchConsoleImportService;
-use OCA\Pipelinq\Service\SearchConsole\SearchQueryReportService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -47,8 +47,8 @@ class SearchConsoleController extends Controller {
 	 *
 	 * @param string $appName App name.
 	 * @param IRequest $request Request.
-	 * @param SearchQueryReportService $report The aggregation.
-	 * @param SearchConsoleImportService $importer Connection status.
+	 * @param SearchQueryReportServiceInterface $report The aggregation.
+	 * @param SearchConsoleImportServiceInterface $importer Connection status.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
@@ -56,8 +56,8 @@ class SearchConsoleController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly SearchQueryReportService $report,
-		private readonly SearchConsoleImportService $importer,
+		private readonly SearchQueryReportServiceInterface $report,
+		private readonly SearchConsoleImportServiceInterface $importer,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);

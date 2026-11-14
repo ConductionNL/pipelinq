@@ -37,9 +37,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Portal\PortalAssertionVerifier;
-use OCA\Pipelinq\Service\DossierQuestionService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DossierQuestionServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalAssertionVerifierInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -56,6 +56,7 @@ use RuntimeException;
  * Receives portaliq's forwarded question actions.
  *
  * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalQuestionController extends Controller {
 	/**
@@ -83,8 +84,8 @@ class PortalQuestionController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                $request   The request.
-	 * @param PortalAssertionVerifier $verifier  Verifies portaliq's assertion.
-	 * @param DossierQuestionService  $questions Files questions and replies.
+	 * @param PortalAssertionVerifierInterface $verifier  Verifies portaliq's assertion.
+	 * @param DossierQuestionServiceInterface  $questions Files questions and replies.
 	 * @param IThrottler              $throttler Counts rejected calls.
 	 * @param LoggerInterface         $logger    Logger.
 	 *
@@ -92,12 +93,12 @@ class PortalQuestionController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PortalAssertionVerifier $verifier,
-		private readonly DossierQuestionService $questions,
+		private readonly PortalAssertionVerifierInterface $verifier,
+		private readonly DossierQuestionServiceInterface $questions,
 		private readonly IThrottler $throttler,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -187,7 +188,7 @@ class PortalQuestionController extends Controller {
 	 * @return string|JSONResponse
 	 */
 	private function subjectRef(): string|JSONResponse {
-		$claims = $this->verifier->verify((string)$this->request->getHeader(PortalAssertionVerifier::HEADER));
+		$claims = $this->verifier->verify((string)$this->request->getHeader(PortalAssertionVerifierInterface::HEADER));
 		if ($claims === null) {
 			$this->registerRejected();
 			return new JSONResponse(['error' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);

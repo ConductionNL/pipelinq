@@ -39,7 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\Mdm\MdmObjectRepository;
+use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
 use OCP\EventDispatcher\Event;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -78,12 +78,12 @@ class DrainMdmSyncQueue implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param MdmObjectRepository $repository The MDM object repository.
+	 * @param MdmObjectRepositoryInterface $repository The MDM object repository.
 	 * @param ContainerInterface $container The DI container (lazy OR WebhookService resolve).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private readonly MdmObjectRepository $repository,
+		private readonly MdmObjectRepositoryInterface $repository,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 	) {

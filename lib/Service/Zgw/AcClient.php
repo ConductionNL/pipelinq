@@ -39,7 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -348,7 +348,7 @@ class AcClient {
 	 * @return int
 	 */
 	private function refreshInterval(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.ac_refresh_interval', self::DEFAULT_REFRESH_S);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'zgw.ac_refresh_interval', self::DEFAULT_REFRESH_S);
 		if ($value > 0) {
 			return $value;
 		}

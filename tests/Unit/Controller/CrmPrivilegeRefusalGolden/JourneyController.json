@@ -34,7 +34,7 @@
                 ]
             },
             {
-                "JourneyService::listJourneys": []
+                "JourneyServiceInterface::listJourneys": []
             }
         ]
     },
@@ -73,7 +73,7 @@
                 ]
             },
             {
-                "JourneyService::find": [
+                "JourneyServiceInterface::find": [
                     "sample-id"
                 ]
             }
@@ -186,7 +186,7 @@
                 ]
             },
             {
-                "JourneyService::compile": [
+                "JourneyServiceInterface::compile": [
                     "sample-id",
                     "crm-user"
                 ]
@@ -264,7 +264,7 @@
                 ]
             },
             {
-                "JourneyService::runsFor": [
+                "JourneyServiceInterface::runsFor": [
                     "sample-id"
                 ]
             }

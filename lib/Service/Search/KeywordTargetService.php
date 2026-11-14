@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Search;
 
+use OCA\Pipelinq\Kernel\Contracts\KeywordTargetServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 use UnexpectedValueException;
@@ -47,7 +48,7 @@ use UnexpectedValueException;
  *
  * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
-class KeywordTargetService {
+class KeywordTargetService implements KeywordTargetServiceInterface {
 
 	/**
 	 * The schema slug the register fragment declares.

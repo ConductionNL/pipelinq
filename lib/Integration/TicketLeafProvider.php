@@ -30,8 +30,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Integration;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketLeafProviderInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
@@ -45,20 +46,13 @@ use Throwable;
  *
  * @spec openspec/specs/ticket-leaf/spec.md
  */
-class TicketLeafProvider {
+class TicketLeafProvider implements TicketLeafProviderInterface {
 	/**
 	 * The statuses in which a ticket is no longer open.
 	 *
 	 * @var array<int, string>
 	 */
 	public const CLOSED_STATUSES = ['closed', 'completed', 'converted', 'rejected', 'resolved'];
-
-	/**
-	 * The ticket subtypes that count as tickets; an interaction is a contact moment.
-	 *
-	 * @var array<int, string>
-	 */
-	public const TICKET_TYPES = [TicketService::TYPE_REQUEST, TicketService::TYPE_COMPLAINT];
 
 	/**
 	 * The status filters a read may ask for: the open tickets, the closed
@@ -185,7 +179,7 @@ class TicketLeafProvider {
 	private function surfaceIds(): array {
 		$ids = [];
 		foreach (['register', 'client_schema', 'ticket_schema'] as $key) {
-			$ids[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$ids[$key] = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		}
 
 		return $ids;
@@ -263,8 +257,8 @@ class TicketLeafProvider {
 	 */
 	public function clientIdsOf(string $ref): array {
 		$ref = trim($ref);
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($ref === '' || $register === '' || $clientSchema === '') {
 			return [];
 		}

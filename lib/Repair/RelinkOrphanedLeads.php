@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\OrphanedLeadRepairService;
+use OCA\Pipelinq\Kernel\Contracts\OrphanedLeadRepairServiceInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 
@@ -37,10 +37,10 @@ class RelinkOrphanedLeads implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param OrphanedLeadRepairService $service Does the work.
+	 * @param OrphanedLeadRepairServiceInterface $service Does the work.
 	 */
 	public function __construct(
-		private readonly OrphanedLeadRepairService $service,
+		private readonly OrphanedLeadRepairServiceInterface $service,
 	) {
 	}//end __construct()
 

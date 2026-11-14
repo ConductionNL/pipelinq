@@ -45,6 +45,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Pipelinq\Kernel\Contracts\ProgrammeEstimationServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -53,7 +54,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/project-portfolio/spec.md#requirement-a-work-item-shall-be-estimable-per-role-with-a-derived-total-req-prj-005
  */
-class ProgrammeEstimationService {
+class ProgrammeEstimationService implements ProgrammeEstimationServiceInterface {
 	/**
 	 * Constructor.
 	 *

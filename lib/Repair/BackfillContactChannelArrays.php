@@ -35,7 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -104,7 +104,7 @@ class BackfillContactChannelArrays implements IRepairStep {
 	 * @spec openspec/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
 	 */
 	public function run(IOutput $output): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$output->info('BackfillContactChannelArrays: pipelinq register not configured, skipping');
 			return;
@@ -121,7 +121,7 @@ class BackfillContactChannelArrays implements IRepairStep {
 
 		$totals = ['fixed' => 0, 'skipped' => 0, 'stuck' => 0];
 		foreach (self::OBJECT_TYPES as $objectType) {
-			$schema = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
+			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
 			if ($schema === '') {
 				continue;
 			}
