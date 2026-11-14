@@ -5044,6 +5044,58 @@
             }
         },
         "/export/full": {
+            "get": {
+                "operationId": "full-export-status",
+                "summary": "The state of the last full export (administrators only)",
+                "description": "none, queued, ready (with the archive name and file id) or failed, with when and for whom. 401 without a caller, 403 for anyone but an administrator.",
+                "tags": [
+                    "full-export"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The state of the last export.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "state": {
+                                            "type": "string",
+                                            "enum": [
+                                                "none",
+                                                "queued",
+                                                "ready",
+                                                "failed"
+                                            ]
+                                        },
+                                        "at": {
+                                            "type": "string"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "fileId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "state"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
             "post": {
                 "operationId": "full-export-start",
                 "summary": "Queue the export for the calling administrator",

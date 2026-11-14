@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\BackgroundJob\FullExportJob;
 use OCA\Pipelinq\Controller\FullExportController;
+use OCA\Pipelinq\Service\Export\FullExportState;
 use OCP\AppFramework\Http;
 use OCP\BackgroundJob\IJobList;
 use OCP\IGroupManager;
@@ -48,7 +49,7 @@ class FullExportControllerTest extends TestCase {
 	 *
 	 * @return FullExportController The controller.
 	 */
-	private function controller(?string $uid, bool $admin, IJobList $jobs): FullExportController {
+	private function controller(?string $uid, bool $admin, IJobList $jobs, ?FullExportState $state = null): FullExportController {
 		$session = $this->createMock(IUserSession::class);
 		$user    = null;
 		if ($uid !== null) {
@@ -60,7 +61,7 @@ class FullExportControllerTest extends TestCase {
 		$groups = $this->createMock(IGroupManager::class);
 		$groups->method('isAdmin')->willReturnCallback(static fn (string $id): bool => $admin && $id === $uid);
 
-		return new FullExportController(request: $this->createMock(IRequest::class), userSession: $session, groups: $groups, jobs: $jobs);
+		return new FullExportController(request: $this->createMock(IRequest::class), userSession: $session, groups: $groups, jobs: $jobs, state: $state);
 	}//end controller()
 
 	/**
@@ -106,4 +107,35 @@ class FullExportControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 	}//end testWithoutACallerIs401()
+
+	/**
+	 * Queueing records the export as queued for the administrator (task 3.1).
+	 *
+	 * @return void
+	 */
+	public function testQueueingRecordsTheState(): void {
+		$state = $this->createMock(FullExportState::class);
+		$state->expects($this->once())->method('queued')->with('admin');
+
+		$this->controller(uid: 'admin', admin: true, jobs: $this->createMock(IJobList::class), state: $state)->start();
+	}//end testQueueingRecordsTheState()
+
+	/**
+	 * An administrator reads the state of the last export; anyone else is refused.
+	 *
+	 * @return void
+	 */
+	public function testOnlyAnAdministratorReadsTheState(): void {
+		$state = $this->createMock(FullExportState::class);
+		$state->method('read')->willReturn(['state' => 'ready', 'name' => 'pipelinq-export.zip', 'fileId' => '42']);
+		$jobs = $this->createMock(IJobList::class);
+
+		$admin = $this->controller(uid: 'admin', admin: true, jobs: $jobs, state: $state)->status();
+		$this->assertSame(Http::STATUS_OK, $admin->getStatus());
+		$this->assertSame(['state' => 'ready', 'name' => 'pipelinq-export.zip', 'fileId' => '42'], $admin->getData());
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(uid: 'sales', admin: false, jobs: $jobs, state: $state)->status()->getStatus());
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(uid: null, admin: false, jobs: $jobs, state: $state)->status()->getStatus());
+		$this->assertSame(['state' => 'none'], $this->controller(uid: 'admin', admin: true, jobs: $jobs)->status()->getData());
+	}//end testOnlyAnAdministratorReadsTheState()
 }//end class

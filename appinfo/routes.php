@@ -484,6 +484,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // router never mistakes "test-run" or "destinations" for an {id} (ADR-016).
         // Export all data in one archive (data-portability-full-export REQ-DPE-002), administrators only.
         ['name' => 'fullExport#start',          'url' => '/api/export/full',                  'verb' => 'POST'],
+        ['name' => 'fullExport#status',         'url' => '/api/export/full',                  'verb' => 'GET'],
         ['name' => 'exportJob#listDestinations',  'url' => '/api/export/destinations',          'verb' => 'GET'],
         ['name' => 'exportJob#createDestination', 'url' => '/api/export/destinations',          'verb' => 'POST'],
         ['name' => 'exportJob#updateDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'PUT'],
