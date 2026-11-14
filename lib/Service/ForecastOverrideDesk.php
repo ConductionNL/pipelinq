@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ForecastOverrideDeskInterface;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006
  */
-class ForecastOverrideDesk {
+class ForecastOverrideDesk implements ForecastOverrideDeskInterface {
 	/**
 	 * Constructor.
 	 *

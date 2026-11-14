@@ -1873,7 +1873,73 @@
 						"id": "ticket-history",
 						"type": "audit-trail",
 						"title": "History",
-						"icon": "History"
+						"icon": "History",
+						"_note": "The same words as the full TicketDetail History tab (ticket-handover-history); tests/vitest/ticketHandoverHistory.spec.js keeps the two equal.",
+						"content": {
+							"layout": "stacked",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated by {actor}"
+							},
+							"changeLabels": [
+								{
+									"action": "update",
+									"field": "assignee",
+									"label": "Passed to {changed.assignee} by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "new",
+									"label": "Set back to new by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "in_progress",
+									"label": "Taken in progress by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "awaiting_customer",
+									"label": "Waiting for the customer by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "resolved",
+									"label": "Resolved by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "completed",
+									"label": "Completed by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "rejected",
+									"label": "Rejected by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "converted",
+									"label": "Converted by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "closed",
+									"label": "Closed by {actor}"
+								}
+							],
+							"excludeActions": [
+								"read"
+							]
+						}
 					},
 					{
 						"id": "ticket-resident-view",

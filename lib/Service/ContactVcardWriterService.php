@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Constants;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
@@ -324,7 +324,7 @@ class ContactVcardWriterService {
 		try {
 			$objectService = $this->getObjectService();
 			$registerId = $this->registerResolver->resolve('contact');
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
+			$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
 
 			// Fail closed on an unconfigured register or schema. This write had
 			// no such guard: an empty id is not the same as "no id" to

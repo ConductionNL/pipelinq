@@ -2638,6 +2638,13 @@
 						"icon": "Email"
 					},
 					{
+						"id": "client-calendar",
+						"type": "integration",
+						"integrationId": "calendar",
+						"title": "Meetings",
+						"icon": "Calendar"
+					},
+					{
 						"id": "client-notes",
 						"type": "integration",
 						"integrationId": "notes",
@@ -3688,7 +3695,7 @@
 						}
 					]
 				},
-				"_sideColumnNote": "The side column in the boards' order with the cards dossiq's DqContact and DqOrganisatie draw: a resident reads Reachable via, Identity and Home address, an organisation KvK and address and Open tickets; both then Contact channels, Relations and Record history. Related, Emails and Notes stay under them until the Activity card carries mail and notes.",
+				"_sideColumnNote": "The side column in the boards' order with the cards dossiq's DqContact and DqOrganisatie draw: a resident reads Reachable via, Identity and Home address, an organisation KvK and address and Open tickets; both then Contact channels, Relations and Record history. Related, Emails, Meetings (the calendar leaf, calendar-deepening) and Notes stay under them until the Activity card carries mail and notes.",
 				"sideColumn": [
 					{
 						"id": "side-reach",
@@ -4122,6 +4129,7 @@
 						}
 					},
 					"client-email",
+					"client-calendar",
 					"client-notes",
 					{
 						"id": "side-knowledge",
@@ -4245,6 +4253,16 @@
 					"hint": "One column per value of the property. Drag a card to change its status.",
 					"moveHandler": "moveTicketStatus",
 					"moveTargetsHandler": "ticketStatusTargets",
+					"states": [
+						{ "key": "new", "label": "New" },
+						{ "key": "in_progress", "label": "In progress" },
+						{ "key": "awaiting_customer", "label": "Waiting for customer" },
+						{ "key": "completed", "label": "Completed" },
+						{ "key": "converted", "label": "Converted", "closed": true },
+						{ "key": "rejected", "label": "Rejected", "closed": true },
+						{ "key": "resolved", "label": "Resolved", "hidden": true },
+						{ "key": "closed", "label": "Closed", "hidden": true }
+					],
 					"card": { "title": "title", "sub": ["channel"], "pill": "ticketType", "due": "slaDeadline", "owner": "assignee" },
 					"columnFields": [
 						{ "field": "status", "label": "status" },
@@ -4483,6 +4501,78 @@
 						}
 					},
 					{
+						"id": "ticket-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"_note": "Board PqTicket History tab (change ticket-handover-history, spec_ref openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001): OpenRegister's audit trail of the ticket in words, newest first. A handover reads \"Passed to <assignee> by <actor>\", a status change the state it reached; any other update reads \"Updated by <actor>\" with the fields it changed. The change rules are limited to updates, so the creation entry keeps \"Created by <actor>\". The ticket schema has no team field, so there is no team rule.",
+						"content": {
+							"layout": "stacked",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated by {actor}"
+							},
+							"changeLabels": [
+								{
+									"action": "update",
+									"field": "assignee",
+									"label": "Passed to {changed.assignee} by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "new",
+									"label": "Set back to new by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "in_progress",
+									"label": "Taken in progress by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "awaiting_customer",
+									"label": "Waiting for the customer by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "resolved",
+									"label": "Resolved by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "completed",
+									"label": "Completed by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "rejected",
+									"label": "Rejected by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "converted",
+									"label": "Converted by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "closed",
+									"label": "Closed by {actor}"
+								}
+							],
+							"excludeActions": [
+								"read"
+							]
+						}
+					},
+					{
 						"id": "ticket-panels",
 						"type": "tabs",
 						"title": "Ticket panels",
@@ -4505,6 +4595,10 @@
 									"visibleWhen": {
 										"appInstalled": "decidiq"
 									}
+								},
+								{
+									"widgetId": "ticket-history",
+									"label": "History"
 								}
 							]
 						}
@@ -5744,7 +5838,7 @@
 							"register": "pipelinq",
 							"schema": "crmTask",
 							"filter": {
-								"lead": "@objectId"
+								"leadId": "@objectId"
 							},
 							"sort": {
 								"field": "deadline",
@@ -6870,6 +6964,12 @@
 						}
 					},
 					{
+						"key": "publishFrom",
+						"label": "Published from",
+						"formatter": "date",
+						"_note": "product-service-catalogue-public task 3.2 (PqProducten): the day a service enters the public catalogue; empty for goods and unpublished services."
+					},
+					{
 						"key": "onDeals",
 						"label": "On deals",
 						"sortable": false,
@@ -6981,6 +7081,7 @@
 										"product-tariffs",
 										"product-variants",
 										"product-publication",
+										"product-catalogue",
 										"product-lines",
 										"product-files"
 									],
@@ -7099,6 +7200,41 @@
 									"formatter": "languageCodes"
 								},
 								"audience": {
+									"formatter": "labelList"
+								}
+							},
+							"hideEmpty": false
+						}
+					},
+					{
+						"id": "product-catalogue",
+						"type": "data",
+						"title": "Catalogue",
+						"icon": "BookOpenPageVariant",
+						"_note": "product-service-catalogue-public task 3.1 (PqProduct): what the public catalogue shows of a service, only for a product of type service. The publication window is what the public read rule will read once task 2.2's access decision is made; until then the card is staff-only like the rest of the page. The tariff table and the audience stay in the cards above, as for every product.",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "service"
+						},
+						"content": {
+							"columns": 3,
+							"include": [
+								"summary",
+								"uplReference",
+								"publishFrom",
+								"publishUntil",
+								"applyUrl",
+								"channels"
+							],
+							"overrides": {
+								"publishFrom": {
+									"formatter": "longDate"
+								},
+								"publishUntil": {
+									"formatter": "longDate"
+								},
+								"channels": {
 									"formatter": "labelList"
 								}
 							},

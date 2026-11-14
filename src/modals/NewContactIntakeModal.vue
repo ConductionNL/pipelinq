@@ -6,7 +6,8 @@
   - contact on the back of an unmatched CTI screen-pop, laid out as board
   - PqGesprekNieuwContact: the call and its queue over the title, why the form
   - is open, name and phone, e-mail and organisation, notes, and what happens
-  - after Create contact.
+  - after Create contact. Below the form, the earlier contacts from the
+  - caller's number (contact-moments-phone-lookup, REQ-CHP-001).
   -
   - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.2
   -->
@@ -79,6 +80,26 @@
 			<p class="cti-intake__wide cti-intake__hint">
 				{{ t('pipelinq', 'The new contact opens straight away, with this call as its first contact moment.') }}
 			</p>
+			<section class="cti-intake__wide cti-intake__history" data-testid="cti-intake-history" :aria-busy="historyLoading ? 'true' : 'false'">
+				<h3 class="cti-intake__label">
+					{{ t('pipelinq', 'Earlier contacts from this number') }}
+				</h3>
+				<p v-if="historyLoading" class="cti-intake__hint">
+					{{ t('pipelinq', 'Looking up earlier contacts…') }}
+				</p>
+				<p v-else-if="historyFailed" class="cti-intake__hint" data-testid="cti-intake-history-failed">
+					{{ t('pipelinq', 'Earlier contacts could not be loaded.') }}
+				</p>
+				<p v-else-if="history.length === 0" class="cti-intake__hint" data-testid="cti-intake-history-empty">
+					{{ t('pipelinq', 'There are no earlier contacts from this number.') }}
+				</p>
+				<ul v-else class="cti-intake__history-list">
+					<li v-for="item in history" :key="item.id" data-testid="cti-intake-history-item">
+						<a :href="ticketUrl(item.id)" target="_blank" rel="noopener">{{ item.title || t('pipelinq', 'Untitled') }}</a>
+						<span class="cti-intake__optional">{{ historyLine(item) }}</span>
+					</li>
+				</ul>
+			</section>
 		</form>
 		<template #actions>
 			<NcButton data-testid="cti-intake-cancel" @click="$emit('close')">
@@ -100,6 +121,8 @@
 
 <script>
 import { CnDialog, CnNoteCard } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcTextArea, NcTextField } from '@nextcloud/vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlusOutline.vue'
 import { readablePhone } from '../utils/readablePhone.js'
@@ -124,6 +147,11 @@ export default {
 				organisation: '',
 				notes: '',
 			},
+
+			/** Earlier tickets and contact moments from this number (REQ-CHP-001). */
+			history: [],
+			historyLoading: false,
+			historyFailed: false,
 		}
 	},
 
@@ -153,7 +181,61 @@ export default {
 		},
 	},
 
+	created() {
+		this.loadHistory()
+	},
+
 	methods: {
+		/**
+		 * Read the earlier contacts from the caller's number, as the agent may
+		 * read them, newest first (contact-moments-phone-lookup D4).
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadHistory() {
+			const number = this.e164 || this.prefillPhone
+			if (!number) {
+				return
+			}
+			this.historyLoading = true
+			this.historyFailed = false
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/tickets/by-phone'), { params: { number } })
+				this.history = Array.isArray(data?.results) ? data.results : []
+			} catch {
+				this.historyFailed = true
+				this.history = []
+			} finally {
+				this.historyLoading = false
+			}
+		},
+
+		/**
+		 * @param {string} id The ticket id.
+		 * @return {string} The ticket's page.
+		 */
+		ticketUrl(id) {
+			return generateUrl('/apps/pipelinq/tickets/' + id)
+		},
+
+		/**
+		 * "12 Oct 2026 · Contact moment · Anna de Vries", and "possible match"
+		 * when only the last nine digits agree.
+		 *
+		 * @param {object} item The ticket.
+		 * @return {string}
+		 */
+		historyLine(item) {
+			const when = item.occurredAt || item.started_at || item['@self']?.created || ''
+			const date = when ? new Date(when).toLocaleDateString() : ''
+			const type = item.ticketType === 'contactmoment' ? t('pipelinq', 'Contact moment') : t('pipelinq', 'Ticket')
+			const parts = [date, type, item.assignee || '']
+			if (item._phoneMatch === 'possible') {
+				parts.push(t('pipelinq', 'possible match'))
+			}
+			return parts.filter(Boolean).join(' · ')
+		},
+
 		submit() {
 			if (!this.valid) {
 				return
@@ -165,6 +247,26 @@ export default {
 </script>
 
 <style scoped>
+.cti-intake__history {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.cti-intake__history-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.cti-intake__history-list a {
+	color: var(--color-primary-element);
+	margin-inline-end: 8px;
+}
+
 .cti-intake {
 	display: grid;
 	grid-template-columns: 1fr 1fr;

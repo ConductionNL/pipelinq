@@ -27,17 +27,18 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
+use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\SmsInbound;
 use OCA\Pipelinq\Service\Provider\SmsMessage;
 use OCA\Pipelinq\Service\Provider\SmsProviderAttempt;
+use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCA\Pipelinq\Service\Provider\SmsSendFailure;
 use OCA\Pipelinq\Service\Provider\SmsSendRun;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
 use OCA\Pipelinq\Util\PayloadToArray;
-use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
-use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -59,7 +60,7 @@ use Throwable;
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class SmsAdapter {
+class SmsAdapter implements SmsAdapterInterface {
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
 
@@ -944,7 +945,7 @@ class SmsAdapter {
 	 * @return string Tenant id.
 	 */
 	private function getTenantId(): string {
-		$tenantId = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
+		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
 		if ($tenantId !== '') {
 			return $tenantId;
 		}
@@ -961,7 +962,7 @@ class SmsAdapter {
 	 * @return string Slug.
 	 */
 	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -975,7 +976,7 @@ class SmsAdapter {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}

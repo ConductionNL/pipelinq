@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\DossierQuestionServiceInterface;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IURLGenerator;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
  */
-class DossierQuestionService {
+class DossierQuestionService implements DossierQuestionServiceInterface {
 	/**
 	 * The `subjectReference.type` of a dossier snapshot (C4).
 	 *

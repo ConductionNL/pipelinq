@@ -51,8 +51,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\TenderPostedEvent;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
@@ -82,7 +83,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
  */
-class PosTenderService {
+class PosTenderService implements PosTenderServiceInterface {
 	/**
 	 * Money comparison tolerance: floating-point amounts within this epsilon
 	 * are treated as exactly equal. €0.005 = half a cent; below the rounding
@@ -1078,8 +1079,8 @@ class PosTenderService {
 	 * @throws OCSNotFoundException When the register or schema is unconfigured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Tender register of schema is not configured');

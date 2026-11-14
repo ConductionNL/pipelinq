@@ -37,16 +37,16 @@
                 ]
             },
             {
-                "RapportageService::getStageValues": []
+                "RapportageServiceInterface::getStageValues": []
             },
             {
-                "RapportageService::getSourcePerformance": []
+                "RapportageServiceInterface::getSourcePerformance": []
             },
             {
-                "RapportageService::getAgingBuckets": []
+                "RapportageServiceInterface::getAgingBuckets": []
             },
             {
-                "RapportageService::getWinLossAnalysis": []
+                "RapportageServiceInterface::getWinLossAnalysis": []
             }
         ]
     }

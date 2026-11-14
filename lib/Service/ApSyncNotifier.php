@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ApSyncNotifierInterface;
 use OCP\IGroupManager;
 
 /**
@@ -36,7 +37,7 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
-class ApSyncNotifier {
+class ApSyncNotifier implements ApSyncNotifierInterface {
 	/**
 	 * Constructor.
 	 *

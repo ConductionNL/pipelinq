@@ -146,4 +146,52 @@ class StoreTemplateAssemblerTest extends TestCase {
 		$this->assembler(objects: $objects)->components(kind: 'pipeline', chosen: [['schema' => 'pipeline', 'id' => 'gone']]);
 
 	}//end testAMissingObjectIsRefused()
+	/**
+	 * Entity rows are offered through their serialised form, rows without an
+	 * id are passed over, and rows that are neither are ignored.
+	 *
+	 * @return void
+	 */
+	public function testEntityRowsAreSerialisedAndRowsWithoutAnIdSkipped(): void {
+		$entity = new class {
+			/**
+			 * The serialised entity.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function jsonSerialize(): array {
+				return ['@self' => ['id' => 'p-9'], 'name' => 'Inkoop'];
+			}
+		};
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objects->method('findAll')->willReturn([$entity, ['title' => 'Zonder id'], 'not a row', ['id' => 'p-3']]);
+
+		$this->assertSame(
+			[
+				['schema' => 'pipeline', 'id' => 'p-9', 'title' => 'Inkoop'],
+				['schema' => 'pipeline', 'id' => 'p-3', 'title' => 'p-3'],
+			],
+			$this->assembler(objects: $objects)->publishable(kind: 'pipeline')
+		);
+
+	}//end testEntityRowsAreSerialisedAndRowsWithoutAnIdSkipped()
+
+	/**
+	 * Without a resolved register nothing is looked up or offered.
+	 *
+	 * @return void
+	 */
+	public function testAnUnresolvedRegisterOffersNothing(): void {
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objects->expects($this->never())->method('findAll');
+		$resolver = $this->createMock(originalClassName: RegisterResolverService::class);
+		$resolver->method('resolve')->willReturn('');
+		$config = $this->createMock(originalClassName: IAppConfig::class);
+		$config->method('getValueString')->willReturn('51');
+
+		$assembler = new StoreTemplateAssembler(objectService: $objects, appConfig: $config, registerResolver: $resolver);
+
+		$this->assertSame([], $assembler->publishable(kind: 'pipeline'));
+
+	}//end testAnUnresolvedRegisterOffersNothing()
 }//end class

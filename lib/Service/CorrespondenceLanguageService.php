@@ -42,7 +42,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CorrespondenceLanguageServiceInterface;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\L10N\IFactory;
@@ -54,7 +55,7 @@ use Throwable;
  *
  * @spec openspec/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
  */
-class CorrespondenceLanguageService {
+class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInterface {
 	/**
 	 * The rule that produced an answer: the party asked for it.
 	 *
@@ -112,7 +113,7 @@ class CorrespondenceLanguageService {
 	 */
 	public function available(): array {
 		try {
-			$languages = $this->l10nFactory->findAvailableLanguages(Application::APP_ID);
+			$languages = $this->l10nFactory->findAvailableLanguages(AppIdentity::APP_ID);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'CorrespondenceLanguageService: could not read the available languages',
@@ -269,8 +270,8 @@ class CorrespondenceLanguageService {
 		try {
 			$this->objectService->saveObject(
 				object: $party,
-				register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
+				register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+				schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', ''),
 				uuid: (string)($party['id'] ?? $party['uuid'] ?? $partyId),
 			);
 		} catch (Throwable $e) {

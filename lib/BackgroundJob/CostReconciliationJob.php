@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\CostReconciliationService;
+use OCA\Pipelinq\Kernel\Contracts\CostReconciliationServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -43,14 +43,14 @@ class CostReconciliationJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param CostReconciliationService $reconciler Service.
+	 * @param CostReconciliationServiceInterface $reconciler Service.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private CostReconciliationService $reconciler,
+		private CostReconciliationServiceInterface $reconciler,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
