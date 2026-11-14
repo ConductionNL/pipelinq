@@ -744,92 +744,16 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	 * @return array<string, mixed> Data with relation fields set.
 	 */
 	private function linkReferences(array $data, array $definition, array $uuids, ?string $ticketType = null): array {
-		// The FK field name is not uniform across the register: the contract
-		// schema calls it `clientRef` ("UUID reference to the existing client
-		// object. Client identity is never duplicated into the contract."),
-		// everything else calls it `client`. Writing the wrong key is silent —
-		// the object saves, the FK is simply absent — so the map is explicit
-		// rather than assumed.
-		$data = $this->values->linkReference(
-			data: $data,
-			definition: $definition,
-			uuids: $uuids,
-			keyName: 'clientKey',
-			section: 'clients',
-			field: ($definition['clientField'] ?? 'client'),
-		);
-
-		$data = $this->values->linkReference(
-			data: $data,
-			definition: $definition,
-			uuids: $uuids,
-			keyName: 'contactKey',
-			section: 'contacts',
-			field: 'contact',
-		);
-
-		// Without this a seeded lead / ticket carries a `stage` name but no
-		// `pipeline`, so it belongs to no board and every stage column counts
-		// zero — the demo data cannot demonstrate the pipeline it was written
-		// for. `pipelines` is seeded before `leads`, so the uuid is available.
-		$data = $this->values->linkReference(
-			data: $data,
-			definition: $definition,
-			uuids: $uuids,
-			keyName: 'pipelineKey',
-			section: 'pipelines',
-			field: 'pipeline',
-		);
-
-		// On a ticket the parent-request link is `parentTicket` (the legacy
-		// contactmoment field was `request`).
-		$requestField = 'request';
-		if ($ticketType !== null) {
-			$requestField = 'parentTicket';
+		foreach ($this->referenceLinks(definition: $definition, ticketType: $ticketType) as [$keyName, $section, $field]) {
+			$data = $this->values->linkReference(
+				data: $data,
+				definition: $definition,
+				uuids: $uuids,
+				keyName: $keyName,
+				section: $section,
+				field: $field,
+			);
 		}
-
-		$data = $this->values->linkReference(
-			data: $data,
-			definition: $definition,
-			uuids: $uuids,
-			keyName: 'requestKey',
-			section: 'requests',
-			field: $requestField,
-		);
-
-		return $this->linkBookingReferences(data: $data, definition: $definition, uuids: $uuids);
-	}//end linkReferences()
-
-	/**
-	 * Link a demo booking to its customer, its service and the resource of
-	 * each assignment, all seeded earlier in the same run.
-	 *
-	 * @param array<string, mixed>  $data       Definition data.
-	 * @param array<string, mixed>  $definition Full definition (may carry customerKey/serviceKey).
-	 * @param array<string, string> $uuids      Already-seeded uuid map (section:key => uuid).
-	 *
-	 * @return array<string, mixed> Data with the booking's relation fields set.
-	 *
-	 * @spec openspec/changes/services-and-resources-at-a-glance/tasks.md#4-example-data
-	 */
-	private function linkBookingReferences(array $data, array $definition, array $uuids): array {
-		$data = $this->values->linkReference(
-			data: $data,
-			definition: $definition,
-			uuids: $uuids,
-			keyName: 'customerKey',
-			section: 'clients',
-			field: 'customerId',
-		);
-
-		$data = $this->values->linkReference(
-			data: $data,
-			definition: $definition,
-			uuids: $uuids,
-			keyName: 'serviceKey',
-			section: 'appointmentServices',
-			field: 'serviceId',
-		);
 
 		return $this->values->linkListReferences(
 			data: $data,
@@ -837,5 +761,46 @@ class DemoSeedService implements DemoSeedServiceInterface {
 			uuids: $uuids,
 			link: ['resourceKey', 'appointmentResources', 'resourceId'],
 		);
-	}//end linkBookingReferences()
+	}//end linkReferences()
+
+	/**
+	 * The definition keys wired onto a payload, in order: key name, seeded section and payload field.
+	 *
+	 * A demo booking links to its customer and its service, and to the
+	 * resource of each assignment, all seeded earlier in the same run.
+	 *
+	 * @param array<string, mixed> $definition Full definition (may carry clientField).
+	 * @param string|null          $ticketType Ticket subtype, or null for own-schema sections.
+	 *
+	 * @return array<int, array{0: string, 1: string, 2: mixed}>
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/tasks.md#4-example-data
+	 */
+	private function referenceLinks(array $definition, ?string $ticketType): array {
+		// On a ticket the parent-request link is `parentTicket` (the legacy
+		// contactmoment field was `request`).
+		$requestField = 'request';
+		if ($ticketType !== null) {
+			$requestField = 'parentTicket';
+		}
+
+		return [
+			// The FK field name is not uniform across the register: the contract
+			// schema calls it `clientRef` ("UUID reference to the existing client
+			// object. Client identity is never duplicated into the contract."),
+			// everything else calls it `client`. Writing the wrong key is silent —
+			// the object saves, the FK is simply absent — so the map is explicit
+			// rather than assumed.
+			['clientKey', 'clients', ($definition['clientField'] ?? 'client')],
+			['contactKey', 'contacts', 'contact'],
+			// Without this a seeded lead / ticket carries a `stage` name but no
+			// `pipeline`, so it belongs to no board and every stage column counts
+			// zero — the demo data cannot demonstrate the pipeline it was written
+			// for. `pipelines` is seeded before `leads`, so the uuid is available.
+			['pipelineKey', 'pipelines', 'pipeline'],
+			['requestKey', 'requests', $requestField],
+			['customerKey', 'clients', 'customerId'],
+			['serviceKey', 'appointmentServices', 'serviceId'],
+		];
+	}//end referenceLinks()
 }//end class
