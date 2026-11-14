@@ -160,18 +160,36 @@ class PortaliqArticleStore {
 		}
 
 		foreach ($this->findAll() as $article) {
-			$self = ($article['@self'] ?? []);
-			if ((string)($article['slug'] ?? '') === $identity
-				|| (is_array($self) === true && (string)($self['slug'] ?? '') === $identity)
-				|| (string)($article['legacyRef'] ?? '') === $identity
-				|| (string)($article['legacyRef'] ?? '') === 'pipelinq:'.$identity
-			) {
+			if (in_array($identity, $this->namesOf(article: $article), true) === true) {
 				return $article;
 			}
 		}
 
 		return null;
 	}//end find()
+
+	/**
+	 * The names an article answers to besides its id: its slug, its object
+	 * slug, its legacyRef and, for a pipelinq legacyRef, the old pipelinq id.
+	 *
+	 * @param array<string, mixed> $article The article.
+	 *
+	 * @return array<int, string> The names, possibly with empty strings.
+	 */
+	private function namesOf(array $article): array {
+		$self = ($article['@self'] ?? []);
+		if (is_array($self) === false) {
+			$self = [];
+		}
+
+		$legacy = (string)($article['legacyRef'] ?? '');
+		$names  = [(string)($article['slug'] ?? ''), (string)($self['slug'] ?? ''), $legacy];
+		if (str_starts_with($legacy, 'pipelinq:') === true) {
+			$names[] = substr($legacy, strlen('pipelinq:'));
+		}
+
+		return $names;
+	}//end namesOf()
 
 	/**
 	 * Every article, optionally narrowed by exact field values.

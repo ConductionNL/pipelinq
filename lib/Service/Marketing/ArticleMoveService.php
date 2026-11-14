@@ -108,48 +108,24 @@ class ArticleMoveService {
 			return $result;
 		}
 
-		$existing = $this->portaliq->findAll();
 		$byLegacy = [];
 		$slugs    = [];
-		foreach ($existing as $article) {
-			$legacy = (string)($article['legacyRef'] ?? '');
-			if (str_starts_with($legacy, self::LEGACY_PREFIX) === true) {
-				$byLegacy[$legacy] = $article;
-			}
-
-			$slugs[(string)($article['slug'] ?? '')] = true;
+		foreach ($this->portaliq->findAll() as $article) {
+			$byLegacy[(string)($article['legacyRef'] ?? '')] = $article;
+			$slugs[(string)($article['slug'] ?? '')]         = true;
 		}
 
 		$renames = [];
 		foreach ($this->store->findAll(schemaSlug: $this->articleSchema()) as $article) {
-			$oldId = $this->store->idOf(payload: $article);
-			if ($oldId === '') {
-				continue;
-			}
-
-			$legacy = self::LEGACY_PREFIX.$oldId;
-			$target = ($byLegacy[$legacy] ?? null);
-			if ($target !== null) {
-				$result['alreadyMoved']++;
-			} else {
-				$target = $this->copy(article: $article, legacyRef: $legacy, slugs: $slugs, result: $result);
-				if ($target === null) {
-					$result['failed']++;
-					continue;
-				}
-
-				$result['moved']++;
-			}
-
-			$newId = $this->portaliq->idOf(payload: $target);
+			$newId = $this->moveOne(article: $article, byLegacy: $byLegacy, slugs: $slugs, result: $result);
 			foreach ($this->identitiesOf(object: $article) as $identity) {
-				$renames[$identity] = $newId;
+				if ($newId !== '') {
+					$renames[$identity] = $newId;
+				}
 			}
+		}
 
-			$this->markMigrated(article: $article, oldId: $oldId, newId: $newId);
-		}//end foreach
-
-		$result['references'] = $this->rewriteReferences(renames: $renames);
+		$result['references'] = ($this->rewriteTemplates(renames: $renames) + $this->rewritePosts(renames: $renames));
 		$result['status']     = 'done';
 		if ($result['failed'] > 0) {
 			$result['status'] = 'failures';
@@ -158,6 +134,41 @@ class ArticleMoveService {
 		$this->logger->info('Pipelinq article move into portaliq', $result);
 		return $result;
 	}//end run()
+
+	/**
+	 * Move one article, or find it already moved, and mark it.
+	 *
+	 * @param array<string, mixed>                $article  The pipelinq article.
+	 * @param array<string, array<string, mixed>> $byLegacy portaliq's articles by legacyRef.
+	 * @param array<string, bool>                 $slugs    The slugs portaliq holds, updated.
+	 * @param array<string, mixed>                $result   The report, updated.
+	 *
+	 * @return string The portaliq id, or '' when the article was not moved.
+	 */
+	private function moveOne(array $article, array $byLegacy, array &$slugs, array &$result): string {
+		$oldId = $this->store->idOf(payload: $article);
+		if ($oldId === '') {
+			return '';
+		}
+
+		$legacy = self::LEGACY_PREFIX.$oldId;
+		$target = ($byLegacy[$legacy] ?? null);
+		$outcome = 'alreadyMoved';
+		if ($target === null) {
+			$target  = $this->copy(article: $article, legacyRef: $legacy, slugs: $slugs, result: $result);
+			$outcome = 'moved';
+		}
+
+		if ($target === null) {
+			$result['failed']++;
+			return '';
+		}
+
+		$result[$outcome]++;
+		$newId = $this->portaliq->idOf(payload: $target);
+		$this->markMigrated(article: $article, oldId: $oldId, newId: $newId);
+		return $newId;
+	}//end moveOne()
 
 	/**
 	 * Copy one article into portaliq.
@@ -214,49 +225,66 @@ class ArticleMoveService {
 	}//end markMigrated()
 
 	/**
-	 * Rewrite `campaignTemplate.articleIds` and `socialPost.articleId`.
+	 * Rewrite `campaignTemplate.articleIds` from the old ids to the new ones.
 	 *
 	 * @param array<string, string> $renames Old identity => portaliq id.
 	 *
-	 * @return int How many objects were rewritten.
+	 * @return int How many templates were rewritten.
 	 */
-	private function rewriteReferences(array $renames): int {
-		if ($renames === []) {
-			return 0;
-		}
-
+	private function rewriteTemplates(array $renames): int {
 		$count  = 0;
 		$schema = $this->store->schemaSlug(configKey: 'campaignTemplate_schema', default: 'campaignTemplate');
 		foreach ($this->store->findAll(schemaSlug: $schema) as $template) {
 			$ids = ($template['articleIds'] ?? null);
-			if (is_array($ids) === false) {
+			if (is_array($ids) === false || $ids === []) {
 				continue;
 			}
 
-			$rewritten = [];
-			foreach ($ids as $id) {
-				if (is_scalar($id) === true && isset($renames[(string)$id]) === true) {
-					$id = $renames[(string)$id];
-				}
-
-				$rewritten[] = $id;
-			}
-
+			$rewritten = array_map(fn (mixed $id): mixed => $this->renamed(id: $id, renames: $renames), array_values($ids));
 			if ($rewritten !== array_values($ids)) {
 				$count += $this->saveRewritten(schema: $schema, object: $template, field: 'articleIds', value: $rewritten);
 			}
 		}
 
+		return $count;
+	}//end rewriteTemplates()
+
+	/**
+	 * Rewrite `socialPost.articleId` from the old id to the new one.
+	 *
+	 * @param array<string, string> $renames Old identity => portaliq id.
+	 *
+	 * @return int How many posts were rewritten.
+	 */
+	private function rewritePosts(array $renames): int {
+		$count  = 0;
 		$schema = $this->store->schemaSlug(configKey: 'social_post_schema', default: 'socialPost');
 		foreach ($this->store->findAll(schemaSlug: $schema) as $post) {
-			$id = ($post['articleId'] ?? null);
-			if (is_scalar($id) === true && isset($renames[(string)$id]) === true && $renames[(string)$id] !== (string)$id) {
-				$count += $this->saveRewritten(schema: $schema, object: $post, field: 'articleId', value: $renames[(string)$id]);
+			$id      = ($post['articleId'] ?? null);
+			$renamed = $this->renamed(id: $id, renames: $renames);
+			if ($renamed !== $id) {
+				$count += $this->saveRewritten(schema: $schema, object: $post, field: 'articleId', value: $renamed);
 			}
 		}
 
 		return $count;
-	}//end rewriteReferences()
+	}//end rewritePosts()
+
+	/**
+	 * The new id for an old reference, or the reference unchanged.
+	 *
+	 * @param mixed                 $id      The reference.
+	 * @param array<string, string> $renames Old identity => portaliq id.
+	 *
+	 * @return mixed The new id, or $id.
+	 */
+	private function renamed(mixed $id, array $renames): mixed {
+		if (is_scalar($id) === false || isset($renames[(string)$id]) === false) {
+			return $id;
+		}
+
+		return $renames[(string)$id];
+	}//end renamed()
 
 	/**
 	 * Save one rewritten reference.

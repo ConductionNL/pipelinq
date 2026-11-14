@@ -32,8 +32,10 @@ Spec only in this PR. Build after portaliq ships `marketing-articles-from-pipeli
   - spec_ref: `specs/marketing-ui/spec.md#requirement-the-marketing-menu-no-longer-carries-articles`
   - acceptance: `tests/vitest/modulesPage.spec.js` counts one card fewer; `git grep -n "ArticleEditModal\|articlesApi" src/` is empty
 - [ ] 4.2 Remove `ArticleController` and the `/api/articles` routes; drop the `article` schema fragment only after the repair step reported zero failures on the release instances.
+  - Built: `ArticleController`, its test and the eight `/api/articles` routes are gone (and from `openapi.json`). Left: dropping the `article` schema fragment waits for the repair step to report zero failures on the release instances, which needs a live run; until then the schema stays, with `migratedTo` (1.1.0) for the move.
 
 ## 5. Verify
 
 - [ ] 5.1 `COMPOSER_PROCESS_TIMEOUT=0 composer check:strict`, `npm run lint`, `npm run test:l10n` once before push.
+  - Ran here: `npm run lint` (0 errors), `npm run test:l10n` (OK), the whole PHPUnit unit suite and vitest suite, and phpcs, phpmd, psalm and phpstan on every touched lib file. `composer check:strict` itself refuses to run as root in the build container, so the full composer chain is left for a local run.
 - [ ] 5.2 Live check: a template naming a moved article previews the article's title and summary.
