@@ -43,6 +43,7 @@ final class DeferredHandlers {
 		AvailabilityCacheInvalidationListener::HANDLER_KEY => AvailabilityCacheInvalidationListener::class,
 		DealCreatedListener::HANDLER_KEY => DealCreatedListener::class,
 		DealUpdatedListener::HANDLER_KEY => DealUpdatedListener::class,
+		EventCancelledListener::HANDLER_KEY => EventCancelledListener::class,
 		ExpenseApprovalListener::HANDLER_KEY => ExpenseApprovalListener::class,
 		SlaObjectCreatedListener::HANDLER_KEY => SlaObjectCreatedListener::class,
 		SlaObjectUpdatedListener::HANDLER_KEY => SlaObjectUpdatedListener::class,

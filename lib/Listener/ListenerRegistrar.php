@@ -141,6 +141,12 @@ class ListenerRegistrar {
 			event: ObjectUpdatedEvent::class,
 			listener: DealUpdatedListener::class
 		);
+		// A cancelled campaign event tells everyone with a place or on the
+		// waiting list, in the deferred job (marketing-events, task 3.1).
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: EventCancelledListener::class
+		);
 		// A changed resource or service expires the cached availability it
 		// made wrong, for every writer (appointment-booking, REQ-APT-015).
 		$context->registerEventListener(
