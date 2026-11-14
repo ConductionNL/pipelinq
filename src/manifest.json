@@ -5833,6 +5833,19 @@
 						}
 					},
 					{
+						"id": "side-assignment",
+						"type": "facts",
+						"title": "Why this owner",
+						"icon": "AccountArrowRight",
+						"_note": "pipeline-lead-rotation (REQ-LRT-001/002): why lead rotation gave this lead its owner, or that it found nobody eligible. Only shown when rotation wrote a reason; the suggested colleagues below it help to pick someone by hand.",
+						"visibleWhen": { "field": "assignmentReason", "op": "notEmpty" },
+						"content": {
+							"fields": [
+								{ "as": "line", "template": "{assignmentReason}" }
+							]
+						}
+					},
+					{
 						"id": "side-suggested",
 						"type": "RoutingSuggestionWidget",
 						"title": "Suggested colleagues",
@@ -5933,6 +5946,7 @@
 				],
 				"sideColumn": [
 					"side-client",
+					"side-assignment",
 					"side-suggested",
 					"side-win-chance",
 					"side-next-step",

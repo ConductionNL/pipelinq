@@ -15,6 +15,14 @@
 				"default": 14,
 				"placeholder": "14",
 				"hint": "Number of days a lead can stay untouched before it is flagged as stale. Default: 14."
+			},
+			{
+				"key": "lead_rotation_enabled",
+				"label": "Assign new leads in turn",
+				"type": "switch",
+				"trueValue": "true",
+				"falseValue": "false",
+				"hint": "A new lead without an owner goes to the colleague with the matching skills who received the fewest leads in the last 30 days. Set a cap or a pause per colleague on their agent profile."
 			}
 		]
 	},
