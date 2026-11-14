@@ -320,69 +320,115 @@ class PosTransactionService implements PosTransactionServiceInterface {
 	 */
 	public function computeTotals(array $lines, ?string $priceMode = null): array {
 		$mode = $this->normalizePriceMode(mode: $priceMode);
-		$subtotal = 0.0;
-		$discountTotal = 0.0;
-		$totalTax = 0.0;
-		$byRate = [];
+		$sums = $this->sumLines(lines: $lines, mode: $mode);
 
-		foreach ($lines as $rawLine) {
-			$line = $this->recalculateLine(lineData: $rawLine, priceMode: $mode);
-			$taxRate = (float)$line['taxRate'];
-
-			// Net base is the tax-exclusive amount the line computed for this
-			// price mode; the gross-before-discount uses the same mode so the
-			// discount figure is consistent (incl-mode strips BTW out first).
-			$net = (float)$line['net'];
-			$taxAmount = (float)$line['taxAmount'];
-			$grossNoDisc = $this->lineNetBeforeDiscount(line: $line, mode: $mode);
-
-			$subtotal += $net;
-			$discountTotal += ($grossNoDisc - $net);
-			$totalTax += $taxAmount;
-
-			$rateKey = (string)$taxRate;
-			if (isset($byRate[$rateKey]) === false) {
-				$byRate[$rateKey] = ['rate' => $taxRate, 'base' => 0.0, 'tax' => 0.0];
-			}
-
-			$byRate[$rateKey]['base'] += $net;
-			$byRate[$rateKey]['tax'] += $taxAmount;
-		}//end foreach
-
-		$taxBreakdown = [];
-		$invoiceBreakdown = [];
-		ksort($byRate, SORT_NUMERIC);
-		foreach ($byRate as $entry) {
-			$base = $this->money(value: $entry['base']);
-			$tax = $this->money(value: $entry['tax']);
-
-			$taxBreakdown[] = [
-				'rate' => $entry['rate'],
-				'base' => $base,
-				'tax' => $tax,
-			];
-
-			$invoiceBreakdown[] = [
-				'rate' => $entry['rate'],
-				'base' => $base,
-				'tax' => $tax,
-				'description' => $this->rateDescription(rate: (float)$entry['rate']),
-			];
-		}//end foreach
-
-		$subtotal = $this->money(value: $subtotal);
-		$totalTax = $this->money(value: $totalTax);
+		$subtotal = $this->money(value: $sums['subtotal']);
+		$totalTax = $this->money(value: $sums['totalTax']);
 
 		return [
 			'priceMode' => $mode,
 			'subtotal' => $subtotal,
-			'discountTotal' => $this->money(value: $discountTotal),
-			'taxBreakdown' => $taxBreakdown,
-			'invoiceBreakdown' => $invoiceBreakdown,
+			'discountTotal' => $this->money(value: $sums['discountTotal']),
+		] + $this->rateBreakdowns(byRate: $sums['byRate']) + [
 			'totalTax' => $totalTax,
 			'total' => $this->money(value: ($subtotal + $totalTax)),
 		];
 	}//end computeTotals()
+
+	/**
+	 * Recompute every line and sum the net, discount and tax amounts, per rate and overall.
+	 *
+	 * @param array<int, array<string, mixed>> $lines The transaction's line items.
+	 * @param string $mode The normalised price mode.
+	 *
+	 * @return array{subtotal: float, discountTotal: float, totalTax: float, byRate: array<string, array<string, float>>}
+	 *
+	 * @spec openspec/specs/pos-nl-btw-engine/spec.md #REQ-BTW-003, #REQ-BTW-004
+	 */
+	private function sumLines(array $lines, string $mode): array {
+		$sums = ['subtotal' => 0.0, 'discountTotal' => 0.0, 'totalTax' => 0.0, 'byRate' => []];
+		foreach ($lines as $rawLine) {
+			$line = $this->recalculateLine(lineData: $rawLine, priceMode: $mode);
+			$sums = $this->addLine(sums: $sums, line: $line, mode: $mode);
+		}
+
+		return $sums;
+	}//end sumLines()
+
+	/**
+	 * Add one recomputed line to the running sums.
+	 *
+	 * @param array{subtotal: float, discountTotal: float, totalTax: float, byRate: array<string, array<string, float>>} $sums The running sums.
+	 * @param array<string, mixed> $line The recomputed line.
+	 * @param string $mode The normalised price mode.
+	 *
+	 * @return array{subtotal: float, discountTotal: float, totalTax: float, byRate: array<string, array<string, float>>}
+	 *
+	 * @spec openspec/specs/pos-nl-btw-engine/spec.md #REQ-BTW-003, #REQ-BTW-004
+	 */
+	private function addLine(array $sums, array $line, string $mode): array {
+		$taxRate = (float)$line['taxRate'];
+
+		// Net base is the tax-exclusive amount the line computed for this
+		// price mode; the gross-before-discount uses the same mode so the
+		// discount figure is consistent (incl-mode strips BTW out first).
+		$net = (float)$line['net'];
+		$taxAmount = (float)$line['taxAmount'];
+		$grossNoDisc = $this->lineNetBeforeDiscount(line: $line, mode: $mode);
+
+		$sums['subtotal'] += $net;
+		$sums['discountTotal'] += ($grossNoDisc - $net);
+		$sums['totalTax'] += $taxAmount;
+
+		$sums['byRate'] = $this->addToRate(byRate: $sums['byRate'], rate: $taxRate, base: $net, tax: $taxAmount);
+		return $sums;
+	}//end addLine()
+
+	/**
+	 * Add a base and tax amount to the bucket of their BTW rate.
+	 *
+	 * @param array<string, array{rate: float, base: float, tax: float}> $byRate The buckets keyed by rate.
+	 * @param float $rate The BTW rate.
+	 * @param float $base The tax-exclusive amount.
+	 * @param float $tax The tax amount.
+	 *
+	 * @return array<string, array{rate: float, base: float, tax: float}>
+	 *
+	 * @spec openspec/specs/pos-nl-btw-engine/spec.md
+	 */
+	private function addToRate(array $byRate, float $rate, float $base, float $tax): array {
+		$rateKey = (string)$rate;
+		if (isset($byRate[$rateKey]) === false) {
+			$byRate[$rateKey] = ['rate' => $rate, 'base' => 0.0, 'tax' => 0.0];
+		}
+
+		$byRate[$rateKey]['base'] += $base;
+		$byRate[$rateKey]['tax'] += $tax;
+		return $byRate;
+	}//end addToRate()
+
+	/**
+	 * The per-rate tax breakdown and invoice breakdown, ordered by rate, with rounded amounts.
+	 *
+	 * @param array<string, array{rate: float, base: float, tax: float}> $byRate The buckets keyed by rate.
+	 *
+	 * @return array{taxBreakdown: array<int, array<string, mixed>>, invoiceBreakdown: array<int, array<string, mixed>>}
+	 *
+	 * @spec openspec/specs/pos-nl-btw-engine/spec.md #REQ-BTW-003, #REQ-BTW-004
+	 */
+	private function rateBreakdowns(array $byRate): array {
+		$taxBreakdown = [];
+		$invoiceBreakdown = [];
+		ksort($byRate, SORT_NUMERIC);
+		foreach ($byRate as $entry) {
+			$row = ['rate' => $entry['rate'], 'base' => $this->money(value: $entry['base']), 'tax' => $this->money(value: $entry['tax'])];
+
+			$taxBreakdown[] = $row;
+			$invoiceBreakdown[] = $row + ['description' => $this->rateDescription(rate: (float)$entry['rate'])];
+		}
+
+		return ['taxBreakdown' => $taxBreakdown, 'invoiceBreakdown' => $invoiceBreakdown];
+	}//end rateBreakdowns()
 
 	/**
 	 * Tax-exclusive line amount before the line discount, for the given mode.
@@ -431,67 +477,110 @@ class PosTransactionService implements PosTransactionServiceInterface {
 	 * @spec openspec/specs/pos-nl-btw-engine/spec.md
 	 */
 	public function buildTaxReport(array $transactions): array {
-		$byRate = [];
-		$totalBase = 0.0;
-		$totalTax = 0.0;
-		$includedCount = 0;
-
+		$report = ['byRate' => [], 'totalBase' => 0.0, 'totalTax' => 0.0, 'count' => 0];
 		foreach ($transactions as $transaction) {
-			$status = (string)($transaction['status'] ?? '');
-			if (in_array($status, ['confirmed', 'settled', 'refunded'], true) === false) {
-				continue;
-			}
-
-			$sign = 1.0;
-			if ($status === 'refunded') {
-				$sign = -1.0;
-			}
-
-			$rows = $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? [];
-			if (is_array($rows) === false) {
-				continue;
-			}
-
-			$includedCount++;
-			foreach ($rows as $row) {
-				if (is_array($row) === false) {
-					continue;
-				}
-
-				$rate = (float)($row['rate'] ?? 0);
-				$base = ($sign * (float)($row['base'] ?? 0));
-				$tax = ($sign * (float)($row['tax'] ?? 0));
-				$rateKey = (string)$rate;
-
-				if (isset($byRate[$rateKey]) === false) {
-					$byRate[$rateKey] = ['rate' => $rate, 'base' => 0.0, 'tax' => 0.0];
-				}
-
-				$byRate[$rateKey]['base'] += $base;
-				$byRate[$rateKey]['tax'] += $tax;
-				$totalBase += $base;
-				$totalTax += $tax;
-			}//end foreach
-		}//end foreach
-
-		$rates = [];
-		ksort($byRate, SORT_NUMERIC);
-		foreach ($byRate as $entry) {
-			$rates[] = [
-				'rate' => $entry['rate'],
-				'base' => $this->money(value: $entry['base']),
-				'tax' => $this->money(value: $entry['tax']),
-				'description' => $this->rateDescription(rate: (float)$entry['rate']),
-			];
+			$report = $this->addTransaction(report: $report, transaction: $transaction);
 		}
 
 		return [
-			'rates' => $rates,
-			'totalBase' => $this->money(value: $totalBase),
-			'totalTax' => $this->money(value: $totalTax),
-			'transactionCount' => $includedCount,
+			'rates' => $this->rateBreakdowns(byRate: $report['byRate'])['invoiceBreakdown'],
+			'totalBase' => $this->money(value: $report['totalBase']),
+			'totalTax' => $this->money(value: $report['totalTax']),
+			'transactionCount' => $report['count'],
 		];
 	}//end buildTaxReport()
+
+	/**
+	 * Add one transaction's breakdown to the report when it is fiscally final.
+	 *
+	 * @param array{byRate: array<string, array<string, float>>, totalBase: float, totalTax: float, count: int} $report The running report.
+	 * @param array<string, mixed> $transaction The transaction.
+	 *
+	 * @return array{byRate: array<string, array<string, float>>, totalBase: float, totalTax: float, count: int}
+	 *
+	 * @spec openspec/specs/pos-nl-btw-engine/spec.md
+	 */
+	private function addTransaction(array $report, array $transaction): array {
+		$sign = $this->reportSign(status: (string)($transaction['status'] ?? ''));
+		if ($sign === null) {
+			return $report;
+		}
+
+		$rows = $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? [];
+		if (is_array($rows) === false) {
+			return $report;
+		}
+
+		return $this->addTaxRows(report: $report, rows: $rows, sign: $sign);
+	}//end addTransaction()
+
+	/**
+	 * The sign a transaction's amounts carry in the report: -1 for refunds, null when it does not count.
+	 *
+	 * @param string $status The transaction status.
+	 *
+	 * @return float|null
+	 *
+	 * @spec openspec/specs/pos-nl-btw-engine/spec.md
+	 */
+	private function reportSign(string $status): float|null {
+		if (in_array($status, ['confirmed', 'settled', 'refunded'], true) === false) {
+			return null;
+		}
+
+		$sign = 1.0;
+		if ($status === 'refunded') {
+			$sign = -1.0;
+		}
+
+		return $sign;
+	}//end reportSign()
+
+	/**
+	 * Count a transaction and add each of its breakdown rows to the report.
+	 *
+	 * @param array{byRate: array<string, array<string, float>>, totalBase: float, totalTax: float, count: int} $report The running report.
+	 * @param array<mixed> $rows The transaction's breakdown rows.
+	 * @param float $sign 1.0, or -1.0 for a refund.
+	 *
+	 * @return array{byRate: array<string, array<string, float>>, totalBase: float, totalTax: float, count: int}
+	 *
+	 * @spec openspec/specs/pos-nl-btw-engine/spec.md
+	 */
+	private function addTaxRows(array $report, array $rows, float $sign): array {
+		$report['count']++;
+		foreach ($rows as $row) {
+			if (is_array($row) === false) {
+				continue;
+			}
+
+			$report = $this->addTaxRow(report: $report, row: $row, sign: $sign);
+		}
+
+		return $report;
+	}//end addTaxRows()
+
+	/**
+	 * Add one signed breakdown row to the report.
+	 *
+	 * @param array{byRate: array<string, array<string, float>>, totalBase: float, totalTax: float, count: int} $report The running report.
+	 * @param array<string, mixed> $row The breakdown row.
+	 * @param float $sign 1.0, or -1.0 for a refund.
+	 *
+	 * @return array{byRate: array<string, array<string, float>>, totalBase: float, totalTax: float, count: int}
+	 *
+	 * @spec openspec/specs/pos-nl-btw-engine/spec.md
+	 */
+	private function addTaxRow(array $report, array $row, float $sign): array {
+		$rate = (float)($row['rate'] ?? 0);
+		$base = ($sign * (float)($row['base'] ?? 0));
+		$tax = ($sign * (float)($row['tax'] ?? 0));
+
+		$report['byRate'] = $this->addToRate(byRate: $report['byRate'], rate: $rate, base: $base, tax: $tax);
+		$report['totalBase'] += $base;
+		$report['totalTax'] += $tax;
+		return $report;
+	}//end addTaxRow()
 
 	/**
 	 * Build the per-rate BTW compliance report for every transaction in this
@@ -730,6 +819,46 @@ class PosTransactionService implements PosTransactionServiceInterface {
 			return '';
 		}
 
+		$event = $this->buildStockMovedEvent(transactionId: $transactionId, transaction: $transaction, lines: $lines);
+		$this->dispatchStockMovedEvent(event: $event, transactionId: $transactionId);
+
+		return $event->getEventId();
+	}//end emitStockMovedEvent()
+
+	/**
+	 * Build the stock-moved event for a settled transaction's lines.
+	 *
+	 * @param string $transactionId The settled transaction UUID.
+	 * @param array<string, mixed> $transaction The transaction.
+	 * @param array<int, array<string, mixed>> $lines The transaction's lines.
+	 *
+	 * @return PosStockMovedEvent
+	 *
+	 * @spec openspec/changes/pos-stock-moved-event/specs/pos-stock-moved-event/spec.md#Requirement:-A-settled-POS-sale-SHALL-emit-a-typed-stock-moved-CloudEvent
+	 */
+	private function buildStockMovedEvent(string $transactionId, array $transaction, array $lines): PosStockMovedEvent {
+		$eventLines = $this->stockEventLines(lines: $lines);
+
+		return new PosStockMovedEvent(
+			eventId: $this->uuid(),
+			transactionUuid: $transactionId,
+			transactionReference: (string)($transaction['reference'] ?? ''),
+			administrationId: $this->resolveAdministrationId(),
+			lines: $eventLines,
+			emittedAt: $this->now(),
+		);
+	}//end buildStockMovedEvent()
+
+	/**
+	 * The event lines: each sold line's SKU, quantity and unit.
+	 *
+	 * @param array<int, array<string, mixed>> $lines The transaction's lines.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/pos-stock-moved-event/specs/pos-stock-moved-event/spec.md#Requirement:-A-settled-POS-sale-SHALL-emit-a-typed-stock-moved-CloudEvent
+	 */
+	private function stockEventLines(array $lines): array {
 		$eventLines = [];
 		foreach ($lines as $line) {
 			$productId = (string)($line['product'] ?? '');
@@ -744,16 +873,20 @@ class PosTransactionService implements PosTransactionServiceInterface {
 			];
 		}
 
-		$eventId = $this->uuid();
-		$event = new PosStockMovedEvent(
-			eventId: $eventId,
-			transactionUuid: $transactionId,
-			transactionReference: (string)($transaction['reference'] ?? ''),
-			administrationId: $this->resolveAdministrationId(),
-			lines: $eventLines,
-			emittedAt: $this->now(),
-		);
+		return $eventLines;
+	}//end stockEventLines()
 
+	/**
+	 * Dispatch the stock-moved event typed in-process, then to the OR webhooks.
+	 *
+	 * @param PosStockMovedEvent $event The event.
+	 * @param string $transactionId The settled transaction UUID, for the logs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pos-stock-moved-event/specs/pos-stock-moved-event/spec.md#Requirement:-A-settled-POS-sale-SHALL-emit-a-typed-stock-moved-CloudEvent
+	 */
+	private function dispatchStockMovedEvent(PosStockMovedEvent $event, string $transactionId): void {
 		try {
 			$this->eventDispatcher->dispatchTyped(event: $event);
 		} catch (\Throwable $e) {
@@ -763,6 +896,20 @@ class PosTransactionService implements PosTransactionServiceInterface {
 			);
 		}
 
+		$this->postStockMovedWebhook(event: $event, transactionId: $transactionId);
+	}//end dispatchStockMovedEvent()
+
+	/**
+	 * Post the stock-moved CloudEvent through OR's WebhookService, when available.
+	 *
+	 * @param PosStockMovedEvent $event The event.
+	 * @param string $transactionId The settled transaction UUID, for the log.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pos-stock-moved-event/specs/pos-stock-moved-event/spec.md#Requirement:-A-settled-POS-sale-SHALL-emit-a-typed-stock-moved-CloudEvent
+	 */
+	private function postStockMovedWebhook(PosStockMovedEvent $event, string $transactionId): void {
 		// Fire-and-forget to OR WebhookService so external subscribers
 		// (Shillinq) get the CloudEvent over their configured webhook URL,
 		// mirroring PosTenderService::emitSingleTenderPosted().
@@ -779,9 +926,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 				['transactionId' => $transactionId, 'exception' => $e->getMessage()]
 			);
 		}
-
-		return $eventId;
-	}//end emitStockMovedEvent()
+	}//end postStockMovedWebhook()
 
 	/**
 	 * Resolve a line's `product` ref to its `[sku, unit]` pair via this app's
@@ -1079,12 +1224,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 
 		// Per-object RBAC denial from the engine → 403.
 		if ($short === 'NotAuthorizedException' || stripos($message, 'permission') !== false) {
-			$forbidden = 'Geen toegang tot deze transactie.';
-			if ($message !== '') {
-				$forbidden = $message;
-			}
-
-			return new OCSForbiddenException($forbidden);
+			return $this->forbiddenFor(message: $message);
 		}
 
 		// Guard authorization denials (HookStoppedException carrying the guard's
@@ -1094,6 +1234,38 @@ class PosTransactionService implements PosTransactionServiceInterface {
 			return new OCSForbiddenException($message);
 		}
 
+		return $this->mapByMessage(e: $e, message: $message);
+	}//end mapTransitionError()
+
+	/**
+	 * The 403 for an RBAC denial, carrying the engine's message when it has one.
+	 *
+	 * @param string $message The engine's message.
+	 *
+	 * @return OCSForbiddenException
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
+	 */
+	private function forbiddenFor(string $message): OCSForbiddenException {
+		$forbidden = 'Geen toegang tot deze transactie.';
+		if ($message !== '') {
+			$forbidden = $message;
+		}
+
+		return new OCSForbiddenException($forbidden);
+	}//end forbiddenFor()
+
+	/**
+	 * Map a non-authorization transition failure by its message: 422, 404, or the original.
+	 *
+	 * @param \Throwable $e The original failure.
+	 * @param string $message Its message.
+	 *
+	 * @return \Throwable
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
+	 */
+	private function mapByMessage(\Throwable $e, string $message): \Throwable {
 		// Invalid-state transition or other guard precondition → 422.
 		if (stripos($message, 'not allowed from') !== false
 			|| stripos($message, 'not declared') !== false
@@ -1107,7 +1279,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 		}
 
 		return $e;
-	}//end mapTransitionError()
+	}//end mapByMessage()
 
 	/**
 	 * Whether a transition-engine error message is an access (authz) denial.
@@ -1251,6 +1423,22 @@ class PosTransactionService implements PosTransactionServiceInterface {
 	 * @spec openspec/specs/pos-transaction-core/spec.md
 	 */
 	private function findOpenShiftId(array $transaction, string $userId): ?string {
+		$match = $this->openShiftMatch(transaction: $transaction, userId: $userId);
+
+		return $this->firstShiftId(results: $this->findOpenShifts(match: $match));
+	}//end findOpenShiftId()
+
+	/**
+	 * The filters for the open shift: on the sale's till, or else the cashier's.
+	 *
+	 * @param array<string, mixed> $transaction The transaction being confirmed.
+	 * @param string $userId The cashier's user id.
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/specs/pos-transaction-core/spec.md
+	 */
+	private function openShiftMatch(array $transaction, string $userId): array {
 		$terminalId = (string)($transaction['terminalId'] ?? '');
 		$match = ['status' => 'open'];
 		if ($terminalId !== '') {
@@ -1261,22 +1449,43 @@ class PosTransactionService implements PosTransactionServiceInterface {
 			$match['operator'] = $userId;
 		}
 
+		return $match;
+	}//end openShiftMatch()
+
+	/**
+	 * Find at most one cash shift matching the filters.
+	 *
+	 * @param array<string, string> $match The shift filters.
+	 *
+	 * @return mixed The findAll result; an empty list when the lookup fails.
+	 *
+	 * @spec openspec/specs/pos-transaction-core/spec.md
+	 */
+	private function findOpenShifts(array $match) {
 		try {
 			[$register, $schema] = $this->config(schemaKey: 'cashShift_schema');
-			$results = $this->getObjectService()->findAll(
+			return $this->getObjectService()->findAll(
 				config: [
-					'filters' => array_merge(
-						['@self' => ['register' => $register, 'schema' => $schema]],
-						$match
-					),
+					'filters' => array_merge(['@self' => ['register' => $register, 'schema' => $schema]], $match),
 					'limit' => 1,
 				]
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: no open shift looked up for the sale', ['exception' => $e->getMessage()]);
-			return null;
+			return [];
 		}//end try
+	}//end findOpenShifts()
 
+	/**
+	 * The id of the first shift that carries one.
+	 *
+	 * @param mixed $results The shifts found.
+	 *
+	 * @return string|null The shift's UUID, or null.
+	 *
+	 * @spec openspec/specs/pos-transaction-core/spec.md
+	 */
+	private function firstShiftId($results): string|null {
 		foreach (($results ?? []) as $result) {
 			$shift = $this->toArray(object: $result);
 			$shiftId = (string)($shift['id'] ?? ($shift['@self']['id'] ?? ''));
@@ -1286,7 +1495,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 		}
 
 		return null;
-	}//end findOpenShiftId()
+	}//end firstShiftId()
 
 	/**
 	 * Fetch all line items belonging to a transaction.

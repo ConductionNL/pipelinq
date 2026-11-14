@@ -1001,13 +1001,7 @@ class AnalyticsService implements AnalyticsServiceInterface {
 	 * @spec openspec/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
 	 */
 	private function leadsMatching(array $leads, array $filter): array {
-		$fields = [];
-		foreach ($filter as $key => $expected) {
-			if (is_string($key) === true && preg_match('/^[A-Za-z0-9_]+$/', $key) === 1) {
-				$fields[$key] = array_map('strval', (array)$expected);
-			}
-		}
-
+		$fields = $this->filterFields(filter: $filter);
 		if ($fields === []) {
 			return $leads;
 		}
@@ -1027,6 +1021,24 @@ class AnalyticsService implements AnalyticsServiceInterface {
 			)
 		);
 	}//end leadsMatching()
+
+	/**
+	 * The filter's safe field names mapped to their accepted values as strings.
+	 *
+	 * @param array<mixed, mixed> $filter The requested filter.
+	 *
+	 * @return array<string, array<int, string>> Field name to accepted values.
+	 */
+	private function filterFields(array $filter): array {
+		$fields = [];
+		foreach ($filter as $key => $expected) {
+			if (is_string($key) === true && preg_match('/^[A-Za-z0-9_]+$/', $key) === 1) {
+				$fields[$key] = array_map('strval', (array)$expected);
+			}
+		}
+
+		return $fields;
+	}//end filterFields()
 
 	/**
 	 * A lead's value weighted by its win chance.
@@ -1070,8 +1082,25 @@ class AnalyticsService implements AnalyticsServiceInterface {
 		$startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
 		$nowTs = $now->getTimestamp();
 		$bucketSize = $this->bucketSizeForPeriod(period: $period);
+		$window = [$startTs, $nowTs, $bucketSize];
 
-		$buckets = [];
+		$buckets = $this->addPosRevenue(buckets: [], pos: $pos, window: $window);
+		$buckets = $this->addWonLeadRevenue(buckets: $buckets, leads: $leads, window: $window);
+
+		return ['metric' => 'revenue', 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: 'revenue')];
+	}//end buildRevenueSeries()
+
+	/**
+	 * Add each revenue POS transaction's total to its time bucket.
+	 *
+	 * @param array<string, float> $buckets The buckets so far.
+	 * @param array<int, array<string, mixed>> $pos The POS transactions.
+	 * @param array{0: int, 1: int, 2: int} $window The start timestamp, now timestamp and bucket size.
+	 *
+	 * @return array<string, float> The buckets.
+	 */
+	private function addPosRevenue(array $buckets, array $pos, array $window): array {
+		[$startTs, $nowTs, $bucketSize] = $window;
 		foreach ($pos as $txn) {
 			if ($this->isRevenueTransaction(txn: $txn) === false) {
 				continue;
@@ -1083,6 +1112,20 @@ class AnalyticsService implements AnalyticsServiceInterface {
 			}
 		}
 
+		return $buckets;
+	}//end addPosRevenue()
+
+	/**
+	 * Add each won lead's value to the bucket of its close date.
+	 *
+	 * @param array<string, float> $buckets The buckets so far.
+	 * @param array<int, array<string, mixed>> $leads The leads.
+	 * @param array{0: int, 1: int, 2: int} $window The start timestamp, now timestamp and bucket size.
+	 *
+	 * @return array<string, float> The buckets.
+	 */
+	private function addWonLeadRevenue(array $buckets, array $leads, array $window): array {
+		[$startTs, $nowTs, $bucketSize] = $window;
 		foreach ($leads as $lead) {
 			if (((string)($lead['status'] ?? '')) !== 'won') {
 				continue;
@@ -1094,8 +1137,8 @@ class AnalyticsService implements AnalyticsServiceInterface {
 			}
 		}
 
-		return ['metric' => 'revenue', 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: 'revenue')];
-	}//end buildRevenueSeries()
+		return $buckets;
+	}//end addWonLeadRevenue()
 
 	/**
 	 * Open-lead value summed per pipeline stage, ordered by stage order.

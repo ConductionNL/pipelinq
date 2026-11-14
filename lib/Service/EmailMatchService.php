@@ -57,6 +57,8 @@ use Throwable;
  *     by the number of matching strategies; each method stays individually simple.
  *
  * @spec openspec/specs/email-calendar-sync/spec.md
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class EmailMatchService implements EmailMatchServiceInterface {
 	use AnyPayloadToArray;
@@ -443,25 +445,63 @@ class EmailMatchService implements EmailMatchServiceInterface {
 	 */
 	public function runForUser(string $userId): array {
 		$settings = $this->getSettings(userId: $userId);
-		if ($settings['enabled'] !== true || $settings['account'] <= 0) {
+		if ($this->mayRun(userId: $userId, settings: $settings) === false) {
 			return ['linked' => 0, 'scanned' => 0];
 		}
 
-		if ($this->ownsAccount(userId: $userId, accountId: $settings['account']) === false) {
-			return ['linked' => 0, 'scanned' => 0];
-		}
-
-		$scanned = 0;
-		$linked = 0;
 		$lastId = (int)$settings['cursor'];
-		$maxId = $lastId;
 
 		$messages = (new MailMessageReader(db: $this->db, logger: $this->logger))->listInbound(accountId: $settings['account'], sinceId: $lastId);
+		$run = $this->scanMessages(messages: $messages, accountId: $settings['account'], userId: $userId, lastId: $lastId);
+		$scanned = $run['scanned'];
+		$linked = $run['linked'];
+		$maxId = $run['maxId'];
+
+		$this->writeStatus(userId: $userId, linked: $linked, scanned: $scanned, error: null);
+		if ($maxId > $lastId) {
+			$settings['cursor'] = $maxId;
+			$this->writeSettings(userId: $userId, settings: $settings);
+		}
+
+		return ['linked' => $linked, 'scanned' => $scanned];
+	}//end runForUser()
+
+	/**
+	 * Whether matching is enabled for the user on an account they own.
+	 *
+	 * @param string               $userId   The user id.
+	 * @param array<string, mixed> $settings The user's matching settings.
+	 *
+	 * @return bool
+	 */
+	private function mayRun(string $userId, array $settings): bool {
+		if ($settings['enabled'] !== true || $settings['account'] <= 0) {
+			return false;
+		}
+
+		return $this->ownsAccount(userId: $userId, accountId: $settings['account']);
+	}//end mayRun()
+
+	/**
+	 * Match and link each inbound message; a per-message failure does not abort the scan.
+	 *
+	 * @param iterable<array<string, mixed>> $messages  The inbound messages since the cursor.
+	 * @param int                            $accountId The Mail account id.
+	 * @param string                         $userId    The user id.
+	 * @param int                            $lastId    The cursor the scan starts after.
+	 *
+	 * @return array{linked: int, scanned: int, maxId: int}
+	 */
+	private function scanMessages(iterable $messages, int $accountId, string $userId, int $lastId): array {
+		$scanned = 0;
+		$linked = 0;
+		$maxId = $lastId;
+
 		foreach ($messages as $msg) {
 			$scanned++;
 			try {
 				$linked += $this->matchAndLinkMessage(
-					message: new MailMessageKey(mailAccountId: $settings['account'], mailMessageId: $msg['id']),
+					message: new MailMessageKey(mailAccountId: $accountId, mailMessageId: $msg['id']),
 					userId: $userId
 				);
 				if ($msg['id'] > $maxId) {
@@ -475,14 +515,8 @@ class EmailMatchService implements EmailMatchServiceInterface {
 			}
 		}
 
-		$this->writeStatus(userId: $userId, linked: $linked, scanned: $scanned, error: null);
-		if ($maxId > $lastId) {
-			$settings['cursor'] = $maxId;
-			$this->writeSettings(userId: $userId, settings: $settings);
-		}
-
-		return ['linked' => $linked, 'scanned' => $scanned];
-	}//end runForUser()
+		return ['linked' => $linked, 'scanned' => $scanned, 'maxId' => $maxId];
+	}//end scanMessages()
 
 	/**
 	 * Read the matching settings for a user.

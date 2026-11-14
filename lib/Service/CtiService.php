@@ -582,51 +582,120 @@ class CtiService implements CtiServiceInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function syncPresence(string $userId, string $presenceState, ?string $extension = null, ?string $platform = null): void {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAgentPresence_schema', '');
-		if ($register === '' || $schema === '') {
+		$target = $this->schemaTarget(schemaKey: 'ctiAgentPresence_schema');
+		if ($target === null) {
 			return;
 		}
 
 		try {
+			[$register, $schema] = $target;
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$existing = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'user_id' => $userId,
-					],
-					'limit' => 1,
-				]
-			);
-
-			$uuid = null;
-			if (is_array($existing) === true && count($existing) > 0) {
-				$first = $existing[0];
-				$uuid = $this->extractId(object: $first);
-			}
-
-			$objectService->saveObject(
-				[
-					'user_id' => $userId,
-					'extension' => ($extension ?? ''),
-					'presence_state' => $presenceState,
-					'last_updated_at' => gmdate('Y-m-d\TH:i:s\Z'),
-					'platform' => ($platform ?? $this->activePlatform()),
-				],
-				[],
-				$register,
-				$schema,
-				$uuid
-			);
+			$uuid = $this->firstId(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema, 'user_id' => $userId]);
+			$payload = $this->presencePayload(userId: $userId, presenceState: $presenceState, extension: $extension, platform: $platform);
+			$objectService->saveObject($payload, [], $register, $schema, $uuid);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'CTI syncPresence failed',
-				['exception' => $e->getMessage(), 'userId' => $userId]
-			);
+			$this->logger->warning('CTI syncPresence failed', ['exception' => $e->getMessage(), 'userId' => $userId]);
 		}//end try
 	}//end syncPresence()
+
+	/**
+	 * The agent presence record to store.
+	 *
+	 * @param string $userId NC user UID.
+	 * @param string $presenceState The presence state.
+	 * @param string|null $extension Agent extension.
+	 * @param string|null $platform Reporting platform; the active platform when null.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
+	 */
+	private function presencePayload(string $userId, string $presenceState, string|null $extension, string|null $platform): array {
+		return [
+			'user_id' => $userId,
+			'extension' => ($extension ?? ''),
+			'presence_state' => $presenceState,
+			'last_updated_at' => gmdate('Y-m-d\TH:i:s\Z'),
+			'platform' => ($platform ?? $this->activePlatform()),
+		];
+	}//end presencePayload()
+
+	/**
+	 * The configured register and the schema stored under a config key, or null when either is unset.
+	 *
+	 * @param string $schemaKey The app config key of the schema.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
+	 */
+	private function schemaTarget(string $schemaKey): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		return [$register, $schema];
+	}//end schemaTarget()
+
+	/**
+	 * Run ObjectService::findAll with the given filters and limit.
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 * @param array<string, mixed> $filters The filters.
+	 * @param int $limit Maximum number of objects.
+	 *
+	 * @return mixed The findAll result.
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
+	 */
+	private function findObjects(object $objectService, array $filters, int $limit) {
+		return $objectService->findAll(
+			[
+				'filters' => $filters,
+				'limit' => $limit,
+			]
+		);
+	}//end findObjects()
+
+	/**
+	 * The first object matching the filters, as a list of zero or one element.
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 * @param array<string, mixed> $filters The filters.
+	 *
+	 * @return array<int, mixed>
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
+	 */
+	private function firstObject(object $objectService, array $filters): array {
+		$existing = $this->findObjects(objectService: $objectService, filters: $filters, limit: 1);
+		if (is_array($existing) === true && count($existing) > 0) {
+			return [$existing[0]];
+		}
+
+		return [];
+	}//end firstObject()
+
+	/**
+	 * The id of the first object matching the filters, or null when there is none.
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 * @param array<string, mixed> $filters The filters.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
+	 */
+	private function firstId(object $objectService, array $filters): string|null {
+		$found = $this->firstObject(objectService: $objectService, filters: $filters);
+		if ($found === []) {
+			return null;
+		}
+
+		return $this->extractId(object: $found[0]);
+	}//end firstId()
 
 	/**
 	 * Active CTI platform from configuration.
@@ -646,27 +715,13 @@ class CtiService implements CtiServiceInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function loadConfig(): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAdapterConfig_schema', '');
-		if ($register === '' || $schema === '') {
+		$target = $this->schemaTarget(schemaKey: 'ctiAdapterConfig_schema');
+		if ($target === null) {
 			return [];
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$existing = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1,
-				]
-			);
-			if (is_array($existing) === true && count($existing) > 0) {
-				$first = $existing[0];
-				return $this->toArray(value: $first);
-			}
+			return $this->configRecord(target: $target);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'CTI loadConfig failed',
@@ -678,6 +733,26 @@ class CtiService implements CtiServiceInterface {
 	}//end loadConfig()
 
 	/**
+	 * The stored CTI config record, or an empty array when none exists.
+	 *
+	 * @param array{0: string, 1: string} $target The register and config schema.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
+	 */
+	private function configRecord(array $target): array {
+		[$register, $schema] = $target;
+		$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+		$found = $this->firstObject(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema]);
+		if ($found === []) {
+			return [];
+		}
+
+		return $this->toArray(value: $found[0]);
+	}//end configRecord()
+
+	/**
 	 * Save the CTI singleton config (creating or updating).
 	 *
 	 * @param array<string,mixed> $config The config payload.
@@ -686,31 +761,13 @@ class CtiService implements CtiServiceInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function saveConfig(array $config): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAdapterConfig_schema', '');
-		if ($register === '' || $schema === '') {
+		$target = $this->schemaTarget(schemaKey: 'ctiAdapterConfig_schema');
+		if ($target === null) {
 			return [];
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$existing = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1,
-				]
-			);
-
-			$uuid = null;
-			if (is_array($existing) === true && count($existing) > 0) {
-				$uuid = $this->extractId(object: $existing[0]);
-			}
-
-			$saved = $objectService->saveObject($config, [], $register, $schema, $uuid);
-			return $this->toArray(value: $saved);
+			return $this->writeConfig(target: $target, config: $config);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI saveConfig failed',
@@ -719,6 +776,25 @@ class CtiService implements CtiServiceInterface {
 			return [];
 		}//end try
 	}//end saveConfig()
+
+	/**
+	 * Create or update the CTI config record.
+	 *
+	 * @param array{0: string, 1: string} $target The register and config schema.
+	 * @param array<string, mixed> $config The config payload.
+	 *
+	 * @return array<string, mixed> The saved record.
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
+	 */
+	private function writeConfig(array $target, array $config): array {
+		[$register, $schema] = $target;
+		$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+		$uuid = $this->firstId(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema]);
+
+		$saved = $objectService->saveObject($config, [], $register, $schema, $uuid);
+		return $this->toArray(value: $saved);
+	}//end writeConfig()
 
 	/**
 	 * Test connectivity against the configured platform.
@@ -820,67 +896,103 @@ class CtiService implements CtiServiceInterface {
 	 * @return int Number of deleted records.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over the fetch/filter/delete loop; extraction adds no clarity.
 	 */
 	public function purgeOldEventLog(): int {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiEventLog_schema', '');
-		if ($register === '' || $schema === '') {
+		$target = $this->schemaTarget(schemaKey: 'ctiEventLog_schema');
+		if ($target === null) {
 			return 0;
 		}
 
 		$cutoff = gmdate('Y-m-d\TH:i:s\Z', (time() - (30 * 86400)));
 
 		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$oldEntries = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1000,
-				]
-			);
-
-			if (is_array($oldEntries) === false) {
-				return 0;
-			}
-
-			$deleted = 0;
-			foreach ($oldEntries as $entry) {
-				$data = $this->toArray(value: $entry);
-				$receivedAt = (string)($data['received_at'] ?? '');
-				if ($receivedAt === '' || $receivedAt >= $cutoff) {
-					continue;
-				}
-
-				$id = $this->extractId(object: $entry);
-				if ($id === null) {
-					continue;
-				}
-
-				try {
-					$objectService->deleteObject(register: $register, schema: $schema, uuid: $id);
-					$deleted++;
-				} catch (\Throwable $e) {
-					$this->logger->warning(
-						'CTI purgeOldEventLog: deleteObject failed',
-						['exception' => $e->getMessage(), 'id' => $id]
-					);
-				}
-			}//end foreach
-
-			return $deleted;
+			return $this->purgeBefore(target: $target, cutoff: $cutoff);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'CTI purgeOldEventLog failed',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->warning('CTI purgeOldEventLog failed', ['exception' => $e->getMessage()]);
 			return 0;
 		}//end try
 	}//end purgeOldEventLog()
+
+	/**
+	 * Delete the event-log entries received before the cutoff.
+	 *
+	 * @param array{0: string, 1: string} $target The register and event-log schema.
+	 * @param string $cutoff The ISO-8601 cutoff.
+	 *
+	 * @return int Number of deleted records.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
+	 */
+	private function purgeBefore(array $target, string $cutoff): int {
+		[$register, $schema] = $target;
+		$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+		$oldEntries = $this->findObjects(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema], limit: 1000);
+
+		if (is_array($oldEntries) === false) {
+			return 0;
+		}
+
+		$deleted = 0;
+		foreach ($oldEntries as $entry) {
+			if ($this->purgeEntry(objectService: $objectService, entry: $entry, target: $target, cutoff: $cutoff) === true) {
+				$deleted++;
+			}
+		}
+
+		return $deleted;
+	}//end purgeBefore()
+
+	/**
+	 * Delete one event-log entry when it was received before the cutoff.
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 * @param mixed $entry The event-log entry.
+	 * @param array{0: string, 1: string} $target The register and event-log schema.
+	 * @param string $cutoff The ISO-8601 cutoff.
+	 *
+	 * @return bool Whether the entry was deleted.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
+	 */
+	private function purgeEntry(object $objectService, $entry, array $target, string $cutoff): bool {
+		$data = $this->toArray(value: $entry);
+		$receivedAt = (string)($data['received_at'] ?? '');
+		if ($receivedAt === '' || $receivedAt >= $cutoff) {
+			return false;
+		}
+
+		$id = $this->extractId(object: $entry);
+		if ($id === null) {
+			return false;
+		}
+
+		return $this->deleteLogEntry(objectService: $objectService, target: $target, id: $id);
+	}//end purgeEntry()
+
+	/**
+	 * Delete one event-log entry, logging a failure.
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 * @param array{0: string, 1: string} $target The register and event-log schema.
+	 * @param string $id The entry id.
+	 *
+	 * @return bool Whether the entry was deleted.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
+	 */
+	private function deleteLogEntry(object $objectService, array $target, string $id): bool {
+		[$register, $schema] = $target;
+		try {
+			$objectService->deleteObject(register: $register, schema: $schema, uuid: $id);
+			return true;
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'CTI purgeOldEventLog: deleteObject failed',
+				['exception' => $e->getMessage(), 'id' => $id]
+			);
+			return false;
+		}
+	}//end deleteLogEntry()
 
 	/**
 	 * Persist a webhook event in the CTI event log.
@@ -987,6 +1099,24 @@ class CtiService implements CtiServiceInterface {
 	 * @return string|null Contactmoment UUID.
 	 */
 	private function finaliseContactmoment(string $platform, CtiWebhookResult $event): ?string {
+		$id = $this->contactmomentIdFor(platform: $platform, event: $event);
+		if ($id === null) {
+			return null;
+		}
+
+		$this->updateContactmoment(id: $id, fields: $this->endedFields(event: $event));
+		return $id;
+	}//end finaliseContactmoment()
+
+	/**
+	 * The contactmoment of an ended call, created when no earlier event made one.
+	 *
+	 * @param string $platform Adapter platform.
+	 * @param CtiWebhookResult $event Normalised event.
+	 *
+	 * @return string|null Contactmoment UUID.
+	 */
+	private function contactmomentIdFor(string $platform, CtiWebhookResult $event): string|null {
 		$id = $this->findContactmomentByCallId(externalCallId: $event->externalCallId);
 		if ($id === null) {
 			// Late ended-event with no prior ringing/answered: still create the record.
@@ -999,10 +1129,17 @@ class CtiService implements CtiServiceInterface {
 			);
 		}
 
-		if ($id === null) {
-			return null;
-		}
+		return $id;
+	}//end contactmomentIdFor()
 
+	/**
+	 * The fields an ended call writes on its contactmoment.
+	 *
+	 * @param CtiWebhookResult $event Normalised event.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function endedFields(CtiWebhookResult $event): array {
 		$fields = [
 			'ended_at' => gmdate('Y-m-d\TH:i:s\Z'),
 			'duration_seconds' => ($event->durationSeconds ?? 0),
@@ -1015,9 +1152,8 @@ class CtiService implements CtiServiceInterface {
 			$fields['recording_retention_expires_at'] = $event->recordingExpiresAt;
 		}
 
-		$this->updateContactmoment(id: $id, fields: $fields);
-		return $id;
-	}//end finaliseContactmoment()
+		return $fields;
+	}//end endedFields()
 
 	/**
 	 * Mark a contactmoment as abandoned (caller hung up before answer).
@@ -1189,42 +1325,86 @@ class CtiService implements CtiServiceInterface {
 	 * @param mixed $object OR entity, array, or serialised object.
 	 *
 	 * @return string|null
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered id-extraction fallbacks (array/getter/jsonSerialize); flattening obscures precedence.
 	 */
 	private function extractId(mixed $object): ?string {
 		if (is_array($object) === true) {
-			$id = ($object['id'] ?? ($object['uuid'] ?? null));
-			if ($id !== null) {
-				return (string)$id;
-			}
-
-			return null;
+			return $this->arrayId(data: $object);
 		}
 
 		if (is_object($object) === true) {
-			foreach (['getUuid', 'getId'] as $method) {
-				if (method_exists($object, $method) === true) {
-					$value = $object->$method();
-					if ($value !== null) {
-						return (string)$value;
-					}
-				}
-			}
-
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					$id = ($serialised['id'] ?? ($serialised['uuid'] ?? null));
-					if ($id !== null) {
-						return (string)$id;
-					}
-
-					return null;
-				}
-			}
-		}//end if
+			return $this->objectId(object: $object);
+		}
 
 		return null;
 	}//end extractId()
+
+	/**
+	 * The `id`, else the `uuid`, of an array record.
+	 *
+	 * @param array<mixed> $data The record.
+	 *
+	 * @return string|null
+	 */
+	private function arrayId(array $data): string|null {
+		$id = ($data['id'] ?? ($data['uuid'] ?? null));
+		if ($id !== null) {
+			return (string)$id;
+		}
+
+		return null;
+	}//end arrayId()
+
+	/**
+	 * The id of an object: from its getters first, else from its serialised form.
+	 *
+	 * @param object $object The OR entity or object.
+	 *
+	 * @return string|null
+	 */
+	private function objectId(object $object): string|null {
+		$id = $this->getterId(object: $object);
+		if ($id !== null) {
+			return $id;
+		}
+
+		return $this->serialisedId(object: $object);
+	}//end objectId()
+
+	/**
+	 * The first non-null value of getUuid() or getId(), when the object has them.
+	 *
+	 * @param object $object The OR entity or object.
+	 *
+	 * @return string|null
+	 */
+	private function getterId(object $object): string|null {
+		foreach (['getUuid', 'getId'] as $method) {
+			if (method_exists($object, $method) === true) {
+				$value = $object->$method();
+				if ($value !== null) {
+					return (string)$value;
+				}
+			}
+		}
+
+		return null;
+	}//end getterId()
+
+	/**
+	 * The id of an object's jsonSerialize() array, when it serialises to one.
+	 *
+	 * @param object $object The OR entity or object.
+	 *
+	 * @return string|null
+	 */
+	private function serialisedId(object $object): string|null {
+		if (method_exists($object, 'jsonSerialize') === true) {
+			$serialised = $object->jsonSerialize();
+			if (is_array($serialised) === true) {
+				return $this->arrayId(data: $serialised);
+			}
+		}
+
+		return null;
+	}//end serialisedId()
 }//end class

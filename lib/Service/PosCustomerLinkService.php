@@ -134,29 +134,61 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 		[$register, $schema] = $this->configContact();
 		$fields = $this->enabledSearchFields();
 
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => ['register' => $register, 'schema' => $schema],
-					'limit' => 200,
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: contact search failed', ['exception' => $e->getMessage()]);
+		$rows = $this->findRowList(
+			config: ['filters' => ['register' => $register, 'schema' => $schema], 'limit' => 200],
+			failure: 'Pipelinq: contact search failed',
+			logContext: []
+		);
+		if ($rows === null) {
 			return [];
 		}
 
-		$matches = [];
-		$haystack = mb_strtolower($needle);
+		$matches = $this->matchingContacts(rows: $rows, query: mb_strtolower($needle), fields: $fields, cap: $cap);
+
+		$this->logger->info('Pipelinq: POS customer search', ['query' => $needle, 'count' => count($matches), 'fields' => $fields]);
+
+		return $matches;
+	}//end searchCustomers()
+
+	/**
+	 * Find rows as a list; a failed lookup is logged and yields null.
+	 *
+	 * @param array<string, mixed> $config     The findAll config.
+	 * @param string               $failure    The warning logged when the lookup fails.
+	 * @param array<string, mixed> $logContext Extra log context after the exception.
+	 *
+	 * @return array<int, mixed>|null
+	 */
+	private function findRowList(array $config, string $failure, array $logContext): array|null {
+		try {
+			$rows = $this->getObjectService()->findAll(config: $config);
+		} catch (Throwable $e) {
+			$this->logger->warning($failure, array_merge(['exception' => $e->getMessage()], $logContext));
+			return null;
+		}
+
 		if (is_array($rows) === false) {
 			$rows = [];
 		}
 
-		$rows = array_values($rows);
+		return array_values($rows);
+	}//end findRowList()
 
+	/**
+	 * The decorated contacts that match a search, up to the cap.
+	 *
+	 * @param array<int, mixed> $rows   The contact rows.
+	 * @param string            $query  The lower-cased search.
+	 * @param array<int, string> $fields The enabled search fields.
+	 * @param int               $cap    Max results.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function matchingContacts(array $rows, string $query, array $fields, int $cap): array {
+		$matches = [];
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
-			if ($this->rowMatches(data: $data, query: $haystack, fields: $fields) === false) {
+			if ($this->rowMatches(data: $data, query: $query, fields: $fields) === false) {
 				continue;
 			}
 
@@ -166,17 +198,8 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 			}
 		}
 
-		$this->logger->info(
-			'Pipelinq: POS customer search',
-			[
-				'query' => $needle,
-				'count' => count($matches),
-				'fields' => $fields,
-			]
-		);
-
 		return $matches;
-	}//end searchCustomers()
+	}//end matchingContacts()
 
 	/**
 	 * Fetch a single contact by UUID, decorated with privacy flags.
@@ -321,34 +344,26 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 
 		[$register, $schema] = $this->configTransaction();
 
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'customer' => $contactUuid,
-					],
-					'limit' => 200,
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: POS customer history fetch failed',
-				[
-					'exception' => $e->getMessage(),
-					'customer' => $contactUuid,
-				]
-			);
+		$rows = $this->findRowList(
+			config: ['filters' => ['register' => $register, 'schema' => $schema, 'customer' => $contactUuid], 'limit' => 200],
+			failure: 'Pipelinq: POS customer history fetch failed',
+			logContext: ['customer' => $contactUuid]
+		);
+		if ($rows === null) {
 			return [];
-		}//end try
-
-		if (is_array($rows) === false) {
-			$rows = [];
 		}
 
-		$rows = array_values($rows);
+		return $this->newestWithItemCounts(history: $this->summariseSales(rows: $rows), cap: $cap, register: $register);
+	}//end getCustomerHistory()
 
+	/**
+	 * Summarise the real sales among transaction rows (drafts and parked carts excluded).
+	 *
+	 * @param array<int, mixed> $rows The transaction rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function summariseSales(array $rows): array {
 		$history = [];
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
@@ -360,6 +375,19 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 			$history[] = $this->summariseTransaction(data: $data);
 		}
 
+		return $history;
+	}//end summariseSales()
+
+	/**
+	 * Sort history newest first, cap it and add each sale's line count.
+	 *
+	 * @param array<int, array<string, mixed>> $history  The summarised sales.
+	 * @param int                              $cap      Max history rows.
+	 * @param string                           $register The register.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function newestWithItemCounts(array $history, int $cap, string $register): array {
 		usort(
 			$history,
 			static fn (array $a, array $b): int => strcmp((string)($b['createdAt'] ?? ''), (string)($a['createdAt'] ?? ''))
@@ -371,7 +399,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 		}
 
 		return $history;
-	}//end getCustomerHistory()
+	}//end newestWithItemCounts()
 
 	/**
 	 * How many lines a sale has: the history's Items column.
@@ -431,6 +459,18 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 			return 'skipped';
 		}
 
+		return $this->syncStoredConsent(contactUuid: $contactUuid, consent: $consent);
+	}//end syncConsent()
+
+	/**
+	 * Write the consent flag onto the stored contact record.
+	 *
+	 * @param string $contactUuid The contact UUID.
+	 * @param bool   $consent     The consent value to write.
+	 *
+	 * @return string One of 'success', 'failed'.
+	 */
+	private function syncStoredConsent(string $contactUuid, bool $consent): string {
 		[$register, $schema] = $this->configContact();
 
 		// 🔴 WRITE AGAINST THE STORED RECORD, NOT THE DECORATED PROJECTION.
@@ -458,6 +498,26 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 		unset($payload['@self'], $payload['doNotContactBadge']);
 		$payload['marketingConsent'] = $consent;
 
+		if ($this->saveConsent(payload: $payload, contactUuid: $contactUuid, register: $register, schema: $schema) === false) {
+			return 'failed';
+		}
+
+		$this->logger->info('Pipelinq: marketing-consent synced to contact', ['contact' => $contactUuid, 'consent' => $consent]);
+
+		return 'success';
+	}//end syncStoredConsent()
+
+	/**
+	 * Save the consent payload; a failed save is logged.
+	 *
+	 * @param array<string, mixed> $payload     The stored contact with the consent set.
+	 * @param string               $contactUuid The contact UUID.
+	 * @param string               $register    The register.
+	 * @param string               $schema      The contact schema.
+	 *
+	 * @return bool True when saved.
+	 */
+	private function saveConsent(array $payload, string $contactUuid, string $register, string $schema): bool {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $payload,
@@ -467,26 +527,12 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 				uuid: $contactUuid
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: marketing-consent sync failed',
-				[
-					'contact' => $contactUuid,
-					'exception' => $e->getMessage(),
-				]
-			);
-			return 'failed';
+			$this->logger->warning('Pipelinq: marketing-consent sync failed', ['contact' => $contactUuid, 'exception' => $e->getMessage()]);
+			return false;
 		}
 
-		$this->logger->info(
-			'Pipelinq: marketing-consent synced to contact',
-			[
-				'contact' => $contactUuid,
-				'consent' => $consent,
-			]
-		);
-
-		return 'success';
-	}//end syncConsent()
+		return true;
+	}//end saveConsent()
 
 	/**
 	 * Validate that an on-account transaction carries a linked customer.

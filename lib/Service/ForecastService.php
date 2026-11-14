@@ -330,6 +330,19 @@ class ForecastService implements ForecastServiceInterface {
 
 		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
 
+		return $this->readObjects(config: $this->queryConfig(allFilters: $allFilters, sort: $sort, limit: $limit));
+	}//end findObjects()
+
+	/**
+	 * The findAll config for the filters, with sort and limit when given.
+	 *
+	 * @param array<string, mixed> $allFilters The register, schema and caller filters.
+	 * @param array<string, string> $sort The sort, or [] for none.
+	 * @param int|null $limit The limit, or null for none.
+	 *
+	 * @return array<string, mixed> The config.
+	 */
+	private function queryConfig(array $allFilters, array $sort, int|null $limit): array {
 		$config = ['filters' => $allFilters];
 		if ($sort !== []) {
 			$config['sort'] = $sort;
@@ -339,6 +352,17 @@ class ForecastService implements ForecastServiceInterface {
 			$config['limit'] = $limit;
 		}
 
+		return $config;
+	}//end queryConfig()
+
+	/**
+	 * Run the query and return the rows as arrays; none (logged) when it fails.
+	 *
+	 * @param array<string, mixed> $config The findAll config.
+	 *
+	 * @return array<int, array<string, mixed>> The objects.
+	 */
+	private function readObjects(array $config): array {
 		try {
 			$results = $this->getObjectService()->findAll(config: $config);
 		} catch (\Throwable $e) {
@@ -352,7 +376,7 @@ class ForecastService implements ForecastServiceInterface {
 		}
 
 		return $objects;
-	}//end findObjects()
+	}//end readObjects()
 
 	/**
 	 * Resolve an object's identifier.

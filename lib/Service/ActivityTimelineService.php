@@ -55,6 +55,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
  * @spec openspec/changes/archive/2026-05-11-activity-timeline/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class ActivityTimelineService implements ActivityTimelineServiceInterface {
 	/**
@@ -246,6 +248,18 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
 	 */
 	public function withoutDuplicateEvents(array $activities): array {
+		$leafUids = $this->calendarLeafUids(activities: $activities);
+		return $this->keepEachEventOnce(activities: $activities, leafUids: $leafUids);
+	}//end withoutDuplicateEvents()
+
+	/**
+	 * The UIDs the calendar leaf delivered, as a set.
+	 *
+	 * @param array<int,array<string,mixed>> $activities The merged items.
+	 *
+	 * @return array<string, true>
+	 */
+	private function calendarLeafUids(array $activities): array {
 		$leafUids = [];
 		foreach ($activities as $activity) {
 			if (($activity['metadata']['source'] ?? null) === 'calendar-leaf') {
@@ -253,6 +267,18 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 			}
 		}
 
+		return $leafUids;
+	}//end calendarLeafUids()
+
+	/**
+	 * Keep every non-event item, and each calendar event once, the leaf's copy first.
+	 *
+	 * @param array<int,array<string,mixed>> $activities The merged items.
+	 * @param array<string, true>            $leafUids   The UIDs the calendar leaf delivered.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function keepEachEventOnce(array $activities, array $leafUids): array {
 		$seen = [];
 		$kept = [];
 		foreach ($activities as $activity) {
@@ -262,8 +288,7 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 				continue;
 			}
 
-			$fromLeaf = (($activity['metadata']['source'] ?? null) === 'calendar-leaf');
-			if (isset($seen[$uid]) === true || ($fromLeaf === false && isset($leafUids[$uid]) === true)) {
+			if ($this->isShadowedEvent(activity: $activity, uid: $uid, seen: $seen, leafUids: $leafUids) === true) {
 				continue;
 			}
 
@@ -272,7 +297,22 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 		}
 
 		return $kept;
-	}//end withoutDuplicateEvents()
+	}//end keepEachEventOnce()
+
+	/**
+	 * Whether a calendar event was kept already, or is a stale copy of one the leaf delivered.
+	 *
+	 * @param array<string,mixed> $activity The item.
+	 * @param string              $uid      Its event UID.
+	 * @param array<string, true> $seen     The UIDs kept so far.
+	 * @param array<string, true> $leafUids The UIDs the calendar leaf delivered.
+	 *
+	 * @return bool
+	 */
+	private function isShadowedEvent(array $activity, string $uid, array $seen, array $leafUids): bool {
+		$fromLeaf = (($activity['metadata']['source'] ?? null) === 'calendar-leaf');
+		return (isset($seen[$uid]) === true || ($fromLeaf === false && isset($leafUids[$uid]) === true));
+	}//end isShadowedEvent()
 
 	/**
 	 * The activities of every configured schema the filter includes.

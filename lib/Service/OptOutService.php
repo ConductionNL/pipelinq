@@ -225,6 +225,22 @@ class OptOutService implements OptOutServiceInterface {
 	private function isActive(array $arr, DateTimeImmutable $today): bool {
 		$ingang = (string)($arr['effectiveDate'] ?? '');
 		$endDate = $arr['endDate'] ?? null;
+		if ($this->hasStarted(ingang: $ingang, today: $today) === false) {
+			return false;
+		}
+
+		return $this->hasNotEnded(endDate: $endDate, today: $today);
+	}//end isActive()
+
+	/**
+	 * Whether a readable effective date has been reached.
+	 *
+	 * @param string            $ingang The effective date.
+	 * @param DateTimeImmutable $today  Today's UTC date.
+	 *
+	 * @return bool
+	 */
+	private function hasStarted(string $ingang, DateTimeImmutable $today): bool {
 		if ($ingang === '') {
 			return false;
 		}
@@ -239,6 +255,18 @@ class OptOutService implements OptOutServiceInterface {
 			return false;
 		}
 
+		return true;
+	}//end hasStarted()
+
+	/**
+	 * Whether the end date, if any, has not passed; an unreadable end date never ends.
+	 *
+	 * @param mixed             $endDate The end date, or null.
+	 * @param DateTimeImmutable $today   Today's UTC date.
+	 *
+	 * @return bool
+	 */
+	private function hasNotEnded(mixed $endDate, DateTimeImmutable $today): bool {
 		if ($endDate !== null && $endDate !== '') {
 			try {
 				$endDt = new DateTimeImmutable((string)$endDate, new DateTimeZone('UTC'));
@@ -252,7 +280,7 @@ class OptOutService implements OptOutServiceInterface {
 		}
 
 		return true;
-	}//end isActive()
+	}//end hasNotEnded()
 
 	/**
 	 * Normalise an OR object (entity or array) to an array.

@@ -115,6 +115,26 @@ class AttributionService implements AttributionServiceInterface {
 			$payload['firstClickAt'] = $timestamp;
 		}
 
+		$payload['clickedUrls'] = $this->clickedUrlsWith(payload: $payload, url: $url);
+
+		$payload = $this->withClickedStatus(payload: $payload);
+
+		$this->saveObject(
+			payload: $payload,
+			schemaSlug: $this->getBlastDeliverySchemaSlug(),
+			id: $this->extractId(payload: $delivery),
+		);
+	}//end recordClick()
+
+	/**
+	 * The delivery's clicked URLs with this click's URL added once.
+	 *
+	 * @param array<string, mixed> $payload The BlastDelivery payload.
+	 * @param string               $url     The clicked URL ('' adds nothing).
+	 *
+	 * @return array<int, string>
+	 */
+	private function clickedUrlsWith(array $payload, string $url): array {
 		$clickedUrls = ($payload['clickedUrls'] ?? []);
 		if (is_array($clickedUrls) === false) {
 			$clickedUrls = [];
@@ -124,19 +144,24 @@ class AttributionService implements AttributionServiceInterface {
 			$clickedUrls[] = $url;
 		}
 
-		$payload['clickedUrls'] = $clickedUrls;
+		return $clickedUrls;
+	}//end clickedUrlsWith()
 
+	/**
+	 * Advance a delivered, opened or sent delivery to clicked.
+	 *
+	 * @param array<string, mixed> $payload The BlastDelivery payload.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withClickedStatus(array $payload): array {
 		$current = (string)($payload['status'] ?? '');
 		if (in_array($current, ['delivered', 'opened', 'sent'], true) === true) {
 			$payload['status'] = 'clicked';
 		}
 
-		$this->saveObject(
-			payload: $payload,
-			schemaSlug: $this->getBlastDeliverySchemaSlug(),
-			id: $this->extractId(payload: $delivery),
-		);
-	}//end recordClick()
+		return $payload;
+	}//end withClickedStatus()
 
 	/**
 	 * Create an AttributionLink joining a Blast click to a closed Deal.
@@ -431,13 +456,31 @@ class AttributionService implements AttributionServiceInterface {
 			return null;
 		}
 
+		$entity = $this->findOne(id: $id, register: $register, schemaSlug: $schemaSlug);
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $entity);
+	}//end loadOne()
+
+	/**
+	 * Find one entity; a missing ObjectService or a failed lookup (logged) yields null.
+	 *
+	 * @param string $id         Object UUID or slug.
+	 * @param string $register   Register slug.
+	 * @param string $schemaSlug Schema slug.
+	 *
+	 * @return mixed The entity, or null.
+	 */
+	private function findOne(string $id, string $register, string $schemaSlug): mixed {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return null;
 		}
 
 		try {
-			$entity = $objectService->find(
+			return $objectService->find(
 				id: $id,
 				register: $register,
 				schema: $schemaSlug,
@@ -449,13 +492,7 @@ class AttributionService implements AttributionServiceInterface {
 			);
 			return null;
 		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
-	}//end loadOne()
+	}//end findOne()
 
 	/**
 	 * Load AttributionLink rows with the given filter map.
@@ -471,30 +508,7 @@ class AttributionService implements AttributionServiceInterface {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
-
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						[
-							'register' => $register,
-							'schema' => $schema,
-						]
-					),
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'AttributionService.loadAttributionLinks: findAll failed',
-				['filters' => $filters, 'exception' => $e->getMessage()]
-			);
-			return [];
-		}
+		$rows = $this->findLinkRows(filters: $filters, register: $register, schema: $schema);
 
 		$out = [];
 		foreach (($rows ?? []) as $row) {
@@ -503,6 +517,34 @@ class AttributionService implements AttributionServiceInterface {
 
 		return $out;
 	}//end loadAttributionLinks()
+
+	/**
+	 * Find AttributionLink rows; a missing ObjectService or a failed read (logged) yields none.
+	 *
+	 * @param array<string, mixed> $filters  Filter map.
+	 * @param string               $register Register slug.
+	 * @param string               $schema   AttributionLink schema slug.
+	 *
+	 * @return mixed The rows.
+	 */
+	private function findLinkRows(array $filters, string $register, string $schema): mixed {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		try {
+			return $objectService->findAll(
+				config: ['filters' => array_merge($filters, ['register' => $register, 'schema' => $schema])]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'AttributionService.loadAttributionLinks: findAll failed',
+				['filters' => $filters, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+	}//end findLinkRows()
 
 	/**
 	 * Persist a payload via OpenRegister's ObjectService.

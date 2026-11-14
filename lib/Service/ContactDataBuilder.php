@@ -81,15 +81,8 @@ class ContactDataBuilder {
 		$org = $this->extractFirstValue(value: ($ncContact['ORG'] ?? ''));
 
 		$clientType = $this->determineClientType(name: $name, org: $org);
-
-		if ($name === '' && $org !== '') {
-			$name = $org;
-		}
-
-		$industry = '';
-		if ($clientType === 'person') {
-			$industry = $org;
-		}
+		$name = $this->displayName(name: $name, org: $org);
+		$industry = $this->industryFor(clientType: $clientType, org: $org);
 
 		$data = ['name' => $name, 'type' => $clientType]
 			+ $this->clientChannels(ncContact: $ncContact)
@@ -104,6 +97,59 @@ class ContactDataBuilder {
 		$data['name'] = $name;
 		$data['type'] = $clientType;
 
+		return $this->withClientExtras(data: $data, industry: $industry, clientType: $clientType, ncContact: $ncContact);
+	}//end buildClientImportData()
+
+	/**
+	 * The client's name: the organisation's when the contact has no name of its own.
+	 *
+	 * @param string $name The contact's name.
+	 * @param string $org The contact's organisation.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 */
+	private function displayName(string $name, string $org): string {
+		if ($name === '' && $org !== '') {
+			$name = $org;
+		}
+
+		return $name;
+	}//end displayName()
+
+	/**
+	 * A person's industry is their organisation; an organisation has none from the card.
+	 *
+	 * @param string $clientType The client type.
+	 * @param string $org The contact's organisation.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 */
+	private function industryFor(string $clientType, string $org): string {
+		$industry = '';
+		if ($clientType === 'person') {
+			$industry = $org;
+		}
+
+		return $industry;
+	}//end industryFor()
+
+	/**
+	 * Add the industry when there is one, and a person's preferred name.
+	 *
+	 * @param array $data The client data.
+	 * @param string $industry The industry, or ''.
+	 * @param string $clientType The client type.
+	 * @param array $ncContact The Nextcloud contact data.
+	 *
+	 * @return array
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 */
+	private function withClientExtras(array $data, string $industry, string $clientType, array $ncContact): array {
 		// `industry` is a list of sectors (pipelinq-forms-review); written only
 		// when there is one, like the scalars above.
 		if ($industry !== '') {
@@ -115,7 +161,7 @@ class ContactDataBuilder {
 		}
 
 		return $data;
-	}//end buildClientImportData()
+	}//end withClientExtras()
 
 	/**
 	 * A client's channels from the card: first email and phone, the typed lists, social profiles and website.

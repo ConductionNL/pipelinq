@@ -146,36 +146,80 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 			return false;
 		}
 
+		$read = $this->meteredReadFor(account: $account, externalId: $externalId);
+		if ($read === null) {
+			return false;
+		}
+
+		$result = $this->read(read: $read, account: $account);
+		if ($result->accepted === false) {
+			return $this->rejectPull(result: $result, accountId: $accountId);
+		}
+
+		return $this->storeMetrics(publication: $publication, adapter: $read->adapter, result: $result, externalId: $externalId);
+	}//end pullOne()
+
+	/**
+	 * The metered metrics read for a publication, or null when the network cannot report one.
+	 *
+	 * @param array<string, mixed> $account The social account.
+	 * @param string $externalId The publication's external id.
+	 *
+	 * @return MeteredRead|null The read.
+	 */
+	private function meteredReadFor(array $account, string $externalId): MeteredRead|null {
 		$adapter = $this->registry->forNetwork(network: (string)($account['network'] ?? ''));
 		if ($adapter === null) {
-			return false;
+			return null;
 		}
 
 		$call = $adapter->metricsCall(externalId: $externalId, account: $account);
 		if ($call === null) {
 			// This network reports nothing Pipelinq can reach. That is not a
 			// failure and it does not clear the numbers already stored.
-			return false;
+			return null;
 		}
 
-		$result = $this->read(read: new MeteredRead(call: $call, adapter: $adapter), account: $account);
-		if ($result->accepted === false) {
-			if ($result->failureCode === SocialGatewayResult::RELINK_NEEDED) {
-				$this->accounts->markRelinkNeeded(accountId: $accountId, reason: $result->failureReason);
-			}
+		return new MeteredRead(call: $call, adapter: $adapter);
+	}//end meteredReadFor()
 
-			// The previous numbers are kept. An unreadable pull is not a drop
-			// to zero, which would read as a post that lost its engagement.
-			return false;
+	/**
+	 * Handle a refused pull: flag the account for relinking when asked; always false.
+	 *
+	 * The previous numbers are kept. An unreadable pull is not a drop
+	 * to zero, which would read as a post that lost its engagement.
+	 *
+	 * @param SocialGatewayResult $result The refused result.
+	 * @param string $accountId The account id.
+	 *
+	 * @return bool Always false.
+	 */
+	private function rejectPull(SocialGatewayResult $result, string $accountId): bool {
+		if ($result->failureCode === SocialGatewayResult::RELINK_NEEDED) {
+			$this->accounts->markRelinkNeeded(accountId: $accountId, reason: $result->failureReason);
 		}
 
+		return false;
+	}//end rejectPull()
+
+	/**
+	 * Store the normalised and raw metrics and the read cost on the publication.
+	 *
+	 * @param array<string, mixed> $publication The publication.
+	 * @param SocialNetworkAdapter $adapter The network adapter.
+	 * @param SocialGatewayResult $result The accepted result.
+	 * @param string $externalId The publication's external id.
+	 *
+	 * @return bool True when the publication was saved.
+	 */
+	private function storeMetrics(array $publication, SocialNetworkAdapter $adapter, SocialGatewayResult $result, string $externalId): bool {
 		$publication['metrics'] = $adapter->normaliseMetrics(payload: $result->body, externalId: $externalId);
 		$publication['rawMetrics'] = $result->body;
 		$publication['metricsAt'] = gmdate('Y-m-d\TH:i:s\Z');
 		$publication['cost'] = ((float)($publication['cost'] ?? 0) + $adapter->costPerRead());
 
 		return ($this->publications->save(publication: $publication) !== null);
-	}//end pullOne()
+	}//end storeMetrics()
 
 	/**
 	 * Refresh the follower count on every connected account that can report one.

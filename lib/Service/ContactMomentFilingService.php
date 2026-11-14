@@ -188,8 +188,29 @@ class ContactMomentFilingService implements ContactMomentFilingServiceInterface 
 		}
 
 		$remaining = array_values(array_filter($set, static fn (string $r): bool => $r !== $caseId));
+		$primary = $this->primaryAfterUnfiling(moment: $moment, caseId: $caseId, newPrimary: trim((string)$newPrimary), remaining: $remaining);
+		if (is_array($primary) === true) {
+			return $primary;
+		}
+
+		return $this->write(
+			moment: $this->withCases(moment: $moment, cases: new ContactMomentCases(set: $remaining, primary: $primary)),
+			trail: ['case' => $caseId, 'act' => 'unfiled'],
+		);
+	}//end unfileFromCase()
+
+	/**
+	 * The primary case once a case is taken off: unchanged, or the new primary when the primary itself goes.
+	 *
+	 * @param array<string, mixed> $moment     The contact moment.
+	 * @param string               $caseId     The case being taken off.
+	 * @param string               $newPrimary The requested next primary ('' when none).
+	 * @param array<int, string>   $remaining  The cases that stay.
+	 *
+	 * @return string|array<string, mixed> The primary, or the refusal.
+	 */
+	private function primaryAfterUnfiling(array $moment, string $caseId, string $newPrimary, array $remaining): string|array {
 		$primary = $this->primaryOf(moment: $moment);
-		$newPrimary = trim((string)$newPrimary);
 
 		if ($primary === $caseId) {
 			$refusal = self::newPrimaryRefusal(newPrimary: $newPrimary, remaining: $remaining);
@@ -200,11 +221,8 @@ class ContactMomentFilingService implements ContactMomentFilingServiceInterface 
 			$primary = $newPrimary;
 		}
 
-		return $this->write(
-			moment: $this->withCases(moment: $moment, cases: new ContactMomentCases(set: $remaining, primary: $primary)),
-			trail: ['case' => $caseId, 'act' => 'unfiled'],
-		);
-	}//end unfileFromCase()
+		return $primary;
+	}//end primaryAfterUnfiling()
 
 	/**
 	 * The refusal to take a moment off a case it is not on (404) or off its last case (409), or null.

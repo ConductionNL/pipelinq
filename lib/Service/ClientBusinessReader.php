@@ -313,6 +313,19 @@ class ClientBusinessReader implements ClientBusinessReaderInterface {
 			return ['status' => 400, 'message' => 'Missing client'];
 		}
 
+		return $this->readClient(clientId: $clientId, register: $register, schema: $schema);
+	}//end client()
+
+	/**
+	 * Read the client under the caller's access, or the refusal.
+	 *
+	 * @param string $clientId The client UUID.
+	 * @param string $register The register id.
+	 * @param string $schema   The client schema id.
+	 *
+	 * @return array<string, mixed> The client, or `status` and `message`.
+	 */
+	private function readClient(string $clientId, string $register, string $schema): array {
 		try {
 			$object = $this->container->get(self::OBJECT_SERVICE)->find(
 				id: $clientId,
@@ -333,7 +346,7 @@ class ClientBusinessReader implements ClientBusinessReaderInterface {
 		}
 
 		return $this->asArray(object: $object);
-	}//end client()
+	}//end readClient()
 
 	/**
 	 * An object as an array.

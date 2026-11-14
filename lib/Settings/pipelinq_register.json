@@ -194,7 +194,15 @@
           "sourceRelation": "client",
           "sourceRelationProperty": "relationshipEndedAt",
           "defaultBewaartermijn": "P2Y",
-          "defaultNominatie": "vernietigen"
+          "defaultNominatie": "vernietigen",
+          "anonymisation": {
+            "name": {"treatment": "fixed", "value": "Anonymised contact person"},
+            "email": "remove",
+            "emails": "remove",
+            "phone": "remove",
+            "phones": "remove",
+            "brpPersonId": "remove"
+          }
         },
         "x-openregister-notifications": {
           "newContact": {

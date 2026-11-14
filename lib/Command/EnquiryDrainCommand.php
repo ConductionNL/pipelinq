@@ -189,6 +189,22 @@ class EnquiryDrainCommand extends Command {
 			$verb = 'delivered';
 		}
 
+		$this->printSummary(label: $label, report: $report, verb: $verb, output: $output);
+		$this->printDelivered(rows: $report['delivered'], output: $output);
+		$this->printRejected(report: $report, output: $output);
+	}//end print()
+
+	/**
+	 * Print the one-line summary of a schema's report.
+	 *
+	 * @param string               $label  The held schema.
+	 * @param array<string, mixed> $report The drain report.
+	 * @param string               $verb   How the delivered count reads.
+	 * @param OutputInterface      $output Console output.
+	 *
+	 * @return void
+	 */
+	private function printSummary(string $label, array $report, string $verb, OutputInterface $output): void {
 		$output->writeln(
 			sprintf(
 				'%s: %d %s, %d refused, %d unmapped.',
@@ -199,7 +215,18 @@ class EnquiryDrainCommand extends Command {
 				count($report['unmapped'])
 			)
 		);
-		foreach ($report['delivered'] as $row) {
+	}//end printSummary()
+
+	/**
+	 * Print a line per delivered enquiry.
+	 *
+	 * @param array<int, array<string, mixed>> $rows   The delivered rows.
+	 * @param OutputInterface                  $output Console output.
+	 *
+	 * @return void
+	 */
+	private function printDelivered(array $rows, OutputInterface $output): void {
+		foreach ($rows as $row) {
 			$line = sprintf('  delivered %s (%s) into %s %s', $row['id'], $row['key'], $row['destination'], $row['reference']);
 			if (isset($row['notRemoved']) === true) {
 				$line .= ' (not removed: ' . $row['notRemoved'] . ')';
@@ -207,7 +234,17 @@ class EnquiryDrainCommand extends Command {
 
 			$output->writeln(rtrim($line));
 		}
+	}//end printDelivered()
 
+	/**
+	 * Print a line per refused and per unmapped enquiry.
+	 *
+	 * @param array<string, mixed> $report The drain report.
+	 * @param OutputInterface      $output Console output.
+	 *
+	 * @return void
+	 */
+	private function printRejected(array $report, OutputInterface $output): void {
 		foreach ($report['refused'] as $row) {
 			$output->writeln(sprintf('  refused %s: status %d %s', $row['id'], $row['status'], implode(',', $row['codes'])));
 		}
@@ -215,6 +252,5 @@ class EnquiryDrainCommand extends Command {
 		foreach ($report['unmapped'] as $row) {
 			$output->writeln(sprintf('  unmapped %s: no published form for source "%s"', $row['id'], $row['key']));
 		}
-
-	}//end print()
+	}//end printRejected()
 }//end class

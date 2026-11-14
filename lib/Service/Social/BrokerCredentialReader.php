@@ -186,26 +186,49 @@ class BrokerCredentialReader {
 			return null;
 		}
 
+		$found = $this->providerRows(provider: $provider);
+		if ($found === []) {
+			return null;
+		}
+
+		return $this->latestOf(rows: $found[0], provider: $provider, ownerUid: $ownerUid);
+	}//end findLatest()
+
+	/**
+	 * The credential rows of a provider.
+	 *
+	 * @param string $provider The catalogue provider identifier.
+	 *
+	 * @return array<int, mixed> The findAll result as a one-element list, or an empty list when it could not be read.
+	 *
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 */
+	private function providerRows(string $provider): array {
 		try {
 			$service = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$rows = $service->findAll(
-				config: [
-					'filters' => [
-						'register' => self::REGISTER,
-						'schema' => self::SCHEMA,
-						'provider' => $provider,
-					],
-				],
-			);
+			return [$service->findAll(config: ['filters' => ['register' => self::REGISTER, 'schema' => self::SCHEMA, 'provider' => $provider]])];
 		} catch (Throwable $failure) {
 			$this->logger->info(
 				'BrokerCredentialReader.findLatest: the credential list could not be read',
 				['provider' => $provider, 'exception' => $failure->getMessage()]
 			);
 
-			return null;
+			return [];
 		}
+	}//end providerRows()
 
+	/**
+	 * The most recently connected credential of the owner among the rows.
+	 *
+	 * @param mixed $rows The credential rows.
+	 * @param string $provider The catalogue provider identifier.
+	 * @param string $ownerUid The user who connected.
+	 *
+	 * @return array<string, mixed>|null The readable metadata, or null.
+	 *
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 */
+	private function latestOf($rows, string $provider, string $ownerUid): array|null {
 		$best = null;
 		foreach (($rows ?? []) as $row) {
 			$readable = $this->readable(entity: $row);
@@ -219,7 +242,7 @@ class BrokerCredentialReader {
 		}
 
 		return $best;
-	}//end findLatest()
+	}//end latestOf()
 
 	/**
 	 * Whether a credential row really is this provider's and this owner's.

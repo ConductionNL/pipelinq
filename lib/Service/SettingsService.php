@@ -465,18 +465,40 @@ class SettingsService implements SettingsServiceInterface {
 		$this->refuseAMatomoToken(data: $data);
 		$this->refuseAnExportThresholdOutOfRange(data: $data);
 
-		foreach (self::CONFIG_KEYS as $key) {
+		$this->writePlainKeys(data: $data, keys: self::CONFIG_KEYS);
+		$this->writePlainKeys(data: $data, keys: array_keys(array: self::TUNABLE_DEFAULTS));
+		$this->writeSecretKeys(data: $data);
+
+		$this->logger->info('Pipelinq settings updated', ['keys' => array_keys($data)]);
+		$this->registerAccess?->sync();
+
+		return $this->getSettings();
+	}//end updateSettings()
+
+	/**
+	 * Store each given key present in the data as a plain string.
+	 *
+	 * @param array<string, mixed> $data The submitted settings.
+	 * @param array<int, string> $keys The keys to store.
+	 *
+	 * @return void
+	 */
+	private function writePlainKeys(array $data, array $keys): void {
+		foreach ($keys as $key) {
 			if (isset($data[$key]) === true) {
 				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$data[$key]);
 			}
 		}
+	}//end writePlainKeys()
 
-		foreach (array_keys(array: self::TUNABLE_DEFAULTS) as $key) {
-			if (isset($data[$key]) === true) {
-				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$data[$key]);
-			}
-		}
-
+	/**
+	 * Clear or store (as sensitive) each secret key; an empty value keeps the stored secret.
+	 *
+	 * @param array<string, mixed> $data The submitted settings.
+	 *
+	 * @return void
+	 */
+	private function writeSecretKeys(array $data): void {
 		foreach (self::SECRET_KEYS as $key) {
 			if ((string)($data[$key . '_clear'] ?? '') === 'true') {
 				$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
@@ -488,12 +510,7 @@ class SettingsService implements SettingsServiceInterface {
 				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $value, false, true);
 			}
 		}
-
-		$this->logger->info('Pipelinq settings updated', ['keys' => array_keys($data)]);
-		$this->registerAccess?->sync();
-
-		return $this->getSettings();
-	}//end updateSettings()
+	}//end writeSecretKeys()
 
 	/**
 	 * Refuse a raw Matomo token written into the credential REFERENCE field.

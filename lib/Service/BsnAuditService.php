@@ -224,71 +224,13 @@ class BsnAuditService implements BsnAuditServiceInterface {
 	 * @return int Number of records pseudonymised.
 	 *
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
 	public function pseudonymise(
 		#[\SensitiveParameter]
 		string $rawBsn,
 	): int {
 		try {
-			[$register, $schema] = $this->config();
-			$oldHash = BsnValidationService::hash($rawBsn);
-			// Pseudonym = HMAC(bsn, secret) — caller-side; we just bump it once.
-			$secret = $this->appConfig->getValueString(
-				AppIdentity::APP_ID,
-				'brp.pseudonym_secret',
-				''
-			);
-			if ($secret === '') {
-				$this->logger->warning(
-					'No pseudonym secret configured; RTBF pseudonymise skipped',
-					['actor' => 'system']
-				);
-				return 0;
-			}
-
-			$newHash = hash_hmac('sha256', $rawBsn, $secret);
-
-			$records = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'bsnHash' => $oldHash,
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
-
-			$count = 0;
-			foreach (($records ?? []) as $record) {
-				$arr = [];
-				if (is_array($record) === true) {
-					$arr = $record;
-				} elseif (method_exists($record, 'jsonSerialize') === true) {
-					$arr = (array)$record->jsonSerialize();
-				}
-
-				$uuid = (string)($arr['@self']['id'] ?? $arr['id'] ?? '');
-				if ($uuid === '') {
-					continue;
-				}
-
-				// Immutable schema: callers MUST go through the system pseudonym path.
-				$arr['bsnHash'] = $newHash;
-				$arr['action'] = 'brp-rtbf-pseudonymised';
-				$arr['outcome'] = 'pseudonymised';
-				$this->getObjectService()->saveObject(
-					object: $arr,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: $uuid,
-				);
-				$count++;
-			}//end foreach
-
-			return $count;
+			return $this->pseudonymiseRecords(rawBsn: $rawBsn);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'BSN audit pseudonymise failed',
@@ -297,6 +239,154 @@ class BsnAuditService implements BsnAuditServiceInterface {
 			return 0;
 		}//end try
 	}//end pseudonymise()
+
+	/**
+	 * Rewrite the bsnHash of every audit record linked to a BSN to its pseudonym.
+	 *
+	 * @param string $rawBsn Raw BSN of the citizen exercising RTBF.
+	 *
+	 * @return int Number of records pseudonymised; 0 when no pseudonym secret is configured.
+	 *
+	 * @throws RuntimeException When the audit register or schema is not configured.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
+	 */
+	private function pseudonymiseRecords(
+		#[\SensitiveParameter]
+		string $rawBsn,
+	): int {
+		[$register, $schema] = $this->config();
+		$oldHash = BsnValidationService::hash($rawBsn);
+		// Pseudonym = HMAC(bsn, secret) — caller-side; we just bump it once.
+		$secret = $this->pseudonymSecret();
+		if ($secret === '') {
+			return 0;
+		}
+
+		$newHash = hash_hmac('sha256', $rawBsn, $secret);
+
+		$records = $this->recordsWithHash(hash: $oldHash, register: $register, schema: $schema);
+		return $this->rewriteRecords(records: $records, newHash: $newHash, register: $register, schema: $schema);
+	}//end pseudonymiseRecords()
+
+	/**
+	 * Read the configured pseudonym secret, warning when none is set.
+	 *
+	 * @return string The secret, or an empty string when none is configured.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function pseudonymSecret(): string {
+		$secret = $this->appConfig->getValueString(
+			AppIdentity::APP_ID,
+			'brp.pseudonym_secret',
+			''
+		);
+		if ($secret === '') {
+			$this->logger->warning(
+				'No pseudonym secret configured; RTBF pseudonymise skipped',
+				['actor' => 'system']
+			);
+		}
+
+		return $secret;
+	}//end pseudonymSecret()
+
+	/**
+	 * Find the audit records that carry a given bsnHash.
+	 *
+	 * @param string $hash The bsnHash to match.
+	 * @param string $register The register id.
+	 * @param string $schema The audit record schema id.
+	 *
+	 * @return mixed The findAll result.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function recordsWithHash(string $hash, string $register, string $schema) {
+		return $this->getObjectService()->findAll(
+			config: [
+				'filters' => [
+					'bsnHash' => $hash,
+					'register' => $register,
+					'schema' => $schema,
+				],
+			]
+		);
+	}//end recordsWithHash()
+
+	/**
+	 * Rewrite each record to the new hash and count the records saved.
+	 *
+	 * @param mixed $records The records found for the old hash.
+	 * @param string $newHash The pseudonym hash.
+	 * @param string $register The register id.
+	 * @param string $schema The audit record schema id.
+	 *
+	 * @return int Number of records saved.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function rewriteRecords($records, string $newHash, string $register, string $schema): int {
+		$count = 0;
+		foreach (($records ?? []) as $record) {
+			if ($this->rewriteRecord(record: $record, newHash: $newHash, register: $register, schema: $schema) === true) {
+				$count++;
+			}
+		}
+
+		return $count;
+	}//end rewriteRecords()
+
+	/**
+	 * Save one record under the new hash.
+	 *
+	 * @param mixed $record The record as returned by OpenRegister.
+	 * @param string $newHash The pseudonym hash.
+	 * @param string $register The register id.
+	 * @param string $schema The audit record schema id.
+	 *
+	 * @return bool Whether the record was saved; false when it has no id.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function rewriteRecord($record, string $newHash, string $register, string $schema): bool {
+		$arr = $this->recordArray(record: $record);
+
+		$uuid = (string)($arr['@self']['id'] ?? $arr['id'] ?? '');
+		if ($uuid === '') {
+			return false;
+		}
+
+		// Immutable schema: callers MUST go through the system pseudonym path.
+		$arr['bsnHash'] = $newHash;
+		$arr['action'] = 'brp-rtbf-pseudonymised';
+		$arr['outcome'] = 'pseudonymised';
+		$this->getObjectService()->saveObject(object: $arr, extend: [], register: $register, schema: $schema, uuid: $uuid);
+		return true;
+	}//end rewriteRecord()
+
+	/**
+	 * Coerce an OpenRegister record into an array.
+	 *
+	 * @param mixed $record The record.
+	 *
+	 * @return array<mixed> The record data; empty when it is neither an array nor serialisable.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function recordArray($record): array {
+		$arr = [];
+		if (is_array($record) === true) {
+			$arr = $record;
+		} elseif (method_exists($record, 'jsonSerialize') === true) {
+			$arr = (array)$record->jsonSerialize();
+		}
+
+		return $arr;
+	}//end recordArray()
 
 	/**
 	 * Anonymise an IPv4 address by zeroing the last octet (ipv6: zero the last 80 bits).

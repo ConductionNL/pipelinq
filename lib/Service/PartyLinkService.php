@@ -76,23 +76,50 @@ class PartyLinkService implements PartyLinkServiceInterface {
 		$party = trim($party);
 		$kind = trim($kind);
 
+		$refusal = $this->linkRefusal(recordType: $recordType, recordId: $recordId, party: $party, kind: $kind);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->saveLink(recordType: $recordType, recordId: $recordId, party: $party, kind: $kind);
+	}//end link()
+
+	/**
+	 * Why a link may not be written: missing input, or the registry refuses the kind. Null when it may.
+	 *
+	 * @param string $recordType The trimmed `<app>:<schema>:<type>` literal.
+	 * @param string $recordId   The trimmed record.
+	 * @param string $party      The trimmed party.
+	 * @param string $kind       The trimmed party kind code.
+	 *
+	 * @return array<string, mixed>|null `status` plus `error`, or null.
+	 */
+	private function linkRefusal(string $recordType, string $recordId, string $party, string $kind): array|null {
 		if ($recordType === '' || $recordId === '' || $party === '') {
 			return ['status' => 400, 'error' => 'A record type, a record and a party are required.'];
 		}
 
-		$answer = $this->registry->mayLink(
-			recordType: $recordType,
-			recordId: $recordId,
-			kind: $kind,
-			party: $party,
-		);
-
+		$answer = $this->registry->mayLink(recordType: $recordType, recordId: $recordId, kind: $kind, party: $party);
 		if ($answer['allowed'] === false) {
 			// 409, not 400: the write is well formed and refused on policy,
 			// and the message is meant to be shown to the handler.
 			return ['status' => 409, 'error' => $answer['reason']];
 		}
 
+		return null;
+	}//end linkRefusal()
+
+	/**
+	 * Write a party link valid from today.
+	 *
+	 * @param string $recordType The trimmed `<app>:<schema>:<type>` literal.
+	 * @param string $recordId   The trimmed record.
+	 * @param string $party      The trimmed party.
+	 * @param string $kind       The trimmed party kind code.
+	 *
+	 * @return array<string, mixed> `status` plus either `partyLink` or `error`.
+	 */
+	private function saveLink(string $recordType, string $recordId, string $party, string $kind): array {
 		$link = [
 			'party' => $party,
 			'kind' => $kind,
@@ -107,7 +134,7 @@ class PartyLinkService implements PartyLinkServiceInterface {
 		}
 
 		return ['status' => 201, 'partyLink' => $link];
-	}//end link()
+	}//end saveLink()
 
 	/**
 	 * End a party link, without deleting the record of it.
@@ -125,22 +152,8 @@ class PartyLinkService implements PartyLinkServiceInterface {
 			return ['status' => 400, 'error' => 'A party link is required.'];
 		}
 
-		try {
-			$entity = $this->objectService->find(id: $linkId);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				'PartyLinkService: the link could not be read',
-				['uuid' => $linkId, 'exception' => $e->getMessage()]
-			);
-			$entity = null;
-		}
-
-		if ($entity === null) {
-			return ['status' => 404, 'error' => 'That party link could not be read.'];
-		}
-
-		$data = $entity->jsonSerialize();
-		if (is_array($data) === false) {
+		$data = $this->readLinkData(linkId: $linkId);
+		if ($data === null) {
 			return ['status' => 404, 'error' => 'That party link could not be read.'];
 		}
 
@@ -152,6 +165,33 @@ class PartyLinkService implements PartyLinkServiceInterface {
 
 		return ['status' => 200, 'partyLink' => $data];
 	}//end end()
+
+	/**
+	 * A party link's data, or null when it cannot be read.
+	 *
+	 * @param string $linkId The link's uuid.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function readLinkData(string $linkId): array|null {
+		try {
+			$entity = $this->objectService->find(id: $linkId);
+		} catch (Throwable $e) {
+			$this->logger->debug('PartyLinkService: the link could not be read', ['uuid' => $linkId, 'exception' => $e->getMessage()]);
+			$entity = null;
+		}
+
+		if ($entity === null) {
+			return null;
+		}
+
+		$data = $entity->jsonSerialize();
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
+	}//end readLinkData()
 
 	/**
 	 * Write every accepted row of a batch, refusing the rest by the same rule.

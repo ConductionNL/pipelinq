@@ -71,6 +71,8 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/unify-client-contact/spec.md
  * @spec openspec/specs/unify-client-contact/spec.md
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class UnifyClientContactIdentity implements IRepairStep {
 	use CastingPayloadToArray;
@@ -372,6 +374,20 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 *   search/hit loops inflate the theoretical path count.
 	 */
 	private function matchExistingContact(array $object): ?string {
+		$contactsManager = $this->enabledContactsManager();
+		if ($contactsManager === null) {
+			return null;
+		}
+
+		return $this->firstMatchingUid(contactsManager: $contactsManager, searchTerms: $this->contactSearchTerms(object: $object));
+	}//end matchExistingContact()
+
+	/**
+	 * Resolve the Contacts manager, or null (logged when unresolvable) when it is unavailable or disabled.
+	 *
+	 * @return mixed The Contacts manager, or null.
+	 */
+	private function enabledContactsManager(): mixed {
 		try {
 			$contactsManager = $this->container->get('OCP\Contacts\IManager');
 		} catch (\Throwable $e) {
@@ -386,8 +402,20 @@ class UnifyClientContactIdentity implements IRepairStep {
 			return null;
 		}
 
-		// Match priority: email, then ORG name for organisations (KvK is carried
-		// as the ORG/X-KVK vCard property by the property builder).
+		return $contactsManager;
+	}//end enabledContactsManager()
+
+	/**
+	 * The contact searches for an object, in match priority.
+	 *
+	 * Match priority: email, then ORG name for organisations (KvK is carried
+	 * as the ORG/X-KVK vCard property by the property builder).
+	 *
+	 * @param array<string, mixed> $object The client or contact object.
+	 *
+	 * @return array<int, array{term: string, props: array<int, string>}> The searches.
+	 */
+	private function contactSearchTerms(array $object): array {
 		$searchTerms = [];
 		$email = (string)($object['email'] ?? '');
 		if ($email !== '') {
@@ -401,28 +429,66 @@ class UnifyClientContactIdentity implements IRepairStep {
 			}
 		}
 
-		foreach ($searchTerms as $search) {
-			try {
-				// Positional args — IManager::search($pattern, $searchProperties, $options).
-				$results = $contactsManager->search($search['term'], $search['props'], []);
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Identity unify: contact search failed',
-					['term' => $search['term'], 'exception' => $e->getMessage()]
-				);
-				continue;
-			}
+		return $searchTerms;
+	}//end contactSearchTerms()
 
-			foreach (($results ?? []) as $hit) {
-				$uid = (string)($hit['UID'] ?? '');
-				if ($uid !== '') {
-					return $uid;
-				}
+	/**
+	 * The UID of the first hit across the searches, or null when nothing matches.
+	 *
+	 * @param mixed $contactsManager The Contacts manager.
+	 * @param array<int, array{term: string, props: array<int, string>}> $searchTerms The searches.
+	 *
+	 * @return string|null The matched UID.
+	 */
+	private function firstMatchingUid(mixed $contactsManager, array $searchTerms): string|null {
+		foreach ($searchTerms as $search) {
+			$uid = $this->firstHitUid(results: $this->searchContacts(contactsManager: $contactsManager, search: $search));
+			if ($uid !== null) {
+				return $uid;
 			}
 		}
 
 		return null;
-	}//end matchExistingContact()
+	}//end firstMatchingUid()
+
+	/**
+	 * Run one contact search, returning no results (logged) when it fails.
+	 *
+	 * @param mixed $contactsManager The Contacts manager.
+	 * @param array{term: string, props: array<int, string>} $search The search.
+	 *
+	 * @return mixed The search results.
+	 */
+	private function searchContacts(mixed $contactsManager, array $search): mixed {
+		try {
+			// Positional args — IManager::search($pattern, $searchProperties, $options).
+			return $contactsManager->search($search['term'], $search['props'], []);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Identity unify: contact search failed',
+				['term' => $search['term'], 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+	}//end searchContacts()
+
+	/**
+	 * The first non-empty UID among the search hits.
+	 *
+	 * @param mixed $results The search results.
+	 *
+	 * @return string|null The UID, or null when no hit has one.
+	 */
+	private function firstHitUid(mixed $results): string|null {
+		foreach (($results ?? []) as $hit) {
+			$uid = (string)($hit['UID'] ?? '');
+			if ($uid !== '') {
+				return $uid;
+			}
+		}
+
+		return null;
+	}//end firstHitUid()
 
 	/**
 	 * Create a Nextcloud Contact from the object's existing identity fields by
@@ -545,55 +611,76 @@ class UnifyClientContactIdentity implements IRepairStep {
 		string $schema,
 		array $clientUidByRef,
 	): int {
-		$moments = $this->readAll(
-			objectService: $objectService,
-			register: $register,
-			schema: $schema,
-			ticketType: TicketServiceInterface::TYPE_CONTACTMOMENT
-		);
+		$type = TicketServiceInterface::TYPE_CONTACTMOMENT;
+		$moments = $this->readAll(objectService: $objectService, register: $register, schema: $schema, ticketType: $type);
 
 		$rekeyed = 0;
 		foreach ($moments as $moment) {
-			if ((string)($moment['contactsUid'] ?? '') !== '') {
-				// Already re-keyed on a prior run — no-op.
-				continue;
-			}
-
-			$clientRef = (string)($moment['client'] ?? '');
-			if ($clientRef === '' || isset($clientUidByRef[$clientRef]) === false) {
-				continue;
-			}
-
-			$momentId = (string)($moment['id'] ?? $moment['uuid'] ?? '');
-			$payload = $moment;
-			$payload['contactsUid'] = $clientUidByRef[$clientRef];
-			unset($payload['@self']);
-
-			try {
-				$this->execAsSystem(
-					objectService: $objectService,
-					operation: static fn () => $objectService
-						->setRegister($register)
-						->setSchema($schema)
-						->saveObject(
-							object: $payload,
-							extend: [],
-							register: $register,
-							schema: $schema,
-							uuid: $momentId
-						)
-				);
-				$rekeyed++;
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Identity unify: failed to re-key contactmoment',
-					['momentId' => $momentId, 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
-				);
-			}//end try
-		}//end foreach
+			$payload = $this->rekeyedPayload(moment: $moment, clientUidByRef: $clientUidByRef);
+			$rekeyed += $this->saveRekeyed(objectService: $objectService, register: $register, schema: $schema, payload: $payload);
+		}
 
 		return $rekeyed;
 	}//end rekeyContactmomenten()
+
+	/**
+	 * The contactmoment re-keyed to its client's contactsUid, or null when it needs no re-key.
+	 *
+	 * @param array<string, mixed> $moment The contactmoment.
+	 * @param array<string, string> $clientUidByRef Client ref to contactsUid.
+	 *
+	 * @return array<string, mixed>|null The payload to save, or null.
+	 */
+	private function rekeyedPayload(array $moment, array $clientUidByRef): array|null {
+		if ((string)($moment['contactsUid'] ?? '') !== '') {
+			// Already re-keyed on a prior run — no-op.
+			return null;
+		}
+
+		$clientRef = (string)($moment['client'] ?? '');
+		if ($clientRef === '' || isset($clientUidByRef[$clientRef]) === false) {
+			return null;
+		}
+
+		$payload = $moment;
+		$payload['contactsUid'] = $clientUidByRef[$clientRef];
+		unset($payload['@self']);
+		return $payload;
+	}//end rekeyedPayload()
+
+	/**
+	 * Save a re-keyed contactmoment as system; 1 when saved, 0 when skipped or failed (logged).
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 * @param string $register The register id/slug.
+	 * @param string $schema The ticket schema id/slug.
+	 * @param array<string, mixed>|null $payload The re-keyed payload, or null to skip.
+	 *
+	 * @return int The number of contactmoments saved.
+	 */
+	private function saveRekeyed(object $objectService, string $register, string $schema, array|null $payload): int {
+		if ($payload === null) {
+			return 0;
+		}
+
+		$momentId = (string)($payload['id'] ?? $payload['uuid'] ?? '');
+		try {
+			$this->execAsSystem(
+				objectService: $objectService,
+				operation: static fn () => $objectService
+					->setRegister($register)
+					->setSchema($schema)
+					->saveObject(object: $payload, extend: [], register: $register, schema: $schema, uuid: $momentId)
+			);
+			return 1;
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Identity unify: failed to re-key contactmoment',
+				['momentId' => $momentId, 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
+			);
+			return 0;
+		}//end try
+	}//end saveRekeyed()
 
 	/**
 	 * Write one MDM sourceRecord (sourceSystem pipelinq-identity-unify) for a
@@ -623,45 +710,68 @@ class UnifyClientContactIdentity implements IRepairStep {
 			return;
 		}
 
+		$record = $this->sourceRecordObject(entityType: $entityType, nativeId: $nativeId, currentMasterEntity: $currentMasterEntity, object: $object);
+		$this->saveSourceRecord(objectService: $objectService, register: $register, schema: $sourceRecordSchema, record: $record);
+	}//end writeSourceRecord()
+
+	/**
+	 * The MDM sourceRecord for a resolved object.
+	 *
+	 * @param string $entityType MDM entityType ('account'|'contact').
+	 * @param string $nativeId The pipelinq object id/uuid.
+	 * @param string $currentMasterEntity The resolved contactsUid.
+	 * @param array<string,mixed> $object The raw object (provenance rawAttributes).
+	 *
+	 * @return array<string, mixed> The sourceRecord object.
+	 */
+	private function sourceRecordObject(string $entityType, string $nativeId, string $currentMasterEntity, array $object): array {
 		$raw = $object;
 		unset($raw['@self']);
 		$now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
+		return [
+			'sourceRecordId' => self::SOURCE_SYSTEM . ':' . $nativeId,
+			'sourceSystem' => self::SOURCE_SYSTEM,
+			'nativeId' => $nativeId,
+			'entityType' => $entityType,
+			'currentMasterEntity' => $currentMasterEntity,
+			'rawAttributes' => $raw,
+			'mappedAttributes' => ['contactsUid' => $currentMasterEntity],
+			'firstSeen' => $now,
+			'lastSeen' => $now,
+			'lastChange' => $now,
+			'linkageMethod' => 'system-auto-merge',
+			'linkageConfidence' => 1.0,
+			'confidence' => 1.0,
+		];
+	}//end sourceRecordObject()
+
+	/**
+	 * Save a sourceRecord as system; a failure is logged, never thrown.
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 * @param string $register The register id/slug.
+	 * @param string $schema The sourceRecord schema id/slug.
+	 * @param array<string, mixed> $record The sourceRecord object.
+	 *
+	 * @return void
+	 */
+	private function saveSourceRecord(object $objectService, string $register, string $schema, array $record): void {
 		try {
 			$this->execAsSystem(
 				objectService: $objectService,
 				operation: static fn () => $objectService
 					->setRegister($register)
-					->setSchema($sourceRecordSchema)
-					->saveObject(
-						object: [
-							'sourceRecordId' => self::SOURCE_SYSTEM . ':' . $nativeId,
-							'sourceSystem' => self::SOURCE_SYSTEM,
-							'nativeId' => $nativeId,
-							'entityType' => $entityType,
-							'currentMasterEntity' => $currentMasterEntity,
-							'rawAttributes' => $raw,
-							'mappedAttributes' => ['contactsUid' => $currentMasterEntity],
-							'firstSeen' => $now,
-							'lastSeen' => $now,
-							'lastChange' => $now,
-							'linkageMethod' => 'system-auto-merge',
-							'linkageConfidence' => 1.0,
-							'confidence' => 1.0,
-						],
-						extend: [],
-						register: $register,
-						schema: $sourceRecordSchema,
-						uuid: null
-					)
+					->setSchema($schema)
+					->saveObject(object: $record, extend: [], register: $register, schema: $schema, uuid: null)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Identity unify: sourceRecord provenance write failed',
-				['nativeId' => $nativeId, 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
+				['nativeId' => $record['nativeId'], 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
 			);
 		}//end try
-	}//end writeSourceRecord()
+	}//end saveSourceRecord()
 
 	/**
 	 * Read every object of a schema in the register (setRegister->setSchema->findAll).
