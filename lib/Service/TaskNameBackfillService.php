@@ -29,7 +29,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TaskNameBackfillServiceInterface;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -51,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
-class TaskNameBackfillService {
+class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
 	/**
 	 * Upper bound on the tasks read in one run.
 	 *
@@ -100,8 +101,8 @@ class TaskNameBackfillService {
 	public function backfill(): array {
 		$counts = ['status' => 'done', 'named' => 0, 'skipped' => 0, 'failed' => 0];
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		if ($register === '' || $schema === '') {
 			$counts['status'] = 'not-configured';
 			return $counts;

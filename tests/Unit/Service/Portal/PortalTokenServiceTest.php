@@ -117,4 +117,19 @@ class PortalTokenServiceTest extends TestCase {
 		$this->assertFalse($service->verify('token', '', '2999-01-01T00:00:00+00:00'));
 		$this->assertFalse($service->verify('token', 'hash', null));
 	}//end testEmptyInputsRejected()
+
+	/**
+	 * An expiry that cannot be parsed counts as expired; a parsable future one does not.
+	 *
+	 * @return void
+	 */
+	public function testAnUnparsableExpiryCountsAsExpired(): void {
+		$service = $this->service();
+
+		$this->assertFalse($service->isUnexpired('not a timestamp'));
+		$this->assertFalse($service->isUnexpired(''));
+		$this->assertFalse($service->isUnexpired(null));
+		$this->assertTrue($service->isUnexpired(date(DATE_ATOM, ($this->now + 60))));
+		$this->assertFalse($service->isUnexpired(date(DATE_ATOM, ($this->now - 60))));
+	}//end testAnUnparsableExpiryCountsAsExpired()
 }//end class

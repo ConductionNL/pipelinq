@@ -2365,7 +2365,14 @@ OC.L10N.register(
         "Your session has ended. Log in again in a new tab, then press Save here.": "Ihre Sitzung ist abgelaufen. Melden Sie sich in einem neuen Tab erneut an und klicken Sie dann hier auf Speichern.",
         "Deal room": "Verkaufsraum",
         "Client room": "Kundenraum",
-        "Board": "Board"
+        "Board": "Board",
+        "Apply link": "Antragslink",
+        "At the desk": "Am Schalter",
+        "By post": "Per Post",
+        "Published from": "Veröffentlicht ab",
+        "Published until": "Veröffentlicht bis",
+        "UPL reference": "UPL-Verweis",
+        "Catalogue": "Katalog"
     },
     "nplurals=2; plural=(n != 1);"
 )

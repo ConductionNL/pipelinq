@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTime;
+use OCA\Pipelinq\Kernel\Contracts\EmailSyncServiceInterface;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
@@ -35,7 +36,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-3
  */
-class EmailSyncService {
+class EmailSyncService implements EmailSyncServiceInterface {
 	/**
 	 * Constructor.
 	 *

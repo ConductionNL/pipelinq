@@ -39,7 +39,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Service\Gdpr\Evidence\EvidenceItem;
 use OCA\OpenRegister\Service\Gdpr\Evidence\EvidenceSourceProvider;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -304,7 +304,7 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
 			return '';
 		}
 
-		return $this->appConfig->getValueString(Application::APP_ID, $configKey, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $configKey, '');
 	}//end resolveSourceSchemaId()
 
 	/**
@@ -317,7 +317,7 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
 	 *                                                                    Null when unprovisioned or OR is unavailable.
 	 */
 	private function resolveContext(): ?array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			return null;
 		}

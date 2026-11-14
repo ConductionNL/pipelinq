@@ -1,0 +1,70 @@
+{
+	"_meta": {
+		"change": "marketing-events",
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "What a campaign event needs to take its registrations from the landing page and look after them: an online join link, the lead each registration came with, when its confirmation and reminder went out, when it was cancelled, and whether the person came. Named 99-zz so it merges after 98-campaign-events, which declares both schemas. Additive: no existing property changes."
+	},
+	"components": {
+		"schemas": {
+			"campaignEvent": {
+				"slug": "campaignEvent",
+				"version": "1.3.0",
+				"properties": {
+					"online": {
+						"type": "boolean",
+						"title": "Online",
+						"description": "The event takes place online; the reminder carries the join link.",
+						"default": false
+					},
+					"joinUrl": {
+						"type": "string",
+						"format": "uri",
+						"title": "Join link",
+						"description": "The link attendees use to join an online event.",
+						"maxLength": 2048
+					}
+				}
+			},
+			"eventRegistration": {
+				"slug": "eventRegistration",
+				"version": "1.2.0",
+				"properties": {
+					"lead": {
+						"type": "string",
+						"format": "uuid",
+						"title": "Lead",
+						"description": "The lead the sign-up created in the campaign.",
+						"$ref": "lead"
+					},
+					"attendance": {
+						"type": "string",
+						"title": "Attendance",
+						"description": "Whether the person came to the event.",
+						"enum": ["attended", "no-show"],
+						"x-enum-labels": { "attended": "Attended", "no-show": "No-show" },
+						"facetable": true
+					},
+					"confirmationSentAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Confirmation sent",
+						"description": "When the confirmation or waiting list mail went out."
+					},
+					"reminderSentAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Reminder sent",
+						"description": "When the reminder the day before went out to this person."
+					},
+					"cancelledAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Cancelled",
+						"description": "When the registration was cancelled."
+					}
+				}
+			}
+		}
+	}
+}

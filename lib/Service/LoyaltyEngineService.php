@@ -29,7 +29,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyEngineServiceInterface;
 use OCA\Pipelinq\Service\Loyalty\LoyaltyPurchase;
 use OCA\Pipelinq\Service\Loyalty\PointsCreditRun;
 use OCA\Pipelinq\Service\Loyalty\PointsGrant;
@@ -40,7 +42,6 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Orchestrates the end-to-end loyalty credit flow on a POS-trigger.
@@ -50,7 +51,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) end-to-end POS credit orchestration is inherently branchy; split across small focused methods
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrator necessarily wires account/ledger/rule/tier/event collaborators
  */
-class LoyaltyEngineService {
+class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -402,8 +403,8 @@ class LoyaltyEngineService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function getActiveProgrammes(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'loyaltyProgramme_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'loyaltyProgramme_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}

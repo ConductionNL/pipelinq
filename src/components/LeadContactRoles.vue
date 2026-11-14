@@ -298,23 +298,23 @@ export default {
 }
 
 .role-badge--beslisser {
-	background: #dbeafe;
-	color: #1e40af;
+	background: var(--color-primary-element-light, #dbeafe);
+	color: var(--color-primary-element-light-text, #1e40af);
 }
 
 .role-badge--beinvloeder {
-	background: #fef3c7;
-	color: #92400e;
+	background: var(--color-warning-light, #fef3c7);
+	color: var(--color-warning-text, #92400e);
 }
 
 .role-badge--gatekeeper {
-	background: #fce7f3;
-	color: #9d174d;
+	background: var(--color-background-dark, #fce7f3);
+	color: var(--color-main-text, #9d174d);
 }
 
 .role-badge--kampioen {
-	background: #dcfce7;
-	color: #166534;
+	background: var(--color-success-light, #dcfce7);
+	color: var(--color-success-text, #166534);
 }
 
 .role-actions {

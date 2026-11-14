@@ -25,7 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\OrganisationEnrichmentServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -34,7 +35,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/client-management/spec.md
  */
-class OrganisationEnrichmentService {
+class OrganisationEnrichmentService implements OrganisationEnrichmentServiceInterface {
 
 	/**
 	 * The most organisations one request looks up.
@@ -267,8 +268,8 @@ class OrganisationEnrichmentService {
 	 */
 	private function config(): array {
 		return [
-			$this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-			$this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', ''),
 		];
 	}//end config()
 }//end class

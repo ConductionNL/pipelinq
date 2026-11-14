@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ShillinqStockReaderInterface;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,7 +41,7 @@ use Throwable;
  *
  * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
-class ShillinqStockReader {
+class ShillinqStockReader implements ShillinqStockReaderInterface {
 	use SerialisedToArray;
 
 	/**

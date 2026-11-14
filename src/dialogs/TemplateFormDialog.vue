@@ -1048,7 +1048,7 @@ export default {
 	height: 216px;
 	border: 1px solid var(--color-border-dark);
 	border-radius: var(--border-radius-large);
-	background: #fff;
+	background: var(--color-main-background, #fff);
 }
 
 .template-form__body-html--code :deep(textarea) {

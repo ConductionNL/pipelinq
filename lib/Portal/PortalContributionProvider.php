@@ -41,7 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Portal;
 
-use OCA\Pipelinq\Service\Portal\QuestionDetailService;
+use OCA\Pipelinq\Kernel\Contracts\QuestionDetailServiceInterface;
 
 /**
  * Declares what an external portal subject may see and do in pipelinq.
@@ -148,12 +148,12 @@ class PortalContributionProvider {
 	 * container hands in the question detail service when it can, and the
 	 * manifest never needs it. Only the two question reads use it.
 	 *
-	 * @param QuestionDetailService|null $questionDetail Reads one question's timeline and items.
+	 * @param QuestionDetailServiceInterface|null $questionDetail Reads one question's timeline and items.
 	 *
 	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	public function __construct(
-		private readonly ?QuestionDetailService $questionDetail = null,
+		private readonly ?QuestionDetailServiceInterface $questionDetail = null,
 	) {
 	}//end __construct()
 
@@ -998,11 +998,11 @@ class PortalContributionProvider {
 	 *
 	 * Protected so a test can hand in a double.
 	 *
-	 * @return QuestionDetailService|null The service, or null when it cannot be built.
+	 * @return QuestionDetailServiceInterface|null The service, or null when it cannot be built.
 	 *
 	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
-	protected function questionDetail(): ?QuestionDetailService {
+	protected function questionDetail(): ?QuestionDetailServiceInterface {
 		return $this->questionDetail;
 	}//end questionDetail()
 }//end class

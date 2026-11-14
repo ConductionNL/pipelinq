@@ -2365,7 +2365,14 @@ OC.L10N.register(
         "Your session has ended. Log in again in a new tab, then press Save here.": "Su sesión ha caducado. Inicie sesión de nuevo en una pestaña nueva y luego pulse Guardar aquí.",
         "Deal room": "Sala de la oportunidad",
         "Client room": "Sala del cliente",
-        "Board": "Tablero"
+        "Board": "Tablero",
+        "Apply link": "Enlace de solicitud",
+        "At the desk": "En el mostrador",
+        "By post": "Por correo postal",
+        "Published from": "Publicado desde",
+        "Published until": "Publicado hasta",
+        "UPL reference": "Referencia UPL",
+        "Catalogue": "Catálogo"
     },
     "nplurals=2; plural=(n != 1);"
 )

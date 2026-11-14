@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalAuthServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Security\IHasher;
@@ -45,7 +46,7 @@ use OCP\Security\IHasher;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalAuthService {
+class PortalAuthService implements PortalAuthServiceInterface {
 	/**
 	 * Schema slug for accounts.
 	 *

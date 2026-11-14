@@ -95,8 +95,15 @@ describe('product page', () => {
 			'product-tariffs',
 			'product-variants',
 			'product-publication',
+			'product-catalogue',
 			'product-lines',
 			'product-files',
 		])
+	})
+
+	it('draws the catalogue card for a service only (product-service-catalogue-public)', () => {
+		const catalogue = widget('product-catalogue')
+		expect(catalogue.visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'service' })
+		expect(catalogue.content.include).toEqual(['summary', 'uplReference', 'publishFrom', 'publishUntil', 'applyUrl', 'channels'])
 	})
 })

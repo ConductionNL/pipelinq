@@ -27,9 +27,9 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\LoyaltyAccountService;
-use OCA\Pipelinq\Service\TierService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TierServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -52,22 +52,22 @@ class TierDowngradeJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ContainerInterface $container The DI container.
-	 * @param LoyaltyAccountService $loyaltyService The account service.
-	 * @param TierService $tierService The tier service.
+	 * @param LoyaltyAccountServiceInterface $loyaltyService The account service.
+	 * @param TierServiceInterface $tierService The tier service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
-		private LoyaltyAccountService $loyaltyService,
-		private TierService $tierService,
+		private LoyaltyAccountServiceInterface $loyaltyService,
+		private TierServiceInterface $tierService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'loyalty.tier_downgrade.poll_interval_seconds',
 				self::DEFAULT_INTERVAL
 			)

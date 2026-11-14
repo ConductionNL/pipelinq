@@ -30,10 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\IntegrationDetectorInterface;
+use OCA\Pipelinq\Kernel\Contracts\TimeBillingHandoffServiceInterface;
 use OCA\Pipelinq\Lifecycle\BillingHandoffAccessPolicy;
-use OCA\Pipelinq\Service\IntegrationDetector;
-use OCA\Pipelinq\Service\TimeBillingHandoffService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -56,19 +56,19 @@ class BillingHandoffController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param TimeBillingHandoffService $handoffService The billing handoff service.
+	 * @param TimeBillingHandoffServiceInterface $handoffService The billing handoff service.
 	 * @param BillingHandoffAccessPolicy $accessPolicy The manager access policy.
-	 * @param IntegrationDetector $integrations Detects Shillinq for the deep-link fallback.
+	 * @param IntegrationDetectorInterface $integrations Detects Shillinq for the deep-link fallback.
 	 * @param IUserSession $userSession The user session.
 	 */
 	public function __construct(
 		IRequest $request,
-		private TimeBillingHandoffService $handoffService,
+		private TimeBillingHandoffServiceInterface $handoffService,
 		private BillingHandoffAccessPolicy $accessPolicy,
-		private IntegrationDetector $integrations,
+		private IntegrationDetectorInterface $integrations,
 		private IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

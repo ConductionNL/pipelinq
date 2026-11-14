@@ -48,6 +48,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\DemoSeedServiceInterface;
 use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
 use OCA\Pipelinq\Service\Demo\DemoSeedContext;
 use OCA\Pipelinq\Service\Demo\DemoSeedTarget;
@@ -60,7 +61,7 @@ use OCA\Pipelinq\Service\Demo\DemoSeedWriter;
  * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
-class DemoSeedService {
+class DemoSeedService implements DemoSeedServiceInterface {
 	/**
 	 * Marker prefix carried by every seeded object's lookup field.
 	 *
@@ -192,24 +193,6 @@ class DemoSeedService {
 		private readonly DemoSeedValues $values,
 	) {
 	}//end __construct()
-
-	/**
-	 * The answer that means "seed nothing".
-	 *
-	 * 🔴 NOT THE ABSENCE OF AN ANSWER. An operator who declines has FINISHED the
-	 * step; a step that can never be marked done reopens the wizard over every
-	 * page (nextcloud-vue#806).
-	 *
-	 * @var string
-	 */
-	public const NONE_DATASET = 'none';
-
-	/**
-	 * The id of the dataset this app seeds.
-	 *
-	 * @var string
-	 */
-	public const DEMO_DATASET = 'demo';
 
 	/**
 	 * Every answer the wizard's choice step may offer, declining included.

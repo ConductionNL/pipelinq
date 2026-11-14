@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Sla;
 
 use DateTimeInterface;
+use OCA\Pipelinq\Kernel\Contracts\SlaEntitySweeperInterface;
 use OCA\Pipelinq\Service\ComplaintSlaService;
 use OCA\Pipelinq\Service\SlaEngineService;
 use Psr\Log\LoggerInterface;
@@ -42,7 +43,7 @@ use Throwable;
  * @spec openspec/specs/sla-engine-and-escalation/spec.md
  * @spec openspec/specs/klachtenregistratie/spec.md#Background-Job-for-SLA-Monitoring
  */
-class SlaEntitySweeper {
+class SlaEntitySweeper implements SlaEntitySweeperInterface {
 	use MergesBreachEvents;
 
 	private const BATCH_SIZE = 100;

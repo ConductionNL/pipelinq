@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -185,7 +185,7 @@ class ProductVendorProviderService {
 		}
 
 		$authorised = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'product_vendor_cost_consumers',
 			''
 		);
@@ -265,8 +265,8 @@ class ProductVendorProviderService {
 	 * @return array{0: string, 1: string}|null
 	 */
 	private function configuredIds(string $schema): ?array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$schema}_schema", '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$schema}_schema", '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'ProductVendorProviderService: register or schema not configured',

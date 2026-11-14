@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Competitor;
 
+use OCA\Pipelinq\Kernel\Contracts\WatchEventStoreInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 
@@ -40,7 +41,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
  */
-class WatchEventStore {
+class WatchEventStore implements WatchEventStoreInterface {
 
 	/**
 	 * The schema slug the register fragment declares.

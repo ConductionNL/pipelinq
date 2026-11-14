@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\PreferenceCentreServiceInterface;
 use OCA\Pipelinq\Service\ListTokenService;
 use OCA\Pipelinq\Service\MailingListService;
 use OCA\Pipelinq\Service\SubscriptionService;
@@ -40,7 +41,7 @@ use OCA\Pipelinq\Service\SubscriptionService;
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-the-preference-centre-shows-and-saves-a-subscribers-lists
  */
-class PreferenceCentreService {
+class PreferenceCentreService implements PreferenceCentreServiceInterface {
 	/**
 	 * Constructor.
 	 *
