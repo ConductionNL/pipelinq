@@ -334,7 +334,7 @@ class TicketService implements TicketServiceInterface {
 		}
 
 		$clientId = ($payload['client'] ?? null);
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if (is_string($clientId) === false || trim($clientId) === '' || $schema === '') {
 			return $payload;
 		}
