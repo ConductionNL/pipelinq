@@ -48,6 +48,10 @@
             "description": "The appointment eligibility endpoints."
         },
         {
+            "name": "appointment-figures",
+            "description": "The appointment figures endpoints."
+        },
+        {
             "name": "article",
             "description": "REST controller for articles."
         },
@@ -914,6 +918,42 @@
                 }
             }
         },
+        "/appointment-resources/{id}/figures": {
+            "get": {
+                "operationId": "appointment-figures-resource-figures",
+                "summary": "How much of one resource's bookable time is booked",
+                "description": "How much of one resource's bookable time is booked: its bookings this week and the share of its working hours this week, minus vacations, they fill. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "appointment-figures"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The resource UUID/slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/appointment-services/eligible-resources": {
             "get": {
                 "operationId": "appointment-eligibility-eligible-resource-counts",
@@ -946,6 +986,42 @@
                 "description": "The resources that match one service. Needs a signed-in Nextcloud user.",
                 "tags": [
                     "appointment-eligibility"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The service UUID/slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/appointment-services/{id}/figures": {
+            "get": {
+                "operationId": "appointment-figures-service-figures",
+                "summary": "How busy one service is",
+                "description": "How busy one service is: the bookings that start this week and the no-shows this month. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "appointment-figures"
                 ],
                 "parameters": [
                     {
