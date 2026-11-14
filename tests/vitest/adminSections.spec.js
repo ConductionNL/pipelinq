@@ -52,15 +52,14 @@ describe('the declared admin sections', () => {
 		}
 	})
 
-	it('reads and saves the app settings, except the provision action and the BRP monitor', () => {
+	it('reads and saves the app settings, except the provision action; the BRP monitor lives in integriq', () => {
 		for (const id of ['leadManagement', 'shillinq', 'exportConfiguration', 'marketingIntel']) {
 			expect(sections[id].valuesPath, id).toBe('config')
 			expect(sections[id].url, id).toBeUndefined()
 		}
 		expect(sections.provisionData.fields.map((field) => field.type)).toEqual(['action'])
 		expect(sections.provisionData.fields[0].url).toBe('/apps/pipelinq/api/setup/action/provision-register')
-		expect(sections.brpMonitor.url).toBe('/apps/pipelinq/api/brp/monitor')
-		expect(sections.brpMonitor.fields.every((field) => field.type === 'status')).toBe(true)
+		expect(sections.brpMonitor).toBeUndefined()
 	})
 
 	it('keeps the checks the hand-built forms had', () => {
@@ -83,16 +82,6 @@ describe('the declared admin sections', () => {
 		}
 	})
 
-	it('names every certificate state of the BRP monitor in its tone', () => {
-		const certificate = sections.brpMonitor.fields.find((field) => field.key === 'cert.status')
-		expect(Object.keys(certificate.textMap)).toEqual(['ok', 'warning', 'critical', '*'])
-		expect(certificate.toneMap).toEqual({ ok: 'success', warning: 'warning', critical: 'error' })
-		const none = sections.brpMonitor.fields.find((field) => field.key === 'noCertificate')
-		expect(none.visibleWhen).toEqual({ key: 'cert', empty: true })
-		const empty = sections.brpMonitor.fields.find((field) => field.key === 'noLookups')
-		expect(empty.visibleWhen).toEqual({ key: 'report', empty: true })
-	})
-
 	it('mounts every section on the admin page behind its guard', () => {
 		const guards = {
 			leadManagement: 'isAdmin',
@@ -100,7 +89,6 @@ describe('the declared admin sections', () => {
 			exportConfiguration: 'isAdmin',
 			shillinq: 'isAdmin && shillinqInstalled',
 			marketingIntel: 'isAdmin',
-			brpMonitor: 'isAdmin',
 		}
 		expect(Object.keys(guards).sort()).toEqual(Object.keys(sections).sort())
 		for (const [id, guard] of Object.entries(guards)) {
