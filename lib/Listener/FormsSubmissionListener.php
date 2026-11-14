@@ -38,9 +38,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\Service\WebForm\FormsQuestionReader;
-use OCA\Pipelinq\Service\WebForm\WebFormFinder;
-use OCA\Pipelinq\Service\WebForm\WebFormIntakeService;
+use OCA\Pipelinq\Kernel\Contracts\FormsQuestionReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\WebFormFinderInterface;
+use OCA\Pipelinq\Kernel\Contracts\WebFormIntakeServiceInterface;
 use OCA\Pipelinq\Service\WebForm\WebFormSubmitException;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -66,17 +66,17 @@ class FormsSubmissionListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param WebFormFinder        $finder    Finds the published binding for a Forms form.
-	 * @param FormsQuestionReader  $questions Reads the form's questions and the submission's answers.
-	 * @param WebFormIntakeService $intake    Submits into the destination.
+	 * @param WebFormFinderInterface        $finder    Finds the published binding for a Forms form.
+	 * @param FormsQuestionReaderInterface  $questions Reads the form's questions and the submission's answers.
+	 * @param WebFormIntakeServiceInterface $intake    Submits into the destination.
 	 * @param LoggerInterface      $logger    Logger. Answers MUST NOT be written here.
 	 *
 	 * @spec exclude constructor wiring only; it makes no decision a requirement can describe
 	 */
 	public function __construct(
-		private readonly WebFormFinder $finder,
-		private readonly FormsQuestionReader $questions,
-		private readonly WebFormIntakeService $intake,
+		private readonly WebFormFinderInterface $finder,
+		private readonly FormsQuestionReaderInterface $questions,
+		private readonly WebFormIntakeServiceInterface $intake,
 		private readonly LoggerInterface $logger,
 	) {
 

@@ -34,8 +34,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SurveyResponseService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SurveyResponseServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -54,13 +54,13 @@ class PublicSurveyController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SurveyResponseService $responses Opens and accepts responses.
+	 * @param SurveyResponseServiceInterface $responses Opens and accepts responses.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SurveyResponseService $responses,
+		private readonly SurveyResponseServiceInterface $responses,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

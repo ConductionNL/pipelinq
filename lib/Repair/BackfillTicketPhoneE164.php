@@ -26,8 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\TicketPhoneNumber;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\Contracts\TicketPhoneNumberInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\Migration\IOutput;
@@ -53,14 +53,14 @@ class BackfillTicketPhoneE164 implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param TicketService     $ticketService Resolver for the unified `ticket` schema.
-	 * @param TicketPhoneNumber $phoneNumber   Reads and normalises a ticket's number.
+	 * @param TicketServiceInterface     $ticketService Resolver for the unified `ticket` schema.
+	 * @param TicketPhoneNumberInterface $phoneNumber   Reads and normalises a ticket's number.
 	 * @param IGroupManager     $groupManager  Resolves an admin to act as while saving.
 	 * @param LoggerInterface   $logger        PSR logger.
 	 */
 	public function __construct(
-		private readonly TicketService $ticketService,
-		private readonly TicketPhoneNumber $phoneNumber,
+		private readonly TicketServiceInterface $ticketService,
+		private readonly TicketPhoneNumberInterface $phoneNumber,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
 	) {
@@ -156,11 +156,11 @@ class BackfillTicketPhoneE164 implements IRepairStep {
 	private function backfill(array $row): string {
 		$e164 = $this->phoneNumber->e164(ticket: $row);
 		$uuid = (string) ($row['id'] ?? ($row['uuid'] ?? ''));
-		if ($e164 === null || $uuid === '' || ($row[TicketPhoneNumber::FIELD] ?? null) === $e164) {
+		if ($e164 === null || $uuid === '' || ($row[TicketPhoneNumberInterface::FIELD] ?? null) === $e164) {
 			return 'unchanged';
 		}
 
-		$row[TicketPhoneNumber::FIELD] = $e164;
+		$row[TicketPhoneNumberInterface::FIELD] = $e164;
 
 		try {
 			$this->ticketService->getObjectService()->saveObject(

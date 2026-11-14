@@ -57,6 +57,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalAssertionVerifierInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -70,11 +71,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
  */
-class PortalAssertionVerifier {
-	/**
-	 * The header portaliq attaches the assertion to (contract v2, A6).
-	 */
-	public const HEADER = 'X-Portal-Subject';
+class PortalAssertionVerifier implements PortalAssertionVerifierInterface {
 
 	/**
 	 * The only accepted JWS algorithm — exact-match kills `none` and any

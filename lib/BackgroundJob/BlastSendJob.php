@@ -31,9 +31,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\BlastService;
-use OCA\Pipelinq\Service\WebhookProcessorService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BlastSendJobInterface;
+use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -51,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
  */
-class BlastSendJob extends TimedJob {
+class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	use PayloadToArray;
 
 	/**
@@ -78,8 +79,8 @@ class BlastSendJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContainerInterface $container DI container for lazy OR.
-	 * @param BlastService $blastService Dispatch service.
-	 * @param WebhookProcessorService $webhookProcessor Webhook event processor.
+	 * @param BlastServiceInterface $blastService Dispatch service.
+	 * @param WebhookProcessorServiceInterface $webhookProcessor Webhook event processor.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
@@ -88,8 +89,8 @@ class BlastSendJob extends TimedJob {
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
-		private BlastService $blastService,
-		private WebhookProcessorService $webhookProcessor,
+		private BlastServiceInterface $blastService,
+		private WebhookProcessorServiceInterface $webhookProcessor,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -232,8 +233,8 @@ class BlastSendJob extends TimedJob {
 	 * @return array<int, array<string, mixed>> Sending blasts.
 	 */
 	private function loadSendingBlasts(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'pipelinq');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'blast_schema', 'blast');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', 'pipelinq');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_schema', 'blast');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -306,7 +307,7 @@ class BlastSendJob extends TimedJob {
 	 * @return array<int, array<string, mixed>> Queue entries.
 	 */
 	private function readQueue(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, self::WEBHOOK_QUEUE_KEY, '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::WEBHOOK_QUEUE_KEY, '');
 		if ($raw === '') {
 			return [];
 		}
@@ -329,13 +330,13 @@ class BlastSendJob extends TimedJob {
 	private function writeQueue(array $queue): void {
 		if ($queue === []) {
 			try {
-				$this->appConfig->deleteKey(Application::APP_ID, self::WEBHOOK_QUEUE_KEY);
+				$this->appConfig->deleteKey(AppIdentity::APP_ID, self::WEBHOOK_QUEUE_KEY);
 			} catch (Throwable $e) {
 				$this->logger->info(
 					'BlastSendJob.writeQueue: deleteKey failed — falling back to empty array',
 					['exception' => $e->getMessage()]
 				);
-				$this->appConfig->setValueString(Application::APP_ID, self::WEBHOOK_QUEUE_KEY, '[]');
+				$this->appConfig->setValueString(AppIdentity::APP_ID, self::WEBHOOK_QUEUE_KEY, '[]');
 			}
 
 			return;
@@ -346,7 +347,7 @@ class BlastSendJob extends TimedJob {
 			return;
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, self::WEBHOOK_QUEUE_KEY, $encoded);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::WEBHOOK_QUEUE_KEY, $encoded);
 	}//end writeQueue()
 
 	/**

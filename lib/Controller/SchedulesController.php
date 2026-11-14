@@ -27,9 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
 use OCA\Pipelinq\Lifecycle\SessionUser;
-use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -78,17 +78,17 @@ class SchedulesController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ScheduledTaskService $scheduledTaskService Schedule service.
+	 * @param ScheduledTaskServiceInterface $scheduledTaskService Schedule service.
 	 * @param SessionUser $sessionUser The session user and their admin membership.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ScheduledTaskService $scheduledTaskService,
+		private ScheduledTaskServiceInterface $scheduledTaskService,
 		private SessionUser $sessionUser,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -154,7 +154,7 @@ class SchedulesController extends Controller {
 			'subject' => (string)$this->request->getParam('subject', ''),
 			'deadline' => (string)$this->request->getParam('deadline', ''),
 		];
-		if (in_array($required['type'], ScheduledTaskService::VALID_TYPES, true) === false
+		if (in_array($required['type'], ScheduledTaskServiceInterface::VALID_TYPES, true) === false
 			|| $required['subject'] === ''
 			|| $required['deadline'] === ''
 		) {

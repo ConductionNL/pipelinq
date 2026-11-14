@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\RetentionMetadataBackfillService;
+use OCA\Pipelinq\Kernel\Contracts\RetentionMetadataBackfillServiceInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 
@@ -53,10 +53,10 @@ class BackfillClientRetention implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param RetentionMetadataBackfillService $service Does the work.
+	 * @param RetentionMetadataBackfillServiceInterface $service Does the work.
 	 */
 	public function __construct(
-		private readonly RetentionMetadataBackfillService $service,
+		private readonly RetentionMetadataBackfillServiceInterface $service,
 	) {
 	}//end __construct()
 

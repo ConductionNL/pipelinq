@@ -27,19 +27,20 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BrpMutationWebhookListenerInterface;
+use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\HaalCentraalClientInterface;
+use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
-use OCA\Pipelinq\Service\BrpCacheService;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Service\BsnAudit\LookupReason;
 use OCA\Pipelinq\Service\BsnAudit\LookupResult;
 use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
-use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
-use OCA\Pipelinq\Service\HaalCentraalClient;
 use OCA\Pipelinq\Service\HaalCentraalException;
-use OCA\Pipelinq\Service\OptOutService;
 use OCA\Pipelinq\Service\PersonLookup\LookupLinks;
 use OCA\Pipelinq\Service\PersonLookup\LookupQuery;
 use OCA\Pipelinq\Service\PersonLookup\LookupRun;
@@ -59,7 +60,6 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Controller for the BRP-lookup REST surface.
@@ -95,11 +95,11 @@ class BrpController extends Controller {
 	 * @param IL10N $l10n i18n.
 	 * @param IAppConfig $appConfig App config.
 	 * @param BsnValidationService $validation 11-proef service.
-	 * @param BrpCacheService $cacheService BRP cache.
-	 * @param HaalCentraalClient $haalCentraal HaalCentraal client.
-	 * @param BsnAuditService $audit Audit service.
-	 * @param OptOutService $optOut Opt-out service.
-	 * @param BrpMutationWebhookListener $webhookListener Webhook listener.
+	 * @param BrpCacheServiceInterface $cacheService BRP cache.
+	 * @param HaalCentraalClientInterface $haalCentraal HaalCentraal client.
+	 * @param BsnAuditServiceInterface $audit Audit service.
+	 * @param OptOutServiceInterface $optOut Opt-out service.
+	 * @param BrpMutationWebhookListenerInterface $webhookListener Webhook listener.
 	 * @param LoggerInterface $logger Logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 *
@@ -114,15 +114,15 @@ class BrpController extends Controller {
 		private IL10N $l10n,
 		private IAppConfig $appConfig,
 		private BsnValidationService $validation,
-		private BrpCacheService $cacheService,
-		private HaalCentraalClient $haalCentraal,
-		private BsnAuditService $audit,
-		private OptOutService $optOut,
-		private BrpMutationWebhookListener $webhookListener,
+		private BrpCacheServiceInterface $cacheService,
+		private HaalCentraalClientInterface $haalCentraal,
+		private BsnAuditServiceInterface $audit,
+		private OptOutServiceInterface $optOut,
+		private BrpMutationWebhookListenerInterface $webhookListener,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -723,11 +723,11 @@ class BrpController extends Controller {
 		$outcome = $this->webhookListener->handle($rawBody, $signature);
 
 		$status = Http::STATUS_OK;
-		if ($outcome['result'] === BrpMutationWebhookListener::RESULT_FORBIDDEN) {
+		if ($outcome['result'] === BrpMutationWebhookListenerInterface::RESULT_FORBIDDEN) {
 			$status = Http::STATUS_FORBIDDEN;
 		}
 
-		if ($outcome['result'] === BrpMutationWebhookListener::RESULT_BAD_REQUEST) {
+		if ($outcome['result'] === BrpMutationWebhookListenerInterface::RESULT_BAD_REQUEST) {
 			$status = Http::STATUS_BAD_REQUEST;
 		}
 
@@ -775,7 +775,7 @@ class BrpController extends Controller {
 	 * @return array<string, mixed>|null
 	 */
 	private function storedJsonObject(string $key): ?array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($raw === '') {
 			return null;
 		}
@@ -821,7 +821,7 @@ class BrpController extends Controller {
 	 */
 	private function allowedLookupGroups(): array {
 		$configured = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'brp.allowed_groups',
 			''
 		);
@@ -859,8 +859,8 @@ class BrpController extends Controller {
 	 * @return array<string,mixed>
 	 */
 	private function saveLookupRequest(array $request): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brpLookupVerzoek_schema', '');
 		if ($register === '' || $schema === '') {
 			return $request;
 		}
@@ -895,8 +895,8 @@ class BrpController extends Controller {
 	 * @return array<string,mixed>
 	 */
 	private function saveBrpPerson(array $person): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brpPersoon_schema', '');
 		$uuid = (string)($person['@self']['id'] ?? $person['id'] ?? '');
 		if ($register === '' || $schema === '') {
 			return $person;
@@ -944,8 +944,8 @@ class BrpController extends Controller {
 	private function stampClientIdentity(LookupLinks $links, DateTimeImmutable $verifiedAt): void {
 		$clientId = $links->clientId;
 		$identityCheck = $links->identityCheck;
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '' || $schema === '') {
 			return;
 		}
@@ -990,8 +990,8 @@ class BrpController extends Controller {
 			return;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 		if ($register === '' || $schema === '') {
 			return;
 		}
@@ -1061,8 +1061,8 @@ class BrpController extends Controller {
 	 * @return array<string, string>|null
 	 */
 	private function linkedPersonFilters(string $contactId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brpPersoon_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}

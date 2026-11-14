@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCA\OpenRegister\Service\ConfigurationService;
@@ -292,10 +292,10 @@ class SettingsLoadService {
 		$data = $this->fileLoader->ensureSourceType(data: $data);
 
 		$configurationService = $this->getConfigurationService();
-		$currentAppVersion = $this->appManager->getAppVersion(Application::APP_ID);
+		$currentAppVersion = $this->appManager->getAppVersion(AppIdentity::APP_ID);
 
 		$result = $configurationService->importFromApp(
-			appId: Application::APP_ID,
+			appId: AppIdentity::APP_ID,
 			data: $data,
 			version: $currentAppVersion,
 			force: $force
@@ -326,7 +326,7 @@ class SettingsLoadService {
 		);
 
 		if ($defaultViewId !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'default_view', (string)$defaultViewId);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'default_view', (string)$defaultViewId);
 		}
 	}//end updateObjectTypeConfiguration()
 
@@ -343,7 +343,7 @@ class SettingsLoadService {
 		);
 
 		if ($registerId !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'register', (string)$registerId);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'register', (string)$registerId);
 		}
 
 		$portalRegisterId = $this->resolveRegisterIdBySlug(
@@ -351,7 +351,7 @@ class SettingsLoadService {
 			slug: self::PORTAL_REGISTER_SLUG
 		);
 		if ($portalRegisterId !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'portal_register', (string)$portalRegisterId);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'portal_register', (string)$portalRegisterId);
 		}
 
 		$slaRegisterId = $this->resolveRegisterIdBySlug(
@@ -359,7 +359,7 @@ class SettingsLoadService {
 			slug: self::SLA_REGISTER_SLUG
 		);
 		if ($slaRegisterId !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'sla_register', (string)$slaRegisterId);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'sla_register', (string)$slaRegisterId);
 		}
 	}//end applyRegisterConfig()
 
@@ -472,7 +472,7 @@ class SettingsLoadService {
 			}
 
 			$key = (self::SCHEMA_CONFIG_KEYS[$slug] ?? "{$slug}_schema");
-			$this->appConfig->setValueString(Application::APP_ID, $key, (string)$schemaMap[$slug]);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$schemaMap[$slug]);
 		}
 	}//end applySchemaConfig()
 

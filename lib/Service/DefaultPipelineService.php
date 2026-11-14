@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -85,8 +85,8 @@ class DefaultPipelineService {
 	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
 	 */
 	private function createDefaultPipelinesAsCaller(): void {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$pipelineSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'pipeline_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$pipelineSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pipeline_schema', '');
 
 		if ($registerId === '' || $pipelineSchemaId === '') {
 			$this->logger->warning(
@@ -114,7 +114,7 @@ class DefaultPipelineService {
 			}
 
 			// Retrieve the default view ID if available.
-			$defaultViewId = $this->appConfig->getValueString(Application::APP_ID, 'default_view', '');
+			$defaultViewId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'default_view', '');
 			$viewId = null;
 			if ($defaultViewId !== '') {
 				$viewId = $defaultViewId;
@@ -126,7 +126,7 @@ class DefaultPipelineService {
 				schemaId: $pipelineSchemaId,
 				data: $this->stageData->getSalesPipelineData(
 					viewId: $viewId,
-					currency: $this->appConfig->getValueString(Application::APP_ID, 'currency', 'EUR')
+					currency: $this->appConfig->getValueString(AppIdentity::APP_ID, 'currency', 'EUR')
 				)
 			);
 

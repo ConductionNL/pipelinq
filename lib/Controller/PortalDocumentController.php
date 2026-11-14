@@ -29,12 +29,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Portal\DocumentSigningService;
-use OCA\Pipelinq\Service\Portal\PortalAuditService;
-use OCA\Pipelinq\Service\Portal\PortalExportService;
+use OCA\Pipelinq\Kernel\Contracts\DocumentSigningServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalExportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
 use OCA\Pipelinq\Service\Portal\PortalInvoiceService;
-use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -67,23 +67,23 @@ class PortalDocumentController extends PortalApiController {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param PortalRequestGuardInterface $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param DocumentSigningService $signing The signing service.
+	 * @param DocumentSigningServiceInterface $signing The signing service.
 	 * @param PortalInvoiceService $invoices The invoice facade (access re-check).
-	 * @param PortalObjectRepository $repository The portal object repository.
-	 * @param PortalAuditService $audit The audit service.
-	 * @param PortalExportService $exports Builds the AVG art. 15 data export.
+	 * @param PortalObjectRepositoryInterface $repository The portal object repository.
+	 * @param PortalAuditServiceInterface $audit The audit service.
+	 * @param PortalExportServiceInterface $exports Builds the AVG art. 15 data export.
 	 */
 	public function __construct(
 		IRequest $request,
-		PortalRequestGuard $guard,
+		PortalRequestGuardInterface $guard,
 		LoggerInterface $logger,
-		private DocumentSigningService $signing,
+		private DocumentSigningServiceInterface $signing,
 		private PortalInvoiceService $invoices,
-		private PortalObjectRepository $repository,
-		private PortalAuditService $audit,
-		private PortalExportService $exports,
+		private PortalObjectRepositoryInterface $repository,
+		private PortalAuditServiceInterface $audit,
+		private PortalExportServiceInterface $exports,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()

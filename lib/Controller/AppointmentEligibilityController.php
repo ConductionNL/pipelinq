@@ -9,9 +9,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EligibilityServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\EligibilityService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -39,19 +39,19 @@ class AppointmentEligibilityController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param EligibilityService $eligibility The eligibility service (REQ-APT-004 + REQ-SRG-002).
+	 * @param EligibilityServiceInterface $eligibility The eligibility service (REQ-APT-004 + REQ-SRG-002).
 	 * @param IUserSession $userSession The current user session.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy The CRM access policy.
 	 * @param IL10N $l10n Localization service.
 	 */
 	public function __construct(
 		IRequest $request,
-		private EligibilityService $eligibility,
+		private EligibilityServiceInterface $eligibility,
 		private IUserSession $userSession,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

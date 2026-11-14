@@ -34,7 +34,7 @@
                 ]
             },
             {
-                "TicketService::getSchemaId": []
+                "TicketServiceInterface::getSchemaId": []
             },
             {
                 "ContainerInterface::get": [
@@ -78,7 +78,7 @@
                 ]
             },
             {
-                "TicketService::getSchemaId": []
+                "TicketServiceInterface::getSchemaId": []
             },
             {
                 "ContainerInterface::get": [

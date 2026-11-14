@@ -28,7 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RetentionMetadataBackfillServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -51,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/changes/platform-client-retention/tasks.md#3-review-and-back-fill
  */
-class RetentionMetadataBackfillService {
+class RetentionMetadataBackfillService implements RetentionMetadataBackfillServiceInterface {
 
 	/**
 	 * Rows listed per page.
@@ -102,10 +103,10 @@ class RetentionMetadataBackfillService {
 	public function backfill(array $schemaKeys): array {
 		$counts = ['status' => 'done', 'applied' => 0, 'skipped' => 0, 'failed' => 0];
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schemas = [];
 		foreach ($schemaKeys as $key) {
-			$schema = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 			if ($schema !== '') {
 				$schemas[] = $schema;
 			}

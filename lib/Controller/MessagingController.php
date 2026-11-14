@@ -28,13 +28,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
+use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ChannelProviderRepository;
-use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
-use OCA\Pipelinq\Service\MessagingService;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -82,19 +82,19 @@ class MessagingController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request HTTP request.
-	 * @param MessagingService $messagingService Send-surface orchestration.
-	 * @param ChannelProviderRepository $providerRepo Provider read-side.
-	 * @param ConsentService $consentService Consent records.
+	 * @param MessagingServiceInterface $messagingService Send-surface orchestration.
+	 * @param ChannelProviderRepositoryInterface $providerRepo Provider read-side.
+	 * @param ConsentServiceInterface $consentService Consent records.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
-		private MessagingService $messagingService,
-		private ChannelProviderRepository $providerRepo,
-		private ConsentService $consentService,
+		private MessagingServiceInterface $messagingService,
+		private ChannelProviderRepositoryInterface $providerRepo,
+		private ConsentServiceInterface $consentService,
 		private CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -342,7 +342,7 @@ class MessagingController extends Controller {
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-002-zero-cost-provider-connectivity-test
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function testProvider(string $id = ''): JSONResponse {
 		$provider = $this->providerRepo->findById(id: $id);
 		if ($provider === null) {

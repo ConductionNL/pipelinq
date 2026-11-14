@@ -27,11 +27,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\CallerObjectReader;
-use OCA\Pipelinq\Service\Marketing\EventEmailService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
-use OCA\Pipelinq\Service\Marketing\EventRegistrationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -50,21 +50,21 @@ class EventAttendanceController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                 $request       The request.
-	 * @param EventRegistrationService $registrations The registrations.
-	 * @param EventEmailService        $mails         Confirms a hand-added registration.
-	 * @param CallerObjectReader       $reader        Reads as the caller, so access rules apply.
+	 * @param EventRegistrationServiceInterface $registrations The registrations.
+	 * @param EventEmailServiceInterface        $mails         Confirms a hand-added registration.
+	 * @param CallerObjectReaderInterface       $reader        Reads as the caller, so access rules apply.
 	 * @param IUserSession             $userSession   The caller.
 	 *
 	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
 	 */
 	public function __construct(
 		IRequest $request,
-		private EventRegistrationService $registrations,
-		private EventEmailService $mails,
-		private CallerObjectReader $reader,
+		private EventRegistrationServiceInterface $registrations,
+		private EventEmailServiceInterface $mails,
+		private CallerObjectReaderInterface $reader,
 		private IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

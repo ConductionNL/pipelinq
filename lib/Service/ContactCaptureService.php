@@ -36,20 +36,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ContactCaptureServiceInterface;
 
 /**
  * Proposes contact fields from free text.
  *
  * @spec openspec/changes/clients-contact-capture/specs/client-contact-capture/spec.md#requirement-pasted-text-becomes-proposed-contact-fields-req-ccc-001
  */
-class ContactCaptureService {
-
-	/**
-	 * The longest text read; anything beyond is not a signature.
-	 *
-	 * @var int
-	 */
-	public const MAX_LENGTH = 5000;
+class ContactCaptureService implements ContactCaptureServiceInterface {
 
 	private const EMAIL = '/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i';
 

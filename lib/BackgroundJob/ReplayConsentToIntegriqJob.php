@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\ConsentService;
+use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -44,12 +44,12 @@ class ReplayConsentToIntegriqJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory    $time    The clock.
-	 * @param ConsentService  $consent Replays the records.
+	 * @param ConsentServiceInterface  $consent Replays the records.
 	 * @param LoggerInterface $logger  Logs what was left.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly ConsentService $consent,
+		private readonly ConsentServiceInterface $consent,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

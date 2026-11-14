@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Notification;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
 use OCP\Notification\INotification;
@@ -94,7 +94,7 @@ class Notifier implements INotifier {
 	 * @spec openspec/specs/notifications-activity/spec.md
 	 */
 	public function getID(): string {
-		return Application::APP_ID;
+		return AppIdentity::APP_ID;
 	}//end getID()
 
 	/**
@@ -105,7 +105,7 @@ class Notifier implements INotifier {
 	 * @spec openspec/specs/notifications-activity/spec.md
 	 */
 	public function getName(): string {
-		return $this->l10nFactory->get(Application::APP_ID)->t('Pipelinq');
+		return $this->l10nFactory->get(AppIdentity::APP_ID)->t('Pipelinq');
 	}//end getName()
 
 	/**
@@ -119,11 +119,11 @@ class Notifier implements INotifier {
 	 * @spec openspec/specs/notifications-activity/spec.md
 	 */
 	public function prepare(INotification $notification, string $languageCode): INotification {
-		if ($notification->getApp() !== Application::APP_ID) {
+		if ($notification->getApp() !== AppIdentity::APP_ID) {
 			throw new UnknownNotificationException();
 		}
 
-		$l = $this->l10nFactory->get(Application::APP_ID, $languageCode);
+		$l = $this->l10nFactory->get(AppIdentity::APP_ID, $languageCode);
 		$params = $notification->getSubjectParameters();
 
 		$this->applyNotificationSubject(
@@ -134,7 +134,7 @@ class Notifier implements INotifier {
 
 		$notification->setIcon(
 			$this->urlGenerator->getAbsoluteURL(
-				$this->urlGenerator->imagePath(appName: Application::APP_ID, file: 'app-dark.svg')
+				$this->urlGenerator->imagePath(appName: AppIdentity::APP_ID, file: 'app-dark.svg')
 			)
 		);
 		$fileId = (string)($params['fileId'] ?? '');

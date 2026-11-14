@@ -22,8 +22,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ClientCaseReader;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -39,13 +39,13 @@ class ClientCaseController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest         $request The request.
-	 * @param ClientCaseReader $reader  Reads the client's cases.
+	 * @param ClientCaseReaderInterface $reader  Reads the client's cases.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ClientCaseReader $reader,
+		private readonly ClientCaseReaderInterface $reader,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

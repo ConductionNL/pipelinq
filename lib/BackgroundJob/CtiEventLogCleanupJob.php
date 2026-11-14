@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\CtiService;
+use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -51,12 +51,12 @@ class CtiEventLogCleanupJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param CtiService $ctiService The CTI service.
+	 * @param CtiServiceInterface $ctiService The CTI service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private CtiService $ctiService,
+		private CtiServiceInterface $ctiService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

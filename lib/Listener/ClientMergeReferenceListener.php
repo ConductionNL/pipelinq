@@ -33,9 +33,9 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Merge\PartyReferenceMover;
-use OCA\Pipelinq\Service\Merge\PartyReferences;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyReferenceMoverInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyReferencesInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -55,7 +55,7 @@ class ClientMergeReferenceListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param ObjectServiceInterface $objects   OpenRegister's object service.
-	 * @param PartyReferenceMover    $mover     Moves the references.
+	 * @param PartyReferenceMoverInterface    $mover     Moves the references.
 	 * @param IAppConfig             $appConfig The client and contact schema ids.
 	 * @param LoggerInterface        $logger    Logs a failed move and every skipped row.
 	 *
@@ -63,7 +63,7 @@ class ClientMergeReferenceListener implements IEventListener {
 	 */
 	public function __construct(
 		private readonly ObjectServiceInterface $objects,
-		private readonly PartyReferenceMover $mover,
+		private readonly PartyReferenceMoverInterface $mover,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 	) {
@@ -113,11 +113,11 @@ class ClientMergeReferenceListener implements IEventListener {
 		$intoUuid = $event->getSurvivorUuid();
 		if ($event->isReversal() === false) {
 			$moved = $this->mover->move(partyType: $partyType, fromUuid: $fromUuid, intoUuid: $intoUuid);
-			$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferences::LEDGER_FIELD => $moved], _rbac: false, _multitenancy: false);
+			$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => $moved], _rbac: false, _multitenancy: false);
 			return;
 		}
 
-		$ledger = $record->getObject()[PartyReferences::LEDGER_FIELD] ?? [];
+		$ledger = $record->getObject()[PartyReferencesInterface::LEDGER_FIELD] ?? [];
 		if (is_array($ledger) === false) {
 			$ledger = [];
 		}
@@ -130,7 +130,7 @@ class ClientMergeReferenceListener implements IEventListener {
 			);
 		}
 
-		$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferences::LEDGER_FIELD => null], _rbac: false, _multitenancy: false);
+		$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => null], _rbac: false, _multitenancy: false);
 	}//end handleOne()
 
 	/**
@@ -147,7 +147,7 @@ class ClientMergeReferenceListener implements IEventListener {
 
 		$schema = (string)$record->getSchema();
 		foreach (['client', 'contact'] as $type) {
-			$configured = $this->appConfig->getValueString(Application::APP_ID, $type.'_schema', '');
+			$configured = $this->appConfig->getValueString(AppIdentity::APP_ID, $type.'_schema', '');
 			if ($configured !== '' && $configured === $schema) {
 				return $type;
 			}

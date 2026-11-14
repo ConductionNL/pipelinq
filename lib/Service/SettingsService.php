@@ -26,7 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Pipelinq\Service\Access\RegisterAccessSync;
 use OCA\Pipelinq\Service\Export\ExportJobService;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
@@ -45,7 +46,7 @@ use UnexpectedValueException;
  *  rather than a constant here so the rule and the service that depends on
  *  it cannot drift, and there is no state an injected instance could hold.
  */
-class SettingsService {
+class SettingsService implements SettingsServiceInterface {
 	private const CONFIG_KEYS = [
 		'register',
 		'currency',
@@ -432,16 +433,16 @@ class SettingsService {
 	public function getSettings(): array {
 		$config = [];
 		foreach (self::CONFIG_KEYS as $key) {
-			$config[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$config[$key] = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		}
 
 		foreach (self::TUNABLE_DEFAULTS as $key => $default) {
-			$config[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+			$config[$key] = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, $default);
 		}
 
 		foreach (self::SECRET_KEYS as $key) {
 			$config[$key . '_set'] = 'false';
-			if ($this->appConfig->getValueString(Application::APP_ID, $key, '') !== '') {
+			if ($this->appConfig->getValueString(AppIdentity::APP_ID, $key, '') !== '') {
 				$config[$key . '_set'] = 'true';
 			}
 		}
@@ -466,25 +467,25 @@ class SettingsService {
 
 		foreach (self::CONFIG_KEYS as $key) {
 			if (isset($data[$key]) === true) {
-				$this->appConfig->setValueString(Application::APP_ID, $key, (string)$data[$key]);
+				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$data[$key]);
 			}
 		}
 
 		foreach (array_keys(array: self::TUNABLE_DEFAULTS) as $key) {
 			if (isset($data[$key]) === true) {
-				$this->appConfig->setValueString(Application::APP_ID, $key, (string)$data[$key]);
+				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$data[$key]);
 			}
 		}
 
 		foreach (self::SECRET_KEYS as $key) {
 			if ((string)($data[$key . '_clear'] ?? '') === 'true') {
-				$this->appConfig->deleteKey(Application::APP_ID, $key);
+				$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 				continue;
 			}
 
 			$value = trim((string)($data[$key] ?? ''));
 			if ($value !== '') {
-				$this->appConfig->setValueString(Application::APP_ID, $key, $value, false, true);
+				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $value, false, true);
 			}
 		}
 
@@ -610,7 +611,7 @@ class SettingsService {
 		foreach (self::USER_SETTING_DEFAULTS as $key => $default) {
 			$settings[$key] = $this->config->getUserValue(
 				userId: $userId,
-				appName: Application::APP_ID,
+				appName: AppIdentity::APP_ID,
 				key: $key,
 				default: $default
 			) === 'true';
@@ -638,7 +639,7 @@ class SettingsService {
 
 				$this->config->setUserValue(
 					userId: $userId,
-					appName: Application::APP_ID,
+					appName: AppIdentity::APP_ID,
 					key: $key,
 					value: $value
 				);
@@ -659,7 +660,7 @@ class SettingsService {
 	 * @spec openspec/changes/archive/retrofit-2026-05-24-admin-settings/tasks.md#task-1
 	 */
 	public function getConfigValue(string $key, string $default = ''): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, $default);
 	}//end getConfigValue()
 
 	/**
@@ -673,7 +674,7 @@ class SettingsService {
 	 * @spec openspec/changes/archive/retrofit-2026-05-24-admin-settings/tasks.md#task-1
 	 */
 	public function setConfigValue(string $key, string $value): void {
-		$this->appConfig->setValueString(Application::APP_ID, $key, $value);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $value);
 	}//end setConfigValue()
 
 	/**
@@ -692,7 +693,7 @@ class SettingsService {
 	 * @spec openspec/specs/pipelinq-or-adoption/spec.md
 	 */
 	public function getIntValue(string $key, int $default): int {
-		return $this->appConfig->getValueInt(Application::APP_ID, $key, $default);
+		return $this->appConfig->getValueInt(AppIdentity::APP_ID, $key, $default);
 	}//end getIntValue()
 
 	/**
@@ -711,6 +712,6 @@ class SettingsService {
 	 * @spec openspec/specs/pipelinq-or-adoption/spec.md
 	 */
 	public function getStringValue(string $key, string $default): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, $default);
 	}//end getStringValue()
 }//end class

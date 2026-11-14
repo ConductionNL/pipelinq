@@ -32,9 +32,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\BerichtenboxService;
-use OCA\Pipelinq\Service\LogiusConnector;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LogiusConnectorInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -56,18 +56,18 @@ class BerichtenboxWebhookController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
-	 * @param BerichtenboxService $berichtenbox Berichtenbox service.
-	 * @param LogiusConnector $logius Logius connector (signature
+	 * @param BerichtenboxServiceInterface $berichtenbox Berichtenbox service.
+	 * @param LogiusConnectorInterface $logius Logius connector (signature
 	 *                                verification helper).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly BerichtenboxService $berichtenbox,
-		private readonly LogiusConnector $logius,
+		private readonly BerichtenboxServiceInterface $berichtenbox,
+		private readonly LogiusConnectorInterface $logius,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

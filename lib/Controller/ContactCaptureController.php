@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ContactCaptureService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactCaptureServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,17 +48,17 @@ class ContactCaptureController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest              $request     The request.
-	 * @param ContactCaptureService $capture     The field proposal.
+	 * @param ContactCaptureServiceInterface $capture     The field proposal.
 	 * @param IUserSession          $userSession The caller.
 	 *
 	 * @spec openspec/changes/clients-contact-capture/specs/client-contact-capture/spec.md#requirement-pasted-text-becomes-proposed-contact-fields-req-ccc-001
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContactCaptureService $capture,
+		private readonly ContactCaptureServiceInterface $capture,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -80,7 +80,7 @@ class ContactCaptureController extends Controller {
 			return new JSONResponse(['error' => 'Paste the text to read.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		if (mb_strlen($text, 'UTF-8') > ContactCaptureService::MAX_LENGTH) {
+		if (mb_strlen($text, 'UTF-8') > ContactCaptureServiceInterface::MAX_LENGTH) {
 			return new JSONResponse(['error' => 'The text is too long to be a signature or a card.'], Http::STATUS_REQUEST_ENTITY_TOO_LARGE);
 		}
 

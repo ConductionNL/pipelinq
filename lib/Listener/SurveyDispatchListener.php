@@ -31,10 +31,10 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
-use OCA\Pipelinq\Service\SchemaMapService;
-use OCA\Pipelinq\Service\SurveyDispatchService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -86,16 +86,16 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	/**
 	 * Constructor.
 	 *
-	 * @param SurveyDispatchService $dispatchService Matches rules and writes invitations.
-	 * @param SchemaMapService $schemaMapService Schema id to entity type.
+	 * @param SurveyDispatchServiceInterface $dispatchService Matches rules and writes invitations.
+	 * @param SchemaMapServiceInterface $schemaMapService Schema id to entity type.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
 	 * @param IAppConfig $appConfig App config, holding the register and contact schema.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private readonly SurveyDispatchService $dispatchService,
-		private readonly SchemaMapService $schemaMapService,
+		private readonly SurveyDispatchServiceInterface $dispatchService,
+		private readonly SchemaMapServiceInterface $schemaMapService,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly IAppConfig $appConfig,
 		private readonly ListenerDeferralService $deferral,
@@ -241,7 +241,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 
 		$contact = $this->read(
 			uuid: $uuid,
-			schema: $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '')
+			schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '')
 		);
 		if ($contact === null) {
 			return $client;
@@ -259,7 +259,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null The data.
 	 */
 	private function read(string $uuid, string $schema): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($uuid === '' || $schema === '' || $register === '') {
 			return null;
 		}

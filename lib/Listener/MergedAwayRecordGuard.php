@@ -27,8 +27,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
-use OCA\Pipelinq\Service\Merge\MergedAwayStamp;
-use OCA\Pipelinq\Service\Merge\PartyReferences;
+use OCA\Pipelinq\Kernel\Contracts\MergedAwayStampInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyReferencesInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IL10N;
@@ -84,7 +84,7 @@ class MergedAwayRecordGuard implements IEventListener {
 		}
 
 		// The stamp, and the list of rows the merge moved, are written by the merge itself.
-		$stamp = array_flip([...MergedAwayStamp::FIELDS, PartyReferences::LEDGER_FIELD]);
+		$stamp = array_flip([...MergedAwayStampInterface::FIELDS, PartyReferencesInterface::LEDGER_FIELD]);
 		return array_diff_key($old, $stamp) != array_diff_key($new, $stamp);
 	}//end refuses()
 

@@ -28,9 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Marketing\EventEmailService;
-use OCA\Pipelinq\Service\Marketing\EventRegistrationService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -51,19 +51,19 @@ class EventCancelController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                 $request       The request.
-	 * @param EventRegistrationService $registrations The registrations.
-	 * @param EventEmailService        $mails         Verifies the token and mails whoever moves up.
+	 * @param EventRegistrationServiceInterface $registrations The registrations.
+	 * @param EventEmailServiceInterface        $mails         Verifies the token and mails whoever moves up.
 	 * @param IURLGenerator            $urls          Builds the form action.
 	 *
 	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function __construct(
 		IRequest $request,
-		private EventRegistrationService $registrations,
-		private EventEmailService $mails,
+		private EventRegistrationServiceInterface $registrations,
+		private EventEmailServiceInterface $mails,
 		private IURLGenerator $urls,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -147,7 +147,7 @@ class EventCancelController extends Controller {
 	 */
 	private function page(string $state, array $event, string $token, int $status = Http::STATUS_OK): TemplateResponse {
 		$response = new TemplateResponse(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'event-cancel',
 			[
 				'state' => $state,

@@ -29,12 +29,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Portal\PasswordResetService;
-use OCA\Pipelinq\Service\Portal\PortalAuthService;
-use OCA\Pipelinq\Service\Portal\PortalMfaService;
-use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
-use OCA\Pipelinq\Service\Portal\PortalSessionManager;
+use OCA\Pipelinq\Kernel\Contracts\PasswordResetServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalAuthServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalMfaServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalSessionManagerInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
@@ -65,23 +65,23 @@ class PortalAuthController extends PortalApiController {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param PortalRequestGuardInterface $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param PortalAuthService $auth The auth service.
-	 * @param PortalSessionManager $sessions The session manager.
-	 * @param PortalMfaService $mfa The MFA service.
-	 * @param PasswordResetService $reset The password-reset service.
-	 * @param PortalObjectRepository $repository The portal object repository.
+	 * @param PortalAuthServiceInterface $auth The auth service.
+	 * @param PortalSessionManagerInterface $sessions The session manager.
+	 * @param PortalMfaServiceInterface $mfa The MFA service.
+	 * @param PasswordResetServiceInterface $reset The password-reset service.
+	 * @param PortalObjectRepositoryInterface $repository The portal object repository.
 	 */
 	public function __construct(
 		IRequest $request,
-		PortalRequestGuard $guard,
+		PortalRequestGuardInterface $guard,
 		LoggerInterface $logger,
-		private PortalAuthService $auth,
-		private PortalSessionManager $sessions,
-		private PortalMfaService $mfa,
-		private PasswordResetService $reset,
-		private PortalObjectRepository $repository,
+		private PortalAuthServiceInterface $auth,
+		private PortalSessionManagerInterface $sessions,
+		private PortalMfaServiceInterface $mfa,
+		private PasswordResetServiceInterface $reset,
+		private PortalObjectRepositoryInterface $repository,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()

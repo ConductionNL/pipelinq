@@ -28,8 +28,8 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\HaalCentraalClient;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\HaalCentraalClientInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -67,7 +67,7 @@ class BrpHealthCheckJob extends TimedJob {
 	 * @param IAppConfig $appConfig App config.
 	 * @param IGroupManager $groupManager Group manager (for admin enumeration).
 	 * @param INotificationManager $notificationManager Nextcloud notification manager.
-	 * @param HaalCentraalClient $client HaalCentraal client (cert reader).
+	 * @param HaalCentraalClientInterface $client HaalCentraal client (cert reader).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -75,13 +75,13 @@ class BrpHealthCheckJob extends TimedJob {
 		private IAppConfig $appConfig,
 		private IGroupManager $groupManager,
 		private INotificationManager $notificationManager,
-		private HaalCentraalClient $client,
+		private HaalCentraalClientInterface $client,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'brp.health_check_interval_seconds',
 				self::DEFAULT_INTERVAL_SECONDS
 			)
@@ -163,7 +163,7 @@ class BrpHealthCheckJob extends TimedJob {
 	 */
 	private function saveStatus(array $status): void {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'brp.cert_health',
 			json_encode($status, JSON_THROW_ON_ERROR)
 		);
@@ -187,7 +187,7 @@ class BrpHealthCheckJob extends TimedJob {
 		foreach ($admins->getUsers() as $admin) {
 			try {
 				$n = $this->notificationManager->createNotification();
-				$n->setApp(Application::APP_ID)
+				$n->setApp(AppIdentity::APP_ID)
 					->setUser($admin->getUID())
 					->setObject('brp-cert', $status)
 					->setSubject(

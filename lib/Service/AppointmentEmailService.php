@@ -32,7 +32,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
@@ -40,7 +42,6 @@ use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * AppointmentEmailService — composes confirmation + reminder emails.
@@ -59,7 +60,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class AppointmentEmailService {
+class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	use NullablePayloadToArray;
 
 	/**
@@ -458,7 +459,7 @@ class AppointmentEmailService {
 				$message->attach($attachment);
 			}
 
-			$sender = $this->appConfig->getValueString(Application::APP_ID, 'appointment_email_sender', '');
+			$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, 'appointment_email_sender', '');
 			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
 				$message->setFrom([$sender]);
 			}
@@ -548,7 +549,7 @@ class AppointmentEmailService {
 		$cancelLink = $this->urlGenerator->getAbsoluteURL('/index.php/apps/pipelinq/portal/cancel')
 			. '?link=' . rawurlencode($cancelToken) . '&bookingId=' . rawurlencode($bookingId);
 
-		$organiser = $this->appConfig->getValueString(Application::APP_ID, 'appointment_email_sender', '');
+		$organiser = $this->appConfig->getValueString(AppIdentity::APP_ID, 'appointment_email_sender', '');
 
 		return [
 			'bookingId' => $bookingId,
@@ -777,7 +778,7 @@ class AppointmentEmailService {
 	 * @return string
 	 */
 	private function linkSecret(): string {
-		$secret = $this->appConfig->getValueString(Application::APP_ID, self::LINK_SECRET_KEY, '');
+		$secret = $this->appConfig->getValueString(AppIdentity::APP_ID, self::LINK_SECRET_KEY, '');
 		if ($secret !== '') {
 			return $secret;
 		}
@@ -786,10 +787,10 @@ class AppointmentEmailService {
 			$secret = bin2hex(random_bytes(32));
 		} catch (\Throwable $e) {
 			// Fallback: deterministic but unique-per-instance fallback.
-			$secret = hash('sha256', Application::APP_ID . '|' . (string)microtime(true));
+			$secret = hash('sha256', AppIdentity::APP_ID . '|' . (string)microtime(true));
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, self::LINK_SECRET_KEY, $secret);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::LINK_SECRET_KEY, $secret);
 		return $secret;
 	}//end linkSecret()
 
@@ -868,7 +869,7 @@ class AppointmentEmailService {
 	 * @return string The configured register id, or '' when unconfigured.
 	 */
 	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
@@ -886,7 +887,7 @@ class AppointmentEmailService {
 	 * @return string
 	 */
 	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaId()
 
 	/**

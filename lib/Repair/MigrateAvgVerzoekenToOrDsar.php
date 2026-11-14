@@ -42,7 +42,7 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -277,8 +277,8 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-017-migration-of-existing-avgverzoek-data-to-or
 	 */
 	public function run(IOutput $output): void {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$requestSchema = $this->appConfig->getValueString(Application::APP_ID, 'avgVerzoek_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$requestSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'avgVerzoek_schema', '');
 		if ($registerId === '' || $requestSchema === '') {
 			$output->info('Pipelinq AVG→DSAR migration: no avgVerzoek schema provisioned, nothing to migrate.');
 			return;
@@ -986,7 +986,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 * @return array<int, mixed> The rows (empty when the schema is unprovisioned/unreadable).
 	 */
 	private function readSchema(DsarMigrationSource $source, string $schemaKey): array {
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($schemaId === '') {
 			return [];
 		}

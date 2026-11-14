@@ -25,11 +25,11 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
-use OCA\Pipelinq\Service\ForecastDealService;
-use OCA\Pipelinq\Service\LeadRotationService;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LeadRotationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -81,22 +81,22 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService $schemaMapService The schema map service.
-	 * @param ForecastDealService $dealService The forecast deal lifecycle service.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
+	 * @param ForecastDealServiceInterface $dealService The forecast deal lifecycle service.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger The logger.
-	 * @param LeadRotationService|null $rotation Assigns a new lead in turn when switched on.
+	 * @param LeadRotationServiceInterface|null $rotation Assigns a new lead in turn when switched on.
 	 */
 	public function __construct(
-		private SchemaMapService $schemaMapService,
-		private ForecastDealService $dealService,
+		private SchemaMapServiceInterface $schemaMapService,
+		private ForecastDealServiceInterface $dealService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
 		private LoggerInterface $logger,
-		private ?LeadRotationService $rotation=null,
+		private ?LeadRotationServiceInterface $rotation=null,
 	) {
 	}//end __construct()
 
@@ -218,8 +218,8 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null The deal data, or null when it is gone.
 	 */
 	private function fetch(string $uuid): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return null;
 		}
@@ -250,8 +250,8 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 */
 	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return;
 		}

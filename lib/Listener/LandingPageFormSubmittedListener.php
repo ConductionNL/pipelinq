@@ -41,12 +41,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
-use OCA\Pipelinq\Service\CampaignService;
-use OCA\Pipelinq\Service\Marketing\EventEmailService;
+use OCA\Pipelinq\Kernel\Contracts\CampaignServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
+use OCA\Pipelinq\Kernel\Contracts\TouchpointServiceInterface;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
-use OCA\Pipelinq\Service\Marketing\EventRegistrationService;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
-use OCA\Pipelinq\Service\TouchpointService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -92,22 +92,22 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore $store Register-scoped object access.
-	 * @param CampaignService $campaigns Resolves the campaign the form belongs to.
-	 * @param TouchpointService $touchpoints The touchpoint log and its nonce guard.
+	 * @param ListObjectStoreInterface $store Register-scoped object access.
+	 * @param CampaignServiceInterface $campaigns Resolves the campaign the form belongs to.
+	 * @param TouchpointServiceInterface $touchpoints The touchpoint log and its nonce guard.
 	 * @param LoggerInterface $logger Logger.
-	 * @param EventRegistrationService|null $eventRegistrations Registers the sign-up for the campaign's event.
-	 * @param EventEmailService|null $eventMails Confirms the registration by mail.
+	 * @param EventRegistrationServiceInterface|null $eventRegistrations Registers the sign-up for the campaign's event.
+	 * @param EventEmailServiceInterface|null $eventMails Confirms the registration by mail.
 	 *
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function __construct(
-		private ListObjectStore $store,
-		private CampaignService $campaigns,
-		private TouchpointService $touchpoints,
+		private ListObjectStoreInterface $store,
+		private CampaignServiceInterface $campaigns,
+		private TouchpointServiceInterface $touchpoints,
 		private LoggerInterface $logger,
-		private ?EventRegistrationService $eventRegistrations = null,
-		private ?EventEmailService $eventMails = null,
+		private ?EventRegistrationServiceInterface $eventRegistrations = null,
+		private ?EventEmailServiceInterface $eventMails = null,
 	) {
 	}//end __construct()
 

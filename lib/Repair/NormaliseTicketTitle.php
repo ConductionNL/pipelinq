@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\Migration\IOutput;
@@ -72,12 +72,12 @@ class NormaliseTicketTitle implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
 	 * @param IGroupManager $groupManager Group manager, used to resolve an acting admin.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private TicketService $ticketService,
+		private TicketServiceInterface $ticketService,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 	) {
@@ -132,7 +132,7 @@ class NormaliseTicketTitle implements IRepairStep {
 		$schema = $this->ticketService->getSchemaId();
 		$actingAdmin = $this->actingAdmin();
 
-		foreach (TicketService::TYPES as $ticketType) {
+		foreach (TicketServiceInterface::TYPES as $ticketType) {
 			// Read with RBAC off for the same reason we write with it off: on the
 			// CLI there is no session, so an RBAC-filtered findAll returns only
 			// the handful of objects 'Anonymous' may read and the repair would

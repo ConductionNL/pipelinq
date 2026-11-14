@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
+use OCA\Pipelinq\Kernel\Contracts\ExportDestinationServiceInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -46,7 +47,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-001
  */
-class ExportDestinationService extends AbstractExportService {
+class ExportDestinationService extends AbstractExportService implements ExportDestinationServiceInterface {
 	/**
 	 * The exportDestination schema config key.
 	 *
