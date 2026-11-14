@@ -2994,14 +2994,14 @@
         "/contact-capture/parse": {
             "post": {
                 "operationId": "contact-capture-parse",
-                "summary": "Propose fields for the posted `text`",
-                "description": "Propose fields for the posted `text`. Needs a signed-in Nextcloud user.",
+                "summary": "Propose contact fields for pasted text or a card photo",
+                "description": "Propose contact fields for the posted `text`, or for the text on a posted `file` (a photo of a business card, read through Nextcloud's `core:image2text:ocr` task). The photo is written to a hidden folder in the caller's own storage only while it is read, and deleted afterwards whatever the outcome; nothing is stored. Needs a signed-in Nextcloud user.",
                 "tags": [
                     "contact-capture"
                 ],
                 "responses": {
                     "200": {
-                        "description": "The request succeeded.",
+                        "description": "The proposed fields, every email and phone found and the unassigned lines; for a photo also the recognised `text`.",
                         "headers": {
                             "API-Version": {
                                 "$ref": "#/components/headers/API-Version"
@@ -3015,6 +3015,174 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "409": {
+                        "description": "Photos cannot be read on this server: no provider serves `core:image2text:ocr`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "reason": {
+                                            "type": "string",
+                                            "enum": [
+                                                "unavailable"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "413": {
+                        "description": "The text is longer than a signature or a card, or the photo is larger than 10 MB.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "415": {
+                        "description": "The posted file is not an image.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "No text was found on the photo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "reason": {
+                                            "type": "string",
+                                            "enum": [
+                                                "empty"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "The recognition task failed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "reason": {
+                                            "type": "string",
+                                            "enum": [
+                                                "failed"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "text"
+                                ],
+                                "properties": {
+                                    "text": {
+                                        "type": "string",
+                                        "maxLength": 5000,
+                                        "description": "The pasted signature or card text."
+                                    }
+                                }
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "A photo of a business card: an image of at most 10 MB."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/contact-capture/status": {
+            "get": {
+                "operationId": "contact-capture-status",
+                "summary": "Whether card photos can be read on this server",
+                "description": "Whether a provider serves Nextcloud's `core:image2text:ocr` task for the caller, so the Paste or scan dialog can offer the photo option or say why it cannot. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "contact-capture"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "photo": {
+                                            "type": "boolean",
+                                            "description": "Whether photos can be read."
+                                        },
+                                        "maxPhotoBytes": {
+                                            "type": "integer",
+                                            "description": "The largest photo accepted, in bytes."
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
@@ -4745,6 +4913,63 @@
             }
         },
         "/export/full": {
+            "get": {
+                "operationId": "full-export-status",
+                "summary": "The state of the last full export (administrators only)",
+                "description": "none, queued, ready (with the archive name and file id) or failed, with when and for whom. 401 without a caller, 403 for anyone but an administrator.",
+                "tags": [
+                    "full-export"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The state of the last export.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "state": {
+                                            "type": "string",
+                                            "enum": [
+                                                "none",
+                                                "queued",
+                                                "ready",
+                                                "failed"
+                                            ]
+                                        },
+                                        "at": {
+                                            "type": "string"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "fileId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "state"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
             "post": {
                 "operationId": "full-export-start",
                 "summary": "Queue the export for the calling administrator",

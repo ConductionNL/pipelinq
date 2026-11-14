@@ -22,6 +22,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\OpenRegister\Event\ObjectDeletingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
@@ -122,6 +123,12 @@ class ListenerRegistrar {
 		$context->registerEventListener(
 			event: ObjectUpdatingEvent::class,
 			listener: StageLimitGuard::class
+		);
+		// A template a scheduled mailing uses cannot be deleted, from any screen
+		// (marketing-mail-templates REQ-MMT-001).
+		$context->registerEventListener(
+			event: ObjectDeletingEvent::class,
+			listener: TemplateInUseGuard::class
 		);
 		// A Nextcloud Forms answer creates the object its binding names (Q6).
 		// Forms is optional; a `::class` string does not autoload, and the guard

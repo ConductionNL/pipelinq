@@ -246,6 +246,21 @@
             "description": "When the blast was actually dispatched.",
             "title": "Sent At"
           },
+          "sentSubject": {
+            "type": "string",
+            "description": "The subject the blast was sent with, kept from its template when sending started so a later template change does not alter it.",
+            "title": "Sent Subject"
+          },
+          "sentHtml": {
+            "type": "string",
+            "description": "The HTML body the blast was sent with, kept from its template when sending started.",
+            "title": "Sent HTML"
+          },
+          "sentText": {
+            "type": "string",
+            "description": "The text body the blast was sent with, kept from its template when sending started.",
+            "title": "Sent Text"
+          },
           "status": {
             "type": "string",
             "enum": [
