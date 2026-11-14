@@ -214,11 +214,22 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
+		return $this->convertLoadedRequest(id: $id, request: $request);
+	}//end convertRequestToCase()
+
+	/**
+	 * Convert a loaded request ticket into a case.
+	 *
+	 * @param string               $id      Request-ticket UUID.
+	 * @param array<string, mixed> $request The request.
+	 *
+	 * @return JSONResponse The conversion outcome.
+	 *
+	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+	 */
+	private function convertLoadedRequest(string $id, array $request): JSONResponse {
 		if ((string)($request['status'] ?? '') !== 'in_progress') {
-			return new JSONResponse(
-				['status' => 'invalid-status', 'message' => 'Conversion is only available from in_progress.'],
-				Http::STATUS_CONFLICT
-			);
+			return new JSONResponse(['status' => 'invalid-status', 'message' => 'Conversion is only available from in_progress.'], Http::STATUS_CONFLICT);
 		}
 
 		if ($this->handoffService->hasImplementer(kindUri: self::KIND_CASE) === false) {
@@ -232,6 +243,21 @@ class SemanticHandoffController extends Controller {
 
 		$keepOpen = filter_var($this->request->getParam('keepOpen', false), FILTER_VALIDATE_BOOLEAN);
 
+		return $this->handoffToCase(id: $id, request: $request, keepOpen: $keepOpen);
+	}//end convertLoadedRequest()
+
+	/**
+	 * Run the convert-to-case handoff and close the request on success.
+	 *
+	 * @param string               $id       Request-ticket UUID.
+	 * @param array<string, mixed> $request  The request.
+	 * @param bool                 $keepOpen Whether the request stays open.
+	 *
+	 * @return JSONResponse The conversion outcome.
+	 *
+	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+	 */
+	private function handoffToCase(string $id, array $request, bool $keepOpen): JSONResponse {
 		$result = $this->handoffService->handoff(
 			register: $this->registerSlug(),
 			schema: $this->ticketSchema(),
@@ -240,14 +266,11 @@ class SemanticHandoffController extends Controller {
 		);
 
 		if ($result['ok'] !== true) {
-			return new JSONResponse(
-				['status' => 'handoff-failed', 'reason' => (string)$result['reason']],
-				Http::STATUS_BAD_GATEWAY
-			);
+			return new JSONResponse(['status' => 'handoff-failed', 'reason' => (string)$result['reason']], Http::STATUS_BAD_GATEWAY);
 		}
 
 		return $this->closeConvertedRequest(id: $id, request: $request, result: $result, keepOpen: $keepOpen);
-	}//end convertRequestToCase()
+	}//end handoffToCase()
 
 	/**
 	 * Store the case type the person chose on the request, where the handoff
@@ -383,6 +406,54 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
+		return $this->invoiceContract(id: $id, uid: $uid, contract: $contract);
+	}//end sendContractToInvoicing()
+
+	/**
+	 * Send an authorised contract through the invoicing handoff and record it.
+	 *
+	 * @param string               $id       Contract UUID.
+	 * @param string               $uid      The acting user id.
+	 * @param array<string, mixed> $contract The contract.
+	 *
+	 * @return JSONResponse The handoff outcome.
+	 *
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+	 */
+	private function invoiceContract(string $id, string $uid, array $contract): JSONResponse {
+		$gate = $this->invoicingGate(contract: $contract);
+		if ($gate !== null) {
+			return $gate;
+		}
+
+		$result = $this->handoffService->handoff(
+			register: $this->registerSlug(),
+			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
+			id: $id,
+			handoffId: self::HANDOFF_SEND_TO_INVOICING
+		);
+
+		if ($result['ok'] !== true) {
+			return new JSONResponse(['status' => 'handoff-failed', 'reason' => (string)$result['reason']], Http::STATUS_BAD_GATEWAY);
+		}
+
+		$this->recordInvoice(id: $id, uid: $uid, contract: $contract, result: $result);
+
+		return new JSONResponse(
+			['status' => 'sent', 'invoiceReference' => (string)$result['targetUuid'], 'correlationId' => (string)$result['correlationId']]
+		);
+	}//end invoiceContract()
+
+	/**
+	 * Why a contract cannot be sent to invoicing now, or null when it can.
+	 *
+	 * @param array<string, mixed> $contract The contract.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+	 */
+	private function invoicingGate(array $contract): JSONResponse|null {
 		if (in_array((string)($contract['status'] ?? ''), self::INVOICEABLE_STATUSES, true) === false) {
 			return new JSONResponse(
 				['status' => 'invalid-status', 'message' => 'Send to invoicing is only available on a running contract (active or expiring).'],
@@ -394,20 +465,22 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'not-available'], Http::STATUS_CONFLICT);
 		}
 
-		$result = $this->handoffService->handoff(
-			register: $this->registerSlug(),
-			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
-			id: $id,
-			handoffId: self::HANDOFF_SEND_TO_INVOICING
-		);
+		return null;
+	}//end invoicingGate()
 
-		if ($result['ok'] !== true) {
-			return new JSONResponse(
-				['status' => 'handoff-failed', 'reason' => (string)$result['reason']],
-				Http::STATUS_BAD_GATEWAY
-			);
-		}
-
+	/**
+	 * Stamp the invoice reference and history on the contract and save it.
+	 *
+	 * @param string               $id       Contract UUID.
+	 * @param string               $uid      The acting user id.
+	 * @param array<string, mixed> $contract The contract.
+	 * @param array<string, mixed> $result   The handoff result.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+	 */
+	private function recordInvoice(string $id, string $uid, array $contract, array $result): void {
 		$sentAt = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 		$contract['invoiceReference'] = (string)$result['targetUuid'];
 		$contract['invoicedAt'] = $sentAt;
@@ -425,20 +498,8 @@ class SemanticHandoffController extends Controller {
 			'amount' => (float)($contract['valuePerInterval'] ?? $contract['value'] ?? 0),
 		];
 		$contract['invoiceHistory'] = array_values($history);
-		$this->saveObject(
-			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
-			id: $id,
-			payload: $contract
-		);
-
-		return new JSONResponse(
-			[
-				'status' => 'sent',
-				'invoiceReference' => (string)$result['targetUuid'],
-				'correlationId' => (string)$result['correlationId'],
-			]
-		);
-	}//end sendContractToInvoicing()
+		$this->saveObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id, payload: $contract);
+	}//end recordInvoice()
 
 	/**
 	 * Load a request-type ticket by id (per-object guard + subtype guard).

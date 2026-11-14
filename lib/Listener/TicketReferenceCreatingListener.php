@@ -77,30 +77,68 @@ class TicketReferenceCreatingListener implements IEventListener {
 			return;
 		}
 
-		$ticketSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
-		$entity = $event->getObject();
-		if ($ticketSchema === '' || (string)$entity->getSchema() !== $ticketSchema) {
+		$entity = $this->ticketEntity(event: $event);
+		if ($entity === null) {
 			return;
 		}
 
 		$ticket = array_merge($entity->getObject(), $event->getModifiedData());
-		if (in_array((string)($ticket['ticketType'] ?? ''), TicketLeafProviderInterface::TICKET_TYPES, true) === false
-			|| trim((string)($ticket['reference'] ?? '')) !== ''
-		) {
+		if ($this->needsReference(ticket: $ticket) === false) {
 			return;
 		}
 
-		try {
-			$reference = $this->sequence->next();
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: no reference number for a new ticket',
-				['exception' => $e->getMessage()]
-			);
+		$reference = $this->nextReference();
+		if ($reference === null) {
 			return;
 		}
 
 		// Merge, never replace: another listener may already have modified the data.
 		$event->setModifiedData(array_merge($event->getModifiedData(), ['reference' => $reference]));
 	}//end handle()
+
+	/**
+	 * The object being created when it is a ticket of the configured ticket schema, else null.
+	 *
+	 * @param ObjectCreatingEvent $event The event.
+	 *
+	 * @return mixed The ticket entity, or null.
+	 */
+	private function ticketEntity(ObjectCreatingEvent $event) {
+		$ticketSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
+		$entity = $event->getObject();
+		if ($ticketSchema === '' || (string)$entity->getSchema() !== $ticketSchema) {
+			return null;
+		}
+
+		return $entity;
+	}//end ticketEntity()
+
+	/**
+	 * Whether the ticket is of a numbered type and has no reference yet.
+	 *
+	 * @param array<string, mixed> $ticket The ticket data.
+	 *
+	 * @return bool True when a reference must be drawn.
+	 */
+	private function needsReference(array $ticket): bool {
+		return (in_array((string)($ticket['ticketType'] ?? ''), TicketLeafProviderInterface::TICKET_TYPES, true) === false
+			|| trim((string)($ticket['reference'] ?? '')) !== '') === false;
+	}//end needsReference()
+
+	/**
+	 * Draw the next reference number; null (logged) when the sequence fails.
+	 *
+	 * @return mixed The reference, or null.
+	 */
+	private function nextReference() {
+		try {
+			return $this->sequence->next();
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: no reference number for a new ticket',
+				['exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end nextReference()
 }//end class

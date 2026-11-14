@@ -221,19 +221,25 @@ class FullExportService implements FullExportServiceInterface {
 			return null;
 		}
 
+		return $this->allRows(slug: $slug, register: $register, schema: $schema);
+	}//end rowsOf()
+
+	/**
+	 * Every object of a configured schema, page by page, read past per-user rules.
+	 *
+	 * @param string $slug The schema slug, for the error.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 *
+	 * @return list<array<string, mixed>> The objects.
+	 *
+	 * @throws RuntimeException When a page cannot be read.
+	 */
+	private function allRows(string $slug, string $register, string $schema): array {
 		$rows   = [];
 		$offset = 0;
 		do {
-			try {
-				$page = $this->objectService->findAll(
-					config: ['filters' => ['register' => $register, 'schema' => $schema], 'limit' => self::PAGE_SIZE, 'offset' => $offset],
-					_rbac: false,
-					_multitenancy: false
-				);
-			} catch (\Throwable $e) {
-				throw new RuntimeException('The objects of schema ' . $slug . ' could not be read: ' . $e->getMessage(), 0, $e);
-			}
-
+			$page = $this->pageOf(slug: $slug, register: $register, schema: $schema, offset: $offset);
 			foreach ($page as $object) {
 				$rows[] = $this->toArray(object: $object);
 			}
@@ -243,7 +249,31 @@ class FullExportService implements FullExportServiceInterface {
 		} while ($pageSize === self::PAGE_SIZE);
 
 		return $rows;
-	}//end rowsOf()
+	}//end allRows()
+
+	/**
+	 * One page of a schema's objects.
+	 *
+	 * @param string $slug The schema slug, for the error.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 * @param int $offset The page offset.
+	 *
+	 * @return array<mixed> The objects on the page.
+	 *
+	 * @throws RuntimeException When the page cannot be read.
+	 */
+	private function pageOf(string $slug, string $register, string $schema, int $offset): array {
+		try {
+			return $this->objectService->findAll(
+				config: ['filters' => ['register' => $register, 'schema' => $schema], 'limit' => self::PAGE_SIZE, 'offset' => $offset],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\Throwable $e) {
+			throw new RuntimeException('The objects of schema ' . $slug . ' could not be read: ' . $e->getMessage(), 0, $e);
+		}
+	}//end pageOf()
 
 	/**
 	 * The archive's file names for a schema, as the manifest lists them.

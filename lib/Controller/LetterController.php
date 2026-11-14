@@ -46,6 +46,8 @@ use RuntimeException;
  * Letter templates and letters for a client.
  *
  * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class LetterController extends Controller
 {
@@ -368,48 +370,156 @@ class LetterController extends Controller
      */
     private function readRecords(string $clientId): array|string
     {
-        $client = $this->reader->read(id: $clientId, schemaKey: 'client_schema');
-        // Existence is not authorization: OpenRegister answers a read whatever
-        // `_rbac` says (see ActivityTimelineController), so this app decides.
-        $uid = (string) $this->userSession->getUser()?->getUID();
-        if ($client === null || $this->accessPolicy->mayAccess(uid: $uid, object: $client, ownerField: 'ownerId') === false) {
+        $client = $this->readOwnClient(clientId: $clientId);
+        if ($client === null) {
             return 'Client not found';
         }
 
         $register = $this->reader->register();
         $refs     = [['register' => $register, 'schema' => 'client', 'id' => $clientId]];
 
-        $contactId = $this->optionalId(name: 'contactId');
-        if ($contactId !== null) {
-            if ($this->reader->read(id: $contactId, schemaKey: 'contact_schema') === null) {
-                return 'Contact not found';
-            }
-
-            $refs[] = ['register' => $register, 'schema' => 'contact', 'id' => $contactId];
+        $linked = $this->linkedRecords(clientId: $clientId, register: $register);
+        if (is_string($linked) === true) {
+            return $linked;
         }
 
-        $ticketId = $this->optionalId(name: 'ticketId');
-        if ($ticketId !== null) {
-            // A ticket of another client would log the letter on the wrong timeline.
-            if ($this->ticketOfClient(ticketId: $ticketId, clientId: $clientId) === false) {
-                return 'Ticket not found';
-            }
-
-            $refs[] = ['register' => $register, 'schema' => 'ticket', 'id' => $ticketId];
-        }
-
-        $appointmentId = $this->optionalId(name: 'appointmentId');
-        if ($appointmentId !== null) {
-            if ($this->appointmentOf(appointmentId: $appointmentId, clientId: $clientId, ticketId: $ticketId) === false) {
-                return 'Appointment not found';
-            }
-
-            $refs[] = ['register' => $register, 'schema' => 'appointmentBooking', 'id' => $appointmentId];
-        }
-
-        return ['client' => $client, 'contactId' => $contactId, 'ticketId' => $ticketId, 'refs' => $refs];
+        return [
+            'client'    => $client,
+            'contactId' => $linked['contactId'],
+            'ticketId'  => $linked['ticketId'],
+            'refs'      => array_merge($refs, $linked['refs']),
+        ];
 
     }//end readRecords()
+
+
+    /**
+     * Read the client as the caller, or null when it is absent or not theirs.
+     *
+     * @param string $clientId The client id.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function readOwnClient(string $clientId): array|null
+    {
+        $client = $this->reader->read(id: $clientId, schemaKey: 'client_schema');
+        // Existence is not authorization: OpenRegister answers a read whatever
+        // `_rbac` says (see ActivityTimelineController), so this app decides.
+        $uid = (string) $this->userSession->getUser()?->getUID();
+        if ($client === null || $this->accessPolicy->mayAccess(uid: $uid, object: $client, ownerField: 'ownerId') === false) {
+            return null;
+        }
+
+        return $client;
+
+    }//end readOwnClient()
+
+
+    /**
+     * The contact, ticket and appointment named in the request, checked in that order.
+     *
+     * @param string $clientId The client id.
+     * @param string $register The register.
+     *
+     * @return array{contactId: string|null, ticketId: string|null, refs: array<int, array<string, string>>}|string
+     *         The ids and filinq references, or the not-found message.
+     */
+    private function linkedRecords(string $clientId, string $register): array|string
+    {
+        $contactId  = $this->optionalId(name: 'contactId');
+        $contactRef = $this->contactRef(contactId: $contactId, register: $register);
+        if (is_string($contactRef) === true) {
+            return $contactRef;
+        }
+
+        $ticketId  = $this->optionalId(name: 'ticketId');
+        $ticketRef = $this->ticketRef(ticketId: $ticketId, clientId: $clientId, register: $register);
+        if (is_string($ticketRef) === true) {
+            return $ticketRef;
+        }
+
+        $appointmentId  = $this->optionalId(name: 'appointmentId');
+        $appointmentRef = $this->appointmentRef(appointmentId: $appointmentId, clientId: $clientId, ticketId: $ticketId, register: $register);
+        if (is_string($appointmentRef) === true) {
+            return $appointmentRef;
+        }
+
+        return ['contactId' => $contactId, 'ticketId' => $ticketId, 'refs' => array_values(array_filter([$contactRef, $ticketRef, $appointmentRef]))];
+
+    }//end linkedRecords()
+
+
+    /**
+     * The filinq reference of the named contact, null when none is named, or the not-found message.
+     *
+     * @param string|null $contactId The contact id.
+     * @param string      $register  The register.
+     *
+     * @return array<string, string>|string|null
+     */
+    private function contactRef(string|null $contactId, string $register): array|string|null
+    {
+        if ($contactId === null) {
+            return null;
+        }
+
+        if ($this->reader->read(id: $contactId, schemaKey: 'contact_schema') === null) {
+            return 'Contact not found';
+        }
+
+        return ['register' => $register, 'schema' => 'contact', 'id' => $contactId];
+
+    }//end contactRef()
+
+
+    /**
+     * The filinq reference of the named ticket, null when none is named, or the not-found message.
+     *
+     * @param string|null $ticketId The ticket id.
+     * @param string      $clientId The client id.
+     * @param string      $register The register.
+     *
+     * @return array<string, string>|string|null
+     */
+    private function ticketRef(string|null $ticketId, string $clientId, string $register): array|string|null
+    {
+        if ($ticketId === null) {
+            return null;
+        }
+
+        // A ticket of another client would log the letter on the wrong timeline.
+        if ($this->ticketOfClient(ticketId: $ticketId, clientId: $clientId) === false) {
+            return 'Ticket not found';
+        }
+
+        return ['register' => $register, 'schema' => 'ticket', 'id' => $ticketId];
+
+    }//end ticketRef()
+
+
+    /**
+     * The filinq reference of the named appointment, null when none is named, or the not-found message.
+     *
+     * @param string|null $appointmentId The appointment id.
+     * @param string      $clientId      The client id.
+     * @param string|null $ticketId      The ticket id.
+     * @param string      $register      The register.
+     *
+     * @return array<string, string>|string|null
+     */
+    private function appointmentRef(string|null $appointmentId, string $clientId, string|null $ticketId, string $register): array|string|null
+    {
+        if ($appointmentId === null) {
+            return null;
+        }
+
+        if ($this->appointmentOf(appointmentId: $appointmentId, clientId: $clientId, ticketId: $ticketId) === false) {
+            return 'Appointment not found';
+        }
+
+        return ['register' => $register, 'schema' => 'appointmentBooking', 'id' => $appointmentId];
+
+    }//end appointmentRef()
 
 
     /**

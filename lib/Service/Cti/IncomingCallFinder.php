@@ -118,32 +118,72 @@ class IncomingCallFinder implements IncomingCallFinderInterface {
 		$newestStart = 0;
 		foreach ($rows as $row) {
 			$data = $this->toArray(value: $row);
-			$started = strtotime((string)($data['started_at'] ?? ''));
-			if ($started === false || $this->isOpenCallOf(data: $data, userId: $userId) === false) {
-				continue;
-			}
-
-			if (($now - $started) > self::MAX_AGE_SECONDS || $started <= $newestStart) {
+			$started = $this->freshOpenCallStart(data: $data, userId: $userId, now: $now);
+			if ($started === false || $started <= $newestStart) {
 				continue;
 			}
 
 			$newestStart = $started;
-			$newest = [
-				'id' => (string)($data['id'] ?? ($data['uuid'] ?? '')),
-				'fromNumber' => (string)($data['from_number'] ?? ''),
-				'queueName' => (string)($data['queue_name'] ?? ''),
-				'extension' => (string)($data['cti_extension'] ?? ''),
-				'startedAt' => (string)$data['started_at'],
-				'answeredAt' => (string)($data['answered_at'] ?? ''),
-			];
-		}//end foreach
+			$newest = $this->callSummary(data: $data);
+		}
 
-		if ($newest === null || $newest['id'] === '') {
+		return $this->withCallId(call: $newest);
+	}//end newestOpenCall()
+
+	/**
+	 * The start time of an open call of the user that is not too old, else false.
+	 *
+	 * @param array<string, mixed> $data The call data.
+	 * @param string $userId The agent's user id.
+	 * @param int $now The current timestamp.
+	 *
+	 * @return int|false The start timestamp, or false.
+	 */
+	private function freshOpenCallStart(array $data, string $userId, int $now): int|false {
+		$started = strtotime((string)($data['started_at'] ?? ''));
+		if ($started === false || $this->isOpenCallOf(data: $data, userId: $userId) === false) {
+			return false;
+		}
+
+		if (($now - $started) > self::MAX_AGE_SECONDS) {
+			return false;
+		}
+
+		return $started;
+	}//end freshOpenCallStart()
+
+	/**
+	 * The call fields the incoming-call banner shows.
+	 *
+	 * @param array<string, mixed> $data The call data.
+	 *
+	 * @return array<string, string> The call summary.
+	 */
+	private function callSummary(array $data): array {
+		return [
+			'id' => (string)($data['id'] ?? ($data['uuid'] ?? '')),
+			'fromNumber' => (string)($data['from_number'] ?? ''),
+			'queueName' => (string)($data['queue_name'] ?? ''),
+			'extension' => (string)($data['cti_extension'] ?? ''),
+			'startedAt' => (string)$data['started_at'],
+			'answeredAt' => (string)($data['answered_at'] ?? ''),
+		];
+	}//end callSummary()
+
+	/**
+	 * The call when it has an id, else null.
+	 *
+	 * @param array<string, string>|null $call The call summary.
+	 *
+	 * @return array<string, string>|null The call.
+	 */
+	private function withCallId(array|null $call): array|null {
+		if ($call === null || $call['id'] === '') {
 			return null;
 		}
 
-		return $newest;
-	}//end newestOpenCall()
+		return $call;
+	}//end withCallId()
 
 	/**
 	 * Whether a row is an inbound telephone call of this agent that has not ended.

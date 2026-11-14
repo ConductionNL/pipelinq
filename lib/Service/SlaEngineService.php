@@ -190,38 +190,68 @@ class SlaEngineService implements SlaEngineServiceInterface {
 		$results = [];
 
 		foreach (($policy['targets'] ?? []) as $target) {
-			$duration = $this->parseDuration(duration: (string)($target['duration'] ?? 'PT0S'));
-			$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
-
-			$effectiveStart = DateTimeImmutable::createFromInterface($startTime);
-			if ($pausedState !== null && isset($pausedState['totalPausedMs']) === true) {
-				$pausedMin = (int)floor(((int)$pausedState['totalPausedMs']) / 60000);
-				if ($pausedMin > 0) {
-					$effectiveStart = $effectiveStart->modify('-' . $pausedMin . ' minutes');
-				}
-			}
-
-			$dueAt = $this->businessHours->addDuration(
-				calendarType: $calendarType,
-				startTime: $effectiveStart,
-				duration: $duration,
-				holidayCalendar: $calendar,
-			);
-
-			$results[] = [
-				'kind' => (string)($target['kind'] ?? 'resolution'),
-				'duration' => (string)($target['duration'] ?? ''),
-				'calendar' => $calendarType,
-				'dueAt' => $dueAt->format(DateTimeInterface::ATOM),
-				'startedAt' => $effectiveStart->format(DateTimeInterface::ATOM),
-				'status' => self::STATUS_ON_TRACK,
-				'consumedPercentage' => 0.0,
-				'breachEventIds' => [],
-			];
-		}//end foreach
+			$results[] = $this->deadlineFor(target: $target, startTime: $startTime, pausedState: $pausedState, calendar: $calendar);
+		}
 
 		return $results;
 	}//end computeDeadlines()
+
+	/**
+	 * The initial deadline entry for one policy target.
+	 *
+	 * @param array<string, mixed>      $target      The policy target.
+	 * @param DateTimeInterface         $startTime   Start instant.
+	 * @param array<string, mixed>|null $pausedState Optional pause state.
+	 * @param string                    $calendar    The holiday calendar.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function deadlineFor(array $target, DateTimeInterface $startTime, array|null $pausedState, string $calendar): array {
+		$duration = $this->parseDuration(duration: (string)($target['duration'] ?? 'PT0S'));
+		$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
+
+		$effectiveStart = $this->pauseAdjustedStart(startTime: $startTime, pausedState: $pausedState);
+
+		$dueAt = $this->businessHours->addDuration(
+			calendarType: $calendarType,
+			startTime: $effectiveStart,
+			duration: $duration,
+			holidayCalendar: $calendar,
+		);
+
+		return [
+			'kind' => (string)($target['kind'] ?? 'resolution'),
+			'duration' => (string)($target['duration'] ?? ''),
+			'calendar' => $calendarType,
+			'dueAt' => $dueAt->format(DateTimeInterface::ATOM),
+			'startedAt' => $effectiveStart->format(DateTimeInterface::ATOM),
+			'status' => self::STATUS_ON_TRACK,
+			'consumedPercentage' => 0.0,
+			'breachEventIds' => [],
+		];
+	}//end deadlineFor()
+
+	/**
+	 * The start instant moved back by the time already spent paused.
+	 *
+	 * @param DateTimeInterface         $startTime   Start instant.
+	 * @param array<string, mixed>|null $pausedState Optional pause state.
+	 *
+	 * @return DateTimeImmutable
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface() is a value-object factory, not a collaborator to inject
+	 */
+	private function pauseAdjustedStart(DateTimeInterface $startTime, array|null $pausedState): DateTimeImmutable {
+		$effectiveStart = DateTimeImmutable::createFromInterface($startTime);
+		if ($pausedState !== null && isset($pausedState['totalPausedMs']) === true) {
+			$pausedMin = (int)floor(((int)$pausedState['totalPausedMs']) / 60000);
+			if ($pausedMin > 0) {
+				$effectiveStart = $effectiveStart->modify('-' . $pausedMin . ' minutes');
+			}
+		}
+
+		return $effectiveStart;
+	}//end pauseAdjustedStart()
 
 	/**
 	 * Re-evaluate target statuses given a current instant and the policy.
@@ -384,17 +414,7 @@ class SlaEngineService implements SlaEngineServiceInterface {
 		$newLevel = $alreadyFired;
 		$eventIds = [];
 
-		foreach ($chain as $idx => $step) {
-			$level = ($idx + 1);
-			if ($level <= $alreadyFired) {
-				continue;
-			}
-
-			$triggerAt = (float)($step['triggerAt'] ?? 1.0);
-			if ($heat->consumed + 1e-9 < $triggerAt) {
-				continue;
-			}
-
+		foreach ($this->dueSteps(chain: $chain, heat: $heat, alreadyFired: $alreadyFired) as $level => $step) {
 			$escalation = new SlaEscalation(policy: $policy, object: $object, step: $step, level: $level);
 			$eventId = $this->fireEscalation(escalation: $escalation, heat: $heat);
 			if ($eventId !== null) {
@@ -406,6 +426,34 @@ class SlaEngineService implements SlaEngineServiceInterface {
 
 		return ['level' => $newLevel, 'eventIds' => $eventIds];
 	}//end executeEscalations()
+
+	/**
+	 * The escalation steps not yet fired whose trigger the hottest target has reached, keyed by level.
+	 *
+	 * @param array<int, array<string, mixed>> $chain        The escalation chain.
+	 * @param SlaHeat                          $heat         The hottest target.
+	 * @param int                              $alreadyFired The current escalation level.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function dueSteps(array $chain, SlaHeat $heat, int $alreadyFired): array {
+		$due = [];
+		foreach ($chain as $idx => $step) {
+			$level = ($idx + 1);
+			if ($level <= $alreadyFired) {
+				continue;
+			}
+
+			$triggerAt = (float)($step['triggerAt'] ?? 1.0);
+			if ($heat->consumed + 1e-9 < $triggerAt) {
+				continue;
+			}
+
+			$due[$level] = $step;
+		}
+
+		return $due;
+	}//end dueSteps()
 
 	/**
 	 * The highest consumedPercentage across all targets, and the kind of the
@@ -1092,6 +1140,20 @@ class SlaEngineService implements SlaEngineServiceInterface {
 			return null;
 		}
 
+		$entity = $this->findPipelinqEntity(schema: $schema, id: $id);
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->normaliseObject(row: $entity);
+	}//end loadPipelinqObject()
+
+	/**
+	 * The pipelinq register and the ObjectService, or null when either is missing.
+	 *
+	 * @return array{service: object, register: string}|null
+	 */
+	private function pipelinqStore(): array|null {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			return null;
@@ -1103,8 +1165,25 @@ class SlaEngineService implements SlaEngineServiceInterface {
 			return null;
 		}
 
+		return ['service' => $objectService, 'register' => $register];
+	}//end pipelinqStore()
+
+	/**
+	 * Find a pipelinq-register object; a missing store or failed lookup yields null (the failure logged).
+	 *
+	 * @param string $schema Schema slug.
+	 * @param string $id     Object UUID.
+	 *
+	 * @return mixed The entity, or null.
+	 */
+	private function findPipelinqEntity(string $schema, string $id): mixed {
+		$store = $this->pipelinqStore();
+		if ($store === null) {
+			return null;
+		}
+
 		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
+			return $store['service']->find(id: $id, register: $store['register'], schema: $schema);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: target object load failed',
@@ -1112,13 +1191,7 @@ class SlaEngineService implements SlaEngineServiceInterface {
 			);
 			return null;
 		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->normaliseObject(row: $entity);
-	}//end loadPipelinqObject()
+	}//end findPipelinqEntity()
 
 	/**
 	 * Render the customer-facing breach message for an sms/whatsapp escalation.
@@ -1182,8 +1255,24 @@ class SlaEngineService implements SlaEngineServiceInterface {
 			return null;
 		}
 
+		$objectService = $this->breachObjectService();
+		if ($objectService === null) {
+			return null;
+		}
+
+		$payload = $this->breachPayload(event: $event);
+
+		return $this->saveBreachPayload(objectService: $objectService, payload: $payload, register: $register, schema: $schema);
+	}//end writeBreachEvent()
+
+	/**
+	 * The ObjectService for a breach event write, or null (logged) when unavailable.
+	 *
+	 * @return object|null
+	 */
+	private function breachObjectService(): object|null {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: ObjectService unavailable for breach event write',
@@ -1191,9 +1280,19 @@ class SlaEngineService implements SlaEngineServiceInterface {
 			);
 			return null;
 		}
+	}//end breachObjectService()
 
-		$payload = $this->breachPayload(event: $event);
-
+	/**
+	 * Save a breach event row and return its UUID (null, logged, on failure).
+	 *
+	 * @param object               $objectService The OpenRegister ObjectService.
+	 * @param array<string, mixed> $payload       The breach event row.
+	 * @param string               $register      The SLA register.
+	 * @param string               $schema        The breach event schema.
+	 *
+	 * @return string|null
+	 */
+	private function saveBreachPayload(object $objectService, array $payload, string $register, string $schema): string|null {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
@@ -1209,7 +1308,7 @@ class SlaEngineService implements SlaEngineServiceInterface {
 			);
 			return null;
 		}
-	}//end writeBreachEvent()
+	}//end saveBreachPayload()
 
 	/**
 	 * The `slaBreachEvent` row for a fired escalation.

@@ -248,21 +248,48 @@ class PortalController extends Controller {
 	 * @spec openspec/specs/appointment-booking/spec.md#req-apt-010
 	 */
 	private function resolvePaymentRedirect(string $bookingId, array $created): ?string {
-		$requiresDeposit = (bool)($created['requiresDeposit'] ?? false);
-		$depositAmount = (float)($created['depositAmount'] ?? 0.0);
-		if ($requiresDeposit === false || $depositAmount <= 0.0) {
-			return null;
-		}
-
-		$amountCents = (int)round($depositAmount * 100);
+		$amountCents = $this->depositCents(created: $created);
 		if ($amountCents <= 0) {
 			return null;
 		}
 
-		$returnUrl = $this->urlGenerator->getAbsoluteURL(
-			'/index.php/apps/pipelinq/portal/api/booking/' . rawurlencode($bookingId)
-		);
+		$returnUrl = $this->urlGenerator->getAbsoluteURL('/index.php/apps/pipelinq/portal/api/booking/' . rawurlencode($bookingId));
+		$sessionUrl = $this->depositSessionUrl(bookingId: $bookingId, created: $created, amountCents: $amountCents, returnUrl: $returnUrl);
+		if ($sessionUrl === '') {
+			return null;
+		}
 
+		return $sessionUrl;
+	}//end resolvePaymentRedirect()
+
+	/**
+	 * The deposit due on a freshly created booking, in cents; 0 when none is due.
+	 *
+	 * @param array<string, mixed> $created The createBookingFromPortal result.
+	 *
+	 * @return int
+	 */
+	private function depositCents(array $created): int {
+		$requiresDeposit = (bool)($created['requiresDeposit'] ?? false);
+		$depositAmount = (float)($created['depositAmount'] ?? 0.0);
+		if ($requiresDeposit === false || $depositAmount <= 0.0) {
+			return 0;
+		}
+
+		return (int)round($depositAmount * 100);
+	}//end depositCents()
+
+	/**
+	 * Open a deposit session and return its hosted checkout URL, or '' when it could not be opened.
+	 *
+	 * @param string               $bookingId   The freshly created booking UUID.
+	 * @param array<string, mixed> $created     The createBookingFromPortal result.
+	 * @param int                  $amountCents The deposit in cents.
+	 * @param string               $returnUrl   The portal URL the customer returns to.
+	 *
+	 * @return string
+	 */
+	private function depositSessionUrl(string $bookingId, array $created, int $amountCents, string $returnUrl): string {
 		try {
 			$session = $this->depositService->createDepositSession(
 				bookingId: $bookingId,
@@ -272,20 +299,12 @@ class PortalController extends Controller {
 				returnUrl: $returnUrl
 			);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq portal: deposit session could not be opened',
-				['booking' => $bookingId]
-			);
-			return null;
+			$this->logger->warning('Pipelinq portal: deposit session could not be opened', ['booking' => $bookingId]);
+			return '';
 		}
 
-		$sessionUrl = (string)$session['sessionUrl'];
-		if ($sessionUrl === '') {
-			return null;
-		}
-
-		return $sessionUrl;
-	}//end resolvePaymentRedirect()
+		return (string)$session['sessionUrl'];
+	}//end depositSessionUrl()
 
 	/**
 	 * GET /portal/booking/{bookingId} — fetch a booking (optionally signed).
@@ -720,6 +739,22 @@ class PortalController extends Controller {
 	 * @return array<string, mixed>|null
 	 */
 	private function loadBookingPublic(string $bookingId): ?array {
+		$data = $this->findBookingData(bookingId: $bookingId);
+		if ($data === null) {
+			return null;
+		}
+
+		return $this->publicBooking(data: $data);
+	}//end loadBookingPublic()
+
+	/**
+	 * Load a booking as an array, or null when it is unconfigured or cannot be read.
+	 *
+	 * @param string $bookingId The booking UUID.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findBookingData(string $bookingId): array|null {
 		$register = $this->registerId();
 		$schema = $this->schemaId(key: 'booking_schema');
 		if ($register === '' || $schema === '' || $bookingId === '') {
@@ -727,20 +762,22 @@ class PortalController extends Controller {
 		}
 
 		try {
-			$found = $this->getObjectService()->find(
-				id: $bookingId,
-				register: $register,
-				schema: $schema
-			);
+			$found = $this->getObjectService()->find(id: $bookingId, register: $register, schema: $schema);
 		} catch (\Throwable $e) {
 			return null;
 		}
 
-		$data = $this->toArray(object: $found);
-		if ($data === null) {
-			return null;
-		}
+		return $this->toArray(object: $found);
+	}//end findBookingData()
 
+	/**
+	 * The fields of a booking the portal UI may show.
+	 *
+	 * @param array<string, mixed> $data The booking.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function publicBooking(array $data): array {
 		return [
 			'id' => $this->idOf(object: $data),
 			'serviceId' => (string)($data['serviceId'] ?? ''),
@@ -748,7 +785,7 @@ class PortalController extends Controller {
 			'endAt' => (string)($data['endAt'] ?? ''),
 			'status' => (string)($data['status'] ?? ''),
 		];
-	}//end loadBookingPublic()
+	}//end publicBooking()
 
 	/**
 	 * Upsert a customer contact by email.
@@ -763,10 +800,6 @@ class PortalController extends Controller {
 	 * @return string The contact UUID (empty when the schema is unconfigured).
 	 *
 	 * @throws RuntimeException If OpenRegister is unavailable.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Find-or-create with defensive OR-shape guards
-	 *   (results/toArray/idOf null-checks) and two fault-tolerant try/catch fallbacks to the
-	 *   email-token id; each guard maps one distinct fallback, not nested branching.
 	 */
 	private function upsertCustomer(string $name, string $email, string $phone): string {
 		$register = $this->registerId();
@@ -775,64 +808,135 @@ class PortalController extends Controller {
 			// Without a customer mirror the booking still records the email
 			// verbatim via the customerId field as a fallback. The BookingService
 			// does not require a real OR entity, only a non-empty id token.
-			return ('email:' . substr($email, 0, 240));
+			return $this->emailToken(email: $email);
 		}
 
+		$id = $this->findCustomerId(register: $register, schema: $schema, email: $email);
+		if ($id !== '') {
+			return $id;
+		}
+
+		$object = $this->customerObject(name: $name, email: $email, phone: $phone);
+		return $this->createCustomer(object: $object, register: $register, schema: $schema);
+	}//end upsertCustomer()
+
+	/**
+	 * The id token that stands in for a customer contact: the email itself.
+	 *
+	 * @param string $email The customer's email.
+	 *
+	 * @return string
+	 */
+	private function emailToken(string $email): string {
+		return ('email:' . substr($email, 0, 240));
+	}//end emailToken()
+
+	/**
+	 * The id of the contact with this email, or '' when none is found or the lookup fails.
+	 *
+	 * @param string $register The register id.
+	 * @param string $schema   The contact schema id.
+	 * @param string $email    Lookup key.
+	 *
+	 * @return string
+	 */
+	private function findCustomerId(string $register, string $schema, string $email): string {
 		try {
 			$rows = $this->getObjectService()->findAll(
 				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'email' => $email,
-					],
+					'filters' => ['register' => $register, 'schema' => $schema, 'email' => $email],
 					'limit' => 1,
 				]
 			);
-			$results = ($rows['results'] ?? $rows);
-			if (is_array($results) === true && $results !== []) {
-				$existing = $this->toArray(object: $results[0]);
-				if ($existing !== null) {
-					$id = $this->idOf(object: $existing);
-					if ($id !== '') {
-						return $id;
-					}
-				}
-			}
+			return $this->firstCustomerId(rows: $rows);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: customer lookup failed');
 		}//end try
 
+		return '';
+	}//end findCustomerId()
+
+	/**
+	 * The id of the first found contact, or '' when there is none.
+	 *
+	 * @param mixed $rows The findAll answer.
+	 *
+	 * @return string
+	 */
+	private function firstCustomerId(mixed $rows): string {
+		$results = ($rows['results'] ?? $rows);
+		if (is_array($results) === false || $results === []) {
+			return '';
+		}
+
+		$existing = $this->toArray(object: $results[0]);
+		if ($existing === null) {
+			return '';
+		}
+
+		return $this->idOf(object: $existing);
+	}//end firstCustomerId()
+
+	/**
+	 * The contact object minted for a new portal customer.
+	 *
+	 * @param string $name  Display name.
+	 * @param string $email The customer's email.
+	 * @param string $phone Optional phone.
+	 *
+	 * @return array<string, string>
+	 */
+	private function customerObject(string $name, string $email, string $phone): array {
+		return [
+			'name' => substr($name, 0, 255),
+			'email' => $email,
+			'phone' => substr($phone, 0, 64),
+			'source' => 'portal',
+		];
+	}//end customerObject()
+
+	/**
+	 * Save a new contact and return its id, or the email token when that fails.
+	 *
+	 * @param array<string, string> $object   The contact object.
+	 * @param string                $register The register id.
+	 * @param string                $schema   The contact schema id.
+	 *
+	 * @return string
+	 *
+	 * @throws RuntimeException If OpenRegister is unavailable.
+	 */
+	private function createCustomer(array $object, string $register, string $schema): string {
 		try {
-			$saved = $this->getObjectService()->saveObject(
-				object: [
-					'name' => substr($name, 0, 255),
-					'email' => $email,
-					'phone' => substr($phone, 0, 64),
-					'source' => 'portal',
-				],
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: null
-			);
+			$saved = $this->getObjectService()->saveObject(object: $object, extend: [], register: $register, schema: $schema, uuid: null);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: customer save failed');
-			return ('email:' . substr($email, 0, 240));
+			return $this->emailToken(email: $object['email']);
 		}
 
-		$data = $this->toArray(object: $saved);
-		if ($data === null) {
-			return ('email:' . substr($email, 0, 240));
-		}
-
-		$id = $this->idOf(object: $data);
+		$id = $this->savedCustomerId(saved: $saved);
 		if ($id === '') {
-			return ('email:' . substr($email, 0, 240));
+			return $this->emailToken(email: $object['email']);
 		}
 
 		return $id;
-	}//end upsertCustomer()
+	}//end createCustomer()
+
+	/**
+	 * The id of a saved contact, or '' when the save answered nothing usable.
+	 *
+	 * @param mixed $saved The saveObject answer.
+	 *
+	 * @return string
+	 */
+	private function savedCustomerId(mixed $saved): string {
+		$data = $this->toArray(object: $saved);
+		if ($data === null) {
+			return '';
+		}
+
+		return $this->idOf(object: $data);
+	}//end savedCustomerId()
 
 	/**
 	 * Compute endAt = startAt + durationMinutes.

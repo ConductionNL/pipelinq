@@ -176,11 +176,7 @@ class ConnectorEgress implements ConnectorEgressInterface {
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function readUrl(string $configKey, string $url, array $config = [], string $sourceId = ''): EgressResult {
-		$resolvedId = trim($sourceId);
-		if ($resolvedId === '') {
-			$resolvedId = $this->sourceId(configKey: $configKey);
-		}
-
+		$resolvedId = $this->resolvedSourceId(configKey: $configKey, sourceId: $sourceId);
 		if ($resolvedId === '') {
 			return EgressResult::failed(
 				failure: EgressResult::NOT_CONFIGURED,
@@ -196,6 +192,40 @@ class ConnectorEgress implements ConnectorEgressInterface {
 			);
 		}
 
+		$endpoint = $this->endpointWithinSource(source: $source, url: $url);
+		if ($endpoint instanceof EgressResult) {
+			return $endpoint;
+		}
+
+		return $this->readThrough(source: $source, sourceId: $resolvedId, endpoint: $endpoint, config: $config, method: 'GET');
+	}//end readUrl()
+
+	/**
+	 * The explicit source id, else the one configured under the key.
+	 *
+	 * @param string $configKey The app-config key naming the source.
+	 * @param string $sourceId The explicit source id, or ''.
+	 *
+	 * @return string The source id ('' when none is configured).
+	 */
+	private function resolvedSourceId(string $configKey, string $sourceId): string {
+		$resolvedId = trim($sourceId);
+		if ($resolvedId === '') {
+			$resolvedId = $this->sourceId(configKey: $configKey);
+		}
+
+		return $resolvedId;
+	}//end resolvedSourceId()
+
+	/**
+	 * The URL relative to the source location, or a refusal when it lies outside the source.
+	 *
+	 * @param mixed $source The OpenConnector source.
+	 * @param string $url The absolute URL to read.
+	 *
+	 * @return string|EgressResult The endpoint, or the refusal.
+	 */
+	private function endpointWithinSource($source, string $url): string|EgressResult {
 		$location = rtrim((string)($this->toArray(value: $source)['location'] ?? ''), '/');
 		$endpoint = trim($url);
 		if ($location !== '') {
@@ -209,8 +239,8 @@ class ConnectorEgress implements ConnectorEgressInterface {
 			$endpoint = substr($endpoint, strlen($location));
 		}
 
-		return $this->readThrough(source: $source, sourceId: $resolvedId, endpoint: $endpoint, config: $config, method: 'GET');
-	}//end readUrl()
+		return $endpoint;
+	}//end endpointWithinSource()
 
 	/**
 	 * Perform the call once the source is resolved.

@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -124,89 +125,192 @@ class NormaliseTicketTitle implements IRepairStep {
 			return;
 		}
 
-		$repaired = 0;
-		$skipped = 0;
+		[$fetchRows, $saveRow] = $this->repairSteps();
+		$counts = ['repaired' => 0, 'skipped' => 0];
 
+		foreach (TicketServiceInterface::TYPES as $ticketType) {
+			$counts = $this->normaliseRows(rows: $fetchRows($ticketType), save: $saveRow, counts: $counts);
+		}
+
+		$output->info(
+			sprintf('Ticket titles normalised: %d rewritten, %d already plain.', $counts['repaired'], $counts['skipped'])
+		);
+	}//end run()
+
+	/**
+	 * Build the row reader and row writer the repair runs with.
+	 *
+	 * @return array{0: callable(string): array<mixed>, 1: callable(array<string, mixed>): mixed}
+	 *
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+	 */
+	private function repairSteps(): array {
 		$objectService = $this->ticketService->getObjectService();
 		$register = $this->ticketService->getRegisterId();
 		$schema = $this->ticketService->getSchemaId();
 		$actingAdmin = $this->actingAdmin();
 
-		foreach (TicketServiceInterface::TYPES as $ticketType) {
-			// Read with RBAC off for the same reason we write with it off: on the
-			// CLI there is no session, so an RBAC-filtered findAll returns only
-			// the handful of objects 'Anonymous' may read and the repair would
-			// silently normalise a fraction of the rows.
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'ticketType' => $ticketType,
-					],
-					'limit' => self::BATCH_LIMIT,
+		return [
+			$this->rowFetcher(objectService: $objectService, register: $register, schema: $schema),
+			$this->titleSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin),
+		];
+	}//end repairSteps()
+
+	/**
+	 * Build the reader that fetches all rows of one ticket subtype.
+	 *
+	 * @param ObjectServiceInterface $objectService The OR object service.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 *
+	 * @return callable(string): array<mixed>
+	 *
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+	 */
+	private function rowFetcher(ObjectServiceInterface $objectService, string $register, string $schema): callable {
+		// Read with RBAC off for the same reason we write with it off: on the
+		// CLI there is no session, so an RBAC-filtered findAll returns only
+		// the handful of objects 'Anonymous' may read and the repair would
+		// silently normalise a fraction of the rows.
+		return static fn (string $ticketType): array => $objectService->findAll(
+			config: [
+				'filters' => [
+					'register' => $register,
+					'schema' => $schema,
+					'ticketType' => $ticketType,
 				],
-				_rbac: false,
-				_multitenancy: false,
-			);
-
-			foreach ($rows as $row) {
-				$data = $this->toArray(row: $row);
-				if ($data === null) {
-					continue;
-				}
-
-				$title = ($data['title'] ?? null);
-				if (is_array($title) === false) {
-					$skipped++;
-					continue;
-				}
-
-				$plain = $this->collapse(map: $title);
-				if ($plain === null) {
-					$this->logger->warning(
-						'NormaliseTicketTitle: unusable title map, left untouched',
-						['uuid' => ($data['id'] ?? '')]
-					);
-					continue;
-				}
-
-				$data['title'] = $plain;
-
-				// Same seam the app's writes use: OpenRegister hands date-times
-				// back as `Y-m-d H:i:s`, which fails its own `format: date-time`
-				// on the way in. Without this the save is rejected and the title
-				// never lands.
-				$data = $this->ticketService->sanitizeForSave(payload: $data);
-
-				try {
-					// Bypass RBAC here — and ONLY here: this is a system context
-					// reshaping data it already owns. TicketService::save() keeps
-					// RBAC on, because controllers call it.
-					$objectService->saveObject(
-						object: $data,
-						extend: [],
-						register: $register,
-						schema: $schema,
-						uuid: (string)($data['id'] ?? ''),
-						_rbac: false,
-						_multitenancy: false,
-						currentUser: $actingAdmin,
-					);
-					$repaired++;
-				} catch (Throwable $e) {
-					$this->logger->error(
-						'NormaliseTicketTitle: failed to save ticket',
-						['uuid' => ($data['id'] ?? ''), 'exception' => $e->getMessage()]
-					);
-				}//end try
-			}//end foreach
-		}//end foreach
-
-		$output->info(
-			sprintf('Ticket titles normalised: %d rewritten, %d already plain.', $repaired, $skipped)
+				'limit' => self::BATCH_LIMIT,
+			],
+			_rbac: false,
+			_multitenancy: false,
 		);
-	}//end run()
+	}//end rowFetcher()
+
+	/**
+	 * Build the writer that saves one normalised row as the acting admin.
+	 *
+	 * @param ObjectServiceInterface $objectService The OR object service.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 * @param IUser|null $actingAdmin The admin to act as, or null when none exists.
+	 *
+	 * @return callable(array<string, mixed>): mixed
+	 *
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+	 */
+	private function titleSaver(ObjectServiceInterface $objectService, string $register, string $schema, IUser|null $actingAdmin): callable {
+		// Bypass RBAC here — and ONLY here: this is a system context
+		// reshaping data it already owns. TicketService::save() keeps
+		// RBAC on, because controllers call it.
+		return static fn (array $data): mixed => $objectService->saveObject(
+			object: $data,
+			extend: [],
+			register: $register,
+			schema: $schema,
+			uuid: (string)($data['id'] ?? ''),
+			_rbac: false,
+			_multitenancy: false,
+			currentUser: $actingAdmin,
+		);
+	}//end titleSaver()
+
+	/**
+	 * Normalise every row of one subtype and add the outcomes to the counts.
+	 *
+	 * @param array<mixed> $rows The fetched rows.
+	 * @param callable(array<string, mixed>): mixed $save The row writer.
+	 * @param array{repaired: int, skipped: int} $counts The running counts.
+	 *
+	 * @return array{repaired: int, skipped: int}
+	 *
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+	 */
+	private function normaliseRows(array $rows, callable $save, array $counts): array {
+		foreach ($rows as $row) {
+			$outcome = $this->normaliseRow(row: $row, save: $save);
+			if ($outcome !== null) {
+				$counts[$outcome]++;
+			}
+		}
+
+		return $counts;
+	}//end normaliseRows()
+
+	/**
+	 * Normalise one row's title.
+	 *
+	 * @param mixed $row The row as returned by the object service.
+	 * @param callable(array<string, mixed>): mixed $save The row writer.
+	 *
+	 * @return 'repaired'|'skipped'|null The counter to raise, or null when neither applies.
+	 *
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+	 */
+	private function normaliseRow(mixed $row, callable $save): string|null {
+		$data = $this->toArray(row: $row);
+		if ($data === null) {
+			return null;
+		}
+
+		$title = ($data['title'] ?? null);
+		if (is_array($title) === false) {
+			return 'skipped';
+		}
+
+		return $this->rewriteTitle(data: $data, title: $title, save: $save);
+	}//end normaliseRow()
+
+	/**
+	 * Collapse a row's translation-map title and save the row.
+	 *
+	 * @param array<string, mixed> $data The row data.
+	 * @param array<string, mixed> $title The stored translation map.
+	 * @param callable(array<string, mixed>): mixed $save The row writer.
+	 *
+	 * @return 'repaired'|null 'repaired' when saved, null when left untouched or the save failed.
+	 *
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+	 */
+	private function rewriteTitle(array $data, array $title, callable $save): string|null {
+		$plain = $this->collapse(map: $title);
+		if ($plain === null) {
+			$this->logger->warning('NormaliseTicketTitle: unusable title map, left untouched', ['uuid' => ($data['id'] ?? '')]);
+			return null;
+		}
+
+		$data['title'] = $plain;
+
+		// Same seam the app's writes use: OpenRegister hands date-times
+		// back as `Y-m-d H:i:s`, which fails its own `format: date-time`
+		// on the way in. Without this the save is rejected and the title
+		// never lands.
+		$data = $this->ticketService->sanitizeForSave(payload: $data);
+
+		return $this->saveRow(data: $data, save: $save);
+	}//end rewriteTitle()
+
+	/**
+	 * Save one normalised row, logging a failure.
+	 *
+	 * @param array<string, mixed> $data The row data.
+	 * @param callable(array<string, mixed>): mixed $save The row writer.
+	 *
+	 * @return 'repaired'|null
+	 *
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
+	 */
+	private function saveRow(array $data, callable $save): string|null {
+		try {
+			$save($data);
+			return 'repaired';
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'NormaliseTicketTitle: failed to save ticket',
+				['uuid' => ($data['id'] ?? ''), 'exception' => $e->getMessage()]
+			);
+			return null;
+		}//end try
+	}//end saveRow()
 
 	/**
 	 * Coerce an OpenRegister row into a plain array.

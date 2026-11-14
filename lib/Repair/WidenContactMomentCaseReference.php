@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -129,10 +130,26 @@ class WidenContactMomentCaseReference implements IRepairStep {
 		$schema = $this->ticketService->getSchemaId();
 		$actingAdmin = $this->actingAdmin();
 
-		$widened = 0;
-		$untouched = 0;
+		$rows = $this->contactMomentRows(objectService: $objectService, register: $register, schema: $schema);
+		$save = $this->momentSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
+		$counts = $this->widenRows(rows: $rows, save: $save);
 
-		$rows = $objectService->findAll(
+		$output->info(sprintf('Contact moment case sets: %d widened, %d already a set.', $counts['widened'], $counts['untouched']));
+	}//end run()
+
+	/**
+	 * Fetch every stored contact moment, with RBAC off.
+	 *
+	 * @param ObjectServiceInterface $objectService The OR object service.
+	 * @param string $register The register id.
+	 * @param string $schema The ticket schema id.
+	 *
+	 * @return array<mixed>
+	 *
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 */
+	private function contactMomentRows(ObjectServiceInterface $objectService, string $register, string $schema): array {
+		return $objectService->findAll(
 			config: [
 				'filters' => [
 					'register' => $register,
@@ -144,45 +161,103 @@ class WidenContactMomentCaseReference implements IRepairStep {
 			_rbac: false,
 			_multitenancy: false,
 		);
+	}//end contactMomentRows()
 
-		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
-			if ($data === null) {
-				continue;
-			}
-
-			$fields = $this->widenedFields(data: $data);
-			if ($fields === null) {
-				$untouched++;
-				continue;
-			}
-
-			$data = $this->ticketService->sanitizeForSave(payload: array_merge($data, $fields));
-
-			try {
-				$objectService->saveObject(
-					object: $data,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: (string)($data['id'] ?? ''),
-					_rbac: false,
-					_multitenancy: false,
-					currentUser: $actingAdmin,
-				);
-				$widened++;
-			} catch (Throwable $e) {
-				$this->logger->error(
-					'WidenContactMomentCaseReference: failed to save contact moment',
-					['uuid' => ($data['id'] ?? ''), 'exception' => $e->getMessage()]
-				);
-			}//end try
-		}//end foreach
-
-		$output->info(
-			sprintf('Contact moment case sets: %d widened, %d already a set.', $widened, $untouched)
+	/**
+	 * Build the writer that saves one widened contact moment as the acting admin.
+	 *
+	 * @param ObjectServiceInterface $objectService The OR object service.
+	 * @param string $register The register id.
+	 * @param string $schema The ticket schema id.
+	 * @param IUser|null $actingAdmin The admin to act as, or null when none exists.
+	 *
+	 * @return callable(array<string, mixed>): mixed
+	 *
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 */
+	private function momentSaver(ObjectServiceInterface $objectService, string $register, string $schema, IUser|null $actingAdmin): callable {
+		return static fn (array $data): mixed => $objectService->saveObject(
+			object: $data,
+			extend: [],
+			register: $register,
+			schema: $schema,
+			uuid: (string)($data['id'] ?? ''),
+			_rbac: false,
+			_multitenancy: false,
+			currentUser: $actingAdmin,
 		);
-	}//end run()
+	}//end momentSaver()
+
+	/**
+	 * Widen every row and count the outcomes.
+	 *
+	 * @param array<mixed> $rows The stored contact moments.
+	 * @param callable(array<string, mixed>): mixed $save The row writer.
+	 *
+	 * @return array{widened: int, untouched: int}
+	 *
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 */
+	private function widenRows(array $rows, callable $save): array {
+		$counts = ['widened' => 0, 'untouched' => 0];
+		foreach ($rows as $row) {
+			$outcome = $this->widenRow(row: $row, save: $save);
+			if ($outcome !== null) {
+				$counts[$outcome]++;
+			}
+		}
+
+		return $counts;
+	}//end widenRows()
+
+	/**
+	 * Widen one stored contact moment.
+	 *
+	 * @param mixed $row The row as returned by the object service.
+	 * @param callable(array<string, mixed>): mixed $save The row writer.
+	 *
+	 * @return 'widened'|'untouched'|null The counter to raise, or null when neither applies.
+	 *
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 */
+	private function widenRow(mixed $row, callable $save): string|null {
+		$data = $this->toArray(row: $row);
+		if ($data === null) {
+			return null;
+		}
+
+		$fields = $this->widenedFields(data: $data);
+		if ($fields === null) {
+			return 'untouched';
+		}
+
+		$data = $this->ticketService->sanitizeForSave(payload: array_merge($data, $fields));
+
+		return $this->saveMoment(data: $data, save: $save);
+	}//end widenRow()
+
+	/**
+	 * Save one widened contact moment, logging a failure.
+	 *
+	 * @param array<string, mixed> $data The contact moment data.
+	 * @param callable(array<string, mixed>): mixed $save The row writer.
+	 *
+	 * @return 'widened'|null
+	 *
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 */
+	private function saveMoment(array $data, callable $save): string|null {
+		try {
+			$save($data);
+			return 'widened';
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'WidenContactMomentCaseReference: failed to save contact moment',
+				['uuid' => ($data['id'] ?? ''), 'exception' => $e->getMessage()]
+			);
+			return null;
+		}//end try
+	}//end saveMoment()
 
 	/**
 	 * Resolve an admin to act as while saving.
