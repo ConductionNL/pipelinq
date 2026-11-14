@@ -40,6 +40,8 @@
 			@add="createNew"
 			@rowClick="openJob"
 			@view="openJob" />
+		<!-- data-portability-full-export 3.1: administrators only; the section hides itself otherwise. -->
+		<FullExportSection />
 		<ExportTestRunModal
 			v-if="testRunJobId"
 			:jobId="testRunJobId"
@@ -50,6 +52,7 @@
 <script>
 import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import FullExportSection from '../../components/FullExportSection.vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { exportApi } from '../../services/exportApi.js'
 import { exportJobSecondaryLabels, exportPageTabs } from './exportPageTabs.js'
@@ -177,6 +180,7 @@ export default {
 	components: {
 		CnIndexPage,
 		ExportTestRunModal,
+		FullExportSection,
 	},
 
 	data() {
