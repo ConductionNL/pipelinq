@@ -2007,6 +2007,10 @@
 						"route": "ClientDetail"
 					}
 				],
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "At risk", "filter": { "churnRisk.level": ["high", "medium"] }, "sort": { "key": "churnRisk.score", "order": "desc" } }
+				],
 				"columns": [
 					"name",
 					"type",
@@ -2029,6 +2033,12 @@
 							}
 						},
 						"widget": "badge"
+					},
+					{
+						"key": "churnRisk.level",
+						"label": "Risk",
+						"widget": "badge",
+						"widgetProps": { "colorMap": { "high": "error", "medium": "warning", "low": "success" } }
 					}
 				],
 				"sidebar": {
@@ -3581,6 +3591,28 @@
 						"props": {
 							"clientId": "@objectId",
 							"inline": true
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
+						"id": "client-risk",
+						"component": "ClientRiskSection",
+						"title": "Risk",
+						"placement": "end",
+						"props": {
+							"risk": "@object.churnRisk"
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
+						"id": "client-history-summary",
+						"component": "ClientHistorySummarySection",
+						"title": "History summary",
+						"placement": "end",
+						"props": {
+							"clientId": "@objectId"
 						},
 						"colSpan": 6,
 						"card": true

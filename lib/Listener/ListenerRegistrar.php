@@ -65,6 +65,16 @@ class ListenerRegistrar {
 			event: ObjectUpdatedEvent::class,
 			listener: ObjectEventListener::class
 		);
+		// A contract status change or a detractor answer recomputes the
+		// client's risk at once (clients-history-summary-and-risk D2).
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: ClientRiskChangeListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: ClientRiskChangeListener::class
+		);
 		// A saved answer on a resident's portal question tells them, with
 		// pipelinq's own message (portal-questions-in-dutch).
 		$context->registerEventListener(
