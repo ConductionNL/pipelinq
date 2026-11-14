@@ -83,6 +83,7 @@ import EmailCalendarSettingsSection from './components/settings/EmailCalendarSet
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
+import { createMatchLineFormatter } from './services/bookingFigures.js'
 import { createAppFormatters } from './services/cellFormatters.js'
 import {
 	auditVerdict,
@@ -219,7 +220,10 @@ export default {
 		 */
 		cellFormatters() {
 			// `auditVerdict` prints the connection audit's follow answers.
-			return { ...createAppFormatters(useObjectStore()), auditVerdict }
+			const formatters = { ...createAppFormatters(useObjectStore()), auditVerdict }
+			// The services list's match line (services-and-resources-at-a-glance).
+			formatters.serviceMatchLine = createMatchLineFormatter()
+			return formatters
 		},
 
 		/**

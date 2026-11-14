@@ -525,6 +525,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // service, and the count per service for the services list.
         ['name' => 'appointmentEligibility#eligibleResourceCounts', 'url' => '/api/appointment-services/eligible-resources', 'verb' => 'GET'],
         ['name' => 'appointmentEligibility#eligibleResources',      'url' => '/api/appointment-services/{id}/eligible-resources', 'verb' => 'GET'],
+        // How busy a service or resource is (REQ-SRG-003, REQ-SRG-004): one call per page.
+        ['name' => 'appointmentFigures#serviceFigures',  'url' => '/api/appointment-services/{id}/figures',  'verb' => 'GET'],
+        ['name' => 'appointmentFigures#resourceFigures', 'url' => '/api/appointment-resources/{id}/figures', 'verb' => 'GET'],
 
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
