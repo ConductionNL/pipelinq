@@ -181,6 +181,19 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 			return null;
 		}
 
+		return $this->findProvider(objectService: $objectService, id: $id, scope: $scope);
+	}//end lookup()
+
+	/**
+	 * Find one provider row, logging a miss.
+	 *
+	 * @param object              $objectService OpenRegister's ObjectService.
+	 * @param string              $id            Provider UUID / slug.
+	 * @param array<string, bool> $scope         Named `_rbac` / `_multitenancy` arguments.
+	 *
+	 * @return array<string, mixed>|null Row or null.
+	 */
+	private function findProvider(object $objectService, string $id, array $scope): array|null {
 		try {
 			$entity = $objectService->find(
 				id: $id,
@@ -190,10 +203,7 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
-			$this->logger->info(
-				'ChannelProviderRepository.findById: not found',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
+			$this->logger->info('ChannelProviderRepository.findById: not found', ['id' => $id, 'exception' => $e->getMessage()]);
 			return null;
 		}
 
@@ -202,7 +212,7 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end lookup()
+	}//end findProvider()
 
 	/**
 	 * First active row matching kind + vendor.
