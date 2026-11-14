@@ -3,9 +3,9 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Override forecast')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="forecast-override">
@@ -45,16 +45,17 @@
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcTextArea, NcTextField } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcTextArea, NcTextField } from '@nextcloud/vue'
 import { createOverride } from '../services/forecastApi.js'
 
 export default {
 	name: 'ForecastOverrideModal',
-	components: { NcButton, NcDialog, NcTextArea, NcTextField },
+	components: { NcButton, CnDialog, NcTextArea, NcTextField },
 	props: {
 		periodId: { type: String, required: true },
 		ownerId: { type: String, required: true },

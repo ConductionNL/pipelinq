@@ -1,0 +1,109 @@
+{
+	"$comment": "pipelinq's tickets that PqTickets, PqWachtrij, PqMijnWerk, PqInkomendGesprek, PqOperationeel and their copies draw and the main file lacked: the complaint PQ-2026-0420, the request PQ-2026-0403, and the unnumbered verhuizen and onbeleefd aan de balie. J. Peters and R. Yilmaz get a client here, ahead of the parts that book or report for them. The boards' meldingen are in 50-board-meldingen.json. The boards' relative times (-4 h, -40 min) are fixed morning times on the install day, as the loader only shifts days.",
+	"objects": [
+		{
+			"key": "client-jpeters",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "J. Peters",
+				"type": "person",
+				"address": "Molenweg 18, 2999BH Zuiddrecht",
+				"contactsUid": "example-jpeters",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Komt regelmatig aan de balie."
+			}
+		},
+		{
+			"key": "client-ryilmaz",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "R. Yilmaz",
+				"type": "person",
+				"address": "Kerkplein 6, 2999BG Zuiddrecht",
+				"contactsUid": "example-ryilmaz",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Belde over losse stoeptegels voor de deur."
+			}
+		},
+		{
+			"key": "ticket-balie-wachttijd",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "complaint",
+				"title": "Klacht over de wachttijd aan de balie",
+				"reference": "PQ-2026-0420",
+				"description": "De heer Peters wachtte drie kwartier aan de balie voor een uittreksel, terwijl hij een afspraak had.",
+				"client": "{{object:client-jpeters.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "balie",
+				"category": "klacht",
+				"complaintCategory": "service",
+				"occurredAt": "{{datetime:0 08:45}}"
+			}
+		},
+		{
+			"key": "ticket-kuiper-tweede-auto",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Parkeervergunning voor een tweede auto",
+				"reference": "PQ-2026-0403",
+				"description": "De familie Kuiper vroeg of een tweede parkeervergunning mogelijk is. Dat kan, met een hoger tarief, en de aanvraag is doorgestuurd.",
+				"client": "{{object:client-kuiper.id}}",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"status": "resolved",
+				"priority": "normal",
+				"channel": "portal",
+				"category": "parkeren",
+				"occurredAt": "{{datetime:-8 11:10}}"
+			}
+		},
+		{
+			"key": "ticket-hoekstra-verhuizen",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Verhuizen naar Zuiddrecht: wat regel ik?",
+				"description": "L. Hoekstra verhuist volgende maand naar Zuiddrecht en vraagt wat ze bij de gemeente moet regelen.",
+				"client": "{{object:client-hoekstra.id}}",
+				"status": "new",
+				"priority": "high",
+				"channel": "email",
+				"category": "burgerzaken",
+				"occurredAt": "{{datetime:-2 13:15}}"
+			}
+		},
+		{
+			"key": "ticket-balie-onbeleefd",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "complaint",
+				"title": "Onbeleefd behandeld aan de balie vanochtend",
+				"description": "Een bezoeker voelde zich vanochtend aan de balie onbeleefd behandeld en wil daar niet zijn naam bij zetten.",
+				"reporterName": "Anoniem",
+				"status": "new",
+				"priority": "high",
+				"channel": "balie",
+				"category": "klacht",
+				"complaintCategory": "service",
+				"occurredAt": "{{datetime:0 09:30}}"
+			}
+		}
+	]
+}

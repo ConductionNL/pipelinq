@@ -17,14 +17,13 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-011
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -70,20 +69,7 @@ class ForecastAccessPolicy {
 	 *   scenario to admin-settings, which never grew one
 	 */
 	public function isManager(string $userId): bool {
-		if ($userId === '') {
-			return false;
-		}
-
-		if ($this->groupManager->isAdmin($userId) === true) {
-			return true;
-		}
-
-		$group = $this->appConfig->getValueString(Application::APP_ID, self::MANAGER_GROUP_KEY, '');
-		if ($group === '') {
-			return false;
-		}
-
-		return $this->groupManager->isInGroup($userId, $group);
+		return $this->groupGate()->admits(userId: $userId, group: new ConfiguredGroup(key: self::MANAGER_GROUP_KEY));
 	}//end isManager()
 
 	/**
@@ -98,7 +84,7 @@ class ForecastAccessPolicy {
 	 *
 	 * @return bool True when reading is permitted.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-011-01, REQ-FRC-010-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011-01, REQ-FRC-010-03
 	 */
 	public function canRead(string $userId, string $level, ?string $ownerId): bool {
 		if ($userId === '') {
@@ -122,14 +108,10 @@ class ForecastAccessPolicy {
 	 *
 	 * @return bool True when overriding is permitted.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-011-02
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011-02
 	 */
 	public function canOverride(string $userId, string $level): bool {
-		if (in_array($level, ['rep', 'team', 'division'], true) === false) {
-			return false;
-		}
-
-		return $this->isManager(userId: $userId);
+		return $this->managesLevel(userId: $userId, level: $level);
 	}//end canOverride()
 
 	/**
@@ -142,13 +124,34 @@ class ForecastAccessPolicy {
 	 *
 	 * @return bool True when setting the quota is permitted.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-011-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011-03
 	 */
 	public function canSetQuota(string $userId, string $level): bool {
+		return $this->managesLevel(userId: $userId, level: $level);
+	}//end canSetQuota()
+
+	/**
+	 * Whether a manager acts on a level that carries forecast figures.
+	 *
+	 * @param string $userId The acting user UID.
+	 * @param string $level  The level (`rep`, `team` or `division`).
+	 *
+	 * @return bool Whether the user may act on that level.
+	 */
+	private function managesLevel(string $userId, string $level): bool {
 		if (in_array($level, ['rep', 'team', 'division'], true) === false) {
 			return false;
 		}
 
 		return $this->isManager(userId: $userId);
-	}//end canSetQuota()
+	}//end managesLevel()
+
+	/**
+	 * The admin-or-member gate over this policy's collaborators.
+	 *
+	 * @return ConfiguredGroupGate The gate.
+	 */
+	private function groupGate(): ConfiguredGroupGate {
+		return new ConfiguredGroupGate(appConfig: $this->appConfig, groupManager: $this->groupManager);
+	}//end groupGate()
 }//end class

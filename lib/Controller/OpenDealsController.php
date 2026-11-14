@@ -20,7 +20,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/detail-pages-read-at-a-glance/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 
 declare(strict_types=1);
@@ -28,7 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,6 +45,8 @@ use Throwable;
  * @spec openspec/specs/client-management/spec.md
  */
 class OpenDealsController extends Controller {
+	use SerialisedToArray;
+
 
 	/**
 	 * The lead field per party kind, and the app-config key of its schema.
@@ -76,7 +79,7 @@ class OpenDealsController extends Controller {
 		private readonly ObjectServiceInterface $objectService,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -87,7 +90,7 @@ class OpenDealsController extends Controller {
 	 *
 	 * @return JSONResponse `{openDealCount, openDealValue}` or an error.
 	 *
-	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/client-management/spec.md
+	 * @spec openspec/specs/client-management/spec.md
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -96,30 +99,61 @@ class OpenDealsController extends Controller {
 		}
 
 		[$field, $partyId] = $this->party();
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$leadSchema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
-		if ($field === '' || $register === '' || $leadSchema === '') {
+		$target = $this->leadTarget(field: $field);
+		if ($target === null) {
 			return new JSONResponse(['error' => 'Name one contact or client'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$partySchema = $this->appConfig->getValueString(Application::APP_ID, self::PARTIES[$field], '');
+		return $this->openDealsFor(field: $field, partyId: $partyId, register: $target[0], leadSchema: $target[1]);
+	}//end index()
+
+	/**
+	 * The register and lead schema, or null when no party is named or either is unset.
+	 *
+	 * @param string $field The party field ('' when no party is named).
+	 *
+	 * @return array{0: string, 1: string}|null
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function leadTarget(string $field): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
+		if ($field === '' || $register === '' || $leadSchema === '') {
+			return null;
+		}
+
+		return [$register, $leadSchema];
+	}//end leadTarget()
+
+	/**
+	 * The open-deal summary of a party the caller may read.
+	 *
+	 * @param string $field The party field.
+	 * @param string $partyId The party's id.
+	 * @param string $register The register id.
+	 * @param string $leadSchema The lead schema id.
+	 *
+	 * @return JSONResponse `{openDealCount, openDealValue}` or an error.
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function openDealsFor(string $field, string $partyId, string $register, string $leadSchema): JSONResponse {
+		$partySchema = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PARTIES[$field], '');
 		if ($this->canRead(id: $partyId, register: $register, schema: $partySchema) === false) {
 			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 		}
 
 		try {
 			$rows = $this->objectService->findAll(
-				config: [
-					'filters' => ['register' => $register, 'schema' => $leadSchema, $field => $partyId, 'status' => 'open'],
-					'limit' => self::LIMIT,
-				]
+				config: ['filters' => ['register' => $register, 'schema' => $leadSchema, $field => $partyId, 'status' => 'open'], 'limit' => self::LIMIT]
 			);
 		} catch (Throwable) {
 			return new JSONResponse(['error' => 'Deals unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
 		return new JSONResponse($this->summarise(rows: $rows, field: $field, partyId: $partyId));
-	}//end index()
+	}//end openDealsFor()
 
 	/**
 	 * Count and sum the open deals of the party.
@@ -136,7 +170,7 @@ class OpenDealsController extends Controller {
 		$count = 0;
 		$value = 0.0;
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(value: $row);
 			if (($data['status'] ?? '') !== 'open' || (string)($data[$field] ?? '') !== $partyId) {
 				continue;
 			}
@@ -189,26 +223,4 @@ class OpenDealsController extends Controller {
 			return false;
 		}
 	}//end canRead()
-
-	/**
-	 * Normalise an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed> The data, [] when unusable.
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

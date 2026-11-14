@@ -54,23 +54,12 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-
-const CHANNEL_COLORS = {
-	telefoon: '#4c84db',
-	email: '#f5a623',
-	balie: '#7ed321',
-	chat: '#9b59b6',
-	social: '#e74c3c',
-	brief: '#1abc9c',
-	unknown: '#95a5a6',
-}
+import { channelColor, reportSectionMixin } from './reportSection.js'
 
 export default {
 	name: 'ChannelDistributionSection',
 	components: { NcButton, NcLoadingIcon },
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [reportSectionMixin],
 
 	props: {
 		/** Relative period token (today / week / month), from `@workspace`.period. */
@@ -86,20 +75,8 @@ export default {
 
 	computed: {
 		effectivePeriod() {
-			if (this.period) return this.period
-			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
-			return (ctx && ctx.period) || 'today'
+			return this.period || this.fromWorkspace('period', 'today')
 		},
-	},
-
-	watch: {
-		effectivePeriod() {
-			this.fetchData()
-		},
-	},
-
-	mounted() {
-		this.fetchData()
 	},
 
 	methods: {
@@ -119,7 +96,7 @@ export default {
 					name,
 					count,
 					percentage: Math.round((count / totalContacts) * 100),
-					color: CHANNEL_COLORS[name] ?? CHANNEL_COLORS.unknown,
+					color: channelColor(name),
 				}))
 			} catch {
 				this.channelData = []

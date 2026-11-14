@@ -17,7 +17,9 @@
  * `_multitenancy` off, the same shape `CampaignPerformanceService` uses
  * to read portaliq's rollups. The probe is a string constant and the
  * whole path fails soft: shillinq absent means the report closes on won
- * leads and says so, never that it errors.
+ * leads and says so, never that it errors. `withCallerRights()` gives a
+ * reader that reads with the signed-in user's rights instead, for a screen
+ * that shows a user what shillinq holds.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -30,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
  */
 
 declare(strict_types=1);
@@ -38,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Service\Marketing\ShillinqInvoiceProjection;
+use OCA\Pipelinq\Util\PayloadToArray;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -45,9 +48,11 @@ use Throwable;
 /**
  * ShillinqInvoiceReader: paid AR invoices for one customer in one window.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
  */
 class ShillinqInvoiceReader {
+	use PayloadToArray;
+
 
 	/**
 	 * Shillinq's register slug.
@@ -92,13 +97,20 @@ class ShillinqInvoiceReader {
 	private const MAX_ROWS = 500;
 
 	/**
+	 * Whether reads apply the signed-in user's rights.
+	 *
+	 * @var bool
+	 */
+	private bool $callerRights = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container for the lazy, duck-typed object service.
 	 * @param LoggerInterface $logger Logger.
 	 * @param ShillinqInvoiceProjection $projection Reduces one shillinq row to what pipelinq reads.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -108,11 +120,64 @@ class ShillinqInvoiceReader {
 	}//end __construct()
 
 	/**
+	 * This reader with the signed-in user's rights: every read applies
+	 * OpenRegister's RBAC and multitenancy instead of reading as the system.
+	 *
+	 * @return static The reader.
+	 *
+	 * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+	 */
+	public function withCallerRights(): static {
+		$reader = clone $this;
+		$reader->callerRights = true;
+		return $reader;
+	}//end withCallerRights()
+
+	/**
+	 * Whether the signed-in user may read shillinq's AR invoices. A right
+	 * that cannot be checked answers no.
+	 *
+	 * @return bool True only when OpenRegister grants read on the schema.
+	 *
+	 * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
+	 */
+	public function callerMayRead(): bool {
+		if ($this->probe() === false) {
+			return false;
+		}
+
+		try {
+			$register = $this->container->get('OCA\OpenRegister\Db\RegisterMapper')->find(
+				id: self::SHILLINQ_REGISTER,
+				_rbac: false,
+				_multitenancy: false
+			);
+			$schema   = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->findBySlugInIds(
+				slug: self::AR_INVOICE_SCHEMA,
+				schemaIds: $register->getSchemas()
+			);
+			if ($schema === null) {
+				return false;
+			}
+
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService')
+				->getPermissionHandler()
+				->hasPermission(schema: $schema, action: 'read');
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'ShillinqInvoiceReader: the invoice read right could not be checked',
+				['exception' => $e->getMessage()]
+			);
+			return false;
+		}//end try
+	}//end callerMayRead()
+
+	/**
 	 * Whether shillinq is installed. Protected so a test can answer for it.
 	 *
 	 * @return bool True when shillinq is present.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function isAvailable(): bool {
 		return $this->probe();
@@ -129,29 +194,10 @@ class ShillinqInvoiceReader {
 	 * @return array<int, array{id: string, amount: float, currency: string, invoiceDate: string, invoiceNumber: string}>
 	 *         The invoices, keyed by nothing: the caller dedupes by id.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function paidInvoicesFor(string $customerRef, string $from, string $to): array {
-		$customer = trim($customerRef);
-		if ($customer === '' || $this->probe() === false) {
-			return [];
-		}
-
-		$objectService = $this->objectService();
-		if ($objectService === null) {
-			return [];
-		}
-
-		$rows = $this->pages(
-			objectService: $objectService,
-			filters: [
-				'register' => self::SHILLINQ_REGISTER,
-				'schema' => self::AR_INVOICE_SCHEMA,
-				'customerId' => $customer,
-				'lifecycleState' => self::PAID_STATE,
-			],
-			maxRows: self::MAX_ROWS
-		);
+		$rows = $this->customerRows(customerRef: $customerRef, filters: ['lifecycleState' => self::PAID_STATE]);
 
 		$invoices = [];
 		foreach ($rows as $row) {
@@ -187,28 +233,10 @@ class ShillinqInvoiceReader {
 	 *         `amount`, `currency`, `invoiceDate`, `dueDate`, `lifecycleState`
 	 *         and `lines`. Newest first is NOT guaranteed: the caller sorts.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function invoicesFor(string $customerRef): array {
-		$customer = trim($customerRef);
-		if ($customer === '' || $this->probe() === false) {
-			return [];
-		}
-
-		$objectService = $this->objectService();
-		if ($objectService === null) {
-			return [];
-		}
-
-		$rows = $this->pages(
-			objectService: $objectService,
-			filters: [
-				'register' => self::SHILLINQ_REGISTER,
-				'schema' => self::AR_INVOICE_SCHEMA,
-				'customerId' => $customer,
-			],
-			maxRows: self::MAX_ROWS
-		);
+		$rows = $this->customerRows(customerRef: $customerRef, filters: []);
 
 		$invoices = [];
 		foreach ($rows as $row) {
@@ -227,7 +255,7 @@ class ShillinqInvoiceReader {
 	 *
 	 * @return bool True when shillinq is installed.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	protected function probe(): bool {
 		return class_exists(self::SHILLINQ_PROBE_CLASS);
@@ -251,50 +279,56 @@ class ShillinqInvoiceReader {
 	}//end objectService()
 
 	/**
-	 * Read matching rows page by page until a short page or the cap.
+	 * The AR invoice rows of one customer, with any further filters; none
+	 * without a customer, without shillinq or without OpenRegister.
 	 *
-	 * @param object $objectService The OpenRegister object service.
-	 * @param array<string, mixed> $filters The filters, register and schema included.
-	 * @param int $maxRows Never read more than this many rows.
+	 * @param string               $customerRef The shillinq customer reference.
+	 * @param array<string, mixed> $filters     Filters on top of register, schema and customer.
 	 *
 	 * @return array<int, array<string, mixed>> Plain rows.
 	 */
-	private function pages(object $objectService, array $filters, int $maxRows): array {
-		$rows = [];
-		$offset = 0;
-		while ($offset < $maxRows) {
-			try {
-				$page = $objectService->findAll(
-					config: ['filters' => $filters, 'limit' => self::PAGE, 'offset' => $offset],
-					_rbac: false,
-					_multitenancy: false
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'ShillinqInvoiceReader: reading AR invoices failed',
-					['customer' => (string)($filters['customerId'] ?? ''), 'exception' => $e->getMessage()]
-				);
-				break;
-			}
-
-			if (is_iterable($page) === false) {
-				break;
-			}
-
-			$count = 0;
-			foreach ($page as $row) {
-				$rows[] = $this->toArray(value: $row);
-				$count++;
-			}
-
-			if ($count < self::PAGE) {
-				break;
-			}
-
-			$offset += self::PAGE;
+	private function customerRows(string $customerRef, array $filters): array {
+		$customer = trim($customerRef);
+		if ($customer === '' || $this->probe() === false) {
+			return [];
 		}
 
-		return $rows;
+		$objectService = $this->objectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		return $this->pages(
+			objectService: $objectService,
+			filters: array_merge(
+				['register' => self::SHILLINQ_REGISTER, 'schema' => self::AR_INVOICE_SCHEMA, 'customerId' => $customer],
+				$filters
+			)
+		);
+	}//end customerRows()
+
+	/**
+	 * Read matching rows page by page until a short page or the cap, with
+	 * this reader's access flags; a failed read is logged and ends the read.
+	 *
+	 * @param object               $objectService The OpenRegister object service.
+	 * @param array<string, mixed> $filters       The filters, register and schema included.
+	 *
+	 * @return array<int, array<string, mixed>> Plain rows.
+	 */
+	private function pages(object $objectService, array $filters): array {
+		$reader = new ObjectPageReader(objectService: $objectService, withRights: $this->callerRights);
+		$reader->pageSize = self::PAGE;
+		$reader->maxRows = self::MAX_ROWS;
+		$rows = $reader->readAll(filters: $filters);
+		if ($reader->failure !== null) {
+			$this->logger->warning(
+				'ShillinqInvoiceReader: reading AR invoices failed',
+				['customer' => (string)($filters['customerId'] ?? ''), 'exception' => $reader->failure->getMessage()]
+			);
+		}
+
+		return array_map(fn (mixed $row): array => $this->toArray(value: $row), $rows);
 	}//end pages()
 
 	/**
@@ -353,33 +387,4 @@ class ShillinqInvoiceReader {
 
 		return ($to === '' || $date <= $to);
 	}//end inWindow()
-
-	/**
-	 * Normalise an OpenRegister entity, or an array, to a plain array.
-	 *
-	 * @param mixed $value Entity object or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

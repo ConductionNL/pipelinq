@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+ * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
  */
 
 declare(strict_types=1);
@@ -28,7 +28,12 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
+use OCA\OpenRegister\Service\WebhookService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -36,9 +41,6 @@ use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
-use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 
 /**
  * Service for POS refund business operations.
@@ -69,10 +71,12 @@ use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
  *  transition wrappers (confirmRefund / rejectRefund) and the two event
  *  emitters — all single-purpose and unit-tested individually.
  *
- * @spec openspec/changes/pos-refund-return/tasks.md#2.1
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
+ * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.2
  */
-class PosRefundService {
+class PosRefundService implements PosRefundServiceInterface {
+	use CastingPayloadToArray;
+
 	/**
 	 * CloudEvent type emitted on refund completion (accounting reversal).
 	 *
@@ -137,7 +141,7 @@ class PosRefundService {
 	 *
 	 * @return array{taxAmount: float, lineTotal: float, ratio: float} The computed amounts.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	public function recalculateLine(array $originalLine, float $returnedQty): array {
 		$originalQty = (float)($originalLine['quantity'] ?? 0);
@@ -174,7 +178,7 @@ class PosRefundService {
 	 *
 	 * @throws OCSNotFoundException If the refund does not exist.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	public function recalculateTotals(string $refundId): array {
 		$refund = $this->fetchRefund(id: $refundId);
@@ -221,7 +225,7 @@ class PosRefundService {
 	 * @throws OCSForbiddenException If the user lacks manager permission.
 	 * @throws OCSBadRequestException If the status is invalid, the cart is empty, or the cap is exceeded.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	public function confirmRefund(string $id, string $userId): array {
 		$refund = $this->fetchRefund(id: $id);
@@ -282,8 +286,8 @@ class PosRefundService {
 	 * @throws OCSForbiddenException If the user lacks manager permission.
 	 * @throws OCSBadRequestException If the status is invalid or the reason is empty.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.2
 	 */
 	public function rejectRefund(string $id, string $reason, string $userId): array {
 		if (trim($reason) === '') {
@@ -320,7 +324,7 @@ class PosRefundService {
 	 * @throws OCSBadRequestException When the transition is invalid / cap exceeded.
 	 * @throws OCSNotFoundException When the object cannot be resolved.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.2
 	 */
 	private function transitionObject(string $id, string $action): array {
 		try {
@@ -343,11 +347,7 @@ class PosRefundService {
 	 *
 	 * @return \Throwable The mapped OCS exception (or the original on no match).
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch maps one distinct
-	 *  engine-error class (RBAC, manager deny, cap/invalid-state, missing object)
-	 *  to its HTTP status; collapsing them would lose the status fidelity.
-	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
 	 */
 	private function mapTransitionError(\Throwable $e): \Throwable {
 		$short = (new ReflectionClass($e))->getShortName();
@@ -355,12 +355,7 @@ class PosRefundService {
 
 		// Per-object RBAC denial → 403.
 		if ($short === 'NotAuthorizedException' || stripos($message, 'permission') !== false) {
-			$forbidden = 'Geen toegang tot deze retour.';
-			if ($message !== '') {
-				$forbidden = $message;
-			}
-
-			return new OCSForbiddenException($forbidden);
+			return $this->forbiddenFor(message: $message);
 		}
 
 		// Manager-authorization denial from PosRefundManagerGuard → 403.
@@ -368,13 +363,40 @@ class PosRefundService {
 			return new OCSForbiddenException($message);
 		}
 
+		return $this->mapByMessage(e: $e, message: $message);
+	}//end mapTransitionError()
+
+	/**
+	 * The 403 for an RBAC denial, carrying the engine's message when it has one.
+	 *
+	 * @param string $message The engine's message.
+	 *
+	 * @return OCSForbiddenException
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
+	 */
+	private function forbiddenFor(string $message): OCSForbiddenException {
+		$forbidden = 'Geen toegang tot deze retour.';
+		if ($message !== '') {
+			$forbidden = $message;
+		}
+
+		return new OCSForbiddenException($forbidden);
+	}//end forbiddenFor()
+
+	/**
+	 * Map a non-authorization transition failure by its message: 422, 404, or the original.
+	 *
+	 * @param \Throwable $e The original failure.
+	 * @param string $message Its message.
+	 *
+	 * @return \Throwable
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
+	 */
+	private function mapByMessage(\Throwable $e, string $message): \Throwable {
 		// Over-refund cap, invalid-state, or other precondition → 422.
-		if (stripos($message, 'overschrijdt') !== false
-			|| stripos($message, 'not allowed from') !== false
-			|| stripos($message, 'not declared') !== false
-			|| stripos($message, 'ontbreekt') !== false
-			|| stripos($message, 'Originele kassabon niet gevonden') !== false
-		) {
+		if ($this->isPreconditionFailure(message: $message) === true) {
 			return new OCSBadRequestException($message);
 		}
 
@@ -383,7 +405,24 @@ class PosRefundService {
 		}
 
 		return $e;
-	}//end mapTransitionError()
+	}//end mapByMessage()
+
+	/**
+	 * Whether a message reports an over-refund, an invalid-state transition or another precondition.
+	 *
+	 * @param string $message The engine's message.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
+	 */
+	private function isPreconditionFailure(string $message): bool {
+		return stripos($message, 'overschrijdt') !== false
+			|| stripos($message, 'not allowed from') !== false
+			|| stripos($message, 'not declared') !== false
+			|| stripos($message, 'ontbreekt') !== false
+			|| stripos($message, 'Originele kassabon niet gevonden') !== false;
+	}//end isPreconditionFailure()
 
 	/**
 	 * Emit the pipelinq.TransactionRefund.completed CloudEvent (fire-and-forget).
@@ -398,7 +437,7 @@ class PosRefundService {
 	 *
 	 * @return string The generated CloudEvents id, or empty string on failure.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	public function emitRefundEvent(array $refund): string {
 		$eventId = $this->uuid();
@@ -429,7 +468,7 @@ class PosRefundService {
 	 *
 	 * @return int The number of stock movement events emitted.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	public function emitStockMovementEvents(string $refundId): int {
 		$refund = $this->fetchRefund(id: $refundId);
@@ -483,7 +522,7 @@ class PosRefundService {
 	 *
 	 * @return array<string, mixed> The CloudEvent payload.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function buildRefundPayload(string $eventId, array $refund): array {
 		$confirmedAt = (string)($refund['confirmedAt'] ?? '');
@@ -530,7 +569,7 @@ class PosRefundService {
 	 *
 	 * @return array<string, mixed> The CloudEvent payload.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function buildStockMovementPayload(
 		string $refundId,
@@ -565,7 +604,7 @@ class PosRefundService {
 	 *
 	 * @throws OCSNotFoundException If the refund is not found in this app's posRefund schema.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function fetchRefund(string $id): array {
 		[$register, $schema] = $this->config(schemaKey: 'posRefund_schema');
@@ -590,7 +629,7 @@ class PosRefundService {
 	 *
 	 * @return array<int, array<string, mixed>> The refund lines.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function fetchRefundLines(string $refundId): array {
 		[$register, $schema] = $this->config(schemaKey: 'posRefundLine_schema');
@@ -627,7 +666,7 @@ class PosRefundService {
 	 *
 	 * @throws OCSNotFoundException If the original line is not found in this app's schema.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function fetchOriginalLine(string $id): array {
 		[$register, $schema] = $this->config(schemaKey: 'posTransactionLine_schema');
@@ -653,7 +692,7 @@ class PosRefundService {
 	 *
 	 * @return array<string, mixed> The original line, or an empty array.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function fetchOriginalLineSafe(string $id): array {
 		try {
@@ -678,7 +717,7 @@ class PosRefundService {
 	 *
 	 * @throws OCSNotFoundException If the transaction is not found.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function fetchTransaction(string $id): void {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
@@ -702,7 +741,7 @@ class PosRefundService {
 	 *
 	 * @return array<string, mixed> The saved refund as an array.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function saveRefund(string $id, array $refund): array {
 		[$register, $schema] = $this->config(schemaKey: 'posRefund_schema');
@@ -728,7 +767,7 @@ class PosRefundService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function saveRefundLine(string $id, array $line): void {
 		if ($id === '') {
@@ -761,11 +800,11 @@ class PosRefundService {
 	 *
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
@@ -779,7 +818,7 @@ class PosRefundService {
 	 *
 	 * @return object The object service.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old
@@ -792,42 +831,13 @@ class PosRefundService {
 	 *
 	 * @return object The transition engine.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.2
 	 */
 	private function getTransitionEngine(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old
 		// catch was unreachable — phpstan reports it as a dead catch.
 		return $this->transitionEngine;
 	}//end getTransitionEngine()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 
 	/**
 	 * Current time as an ISO 8601 string.

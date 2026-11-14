@@ -23,17 +23,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use Psr\Container\ContainerInterface;
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -48,9 +49,13 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * (ADR-022). All reads/writes are scoped to this app's own register + schema,
  * so an id belonging to another app resolves to a 404 (IDOR-safe).
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 abstract class AbstractExportService {
+	use CastingPayloadToArray {
+		toArray as protected;
+	}
+
 	/**
 	 * Constructor.
 	 *
@@ -75,8 +80,8 @@ abstract class AbstractExportService {
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 */
 	protected function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Export register of schema is niet geconfigureerd.');
@@ -184,42 +189,13 @@ abstract class AbstractExportService {
 	 * @return object The object service.
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	protected function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old
 		// catch was unreachable — phpstan reports it as a dead catch.
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	protected function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 
 	/**
 	 * Current time as an ISO 8601 string.

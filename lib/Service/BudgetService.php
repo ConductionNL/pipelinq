@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -29,7 +29,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BudgetServiceInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -48,11 +50,13 @@ use Throwable;
  * - resetPeriods() — invoked by BudgetPeriodResetJob; rolls every
  *   budget row whose periodResetAt has passed.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Budget gating spans many period/threshold branches; complexity is inherent.
  */
-class BudgetService {
+class BudgetService implements BudgetServiceInterface {
+	use PayloadToArray;
+
 	/**
 	 * Default messageSendBudget schema slug.
 	 */
@@ -71,7 +75,7 @@ class BudgetService {
 	 * @param NotificationService $notificationService Admin notifications.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -91,7 +95,7 @@ class BudgetService {
 	 * @return bool True when allowed (no budget, soft-limit, or
 	 *              hard-limit not yet reached).
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function canSend(string $tenantId, string $providerId, float $estimatedCostEur = 0.0): bool {
 		$budget = $this->loadBudget(tenantId: $tenantId, providerId: $providerId);
@@ -133,7 +137,7 @@ class BudgetService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function recordSend(string $tenantId, string $providerId, float $costEur = 0.0): void {
 		$budget = $this->loadBudget(tenantId: $tenantId, providerId: $providerId);
@@ -143,35 +147,46 @@ class BudgetService {
 
 		$newMessages = ((int)($budget['currentPeriodMessages'] ?? 0)) + 1;
 		$newCost = ((float)($budget['currentPeriodCostEur'] ?? 0)) + $costEur;
-		$maxMessages = (int)($budget['maxMessages'] ?? 0);
-		$maxCost = (float)($budget['maxCostEur'] ?? 0);
-		$thresholdPct = (float)($budget['alertThresholdPct'] ?? 0.8);
-		$alertedAt = (string)($budget['alertedAtPeriodStart'] ?? '');
 
 		$payload = $budget;
 		$payload['currentPeriodMessages'] = $newMessages;
 		$payload['currentPeriodCostEur'] = $newCost;
 
-		// Soft-alert: fire exactly once per period when crossing the
-		// threshold (either messages or cost).
-		$shouldAlert = false;
-		if ($alertedAt === '') {
-			if ($maxMessages > 0 && $newMessages >= (int)ceil($maxMessages * $thresholdPct)) {
-				$shouldAlert = true;
-			}
-
-			if ($maxCost > 0 && $newCost >= ($maxCost * $thresholdPct)) {
-				$shouldAlert = true;
-			}
-		}
-
-		if ($shouldAlert === true) {
+		if ($this->crossesAlertThreshold(budget: $budget, newMessages: $newMessages, newCost: $newCost) === true) {
 			$payload['alertedAtPeriodStart'] = $this->nowIso();
 			$this->fireAlert(tenantId: $tenantId, providerId: $providerId, budget: $payload);
 		}
 
 		$this->saveObject(payload: $payload, id: $this->extractId(payload: $budget));
 	}//end recordSend()
+
+	/**
+	 * Whether this send crosses the alert threshold (messages or cost) for the first time this period.
+	 *
+	 * Soft-alert: fire exactly once per period when crossing the
+	 * threshold (either messages or cost).
+	 *
+	 * @param array<string, mixed> $budget The budget before this send.
+	 * @param int $newMessages The message count including this send.
+	 * @param float $newCost The cost including this send.
+	 *
+	 * @return bool True when the alert should fire.
+	 */
+	private function crossesAlertThreshold(array $budget, int $newMessages, float $newCost): bool {
+		$maxMessages = (int)($budget['maxMessages'] ?? 0);
+		$maxCost = (float)($budget['maxCostEur'] ?? 0);
+		$thresholdPct = (float)($budget['alertThresholdPct'] ?? 0.8);
+		$alertedAt = (string)($budget['alertedAtPeriodStart'] ?? '');
+		if ($alertedAt !== '') {
+			return false;
+		}
+
+		if ($maxMessages > 0 && $newMessages >= (int)ceil($maxMessages * $thresholdPct)) {
+			return true;
+		}
+
+		return $maxCost > 0 && $newCost >= ($maxCost * $thresholdPct);
+	}//end crossesAlertThreshold()
 
 	/**
 	 * Roll every budget row whose period has passed.
@@ -182,7 +197,7 @@ class BudgetService {
 	 *
 	 * @return int Number of rows reset.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function resetPeriods(): int {
 		$rows = $this->loadAllBudgets();
@@ -232,8 +247,21 @@ class BudgetService {
 			return null;
 		}
 
+		return $this->firstBudget(rows: $this->findBudgetRows(objectService: $objectService, tenantId: $tenantId, providerId: $providerId));
+	}//end loadBudget()
+
+	/**
+	 * Read the budget rows of a tenant and provider; null (logged) when the read fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $tenantId The tenant id.
+	 * @param string $providerId The provider id.
+	 *
+	 * @return mixed The rows, or null.
+	 */
+	private function findBudgetRows(object $objectService, string $tenantId, string $providerId) {
 		try {
-			$rows = $objectService->findAll(
+			return $objectService->findAll(
 				config: [
 					'filters' => [
 						'tenantId' => $tenantId,
@@ -250,14 +278,23 @@ class BudgetService {
 			);
 			return null;
 		}
+	}//end findBudgetRows()
 
+	/**
+	 * The first budget row as an array, or null when there is none.
+	 *
+	 * @param mixed $rows The rows.
+	 *
+	 * @return array<string, mixed>|null The budget.
+	 */
+	private function firstBudget($rows): array|null {
 		if ($rows === null || $rows === []) {
 			return null;
 		}
 
 		$first = $rows[0];
 		return $this->toArray(value: $first);
-	}//end loadBudget()
+	}//end firstBudget()
 
 	/**
 	 * Load every budget row.
@@ -415,35 +452,6 @@ class BudgetService {
 	}//end getObjectService()
 
 	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * Extract a UUID / id / slug from a payload.
 	 *
 	 * @param array<string, mixed> $payload Payload.
@@ -477,7 +485,7 @@ class BudgetService {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -492,7 +500,7 @@ class BudgetService {
 	 */
 	private function getSchemaSlug(): string {
 		$slug = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'messageSendBudget_schema',
 			''
 		);

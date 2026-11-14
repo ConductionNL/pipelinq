@@ -152,6 +152,160 @@ class ForecastSettingsControllerTest extends TestCase {
 	}//end testNegativePipelineTargetRefused()
 
 	/**
+	 * An override with a reason is stored and shown with its source; the
+	 * settings list each currency's current source.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+	 */
+	public function testOverrideWithReasonRoundTrips(): void {
+		$response = $this->controller(
+			[
+				'exchange_rates' => ['USD' => 0.9],
+				'rate_overrides' => ['usd' => ['rate' => '0.92', 'reason' => 'contract rate 2026']],
+			]
+		)->update();
+		$this->assertSame(200, $response->getStatus());
+
+		$data = $this->controller()->index()->getData();
+		$this->assertSame('contract rate 2026', $data['rate_overrides']->USD['reason']);
+		$this->assertSame('override', $data['rate_sources']->USD['source']);
+		$this->assertSame(0.92, $data['rate_sources']->USD['rate']);
+		$this->assertSame(7, $data['max_rate_age_days']);
+		$this->assertArrayHasKey('USD', json_decode($this->store[ExchangeRateService::RATE_DATES_KEY], true));
+	}//end testOverrideWithReasonRoundTrips()
+
+	/**
+	 * An override without a reason, or a stale limit under one day, is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
+	 */
+	public function testOverrideWithoutReasonRefused(): void {
+		$response = $this->controller(['rate_overrides' => ['USD' => ['rate' => 0.92, 'reason' => '']]])->update();
+		$this->assertSame(400, $response->getStatus());
+		$this->assertArrayNotHasKey(ExchangeRateService::OVERRIDES_KEY, $this->store->getArrayCopy());
+
+		$response = $this->controller(['max_rate_age_days' => 0])->update();
+		$this->assertSame(400, $response->getStatus());
+
+		$this->controller(['max_rate_age_days' => 14])->update();
+		$this->assertSame(14, $this->controller()->index()->getData()['max_rate_age_days']);
+	}//end testOverrideWithoutReasonRefused()
+
+	/**
+	 * Every forecast field is stored, in submission order, under its own key
+	 * with its own cast.
+	 *
+	 * @return void
+	 */
+	public function testEveryFieldIsStoredInOrder(): void {
+		$response = $this->controller(
+			[
+				'team_groups' => 'sales-a',
+				'manager_group' => 'managers',
+				'max_rate_age_days' => '3',
+				'reporting_currency' => ' gbp ',
+				'at_risk_days' => '12',
+				'at_risk_percent' => '-4',
+				'accuracy_amber' => '0.75x',
+				'accuracy_green' => 2,
+				'generation_hour' => '23',
+				'generation_day' => '7',
+				'generation_timezone' => 15,
+				'pipeline_target' => '0',
+				'commit_threshold' => '70',
+			]
+		)->update();
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(['status' => 'saved'], $response->getData());
+		$this->assertSame(
+			[
+				'forecast_commit_threshold' => '70',
+				ForecastService::PIPELINE_TARGET_KEY => '0',
+				'forecast_generation_timezone' => '15',
+				'forecast_generation_day' => '7',
+				'forecast_generation_hour' => '23',
+				ForecastService::ACCURACY_GREEN_KEY => '2',
+				ForecastService::ACCURACY_AMBER_KEY => '0.75',
+				'forecast_at_risk_percent' => '-4',
+				'forecast_at_risk_days' => '12',
+				ExchangeRateService::REPORTING_CURRENCY_KEY => 'GBP',
+				ExchangeRateService::MAX_RATE_AGE_KEY => '3',
+				'forecast_manager_group' => 'managers',
+				'forecast_team_groups' => 'sales-a',
+			],
+			$this->store->getArrayCopy()
+		);
+	}//end testEveryFieldIsStoredInOrder()
+
+	/**
+	 * An empty request stores nothing and still reports saved.
+	 *
+	 * @return void
+	 */
+	public function testEmptyRequestStoresNothing(): void {
+		$response = $this->controller()->update();
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(['status' => 'saved'], $response->getData());
+		$this->assertSame([], $this->store->getArrayCopy());
+	}//end testEmptyRequestStoresNothing()
+
+	/**
+	 * Each refused value answers with its own message, keeps the fields
+	 * before it and stores none after it.
+	 *
+	 * @param array<string, mixed> $params  The request parameters.
+	 * @param string               $message The expected error.
+	 * @param list<string>         $stored  The keys stored before the refusal.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider refusedProvider
+	 */
+	public function testRefusalStopsAtTheFirstBadField(array $params, string $message, array $stored): void {
+		$response = $this->controller($params + ['commit_threshold' => '5', 'team_groups' => 't'])->update();
+		$this->assertSame(400, $response->getStatus());
+		$this->assertSame(['error' => $message], $response->getData());
+		$this->assertSame($stored, array_keys($this->store->getArrayCopy()));
+	}//end testRefusalStopsAtTheFirstBadField()
+
+	/**
+	 * The refused values.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: string, 2: list<string>}>
+	 */
+	public static function refusedProvider(): array {
+		$threshold = 'forecast_commit_threshold';
+		return [
+			'negative threshold' => [['commit_threshold' => -1, 'pipeline_target' => 4], 'commit_threshold must be non-negative.', []],
+			'negative target' => [['pipeline_target' => '-1', 'generation_timezone' => 'UTC'], 'pipeline_target must be non-negative.', [$threshold]],
+			'day zero' => [['generation_timezone' => 'UTC', 'generation_day' => 0], 'generation_day must be 1-7.', [$threshold, 'forecast_generation_timezone']],
+			'day eight' => [['generation_day' => 8, 'generation_hour' => 1], 'generation_day must be 1-7.', [$threshold]],
+			'hour negative' => [['generation_day' => 1, 'generation_hour' => -1], 'generation_hour must be 0-23.', [$threshold, 'forecast_generation_day']],
+			'hour 24' => [['generation_hour' => 24, 'accuracy_green' => 1], 'generation_hour must be 0-23.', [$threshold]],
+			'currency' => [['at_risk_days' => 2, 'reporting_currency' => 'EURO'], 'reporting_currency must be a three-letter currency code.', [$threshold, 'forecast_at_risk_days']],
+			'stale limit' => [['reporting_currency' => 'eur', 'max_rate_age_days' => 0, 'manager_group' => 'm'], 'max_rate_age_days must be at least 1.', [$threshold, ExchangeRateService::REPORTING_CURRENCY_KEY]],
+		];
+	}//end refusedProvider()
+
+	/**
+	 * A refused rate table answers with the service's message and stores no
+	 * later field.
+	 *
+	 * @return void
+	 */
+	public function testRefusedRateTableKeepsTheMessage(): void {
+		$response = $this->controller(['exchange_rates' => ['USD' => '-1'], 'manager_group' => 'm', 'commit_threshold' => 1])->update();
+		$this->assertSame(400, $response->getStatus());
+		$this->assertNotSame('', (string)$response->getData()['error']);
+		$this->assertSame(['forecast_commit_threshold'], array_keys($this->store->getArrayCopy()));
+	}//end testRefusedRateTableKeepsTheMessage()
+
+	/**
 	 * An app config double reading the shared store.
 	 *
 	 * @return IAppConfig The double.

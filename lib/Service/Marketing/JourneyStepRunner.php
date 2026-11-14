@@ -33,13 +33,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\JourneyStepRunnerInterface;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -53,9 +54,9 @@ use Throwable;
  *  its audience, the consent gate, the transport and the run ledger; splitting
  *  it would put the gate somewhere the action could be reached without it.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
  */
-class JourneyStepRunner {
+class JourneyStepRunner implements JourneyStepRunnerInterface {
 
 	/**
 	 * The channel a journey mailing uses.
@@ -82,7 +83,7 @@ class JourneyStepRunner {
 	 * @param ITimeFactory $time Clock.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -104,7 +105,7 @@ class JourneyStepRunner {
 	 *
 	 * @return array<int, array{contactId: string, state: string, reason: string}> One entry per contact.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	public function run(string $journeyId, array $subject = [], string $flowRunUuid = ''): array {
 		$journey = $this->journeys->find(journeyId: $journeyId);
@@ -112,15 +113,11 @@ class JourneyStepRunner {
 			return [];
 		}
 
-		$action = (array)($journey['action'] ?? []);
+		$step = new JourneyStep(journeyId: $journeyId, journey: $journey);
+		$action = $step->action();
 		$outcomes = [];
 		foreach ($this->contactsFor(journey: $journey, subject: $subject) as $contactId) {
-			$outcome = $this->act(
-				journeyId: $journeyId,
-				action: $action,
-				contactId: $contactId,
-				segmentId: trim((string)($journey['audienceSegment'] ?? ''))
-			);
+			$outcome = $this->act(step: $step, contactId: $contactId);
 			$outcome['contactId'] = $contactId;
 			$outcomes[] = $outcome;
 
@@ -141,14 +138,13 @@ class JourneyStepRunner {
 	/**
 	 * Perform one action for one contact, gate first.
 	 *
-	 * @param string $journeyId The journey.
-	 * @param array<string, mixed> $action The journey's action block.
-	 * @param string $contactId The contact.
-	 * @param string $segmentId The journey's audience segment, for the delivery ledger.
+	 * @param JourneyStep $step      The journey's step.
+	 * @param string      $contactId The contact.
 	 *
 	 * @return array{state: string, reason: string} What happened.
 	 */
-	private function act(string $journeyId, array $action, string $contactId, string $segmentId = ''): array {
+	private function act(JourneyStep $step, string $contactId): array {
+		$action = $step->action();
 		if ((string)($action['kind'] ?? 'createTask') === 'createTask') {
 			// A task is internal work, not a message to the contact, so no
 			// consent question arises and none is asked.
@@ -165,67 +161,115 @@ class JourneyStepRunner {
 		if ($gate['allowed'] === false) {
 			$this->logger->info(
 				'JourneyStepRunner: refused a journey send',
-				['journeyId' => $journeyId, 'contactId' => $contactId, 'reason' => $gate['reason']]
+				['journeyId' => $step->journeyId, 'contactId' => $contactId, 'reason' => $gate['reason']]
 			);
 			return ['state' => 'refused', 'reason' => $gate['reason']];
 		}
 
-		return $this->sendMailing(journeyId: $journeyId, action: $action, contactId: $contactId, segmentId: $segmentId);
+		return $this->sendMailing(mailing: new JourneyMailing(step: $step, contactId: $contactId));
 	}//end act()
 
 	/**
 	 * Send one journey mailing to one contact.
 	 *
-	 * @param string $journeyId The journey.
-	 * @param array<string, mixed> $action The action block.
-	 * @param string $contactId The contact.
-	 * @param string $segmentId The journey's audience segment, for the delivery ledger.
+	 * @param JourneyMailing $mailing The step and the contact.
 	 *
 	 * @return array{state: string, reason: string} What happened.
 	 */
-	private function sendMailing(string $journeyId, array $action, string $contactId, string $segmentId = ''): array {
+	private function sendMailing(JourneyMailing $mailing): array {
+		$reason = $this->prepareMailing(mailing: $mailing);
+		if ($reason === '') {
+			$reason = $this->queueMailing(mailing: $mailing);
+		}
+
+		if ($reason !== '') {
+			return ['state' => 'failed', 'reason' => $reason];
+		}
+
+		return $this->deliverMailing(mailing: $mailing);
+	}//end sendMailing()
+
+	/**
+	 * Resolve the template, the transport and the contact's address.
+	 *
+	 * @param JourneyMailing $mailing The mailing to fill.
+	 *
+	 * @return string The failure reason, '' when everything resolved.
+	 */
+	private function prepareMailing(JourneyMailing $mailing): string {
 		$template = $this->store->find(
 			schemaSlug: $this->store->schemaSlug('campaignTemplate_schema', 'campaignTemplate'),
-			id: (string)($action['templateId'] ?? '')
+			id: $mailing->step->templateId()
 		);
 		if ($template === null) {
-			return ['state' => 'failed', 'reason' => 'template_missing'];
+			return 'template_missing';
 		}
 
 		$transport = $this->transports->resolveTransport(blast: []);
 		if ($transport === null) {
-			return ['state' => 'failed', 'reason' => 'no_transport'];
+			return 'no_transport';
 		}
 
+		$mailing->template = $template;
+		$mailing->transport = $transport;
+		$mailing->email = $this->emailOf(contactId: $mailing->contactId);
+
+		return self::reasonWhen(failed: $mailing->email === '', reason: 'no_email');
+	}//end prepareMailing()
+
+	/**
+	 * The contact's trimmed address, '' when the contact or its address is missing.
+	 *
+	 * @param string $contactId The contact.
+	 *
+	 * @return string
+	 */
+	private function emailOf(string $contactId): string {
 		$contact = $this->store->find(schemaSlug: $this->store->schemaSlug('contact_schema', 'contact'), id: $contactId);
-		$email = trim((string)(($contact ?? [])['email'] ?? ''));
-		if ($email === '') {
-			return ['state' => 'failed', 'reason' => 'no_email'];
-		}
 
-		$blastId = $this->ledgerBlast(
-			journeyId: $journeyId,
-			templateId: (string)($action['templateId'] ?? ''),
-			segmentId: $segmentId
-		);
+		return trim((string)(($contact ?? [])['email'] ?? ''));
+	}//end emailOf()
+
+	/**
+	 * Record a queued delivery against the journey's blast.
+	 *
+	 * @param JourneyMailing $mailing The mailing to fill.
+	 *
+	 * @return string The failure reason, '' when the delivery is queued.
+	 */
+	private function queueMailing(JourneyMailing $mailing): string {
+		$blastId = $this->ledgerBlast(step: $mailing->step);
 		if ($blastId === '') {
-			return ['state' => 'failed', 'reason' => 'no_ledger'];
+			return 'no_ledger';
 		}
 
 		$delivery = $this->store->save(
 			schemaSlug: $this->store->schemaSlug('blastDelivery_schema', 'blastDelivery'),
-			payload: ['blastId' => $blastId, 'contactId' => $contactId, 'email' => $email, 'status' => 'queued']
+			payload: ['blastId' => $blastId, 'contactId' => $mailing->contactId, 'email' => $mailing->email, 'status' => 'queued']
 		);
 		if ($delivery === null) {
-			return ['state' => 'failed', 'reason' => 'no_delivery'];
+			return 'no_delivery';
 		}
 
+		$mailing->delivery = $delivery;
+
+		return '';
+	}//end queueMailing()
+
+	/**
+	 * Hand the queued delivery to the transport.
+	 *
+	 * @param JourneyMailing $mailing The prepared, queued mailing.
+	 *
+	 * @return array{state: string, reason: string} What happened.
+	 */
+	private function deliverMailing(JourneyMailing $mailing): array {
 		try {
-			$accepted = $this->transports->sendOneDelivery(delivery: $delivery, template: $template, transport: $transport);
+			$accepted = $this->transports->sendOneDelivery(delivery: $mailing->delivery, template: $mailing->template, transport: $mailing->transport);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'JourneyStepRunner.sendMailing: the transport threw',
-				['journeyId' => $journeyId, 'contactId' => $contactId, 'exception' => $e->getMessage()]
+				['journeyId' => $mailing->step->journeyId, 'contactId' => $mailing->contactId, 'exception' => $e->getMessage()]
 			);
 			return ['state' => 'failed', 'reason' => 'transport_error'];
 		}
@@ -235,7 +279,23 @@ class JourneyStepRunner {
 		}
 
 		return ['state' => 'failed', 'reason' => 'transport_rejected'];
-	}//end sendMailing()
+	}//end deliverMailing()
+
+	/**
+	 * The reason when the check failed, otherwise ''.
+	 *
+	 * @param bool   $failed Whether the check failed.
+	 * @param string $reason The reason it failed.
+	 *
+	 * @return string
+	 */
+	private static function reasonWhen(bool $failed, string $reason): string {
+		if ($failed === true) {
+			return $reason;
+		}
+
+		return '';
+	}//end reasonWhen()
 
 	/**
 	 * Put a task on somebody's list.
@@ -387,13 +447,12 @@ class JourneyStepRunner {
 	 * what keeps the click redirect, the unsubscribe link and the campaign
 	 * report working on a journey send without a second code path.
 	 *
-	 * @param string $journeyId The journey.
-	 * @param string $templateId The template the journey sends.
-	 * @param string $segmentId The journey's audience segment, which the blast schema requires.
+	 * @param JourneyStep $step The journey's step: its id, template and audience segment (which the blast schema requires).
 	 *
 	 * @return string The blast id, empty when it could not be written.
 	 */
-	private function ledgerBlast(string $journeyId, string $templateId, string $segmentId = ''): string {
+	private function ledgerBlast(JourneyStep $step): string {
+		$journeyId = $step->journeyId;
 		$schema = $this->store->schemaSlug('blast_schema', 'blast');
 		foreach ($this->store->findAll(schemaSlug: $schema, filters: ['journeyId' => $journeyId]) as $blast) {
 			if ((string)($blast['journeyId'] ?? '') === $journeyId) {
@@ -406,12 +465,12 @@ class JourneyStepRunner {
 			'status' => 'sending',
 			'channel' => self::CHANNEL,
 			'journeyId' => $journeyId,
-			'templateId' => $templateId,
+			'templateId' => $step->templateId(),
 			// `segmentId` is on the blast schema's required list, so it has
 			// to be PRESENT even when a journey has no segment. An absent key
 			// is refused by OpenRegister and the write is dropped without an
 			// error, which is how a whole send disappears quietly.
-			'segmentId' => $segmentId,
+			'segmentId' => $step->segmentId(),
 			'listId' => '',
 			'createdAt' => date('c', $this->time->getTime()),
 		]);

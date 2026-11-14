@@ -1,11 +1,8 @@
 <template>
 	<CnSettingsSection
-		:name="t('pipelinq', 'Prospect Discovery')"
+		:name="t('pipelinq', 'Find prospects')"
 		:description="
-			t(
-				'pipelinq',
-				'Configure your Ideal Customer Profile (ICP) to discover potential leads.',
-			)
+			t('pipelinq', 'Your ideal customer profile, to find possible leads.')
 		">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
@@ -168,6 +165,77 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
+
+/** How the server shows a KvK API key that is configured. */
+const MASKED_KEY = '***configured***'
+
+/**
+ * A request to the prospect settings endpoint.
+ *
+ * @param {object} init The method and body, if any.
+ * @return {Promise<Response>} The response.
+ */
+function settingsRequest(init) {
+	return fetch(
+		generateUrl('/apps/pipelinq/api/prospects/settings'),
+		{
+			...init,
+			headers: jsonRequestHeaders(),
+		},
+	)
+}
+
+/**
+ * The stored profile as the form edits it; a configured KvK key stays masked.
+ *
+ * @param {object} data The stored profile.
+ * @return {object} The form.
+ */
+function icpForm(data) {
+	return {
+		...icpFilters(data),
+		excludeInactive: data.excludeInactive !== false,
+		kvkApiKey:
+			data.kvkApiKey === MASKED_KEY
+				? MASKED_KEY
+				: '',
+
+		openCorporatesEnabled: data.openCorporatesEnabled || false,
+	}
+}
+
+/**
+ * @param {object} data The stored profile.
+ * @return {object} The company size, provinces and legal forms, empty when unset.
+ */
+function icpFilters(data) {
+	return {
+		employeeCountMin: data.employeeCountMin || 0,
+		employeeCountMax: data.employeeCountMax || 0,
+		provinces: data.provinces || [],
+		legalForms: data.legalForms || [],
+	}
+}
+
+/**
+ * @param {?Array<string>} list A stored list.
+ * @return {string} The list as the form types it.
+ */
+function listText(list) {
+	return (list || []).join(', ')
+}
+
+/**
+ * @param {string} text A comma-separated list as typed.
+ * @return {Array<string>} The entries, trimmed, empty ones left out.
+ */
+function textList(text) {
+	return text
+		.split(',')
+		.map((s) => s.trim())
+		.filter(Boolean)
+}
 
 export default {
 	name: 'ProspectSettings',
@@ -232,38 +300,17 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-65
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-65
 		 */
 		async fetchSettings() {
 			this.loading = true
 			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/prospects/settings'),
-					{
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
+				const response = await settingsRequest({})
 				if (response.ok) {
 					const data = await response.json()
-					this.form = {
-						employeeCountMin: data.employeeCountMin || 0,
-						employeeCountMax: data.employeeCountMax || 0,
-						provinces: data.provinces || [],
-						legalForms: data.legalForms || [],
-						excludeInactive: data.excludeInactive !== false,
-						kvkApiKey:
-							data.kvkApiKey === '***configured***'
-								? '***configured***'
-								: '',
-
-						openCorporatesEnabled: data.openCorporatesEnabled || false,
-					}
-					this.sbiCodesText = (data.sbiCodes || []).join(', ')
-					this.keywordsText = (data.keywords || []).join(', ')
+					this.form = icpForm(data)
+					this.sbiCodesText = listText(data.sbiCodes)
+					this.keywordsText = listText(data.keywords)
 				}
 			} catch {
 				// Settings may not exist yet
@@ -273,7 +320,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-66
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-66
 		 */
 		async save() {
 			this.saving = true
@@ -281,67 +328,51 @@ export default {
 
 			const payload = {
 				...this.form,
-				sbiCodes: this.sbiCodesText
-					.split(',')
-					.map((s) => s.trim())
-					.filter(Boolean),
+				sbiCodes: textList(this.sbiCodesText),
 
-				keywords: this.keywordsText
-					.split(',')
-					.map((s) => s.trim())
-					.filter(Boolean),
+				keywords: textList(this.keywordsText),
 			}
 
 			// Don't send masked API key
-			if (payload.kvkApiKey === '***configured***') {
+			if (payload.kvkApiKey === MASKED_KEY) {
 				delete payload.kvkApiKey
 			}
 
 			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/prospects/settings'),
-					{
-						method: 'PUT',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(payload),
-					},
-				)
-
-				if (response.ok) {
-					this.message = t('pipelinq', 'ICP settings saved successfully')
-					this.messageType = 'success'
-				} else {
-					this.message = t('pipelinq', 'Failed to save ICP settings')
-					this.messageType = 'error'
-				}
+				const response = await settingsRequest({
+					method: 'PUT',
+					body: JSON.stringify(payload),
+				})
+				this.showSaved(response.ok)
 			} catch {
-				this.message = t('pipelinq', 'Failed to save ICP settings')
-				this.messageType = 'error'
+				this.showSaved(false)
 			} finally {
 				this.saving = false
+			}
+		},
+
+		/**
+		 * @param {boolean} saved Whether the settings were saved.
+		 * @return {void}
+		 */
+		showSaved(saved) {
+			if (saved) {
+				this.message = t('pipelinq', 'ICP settings saved successfully')
+				this.messageType = 'success'
+			} else {
+				this.message = t('pipelinq', 'Failed to save ICP settings')
+				this.messageType = 'error'
 			}
 		},
 	},
 }
 </script>
 
+<style scoped src="../fieldGroupLayout.css"></style>
+
 <style scoped>
 .prospect-settings__form {
 	max-width: 600px;
-}
-
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
 }
 
 .form-group--checkbox {
@@ -353,15 +384,6 @@ export default {
 .form-group--checkbox label {
 	margin-bottom: 0;
 	font-weight: normal;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .form-help {

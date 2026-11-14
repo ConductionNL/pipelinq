@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
-use OCA\OpenRegister\Service\Notification\UnsubscribeHeaders;
+use OCA\OpenRegister\Notifications\Service\Notification\UnsubscribeHeaders;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
@@ -114,6 +114,7 @@ class SegmentBlastUnsubscribeTest extends TestCase {
 			FakeSlugResolver::connectorRegister(),
 			$logger,
 			new PhysicalAddressRenderer(),
+			new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($container, $appConfig, new \Psr\Log\NullLogger()),
 		);
 		$blast = new BlastService($container, $appConfig, $segments, $mailTransport, $logger);
 

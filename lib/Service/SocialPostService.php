@@ -44,14 +44,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
 use OCA\Pipelinq\Service\Social\SocialGatewayResult;
@@ -64,7 +65,7 @@ use OCP\IAppConfig;
 /**
  * The social post lifecycle, its variants and its publishing.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The composer surface, the
  *  approval gate and the publishing loop are one cohesive object lifecycle;
@@ -84,7 +85,7 @@ use OCP\IAppConfig;
  *  short; splitting the class would separate the gate from the path it gates,
  *  which is the arrangement that lets a gate be skipped.
  */
-class SocialPostService {
+class SocialPostService implements SocialPostServiceInterface {
 	/**
 	 * The post schema slug, matching the register fragment.
 	 *
@@ -149,6 +150,17 @@ class SocialPostService {
 	];
 
 	/**
+	 * Where a review decision moves the post: an approval schedules it, a
+	 * rejection sends it back to the marketer.
+	 *
+	 * @var array<string, string>
+	 */
+	private const DECISION_STATUS = [
+		'approved' => self::STATUS_SCHEDULED,
+		'rejected' => self::STATUS_DRAFT,
+	];
+
+	/**
 	 * Fields a client may set. `status`, `approvals`, `agentAuthored`,
 	 * `agentAuthoredBy`, `createdBy`, `publishedAt` and `failureReason` are
 	 * written by this service and are ignored wherever a client sends them.
@@ -200,7 +212,7 @@ class SocialPostService {
 	 *
 	 * @return string The schema slug.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function schema(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA);
@@ -213,7 +225,7 @@ class SocialPostService {
 	 *
 	 * @return array{data: array<int, array<string, mixed>>} The posts.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function listPosts(string $status = ''): array {
 		$filters = [];
@@ -231,7 +243,7 @@ class SocialPostService {
 	 *
 	 * @return array<string, mixed>|null The post, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function getPost(string $postId): ?array {
 		return $this->store->find(schemaSlug: $this->schema(), id: $postId);
@@ -246,7 +258,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function createPost(array $payload, string $uid, string $agent = ''): array {
 		if (trim((string)($payload['body'] ?? '')) === '') {
@@ -281,7 +293,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function updatePost(string $postId, array $payload, string $uid): array {
 		$post = $this->getPost(postId: $postId);
@@ -318,7 +330,7 @@ class SocialPostService {
 	 *
 	 * @return array{body: string, link: string, media: array<int, array<string, mixed>>} The resolved values.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function resolveVariant(array $post, string $network): array {
 		$media = ($post['media'] ?? []);
@@ -332,29 +344,13 @@ class SocialPostService {
 			'media' => $media,
 		];
 
-		$variants = ($post['variants'] ?? []);
-		$variant = null;
-		if (is_array($variants) === true) {
-			$variant = ($variants[$network] ?? null);
-		}
-
-		if (is_array($variant) === false) {
+		$merge = new PostVariantMerge();
+		$variant = $merge->variantFor(post: $post, network: $network);
+		if ($variant === null) {
 			return $resolved;
 		}
 
-		foreach (['body', 'link'] as $field) {
-			$value = trim((string)($variant[$field] ?? ''));
-			if ($value !== '') {
-				$resolved[$field] = $value;
-			}
-		}
-
-		$variantMedia = ($variant['media'] ?? null);
-		if (is_array($variantMedia) === true && $variantMedia !== []) {
-			$resolved['media'] = $variantMedia;
-		}
-
-		return $resolved;
+		return $merge->merged(resolved: $resolved, variant: $variant);
 	}//end resolveVariant()
 
 	/**
@@ -367,7 +363,7 @@ class SocialPostService {
 	 *
 	 * @return array<int, string> One readable line per network that does not fit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function overlongVariants(array $post): array {
 		$problems = [];
@@ -401,7 +397,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function submitForApproval(string $postId): array {
 		$post = $this->getPost(postId: $postId);
@@ -440,15 +436,12 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function approve(string $postId, string $uid, string $note = ''): array {
 		return $this->decide(
-			postId: $postId,
-			uid: $uid,
-			decision: 'approved',
-			note: $note,
-			nextStatus: self::STATUS_SCHEDULED,
+			review: new PostReview(postId: $postId, uid: $uid),
+			verdict: new ReviewVerdict(decision: 'approved', note: $note),
 		);
 	}//end approve()
 
@@ -461,15 +454,12 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	public function reject(string $postId, string $uid, string $note = ''): array {
 		return $this->decide(
-			postId: $postId,
-			uid: $uid,
-			decision: 'rejected',
-			note: $note,
-			nextStatus: self::STATUS_DRAFT,
+			review: new PostReview(postId: $postId, uid: $uid),
+			verdict: new ReviewVerdict(decision: 'rejected', note: $note),
 		);
 	}//end reject()
 
@@ -480,7 +470,7 @@ class SocialPostService {
 	 *
 	 * @return int How many posts were attempted.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function publishDuePosts(?string $now = null): int {
 		$moment = ($now ?? gmdate('Y-m-d\TH:i:s\Z'));
@@ -507,7 +497,7 @@ class SocialPostService {
 	 * @return array{error?: string, post?: array<string, mixed>, publications?: array<int, array<string, mixed>>}
 	 *         The settled post and its publications, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function publishPost(string $postId): array {
 		$post = $this->getPost(postId: $postId);
@@ -545,7 +535,7 @@ class SocialPostService {
 	 *
 	 * @return array{error?: string, publication?: array<string, mixed>} The row, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function retryPublication(string $publicationId, string $uid): array {
 		$publication = $this->publications->find(publicationId: $publicationId);
@@ -587,69 +577,98 @@ class SocialPostService {
 	 *
 	 * @return array<string, mixed>|null The publication row, or null when it could not be written.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	private function publishToAccount(array $post, string $accountId): ?array {
-		$account = $this->accounts->getAccount(accountId: $accountId);
-		$network = '';
-		if ($account !== null) {
-			$network = (string)($account['network'] ?? '');
-		}
-
+		$account = new PublishingAccount(id: $accountId, row: $this->accounts->getAccount(accountId: $accountId));
 		$publication = $this->publications->open(
 			postId: $this->store->idOf(payload: $post),
 			accountId: $accountId,
-			network: $network,
+			network: $account->network(),
 		);
 
 		if ($publication === null) {
 			return null;
 		}
 
-		if ($account === null) {
-			return $this->publications->record(
-				publication: $publication,
-				outcome: SocialPublishOutcome::refused(
-					code: SocialGatewayResult::NOT_CONFIGURED,
-					reason: 'This post names an account that no longer exists.',
-				),
-			);
+		$run = new AccountPublishRun(post: $post, account: $account);
+		$run->publication = $publication;
+		if ($account->row === null) {
+			return $this->recordNotConfigured(run: $run, reason: 'This post names an account that no longer exists.');
 		}
 
-		$request = $this->requestFor(post: $post, account: $account);
+		return $this->publishOpened(run: $run);
+	}//end publishToAccount()
+
+	/**
+	 * Publish to an existing account whose publication row is open: hand a
+	 * share-mode account to advocacy, otherwise go through its network's adapter.
+	 *
+	 * @param AccountPublishRun $run The post, account and publication.
+	 *
+	 * @return array<string, mixed>|null The publication row, or null when it could not be written.
+	 */
+	private function publishOpened(AccountPublishRun $run): ?array {
+		$account = $run->account;
+		$request = $this->requestFor(post: $run->post, account: (array)$account->row);
 
 		// The accounts no application may post to never reach an adapter.
-		if ((string)($account['publishMode'] ?? 'api') === 'share') {
+		if ($account->publishMode() === 'share') {
 			return $this->advocacy->requestShare(
-				publication: $publication,
-				account: $account,
-				post: $post,
+				publication: $run->publication,
+				account: (array)$account->row,
+				post: $run->post,
 				request: $request,
 			);
 		}
 
-		$adapter = $this->registry->forNetwork(network: $network);
+		$adapter = $this->registry->forNetwork(network: $account->network());
 		if ($adapter === null) {
-			return $this->publications->record(
-				publication: $publication,
-				outcome: SocialPublishOutcome::refused(
-					code: SocialGatewayResult::NOT_CONFIGURED,
-					reason: 'Pipelinq cannot publish to ' . $network . ' yet.',
-				),
-			);
+			return $this->recordNotConfigured(run: $run, reason: 'Pipelinq cannot publish to ' . $account->network() . ' yet.');
 		}
 
-		$stop = $this->budgetRefusal(adapter: $adapter);
+		return $this->publishThrough(run: $run, attempt: new AdapterAttempt(adapter: $adapter, request: $request));
+	}//end publishOpened()
+
+	/**
+	 * Publish through an adapter unless the spend budget stops it, record the
+	 * outcome and settle the budget and the account's grant.
+	 *
+	 * @param AccountPublishRun $run     The post, account and publication.
+	 * @param AdapterAttempt    $attempt The adapter and the resolved request.
+	 *
+	 * @return array<string, mixed>|null The publication row, or null when it could not be written.
+	 */
+	private function publishThrough(AccountPublishRun $run, AdapterAttempt $attempt): ?array {
+		$stop = $this->budgetRefusal(adapter: $attempt->adapter);
 		if ($stop !== null) {
-			return $this->publications->record(publication: $publication, outcome: $stop);
+			return $this->publications->record(publication: $run->publication, outcome: $stop);
 		}
 
-		$outcome = $adapter->publish(request: $request);
-		$recorded = $this->publications->record(publication: $publication, outcome: $outcome);
-		$this->afterAttempt(accountId: $accountId, adapter: $adapter, outcome: $outcome);
+		$outcome = $attempt->adapter->publish(request: $attempt->request);
+		$recorded = $this->publications->record(publication: $run->publication, outcome: $outcome);
+		$this->afterAttempt(accountId: $run->account->id, adapter: $attempt->adapter, outcome: $outcome);
 
 		return $recorded;
-	}//end publishToAccount()
+	}//end publishThrough()
+
+	/**
+	 * Record a typed not-configured refusal on the run's publication.
+	 *
+	 * @param AccountPublishRun $run    The post, account and publication.
+	 * @param string            $reason Why nothing was sent.
+	 *
+	 * @return array<string, mixed>|null The publication row, or null when it could not be written.
+	 */
+	private function recordNotConfigured(AccountPublishRun $run, string $reason): ?array {
+		return $this->publications->record(
+			publication: $run->publication,
+			outcome: SocialPublishOutcome::refused(
+				code: SocialGatewayResult::NOT_CONFIGURED,
+				reason: $reason,
+			),
+		);
+	}//end recordNotConfigured()
 
 	/**
 	 * Build the resolved request one account gets, with the campaign link
@@ -660,7 +679,7 @@ class SocialPostService {
 	 *
 	 * @return SocialPublishRequest The request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
+	 * @spec openspec/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
 	 */
 	private function requestFor(array $post, array $account): SocialPublishRequest {
 		$network = (string)($account['network'] ?? '');
@@ -700,7 +719,7 @@ class SocialPostService {
 	 *
 	 * @return string The link to publish.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
+	 * @spec openspec/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
 	 */
 	private function decoratedLink(array $post, string $network, string $link): string {
 		$campaignId = trim((string)($post['campaignId'] ?? ''));
@@ -741,7 +760,7 @@ class SocialPostService {
 	 *
 	 * @return SocialPublishOutcome|null The refusal, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	private function budgetRefusal(SocialNetworkAdapter $adapter): ?SocialPublishOutcome {
 		$cost = $adapter->costPerPost();
@@ -774,7 +793,7 @@ class SocialPostService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	private function afterAttempt(string $accountId, SocialNetworkAdapter $adapter, SocialPublishOutcome $outcome): void {
 		if ($outcome->accepted === true && $outcome->cost > 0.0) {
@@ -802,36 +821,11 @@ class SocialPostService {
 	 *
 	 * @return array<string, mixed> The settled post.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	private function settle(string $postId, array $post): array {
 		$rows = $this->publications->forPost(postId: $postId);
-		$failures = [];
-		$done = 0;
-
-		foreach ($rows as $row) {
-			$status = (string)($row['status'] ?? '');
-			if ($status === SocialPublicationStore::FAILED) {
-				$failures[] = (string)($row['network'] ?? '') . ': ' . (string)($row['failureReason'] ?? '');
-				continue;
-			}
-
-			if (in_array($status, self::SETTLED_STATUSES, true) === true) {
-				$done++;
-			}
-		}
-
-		$post['status'] = self::STATUS_SCHEDULED;
-		$post['failureReason'] = '';
-		if ($failures !== []) {
-			$post['status'] = self::STATUS_FAILED;
-			$post['failureReason'] = implode(' ', $failures);
-		} elseif ($rows !== [] && $done === count($rows)) {
-			$post['status'] = self::STATUS_PUBLISHED;
-			if (trim((string)($post['publishedAt'] ?? '')) === '') {
-				$post['publishedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-			}
-		}
+		$post = (new PostSettlement())->settled(post: $post, rows: $rows);
 
 		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $postId);
 
@@ -841,16 +835,13 @@ class SocialPostService {
 	/**
 	 * Record one human decision and move the post.
 	 *
-	 * @param string $postId The post.
-	 * @param string $uid The person deciding.
-	 * @param string $decision `approved` or `rejected`.
-	 * @param string $note Their words.
-	 * @param string $nextStatus Where the post goes.
+	 * @param PostReview    $review  The post and the person deciding.
+	 * @param ReviewVerdict $verdict `approved` or `rejected`, with their words.
 	 *
 	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
 	 */
-	private function decide(string $postId, string $uid, string $decision, string $note, string $nextStatus): array {
-		$post = $this->getPost(postId: $postId);
+	private function decide(PostReview $review, ReviewVerdict $verdict): array {
+		$post = $this->getPost(postId: $review->postId);
 		if ($post === null) {
 			return ['error' => 'That post does not exist.'];
 		}
@@ -859,25 +850,11 @@ class SocialPostService {
 			return ['error' => 'This post is not waiting for approval.'];
 		}
 
-		$approvals = ($post['approvals'] ?? []);
-		if (is_array($approvals) === false) {
-			$approvals = [];
-		}
+		$approvals = new PostApprovals();
+		$post['approvals'] = $approvals->appended(post: $post, approval: $approvals->entryFor(review: $review, verdict: $verdict));
+		$post['status'] = self::DECISION_STATUS[$verdict->decision];
 
-		// The approver is the session, always. A body naming somebody else is
-		// ignored rather than refused, because refusing would tell a caller
-		// which field it guessed right.
-		$approvals[] = [
-			'userId' => $uid,
-			'decision' => $decision,
-			'decidedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-			'note' => $note,
-		];
-
-		$post['approvals'] = $approvals;
-		$post['status'] = $nextStatus;
-
-		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $postId);
+		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $review->postId);
 		if ($saved === null) {
 			return ['error' => 'The decision could not be saved.'];
 		}
@@ -935,7 +912,7 @@ class SocialPostService {
 	 * @return string The tenant id.
 	 */
 	private function tenantId(): string {
-		$tenantId = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
+		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
 		if ($tenantId !== '') {
 			return $tenantId;
 		}

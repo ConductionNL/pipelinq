@@ -23,28 +23,27 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\CampaignReportService;
-use OCA\Pipelinq\Service\CampaignService;
-use OCA\Pipelinq\Service\LandingPageProvisioningService;
+use OCA\Pipelinq\Kernel\Contracts\CampaignReportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\CampaignServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LandingPageProvisioningServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * CampaignController: the campaign report and the landing page action.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
 class CampaignController extends Controller {
 
@@ -89,22 +88,20 @@ class CampaignController extends Controller {
 	 *
 	 * @param string $appName App name.
 	 * @param IRequest $request Request.
-	 * @param CampaignReportService $report The aggregate report.
-	 * @param CampaignService $campaigns Mints the campaign value and checks the vocabulary.
-	 * @param LandingPageProvisioningService $landingPages The Portaliq hand-off.
-	 * @param IUserSession $userSession Session.
-	 * @param ObjectOwnerAccessPolicy $policy CRM privilege check.
+	 * @param CampaignReportServiceInterface $report The aggregate report.
+	 * @param CampaignServiceInterface $campaigns Mints the campaign value and checks the vocabulary.
+	 * @param LandingPageProvisioningServiceInterface $landingPages The Portaliq hand-off.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly CampaignReportService $report,
-		private readonly CampaignService $campaigns,
-		private readonly LandingPageProvisioningService $landingPages,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CampaignReportServiceInterface $report,
+		private readonly CampaignServiceInterface $campaigns,
+		private readonly LandingPageProvisioningServiceInterface $landingPages,
+		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -118,11 +115,11 @@ class CampaignController extends Controller {
 	 *
 	 * @return JSONResponse `{sources[], mediums[]}`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	#[NoAdminRequired]
 	public function vocabularies(): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -142,7 +139,7 @@ class CampaignController extends Controller {
 	 *
 	 * @return JSONResponse The created campaign, or the refusal with its reason.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -156,7 +153,7 @@ class CampaignController extends Controller {
 	 *
 	 * @return JSONResponse The saved campaign, or the refusal with its reason.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
@@ -172,11 +169,11 @@ class CampaignController extends Controller {
 	 *
 	 * @return JSONResponse `{campaign, window, channels[], engagement, leads[], totals, models, cost}`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	#[NoAdminRequired]
 	public function report(string $id, ?string $from = null, ?string $to = null): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -202,11 +199,11 @@ class CampaignController extends Controller {
 	 *
 	 * @return JSONResponse `{error, portal, route, pageId, publicUrl, formId}`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	#[NoAdminRequired]
 	public function createLandingPage(string $id, string $portal = '', string $route = ''): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -231,7 +228,7 @@ class CampaignController extends Controller {
 	 * @return JSONResponse The saved campaign, or the refusal.
 	 */
 	private function write(?string $id): JSONResponse {
-		$denied = $this->guard();
+		$denied = $this->privilege->refusal();
 		if ($denied !== null) {
 			return $denied;
 		}
@@ -239,11 +236,7 @@ class CampaignController extends Controller {
 		$body = $this->request->getParams();
 		unset($body['id'], $body['_route'], $body['createdBy'], $body['utmCampaign']);
 
-		$user = $this->userSession->getUser();
-		$uid = '';
-		if ($user !== null) {
-			$uid = $user->getUID();
-		}
+		$uid = $this->privilege->actingUserId();
 
 		$result = $this->campaigns->save(payload: $body, id: $id, uid: $uid);
 
@@ -256,22 +249,4 @@ class CampaignController extends Controller {
 			(self::WRITE_STATUS[$result['error']] ?? Http::STATUS_BAD_REQUEST)
 		);
 	}//end write()
-
-	/**
-	 * Refuse a caller who is not signed in or not privileged.
-	 *
-	 * @return JSONResponse|null The refusal, or null when the caller may proceed.
-	 */
-	private function guard(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		return null;
-	}//end guard()
 }//end class

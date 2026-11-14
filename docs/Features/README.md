@@ -33,9 +33,11 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Action Widgets | Dashboard widgets for quick request, lead, and client actions | Implemented | GEMMA Callcenter; TEC 1.1, 3.1; Nextcloud IWidget | [action-widgets.md](action-widgets.md) |
 | My Work | Personal work queue aggregating all assigned items | Implemented | TEC 1.5 | [my-work.md](my-work.md) |
 | Contacts Sync | Two-way sync with Nextcloud Contacts via IManager | Implemented | vCard RFC 6350 | [contacts-sync.md](contacts-sync.md) |
+| Contact Capture | Paste a signature or scan a business card into a prefilled create form | Implemented | Nextcloud TaskProcessing (OCR) | [contact-capture.md](contact-capture.md) |
 | Entity Notes | Internal notes and comments on all CRM entities | Implemented | TEC 5.3 | [entity-notes.md](entity-notes.md) |
 | Notifications & Activity | Nextcloud activity events and push notifications on CRM changes | Implemented | Nextcloud Activity API | [notifications-activity.md](notifications-activity.md) |
 | Activity Timeline | Chronological event timeline on entity detail views | Implemented | TEC 1.5 | [activity-timeline.md](activity-timeline.md) |
+| Call Review | Transcripts and summaries of recorded calls, scorecards and coaching points | In progress | — | [call-review.md](call-review.md) |
 | Product & Service Catalog | Product/service catalogue with pricing for linking to leads | Implemented | TEC 1.8; Schema.org Product | [product-service-catalog.md](product-service-catalog.md) |
 | Lead–Product Link | Line items linking leads to products/services with quantity and value | Implemented | TEC 1.8 | [lead-product-link.md](lead-product-link.md) |
 | Prospect Discovery | ICP-based prospect search using KVK/NHR data for lead generation | Implemented | TEC 1.3 | [prospect-discovery.md](prospect-discovery.md) |
@@ -49,6 +51,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Contactmomenten | Core CRUD and lifecycle for registered client interaction records | Planned | GEMMA Callcenter; VNG Klantinteracties | [contactmomenten.md](contactmomenten.md) |
 | Contactmomenten Rapportage | Management dashboards and KPI reporting on contact moments | Planned | GEMMA Callcenter; TEC 4.1–4.2 | [contactmomenten-rapportage.md](contactmomenten-rapportage.md) |
 | Customer 360 | Unified 360-degree citizen/client profile view | Planned | GEMMA CRM; TEC 1.4 | [customer-360.md](customer-360.md) |
+| Client risk and history summary | Churn risk level with reasons per client, and a generated summary of recent history | Implemented | n/a | [client-risk-and-summary.md](client-risk-and-summary.md) |
 | Kennisbank | Searchable knowledge base for KCC agents with article lifecycle | Planned | GEMMA Callcenter; TEC 3.5 | [kennisbank.md](kennisbank.md) |
 | Terugbel- & Taakbeheer | Callback requests and follow-up task assignment with deadline tracking | Planned | GEMMA Callcenter; TEC 3.2–3.3 | [terugbel-taakbeheer.md](terugbel-taakbeheer.md) |
 | Skill-based routing | Route a ticket to the best-matched, least-loaded agent | Planned | GEMMA Klantgeleiding; TEC 3.2 | [skill-routing.md](skill-routing.md) |
@@ -78,9 +81,11 @@ The foundational sales and relationship management layer. These features are liv
 | Action Widgets | [action-widgets.md](action-widgets.md) |
 | My Work | [my-work.md](my-work.md) |
 | Contacts Sync | [contacts-sync.md](contacts-sync.md) |
+| Contact Capture | [contact-capture.md](contact-capture.md) |
 | Entity Notes | [entity-notes.md](entity-notes.md) |
 | Notifications & Activity | [notifications-activity.md](notifications-activity.md) |
 | Activity Timeline | [activity-timeline.md](activity-timeline.md) |
+| Call Review | [call-review.md](call-review.md) |
 | Product & Service Catalog | [product-service-catalog.md](product-service-catalog.md) |
 | Lead–Product Link | [lead-product-link.md](lead-product-link.md) |
 | Prospect Discovery | [prospect-discovery.md](prospect-discovery.md) |
@@ -140,6 +145,7 @@ Used by `/opsx:archive` to determine the correct feature doc when archiving a ch
 ```
 client-management       → client-management.md
 contacts-sync           → contacts-sync.md
+client-contact-capture  → contact-capture.md
 lead-management         → lead-management.md
 lead-product-link       → lead-product-link.md
 prospect-discovery      → prospect-discovery.md

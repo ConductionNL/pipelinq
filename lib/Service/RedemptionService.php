@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
  */
 
 declare(strict_types=1);
@@ -27,22 +27,26 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Redemption lifecycle service.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) orchestrates the full
  *  redemption lifecycle (reserve/use/cancel/expire) across account + ledger
  *  services.
  */
-class RedemptionService {
+class RedemptionService implements RedemptionServiceInterface {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -71,7 +75,7 @@ class RedemptionService {
 	 *
 	 * @throws RuntimeException On insufficient balance, expired option, per-customer limit reached.
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004-01
 	 */
 	public function initiateRedemption(string $accountId, string $optionId): array {
 		$account = $this->accountService->getAccount(accountId: $accountId);
@@ -105,7 +109,7 @@ class RedemptionService {
 		// Debit AFTER the redemption record exists so the brondocument points at the redemption.
 		$redemptionUuid = $this->extractUuid(object: $saved);
 		try {
-			$this->ledgerService->debitPoints(
+			$this->ledgerService->forOperation(operationId: 'redemption:'.(string)$redemptionUuid)->debitPoints(
 				accountId: $accountId,
 				amount: $cost,
 				redemptionId: (string)$redemptionUuid,
@@ -171,7 +175,7 @@ class RedemptionService {
 	 * @param string $code The beloningCode.
 	 *
 	 * @return array{valid: bool, redemption: ?array<string, mixed>, reason: ?string}
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
 	 */
 	public function validateCode(string $code): array {
 		$redemption = $this->findByCode(code: $code);
@@ -202,7 +206,7 @@ class RedemptionService {
 	 * @param ?string $posTransactionId Optional POS transaction id.
 	 *
 	 * @return array<string, mixed> The updated redemption.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-004
 	 */
 	public function markRedemptionUsed(string $redemptionId, ?string $posTransactionId = null): array {
 		$redemption = $this->getRedemption(redemptionId: $redemptionId);
@@ -258,28 +262,49 @@ class RedemptionService {
 	 * @spec exclude phpmd mechanical refactor
 	 */
 	public function getValidRedemptionOptions(string $accountId, string $programmeId): array {
-		$account = $this->accountService->getAccount(accountId: $accountId);
-		$balance = 0;
-		if ($account !== null) {
-			$balance = (int)($account['currentBalance'] ?? 0);
-		}
+		$balance = $this->accountBalance(accountId: $accountId);
 
 		[$register, $schema] = $this->config(schemaKey: 'redemptionOption_schema');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
+		$rowList = $this->findRowList(
+			filters: ['programmeId' => $programmeId, 'register' => $register, 'schema' => $schema],
+			limit: 200
+		);
+
+		return $this->affordableOptions(rowList: $rowList, balance: $balance);
+	}//end getValidRedemptionOptions()
+
+	/**
+	 * The account's current points balance; 0 when the account is unknown.
+	 *
+	 * @param string $accountId The account UUID.
+	 *
+	 * @return int
+	 */
+	private function accountBalance(string $accountId): int {
+		$account = $this->accountService->getAccount(accountId: $accountId);
+		$balance = 0;
+		if ($account !== null) {
+			$balance = (int)($account['currentBalance'] ?? 0);
+		}
+
+		return $balance;
+	}//end accountBalance()
+
+	/**
+	 * Run a findAll and return its rows as a list; none when the read fails.
+	 *
+	 * @param array<string, mixed> $filters The filters, register and schema included.
+	 * @param int                  $limit   The row limit.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function findRowList(array $filters, int $limit): array {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'programmeId' => $programmeId,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 200,
-				]
-			);
+			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters, 'limit' => $limit]);
 		} catch (\Throwable $e) {
 			return [];
 		}
@@ -289,6 +314,18 @@ class RedemptionService {
 			$rowList = array_values($rows);
 		}
 
+		return $rowList;
+	}//end findRowList()
+
+	/**
+	 * The valid options the balance can pay for.
+	 *
+	 * @param array<int, mixed> $rowList The option rows.
+	 * @param int               $balance The points balance.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function affordableOptions(array $rowList, int $balance): array {
 		$options = array_map([$this, 'toArray'], $rowList);
 
 		return array_values(
@@ -298,7 +335,7 @@ class RedemptionService {
 					&& (int)($option['costInPoints'] ?? 0) <= $balance
 			)
 		);
-	}//end getValidRedemptionOptions()
+	}//end affordableOptions()
 
 	/**
 	 * Get a Redemption by UUID.
@@ -325,7 +362,7 @@ class RedemptionService {
 			return null;
 		}
 
-		return $this->toArray(object: $object);
+		return $this->toArray(value: $object);
 	}//end getRedemption()
 
 	/**
@@ -338,37 +375,32 @@ class RedemptionService {
 	 * @spec exclude phpmd mechanical refactor
 	 */
 	public function findByCode(string $code): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
-		if ($register === '' || $schema === '' || $code === '') {
-			return null;
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'rewardCode' => $code,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1,
-				]
-			);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		$rowList = [];
-		if (is_array($rows) === true) {
-			$rowList = array_values($rows);
-		}
-
+		$rowList = $this->codeRows(code: $code);
 		if ($rowList === []) {
 			return null;
 		}
 
-		return $this->toArray(object: reset($rowList));
+		return $this->toArray(value: reset($rowList));
 	}//end findByCode()
+
+	/**
+	 * The Redemption rows carrying a code; none when unconfigured, empty or unreadable.
+	 *
+	 * @param string $code The code.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function codeRows(string $code): array {
+		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
+		if ($register === '' || $schema === '' || $code === '') {
+			return [];
+		}
+
+		return $this->findRowList(
+			filters: ['rewardCode' => $code, 'register' => $register, 'schema' => $schema],
+			limit: 1
+		);
+	}//end codeRows()
 
 	/**
 	 * Mark a Redemption as vervallen.
@@ -474,7 +506,7 @@ class RedemptionService {
 			return null;
 		}
 
-		return $this->toArray(object: $object);
+		return $this->toArray(value: $object);
 	}//end getOption()
 
 	/**
@@ -540,7 +572,7 @@ class RedemptionService {
 			uuid: $uuid
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persist()
 
 	/**
@@ -559,8 +591,8 @@ class RedemptionService {
 	 *                                     when unconfigured.
 	 */
 	private function config(string $schemaKey): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/schema not configured; OpenRegister calls are refused, not run unscoped',
@@ -586,35 +618,6 @@ class RedemptionService {
 
 		return $object['redemptionId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Normalise OR entity/array to array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the ObjectService.

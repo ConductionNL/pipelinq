@@ -108,7 +108,29 @@ import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import DeletePipelineDialog from '../../dialogs/DeletePipelineDialog.vue'
 import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import { resolveObjectType } from '../../services/pipelineUtils.js'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 import { useObjectStore } from '../../store/modules/object.js'
+
+/**
+ * The total an object count path answers; a refused or failed count adds 0.
+ *
+ * @param {string} path The count path.
+ * @return {Promise<number>} The total.
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
+ */
+async function countAt(path) {
+	try {
+		const resp = await fetch(generateUrl(path), { headers: jsonRequestHeaders() })
+		if (!resp.ok) {
+			return 0
+		}
+		const data = await resp.json()
+		return data.total || 0
+	} catch {
+		// Non-blocking
+		return 0
+	}
+}
 
 export default {
 	name: 'PipelineManager',
@@ -137,21 +159,21 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-51
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-51
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-45
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-45
 		 */
 		loading() {
 			return this.objectStore.loading.pipeline || false
@@ -165,7 +187,7 @@ export default {
 	methods: {
 		/**
 		 * @param {object} pipeline The pipeline whose scope to label.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-52
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-52
 		 */
 		schemaLabel(pipeline) {
 			const mappings = pipeline.propertyMappings
@@ -183,7 +205,7 @@ export default {
 
 		/**
 		 * @param {object} pipeline The pipeline to count stages for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-53
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-53
 		 */
 		stageCount(pipeline) {
 			const count = (pipeline.stages || []).length
@@ -192,7 +214,7 @@ export default {
 
 		/**
 		 * @param {object} pipeline The pipeline to preview stages for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-54
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-54
 		 */
 		stagePreview(pipeline) {
 			const stages = pipeline.stages || []
@@ -208,7 +230,7 @@ export default {
 
 		/**
 		 * @param {object} pipeline The pipeline to edit.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-49
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-49
 		 */
 		onEdit(pipeline) {
 			this.editingPipeline = pipeline
@@ -244,7 +266,7 @@ export default {
 
 		/**
 		 * @param {object} pipeline The pipeline the user asked to delete.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-47
 		 */
 		async onDeleteClick(pipeline) {
 			// W1: Prevent deleting the default pipeline
@@ -271,7 +293,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-48
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-48
 		 */
 		async onDeleteConfirm() {
 			const id = this.deletingPipeline.id
@@ -283,7 +305,7 @@ export default {
 
 		/**
 		 * @param {string} pipelineData The pipeline to persist.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-50
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-50
 		 */
 		async onSave(pipelineData) {
 			// W5: Auto-set first pipeline as default
@@ -337,50 +359,58 @@ export default {
 
 		/**
 		 * @param {string} pipelineId Identifier of the pipeline whose items to count.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
 		 */
 		async countAffectedItems(pipelineId) {
-			const headers = {
-				'Content-Type': 'application/json',
-				requesttoken: OC.requestToken,
-				'OCS-APIREQUEST': 'true',
-			}
 			let total = 0
-
-			// Determine which schemas to count from the pipeline's mappings
-			const pipeline = this.pipelines.find((p) => p.id === pipelineId)
-			const mappings = pipeline?.propertyMappings || []
-			const schemaSlugs =
-				mappings.length > 0
-					? mappings.map((m) => m.schemaSlug)
-					: ['lead', 'request'] // Legacy fallback
-
-			for (const slug of schemaSlugs) {
-				// `slug` is a *logical* type — stored propertyMappings still say
-				// `request` / `complaint` / `contactmoment`, which now live in the
-				// `ticket` supertype (unify-ticket-supertype). Resolve it to the
-				// registered object type plus its ticketType filter.
-				const { objectType, ticketType } = resolveObjectType(slug)
-				const config = this.objectStore.objectTypeRegistry[objectType]
-				if (!config) continue
-				try {
-					const ticketFilter = ticketType
-						? `ticketType=${ticketType}&`
-						: ''
-					const url = generateUrl(
-						`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${pipelineId}&_limit=1`,
-					)
-					const resp = await fetch(url, { headers })
-					if (resp.ok) {
-						const data = await resp.json()
-						total += data.total || 0
-					}
-				} catch {
-					// Non-blocking
+			for (const slug of this.countedSchemaSlugs(pipelineId)) {
+				const path = this.pipelineCountPath(slug, pipelineId)
+				if (path !== null) {
+					total += await countAt(path)
 				}
 			}
 
 			return total
+		},
+
+		/**
+		 * The schemas to count, from the pipeline's mappings, else leads and
+		 * requests (the legacy fallback).
+		 *
+		 * @param {string} pipelineId The pipeline.
+		 * @return {string[]} The logical schema slugs.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
+		 */
+		countedSchemaSlugs(pipelineId) {
+			const pipeline = this.pipelines.find((p) => p.id === pipelineId)
+			const mappings = pipeline?.propertyMappings || []
+			return mappings.length > 0
+				? mappings.map((m) => m.schemaSlug)
+				: ['lead', 'request']
+		},
+
+		/**
+		 * The path that counts one schema's items on the pipeline, or null when
+		 * the schema is not registered.
+		 *
+		 * `slug` is a *logical* type — stored propertyMappings still say
+		 * `request` / `complaint` / `contactmoment`, which now live in the
+		 * `ticket` supertype (unify-ticket-supertype). It is resolved to the
+		 * registered object type plus its ticketType filter.
+		 *
+		 * @param {string} slug The logical schema slug.
+		 * @param {string} pipelineId The pipeline.
+		 * @return {string|null} The path.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
+		 */
+		pipelineCountPath(slug, pipelineId) {
+			const { objectType, ticketType } = resolveObjectType(slug)
+			const config = this.objectStore.objectTypeRegistry[objectType]
+			if (!config) {
+				return null
+			}
+			const ticketFilter = ticketType ? `ticketType=${ticketType}&` : ''
+			return `/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${pipelineId}&_limit=1`
 		},
 	},
 }

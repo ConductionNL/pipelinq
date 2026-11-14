@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ namespace OCA\Pipelinq\Service\Payment;
 /**
  * Payment provider adapter contract.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 interface PaymentProviderInterface {
 	/**
@@ -61,8 +61,8 @@ interface PaymentProviderInterface {
 	 *
 	 * @return array{sessionId: string, redirectUrl: string|null, status: string, error?: string} The session.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 	 */
 	public function initiate(array $transactionData, float $amount, string $paymentMethod): array;
 
@@ -73,7 +73,7 @@ interface PaymentProviderInterface {
 	 *
 	 * @return array{sessionId: string, status: string, error?: string|null} The capture result.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
 	 */
 	public function capture(string $sessionId): array;
 
@@ -85,7 +85,7 @@ interface PaymentProviderInterface {
 	 *
 	 * @return array{sessionId: string, refundId: string, status: string, error?: string|null} The refund result.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
 	 */
 	public function refund(string $sessionId, string $reason): array;
 
@@ -102,7 +102,7 @@ interface PaymentProviderInterface {
 	 *
 	 * @return bool True when the signature validates.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function validateWebhook(string $rawPayload, string $signature): bool;
 
@@ -113,7 +113,7 @@ interface PaymentProviderInterface {
 	 *
 	 * @return array{sessionId: string, status: string, eventId: string, error: string|null} Normalised settlement data.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function parseWebhook(array $payload): array;
 
@@ -122,7 +122,7 @@ interface PaymentProviderInterface {
 	 *
 	 * @return array{status: string, message: string} The test result.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function testConnection(): array;
 
@@ -131,7 +131,7 @@ interface PaymentProviderInterface {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
 	 */
 	public function getName(): string;
 }//end interface

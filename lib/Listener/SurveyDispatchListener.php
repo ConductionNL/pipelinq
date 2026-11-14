@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
  */
 
 declare(strict_types=1);
@@ -31,10 +31,10 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
-use OCA\Pipelinq\Service\SchemaMapService;
-use OCA\Pipelinq\Service\SurveyDispatchService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -57,7 +57,7 @@ use Throwable;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
  */
 class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 
@@ -86,16 +86,16 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	/**
 	 * Constructor.
 	 *
-	 * @param SurveyDispatchService $dispatchService Matches rules and writes invitations.
-	 * @param SchemaMapService $schemaMapService Schema id to entity type.
+	 * @param SurveyDispatchServiceInterface $dispatchService Matches rules and writes invitations.
+	 * @param SchemaMapServiceInterface $schemaMapService Schema id to entity type.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
 	 * @param IAppConfig $appConfig App config, holding the register and contact schema.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private readonly SurveyDispatchService $dispatchService,
-		private readonly SchemaMapService $schemaMapService,
+		private readonly SurveyDispatchServiceInterface $dispatchService,
+		private readonly SchemaMapServiceInterface $schemaMapService,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly IAppConfig $appConfig,
 		private readonly ListenerDeferralService $deferral,
@@ -112,7 +112,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatedEvent) === false
@@ -147,7 +147,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
 	 */
 	public function runDeferredWork(array $entry): void {
 		$uuid = (string)($entry['uuid'] ?? '');
@@ -181,6 +181,24 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, string>|null The entry, or null when no rule applies.
 	 */
 	private function completionEntry(ObjectCreatedEvent|ObjectUpdatedEvent $event): ?array {
+		[$entity, $previousStatus] = $this->entityAndPreviousStatus(event: $event);
+
+		$schemaId = (string)$entity->getSchema();
+		if ($this->schemaMapService->resolveEntityType(schemaId: $schemaId) !== 'ticket') {
+			return null;
+		}
+
+		return $this->completionFor(entity: $entity, schemaId: $schemaId, previousStatus: $previousStatus);
+	}//end completionEntry()
+
+	/**
+	 * The event's (new) object and, for an update, the previous status.
+	 *
+	 * @param ObjectCreatedEvent|ObjectUpdatedEvent $event The event.
+	 *
+	 * @return array{0: mixed, 1: string} The entity and the previous status ('' when none).
+	 */
+	private function entityAndPreviousStatus(ObjectCreatedEvent|ObjectUpdatedEvent $event): array {
 		$entity = $event->getObject();
 		$previousStatus = '';
 		if ($event instanceof ObjectUpdatedEvent) {
@@ -191,36 +209,48 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 			}
 		}
 
-		$schemaId = (string)$entity->getSchema();
-		if ($this->schemaMapService->resolveEntityType(schemaId: $schemaId) !== 'ticket') {
-			return null;
-		}
+		return [$entity, $previousStatus];
+	}//end entityAndPreviousStatus()
 
+	/**
+	 * The deferred-handler entry for a ticket that moved into a status with matching rules, else null.
+	 *
+	 * @param mixed $entity The ticket entity.
+	 * @param string $schemaId The ticket schema id.
+	 * @param string $previousStatus The status before the update ('' when none).
+	 *
+	 * @return array<string, string>|null The entry.
+	 */
+	private function completionFor($entity, string $schemaId, string $previousStatus): array|null {
 		$data = $entity->getObject();
 		$status = trim((string)($data['status'] ?? ''));
 		$entityType = (self::RULE_ENTITY_TYPES[(string)($data['ticketType'] ?? '')] ?? '');
 		$uuid = (string)$entity->getUuid();
-		if ($status === '' || $status === $previousStatus || $entityType === '' || $uuid === '') {
+		if ($this->isNewRuleStatus(status: $status, previousStatus: $previousStatus, entityType: $entityType, uuid: $uuid) === false) {
 			return null;
 		}
 
-		$rules = $this->dispatchService->matchingRules(
-			entityType: $entityType,
-			status: $status,
-			channel: trim((string)($data['channel'] ?? '')),
-		);
+		$rules = $this->dispatchService->matchingRules(entityType: $entityType, status: $status, channel: trim((string)($data['channel'] ?? '')));
 		if ($rules === []) {
 			return null;
 		}
 
-		return [
-			'handler' => self::HANDLER_KEY,
-			'uuid' => $uuid,
-			'schema' => $schemaId,
-			'entityType' => $entityType,
-			'status' => $status,
-		];
-	}//end completionEntry()
+		return ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'schema' => $schemaId, 'entityType' => $entityType, 'status' => $status];
+	}//end completionFor()
+
+	/**
+	 * Whether the ticket has a new, non-empty status, a rule entity type and a uuid.
+	 *
+	 * @param string $status The current status.
+	 * @param string $previousStatus The previous status.
+	 * @param string $entityType The rule entity type.
+	 * @param string $uuid The ticket uuid.
+	 *
+	 * @return bool True when the change can trigger survey rules.
+	 */
+	private function isNewRuleStatus(string $status, string $previousStatus, string $entityType, string $uuid): bool {
+		return ($status === '' || $status === $previousStatus || $entityType === '' || $uuid === '') === false;
+	}//end isNewRuleStatus()
 
 	/**
 	 * The ticket's contact, shaped as the dispatch service reads a recipient.
@@ -241,7 +271,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 
 		$contact = $this->read(
 			uuid: $uuid,
-			schema: $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '')
+			schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '')
 		);
 		if ($contact === null) {
 			return $client;
@@ -259,7 +289,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null The data.
 	 */
 	private function read(string $uuid, string $schema): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($uuid === '' || $schema === '' || $register === '') {
 			return null;
 		}

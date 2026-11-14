@@ -36,7 +36,16 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
+use OCA\Pipelinq\Service\Sla\SlaBreachEvent;
+use OCA\Pipelinq\Service\Sla\SlaEscalation;
+use OCA\Pipelinq\Service\Sla\SlaHeat;
+use OCA\Pipelinq\Service\Sla\SlaInstant;
+use OCA\Pipelinq\Service\Sla\SlaPause;
+use OCA\Pipelinq\Service\Sla\SlaPolicyQuery;
+use OCA\Pipelinq\Service\Sla\SlaRecipient;
+use OCA\Pipelinq\Service\Sla\SlaTrackedObject;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use OCP\Notification\IManager as INotificationManager;
@@ -51,7 +60,7 @@ use Throwable;
  * `ContainerInterface` to resolve OpenRegister's ObjectService lazily —
  * mirroring the existing pipelinq pattern (DealCreatedListener etc.).
  *
- * @spec openspec/changes/sla-engine-and-escalation/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-06-14-sla-engine-and-escalation/tasks.md#3.1
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -60,7 +69,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods)           Outbound sms/whatsapp escalation legs add small single-purpose private helpers
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Policy + deadline + escalation logic, split into helpers, still one cohesive engine
  */
-class SlaEngineService {
+class SlaEngineService implements SlaEngineServiceInterface {
 	use EntityAccessorTrait;
 
 	public const STATUS_ON_TRACK = 'on-track';
@@ -137,54 +146,13 @@ class SlaEngineService {
 			return null;
 		}
 
-		$tier = (string)($metadata['tier'] ?? '');
-		$organisationId = (string)($metadata['organisationId'] ?? '');
-		$contractId = (string)($metadata['contractId'] ?? '');
-		$now = $this->now();
-
-		$candidates = [];
-		foreach ($policies as $policy) {
-			$matches = $this->policyApplies(
-				policy: $policy,
-				objectType: $objectType,
-				tier: $tier,
-				organisationId: $organisationId,
-				contractId: $contractId,
-				now: $now
-			);
-			if ($matches === false) {
-				continue;
-			}
-
-			$candidates[] = $policy;
-		}
-
+		$query = new SlaPolicyQuery(objectType: $objectType, metadata: $metadata, now: $this->now());
+		$candidates = $this->candidatePolicies(policies: $policies, query: $query);
 		if ($candidates === []) {
 			return null;
 		}
 
-		// Tie-break: prefer contract-scoped over org-scoped over tier-only over wildcard;
-		// then lower `priority`; then newer `validFrom`.
-		usort(
-			$candidates,
-			function (array $a, array $b) use ($contractId, $organisationId): int {
-				$scopeA = $this->scopeSpecificity(policy: $a, contractId: $contractId, organisationId: $organisationId);
-				$scopeB = $this->scopeSpecificity(policy: $b, contractId: $contractId, organisationId: $organisationId);
-				if ($scopeA !== $scopeB) {
-					return $scopeB <=> $scopeA;
-				}
-
-				$priorityA = (int)($a['priority'] ?? 100);
-				$priorityB = (int)($b['priority'] ?? 100);
-				if ($priorityA !== $priorityB) {
-					return $priorityA <=> $priorityB;
-				}
-
-				$vfA = (string)($a['validFrom'] ?? '');
-				$vfB = (string)($b['validFrom'] ?? '');
-				return strcmp($vfB, $vfA);
-			}
-		);
+		usort($candidates, $query->compare(...));
 
 		$chosen = $candidates[0];
 		$this->logger->debug(
@@ -192,7 +160,7 @@ class SlaEngineService {
 			[
 				'policyId' => $chosen['id'] ?? $chosen['@self']['slug'] ?? null,
 				'objectType' => $objectType,
-				'tier' => $tier,
+				'tier' => $query->tier,
 				'candidates' => count($candidates),
 			]
 		);
@@ -222,38 +190,68 @@ class SlaEngineService {
 		$results = [];
 
 		foreach (($policy['targets'] ?? []) as $target) {
-			$duration = $this->parseDuration(duration: (string)($target['duration'] ?? 'PT0S'));
-			$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
-
-			$effectiveStart = DateTimeImmutable::createFromInterface($startTime);
-			if ($pausedState !== null && isset($pausedState['totalPausedMs']) === true) {
-				$pausedMin = (int)floor(((int)$pausedState['totalPausedMs']) / 60000);
-				if ($pausedMin > 0) {
-					$effectiveStart = $effectiveStart->modify('-' . $pausedMin . ' minutes');
-				}
-			}
-
-			$dueAt = $this->businessHours->addDuration(
-				calendarType: $calendarType,
-				startTime: $effectiveStart,
-				duration: $duration,
-				holidayCalendar: $calendar,
-			);
-
-			$results[] = [
-				'kind' => (string)($target['kind'] ?? 'resolution'),
-				'duration' => (string)($target['duration'] ?? ''),
-				'calendar' => $calendarType,
-				'dueAt' => $dueAt->format(DateTimeInterface::ATOM),
-				'startedAt' => $effectiveStart->format(DateTimeInterface::ATOM),
-				'status' => self::STATUS_ON_TRACK,
-				'consumedPercentage' => 0.0,
-				'breachEventIds' => [],
-			];
-		}//end foreach
+			$results[] = $this->deadlineFor(target: $target, startTime: $startTime, pausedState: $pausedState, calendar: $calendar);
+		}
 
 		return $results;
 	}//end computeDeadlines()
+
+	/**
+	 * The initial deadline entry for one policy target.
+	 *
+	 * @param array<string, mixed>      $target      The policy target.
+	 * @param DateTimeInterface         $startTime   Start instant.
+	 * @param array<string, mixed>|null $pausedState Optional pause state.
+	 * @param string                    $calendar    The holiday calendar.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function deadlineFor(array $target, DateTimeInterface $startTime, array|null $pausedState, string $calendar): array {
+		$duration = $this->parseDuration(duration: (string)($target['duration'] ?? 'PT0S'));
+		$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
+
+		$effectiveStart = $this->pauseAdjustedStart(startTime: $startTime, pausedState: $pausedState);
+
+		$dueAt = $this->businessHours->addDuration(
+			calendarType: $calendarType,
+			startTime: $effectiveStart,
+			duration: $duration,
+			holidayCalendar: $calendar,
+		);
+
+		return [
+			'kind' => (string)($target['kind'] ?? 'resolution'),
+			'duration' => (string)($target['duration'] ?? ''),
+			'calendar' => $calendarType,
+			'dueAt' => $dueAt->format(DateTimeInterface::ATOM),
+			'startedAt' => $effectiveStart->format(DateTimeInterface::ATOM),
+			'status' => self::STATUS_ON_TRACK,
+			'consumedPercentage' => 0.0,
+			'breachEventIds' => [],
+		];
+	}//end deadlineFor()
+
+	/**
+	 * The start instant moved back by the time already spent paused.
+	 *
+	 * @param DateTimeInterface         $startTime   Start instant.
+	 * @param array<string, mixed>|null $pausedState Optional pause state.
+	 *
+	 * @return DateTimeImmutable
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface() is a value-object factory, not a collaborator to inject
+	 */
+	private function pauseAdjustedStart(DateTimeInterface $startTime, array|null $pausedState): DateTimeImmutable {
+		$effectiveStart = DateTimeImmutable::createFromInterface($startTime);
+		if ($pausedState !== null && isset($pausedState['totalPausedMs']) === true) {
+			$pausedMin = (int)floor(((int)$pausedState['totalPausedMs']) / 60000);
+			if ($pausedMin > 0) {
+				$effectiveStart = $effectiveStart->modify('-' . $pausedMin . ' minutes');
+			}
+		}
+
+		return $effectiveStart;
+	}//end pauseAdjustedStart()
 
 	/**
 	 * Re-evaluate target statuses given a current instant and the policy.
@@ -272,44 +270,110 @@ class SlaEngineService {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function evaluateTargets(array $currentTargets, array $policy, DateTimeInterface $now): array {
-		$calendar = (string)($policy['holidayCalendar'] ?? 'nl-feestdagen-rijksoverheid');
-
-		foreach ($currentTargets as $idx => $target) {
-			if (($target['status'] ?? '') === self::STATUS_MET) {
-				continue;
-			}
-
-			$started = $this->parseIsoOrNull(value: ($target['startedAt'] ?? null));
-			$dueAt = $this->parseIsoOrNull(value: ($target['dueAt'] ?? null));
-			if ($started === null || $dueAt === null) {
-				continue;
-			}
-
-			$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
-
-			$totalMin = $this->businessHours->elapsedBusinessMinutes($started, $dueAt, $calendar, $calendarType);
-			$elapsedMin = $this->businessHours->elapsedBusinessMinutes($started, $now, $calendar, $calendarType);
-			$consumed = 0.0;
-			if ($totalMin > 0) {
-				$consumed = ($elapsedMin / $totalMin);
-			}
-
-			$currentTargets[$idx]['consumedPercentage'] = round($consumed, 4);
-
-			$status = self::STATUS_ON_TRACK;
-			if ($consumed >= 0.8) {
-				$status = self::STATUS_AT_RISK;
-			}
-
-			if ($consumed >= 1.0) {
-				$status = self::STATUS_BREACHED;
-			}
-
-			$currentTargets[$idx]['status'] = $status;
-		}//end foreach
-
-		return $currentTargets;
+		return $this->evaluateTargetsAt(targets: $currentTargets, at: $this->slaInstant(policy: $policy, now: $now));
 	}//end evaluateTargets()
+
+	/**
+	 * Re-evaluate every target at one instant; met and unparseable targets
+	 * stay as they are.
+	 *
+	 * @param array<int|string, array<string, mixed>> $targets Targets snapshot.
+	 * @param SlaInstant                              $at      The evaluation instant and calendar.
+	 *
+	 * @return array<int|string, array<string, mixed>> Updated targets, keys kept.
+	 */
+	private function evaluateTargetsAt(array $targets, SlaInstant $at): array {
+		foreach ($targets as $idx => $target) {
+			$targets[$idx] = $this->evaluatedTarget(target: $target, at: $at);
+		}
+
+		return $targets;
+	}//end evaluateTargetsAt()
+
+	/**
+	 * One target with its consumed share and status brought up to date.
+	 *
+	 * @param array<string, mixed> $target The target.
+	 * @param SlaInstant           $at     The evaluation instant and calendar.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function evaluatedTarget(array $target, SlaInstant $at): array {
+		if (($target['status'] ?? '') === self::STATUS_MET) {
+			return $target;
+		}
+
+		$consumed = $this->consumedShare(target: $target, at: $at);
+		if ($consumed === null) {
+			return $target;
+		}
+
+		$target['consumedPercentage'] = round($consumed, 4);
+		$target['status'] = $this->statusForShare(consumed: $consumed);
+
+		return $target;
+	}//end evaluatedTarget()
+
+	/**
+	 * The share of a target's window used up at an instant, in the target's
+	 * calendar mode; null when the window does not parse.
+	 *
+	 * @param array<string, mixed> $target The target.
+	 * @param SlaInstant           $at     The evaluation instant and calendar.
+	 *
+	 * @return float|null
+	 */
+	private function consumedShare(array $target, SlaInstant $at): ?float {
+		$started = $this->parseIsoOrNull(value: ($target['startedAt'] ?? null));
+		$dueAt = $this->parseIsoOrNull(value: ($target['dueAt'] ?? null));
+		if ($started === null || $dueAt === null) {
+			return null;
+		}
+
+		$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
+		$totalMin = $this->businessHours->elapsedBusinessMinutes($started, $dueAt, $at->holidayCalendar, $calendarType);
+		$elapsedMin = $this->businessHours->elapsedBusinessMinutes($started, $at->now, $at->holidayCalendar, $calendarType);
+		if ($totalMin > 0) {
+			return ($elapsedMin / $totalMin);
+		}
+
+		return 0.0;
+	}//end consumedShare()
+
+	/**
+	 * The status a consumed share puts a target in: breached from 100%,
+	 * at risk from 80%, otherwise on track.
+	 *
+	 * @param float $consumed The consumed share.
+	 *
+	 * @return string
+	 */
+	private function statusForShare(float $consumed): string {
+		if ($consumed >= 1.0) {
+			return self::STATUS_BREACHED;
+		}
+
+		if ($consumed >= 0.8) {
+			return self::STATUS_AT_RISK;
+		}
+
+		return self::STATUS_ON_TRACK;
+	}//end statusForShare()
+
+	/**
+	 * The instant and holiday calendar an evaluation under a policy runs at.
+	 *
+	 * @param array<string, mixed> $policy The policy.
+	 * @param DateTimeInterface    $now    The instant.
+	 *
+	 * @return SlaInstant
+	 */
+	private function slaInstant(array $policy, DateTimeInterface $now): SlaInstant {
+		return new SlaInstant(
+			holidayCalendar: (string)($policy['holidayCalendar'] ?? 'nl-feestdagen-rijksoverheid'),
+			now: $now
+		);
+	}//end slaInstant()
 
 	/**
 	 * Execute escalation steps whose thresholds were just crossed.
@@ -345,42 +409,14 @@ class SlaEngineService {
 			return ['level' => $alreadyFired, 'eventIds' => []];
 		}
 
-		// Compute the highest consumedPercentage across all targets,
-		// because escalation thresholds are tested against any target.
-		$maxConsumed = 0.0;
-		$hottestKind = '';
-		foreach ($newTargets as $target) {
-			$consumed = (float)($target['consumedPercentage'] ?? 0.0);
-			if ($consumed > $maxConsumed) {
-				$maxConsumed = $consumed;
-				$hottestKind = (string)($target['kind'] ?? '');
-			}
-		}
-
+		$heat = $this->hottestTarget(targets: $newTargets);
+		$object = new SlaTrackedObject(type: $objectType, id: $objectId);
 		$newLevel = $alreadyFired;
 		$eventIds = [];
 
-		foreach ($chain as $idx => $step) {
-			$level = ($idx + 1);
-			if ($level <= $alreadyFired) {
-				continue;
-			}
-
-			$triggerAt = (float)($step['triggerAt'] ?? 1.0);
-			if ($maxConsumed + 1e-9 < $triggerAt) {
-				continue;
-			}
-
-			$eventId = $this->fireEscalation(
-				policy: $policy,
-				objectType: $objectType,
-				objectId: $objectId,
-				step: $step,
-				level: $level,
-				consumed: $maxConsumed,
-				hottestKind: $hottestKind,
-			);
-
+		foreach ($this->dueSteps(chain: $chain, heat: $heat, alreadyFired: $alreadyFired) as $level => $step) {
+			$escalation = new SlaEscalation(policy: $policy, object: $object, step: $step, level: $level);
+			$eventId = $this->fireEscalation(escalation: $escalation, heat: $heat);
 			if ($eventId !== null) {
 				$eventIds[] = $eventId;
 			}
@@ -390,6 +426,56 @@ class SlaEngineService {
 
 		return ['level' => $newLevel, 'eventIds' => $eventIds];
 	}//end executeEscalations()
+
+	/**
+	 * The escalation steps not yet fired whose trigger the hottest target has reached, keyed by level.
+	 *
+	 * @param array<int, array<string, mixed>> $chain        The escalation chain.
+	 * @param SlaHeat                          $heat         The hottest target.
+	 * @param int                              $alreadyFired The current escalation level.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function dueSteps(array $chain, SlaHeat $heat, int $alreadyFired): array {
+		$due = [];
+		foreach ($chain as $idx => $step) {
+			$level = ($idx + 1);
+			if ($level <= $alreadyFired) {
+				continue;
+			}
+
+			$triggerAt = (float)($step['triggerAt'] ?? 1.0);
+			if ($heat->consumed + 1e-9 < $triggerAt) {
+				continue;
+			}
+
+			$due[$level] = $step;
+		}
+
+		return $due;
+	}//end dueSteps()
+
+	/**
+	 * The highest consumedPercentage across all targets, and the kind of the
+	 * target that has it: escalation thresholds are tested against any target.
+	 *
+	 * @param array<int, array<string, mixed>> $targets Evaluated targets.
+	 *
+	 * @return SlaHeat The heat.
+	 */
+	private function hottestTarget(array $targets): SlaHeat {
+		$maxConsumed = 0.0;
+		$hottestKind = '';
+		foreach ($targets as $target) {
+			$consumed = (float)($target['consumedPercentage'] ?? 0.0);
+			if ($consumed > $maxConsumed) {
+				$maxConsumed = $consumed;
+				$hottestKind = (string)($target['kind'] ?? '');
+			}
+		}
+
+		return new SlaHeat(consumed: $maxConsumed, hottestKind: $hottestKind);
+	}//end hottestTarget()
 
 	/**
 	 * Mark the timer as paused.
@@ -426,6 +512,18 @@ class SlaEngineService {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function resumeTimer(array $slaStatus, array $policy, DateTimeInterface $now): array {
+		return $this->resumeTimerAt(slaStatus: $slaStatus, at: $this->slaInstant(policy: $policy, now: $now));
+	}//end resumeTimer()
+
+	/**
+	 * Resume a paused timer at an instant.
+	 *
+	 * @param array<string, mixed> $slaStatus Current slaStatus.
+	 * @param SlaInstant           $at        The resume instant and calendar.
+	 *
+	 * @return array<string, mixed> Updated slaStatus.
+	 */
+	private function resumeTimerAt(array $slaStatus, SlaInstant $at): array {
 		$pausedAtRaw = $slaStatus['pausedAt'] ?? null;
 		if ($pausedAtRaw === null || $pausedAtRaw === '') {
 			return $slaStatus;
@@ -437,44 +535,94 @@ class SlaEngineService {
 			return $slaStatus;
 		}
 
-		$calendar = (string)($policy['holidayCalendar'] ?? 'nl-feestdagen-rijksoverheid');
+		$pause = new SlaPause(pausedAt: $pausedAt, resumedAt: $at->now, holidayCalendar: $at->holidayCalendar);
+		$slaStatus['targets'] = $this->extendedTargets(targets: ($slaStatus['targets'] ?? []), pause: $pause);
 
+		return $this->closePause(slaStatus: $slaStatus, pause: $pause);
+	}//end resumeTimerAt()
+
+	/**
+	 * The targets with every dueAt moved out by the paused time.
+	 *
+	 * @param mixed    $targets The slaStatus targets.
+	 * @param SlaPause $pause   The pause being closed.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function extendedTargets(mixed $targets, SlaPause $pause): array {
 		$newTargets = [];
-		foreach (($slaStatus['targets'] ?? []) as $target) {
-			$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
-			// For 24x7 we charge wall-clock minutes; for business modes,
-			// we only charge business minutes (Friday 16:00 → Monday 10:00
-			// is 2 business hours, not 66).
-			$pausedMin = $this->businessHours->elapsedBusinessMinutes(
-				$pausedAt,
-				$now,
-				$calendar,
-				$calendarType,
-			);
+		foreach ($targets as $target) {
+			$newTargets[] = $this->extendedTarget(target: $target, pause: $pause);
+		}
 
-			if ($pausedMin > 0 && isset($target['dueAt']) === true) {
-				$due = $this->parseIsoOrNull(value: $target['dueAt']);
-				if ($due !== null) {
-					// Extend dueAt by the paused business-minutes inside its calendar mode.
-					$extended = $this->businessHours->addDuration(
-						calendarType: $calendarType,
-						startTime: $due,
-						duration: new DateInterval('PT' . $pausedMin . 'M'),
-						holidayCalendar: $calendar,
-					);
-					$target['dueAt'] = $extended->format(DateTimeInterface::ATOM);
-				}
-			}
+		return $newTargets;
+	}//end extendedTargets()
 
-			$newTargets[] = $target;
-		}//end foreach
+	/**
+	 * One target with its dueAt extended by the paused minutes inside its
+	 * calendar mode.
+	 *
+	 * @param array<string, mixed> $target The target.
+	 * @param SlaPause             $pause  The pause being closed.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function extendedTarget(array $target, SlaPause $pause): array {
+		$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
+		$pausedMin = $this->pausedMinutes(calendarType: $calendarType, pause: $pause);
+		$due = $this->parseIsoOrNull(value: ($target['dueAt'] ?? null));
+		if ($pausedMin <= 0 || $due === null) {
+			return $target;
+		}
 
-		$slaStatus['targets'] = $newTargets;
-		$slaStatus['totalPausedMs'] = ((int)($slaStatus['totalPausedMs'] ?? 0)) + ($this->wallClockMs(a: $pausedAt, b: $now));
+		// Extend dueAt by the paused business-minutes inside its calendar mode.
+		$target['dueAt'] = $this->businessHours->addDuration(
+			calendarType: $calendarType,
+			startTime: $due,
+			duration: new DateInterval('PT' . $pausedMin . 'M'),
+			holidayCalendar: $pause->holidayCalendar,
+		)->format(DateTimeInterface::ATOM);
+
+		return $target;
+	}//end extendedTarget()
+
+	/**
+	 * The minutes a pause charges in a calendar mode.
+	 *
+	 * For 24x7 we charge wall-clock minutes; for business modes, we only
+	 * charge business minutes (Friday 16:00 → Monday 10:00 is 2 business
+	 * hours, not 66).
+	 *
+	 * @param string   $calendarType The target's calendar mode.
+	 * @param SlaPause $pause        The pause being closed.
+	 *
+	 * @return int
+	 */
+	private function pausedMinutes(string $calendarType, SlaPause $pause): int {
+		return $this->businessHours->elapsedBusinessMinutes(
+			$pause->pausedAt,
+			$pause->resumedAt,
+			$pause->holidayCalendar,
+			$calendarType,
+		);
+	}//end pausedMinutes()
+
+	/**
+	 * Book the paused time and clear the pause.
+	 *
+	 * @param array<string, mixed> $slaStatus The slaStatus with extended targets.
+	 * @param SlaPause             $pause     The pause being closed.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function closePause(array $slaStatus, SlaPause $pause): array {
+		$pausedMs = $this->wallClockMs(a: $pause->pausedAt, b: $pause->resumedAt);
+		$slaStatus['totalPausedMs'] = ((int)($slaStatus['totalPausedMs'] ?? 0)) + $pausedMs;
 		$slaStatus['pausedAt'] = null;
-		$slaStatus['lastEvaluatedAt'] = $now->format(DateTimeInterface::ATOM);
+		$slaStatus['lastEvaluatedAt'] = $pause->resumedAt->format(DateTimeInterface::ATOM);
+
 		return $slaStatus;
-	}//end resumeTimer()
+	}//end closePause()
 
 	/**
 	 * Initialise the slaStatus envelope when a policy resolves on object
@@ -541,39 +689,57 @@ class SlaEngineService {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function loadActivePolicies(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_policy_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_policy_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
+		$objectService = $this->policyObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		// Register/schema belong inside `filters`: prepareFindAllConfig()
+		// reads them from there and nowhere else, so a top-level pair
+		// resolves NO context and findAll() answers []. Found by grepping
+		// for the shape after fixing the same mistake twice in
+		// SlaAttainmentService — this third site loads the POLICIES, so an
+		// empty answer means every ticket is evaluated against no policy at
+		// all, silently.
+		$rows = $this->findPolicyRows(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema]);
+
+		return $this->activePolicies(rows: (array)$rows);
+	}//end loadActivePolicies()
+
+	/**
+	 * OpenRegister's ObjectService for the policy read; null when unavailable.
+	 *
+	 * @return object|null
+	 */
+	private function policyObjectService(): ?object {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: ObjectService not available',
 				['error' => $e->getMessage()]
 			);
-			return [];
+			return null;
 		}
+	}//end policyObjectService()
 
+	/**
+	 * Read up to 500 policy rows; none when the read fails.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $filters       The register and schema filters.
+	 *
+	 * @return mixed The rows as findAll() answers them.
+	 */
+	private function findPolicyRows(object $objectService, array $filters): mixed {
 		try {
-			// Register/schema belong inside `filters`: prepareFindAllConfig()
-			// reads them from there and nowhere else, so a top-level pair
-			// resolves NO context and findAll() answers []. Found by grepping
-			// for the shape after fixing the same mistake twice in
-			// SlaAttainmentService — this third site loads the POLICIES, so an
-			// empty answer means every ticket is evaluated against no policy at
-			// all, silently.
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 500,
-				]
-			);
+			return $objectService->findAll(config: ['filters' => $filters, 'limit' => 500]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: ObjectService::findAll failed',
@@ -581,9 +747,18 @@ class SlaEngineService {
 			);
 			return [];
 		}
+	}//end findPolicyRows()
 
+	/**
+	 * The policy rows that are neither archived nor switched off, normalised.
+	 *
+	 * @param array<int|string, mixed> $rows The stored policy rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function activePolicies(array $rows): array {
 		$policies = [];
-		foreach ((array)$rows as $row) {
+		foreach ($rows as $row) {
 			$array = $this->normaliseObject(row: $row);
 			if (($array['status'] ?? 'published') === 'archived') {
 				continue;
@@ -597,103 +772,26 @@ class SlaEngineService {
 		}
 
 		return $policies;
-	}//end loadActivePolicies()
+	}//end activePolicies()
 
 	/**
-	 * Test whether a policy applies to the given object's metadata.
+	 * The policies that apply to the queried object, in register order.
 	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $objectType Object type.
-	 * @param string $tier Customer tier.
-	 * @param string $organisationId Optional organisation UUID.
-	 * @param string $contractId Optional contract UUID.
-	 * @param DateTimeInterface $now Resolution instant.
+	 * @param array<int, array<string, mixed>> $policies Active policies.
+	 * @param SlaPolicyQuery                   $query    The object.
 	 *
-	 * @return bool True when this policy is a candidate.
+	 * @return array<int, array<string, mixed>>
 	 */
-	private function policyApplies(
-		array $policy,
-		string $objectType,
-		string $tier,
-		string $organisationId,
-		string $contractId,
-		DateTimeInterface $now,
-	): bool {
-		if ($this->matchesAppliesTo(policy: $policy, objectType: $objectType) === false) {
-			return false;
+	private function candidatePolicies(array $policies, SlaPolicyQuery $query): array {
+		$candidates = [];
+		foreach ($policies as $policy) {
+			if ($query->matches(policy: $policy) === true && $this->isValidAt(policy: $policy, now: $query->now) === true) {
+				$candidates[] = $policy;
+			}
 		}
 
-		if ($this->matchesTier(policy: $policy, tier: $tier) === false) {
-			return false;
-		}
-
-		if ($this->matchesScope(policy: $policy, organisationId: $organisationId, contractId: $contractId) === false) {
-			return false;
-		}
-
-		return $this->isValidAt(policy: $policy, now: $now);
-	}//end policyApplies()
-
-	/**
-	 * Whether the policy's `appliesTo` matches the object type.
-	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $objectType Object type.
-	 *
-	 * @return bool
-	 */
-	private function matchesAppliesTo(array $policy, string $objectType): bool {
-		$applies = (string)($policy['appliesTo'] ?? '*');
-		return ($applies === '*' || $applies === $objectType);
-	}//end matchesAppliesTo()
-
-	/**
-	 * Whether the policy's `customerTier` matches, defaulting the
-	 * customer's tier to "bronze" when unspecified.
-	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $tier Customer tier.
-	 *
-	 * @return bool
-	 */
-	private function matchesTier(array $policy, string $tier): bool {
-		$policyTier = (string)($policy['customerTier'] ?? '*');
-		$effectiveTier = 'bronze';
-		if ($tier !== '') {
-			$effectiveTier = $tier;
-		}
-
-		return ($policyTier === '*' || $policyTier === $effectiveTier);
-	}//end matchesTier()
-
-	/**
-	 * Whether the policy's `customerScope` (contract/organisation
-	 * allow-lists) matches, when a scope is configured at all.
-	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $organisationId Organisation UUID (or '').
-	 * @param string $contractId Contract UUID (or '').
-	 *
-	 * @return bool
-	 */
-	private function matchesScope(array $policy, string $organisationId, string $contractId): bool {
-		$scope = $policy['customerScope'] ?? null;
-		if (is_array($scope) === false) {
-			return true;
-		}
-
-		$orgs = (array)($scope['organisationIds'] ?? []);
-		$contracts = (array)($scope['contractIds'] ?? []);
-		if ($orgs !== [] && in_array($organisationId, $orgs, true) === false) {
-			return false;
-		}
-
-		if ($contracts !== [] && in_array($contractId, $contracts, true) === false) {
-			return false;
-		}
-
-		return true;
-	}//end matchesScope()
+		return $candidates;
+	}//end candidatePolicies()
 
 	/**
 	 * Whether `$now` falls within the policy's validFrom/validUntil window.
@@ -718,96 +816,25 @@ class SlaEngineService {
 	}//end isValidAt()
 
 	/**
-	 * Score the specificity of a policy's scope for sort ordering.
-	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $contractId Contract UUID (or '').
-	 * @param string $organisationId Organisation UUID (or '').
-	 *
-	 * @return int Specificity (higher = more specific).
-	 */
-	private function scopeSpecificity(array $policy, string $contractId, string $organisationId): int {
-		$scope = $policy['customerScope'] ?? null;
-		if (is_array($scope) === false) {
-			// No scope = wildcard.
-			if (($policy['customerTier'] ?? '*') === '*') {
-				return 0;
-			}
-
-			return 1;
-		}
-
-		$contracts = (array)($scope['contractIds'] ?? []);
-		$orgs = (array)($scope['organisationIds'] ?? []);
-		if ($contracts !== [] && $contractId !== '' && in_array($contractId, $contracts, true) === true) {
-			return 4;
-		}
-
-		if ($orgs !== [] && $organisationId !== '' && in_array($organisationId, $orgs, true) === true) {
-			return 3;
-		}
-
-		return 2;
-	}//end scopeSpecificity()
-
-	/**
 	 * Fire one escalation step: notification + audit-record creation.
 	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $objectType Tracked object type.
-	 * @param string $objectId Tracked object UUID.
-	 * @param array<string, mixed> $step Escalation step.
-	 * @param int $level 1-indexed escalation level.
-	 * @param float $consumed Consumed percentage at firing.
-	 * @param string $hottestKind The target kind that drove the threshold.
+	 * @param SlaEscalation $escalation The step that fires.
+	 * @param SlaHeat       $heat       The heat it fires at.
 	 *
 	 * @return ?string Breach event UUID, or null on failure.
 	 */
-	private function fireEscalation(
-		array $policy,
-		string $objectType,
-		string $objectId,
-		array $step,
-		int $level,
-		float $consumed,
-		string $hottestKind,
-	): ?string {
-		$channel = (string)($step['channel'] ?? 'nextcloud-notification');
-		$notify = (string)($step['notify'] ?? 'assignee');
-
+	private function fireEscalation(SlaEscalation $escalation, SlaHeat $heat): ?string {
 		try {
-			$notifiedActors = $this->dispatchNotification(
-				channel: $channel,
-				notify: $notify,
-				policy: $policy,
-				objectType: $objectType,
-				objectId: $objectId,
-				level: $level,
-				step: $step
-			);
+			$notifiedActors = $this->dispatchNotification(escalation: $escalation);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: notification dispatch failed',
-				['error' => $e->getMessage(), 'channel' => $channel]
+				['error' => $e->getMessage(), 'channel' => $escalation->channel()]
 			);
-			$notifiedActors = ['failed:' . $channel];
+			$notifiedActors = ['failed:' . $escalation->channel()];
 		}
 
-		$kind = $hottestKind;
-		if ($hottestKind === '') {
-			$kind = 'resolution';
-		}
-
-		return $this->writeBreachEvent(
-			policy: $policy,
-			objectType: $objectType,
-			objectId: $objectId,
-			kind: $kind,
-			level: $level,
-			consumed: $consumed,
-			channel: $channel,
-			actors: $notifiedActors,
-		);
+		return $this->writeBreachEvent(event: new SlaBreachEvent(escalation: $escalation, heat: $heat, actors: $notifiedActors));
 	}//end fireEscalation()
 
 	/**
@@ -822,84 +849,49 @@ class SlaEngineService {
 	 * in the `notifiedActors` marker vocabulary and a Throwable never escapes
 	 * (the caller's try/catch is the last resort).
 	 *
-	 * @param string $channel Channel slug.
-	 * @param string $notify Actor role.
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $objectType Object type.
-	 * @param string $objectId Object UUID.
-	 * @param int $level Escalation level.
-	 * @param array<string, mixed> $step The escalation step (carries `templateId`).
+	 * @param SlaEscalation $escalation The step that fires (channel, notify role, `templateId`).
 	 *
 	 * @return array<int, string> Notified actor identifiers / markers.
 	 *
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-escalation-chain-execution
 	 */
-	private function dispatchNotification(
-		string $channel,
-		string $notify,
-		array $policy,
-		string $objectType,
-		string $objectId,
-		int $level,
-		array $step = [],
-	): array {
+	private function dispatchNotification(SlaEscalation $escalation): array {
+		$channel = $escalation->channel();
 		if ($channel === 'nextcloud-notification') {
-			return $this->dispatchNextcloudNotification(
-				notify: $notify,
-				policy: $policy,
-				objectType: $objectType,
-				objectId: $objectId,
-				level: $level
-			);
+			return $this->dispatchNextcloudNotification(escalation: $escalation);
 		}
 
 		if ($channel === 'sms' || $channel === 'whatsapp') {
-			return $this->dispatchChannelAdapter(
-				channel: $channel,
-				notify: $notify,
-				policy: $policy,
-				objectType: $objectType,
-				objectId: $objectId,
-				level: $level,
-				step: $step
-			);
+			return $this->dispatchChannelAdapter(escalation: $escalation);
 		}
 
 		// Email / webhook are delegated to their own capabilities; record
 		// the intent so the audit trail captures it.
-		return ['deferred:' . $channel . ':' . $notify];
+		return ['deferred:' . $channel . ':' . $escalation->notify()];
 	}//end dispatchNotification()
 
 	/**
 	 * Dispatch a Nextcloud in-app notification to the resolved actor.
 	 *
-	 * @param string $notify Actor role.
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $objectType Object type.
-	 * @param string $objectId Object UUID.
-	 * @param int $level Escalation level.
+	 * @param SlaEscalation $escalation The step that fires.
 	 *
 	 * @return array<int, string> Notified actor identifiers / markers.
 	 */
-	private function dispatchNextcloudNotification(
-		string $notify,
-		array $policy,
-		string $objectType,
-		string $objectId,
-		int $level,
-	): array {
-		$actor = $this->resolveActor(role: $notify, policy: $policy);
+	private function dispatchNextcloudNotification(SlaEscalation $escalation): array {
+		$notify = $escalation->notify();
+		$actor = $this->resolveActor(role: $notify, policy: $escalation->policy);
 		if ($actor === null) {
 			return ['unresolved:' . $notify];
 		}
 
+		$level = $escalation->level;
 		try {
 			$notification = $this->notifications->createNotification();
-			$notification->setApp(Application::APP_ID)
+			$notification->setApp(AppIdentity::APP_ID)
 				->setUser($actor)
 				->setDateTime(new DateTime())
-				->setObject($objectType, $objectId)
-				->setSubject('sla_breach', ['level' => $level, 'policy' => (string)($policy['name'] ?? '')])
+				->setObject($escalation->object->type, $escalation->object->id)
+				->setSubject('sla_breach', ['level' => $level, 'policy' => (string)($escalation->policy['name'] ?? '')])
 				->setMessage('sla_breach_message', ['level' => $level]);
 			$this->notifications->notify($notification);
 		} catch (Throwable $e) {
@@ -920,80 +912,49 @@ class SlaEngineService {
 	 * client/contact is the recipient). Other roles have no phone seam and
 	 * record an `unsupported:` marker without dispatching.
 	 *
-	 * @param string $channel `sms` or `whatsapp`.
-	 * @param string $notify Actor role.
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $objectType Object type.
-	 * @param string $objectId Object UUID.
-	 * @param int $level Escalation level.
-	 * @param array<string, mixed> $step The escalation step (carries `templateId`).
+	 * @param SlaEscalation $escalation The step that fires on `sms` or `whatsapp`.
 	 *
 	 * @return array<int, string> Notified actor identifiers / markers.
 	 *
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-escalation-chain-execution
 	 */
-	private function dispatchChannelAdapter(
-		string $channel,
-		string $notify,
-		array $policy,
-		string $objectType,
-		string $objectId,
-		int $level,
-		array $step,
-	): array {
+	private function dispatchChannelAdapter(SlaEscalation $escalation): array {
+		$channel = $escalation->channel();
+		$notify = $escalation->notify();
 		if ($notify !== 'customer') {
 			return ['unsupported:' . $channel . ':' . $notify];
 		}
 
-		$contact = $this->resolveCustomerContact(objectType: $objectType, objectId: $objectId);
+		$contact = $this->resolveCustomerContact(objectType: $escalation->object->type, objectId: $escalation->object->id);
 		if ($contact === null) {
 			return ['unresolved:' . $notify];
 		}
 
-		$contactId = (string)($contact['uuid'] ?? ($contact['id'] ?? ''));
-		$context = [
-			'clientId' => (string)($contact['client'] ?? ''),
-			'agent' => 'system:sla-engine',
-		];
+		$recipient = new SlaRecipient(
+			contact: $contact,
+			contactId: (string)($contact['uuid'] ?? ($contact['id'] ?? '')),
+			context: [
+				'clientId' => (string)($contact['client'] ?? ''),
+				'agent' => 'system:sla-engine',
+			],
+		);
 
 		if ($channel === 'sms') {
-			return $this->dispatchSmsEscalation(
-				contact: $contact,
-				contactId: $contactId,
-				policy: $policy,
-				level: $level,
-				context: $context
-			);
+			return $this->dispatchSmsEscalation(escalation: $escalation, recipient: $recipient);
 		}
 
-		return $this->dispatchWhatsAppEscalation(
-			contact: $contact,
-			contactId: $contactId,
-			policy: $policy,
-			level: $level,
-			step: $step,
-			context: $context
-		);
+		return $this->dispatchWhatsAppEscalation(escalation: $escalation, recipient: $recipient);
 	}//end dispatchChannelAdapter()
 
 	/**
 	 * Dispatch an SMS escalation through SmsAdapter.
 	 *
-	 * @param array<string, mixed> $contact Recipient contact/client row.
-	 * @param string $contactId Recipient UUID (audit marker).
-	 * @param array<string, mixed> $policy Policy.
-	 * @param int $level Escalation level.
-	 * @param array<string, mixed> $context Send context (clientId, agent).
+	 * @param SlaEscalation $escalation The step that fires.
+	 * @param SlaRecipient  $recipient  The customer it goes to.
 	 *
 	 * @return array<int, string> Notified actor identifiers / markers.
 	 */
-	private function dispatchSmsEscalation(
-		array $contact,
-		string $contactId,
-		array $policy,
-		int $level,
-		array $context,
-	): array {
+	private function dispatchSmsEscalation(SlaEscalation $escalation, SlaRecipient $recipient): array {
 		$adapter = $this->resolveMessagingAdapter(class: 'OCA\\Pipelinq\\Service\\SmsAdapter');
 		if ($adapter === null) {
 			return ['failed:sms'];
@@ -1001,17 +962,17 @@ class SlaEngineService {
 
 		try {
 			$outcome = $adapter->send(
-				contact: $contact,
-				body: $this->renderBreachMessage(policy: $policy, level: $level),
+				contact: $recipient->contact,
+				body: $this->renderBreachMessage(policy: $escalation->policy, level: $escalation->level),
 				providerHint: null,
-				context: $context
+				context: $recipient->context
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('SlaEngineService: SMS escalation dispatch threw', ['error' => $e->getMessage()]);
 			return ['failed:sms'];
 		}
 
-		return $this->markerFromOutcome(channel: 'sms', contactId: $contactId, outcome: $outcome);
+		return $recipient->marker(channel: 'sms', outcome: $outcome);
 	}//end dispatchSmsEscalation()
 
 	/**
@@ -1021,99 +982,64 @@ class SlaEngineService {
 	 * is required unless the contact has an open 24h session window. Missing
 	 * both fails closed with a `template-missing:whatsapp` marker.
 	 *
-	 * @param array<string, mixed> $contact Recipient contact/client row.
-	 * @param string $contactId Recipient UUID.
-	 * @param array<string, mixed> $policy Policy.
-	 * @param int $level Escalation level.
-	 * @param array<string, mixed> $step The escalation step (carries `templateId`).
-	 * @param array<string, mixed> $context Send context (clientId, agent).
+	 * @param SlaEscalation $escalation The step that fires (carries `templateId`).
+	 * @param SlaRecipient  $recipient  The customer it goes to.
 	 *
 	 * @return array<int, string> Notified actor identifiers / markers.
 	 */
-	private function dispatchWhatsAppEscalation(
-		array $contact,
-		string $contactId,
-		array $policy,
-		int $level,
-		array $step,
-		array $context,
-	): array {
+	private function dispatchWhatsAppEscalation(SlaEscalation $escalation, SlaRecipient $recipient): array {
 		$adapter = $this->resolveMessagingAdapter(class: 'OCA\\Pipelinq\\Service\\WhatsAppAdapter');
 		if ($adapter === null) {
 			return ['failed:whatsapp'];
 		}
 
-		$templateId = trim((string)($step['templateId'] ?? ''));
+		$templateId = $escalation->templateId();
+		$sendTemplateId = $templateId;
 		$body = '';
-		$template = $templateId;
 		if ($templateId === '') {
-			$withinWindow = false;
-			// Narrow with instanceof rather than method_exists: resolveMessagingAdapter()
-			// bare ?object, so method_exists leaves phpstan with stdClass and the named
-			// argument below unchecked. Same guard, but the call is type-checked.
-			if ($adapter instanceof WhatsAppAdapter) {
-				$withinWindow = (bool)$adapter->isWithinSessionWindow(contactId: $contactId);
-			}
-
-			if ($withinWindow === false) {
+			if ($this->inSessionWindow(adapter: $adapter, contactId: $recipient->contactId) === false) {
 				return ['template-missing:whatsapp'];
 			}
 
-			$body = $this->renderBreachMessage(policy: $policy, level: $level);
-			$template = '';
-		}
-
-		$sendTemplateId = null;
-		if ($template !== '') {
-			$sendTemplateId = $template;
+			$body = $this->renderBreachMessage(policy: $escalation->policy, level: $escalation->level);
+			$sendTemplateId = null;
 		}
 
 		try {
 			$outcome = $adapter->send(
-				contact: $contact,
+				contact: $recipient->contact,
 				body: $body,
 				templateId: $sendTemplateId,
 				parameters: [],
-				context: $context
+				context: $recipient->context
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('SlaEngineService: WhatsApp escalation dispatch threw', ['error' => $e->getMessage()]);
 			return ['failed:whatsapp'];
 		}
 
-		return $this->markerFromOutcome(channel: 'whatsapp', contactId: $contactId, outcome: $outcome);
+		return $recipient->marker(channel: 'whatsapp', outcome: $outcome);
 	}//end dispatchWhatsAppEscalation()
 
 	/**
-	 * Map an adapter outcome envelope onto the notifiedActors marker vocabulary.
+	 * Whether the contact has an open WhatsApp session window.
 	 *
-	 * @param string $channel `sms` or `whatsapp`.
-	 * @param string $contactId Recipient UUID (the `sent` actor).
-	 * @param array<string, mixed> $outcome Adapter outcome envelope.
+	 * Narrows with instanceof rather than method_exists: resolveMessagingAdapter()
+	 * returns a bare ?object, so method_exists leaves phpstan with stdClass and
+	 * the named argument unchecked. Any other adapter has no window.
 	 *
-	 * @return array<int, string> Notified actor identifiers / markers.
+	 * @param object $adapter   The resolved WhatsApp adapter.
+	 * @param string $contactId Recipient UUID.
+	 *
+	 * @return bool True inside the window.
 	 */
-	private function markerFromOutcome(string $channel, string $contactId, array $outcome): array {
-		$status = (string)($outcome['status'] ?? '');
-		if ($status === 'sent') {
-			$actor = $contactId;
-			if ($actor === '') {
-				$actor = 'customer';
-			}
-
-			return [$actor];
+	private function inSessionWindow(object $adapter, string $contactId): bool {
+		if ($adapter instanceof WhatsAppAdapter) {
+			return (bool)$adapter->isWithinSessionWindow(contactId: $contactId);
 		}
 
-		if ($status === 'consentMissing') {
-			return ['consent-missing:' . $channel];
-		}
-
-		if ($status === 'sessionWindowExpired') {
-			return ['template-missing:' . $channel];
-		}
-
-		return ['failed:' . $channel . ':' . $status];
-	}//end markerFromOutcome()
+		return false;
+	}//end inSessionWindow()
 
 	/**
 	 * Resolve a messaging adapter (SmsAdapter / WhatsAppAdapter) lazily.
@@ -1149,41 +1075,57 @@ class SlaEngineService {
 	 * @return array<string, mixed>|null The recipient row, or null.
 	 */
 	private function resolveCustomerContact(string $objectType, string $objectId): ?array {
-		$targetSchema = $this->appConfig->getValueString(Application::APP_ID, 'sla_target_schema_' . $objectType, '');
-		if ($targetSchema === '') {
-			$targetSchema = $objectType;
-		}
-
+		$targetSchema = $this->configuredSchema(key: 'sla_target_schema_' . $objectType, default: $objectType);
 		$target = $this->loadPipelinqObject(schema: $targetSchema, id: $objectId);
 		if ($target === null) {
 			return null;
 		}
 
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-		if ($contactSchema === '') {
-			$contactSchema = 'contact';
+		$contact = $this->linkedObject(target: $target, link: 'contact');
+		if ($contact !== null) {
+			return $contact;
 		}
 
-		$contactId = (string)($target['contact'] ?? '');
-		if ($contactId !== '') {
-			$contact = $this->loadPipelinqObject(schema: $contactSchema, id: $contactId);
-			if ($contact !== null) {
-				return $contact;
-			}
-		}
-
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
-		if ($clientSchema === '') {
-			$clientSchema = 'client';
-		}
-
-		$clientId = (string)($target['client'] ?? '');
-		if ($clientId !== '') {
-			return $this->loadPipelinqObject(schema: $clientSchema, id: $clientId);
-		}
-
-		return null;
+		return $this->linkedObject(target: $target, link: 'client');
 	}//end resolveCustomerContact()
+
+	/**
+	 * The object a tracked object links to under `contact` or `client`, read
+	 * from the schema configured as `<link>_schema` (default: the link name).
+	 *
+	 * @param array<string, mixed> $target The tracked object.
+	 * @param string               $link   `contact` or `client`.
+	 *
+	 * @return array<string, mixed>|null The linked object, or null when unset or not found.
+	 */
+	private function linkedObject(array $target, string $link): ?array {
+		$linkedId = (string)($target[$link] ?? '');
+		if ($linkedId === '') {
+			return null;
+		}
+
+		return $this->loadPipelinqObject(
+			schema: $this->configuredSchema(key: $link . '_schema', default: $link),
+			id: $linkedId
+		);
+	}//end linkedObject()
+
+	/**
+	 * A schema slug from app config, or the default when it is not set.
+	 *
+	 * @param string $key     The app-config key.
+	 * @param string $default The slug to fall back on.
+	 *
+	 * @return string
+	 */
+	private function configuredSchema(string $key, string $default): string {
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
+		if ($schema === '') {
+			return $default;
+		}
+
+		return $schema;
+	}//end configuredSchema()
 
 	/**
 	 * Load a pipelinq-register object by schema slug + id (best effort).
@@ -1198,7 +1140,21 @@ class SlaEngineService {
 			return null;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$entity = $this->findPipelinqEntity(schema: $schema, id: $id);
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->normaliseObject(row: $entity);
+	}//end loadPipelinqObject()
+
+	/**
+	 * The pipelinq register and the ObjectService, or null when either is missing.
+	 *
+	 * @return array{service: object, register: string}|null
+	 */
+	private function pipelinqStore(): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			return null;
 		}
@@ -1209,8 +1165,25 @@ class SlaEngineService {
 			return null;
 		}
 
+		return ['service' => $objectService, 'register' => $register];
+	}//end pipelinqStore()
+
+	/**
+	 * Find a pipelinq-register object; a missing store or failed lookup yields null (the failure logged).
+	 *
+	 * @param string $schema Schema slug.
+	 * @param string $id     Object UUID.
+	 *
+	 * @return mixed The entity, or null.
+	 */
+	private function findPipelinqEntity(string $schema, string $id): mixed {
+		$store = $this->pipelinqStore();
+		if ($store === null) {
+			return null;
+		}
+
 		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
+			return $store['service']->find(id: $id, register: $store['register'], schema: $schema);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: target object load failed',
@@ -1218,13 +1191,7 @@ class SlaEngineService {
 			);
 			return null;
 		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->normaliseObject(row: $entity);
-	}//end loadPipelinqObject()
+	}//end findPipelinqEntity()
 
 	/**
 	 * Render the customer-facing breach message for an sms/whatsapp escalation.
@@ -1260,12 +1227,12 @@ class SlaEngineService {
 	private function resolveActor(string $role, array $policy): ?string {
 		unset($policy);
 		$key = 'sla_actor_' . preg_replace('/[^a-z0-9_-]/i', '_', $role);
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($value !== '') {
 			return $value;
 		}
 
-		$fallback = $this->appConfig->getValueString(Application::APP_ID, 'sla_actor_fallback', '');
+		$fallback = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_actor_fallback', '');
 		if ($fallback === '') {
 			return null;
 		}
@@ -1276,36 +1243,36 @@ class SlaEngineService {
 	/**
 	 * Persist an `slaBreachEvent` audit row.
 	 *
-	 * @param array<string, mixed> $policy Policy.
-	 * @param string $objectType Object type.
-	 * @param string $objectId Object UUID.
-	 * @param string $kind Target kind.
-	 * @param int $level Escalation level.
-	 * @param float $consumed Consumed percentage.
-	 * @param string $channel Channel slug.
-	 * @param array<int, string> $actors Notified actors.
+	 * @param SlaBreachEvent $event The fired escalation and who was notified.
 	 *
 	 * @return ?string Breach event UUID, or null on failure.
 	 */
-	private function writeBreachEvent(
-		array $policy,
-		string $objectType,
-		string $objectId,
-		string $kind,
-		int $level,
-		float $consumed,
-		string $channel,
-		array $actors,
-	): ?string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_breach_event_schema', '');
+	private function writeBreachEvent(SlaBreachEvent $event): ?string {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_breach_event_schema', '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug('SlaEngineService: breach register/schema not configured; skipping audit row');
 			return null;
 		}
 
+		$objectService = $this->breachObjectService();
+		if ($objectService === null) {
+			return null;
+		}
+
+		$payload = $this->breachPayload(event: $event);
+
+		return $this->saveBreachPayload(objectService: $objectService, payload: $payload, register: $register, schema: $schema);
+	}//end writeBreachEvent()
+
+	/**
+	 * The ObjectService for a breach event write, or null (logged) when unavailable.
+	 *
+	 * @return object|null
+	 */
+	private function breachObjectService(): object|null {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: ObjectService unavailable for breach event write',
@@ -1313,20 +1280,19 @@ class SlaEngineService {
 			);
 			return null;
 		}
+	}//end breachObjectService()
 
-		$payload = [
-			'policyId' => $this->policyIdentity(policy: $policy),
-			'targetObjectType' => $objectType,
-			'targetObjectId' => $objectId,
-			'targetKind' => $kind,
-			'breachedAt' => $this->now()->format(DateTimeInterface::ATOM),
-			'consumedPercentage' => round($consumed, 4),
-			'escalationLevel' => $level,
-			'notifiedActors' => $actors,
-			'channel' => $channel,
-			'acknowledged' => false,
-		];
-
+	/**
+	 * Save a breach event row and return its UUID (null, logged, on failure).
+	 *
+	 * @param object               $objectService The OpenRegister ObjectService.
+	 * @param array<string, mixed> $payload       The breach event row.
+	 * @param string               $register      The SLA register.
+	 * @param string               $schema        The breach event schema.
+	 *
+	 * @return string|null
+	 */
+	private function saveBreachPayload(object $objectService, array $payload, string $register, string $schema): string|null {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
@@ -1334,31 +1300,63 @@ class SlaEngineService {
 				register: $register,
 				schema: $schema,
 			);
-
-			$uuid = '';
-			if (is_array($saved) === true) {
-				$uuid = (string)($saved['uuid'] ?? $saved['id'] ?? '');
-			} elseif (is_object($saved) === true) {
-				// SaveObject() returns an ObjectEntity whose getUuid() is served by
-				// Entity::__call — method_exists() is FALSE for it, so this branch
-				// never ran and the breach event's id was lost even though the row
-				// was written (pipelinq#807).
-				$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
-			}
-
-			if ($uuid === '') {
-				return null;
-			}
-
-			return $uuid;
+			return $this->savedUuid(saved: $saved);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: failed to write breach event',
 				['error' => $e->getMessage()]
 			);
 			return null;
-		}//end try
-	}//end writeBreachEvent()
+		}
+	}//end saveBreachPayload()
+
+	/**
+	 * The `slaBreachEvent` row for a fired escalation.
+	 *
+	 * @param SlaBreachEvent $event The fired escalation and who was notified.
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private function breachPayload(SlaBreachEvent $event): array {
+		$escalation = $event->escalation;
+		return [
+			'policyId' => $this->policyIdentity(policy: $escalation->policy),
+			'targetObjectType' => $escalation->object->type,
+			'targetObjectId' => $escalation->object->id,
+			'targetKind' => $event->heat->kind(),
+			'breachedAt' => $this->now()->format(DateTimeInterface::ATOM),
+			'consumedPercentage' => round($event->heat->consumed, 4),
+			'escalationLevel' => $escalation->level,
+			'notifiedActors' => $event->actors,
+			'channel' => $escalation->channel(),
+			'acknowledged' => false,
+		];
+	}//end breachPayload()
+
+	/**
+	 * The UUID of a saved breach event, or null when the save returned none.
+	 *
+	 * @param mixed $saved What saveObject() returned.
+	 *
+	 * @return ?string Breach event UUID, or null.
+	 */
+	private function savedUuid(mixed $saved): ?string {
+		$uuid = '';
+		if (is_array($saved) === true) {
+			$uuid = (string)($saved['uuid'] ?? $saved['id'] ?? '');
+		} elseif (is_object($saved) === true) {
+			// SaveObject() returns an ObjectEntity whose getUuid() is served by
+			// Entity::__call — method_exists() is FALSE for it, so the id is read
+			// through the entity accessor (pipelinq#807).
+			$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
+		}
+
+		if ($uuid === '') {
+			return null;
+		}
+
+		return $uuid;
+	}//end savedUuid()
 
 	/**
 	 * Return the identity string for a policy (UUID preferred, else slug).
@@ -1439,28 +1437,56 @@ class SlaEngineService {
 			return $row;
 		}
 
-		if (is_object($row) === true) {
-			if (method_exists($row, 'getObject') === true) {
-				$object = $row->getObject();
-				if (is_array($object) === true) {
-					if (method_exists($row, 'getUuid') === true) {
-						$object['id'] = $object['id'] ?? (string)$row->getUuid();
-					}
-
-					return $object;
-				}
-			}
-
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$json = $row->jsonSerialize();
-				if (is_array($json) === true) {
-					return $json;
-				}
-			}
+		if (is_object($row) === false) {
+			return [];
 		}
 
-		return [];
+		return ($this->entityObject(row: $row) ?? $this->serialisedObject(row: $row) ?? []);
 	}//end normaliseObject()
+
+	/**
+	 * An entity's object array, with its uuid as `id` when it has none.
+	 *
+	 * @param object $row The entity.
+	 *
+	 * @return array<string, mixed>|null Null when it has no object array.
+	 */
+	private function entityObject(object $row): ?array {
+		if (method_exists($row, 'getObject') === false) {
+			return null;
+		}
+
+		$object = $row->getObject();
+		if (is_array($object) === false) {
+			return null;
+		}
+
+		if (method_exists($row, 'getUuid') === true) {
+			$object['id'] = $object['id'] ?? (string)$row->getUuid();
+		}
+
+		return $object;
+	}//end entityObject()
+
+	/**
+	 * An object's jsonSerialize() array.
+	 *
+	 * @param object $row The object.
+	 *
+	 * @return array<string, mixed>|null Null when it does not serialise to an array.
+	 */
+	private function serialisedObject(object $row): ?array {
+		if (method_exists($row, 'jsonSerialize') === false) {
+			return null;
+		}
+
+		$json = $row->jsonSerialize();
+		if (is_array($json) === false) {
+			return null;
+		}
+
+		return $json;
+	}//end serialisedObject()
 
 	/**
 	 * Wall-clock milliseconds between two instants.

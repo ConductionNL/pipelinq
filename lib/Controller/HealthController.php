@@ -32,14 +32,14 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -59,7 +59,8 @@ use Psr\Container\ContainerInterface;
  *
  * @psalm-suppress UnusedClass
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class HealthController extends Controller {
 
@@ -97,7 +98,7 @@ class HealthController extends Controller {
 		private readonly IConfig $config,
 		private readonly ContainerInterface $container,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -118,7 +119,7 @@ class HealthController extends Controller {
 	 *
 	 * @return JSONResponse `{status, app, version, checks}` with HTTP code per policy.
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.3
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -130,7 +131,7 @@ class HealthController extends Controller {
 				[
 					'status' => 'degraded',
 					'app' => $this->appName,
-					'version' => $this->config->getAppValue(Application::APP_ID, 'installed_version', ''),
+					'version' => $this->config->getAppValue(AppIdentity::APP_ID, 'installed_version', ''),
 					'checks' => ['openregister' => 'unavailable'],
 				],
 				Http::STATUS_OK

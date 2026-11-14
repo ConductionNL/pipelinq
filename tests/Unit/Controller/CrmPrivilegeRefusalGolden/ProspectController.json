@@ -1,0 +1,39 @@
+{
+    "index no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "t:Authentication required"
+        },
+        "trace": []
+    },
+    "index unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "t:Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "index privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "ProspectDiscoveryServiceInterface::discover": []
+            }
+        ]
+    }
+}

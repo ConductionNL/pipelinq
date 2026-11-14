@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3
  */
 
 declare(strict_types=1);
@@ -27,13 +27,15 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for POS staff business operations.
@@ -51,9 +53,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) CRUD + PIN-auth + lockout
  *  logic is inherently branchy; split across small focused methods.
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3
  */
-class PosStaffService {
+class PosStaffService implements PosStaffServiceInterface {
+	use CastingPayloadToArray;
+
 	/**
 	 * Maximum consecutive failed PIN attempts before a 15-minute lockout.
 	 *
@@ -97,7 +101,7 @@ class PosStaffService {
 	 *
 	 * @return array<int, array<string, mixed>> The staff objects without pinHash.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function listStaff(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
@@ -129,7 +133,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSNotFoundException If the staff is not found.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function getStaff(string $id): array {
 		$staff = $this->fetchStaff(id: $id);
@@ -151,7 +155,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSBadRequestException If displayName/role missing, or PIN format is invalid on create/update.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function saveStaff(array $data, string $id = ''): array {
 		$displayName = trim((string)($data['displayName'] ?? ''));
@@ -302,7 +306,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSNotFoundException If deletion fails.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function deleteStaff(string $id): void {
 		// Ensure the staff exists first (throws OCSNotFoundException).
@@ -334,7 +338,7 @@ class PosStaffService {
 	 * @throws OCSNotFoundException If the staff is not found.
 	 * @throws OCSForbiddenException If the account is inactive, currently locked, or the PIN does not match.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function validatePin(string $staffId, string $pin): array {
 		if ($this->isValidPinFormat(pin: $pin) === false) {
@@ -343,6 +347,25 @@ class PosStaffService {
 
 		$staff = $this->fetchStaff(id: $staffId);
 
+		$this->assertCanLogIn(staff: $staff);
+		$this->assertPinMatches(staff: $staff, pin: $pin);
+
+		// Successful login: clear counters, update lastLoginAt.
+		$this->markLoginSuccess(staff: $staff);
+
+		return $this->loginSession(staff: $staff, staffId: $staffId);
+	}//end validatePin()
+
+	/**
+	 * Refuse a deactivated or still-locked account.
+	 *
+	 * @param array<string, mixed> $staff The staff member.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSForbiddenException When the account may not log in.
+	 */
+	private function assertCanLogIn(array $staff): void {
 		if ((bool)($staff['isActive'] ?? true) === false) {
 			throw new OCSForbiddenException('Account is gedeactiveerd.');
 		}
@@ -351,16 +374,35 @@ class PosStaffService {
 		if ($lockedUntil !== '' && $this->isStillLocked(lockedUntil: $lockedUntil) === true) {
 			throw new OCSForbiddenException('Account is geblokkeerd. Probeer het later opnieuw.');
 		}
+	}//end assertCanLogIn()
 
+	/**
+	 * Refuse a wrong PIN, counting the failed attempt.
+	 *
+	 * @param array<string, mixed> $staff The staff member.
+	 * @param string $pin The submitted PIN.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSForbiddenException When the PIN does not match.
+	 */
+	private function assertPinMatches(array $staff, string $pin): void {
 		$hash = (string)($staff['pinHash'] ?? '');
 		if ($hash === '' || password_verify($pin, $hash) === false) {
 			$this->incrementFailedAttempts(staff: $staff);
 			throw new OCSForbiddenException('PIN onjuist.');
 		}
+	}//end assertPinMatches()
 
-		// Successful login: clear counters, update lastLoginAt.
-		$this->markLoginSuccess(staff: $staff);
-
+	/**
+	 * The POS session for a logged-in staff member.
+	 *
+	 * @param array<string, mixed> $staff The staff member.
+	 * @param string $staffId The requested staff id.
+	 *
+	 * @return array<string, mixed> The staff id, display name, permissions and expiry.
+	 */
+	private function loginSession(array $staff, string $staffId): array {
 		$permissions = $this->resolvePermissions(roleId: (string)($staff['posRole'] ?? ''));
 
 		return [
@@ -369,7 +411,7 @@ class PosStaffService {
 			'permissions' => $permissions,
 			'expiresAt' => (new DateTimeImmutable('+8 hours'))->format(DateTimeInterface::ATOM),
 		];
-	}//end validatePin()
+	}//end loginSession()
 
 	/**
 	 * Get the role's permission matrix for a staff member without verifying the PIN.
@@ -384,7 +426,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSNotFoundException If the staff is not found.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.1
 	 */
 	public function getPermissions(string $staffId): array {
 		$staff = $this->fetchStaff(id: $staffId);
@@ -409,7 +451,7 @@ class PosStaffService {
 	 *
 	 * @throws OCSNotFoundException If the staff is not found in this app's schema.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3.3
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3.3
 	 */
 	public function authorizeStaff(string $staffId, string $userId): array {
 		$staff = $this->fetchStaff(id: $staffId);
@@ -628,8 +670,8 @@ class PosStaffService {
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
@@ -648,35 +690,6 @@ class PosStaffService {
 		// catch was unreachable — phpstan reports it as a dead catch.
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OR object into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 
 	/**
 	 * Generate a v4 UUID.

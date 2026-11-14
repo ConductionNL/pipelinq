@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
  */
 
 declare(strict_types=1);
@@ -28,7 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\OrphanedLeadRepairServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -36,9 +37,9 @@ use Throwable;
 /**
  * Re-homes leads whose pipeline was deleted.
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
  */
-class OrphanedLeadRepairService {
+class OrphanedLeadRepairService implements OrphanedLeadRepairServiceInterface {
 	/**
 	 * Upper bound on the objects read per schema in one run.
 	 */
@@ -67,7 +68,7 @@ class OrphanedLeadRepairService {
 	 *
 	 * @return array{moved: int, failed: int} How many leads moved, and how many could not be saved.
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+	 * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function repair(): array {
 		return $this->systemAccount->runAsCurrentOrSystem(fn (): array => $this->repairAsCaller());
@@ -81,9 +82,9 @@ class OrphanedLeadRepairService {
 	private function repairAsCaller(): array {
 		$counts = ['moved' => 0, 'failed' => 0];
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$leadSchema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
-		$pipelineSchema = $this->appConfig->getValueString(Application::APP_ID, 'pipeline_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
+		$pipelineSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pipeline_schema', '');
 		if ($register === '' || $leadSchema === '' || $pipelineSchema === '') {
 			return $counts;
 		}
@@ -95,35 +96,61 @@ class OrphanedLeadRepairService {
 			return $counts;
 		}
 
-		foreach ($this->readAll(register: $register, schema: $leadSchema) as $lead) {
-			$patch = $this->placer->forOrphanedLead(lead: $lead, pipelines: $pipelines);
-			$uuid = (string)($lead['id'] ?? '');
-			if ($patch === [] || $uuid === '') {
-				continue;
-			}
+		return $this->moveOrphans(target: ['register' => $register, 'schema' => $leadSchema], pipelines: $pipelines);
+	}//end repairAsCaller()
 
-			$payload = $lead;
-			unset($payload['@self']);
-			try {
-				$this->objectService->saveObject(
-					object: array_merge($payload, $patch),
-					extend: [],
-					register: $register,
-					schema: $leadSchema,
-					uuid: $uuid,
-				);
-				$counts['moved']++;
-			} catch (Throwable $e) {
-				$counts['failed']++;
-				$this->logger->error(
-					'Pipelinq: could not move a lead off a deleted pipeline',
-					['uuid' => $uuid, 'exception' => $e->getMessage()]
-				);
+	/**
+	 * Move every lead that sits on a deleted pipeline, counting the outcomes.
+	 *
+	 * @param array<string, string>            $target    Keys: register, schema (the lead schema).
+	 * @param array<int, array<string, mixed>> $pipelines The stored pipelines.
+	 *
+	 * @return array{moved: int, failed: int} The counts.
+	 */
+	private function moveOrphans(array $target, array $pipelines): array {
+		$counts = ['moved' => 0, 'failed' => 0];
+		foreach ($this->readAll(register: $target['register'], schema: $target['schema']) as $lead) {
+			$outcome = $this->moveLead(lead: $lead, pipelines: $pipelines, target: $target);
+			if ($outcome !== null) {
+				$counts[$outcome]++;
 			}
-		}//end foreach
+		}
 
 		return $counts;
-	}//end repairAsCaller()
+	}//end moveOrphans()
+
+	/**
+	 * Move one lead off a deleted pipeline.
+	 *
+	 * @param array<string, mixed>             $lead      The lead.
+	 * @param array<int, array<string, mixed>> $pipelines The stored pipelines.
+	 * @param array<string, string>            $target    Keys: register, schema (the lead schema).
+	 *
+	 * @return string|null 'moved' or 'failed', null when the lead needs no move.
+	 */
+	private function moveLead(array $lead, array $pipelines, array $target): string|null {
+		$patch = $this->placer->forOrphanedLead(lead: $lead, pipelines: $pipelines);
+		$uuid = (string)($lead['id'] ?? '');
+		if ($patch === [] || $uuid === '') {
+			return null;
+		}
+
+		$payload = $lead;
+		unset($payload['@self']);
+		try {
+			$this->objectService->saveObject(
+				object: array_merge($payload, $patch),
+				extend: [],
+				register: $target['register'],
+				schema: $target['schema'],
+				uuid: $uuid,
+			);
+			return 'moved';
+		} catch (Throwable $e) {
+			$this->logger->error('Pipelinq: could not move a lead off a deleted pipeline', ['uuid' => $uuid, 'exception' => $e->getMessage()]);
+			return 'failed';
+		}
+	}//end moveLead()
 
 	/**
 	 * Read every object of a schema as plain arrays.
@@ -149,6 +176,17 @@ class OrphanedLeadRepairService {
 			return [];
 		}
 
+		return $this->plainRows(rows: $rows);
+	}//end readAll()
+
+	/**
+	 * Rows as plain arrays; a row with no array shape is dropped.
+	 *
+	 * @param iterable<mixed> $rows The rows OpenRegister returned.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function plainRows(iterable $rows): array {
 		$out = [];
 		foreach ($rows as $row) {
 			if (is_array($row) === true) {
@@ -165,5 +203,5 @@ class OrphanedLeadRepairService {
 		}
 
 		return $out;
-	}//end readAll()
+	}//end plainRows()
 }//end class

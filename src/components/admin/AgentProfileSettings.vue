@@ -7,16 +7,25 @@
 		">
 		<NcLoadingIcon v-if="loading" />
 
-		<div v-else class="agent-settings">
-			<div v-for="profile in profiles" :key="profile.id" class="agent-item">
+		<div v-else class="agent-settings cn-settings-list">
+			<div
+				v-for="profile in profiles"
+				:key="profile.id"
+				class="agent-item"
+				:class="{ 'cn-settings-row': editingId !== profile.id }">
 				<div v-if="editingId !== profile.id" class="agent-item__display">
 					<div class="agent-item__info">
 						<span class="agent-name">{{ profile.userId }}</span>
-						<span
+						<CnStatusBadge
 							v-if="profile.isAvailable === false"
-							class="unavailable-tag"
-							>{{ t('pipelinq', 'Unavailable') }}</span
-						>
+							variant="warning"
+							:label="t('pipelinq', 'Unavailable')"
+							class="agent-availability" />
+						<CnStatusBadge
+							v-if="profile.pauseLeadAssignment === true"
+							variant="warning"
+							:label="t('pipelinq', 'Paused for new leads')"
+							class="agent-availability" />
 						<span class="agent-meta">
 							{{
 								getSkillNames(profile).join(', ')
@@ -30,11 +39,11 @@
 							}}
 						</span>
 					</div>
-					<div class="agent-item__actions">
+					<div class="agent-item__actions cn-settings-row-actions">
 						<NcButton @click="startEdit(profile)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton variant="error" @click="deleteProfile(profile)">
+						<NcButton variant="error" @click="askDelete(profile)">
 							{{ t('pipelinq', 'Delete') }}
 						</NcButton>
 					</div>
@@ -90,6 +99,27 @@
 							</label>
 						</div>
 					</div>
+					<div class="edit-row">
+						<div class="edit-field">
+							<label for="agent-edit-lead-cap">{{
+								t('pipelinq', 'Most new leads in 30 days')
+							}}</label>
+							<input
+								id="agent-edit-lead-cap"
+								v-model.number="editForm.leadCapPer30Days"
+								type="number"
+								min="1"
+								:placeholder="t('pipelinq', 'No limit')" />
+						</div>
+						<div class="edit-field">
+							<label>
+								<input
+									v-model="editForm.pauseLeadAssignment"
+									type="checkbox" />
+								{{ t('pipelinq', 'Pause lead assignment') }}
+							</label>
+						</div>
+					</div>
 					<div class="edit-actions">
 						<NcButton @click="cancelEdit">
 							{{ t('pipelinq', 'Cancel') }}
@@ -103,64 +133,77 @@
 
 			<div class="agent-add">
 				<NcButton @click="addProfile">
-					{{ t('pipelinq', '+ Add Agent Profile') }}
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'Add agent profile') }}
 				</NcButton>
 			</div>
 		</div>
+		<CnDeleteDialog
+			v-if="deleting"
+			ref="deleteDialog"
+			:item="deleting"
+			nameField="userId"
+			:dialogTitle="t('pipelinq', 'Delete agent profile')"
+			@confirm="confirmDelete"
+			@close="deleting = null" />
 	</NcSettingsSection>
 </template>
 
 <script>
+import { CnDeleteDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useAgentProfilesStore } from '../../store/modules/agentProfiles.js'
 import { useSkillsStore } from '../../store/modules/skills.js'
+import { profileToSave } from '../../utils/agentProfileForm.js'
+import inlineEditRowsMixin from './inlineEditRowsMixin.js'
 
 export default {
 	name: 'AgentProfileSettings',
 	components: {
+		Plus,
+		CnDeleteDialog,
+		CnStatusBadge,
 		NcButton,
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
 
-	data() {
-		return {
-			editingId: null,
-			editForm: {},
-		}
-	},
+	mixins: [inlineEditRowsMixin],
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-9
 		 */
 		profilesStore() {
 			return useAgentProfilesStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-11
 		 */
 		skillsStore() {
 			return useSkillsStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		loading() {
 			return this.profilesStore.loading
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		profiles() {
 			return this.profilesStore.profiles
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		allSkills() {
 			return this.skillsStore.skills
@@ -168,7 +211,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-7
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-7
 	 */
 	mounted() {
 		this.profilesStore.fetchProfiles()
@@ -178,7 +221,7 @@ export default {
 	methods: {
 		/**
 		 * @param {object} profile The agent profile whose skills to name.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		getSkillNames(profile) {
 			if (!profile.skills || !this.allSkills.length) return []
@@ -190,7 +233,7 @@ export default {
 
 		/**
 		 * @param {object} profile The agent profile to edit.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
 		 */
 		startEdit(profile) {
 			this.editingId = profile.id
@@ -198,17 +241,9 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-3
-		 */
-		cancelEdit() {
-			this.editingId = null
-			this.editForm = {}
-		},
-
-		/**
 		 * @param {string} skillId Identifier of the skill.
 		 * @param {boolean} checked Whether the skill is now selected.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
 		 */
 		toggleSkill(skillId, checked) {
 			const skills = [...(this.editForm.skills || [])]
@@ -222,15 +257,15 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
 		 */
 		async saveEdit() {
-			await this.profilesStore.saveProfile(this.editForm)
+			await this.profilesStore.saveProfile(profileToSave(this.editForm))
 			this.cancelEdit()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async addProfile() {
 			const userId = prompt(t('pipelinq', 'Enter Nextcloud user ID:'))
@@ -244,23 +279,21 @@ export default {
 		},
 
 		/**
-		 * @param {object} profile The agent profile to delete.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-4
+		 * Delete the row the dialog asked about, and tell the dialog how it went.
+		 *
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
 		 */
-		async deleteProfile(profile) {
-			if (
-				confirm(
-					t('pipelinq', 'Delete agent profile for "{userId}"?', {
-						userId: profile.userId,
-					}),
-				)
-			) {
-				await this.profilesStore.deleteProfile(profile.id)
-			}
+		async confirmDelete() {
+			const deleted = await this.profilesStore.deleteProfile(this.deleting.id)
+			this.$refs.deleteDialog?.setResult(deleted
+				? { success: true }
+				: { error: this.profilesStore.error || t('pipelinq', 'Deleting failed.') })
 		},
 	},
 }
 </script>
+
+<style scoped src="./inlineEditRows.css"></style>
 
 <style scoped>
 .agent-settings {
@@ -286,13 +319,8 @@ export default {
 	font-weight: 700;
 }
 
-.unavailable-tag {
-	font-size: 11px;
-	padding: 1px 6px;
-	border-radius: 8px;
-	background: var(--color-error);
-	color: #fff;
-	margin-inline-start: 6px;
+.agent-availability {
+	margin-inline-start: 8px;
 }
 
 .agent-meta {
@@ -312,17 +340,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-}
-
-.edit-field {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.edit-field label {
-	font-weight: 600;
-	font-size: 13px;
 }
 
 .edit-field input[type='text'],
@@ -349,12 +366,6 @@ export default {
 	gap: 4px;
 	font-size: 13px;
 	font-weight: normal !important;
-}
-
-.edit-actions {
-	display: flex;
-	gap: 4px;
-	justify-content: flex-end;
 }
 
 .agent-add {

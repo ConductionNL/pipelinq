@@ -59,15 +59,220 @@
 		},
 		{
 			"id": "ConnectionAudit",
-			"_note": "The follow audit (marketing-search-intelligence). Custom rather than a declarative type:index over socialConnection, because the page's whole job is to render the REASON an answer is unknown next to the answer, and because it offers a re-run action. A declarative index would show the three-valued fields as bare enum labels and drop the reason, which is the half a marketer needs in order not to act on a wrong no.",
+			"_note": "The follow audit (marketing-search-intelligence), board PqVerbindingscontrole: per client and network, whether we follow them and whether they follow us, and WHY an answer is unknown. A board-look index over the stored socialConnection rows: the reason is its own column, so the third answer (the network will not say) is never shown as a no. The verdict columns go through the `auditVerdict` formatter, which prints an empty or unknown verdict as Cannot be checked. Check again re-runs the audit through GET /api/marketing/connection-audit?refresh=true (`rerunConnectionAudit`); the rows it writes reach the page through the collection's live update.",
 			"route": "/marketing/connection-audit",
-			"type": "custom",
+			"type": "index",
 			"title": "Connection audit",
-			"component": "ConnectionAuditView",
 			"config": {
 				"register": "pipelinq",
 				"schema": "socialConnection",
-				"documentationUrl": "https://pipelinq.conduction.nl"
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showFormDialog": false,
+				"showMassImport": false,
+				"showMassCopy": false,
+				"countText": "Which social accounts of our clients we follow and which follow us back",
+				"selectable": false,
+				"searchPlaceholder": "Search a client or username",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "rerun-connection-audit",
+						"label": "Check again",
+						"variant": "primary",
+						"icon": "Repeat"
+					}
+				],
+				"headerActions": [
+					{
+						"id": "rerun-connection-audit",
+						"label": "Check again",
+						"icon": "Repeat",
+						"handler": "rerunConnectionAudit"
+					}
+				],
+				"statRow": [
+					{
+						"id": "audit-checked",
+						"type": "stat",
+						"title": "Accounts checked",
+						"content": {
+							"label": "Accounts checked",
+							"caption": "handles stored on clients",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "socialConnection",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "audit-we-do-not-follow",
+						"type": "stat",
+						"title": "We do not follow",
+						"content": {
+							"label": "We do not follow",
+							"caption": "they follow us, we do not follow back",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "socialConnection",
+								"metric": "count",
+								"filter": {
+									"weFollowThem": "no",
+									"theyFollowUs": "yes"
+								}
+							}
+						}
+					},
+					{
+						"id": "audit-they-do-not-follow",
+						"type": "stat",
+						"title": "They do not follow",
+						"content": {
+							"label": "They do not follow",
+							"caption": "worth a post or a mention",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "socialConnection",
+								"metric": "count",
+								"filter": {
+									"theyFollowUs": "no"
+								}
+							}
+						}
+					},
+					{
+						"id": "audit-cannot-check",
+						"type": "stat",
+						"title": "Cannot be checked",
+						"content": {
+							"label": "Cannot be checked",
+							"caption": "the network has no API for followers",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "socialConnection",
+								"metric": "count",
+								"filter": {
+									"weFollowThem": "unknown"
+								}
+							}
+						}
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "We do not follow",
+						"filter": {
+							"weFollowThem": "no",
+							"theyFollowUs": "yes"
+						},
+						"showCount": true
+					},
+					{
+						"label": "They do not follow",
+						"filter": {
+							"theyFollowUs": "no"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Cannot be checked",
+						"filter": {
+							"weFollowThem": "unknown"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
+					{
+						"key": "clientId",
+						"label": "Client",
+						"widget": "fkResolve",
+						"widgetProps": {
+							"register": "pipelinq",
+							"schema": "client",
+							"labelField": "name"
+						}
+					},
+					{
+						"key": "counterpartHandle",
+						"label": "Handle",
+						"widget": "link",
+						"widgetProps": {
+							"href": "{counterpartUrl}",
+							"fallback": "silent"
+						}
+					},
+					{
+						"key": "network",
+						"label": "Network",
+						"formatter": "enumText"
+					},
+					{
+						"key": "weFollowThem",
+						"label": "We follow them",
+						"formatter": "auditVerdict",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"yes": "success",
+								"no": "warning",
+								"unknown": "default"
+							}
+						}
+					},
+					{
+						"key": "theyFollowUs",
+						"label": "They follow us",
+						"formatter": "auditVerdict",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"yes": "success",
+								"no": "warning",
+								"unknown": "default"
+							}
+						}
+					},
+					{
+						"key": "reason",
+						"label": "Reason",
+						"sortable": false
+					}
+				],
+				"footerNote": "Mastodon and Bluesky are read live; for other networks the reason they cannot be checked is shown",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
 			}
 		}
 	]

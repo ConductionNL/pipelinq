@@ -32,23 +32,24 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CampaignServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\IAppConfig;
 
 /**
  * CampaignService: read, mint, validate and store a campaign.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
  */
-class CampaignService {
+class CampaignService implements CampaignServiceInterface {
 
 	/**
 	 * The schema slug the register fragment declares.
@@ -112,7 +113,7 @@ class CampaignService {
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param CampaignLinkDecorator $decorator Owns the slug rule a campaign value is minted with.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -126,7 +127,7 @@ class CampaignService {
 	 *
 	 * @return string The slug.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function schemaSlug(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA_SLUG);
@@ -139,7 +140,7 @@ class CampaignService {
 	 *
 	 * @return array<string, mixed>|null The campaign, or null.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function find(string $id): ?array {
 		if (trim($id) === '') {
@@ -156,7 +157,7 @@ class CampaignService {
 	 *
 	 * @return array<int, array<string, mixed>> The campaigns.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function all(array $filters = []): array {
 		return $this->store->findAll(schemaSlug: $this->schemaSlug(), filters: $filters);
@@ -172,7 +173,7 @@ class CampaignService {
 	 *
 	 * @return array<string, mixed> The campaign, or an empty array.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function forBlast(array $blast): array {
 		$campaignId = trim((string)($blast['campaignId'] ?? ''));
@@ -193,7 +194,7 @@ class CampaignService {
 	 * @return array{sources: array<int, string>, mediums: array<int, string>}
 	 *         Both vocabularies, lowercase and unique.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function vocabularies(): array {
 		return [
@@ -212,7 +213,7 @@ class CampaignService {
 	 *
 	 * @return string The slug, empty when nothing survives.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function mint(string $name): string {
 		return $this->decorator->slug(value: $name);
@@ -235,15 +236,12 @@ class CampaignService {
 	 * @return array{error: string, value: string, allowed: array<int, string>, campaign: array<string, mixed>|null}
 	 *         `error` empty on success.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function save(array $payload, ?string $id = null, string $uid = ''): array {
-		$existing = null;
-		if ($id !== null && trim($id) !== '') {
-			$existing = $this->find(id: $id);
-			if ($existing === null) {
-				return $this->failure(error: 'not_found', value: (string)$id, allowed: []);
-			}
+		[$existing, $failure] = $this->existingCampaign(id: $id);
+		if ($failure !== null) {
+			return $failure;
 		}
 
 		$name = trim((string)($payload['name'] ?? ($existing['name'] ?? '')));
@@ -256,6 +254,39 @@ class CampaignService {
 			return $check;
 		}
 
+		return $this->storeCampaign(record: $this->campaignRecord(existing: $existing, payload: $payload, name: $name, uid: $uid), id: $id, name: $name);
+	}//end save()
+
+	/**
+	 * The campaign being updated, or a not-found failure; [null, null] for a new campaign.
+	 *
+	 * @param string|null $id The campaign id, or null to create.
+	 *
+	 * @return array{0: array<string, mixed>|null, 1: array<string, mixed>|null} The existing campaign and the failure.
+	 */
+	private function existingCampaign(string|null $id): array {
+		$existing = null;
+		if ($id !== null && trim($id) !== '') {
+			$existing = $this->find(id: $id);
+			if ($existing === null) {
+				return [null, $this->failure(error: 'not_found', value: (string)$id, allowed: [])];
+			}
+		}
+
+		return [$existing, null];
+	}//end existingCampaign()
+
+	/**
+	 * The record to store: the existing campaign overlaid with the payload, the name and frozen slug.
+	 *
+	 * @param array<string, mixed>|null $existing The existing campaign, or null for a new one.
+	 * @param array<string, mixed> $payload The submitted payload.
+	 * @param string $name The trimmed name.
+	 * @param string $uid The acting user id.
+	 *
+	 * @return array<string, mixed> The record.
+	 */
+	private function campaignRecord(array|null $existing, array $payload, string $name, string $uid): array {
 		$record = array_merge(($existing ?? []), $payload);
 		$record['name'] = $name;
 		$record['utmCampaign'] = $this->frozenSlug(existing: $existing, name: $name);
@@ -266,13 +297,26 @@ class CampaignService {
 
 		unset($record['@self'], $record['id'], $record['uuid'], $record['slug']);
 
+		return $record;
+	}//end campaignRecord()
+
+	/**
+	 * Store the campaign and answer with it, or with a write failure.
+	 *
+	 * @param array<string, mixed> $record The record to store.
+	 * @param string|null $id The campaign id, or null to create.
+	 * @param string $name The campaign name.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 */
+	private function storeCampaign(array $record, string|null $id, string $name): array {
 		$saved = $this->store->save(schemaSlug: $this->schemaSlug(), payload: $record, id: $id);
 		if ($saved === null) {
 			return $this->failure(error: 'write_failed', value: $name, allowed: []);
 		}
 
 		return ['error' => '', 'value' => '', 'allowed' => [], 'campaign' => $saved];
-	}//end save()
+	}//end storeCampaign()
 
 	/**
 	 * Record what portaliq answered when this campaign asked for a page.
@@ -283,7 +327,7 @@ class CampaignService {
 	 *
 	 * @return array<string, mixed>|null The saved campaign, or null when the write failed.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function recordLandingPage(string $id, array $landingPage, string $formId): ?array {
 		$campaign = $this->find(id: $id);
@@ -305,7 +349,7 @@ class CampaignService {
 	 *
 	 * @return string The id, or an empty string.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function idOf(?array $campaign): string {
 		return $this->store->idOf(payload: $campaign);
@@ -380,7 +424,7 @@ class CampaignService {
 	 * @return array<int, string> Lowercase, trimmed, unique, in order.
 	 */
 	private function vocabulary(string $configKey, array $defaults): array {
-		$raw = trim($this->appConfig->getValueString(Application::APP_ID, $configKey, ''));
+		$raw = trim($this->appConfig->getValueString(AppIdentity::APP_ID, $configKey, ''));
 		if ($raw === '') {
 			return $defaults;
 		}

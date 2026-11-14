@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,9 +28,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SmsAdapter;
-use OCA\Pipelinq\Service\WhatsAppAdapter;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
+use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -44,9 +45,11 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges OR + two
  * adapters + logger.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WebhookProcessorJob extends TimedJob {
+	use PayloadToArray;
+
 	/**
 	 * Default register slug.
 	 */
@@ -63,18 +66,18 @@ class WebhookProcessorJob extends TimedJob {
 	 * @param ITimeFactory $time Time factory.
 	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig App config.
-	 * @param WhatsAppAdapter $whatsAppAdapter WhatsApp adapter.
-	 * @param SmsAdapter $smsAdapter SMS adapter.
+	 * @param WhatsAppAdapterInterface $whatsAppAdapter WhatsApp adapter.
+	 * @param SmsAdapterInterface $smsAdapter SMS adapter.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private WhatsAppAdapter $whatsAppAdapter,
-		private SmsAdapter $smsAdapter,
+		private WhatsAppAdapterInterface $whatsAppAdapter,
+		private SmsAdapterInterface $smsAdapter,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -115,8 +118,26 @@ class WebhookProcessorJob extends TimedJob {
 			return;
 		}
 
+		$rows = $this->queuedRows(objectService: $objectService);
+		if (is_array($rows) === false || $rows === []) {
+			return;
+		}
+
+		foreach ($rows as $raw) {
+			$this->processRow(objectService: $objectService, raw: $raw);
+		}//end foreach
+	}//end drain()
+
+	/**
+	 * The queued webhook rows, or null (logged) when they cannot be read.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 *
+	 * @return mixed
+	 */
+	private function queuedRows(object $objectService): mixed {
 		try {
-			$rows = $objectService->findAll(
+			return $objectService->findAll(
 				config: [
 					'filters' => [
 						'status' => 'queued',
@@ -130,17 +151,9 @@ class WebhookProcessorJob extends TimedJob {
 				'WebhookProcessorJob.drain: findAll failed',
 				['exception' => $e->getMessage()]
 			);
-			return;
+			return null;
 		}
-
-		if (is_array($rows) === false || $rows === []) {
-			return;
-		}
-
-		foreach ($rows as $raw) {
-			$this->processRow(objectService: $objectService, raw: $raw);
-		}//end foreach
-	}//end drain()
+	}//end queuedRows()
 
 	/**
 	 * Process one queued webhook row: dispatch to the channel adapter and
@@ -246,35 +259,6 @@ class WebhookProcessorJob extends TimedJob {
 	}//end getObjectService()
 
 	/**
-	 * Normalise an OR entity to an array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * Extract a UUID / id / slug from a payload.
 	 *
 	 * @param array<string, mixed> $payload Payload.
@@ -320,7 +304,7 @@ class WebhookProcessorJob extends TimedJob {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -334,7 +318,7 @@ class WebhookProcessorJob extends TimedJob {
 	 * @return string Slug.
 	 */
 	private function getSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'webhookQueue_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'webhookQueue_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}

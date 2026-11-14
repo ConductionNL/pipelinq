@@ -115,6 +115,26 @@ class WeeklyReviewServiceTest extends TestCase {
 	}//end testComposesFromOneReadOfEachCollection()
 
 	/**
+	 * Each highlight line carries whether its figure rose, fell or held
+	 * against the week before: mail by clicks, social by views, search by
+	 * clicks and the watches by items seen.
+	 *
+	 * @return void
+	 */
+	public function testEachHighlightCarriesItsDirectionAgainstTheWeekBefore(): void {
+		$this->store->rows['touchpoint'][] = ['uuid' => 't-9', 'kind' => 'click', 'occurredAt' => '2026-08-18T10:00:00+02:00'];
+		$this->store->rows['touchpoint'][] = ['uuid' => 't-8', 'kind' => 'click', 'occurredAt' => '2026-08-19T10:00:00+02:00'];
+		$this->store->rows['touchpoint'][] = ['uuid' => 't-7', 'kind' => 'click', 'occurredAt' => '2026-08-20T10:00:00+02:00'];
+		$this->store->rows['socialPublication'][] = ['uuid' => 's-9', 'publishedAt' => '2026-08-18T12:00:00+02:00', 'metrics' => ['views' => 120]];
+		$this->store->rows['searchQueryDaily'][] = ['uuid' => 'q-9', 'date' => '2026-08-18', 'query' => 'x', 'clicks' => 2, 'impressions' => 40];
+
+		$review = $this->service()->compose();
+
+		$this->assertCount(expectedCount: count(value: $review['highlights']), haystack: $review['highlightDirections']);
+		$this->assertSame(expected: ['down', 'flat', 'up', 'up'], actual: $review['highlightDirections']);
+	}//end testEachHighlightCarriesItsDirectionAgainstTheWeekBefore()
+
+	/**
 	 * 🔴 A source this tenant holds nothing for is NAMED, never passed off as
 	 * a zero. A quiet week and a Search Console nobody connected both render
 	 * as no line, and only one of them is a result.
@@ -251,4 +271,31 @@ class WeeklyReviewServiceTest extends TestCase {
 			$time,
 		);
 	}//end service()
+	/**
+	 * Every search number: only the week's rows count (bounds included, a
+	 * date-time read by its day, no date skipped); clicks and impressions
+	 * add up; ideas are queries by impressions, a repeated query summed, a
+	 * blank one left out; no impressions is no highlight.
+	 *
+	 * @return void
+	 */
+	public function testEverySearchNumber(): void {
+		$store = new InMemoryListObjectStore([
+			'searchQueryDaily' => [
+				['uuid' => 'a', 'date' => '2026-08-24T23:00:00Z', 'query' => 'beta', 'clicks' => 1, 'impressions' => 10],
+				['uuid' => 'b', 'date' => '2026-08-30', 'query' => ' alpha ', 'clicks' => '2', 'impressions' => '15'],
+				['uuid' => 'c', 'date' => '2026-08-27', 'query' => 'beta', 'clicks' => 0, 'impressions' => 10],
+				['uuid' => 'd', 'date' => '2026-08-27', 'query' => ' ', 'clicks' => 5, 'impressions' => 5],
+				['uuid' => 'e', 'date' => '2026-08-31', 'query' => 'later', 'clicks' => 9, 'impressions' => 99],
+				['uuid' => 'f', 'query' => 'undated', 'clicks' => 9, 'impressions' => 99],
+			],
+		]);
+		$numbers = new WeeklyReviewNumbers(store: $store);
+
+		$this->assertSame(
+			['clicks' => 8, 'impressions' => 40, 'highlights' => ['Search showed the site 40 times and brought 8 visits.'], 'ideas' => ['beta', 'alpha']],
+			$numbers->search(from: '2026-08-24', to: '2026-08-30')
+		);
+		$this->assertSame(['clicks' => 0, 'impressions' => 0, 'highlights' => [], 'ideas' => []], $numbers->search(from: '2026-01-05', to: '2026-01-11'));
+	}//end testEverySearchNumber()
 }//end class

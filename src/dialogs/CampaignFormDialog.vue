@@ -7,17 +7,17 @@
   - CampaignService mints the campaign value, freezes it across a rename and
   - refuses a source or medium outside the tenant's vocabulary.
   -
-  - @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+  - @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
+		width="form"
 		:name="
 			isEditing
 				? t('pipelinq', 'Edit campaign')
 				: t('pipelinq', 'New campaign')
 		"
-		:open="true"
 		size="normal"
 		:closeOnClickOutside="false"
 		@closing="close()">
@@ -116,7 +116,7 @@
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="close()">
+			<NcButton @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -130,17 +130,17 @@
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcDateTimePickerNative,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
@@ -148,6 +148,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import { fetchCampaignVocabularies, saveCampaign } from '../services/campaignsApi.js'
+import hostedFormDialogMixin from './hostedFormDialogMixin.js'
 
 /**
  * @return {object} A blank campaign form.
@@ -167,7 +168,7 @@ export default {
 	components: {
 		NcButton,
 		NcDateTimePickerNative,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -175,33 +176,7 @@ export default {
 		NcTextField,
 	},
 
-	inheritAttrs: false,
-
-	props: {
-		/** Whether the host page has the dialog open. */
-		show: {
-			type: Boolean,
-			default: false,
-		},
-
-		/** The campaign being edited, or null to create one. */
-		item: {
-			type: Object,
-			default: null,
-		},
-
-		/** Closes the dialog. */
-		close: {
-			type: Function,
-			default: () => {},
-		},
-
-		/** Re-reads the index page's list; the detail page does not pass it. */
-		refresh: {
-			type: Function,
-			default: null,
-		},
-	},
+	mixins: [hostedFormDialogMixin],
 
 	data() {
 		return {
@@ -223,7 +198,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The id of the campaign being edited, empty when creating one.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		campaignId() {
 			const item = this.item || {}
@@ -237,36 +212,27 @@ export default {
 
 		/**
 		 * @return {Array<string>} The statuses the schema declares.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		statuses() {
 			return ['planned', 'running', 'finished', 'cancelled']
 		},
 	},
 
-	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Load the form each time the dialog opens.
-			 *
-			 * @param {boolean} open Whether the dialog is open.
-			 *
-			 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
-			 */
-			handler(open) {
-				if (open) {
-					this.load()
-				}
-			},
-		},
-	},
-
 	methods: {
+		/**
+		 * Read the record each time the dialog opens.
+		 *
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 */
+		prepareOnOpen() {
+			this.load()
+		},
+
 		/**
 		 * Reset the form, then read the vocabularies, and the campaign when editing one.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		async load() {
 			this.form = blankForm()
@@ -298,7 +264,7 @@ export default {
 		/**
 		 * Read the campaign being edited.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		async fetchCampaign() {
 			try {
@@ -332,7 +298,7 @@ export default {
 		 * campaign opens on its detail page; an edited one re-reads the page
 		 * the dialog was opened from.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		async save() {
 			this.saving = true
@@ -389,7 +355,7 @@ export default {
 		 *
 		 * @param {object} result The refusal.
 		 * @return {string} The sentence.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		explain(result) {
 			const allowed = (result.allowed || []).join(', ')
@@ -416,7 +382,7 @@ export default {
 		/**
 		 * @param {Date|null} date A date, or null.
 		 * @return {string} YYYY-MM-DD, or an empty string.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 		 */
 		isoDay(date) {
 			if (!date) {

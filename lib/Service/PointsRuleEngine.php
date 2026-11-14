@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 
 declare(strict_types=1);
@@ -29,7 +29,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -43,6 +44,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   and nothing inherited it
  */
 class PointsRuleEngine {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -65,7 +68,7 @@ class PointsRuleEngine {
 	 * @param array<string, mixed> $context The evaluation context.
 	 *
 	 * @return array<int, array<string, mixed>> Matching rules, highest prioriteit first.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function evaluateRules(string $programmeId, string $trigger, array $context): array {
 		$rules = $this->loadRules(programmeId: $programmeId, trigger: $trigger);
@@ -122,36 +125,38 @@ class PointsRuleEngine {
 	 * @spec exclude phpmd mechanical refactor
 	 */
 	public function evaluateCondition(array $condition, array $context): bool {
-		if ($condition === []) {
-			return true;
-		}
-
-		if ($this->passesExcludeCategory(condition: $condition, context: $context) === false) {
-			return false;
-		}
-
-		if ($this->passesCategory(condition: $condition, context: $context) === false) {
-			return false;
-		}
-
-		if ($this->passesSegment(condition: $condition, context: $context) === false) {
-			return false;
-		}
-
-		if ($this->passesChannel(condition: $condition, context: $context) === false) {
-			return false;
-		}
-
-		if ($this->passesDayOfWeek(condition: $condition, context: $context) === false) {
-			return false;
-		}
-
-		if ($this->passesTimeRange(condition: $condition, context: $context) === false) {
-			return false;
-		}
-
-		return true;
+		return $this->passesWhat(condition: $condition, context: $context) === true
+			&& $this->passesWhen(condition: $condition, context: $context) === true;
 	}//end evaluateCondition()
+
+	/**
+	 * Whether the purchase passes the category, segment and channel checks,
+	 * in that order (the excluded category first).
+	 *
+	 * @param array<string, mixed> $condition The rule condition.
+	 * @param array<string, mixed> $context   The trigger context.
+	 *
+	 * @return bool
+	 */
+	private function passesWhat(array $condition, array $context): bool {
+		return $this->passesExcludeCategory(condition: $condition, context: $context) === true
+			&& $this->passesCategory(condition: $condition, context: $context) === true
+			&& $this->passesSegment(condition: $condition, context: $context) === true
+			&& $this->passesChannel(condition: $condition, context: $context) === true;
+	}//end passesWhat()
+
+	/**
+	 * Whether the purchase's moment passes the day-of-week and time-range checks.
+	 *
+	 * @param array<string, mixed> $condition The rule condition.
+	 * @param array<string, mixed> $context   The trigger context.
+	 *
+	 * @return bool
+	 */
+	private function passesWhen(array $condition, array $context): bool {
+		return $this->passesDayOfWeek(condition: $condition, context: $context) === true
+			&& $this->passesTimeRange(condition: $condition, context: $context) === true;
+	}//end passesWhen()
 
 	/**
 	 * Whether the excludeCategory condition (if present) allows the context category.
@@ -188,13 +193,7 @@ class PointsRuleEngine {
 			return true;
 		}
 
-		$allowed = (array)$condition['category'];
-		$contextCategory = (string)($context['category'] ?? '');
-		if ($contextCategory === '' || in_array($contextCategory, $allowed, true) === false) {
-			return false;
-		}
-
-		return true;
+		return $this->listed(allowed: (array)$condition['category'], value: (string)($context['category'] ?? ''));
 	}//end passesCategory()
 
 	/**
@@ -210,13 +209,7 @@ class PointsRuleEngine {
 			return true;
 		}
 
-		$allowed = (array)$condition['segment'];
-		$contextSegment = (string)($context['segment'] ?? '');
-		if ($contextSegment === '' || in_array($contextSegment, $allowed, true) === false) {
-			return false;
-		}
-
-		return true;
+		return $this->listed(allowed: (array)$condition['segment'], value: (string)($context['segment'] ?? ''));
 	}//end passesSegment()
 
 	/**
@@ -232,14 +225,20 @@ class PointsRuleEngine {
 			return true;
 		}
 
-		$allowed = (array)$condition['channel'];
-		$contextChannel = (string)($context['channel'] ?? '');
-		if ($contextChannel === '' || in_array($contextChannel, $allowed, true) === false) {
-			return false;
-		}
-
-		return true;
+		return $this->listed(allowed: (array)$condition['channel'], value: (string)($context['channel'] ?? ''));
 	}//end passesChannel()
+
+	/**
+	 * Whether a non-empty context value is one of the allowed values.
+	 *
+	 * @param array<mixed> $allowed The allowed values.
+	 * @param string       $value   The context value.
+	 *
+	 * @return bool
+	 */
+	private function listed(array $allowed, string $value): bool {
+		return $value !== '' && in_array($value, $allowed, true) === true;
+	}//end listed()
 
 	/**
 	 * Whether the dayOfWeek condition (if present) matches the context timestamp.
@@ -289,38 +288,56 @@ class PointsRuleEngine {
 	 * @param float $multiplier Tier multiplier (default 1.0).
 	 *
 	 * @return int Points awarded (floored).
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
 	 */
 	public function calculatePoints(array $formula, float $amount, float $multiplier = 1.0): int {
-		$type = (string)($formula['type'] ?? '');
-
-		$raw = 0.0;
-		switch ($type) {
-			case 'fixed':
-				$raw = (float)($formula['value'] ?? 0);
-				break;
-			case 'percentage':
-				$raw = $amount * (float)($formula['value'] ?? 0);
-				break;
-			case 'stepped':
-				$brackets = $formula['brackets'] ?? [];
-				if (is_array($brackets) === true) {
-					foreach ($brackets as $bracket) {
-						$bracketAmount = (float)($bracket['amount'] ?? 0);
-						if ($amount >= $bracketAmount) {
-							$raw = (float)($bracket['points'] ?? 0);
-						}
-					}
-				}
-				break;
-			default:
-				$raw = 0.0;
-		}//end switch
-
-		$multiplied = $raw * max(0.0, $multiplier);
+		$multiplied = $this->rawPoints(formula: $formula, amount: $amount) * max(0.0, $multiplier);
 
 		return (int)floor($multiplied);
 	}//end calculatePoints()
+
+	/**
+	 * The formula's points before the multiplier: a fixed value, a
+	 * percentage of the amount, the stepped bracket, or zero for an unknown type.
+	 *
+	 * @param array<string, mixed> $formula The formula.
+	 * @param float                $amount  The amount.
+	 *
+	 * @return float
+	 */
+	private function rawPoints(array $formula, float $amount): float {
+		return match ((string)($formula['type'] ?? '')) {
+			'fixed' => (float)($formula['value'] ?? 0),
+			'percentage' => $amount * (float)($formula['value'] ?? 0),
+			'stepped' => $this->steppedPoints(formula: $formula, amount: $amount),
+			default => 0.0,
+		};
+	}//end rawPoints()
+
+	/**
+	 * The points of the last bracket (in the order given) the amount
+	 * reaches; zero when none does or the brackets are not a list.
+	 *
+	 * @param array<string, mixed> $formula The stepped formula.
+	 * @param float                $amount  The amount.
+	 *
+	 * @return float
+	 */
+	private function steppedPoints(array $formula, float $amount): float {
+		$brackets = ($formula['brackets'] ?? []);
+		if (is_array($brackets) === false) {
+			return 0.0;
+		}
+
+		$raw = 0.0;
+		foreach ($brackets as $bracket) {
+			if ($amount >= (float)($bracket['amount'] ?? 0)) {
+				$raw = (float)($bracket['points'] ?? 0);
+			}
+		}
+
+		return $raw;
+	}//end steppedPoints()
 
 	/**
 	 * Cap a points credit by a per-customer-per-period maximum.
@@ -359,30 +376,32 @@ class PointsRuleEngine {
 			return [];
 		}
 
+		$filters = ['programmeId' => $programmeId, 'trigger' => $trigger, 'register' => $register, 'schema' => $schema];
+		return array_map([$this, 'toArray'], $this->ruleRows(filters: $filters));
+	}//end loadRules()
+
+	/**
+	 * The rule rows for the filters, up to 200; none when the read fails
+	 * (logged at debug) or answers no list.
+	 *
+	 * @param array<string, string> $filters The filters.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function ruleRows(array $filters): array {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'programmeId' => $programmeId,
-						'trigger' => $trigger,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 200,
-				]
-			);
+			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters, 'limit' => 200]);
 		} catch (\Throwable $e) {
 			$this->logger->debug('Pipelinq: rule findAll failed', ['exception' => $e->getMessage()]);
 			return [];
 		}
 
-		$ruleList = [];
-		if (is_array($rows) === true) {
-			$ruleList = array_values($rows);
+		if (is_array($rows) === false) {
+			return [];
 		}
 
-		return array_map([$this, 'toArray'], $ruleList);
-	}//end loadRules()
+		return array_values($rows);
+	}//end ruleRows()
 
 	/**
 	 * Whether a rule is within geldigVan/geldigTot for the context timestamp.
@@ -466,41 +485,10 @@ class PointsRuleEngine {
 	 */
 	private function config(): array {
 		return [
-			$this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-			$this->appConfig->getValueString(Application::APP_ID, 'pointsRule_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'pointsRule_schema', ''),
 		];
 	}//end config()
-
-	/**
-	 * Normalise OR entity/array to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) invoked via array_map([$this, 'toArray'], ...) callable reference, not statically detected
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

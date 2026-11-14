@@ -20,17 +20,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RoutingServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Read-aggregation service that produces a ranked shortlist of agents for an
@@ -45,10 +46,12 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class RoutingService {
+class RoutingService implements RoutingServiceInterface {
 	/**
 	 * Terminal statuses excluded from workload counts.
 	 *
@@ -87,34 +90,68 @@ class RoutingService {
 	 *
 	 * @return array<string, mixed> Shape: { suggestions, atCapacity, noMatch }.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.2
 	 */
 	public function getSuggestedAgents(string $entityType, string $entityId): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		if ($this->isRoutingConfigured(entityType: $entityType) === false) {
+			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+		}
+
+		$data = $this->loadEntityData(entityType: $entityType, entityId: $entityId);
+		if ($data === null) {
+			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+		}
+
+		$candidates = $this->candidatesFor(data: $data);
+		if ($candidates === []) {
+			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+		}
+
+		return $this->rankCandidates(candidates: $candidates);
+	}//end getSuggestedAgents()
+
+	/**
+	 * Whether the register and the entity type's schema are configured (logs when not).
+	 *
+	 * @param string $entityType The entity type (`lead` or a ticket).
+	 *
+	 * @return bool True when routing can look up the entity.
+	 */
+	private function isRoutingConfigured(string $entityType): bool {
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 
 		$schemaId = $this->ticketService->getSchemaId();
 		if ($entityType === 'lead') {
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+			$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		}
 
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning('RoutingService: register or schema not configured for ' . $entityType);
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+			return false;
 		}
 
+		return true;
+	}//end isRoutingConfigured()
+
+	/**
+	 * Load the entity's object data, or null (logged on failure) when it cannot be read.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $entityId The entity id.
+	 *
+	 * @return array<string, mixed>|null The entity data.
+	 */
+	private function loadEntityData(string $entityType, string $entityId): array|null {
 		$objectService = $this->getObjectService();
 
 		try {
-			$entity = $objectService->find(
-				$entityId,
-				[]
-			);
+			$entity = $objectService->find($entityId, []);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'RoutingService: failed to load entity',
 				['exception' => $e->getMessage(), 'entityType' => $entityType, 'entityId' => $entityId]
 			);
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+			return null;
 		}
 
 		// ObjectServiceInterface::find() returns an ObjectEntityInterface, so a
@@ -123,21 +160,36 @@ class RoutingService {
 		// suggestion request short-circuited to noMatch. Read the payload
 		// through the entity contract instead.
 		if ($entity === null) {
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+			return null;
 		}
 
-		$data = $entity->getObject();
+		return $entity->getObject();
+	}//end loadEntityData()
 
+	/**
+	 * The agents matching the entity's category; none when it has no category.
+	 *
+	 * @param array<string, mixed> $data The entity data.
+	 *
+	 * @return array<int, mixed> The candidate agent profiles.
+	 */
+	private function candidatesFor(array $data): array {
 		$category = (string)($data['category'] ?? '');
 		if ($category === '') {
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+			return [];
 		}
 
-		$candidates = $this->findMatchingAgents(category: $category);
-		if ($candidates === []) {
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
-		}
+		return $this->findMatchingAgents(category: $category);
+	}//end candidatesFor()
 
+	/**
+	 * Filter candidates by availability and capacity and build the suggestions.
+	 *
+	 * @param array<int, mixed> $candidates The candidate agent profiles.
+	 *
+	 * @return array{suggestions: array, atCapacity: int, noMatch: bool} The routing suggestions.
+	 */
+	private function rankCandidates(array $candidates): array {
 		$available = $this->filterByAvailability(profiles: $candidates);
 		[$inCapacity, $atCapacityCount] = $this->filterByCapacity(profiles: $available);
 
@@ -148,7 +200,7 @@ class RoutingService {
 			'atCapacity' => $atCapacityCount,
 			'noMatch' => $suggestions === [] && $atCapacityCount === 0,
 		];
-	}//end getSuggestedAgents()
+	}//end rankCandidates()
 
 	/**
 	 * Build the workload-sorted suggestion list from in-capacity profiles.
@@ -183,29 +235,42 @@ class RoutingService {
 	 *
 	 * @return int The open item count.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
 	 */
 	public function getAgentWorkload(string $userId): int {
 		if ($userId === '') {
 			return 0;
 		}
 
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$leadSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 
 		if ($registerId === '') {
 			return 0;
 		}
 
 		$objectService = $this->getObjectService();
-		$count = 0;
 
-		// Open request tickets: the "non-terminal" predicate is a NOT IN over
-		// TERMINAL_STATUSES, which OpenRegister's query engine cannot express
-		// (no NOT IN operator), and the comparison is case-folded in PHP. This
-		// leg therefore stays a PHP-side count over the assignee-filtered set.
-		// TicketService::findByType pins register + schema + ticketType=request
-		// and degrades to [] on any failure (it logs the cause itself).
+		return $this->openRequestCount(userId: $userId)
+			+ $this->openLeadCount(objectService: $objectService, registerId: $registerId, leadSchemaId: $leadSchemaId, userId: $userId);
+	}//end getAgentWorkload()
+
+	/**
+	 * Count the agent's open (non-terminal) request tickets.
+	 *
+	 * The "non-terminal" predicate is a NOT IN over TERMINAL_STATUSES, which
+	 * OpenRegister's query engine cannot express (no NOT IN operator), and the
+	 * comparison is case-folded in PHP. This leg therefore stays a PHP-side
+	 * count over the assignee-filtered set. TicketService::findByType pins
+	 * register + schema + ticketType=request and degrades to [] on any failure
+	 * (it logs the cause itself).
+	 *
+	 * @param string $userId The agent's user id.
+	 *
+	 * @return int The number of open requests.
+	 */
+	private function openRequestCount(string $userId): int {
+		$count = 0;
 		$requests = $this->ticketService->findByType(
 			ticketType: TicketService::TYPE_REQUEST,
 			extraFilters: ['assignee' => $userId],
@@ -219,30 +284,36 @@ class RoutingService {
 			}
 		}
 
-		// Open leads (status=open) — push the COUNT down into OpenRegister
-		// since every predicate is a server-side equality filter.
-		if ($leadSchemaId !== '') {
-			try {
-				$count += $objectService->count(
-					[
-						'filters' => [
-							'register' => $registerId,
-							'schema' => $leadSchemaId,
-							'assignee' => $userId,
-							'status' => 'open',
-						],
-					]
-				);
-			} catch (\Throwable $e) {
-				$this->logger->error(
-					'RoutingService: failed to count open leads',
-					['exception' => $e->getMessage(), 'userId' => $userId]
-				);
-			}//end try
-		}//end if
-
 		return $count;
-	}//end getAgentWorkload()
+	}//end openRequestCount()
+
+	/**
+	 * Count the agent's open leads server-side; 0 when no lead schema is set or the count fails (logged).
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $registerId The register id.
+	 * @param string $leadSchemaId The lead schema id.
+	 * @param string $userId The agent's user id.
+	 *
+	 * @return int The number of open leads.
+	 */
+	private function openLeadCount(object $objectService, string $registerId, string $leadSchemaId, string $userId): int {
+		if ($leadSchemaId === '') {
+			return 0;
+		}
+
+		try {
+			return $objectService->count(
+				['filters' => ['register' => $registerId, 'schema' => $leadSchemaId, 'assignee' => $userId, 'status' => 'open']]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'RoutingService: failed to count open leads',
+				['exception' => $e->getMessage(), 'userId' => $userId]
+			);
+			return 0;
+		}
+	}//end openLeadCount()
 
 	/**
 	 * Find agent profiles whose skills cover the given category.
@@ -254,16 +325,16 @@ class RoutingService {
 	 *
 	 * @return array<int, array<string, mixed>> Matching agentProfile objects.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.4
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.4
 	 */
 	public function findMatchingAgents(string $category): array {
 		if ($category === '') {
 			return [];
 		}
 
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$skillSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
-		$agentProfileSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'agentProfile_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$skillSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'skill_schema', '');
+		$agentProfileSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'agentProfile_schema', '');
 
 		if ($registerId === '' || $skillSchemaId === '' || $agentProfileSchemaId === '') {
 			return [];
@@ -406,7 +477,7 @@ class RoutingService {
 	 *
 	 * @return array<int, array<string, mixed>> Available profiles.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.5
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.5
 	 */
 	public function filterByAvailability(array $profiles): array {
 		return array_values(
@@ -424,7 +495,7 @@ class RoutingService {
 	 *
 	 * @return array{0: array<int, array<string, mixed>>, 1: int} Tuple of (in-capacity profiles, at-capacity count).
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.6
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.6
 	 */
 	public function filterByCapacity(array $profiles): array {
 		$inCapacity = [];
@@ -451,7 +522,7 @@ class RoutingService {
 	 *
 	 * @return bool True if workload >= maxConcurrent.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.7
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.7
 	 */
 	public function isAgentAtCapacity(array $profile, int $workload): bool {
 		$max = (int)($profile['maxConcurrent'] ?? self::DEFAULT_MAX_CONCURRENT);

@@ -19,24 +19,21 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-003
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-003
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosCustomerLinkService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosCustomerLinkServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -54,26 +51,26 @@ use Psr\Log\LoggerInterface;
  *  Nextcloud controller collaborators (request, session, l10n, logger) plus
  *  the single service it delegates to.
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
  */
 class PosCustomerController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosCustomerLinkService $service The POS customer-link service.
+	 * @param PosCustomerLinkServiceInterface $service The POS customer-link service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosCustomerLinkService $service,
+		private PosCustomerLinkServiceInterface $service,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -85,7 +82,7 @@ class PosCustomerController extends Controller {
 	 *
 	 * @return JSONResponse The list of decorated customers.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
 	 */
 	#[NoAdminRequired]
 	public function search(): JSONResponse {
@@ -95,7 +92,7 @@ class PosCustomerController extends Controller {
 		}
 
 		$query = (string)$this->request->getParam('query', '');
-		$limit = (int)$this->request->getParam('limit', (string)PosCustomerLinkService::DEFAULT_SEARCH_LIMIT);
+		$limit = (int)$this->request->getParam('limit', (string)PosCustomerLinkServiceInterface::DEFAULT_SEARCH_LIMIT);
 
 		return $this->run(
 			action: fn (): array => $this->service->searchCustomers(query: $query, limit: $limit),
@@ -115,8 +112,8 @@ class PosCustomerController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-004
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-004
 	 */
 	#[NoAdminRequired]
 	public function attach(string $id): JSONResponse {
@@ -154,7 +151,7 @@ class PosCustomerController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-002
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
 	 */
 	#[NoAdminRequired]
 	public function detach(string $id): JSONResponse {
@@ -180,7 +177,7 @@ class PosCustomerController extends Controller {
 	 *
 	 * @return JSONResponse The history rows.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-003
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-003
 	 */
 	#[NoAdminRequired]
 	public function history(string $id): JSONResponse {
@@ -204,15 +201,7 @@ class PosCustomerController extends Controller {
 	 * @return string|JSONResponse The user UID, or a 401 response.
 	 */
 	private function requireUserId(): string|JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		return $user->getUID();
+		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
 	}//end requireUserId()
 
 	/**
@@ -244,20 +233,18 @@ class PosCustomerController extends Controller {
 	 * @return JSONResponse The response.
 	 */
 	private function run(callable $action, string $label, string $key = 'transaction'): JSONResponse {
-		try {
-			return new JSONResponse([$key => $action()]);
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-		} catch (\Throwable $e) {
-			$this->logger->error('PosCustomerController::' . $label . ' failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		return $this->posResponses()->run(
+			respond: fn (): JSONResponse => new JSONResponse([$key => $action()]),
+			logLabel: 'PosCustomerController::' . $label
+		);
 	}//end run()
+
+	/**
+	 * The login check and error mapping shared by the POS controllers.
+	 *
+	 * @return PosResponses The shared responses.
+	 */
+	private function posResponses(): PosResponses {
+		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
+	}//end posResponses()
 }//end class

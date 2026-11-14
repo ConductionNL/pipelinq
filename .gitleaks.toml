@@ -1,0 +1,65 @@
+# gitleaks configuration: the default rules, plus allowlists for findings
+# that are not secrets. Each allowlist names the exact files and only the
+# rules that fire there, so anything else in those files is still reported.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Documentation examples: the default admin:admin login of the local development and demo containers."
+targetRules = ["curl-auth-user"]
+paths = [
+  '''(^|/)docs/Installation/demo\-environment\.md$''',
+]
+
+[[allowlists]]
+description = "Demo seed data: the key fields are human-readable slugs (kassa-..., forecast-..., social-...), not credentials."
+targetRules = ["generic-api-key"]
+paths = [
+  '''(^|/)lib/Settings/example\-sets/zuiddrecht\.d/46\-social\.json$''',
+  '''(^|/)lib/Settings/example\-sets/zuiddrecht\.d/56\-buurtnieuws\-deliveries\.json$''',
+  '''(^|/)lib/Settings/example\-sets/zuiddrecht\.d/57\-search\-insight\.json$''',
+  '''(^|/)lib/Settings/example\-sets/zuiddrecht\.d/63\-forecast\.json$''',
+  '''(^|/)lib/Settings/example\-sets/zuiddrecht\.d/65\-contracts\-and\-campaigns\.json$''',
+  '''(^|/)lib/Settings/example\-sets/zuiddrecht\.d/75\-till\-example\-sale\.json$''',
+  '''(^|/)lib/Settings/example\-sets/zuiddrecht\.d/76\-sale\-in\-its\-shift\.json$''',
+  '''(^|/)lib/Settings/example\-sets/zuiddrecht\.d/79\-quote\-0042\-contact\-history\.json$''',
+  '''(^|/)lib/Settings/example\-sets/zuiddrecht\.json$''',
+]
+
+[[allowlists]]
+description = "Specification examples: curl calls with the default admin:admin login, placeholder payment keys (sk_live_123456..., sk_live_ABC123...) and prose that matches the generic key pattern."
+targetRules = ["curl-auth-user", "generic-api-key", "stripe-access-token"]
+paths = [
+  '''(^|/)openspec/changes/archive/2026\-03\-21\-kcc\-werkplek/specs/kcc\-werkplek/spec\.md$''',
+  '''(^|/)openspec/changes/archive/2026\-03\-21\-klantbeeld\-360/specs/klantbeeld\-360/spec\.md$''',
+  '''(^|/)openspec/changes/archive/2026\-03\-21\-prospect\-discovery/specs/prospect\-discovery/spec\.md$''',
+  '''(^|/)openspec/changes/archive/2026\-06\-14\-pos\-payment\-provider\-adapter/specs/pos\-payment\-provider\-adapter/spec\.md$''',
+  '''(^|/)openspec/changes/archive/2026\-06\-21\-pipelinq\-xwiki\-through\-or/proposal\.md$''',
+  '''(^|/)openspec/changes/archive/2026\-06\-23\-pipelinq\-mdm\-consume\-or/proposal\.md$''',
+  '''(^|/)openspec/specs/customer\-360/spec\.md$''',
+  '''(^|/)openspec/specs/kcc\-werkplek/spec\.md$''',
+  '''(^|/)openspec/specs/pos\-payment\-provider\-adapter/spec\.md$''',
+  '''(^|/)openspec/specs/prospect\-discovery/spec\.md$''',
+]
+
+[[allowlists]]
+description = "Unit test fixtures: made-up passwords, a sequential example UUID, a sequential minimum-length secret, placeholder payment intent ids and fixed signing secrets that exist only inside the tests."
+targetRules = ["generic-api-key"]
+paths = [
+  '''(^|/)tests/Unit/Controller/PortalPasswordResetFlowTest\.php$''',
+  '''(^|/)tests/Unit/Controller/PortalQuestionControllerTest\.php$''',
+  '''(^|/)tests/Unit/Portal/PortalAssertionVerifierBoundaryTest\.php$''',
+  '''(^|/)tests/Unit/Portal/PortalAssertionVerifierTest\.php$''',
+  '''(^|/)tests/Unit/Service/Payment/StripeAdapterTest\.php$''',
+  '''(^|/)tests/Unit/Service/Portal/DocumentSigningServiceTest\.php$''',
+  '''(^|/)tests/Unit/Service/SettingsServiceMatomoReferenceTest\.php$''',
+]
+
+[[allowlists]]
+description = "MFA unit test: the published RFC 6238 SHA-1 test secret (\"12345678901234567890\" in base32), the input the TOTP test vectors require."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "secret"
+regexes = ['''^GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ$''']
+paths = ['''(^|/)tests/Unit/Service/Portal/PortalMfaServiceTest\.php$''']

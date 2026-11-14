@@ -1,7 +1,7 @@
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'New contact')"
-		:open="true"
 		size="normal"
 		data-testid="contact-create-dialog"
 		@closing="$emit('close')">
@@ -10,12 +10,12 @@
 			:preSelectedClient="client"
 			@save="onSave"
 			@cancel="$emit('close')" />
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
-import { NcDialog } from '@nextcloud/vue'
 import ContactForm from '../views/contacts/ContactForm.vue'
 import { createWithContact } from '../services/contactSyncApi.js'
 
@@ -40,7 +40,7 @@ export default {
 	name: 'ContactCreateDialog',
 
 	components: {
-		NcDialog,
+		CnDialog,
 		ContactForm,
 	},
 
@@ -56,6 +56,16 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/**
+		 * Field values to start the form with, e.g. what Paste or scan
+		 * proposed (name, role, email, phone). Given, the dialog was opened on
+		 * its own from the app root, so after Save it opens the new contact.
+		 */
+		values: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	emits: ['created', 'close'],
@@ -70,6 +80,10 @@ export default {
 		 */
 		seed() {
 			const seed = {}
+			for (const field of ['name', 'role', 'email', 'phone']) {
+				const value = this.values?.[field]
+				if (typeof value === 'string' && value.trim() !== '') seed[field] = value
+			}
 			if (this.name) seed.name = this.name
 			if (this.client) seed.client = this.client
 			return seed
@@ -88,8 +102,14 @@ export default {
 		async onSave(formData) {
 			try {
 				const created = await createWithContact('contact', formData)
-				if (created && (created.id || created['@self']?.id)) {
+				const id = created?.id || created?.['@self']?.id
+				if (id) {
 					this.$emit('created', created)
+					if (this.values) {
+						// Opened from Paste or scan at the app root: no form waits for it.
+						this.$emit('close')
+						this.$router?.push({ name: 'ContactDetail', params: { id } })?.catch?.(() => {})
+					}
 					return
 				}
 				showError(t('pipelinq', 'Failed to create contact.'))

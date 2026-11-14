@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#9.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -22,6 +22,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
+use OCA\Pipelinq\Service\BsnAudit\LookupReason;
+use OCA\Pipelinq\Service\BsnAudit\LookupResult;
+use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
 use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCP\IAppConfig;
@@ -33,7 +37,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for BsnAuditService.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005
  */
 class BsnAuditServiceTest extends TestCase {
 	/**
@@ -41,7 +45,7 @@ class BsnAuditServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-009-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
 	public function testAnonymiseIpv4ZeroesLastOctet(): void {
 		self::assertSame('10.42.18.0', BsnAuditService::anonymiseIp('10.42.18.7'));
@@ -76,7 +80,7 @@ class BsnAuditServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005-01
 	 */
 	public function testRecordLookupFallsBackWhenStorageMissing(): void {
 		$container = $this->createMock(ContainerInterface::class);
@@ -95,10 +99,11 @@ class BsnAuditServiceTest extends TestCase {
 		);
 		$uuid = $service->recordLookup(
 			actor: 'demo:tester',
-			rawBsn: '123456782',
-			verzoekreden: 'unit-test',
-			purposeBinding: 'unit-test',
-			outcome: 'succeeded',
+			lookup: new LookupAudit(
+				subject: new LookupSubject(rawBsn: '123456782'),
+				reason: new LookupReason(verzoekreden: 'unit-test', purposeBinding: 'unit-test', linkedRequest: null, vogScreening: false),
+				result: new LookupResult(outcome: 'succeeded'),
+			),
 		);
 		self::assertSame('', $uuid);
 	}//end testRecordLookupFallsBackWhenStorageMissing()

@@ -22,8 +22,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-002
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-optin-011
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-002
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OPTIN-011
  */
 
 declare(strict_types=1);
@@ -32,7 +32,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -41,9 +42,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Mailbox lookup with TTL cache.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-002
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-002
  */
 class MailboxResolver {
+	use OptionalPayloadToArray;
+
 	/**
 	 * Default cache TTL in seconds (24h per Logius SLA).
 	 *
@@ -80,7 +83,11 @@ class MailboxResolver {
 	 * @throws RuntimeException On configuration error.
 	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
-	public function resolve(string $bsn, string $tenantId): array {
+	public function resolve(
+		#[\SensitiveParameter]
+		string $bsn,
+		string $tenantId,
+	): array {
 		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);
 		$cached = $this->lookupCache(bsnHash: $bsnHash);
 		if ($cached !== null) {
@@ -140,57 +147,95 @@ class MailboxResolver {
 	 * @return array|null The cached row or null when expired/absent.
 	 */
 	private function lookupCache(string $bsnHash): ?array {
-		[$register, $schema] = $this->config();
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'bsnHash' => $bsnHash,
-					],
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'MailboxResolver cache lookup failed.',
-				['exception' => $e->getMessage()]
-			);
+		$rows = $this->findCacheRows(bsnHash: $bsnHash);
+		if ($rows === null) {
 			return null;
 		}
 
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
-			if ($data === null) {
-				continue;
+			$hit = $this->freshCacheHit(row: $row, now: $now, bsnHash: $bsnHash);
+			if ($hit !== null) {
+				return $hit;
 			}
-
-			$expiresAt = $data['expiresAt'] ?? null;
-			if (is_string($expiresAt) === false) {
-				continue;
-			}
-
-			try {
-				$expires = new DateTimeImmutable($expiresAt);
-			} catch (\Throwable) {
-				continue;
-			}
-
-			if ($expires > $now) {
-				return [
-					'mailboxAvailable' => (bool)($data['mailboxAvailable'] ?? false),
-					'optedOut' => (bool)($data['optedOut'] ?? false),
-					'resolvedAt' => (string)($data['resolvedAt'] ?? $now->format(DATE_ATOM)),
-					'expiresAt' => $expiresAt,
-					'bsnHash' => $bsnHash,
-					'source' => 'cache',
-				];
-			}
-		}//end foreach
+		}
 
 		return null;
 	}//end lookupCache()
+
+	/**
+	 * Find the cached rows for a bsnHash, or null when the lookup fails.
+	 *
+	 * @param string $bsnHash The HMAC of the BSN.
+	 *
+	 * @return iterable<mixed>|null
+	 */
+	private function findCacheRows(string $bsnHash): iterable|null {
+		[$register, $schema] = $this->config();
+		try {
+			return $this->getObjectService()->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema, 'bsnHash' => $bsnHash]]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('MailboxResolver cache lookup failed.', ['exception' => $e->getMessage()]);
+			return null;
+		}
+	}//end findCacheRows()
+
+	/**
+	 * The resolution a cached row holds while it has not expired, else null.
+	 *
+	 * @param mixed             $row     The cached row.
+	 * @param DateTimeImmutable $now     The current time.
+	 * @param string            $bsnHash The HMAC of the BSN.
+	 *
+	 * @return array|null
+	 */
+	private function freshCacheHit(mixed $row, DateTimeImmutable $now, string $bsnHash): array|null {
+		$data = $this->toArray(object: $row);
+		if ($data === null) {
+			return null;
+		}
+
+		$expiresAt = $this->unexpiredAt(data: $data, now: $now);
+		if ($expiresAt === null) {
+			return null;
+		}
+
+		return [
+			'mailboxAvailable' => (bool)($data['mailboxAvailable'] ?? false),
+			'optedOut' => (bool)($data['optedOut'] ?? false),
+			'resolvedAt' => (string)($data['resolvedAt'] ?? $now->format(DATE_ATOM)),
+			'expiresAt' => $expiresAt,
+			'bsnHash' => $bsnHash,
+			'source' => 'cache',
+		];
+	}//end freshCacheHit()
+
+	/**
+	 * A cached row's expiresAt when it lies in the future, else null.
+	 *
+	 * @param array             $data The cached row.
+	 * @param DateTimeImmutable $now  The current time.
+	 *
+	 * @return string|null
+	 */
+	private function unexpiredAt(array $data, DateTimeImmutable $now): string|null {
+		$expiresAt = $data['expiresAt'] ?? null;
+		if (is_string($expiresAt) === false) {
+			return null;
+		}
+
+		try {
+			$expires = new DateTimeImmutable($expiresAt);
+		} catch (\Throwable) {
+			return null;
+		}
+
+		if ($expires > $now) {
+			return $expiresAt;
+		}
+
+		return null;
+	}//end unexpiredAt()
 
 	/**
 	 * Persist (or upsert) a cache row.
@@ -234,9 +279,9 @@ class MailboxResolver {
 	 * @return array{0: string, 1: string}
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'mailboxResolution_schema',
 			''
 		);
@@ -247,35 +292,4 @@ class MailboxResolver {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Normalise an OR result entry to an associative array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array|null
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true) {
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$serialised = $row->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($row, 'getObject') === true) {
-				$inner = $row->getObject();
-				if (is_array($inner) === true) {
-					return $inner;
-				}
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Settings;
 use OCA\Pipelinq\Controller\DashboardController;
 use OCA\Pipelinq\Service\DefaultPipelineService;
 use OCA\Pipelinq\Service\DefaultSkillService;
+use OCA\Pipelinq\Service\SemanticHandoffService;
 use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Service\SettingsService;
@@ -236,6 +237,7 @@ final class MenuStructureTest extends TestCase {
 			$appConfig,
 			new MenuStructure(),
 			$this->createMock(IAppManager::class),
+			$this->createMock(SemanticHandoffService::class),
 		);
 		$controller->page();
 

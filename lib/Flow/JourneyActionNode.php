@@ -30,7 +30,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
 
 declare(strict_types=1);
@@ -39,14 +39,14 @@ namespace OCA\Pipelinq\Flow;
 
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
-use OCA\Pipelinq\Service\Marketing\JourneyStepRunner;
+use OCA\Pipelinq\Kernel\Contracts\JourneyStepRunnerInterface;
 use OCP\IURLGenerator;
 use UnexpectedValueException;
 
 /**
  * JourneyActionNode: run one journey's action for the items the flow carries.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
 class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 
@@ -60,13 +60,13 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	/**
 	 * Constructor.
 	 *
-	 * @param JourneyStepRunner $runner The gate and the action.
+	 * @param JourneyStepRunnerInterface $runner The gate and the action.
 	 * @param IURLGenerator $urls URL generator, for the palette icon.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function __construct(
-		private JourneyStepRunner $runner,
+		private JourneyStepRunnerInterface $runner,
 		private IURLGenerator $urls,
 	) {
 	}//end __construct()
@@ -76,7 +76,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The type identifier.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function getId(): string {
 		return self::NODE_ID;
@@ -87,7 +87,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The display name.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function getDisplayName(): string {
 		return 'Journey action';
@@ -98,7 +98,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The description.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function getDescription(): string {
 		return 'Send the journey\'s mailing or create its task, after the consent gate.';
@@ -109,7 +109,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The icon URL.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function getIcon(): string {
 		return $this->urls->getAbsoluteURL($this->urls->imagePath('pipelinq', 'app.svg'));
@@ -122,7 +122,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return bool Whether it is available.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function isAvailableForScope(int $scope): bool {
 		unset($scope);
@@ -134,7 +134,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return array<int, string> The accepted keys.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function configKeys(): array {
 		return ['journey'];
@@ -149,7 +149,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @throws UnexpectedValueException When no journey is named.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function validateConfig(array $config): void {
 		if (trim((string)($config['journey'] ?? '')) === '') {
@@ -173,7 +173,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @throws UnexpectedValueException When the step was never validated.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	public function execute(array $items, array $config, array $context): array {
 		// Re-checked here on purpose: validateConfig() only runs when a flow

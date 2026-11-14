@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002, REQ-FRC-003
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002, REQ-FRC-003
  */
 
 declare(strict_types=1);
@@ -25,10 +25,10 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
-use OCA\Pipelinq\Service\ForecastDealService;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -80,16 +80,16 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService $schemaMapService The schema map service.
-	 * @param ForecastDealService $dealService The forecast deal lifecycle service.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
+	 * @param ForecastDealServiceInterface $dealService The forecast deal lifecycle service.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private SchemaMapService $schemaMapService,
-		private ForecastDealService $dealService,
+		private SchemaMapServiceInterface $schemaMapService,
+		private ForecastDealServiceInterface $dealService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
@@ -107,46 +107,85 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002-01, REQ-FRC-003-01
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
-	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
-	 *  instance in the request, which is exactly what an injected per-instance
-	 *  service cannot give. Static is the mechanism, not an accident.
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-01, REQ-FRC-003-01
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatedEvent) === false) {
 			return;
 		}
 
+		$lead = $this->correctableLead(event: $event);
+		if ($lead === null) {
+			return;
+		}
+
+		[$uuid, $oldEntity, $newEntity] = $lead;
+		$oldData = $oldEntity->getObject();
+		$newData = $newEntity->getObject();
+
+		if ($this->needsCorrection(oldData: $oldData, newData: $newData) === true) {
+			$this->deferCorrection(uuid: $uuid, oldData: $oldData);
+		}
+	}//end handle()
+
+	/**
+	 * The uuid and old and new entities of an updated lead not already being corrected, else null.
+	 *
+	 * @param ObjectUpdatedEvent $event The update event.
+	 *
+	 * @return array{0: string, 1: mixed, 2: mixed}|null The uuid, old entity and new entity.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
+	 */
+	private function correctableLead(ObjectUpdatedEvent $event): array|null {
 		$newEntity = $event->getNewObject();
 		$oldEntity = $event->getOldObject();
 		if ($this->isLead(entity: $newEntity) === false || $oldEntity === null) {
-			return;
+			return null;
 		}
 
 		$uuid = (string)$newEntity->getUuid();
 		if ($uuid === '') {
-			return;
+			return null;
 		}
 
 		// Our own deferred correction re-enters this listener. Deferring again
 		// would enqueue another job whose write re-enters again — a cron loop.
 		if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
-			return;
+			return null;
 		}
 
-		$oldData = $oldEntity->getObject();
-		$newData = $newEntity->getObject();
+		return [$uuid, $oldEntity, $newEntity];
+	}//end correctableLead()
 
-		// Nothing to correct: skip the job row entirely rather than enqueue a
-		// no-op. Both decisions are re-taken against current state in the job.
-		if ($this->dealService->validateTransition(oldData: $oldData, newData: $newData) === null
-			&& $this->dealService->applyReopenReset(oldData: $oldData, newData: $newData) === null
-		) {
-			return;
-		}
+	/**
+	 * Whether the transition is invalid or a reopen needs a reset.
+	 *
+	 * Nothing to correct: skip the job row entirely rather than enqueue a
+	 * no-op. Both decisions are re-taken against current state in the job.
+	 *
+	 * @param array<string, mixed> $oldData The lead before the update.
+	 * @param array<string, mixed> $newData The lead after the update.
+	 *
+	 * @return bool True when a correction job is needed.
+	 */
+	private function needsCorrection(array $oldData, array $newData): bool {
+		return ($this->dealService->validateTransition(oldData: $oldData, newData: $newData) === null
+			&& $this->dealService->applyReopenReset(oldData: $oldData, newData: $newData) === null) === false;
+	}//end needsCorrection()
 
+	/**
+	 * Defer the lead correction to a background job, deduplicated per lead.
+	 *
+	 * @param string $uuid The lead uuid.
+	 * @param array<string, mixed> $oldData The lead before the update.
+	 *
+	 * @return void
+	 */
+	private function deferCorrection(string $uuid, array $oldData): void {
 		$this->deferral->defer(
 			jobClass: DeferredObjectListenerJob::class,
 			entry: [
@@ -156,7 +195,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 			],
 			dedupeKey: self::HANDLER_KEY . '|' . $uuid
 		);
-	}//end handle()
+	}//end deferCorrection()
 
 	/**
 	 * Re-decide and apply the forecast-category correction.
@@ -165,7 +204,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002-01, REQ-FRC-003-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-01, REQ-FRC-003-01
 	 */
 	public function runDeferredWork(array $entry): void {
 		$uuid = (string)($entry['uuid'] ?? '');
@@ -188,7 +227,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 				['uuid' => $uuid, 'reason' => $error]
 			);
 			$reverted = $current;
-			$reverted['forecast_category'] = ($oldData['forecast_category'] ?? ForecastDealService::DEFAULT_CATEGORY);
+			$reverted['forecast_category'] = ($oldData['forecast_category'] ?? ForecastDealServiceInterface::DEFAULT_CATEGORY);
 			$this->persist(uuid: $uuid, data: $reverted);
 			return;
 		}
@@ -219,8 +258,8 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null The deal data, or null when it is gone.
 	 */
 	private function fetch(string $uuid): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return null;
 		}
@@ -251,8 +290,8 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 */
 	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return;
 		}

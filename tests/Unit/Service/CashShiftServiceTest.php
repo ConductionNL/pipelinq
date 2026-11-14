@@ -30,14 +30,19 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\CashShiftService;
+use OCA\Pipelinq\Service\CashShiftSummaryService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
+use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
+use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -88,8 +93,8 @@ class CashFakeObjectService extends ObjectService {
 		int|string $id,
 		?array $_extend = [],
 		bool $files = false,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_render = true,
@@ -154,10 +159,10 @@ class CashFakeObjectService extends ObjectService {
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
 	public function saveObject(
-		array $object,
+		array|ObjectEntity $object,
 		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
@@ -166,6 +171,9 @@ class CashFakeObjectService extends ObjectService {
 		?array $uploadedFiles = null,
 		?IUser $currentUser = null,
 		bool $failIfExists = false,
+		bool $_unowned = false,
+		bool $_dedupOverride = false,
+		?string $_owner = null,
 	): ObjectEntityInterface {
 		$schemaKey = (string)$schema;
 		$key = (string)$uuid;
@@ -270,7 +278,7 @@ class CashFakeWebhookService extends WebhookService {
 	/**
 	 * @param array<string, mixed> $payload
 	 */
-	public function dispatchEvent(object $_event, string $eventName, array $payload): void {
+	public function dispatchEvent(Event $_event, string $eventName, array $payload): void {
 		$this->events[] = ['eventName' => $eventName, 'payload' => $payload];
 	}
 }
@@ -747,4 +755,116 @@ class CashShiftServiceTest extends TestCase {
 		$diff = array_values($diffs)[0];
 		$this->assertSame(590.00, $diff['actualAmount']);
 	}//end testRecordCountUpdatesPendingDiffInPlace()
+
+	/**
+	 * pendingDiffId names the shift's pending difference, so a header button
+	 * can approve it without knowing the diff.
+	 *
+	 * @return void
+	 */
+	public function testPendingDiffIdNamesTheShiftsPendingDiff(): void {
+		$this->asAdmin();
+		$this->seedShift(floatAmount: 100.00, salesTotal: 500.00);
+		$result = $this->service->recordCount('shift-1', 615.00, 'boss');
+
+		$this->assertSame(expected: $result['diff']['id'], actual: $this->service->pendingDiffId('shift-1'));
+	}//end testPendingDiffIdNamesTheShiftsPendingDiff()
+
+	/**
+	 * pendingDiffId refuses a shift without a pending difference.
+	 *
+	 * @return void
+	 */
+	public function testPendingDiffIdWithoutPendingDiffIsNotFound(): void {
+		$this->asAdmin();
+		$this->seedShift(floatAmount: 100.00, salesTotal: 0.00);
+
+		$this->expectException(exception: OCSNotFoundException::class);
+		$this->service->pendingDiffId('shift-1');
+	}//end testPendingDiffIdWithoutPendingDiffIsNotFound()
+
+	/**
+	 * summarise reads each shift's drops, its newest cash difference and an
+	 * outcome word the shifts list draws as a pill.
+	 *
+	 * @return void
+	 */
+	public function testSummariseCountsDropsAndReadsTheDifference(): void {
+		$this->asAdmin();
+		$this->seedShift(floatAmount: 100.00, salesTotal: 300.00);
+		$this->objects->store['cashShift_schema']['shift-1']['status'] = 'closed';
+		$this->objects->store['cashDrop_schema']['drop-1'] = ['id' => 'drop-1', 'shift' => 'shift-1', 'amount' => 200.0];
+		$this->objects->store['cashDrop_schema']['drop-2'] = ['id' => 'drop-2', 'shift' => 'shift-1', 'amount' => 50.0];
+		$this->objects->store['cashDiff_schema']['diff-1'] = [
+			'id'                  => 'diff-1',
+			'shift'               => 'shift-1',
+			'diffAmount'          => -12.4,
+			'tolerancePercentage' => 2,
+			'withinTolerance'     => false,
+			'status'              => 'pending',
+		];
+		$this->objects->store['cashShift_schema']['shift-2'] = ['id' => 'shift-2', 'status' => 'open', 'floatAmount' => 150.0];
+
+		$summary = (new CashShiftSummaryService(shifts: $this->service))->summarise(shiftIds: ['shift-1', 'shift-2']);
+
+		$this->assertSame(expected: 2, actual: $summary['shift-1']['dropCount']);
+		$this->assertSame(expected: 250.0, actual: $summary['shift-1']['dropTotal']);
+		$this->assertSame(expected: -12.4, actual: $summary['shift-1']['difference']);
+		$this->assertSame(expected: 2.0, actual: $summary['shift-1']['tolerancePercentage']);
+		$this->assertSame(expected: 'outside the margin', actual: $summary['shift-1']['outcome']);
+		$this->assertSame(expected: 'open', actual: $summary['shift-2']['outcome']);
+		$this->assertSame(expected: 0, actual: $summary['shift-2']['dropCount']);
+		$this->assertNull(actual: $summary['shift-2']['difference']);
+	}//end testSummariseCountsDropsAndReadsTheDifference()
+
+	/**
+	 * The outcome word follows the difference: an approved exact count reads
+	 * approved, an approved small difference within the margin, a rejected
+	 * one rejected, a counted shift without a difference counted.
+	 *
+	 * @return void
+	 */
+	public function testSummariseOutcomeWords(): void {
+		$this->asAdmin();
+		$diffs = [
+			'a' => ['diffAmount' => 0.0, 'withinTolerance' => true, 'status' => 'approved'],
+			'b' => ['diffAmount' => 0.8, 'withinTolerance' => true, 'status' => 'approved'],
+			'c' => ['diffAmount' => -30.0, 'withinTolerance' => false, 'status' => 'rejected'],
+		];
+		foreach ($diffs as $key => $diff) {
+			$this->objects->store['cashShift_schema'][$key] = ['id' => $key, 'status' => 'reconciled'];
+			$this->objects->store['cashDiff_schema']['diff-'.$key] = array_merge(['id' => 'diff-'.$key, 'shift' => $key], $diff);
+		}
+
+		$this->objects->store['cashShift_schema']['d'] = ['id' => 'd', 'status' => 'closed'];
+
+		$summary = (new CashShiftSummaryService(shifts: $this->service))->summarise(shiftIds: ['a', 'b', 'c', 'd']);
+
+		$this->assertSame(expected: 'approved', actual: $summary['a']['outcome']);
+		$this->assertSame(expected: 'within the margin', actual: $summary['b']['outcome']);
+		$this->assertSame(expected: 'rejected', actual: $summary['c']['outcome']);
+		$this->assertSame(expected: 'counted', actual: $summary['d']['outcome']);
+	}//end testSummariseOutcomeWords()
+
+	/**
+	 * The page summary adds the sales booked in the shift and the Z report of
+	 * its till on its day.
+	 *
+	 * @return void
+	 */
+	public function testShiftSummaryNamesItsSalesAndZReport(): void {
+		$this->asAdmin();
+		$this->seedShift(floatAmount: 100.00, salesTotal: 0.00);
+		$this->objects->store['cashShift_schema']['shift-1']['drawer'] = 'Balie 3, stadskantoor';
+		$this->objects->store['posTransaction_schema']['txn-1']['shift'] = 'shift-1';
+		$this->objects->store['posZReport_schema']['z-1'] = ['id' => 'z-1', 'reference' => 'Z-1', 'terminalId' => 'Balie 3', 'reportDate' => '2026-05-21'];
+		$this->objects->store['posZReport_schema']['z-2'] = ['id' => 'z-2', 'reference' => 'Z-2', 'terminalId' => 'Balie 2', 'reportDate' => '2026-05-21'];
+		$this->objects->store['posZReport_schema']['z-3'] = ['id' => 'z-3', 'reference' => 'Z-3', 'terminalId' => 'Balie 3', 'reportDate' => '2026-05-20'];
+
+		$summary = (new CashShiftSummaryService(shifts: $this->service))->shiftSummary(shiftId: 'shift-1');
+
+		$this->assertSame(expected: [['id' => 'sales', 'count' => 1]], actual: $summary['sales']);
+		$this->assertSame(expected: ['z-1'], actual: array_column($summary['zReports'], 'id'));
+		$this->assertSame(expected: 100.0, actual: $summary['floatAmount']);
+	}//end testShiftSummaryNamesItsSalesAndZReport()
 }//end class

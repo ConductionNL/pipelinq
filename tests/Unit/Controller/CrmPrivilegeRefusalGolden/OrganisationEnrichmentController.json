@@ -1,0 +1,74 @@
+{
+    "propose no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "t:Authentication required"
+        },
+        "trace": []
+    },
+    "propose unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "t:Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "propose privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "t:Choose at least one organisation"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            }
+        ]
+    },
+    "apply no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "t:Authentication required"
+        },
+        "trace": []
+    },
+    "apply unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "t:Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "apply privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "t:No changes to write"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            }
+        ]
+    }
+}

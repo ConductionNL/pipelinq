@@ -330,6 +330,59 @@ class SearchConsoleImportServiceTest extends TestCase {
 	}//end testAnApiErrorOnOnePropertyIsReportedAndTheOthersContinue()
 
 	/**
+	 * An answer that is not JSON fails the property with its own message, and
+	 * a run where no property succeeded leaves the last-import stamp alone.
+	 *
+	 * @return void
+	 */
+	public function testAnAnswerThatIsNotJsonFailsThePropertyAndStampsNothing(): void {
+		$importer = $this->build(['<html>', '!down']);
+		$result = $importer->importRecent();
+
+		$this->assertSame(
+			['properties' => 0, 'rows' => 0, 'errors' => [
+				'https://example.org/' => 'Search Console: the API answered with something that is not JSON',
+				'sc-domain:example.net' => 'down',
+			]],
+			$result
+		);
+		$this->assertSame('', $importer->lastImportAt());
+	}//end testAnAnswerThatIsNotJsonFailsThePropertyAndStampsNothing()
+
+	/**
+	 * The request carries the bearer, the window and the paging, and a
+	 * successful run stamps the import moment.
+	 *
+	 * @return void
+	 */
+	public function testTheRequestCarriesTheWindowAndASuccessStampsTheMoment(): void {
+		$importer = $this->build([$this->page([]), $this->page([])]);
+		$importer->importRecent(days: 2);
+
+		$this->assertCount(2, $this->posts);
+		$this->assertStringContainsString(rawurlencode('https://example.org/'), $this->posts[0]['url']);
+		$this->assertStringContainsString(rawurlencode('sc-domain:example.net'), $this->posts[1]['url']);
+		$today = gmdate('Y-m-d', self::NOW);
+		$from = gmdate('Y-m-d', (self::NOW - (2 * 86400)));
+		$this->assertSame(
+			[
+				'headers' => ['Authorization' => 'Bearer tok-1', 'Accept' => 'application/json'],
+				'json' => [
+					'startDate' => $from,
+					'endDate' => $today,
+					'dimensions' => ['date', 'query', 'page'],
+					'rowLimit' => 5000,
+					'startRow' => 0,
+					'dataState' => 'all',
+				],
+				'timeout' => 60,
+			],
+			$this->posts[0]['options']
+		);
+		$this->assertSame(gmdate('Y-m-d\TH:i:s\Z', self::NOW), $importer->lastImportAt());
+	}//end testTheRequestCarriesTheWindowAndASuccessStampsTheMoment()
+
+	/**
 	 * @return void
 	 */
 	public function testATransportFailureIsReportedPerProperty(): void {

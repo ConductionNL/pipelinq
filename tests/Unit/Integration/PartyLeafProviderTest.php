@@ -211,4 +211,96 @@ class PartyLeafProviderTest extends TestCase {
 		$this->assertSame(200, $panel['status']);
 		$this->assertSame([], $panel['fields']);
 	}//end testAPartyWithNoDeclaredFieldsStillRenders()
+
+	/**
+	 * Golden: the exact panel — every field default, a skipped keyless field, values that are not a map —
+	 * and the refusals.
+	 *
+	 * @return void
+	 */
+	public function testThePanelIsExact(): void {
+		$this->parties = [
+			'p2' => ['id' => 'p2', 'type' => 'persoon', 'fieldValues' => 'not-a-map', 'parentOrganisation' => 'org-1'],
+			'p3' => ['id' => 'p3', 'partyKind' => ' organisatie ', 'fieldValues' => ['kvk' => '123']],
+		];
+		$this->fieldSets = [
+			['key' => 'kvk', 'label' => 'KvK', 'fieldKind' => 'number', 'required' => 1, 'order' => '2', 'choices' => 'one'],
+			['key' => '', 'label' => 'Keyless'],
+			['key' => 'bsn'],
+			new class implements \JsonSerializable {
+				/**
+				 * @return array<string, mixed> A field.
+				 */
+				public function jsonSerialize(): array {
+					return ['key' => 'note', 'order' => 1];
+				}
+			},
+		];
+
+		$this->assertSame(
+			[
+				'status' => 200,
+				'party' => ['id' => 'p2', 'kind' => 'persoon', 'parentOrganisation' => 'org-1', 'organisationPath' => ''],
+				'fields' => [
+					['key' => 'bsn', 'label' => 'bsn', 'fieldKind' => 'text', 'required' => false, 'order' => 0, 'choices' => [], 'value' => null],
+					['key' => 'note', 'label' => 'note', 'fieldKind' => 'text', 'required' => false, 'order' => 1, 'choices' => [], 'value' => null],
+					['key' => 'kvk', 'label' => 'KvK', 'fieldKind' => 'number', 'required' => true, 'order' => 2, 'choices' => ['one'], 'value' => null],
+				],
+				'indicators' => [],
+			],
+			$this->provider()->describe(partyId: ' p2 ')
+		);
+		$this->assertSame('123', $this->provider()->describe(partyId: 'p3')['fields'][2]['value']);
+		$this->assertSame('organisatie', $this->provider()->describe(partyId: 'p3')['party']['kind']);
+		$this->assertSame(['status' => 400, 'error' => 'A party is required.'], $this->provider()->describe(partyId: '  '));
+		$this->assertSame(['status' => 403, 'error' => 'You may not read this party.'], $this->provider()->describe(partyId: 'ghost'));
+	}//end testThePanelIsExact()
+
+	/**
+	 * Golden: the field-set query per kind, and a failing read that still renders the panel.
+	 *
+	 * @return void
+	 */
+	public function testTheFieldSetQueryIsExact(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => (['register' => 'reg-1', 'partyFieldSet_schema' => 'sch-fields'][$key] ?? $default)
+		);
+		$queries = [];
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('findAll')->willReturnCallback(
+			static function (array $config) use (&$queries): array {
+				$queries[] = $config;
+				if (($config['filters']['partyKind'] ?? '') === 'broken') {
+					throw new \RuntimeException('register offline');
+				}
+
+				return [];
+			}
+		);
+		$warnings = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			static function (string $message, array $context = []) use (&$warnings): void {
+				$warnings[] = [$message, $context];
+			}
+		);
+		$indicators = $this->createMock(PartyIndicatorService::class);
+		$indicators->method('resolve')->willReturn([]);
+		$provider = new PartyLeafProvider($appConfig, $objectService, $indicators, $logger);
+		$read = new \ReflectionMethod($provider, 'declaredFields');
+
+		$this->assertSame([], $read->invoke($provider, ''));
+		$this->assertSame([], $read->invoke($provider, 'organisatie'));
+		$this->assertSame([], $read->invoke($provider, 'broken'));
+		$this->assertSame(
+			[
+				['filters' => ['register' => 'reg-1', 'schema' => 'sch-fields'], 'limit' => 200],
+				['filters' => ['register' => 'reg-1', 'schema' => 'sch-fields', 'partyKind' => 'organisatie'], 'limit' => 200],
+				['filters' => ['register' => 'reg-1', 'schema' => 'sch-fields', 'partyKind' => 'broken'], 'limit' => 200],
+			],
+			$queries
+		);
+		$this->assertSame([['PartyLeafProvider: the field set read failed', ['kind' => 'broken', 'exception' => 'register offline']]], $warnings);
+	}//end testTheFieldSetQueryIsExact()
 }//end class

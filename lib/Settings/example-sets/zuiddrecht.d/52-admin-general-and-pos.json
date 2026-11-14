@@ -1,0 +1,275 @@
+{
+	"$comment": "pipelinq's admin settings in the Zuiddrecht set, general and POS tabs, as PqBeheer and PqBeheerKassa draw them: the simple menu with Verkoop, Kassa and Producten switched on; agent profiles for pieter, Fatma Yildiz and joris on the skills of 41-appointments.json; the payment providers (CCV live, Mollie in test, Adyen and Stripe off), the tender types with their ledger accounts and the POS roles, set on pipelinq's own shipped rows (their fixed uuids) so each shows once, with Op rekening as the one tender type pipelinq does not ship; and who holds which role. The CCV key itself is not in the set: config names the credential it comes from. Lead sources and request channels are Nextcloud system tags, which a set cannot write, and VAT 21/9/0/0 is pipelinq's default, so neither is here.",
+	"appConfig": [
+		{
+			"key": "menu_modules",
+			"value": "sales,pos,products"
+		}
+	],
+	"objects": [
+		{
+			"key": "agentprofiel-pieter",
+			"register": "pipelinq",
+			"schema": "agentProfile",
+			"data": {
+				"userId": "{{cast:pieter.uid}}",
+				"skills": [
+					"{{object:vaardigheid-bouwvergunningen.id}}",
+					"{{object:vaardigheid-burgerzaken.id}}"
+				],
+				"maxConcurrent": 8,
+				"isAvailable": true
+			}
+		},
+		{
+			"key": "agentprofiel-fatmayildiz",
+			"register": "pipelinq",
+			"schema": "agentProfile",
+			"data": {
+				"userId": "{{cast:fatmayildiz.uid}}",
+				"skills": [
+					"{{object:vaardigheid-schuldhulp.id}}",
+					"{{object:vaardigheid-identiteitscontrole.id}}"
+				],
+				"maxConcurrent": 10,
+				"isAvailable": true
+			}
+		},
+		{
+			"key": "agentprofiel-joris",
+			"register": "pipelinq",
+			"schema": "agentProfile",
+			"data": {
+				"userId": "{{cast:joris.uid}}",
+				"skills": [
+					"{{object:vaardigheid-burgerzaken.id}}",
+					"{{object:vaardigheid-biometrie.id}}"
+				],
+				"maxConcurrent": 6,
+				"isAvailable": false
+			}
+		},
+		{
+			"key": "betaalwijze-op-rekening",
+			"register": "pipelinq",
+			"schema": "posTenderType",
+			"data": {
+				"name": "Op rekening",
+				"code": "REKENING",
+				"glAccount": "1400",
+				"description": "Op rekening van de klant.",
+				"allowsChange": false,
+				"requiresReference": false,
+				"requiresPin": false,
+				"isActive": false,
+				"sortOrder": 4
+			}
+		},
+		{
+			"key": "kassamedewerker-pieter",
+			"register": "pipelinq",
+			"schema": "posStaff",
+			"data": {
+				"displayName": "{{cast:pieter.displayName}}",
+				"userId": "{{cast:pieter.uid}}",
+				"posRole": "9e1c2a01-2222-4aaa-9222-2345cafebabe",
+				"isActive": true,
+				"lastLoginAt": "{{datetime:0 08:30}}"
+			}
+		},
+		{
+			"key": "kassamedewerker-fatmayildiz",
+			"register": "pipelinq",
+			"schema": "posStaff",
+			"data": {
+				"displayName": "{{cast:fatmayildiz.displayName}}",
+				"userId": "{{cast:fatmayildiz.uid}}",
+				"posRole": "9e1c2a01-1111-4aaa-9111-1234deadbeef",
+				"isActive": true,
+				"lastLoginAt": "{{datetime:0 08:25}}"
+			}
+		},
+		{
+			"key": "kassamedewerker-joris",
+			"register": "pipelinq",
+			"schema": "posStaff",
+			"data": {
+				"displayName": "{{cast:joris.displayName}}",
+				"userId": "{{cast:joris.uid}}",
+				"posRole": "9e1c2a01-1111-4aaa-9111-1234deadbeef",
+				"isActive": true,
+				"lastLoginAt": "{{datetime:-1 09:00}}"
+			}
+		}
+	],
+	"changes": [
+		{
+			"key": "betaalprovider-ccv-overgenomen",
+			"register": "pipelinq",
+			"schema": "paymentProvider",
+			"where": {
+				"id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c42"
+			},
+			"set": {
+				"name": "ccv",
+				"displayName": "CCV",
+				"type": "terminal",
+				"isActive": true,
+				"environment": "live",
+				"testMode": false,
+				"config": {
+					"terminalId": "register-01",
+					"credential": "CCV balie, stadskantoor"
+				}
+			}
+		},
+		{
+			"key": "betaalprovider-mollie-overgenomen",
+			"register": "pipelinq",
+			"schema": "paymentProvider",
+			"where": {
+				"id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c41"
+			},
+			"set": {
+				"name": "mollie",
+				"displayName": "Mollie",
+				"type": "online",
+				"isActive": true,
+				"environment": "sandbox",
+				"testMode": true
+			}
+		},
+		{
+			"key": "betaalprovider-adyen-overgenomen",
+			"register": "pipelinq",
+			"schema": "paymentProvider",
+			"where": {
+				"id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c43"
+			},
+			"set": {
+				"name": "adyen",
+				"displayName": "Adyen",
+				"type": "terminal",
+				"isActive": false,
+				"environment": "sandbox",
+				"testMode": true
+			}
+		},
+		{
+			"key": "betaalprovider-stripe-overgenomen",
+			"register": "pipelinq",
+			"schema": "paymentProvider",
+			"where": {
+				"id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c44"
+			},
+			"set": {
+				"name": "stripe",
+				"displayName": "Stripe",
+				"type": "online",
+				"isActive": false,
+				"environment": "sandbox",
+				"testMode": true
+			}
+		},
+		{
+			"key": "betaalwijze-contant-overgenomen",
+			"register": "pipelinq",
+			"schema": "posTenderType",
+			"where": {
+				"id": "b1a0e0c0-0001-4001-a001-000000000001"
+			},
+			"set": {
+				"name": "Contant",
+				"code": "CONTANT",
+				"glAccount": "1000",
+				"allowsChange": true,
+				"requiresReference": false,
+				"requiresPin": false,
+				"isActive": true,
+				"sortOrder": 1
+			}
+		},
+		{
+			"key": "betaalwijze-pin-overgenomen",
+			"register": "pipelinq",
+			"schema": "posTenderType",
+			"where": {
+				"id": "b1a0e0c0-0001-4001-a001-000000000002"
+			},
+			"set": {
+				"name": "Pin",
+				"code": "PIN",
+				"glAccount": "1100",
+				"allowsChange": false,
+				"requiresReference": true,
+				"requiresPin": false,
+				"isActive": true,
+				"sortOrder": 2
+			}
+		},
+		{
+			"key": "betaalwijze-cadeaubon-overgenomen",
+			"register": "pipelinq",
+			"schema": "posTenderType",
+			"where": {
+				"id": "b1a0e0c0-0001-4001-a001-000000000003"
+			},
+			"set": {
+				"name": "Cadeaubon",
+				"code": "BON",
+				"glAccount": "1300",
+				"allowsChange": false,
+				"requiresReference": true,
+				"requiresPin": true,
+				"isActive": true,
+				"sortOrder": 3
+			}
+		},
+		{
+			"key": "kassarol-kassamedewerker-overgenomen",
+			"register": "pipelinq",
+			"schema": "posRole",
+			"where": {
+				"id": "9e1c2a01-1111-4aaa-9111-1234deadbeef"
+			},
+			"set": {
+				"name": "Kassamedewerker",
+				"canVoid": false,
+				"canRefund": false,
+				"canNoSale": false,
+				"maxDiscountPercent": 5
+			}
+		},
+		{
+			"key": "kassarol-leidinggevende-overgenomen",
+			"register": "pipelinq",
+			"schema": "posRole",
+			"where": {
+				"id": "9e1c2a01-2222-4aaa-9222-2345cafebabe"
+			},
+			"set": {
+				"name": "Leidinggevende",
+				"canVoid": true,
+				"canRefund": true,
+				"canNoSale": true,
+				"maxDiscountPercent": 25,
+				"description": "Leidinggevende aan de kassa: mag annuleren, retourneren en tot 25% korting geven."
+			}
+		},
+		{
+			"key": "kassarol-manager-overgenomen",
+			"register": "pipelinq",
+			"schema": "posRole",
+			"where": {
+				"id": "9e1c2a01-3333-4aaa-9333-3456f00dbabe"
+			},
+			"set": {
+				"name": "Manager",
+				"canVoid": true,
+				"canRefund": true,
+				"canNoSale": true,
+				"maxDiscountPercent": 100
+			}
+		}
+	]
+}

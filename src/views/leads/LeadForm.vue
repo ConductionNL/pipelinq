@@ -27,6 +27,11 @@
 				@update:modelValue="(v) => (form.category = v)" />
 		</div>
 
+		<!-- Labels from the shared list (shared-label-list). -->
+		<div class="form-group" data-testid="lead-form-labels">
+			<LabelSelect v-model="form.labels" />
+		</div>
+
 		<!-- Value + currency row. The win chance is the qualification score
 		     (pipeline-numbers-tell-the-truth), so there is no probability input. -->
 		<div class="form-row">
@@ -61,6 +66,8 @@
 				<NcSelect
 					v-model="form.source"
 					:options="sourceOptions"
+					label="label"
+					:reduce="(o) => o.id"
 					:aria-label-combobox="t('pipelinq', 'Source')"
 					labelOutside
 					:clearable="true"
@@ -88,9 +95,10 @@
 				@update:modelValue="expectedCloseDateObj = $event" />
 		</div>
 
-		<!-- Client + Contact. Contact is scoped to the chosen client and stays
-		     disabled until there is one — the same cascade Stage has on
-		     Pipeline below. Both can create what they cannot find. -->
+		<!-- Client + Contact. Both are optional (decision 207): a lead can be
+		     saved with no client linked. With a client chosen the contact
+		     picker is scoped to it; without one it offers every contact.
+		     Both can create what they cannot find. -->
 		<div class="form-row">
 			<div class="form-group" data-testid="lead-form-client">
 				<CnResourceSelect
@@ -98,13 +106,18 @@
 					schema="client"
 					labelField="name"
 					:modelValue="form.client || ''"
-					:inputLabel="t('pipelinq', 'Client') + ' *'"
+					:inputLabel="t('pipelinq', 'Client')"
 					:placeholder="t('pipelinq', 'Select or create a client')"
 					:preload="true"
 					:createHandler="createClient"
 					@update:modelValue="onClientChange" />
-				<p v-if="shownErrors.client" class="field-error" role="alert">
-					{{ shownErrors.client }}
+				<p class="field-hint" data-testid="lead-form-client-hint">
+					{{
+						t(
+							'pipelinq',
+							'Leave empty to save the lead without a client.',
+						)
+					}}
 				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-contact">
@@ -115,14 +128,9 @@
 					:modelValue="form.contact || ''"
 					:inputLabel="t('pipelinq', 'Contact')"
 					:filters="contactFilters"
-					:disabled="!form.client"
 					:preload="true"
 					:createHandler="createContact"
-					:placeholder="
-						form.client
-							? t('pipelinq', 'Select or create a contact')
-							: t('pipelinq', 'Select a client first')
-					"
+					:placeholder="t('pipelinq', 'Select or create a contact')"
 					@update:modelValue="(v) => (form.contact = v || null)" />
 			</div>
 		</div>
@@ -196,17 +204,22 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import LabelSelect from '../../components/LabelSelect.vue'
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
+import hostedFormMixin from '../../mixins/hostedFormMixin.js'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
+import pipelineStageMixin from '../../mixins/pipelineStageMixin.js'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import { isCurrencyCode, normaliseCurrency } from '../../services/leadCurrency.js'
+import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
-import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
+import { defaultPipelineFor, pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { reportingCurrency } from '../../services/reportingCurrency.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { enumOptions, LEAD_PRIORITY_LABELS } from '../../utils/enumLabels.js'
+import { fieldsOr, withoutEmptyFields } from '../../utils/formFields.js'
 
 export default {
 	name: 'LeadForm',
@@ -214,33 +227,19 @@ export default {
 		ClientCreateDialog,
 		CnResourceSelect,
 		ContactCreateDialog,
+		LabelSelect,
 		NcButton,
 		NcDateTimePickerNative,
 		NcSelect,
 		NcTextField,
 	},
 
-	mixins: [linkedPartyCascadeMixin, touchedErrorsMixin],
+	mixins: [hostedFormMixin, linkedPartyCascadeMixin, pipelineStageMixin, touchedErrorsMixin],
 
 	props: {
 		lead: {
 			type: Object,
 			default: null,
-		},
-
-		/**
-		 * Render the built-in Cancel / Save buttons. Set to `false` when the
-		 * host supplies its own action buttons (e.g. a parent NcDialog driving
-		 * the form via a ref + the `update:valid` event).
-		 *
-		 * Defaults ON deliberately: a host that supplies its own action bar
-		 * opts OUT. Inverting the name would make every ordinary use pass a
-		 * negative prop just to get the normal form.
-		 */
-		showActions: {
-			type: Boolean,
-			// eslint-disable-next-line vue/no-boolean-default
-			default: true,
 		},
 	},
 
@@ -252,6 +251,7 @@ export default {
 				title: '',
 				description: '',
 				category: '',
+				labels: [],
 				value: null,
 				// The deal's currency (pipelinq#2040). New deals start in the
 				// reporting currency; the forecast converts any other one.
@@ -287,24 +287,27 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-48
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-48
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-47
 		 */
 		leadSourcesStore() {
 			return useLeadSourcesStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-54
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-54
 		 */
 		sourceOptions() {
-			return this.leadSourcesStore.sourceNames
+			return this.leadSourcesStore.sourceNames.map((id) => ({
+				id,
+				label: leadSourceLabel(id),
+			}))
 		},
 
 		isEdit() {
@@ -312,21 +315,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-52
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-52
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-46
 		 */
 		leadPipelines() {
 			return this.pipelines.filter((p) => pipelineAppliesTo(p, 'lead'))
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-51
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-51
 		 */
 		pipelineOptions() {
 			return this.leadPipelines.map((p) => ({
@@ -336,25 +339,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-53
-		 */
-		selectedPipeline() {
-			if (!this.form.pipeline) return null
-			return this.pipelines.find((p) => p.id === this.form.pipeline) || null
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-55
-		 */
-		stageOptions() {
-			if (!this.selectedPipeline?.stages) return []
-			return [...this.selectedPipeline.stages]
-				.sort((a, b) => a.order - b.order)
-				.map((s) => s.name)
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
 		 */
 		errors() {
 			const errors = {}
@@ -371,39 +356,21 @@ export default {
 				)
 			}
 
-			// A lead belongs to a pipeline and to a client; the schema requires
-			// both. Catching it here means the user sees which field is missing,
-			// instead of OpenRegister rejecting the whole save with
-			// "The required property (client) is missing".
+			// A lead belongs to a pipeline; the schema requires it. Catching it
+			// here means the user sees which field is missing, instead of
+			// OpenRegister rejecting the whole save with
+			// "The required property (pipeline) is missing". The client is
+			// optional (decision 207): a lead can exist with no client linked.
 			if (!this.form.pipeline) {
 				errors.pipeline = t('pipelinq', 'Pipeline is required')
 			}
 
-			if (!this.form.client) {
-				errors.client = t('pipelinq', 'Client is required')
-			}
-
 			return errors
-		},
-
-		isValid() {
-			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
-		},
-	},
-
-	watch: {
-		// Surface validity so a host (e.g. a parent NcDialog) can enable or
-		// disable its own submit button.
-		isValid: {
-			immediate: true,
-			handler(val) {
-				this.$emit('update:valid', !!val)
-			},
 		},
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-44
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-44
 	 */
 	async created() {
 		// Load pipelines, clients, and lead sources for dropdowns
@@ -414,23 +381,7 @@ export default {
 
 		if (this.lead) {
 			// Edit mode: populate from existing lead
-			this.form = {
-				id: this.lead.id,
-				title: this.lead.title || '',
-				description: this.lead.description || '',
-				category: this.lead.category || '',
-				value: this.lead.value ?? null,
-				currency: this.lead.currency || reportingCurrency(),
-				// Not editable any more; carried so a full save keeps the stored value.
-				probability: this.lead.probability ?? null,
-				source: this.lead.source || null,
-				priority: this.lead.priority || 'normal',
-				expectedCloseDate: this.lead.expectedCloseDate || null,
-				client: this.lead.client || null,
-				contact: this.lead.contact || null,
-				pipeline: this.lead.pipeline || null,
-				stage: this.lead.stage || null,
-			}
+			this.form = this.leadAsForm()
 		} else {
 			// Create mode: auto-assign default pipeline
 			this.autoAssignDefaultPipeline()
@@ -441,43 +392,48 @@ export default {
 		normaliseCurrency,
 
 		/**
-		 * Put a new lead on the default lead pipeline, or the first one when
-		 * none is marked default, in its first open stage. Every lead sits in
-		 * a stage; the server fills one in too, this shows it in the form.
+		 * The lead being edited as the form edits it.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
-		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+		 * @return {object} The form.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-44
 		 */
-		autoAssignDefaultPipeline() {
-			const defaultPipeline =
-				this.leadPipelines.find((p) => p.isDefault) || this.leadPipelines[0]
-			if (defaultPipeline) {
-				this.form.pipeline = defaultPipeline.id
-				const stages = [...(defaultPipeline.stages || [])].sort(
-					(a, b) => a.order - b.order,
-				)
-				const firstOpen = stages.find((s) => !s.isClosed)
-				if (firstOpen) {
-					this.form.stage = firstOpen.name
-				}
+		leadAsForm() {
+			return {
+				id: this.lead.id,
+				...this.leadTexts(),
+				labels: Array.isArray(this.lead.labels) ? [...this.lead.labels] : [],
+				value: this.lead.value ?? null,
+				currency: this.lead.currency || reportingCurrency(),
+				// Not editable any more; carried so a full save keeps the stored value.
+				probability: this.lead.probability ?? null,
+				...fieldsOr(this.lead, { source: null, priority: 'normal', expectedCloseDate: null, client: null, contact: null, pipeline: null, stage: null }),
 			}
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-49
+		 * @return {object} The lead's title, description and category, empty when unset.
 		 */
-		onPipelineChange() {
-			// Reset stage when pipeline changes
-			this.form.stage = null
-			// Auto-select first non-closed stage
-			if (this.selectedPipeline) {
-				const stages = [...(this.selectedPipeline.stages || [])].sort(
-					(a, b) => a.order - b.order,
-				)
-				const firstOpen = stages.find((s) => !s.isClosed)
-				if (firstOpen) {
-					this.form.stage = firstOpen.name
-				}
+		leadTexts() {
+			return {
+				title: this.lead.title || '',
+				description: this.lead.description || '',
+				category: this.lead.category || '',
+			}
+		},
+
+		/**
+		 * Put a new lead on the default lead pipeline, or the first one when
+		 * none is marked default, in its first open stage. Every lead sits in
+		 * a stage; the server fills one in too, this shows it in the form.
+		 *
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		autoAssignDefaultPipeline() {
+			const defaultPipeline = defaultPipelineFor(this.leadPipelines, 'lead')
+			if (defaultPipeline) {
+				this.form.pipeline = defaultPipeline.id
+				this.placeOnFirstOpenStage(defaultPipeline)
 			}
 		},
 
@@ -487,7 +443,7 @@ export default {
 		 *
 		 * @param {string|undefined} stage The chosen stage name.
 		 * @return {object} The fields to add to the saved lead.
-		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		stagePlacement(stage) {
 			if (!stage) return {}
@@ -505,7 +461,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
 		 */
 		onSave() {
 			this.markSaveAttempted()
@@ -514,15 +470,8 @@ export default {
 			const data = { ...this.form }
 			// Clean null values
 			if (data.value === null) delete data.value
-			if (!data.currency) delete data.currency
 			if (data.probability === null) delete data.probability
-			if (!data.source) delete data.source
-			if (!data.category) delete data.category
-			if (!data.expectedCloseDate) delete data.expectedCloseDate
-			if (!data.client) delete data.client
-			if (!data.contact) delete data.contact
-			if (!data.pipeline) delete data.pipeline
-			if (!data.stage) delete data.stage
+			withoutEmptyFields(data, ['currency', 'source', 'category', 'expectedCloseDate', 'client', 'contact', 'pipeline', 'stage'])
 			Object.assign(data, this.stagePlacement(data.stage))
 
 			this.$emit('save', data)
@@ -531,30 +480,11 @@ export default {
 }
 </script>
 
+<style scoped src="../formLayout.css"></style>
+
 <style scoped>
 .lead-form {
 	max-width: 600px;
-}
-
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	font-weight: bold;
-	margin-bottom: 4px;
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .form-row .form-group--currency {
@@ -567,9 +497,9 @@ export default {
 	margin-top: 4px;
 }
 
-.form-actions {
-	display: flex;
-	gap: 8px;
-	margin-top: 20px;
+.field-hint {
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+	margin-top: 4px;
 }
 </style>

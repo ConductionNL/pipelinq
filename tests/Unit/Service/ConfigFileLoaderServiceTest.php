@@ -362,4 +362,120 @@ class ConfigFileLoaderServiceTest extends TestCase {
 			'a normal list value must be replaced, not unioned'
 		);
 	}//end testNonAdditiveListsAreStillReplaced()
+	/**
+	 * Build a fake app root whose fragment files hold raw text, so unreadable
+	 * JSON and non-object fragments can be written.
+	 *
+	 * @param array                $monolith  The monolith register data.
+	 * @param array<string,string> $fragments Map of fragment filename => raw content.
+	 *
+	 * @return ConfigFileLoaderService The service bound to the fake app root.
+	 */
+	private function serviceWithRawFragments(array $monolith, array $fragments): ConfigFileLoaderService {
+		$service = $this->serviceWithFixture($monolith, []);
+		$root = end($this->tempRoots);
+		foreach ($fragments as $name => $content) {
+			file_put_contents($root . '/lib/Settings/register.d/' . $name, $content);
+		}
+
+		return $service;
+	}//end serviceWithRawFragments()
+
+	/**
+	 * Without a fragment directory, or with an empty one, the monolith is
+	 * returned unchanged, version included.
+	 *
+	 * @return void
+	 */
+	public function testNoFragmentsLeavesTheMonolithUnchanged(): void {
+		$monolith = ['info' => ['version' => '2.0.0'], 'components' => ['objects' => [1]]];
+		$this->assertSame($monolith, $this->serviceWithFixture($monolith, [])->loadConfigurationFile());
+
+		$service = $this->serviceWithFixture($monolith, []);
+		rmdir(end($this->tempRoots) . '/lib/Settings/register.d');
+		$this->assertSame($monolith, $service->loadConfigurationFile());
+
+		$service = $this->serviceWithRawFragments($monolith, ['10-notes.txt' => '{"a":1}']);
+		$this->assertSame($monolith, $service->loadConfigurationFile());
+	}//end testNoFragmentsLeavesTheMonolithUnchanged()
+
+	/**
+	 * Fragments merge in file-name order and fold a hash of their content
+	 * into the version; a fragment that is not an object is skipped and
+	 * leaves no trace in the hash.
+	 *
+	 * @return void
+	 */
+	public function testFragmentsMergeInNameOrderAndStampTheVersion(): void {
+		$second = '{"a":"second","c":3}';
+		$first = '{"a":"first","b":2}';
+		$service = $this->serviceWithRawFragments(
+			['info' => ['version' => '1.2.3']],
+			['20-b.json' => $second, '15-scalar.json' => '5', '10-a.json' => $first]
+		);
+
+		$result = $service->loadConfigurationFile();
+
+		$this->assertSame('second', $result['a']);
+		$this->assertSame(2, $result['b']);
+		$this->assertSame(3, $result['c']);
+		$this->assertSame('1.2.3+frag.' . substr(hash('sha256', $first . $second), 0, 8), $result['info']['version']);
+	}//end testFragmentsMergeInNameOrderAndStampTheVersion()
+
+	/**
+	 * A monolith without version, or whose info is not an object, gets a
+	 * fresh info block carrying only the stamped version.
+	 *
+	 * @return void
+	 */
+	public function testVersionStampWithoutAnInfoBlock(): void {
+		$fragment = '{"x":1}';
+		$hash = substr(hash('sha256', $fragment), 0, 8);
+
+		$result = $this->serviceWithRawFragments([], ['10-x.json' => $fragment])->loadConfigurationFile();
+		$this->assertSame(['version' => '0.0.0+frag.' . $hash], $result['info']);
+
+		$result = $this->serviceWithRawFragments(['info' => 'flat'], ['10-x.json' => $fragment])->loadConfigurationFile();
+		$this->assertSame(['version' => '0.0.0+frag.' . $hash], $result['info']);
+	}//end testVersionStampWithoutAnInfoBlock()
+
+	/**
+	 * A fragment that is not valid JSON stops the load with its file name.
+	 *
+	 * @return void
+	 */
+	public function testInvalidFragmentJsonThrows(): void {
+		$service = $this->serviceWithRawFragments([], ['10-ok.json' => '{"a":1}', '20-bad.json' => '{"a":']);
+		$root = end($this->tempRoots);
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage('Invalid JSON in register fragment ' . $root . '/lib/Settings/register.d/20-bad.json: Syntax error');
+		$service->loadConfigurationFile();
+	}//end testInvalidFragmentJsonThrows()
+
+	/**
+	 * An empty fragment object keeps a populated base object, an empty list
+	 * over an empty base replaces it, and a list over an object replaces it.
+	 *
+	 * @return void
+	 */
+	public function testEmptyAndMixedShapesMerge(): void {
+		$monolith = [
+			'keep' => ['a' => 1],
+			'emptyBase' => [],
+			'shape' => ['a' => 1],
+			'scalar' => 'x',
+			'nested' => ['inner' => ['b' => 1, 'list' => [1, 2]]],
+		];
+		$fragment = '{"keep":{},"emptyBase":[],"shape":[1,2],"scalar":{"now":"object"},"nested":{"inner":{"list":[3],"c":2}},"fresh":{}}';
+
+		$result = $this->serviceWithRawFragments($monolith, ['10-x.json' => $fragment])->loadConfigurationFile();
+
+		$this->assertSame(['a' => 1], $result['keep']);
+		$this->assertSame([], $result['emptyBase']);
+		$this->assertSame([1, 2], $result['shape']);
+		$this->assertSame(['now' => 'object'], $result['scalar']);
+		$this->assertSame(['b' => 1, 'list' => [3], 'c' => 2], $result['nested']['inner']);
+		$this->assertSame([], $result['fresh']);
+	}//end testEmptyAndMixedShapesMerge()
 }//end class

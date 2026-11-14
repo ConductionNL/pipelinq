@@ -29,8 +29,8 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Customer360SummaryService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\Customer360SummaryServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -71,7 +71,7 @@ class Customer360Controller extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param Customer360SummaryService $summaryService The customer 360 summary aggregator.
+	 * @param Customer360SummaryServiceInterface $summaryService The customer 360 summary aggregator.
 	 * @param IUserSession $userSession Current user.
 	 * @param IAppConfig $appConfig App config (register/schema resolution for the read guard).
 	 * @param ContainerInterface $container DI container (OpenRegister ObjectService).
@@ -80,13 +80,13 @@ class Customer360Controller extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private Customer360SummaryService $summaryService,
+		private Customer360SummaryServiceInterface $summaryService,
 		private IUserSession $userSession,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -107,7 +107,7 @@ class Customer360Controller extends Controller {
 	 *
 	 * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
 	 * @spec openspec/specs/customer-360/spec.md#requirement-customer-360-access-is-logged-doelbinding-mvp
-	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
+	 * @spec openspec/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
 	 */
 	public function summary(): JSONResponse {
 		$user = $this->userSession->getUser();
@@ -122,7 +122,29 @@ class Customer360Controller extends Controller {
 
 		// Access follows the client's own read rights in OpenRegister (Ruben,
 		// 7 October): whoever may read the client sees its 360 summary.
-		$access = $this->clientAccess(clientId: $clientId);
+		$refusal = $this->accessRefusal(access: $this->clientAccess(clientId: $clientId));
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$summary = $this->loadSummary(clientId: $clientId);
+		if ($summary instanceof JSONResponse) {
+			return $summary;
+		}
+
+		$this->logAccess(actor: $user->getUID(), clientId: $clientId);
+
+		return new JSONResponse($summary);
+	}//end summary()
+
+	/**
+	 * The response refusing a client the caller may not read, or null when access is granted.
+	 *
+	 * @param string $access One of the ACCESS_* constants.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function accessRefusal(string $access): JSONResponse|null {
 		if ($access === self::ACCESS_DENIED) {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
@@ -135,8 +157,19 @@ class Customer360Controller extends Controller {
 			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
+		return null;
+	}//end accessRefusal()
+
+	/**
+	 * The client's 360 summary, or a 500 response (logged) when it cannot be built.
+	 *
+	 * @param string $clientId The client UUID.
+	 *
+	 * @return array<string, mixed>|JSONResponse The summary or the error response.
+	 */
+	private function loadSummary(string $clientId): array|JSONResponse {
 		try {
-			$summary = $this->summaryService->getSummary(clientId: $clientId);
+			return $this->summaryService->getSummary(clientId: $clientId);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'Customer360Controller: summary failed',
@@ -144,11 +177,7 @@ class Customer360Controller extends Controller {
 			);
 			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
-
-		$this->logAccess(actor: $user->getUID(), clientId: $clientId);
-
-		return new JSONResponse($summary);
-	}//end summary()
+	}//end loadSummary()
 
 	/**
 	 * Whether the caller may read the client, through OpenRegister.
@@ -169,15 +198,28 @@ class Customer360Controller extends Controller {
 	 *
 	 * @return string One of the ACCESS_* constants.
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
+	 * @spec openspec/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
 	 */
 	private function clientAccess(string $clientId): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '' || $schema === '') {
 			return self::ACCESS_FAILED;
 		}
 
+		return $this->readClientAccess(clientId: $clientId, register: $register, schema: $schema);
+	}//end clientAccess()
+
+	/**
+	 * Read the client with RBAC on and classify the outcome.
+	 *
+	 * @param string $clientId The client UUID.
+	 * @param string $register The register.
+	 * @param string $schema The client schema.
+	 *
+	 * @return string One of the ACCESS_* constants.
+	 */
+	private function readClientAccess(string $clientId, string $register, string $schema): string {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$object = $objectService->find(
@@ -190,17 +232,7 @@ class Customer360Controller extends Controller {
 		} catch (NotAuthorizedException $e) {
 			return self::ACCESS_DENIED;
 		} catch (Throwable $e) {
-			// OCP's DoesNotExistException, matched by name to keep this
-			// controller's coupling under the phpmd threshold.
-			if (str_ends_with(get_class($e), '\\DoesNotExistException') === true) {
-				return self::ACCESS_MISSING;
-			}
-
-			$this->logger->warning(
-				'Customer360Controller: client read-guard failed',
-				['clientId' => $clientId, 'exception' => $e->getMessage()]
-			);
-			return self::ACCESS_FAILED;
+			return $this->readFailureAccess(error: $e, clientId: $clientId);
 		}
 
 		if ($object === null) {
@@ -208,7 +240,29 @@ class Customer360Controller extends Controller {
 		}
 
 		return self::ACCESS_GRANTED;
-	}//end clientAccess()
+	}//end readClientAccess()
+
+	/**
+	 * Classify a failed client read: missing for a DoesNotExistException, otherwise failed (logged).
+	 *
+	 * @param Throwable $error The read failure.
+	 * @param string $clientId The client UUID.
+	 *
+	 * @return string ACCESS_MISSING or ACCESS_FAILED.
+	 */
+	private function readFailureAccess(Throwable $error, string $clientId): string {
+		// OCP's DoesNotExistException, matched by name to keep this
+		// controller's coupling under the phpmd threshold.
+		if (str_ends_with(get_class($error), '\\DoesNotExistException') === true) {
+			return self::ACCESS_MISSING;
+		}
+
+		$this->logger->warning(
+			'Customer360Controller: client read-guard failed',
+			['clientId' => $clientId, 'exception' => $error->getMessage()]
+		);
+		return self::ACCESS_FAILED;
+	}//end readFailureAccess()
 
 	/**
 	 * Log a customer 360 access (doelbinding, MVP) via the app's standard

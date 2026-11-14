@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 
 declare(strict_types=1);
@@ -41,9 +41,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
-use OCA\Pipelinq\Service\CampaignService;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
-use OCA\Pipelinq\Service\TouchpointService;
+use OCA\Pipelinq\Kernel\Contracts\CampaignServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
+use OCA\Pipelinq\Kernel\Contracts\TouchpointServiceInterface;
+use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -54,7 +57,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 class LandingPageFormSubmittedListener implements IEventListener {
 
@@ -89,18 +92,22 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore $store Register-scoped object access.
-	 * @param CampaignService $campaigns Resolves the campaign the form belongs to.
-	 * @param TouchpointService $touchpoints The touchpoint log and its nonce guard.
+	 * @param ListObjectStoreInterface $store Register-scoped object access.
+	 * @param CampaignServiceInterface $campaigns Resolves the campaign the form belongs to.
+	 * @param TouchpointServiceInterface $touchpoints The touchpoint log and its nonce guard.
 	 * @param LoggerInterface $logger Logger.
+	 * @param EventRegistrationServiceInterface|null $eventRegistrations Registers the sign-up for the campaign's event.
+	 * @param EventEmailServiceInterface|null $eventMails Confirms the registration by mail.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function __construct(
-		private ListObjectStore $store,
-		private CampaignService $campaigns,
-		private TouchpointService $touchpoints,
+		private ListObjectStoreInterface $store,
+		private CampaignServiceInterface $campaigns,
+		private TouchpointServiceInterface $touchpoints,
 		private LoggerInterface $logger,
+		private ?EventRegistrationServiceInterface $eventRegistrations = null,
+		private ?EventEmailServiceInterface $eventMails = null,
 	) {
 	}//end __construct()
 
@@ -111,7 +118,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof LandingPageFormSubmittedEvent) === false) {
@@ -139,6 +146,114 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * @return void
 	 */
 	private function ingest(LandingPageFormSubmittedEvent $event): void {
+		if ($this->alreadyRecorded(event: $event) === true) {
+			return;
+		}
+
+		$campaignId = $this->campaignIdFor(event: $event);
+		$submission = new LandingSubmission(
+			event: $event,
+			campaign: new SubmissionCampaign(id: $campaignId, row: ($this->campaigns->find(id: $campaignId) ?? []))
+		);
+		$records = $this->recordsFor(submission: $submission);
+
+		$this->touchpoints->recordSubmission(
+			touchpoint: $this->touchpointFor(submission: $submission, records: $records),
+			landingPage: $this->landingPageOf(event: $event)
+		);
+
+		if ($records->leadId !== '') {
+			$event->setLeadId($records->leadId);
+		}
+
+		$event->setHandled(true);
+
+		$this->registerForEvent(submission: $submission, records: $records);
+	}//end ingest()
+
+	/**
+	 * Register the sign-up for the campaign's event and mail the person what happened.
+	 *
+	 * Runs after the submission is acknowledged, and a failure here is logged
+	 * on its own: the contact, lead and touchpoint stand whatever happens to
+	 * the registration. The event's contract with portaliq is unchanged.
+	 *
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 * @param SubmissionRecords $records    The contact and lead written for it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 */
+	private function registerForEvent(LandingSubmission $submission, SubmissionRecords $records): void {
+		$values = $submission->event->getValues();
+		$email = strtolower(trim((string)($values['email'] ?? '')));
+		if ($this->eventRegistrations === null || $email === '') {
+			return;
+		}
+
+		try {
+			$campaignEvent = $this->eventRegistrations->eventForCampaign(campaignId: $submission->campaign->id);
+			if ($campaignEvent === null) {
+				return;
+			}
+
+			$person = [
+				'name' => trim((string)($values['name'] ?? '')),
+				'email' => $email,
+				'contact' => $records->contactId,
+				'lead' => $records->leadId,
+				'source' => 'web-form',
+			];
+			$outcome = $this->eventRegistrations->register(event: $campaignEvent, person: $person);
+			$this->mailOutcome(campaignEvent: $campaignEvent, person: $person, outcome: $outcome);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: landing page sign-up could not be registered for the event',
+				['form' => $submission->event->getFormId(), 'reason' => $e->getMessage()]
+			);
+		}
+	}//end registerForEvent()
+
+	/**
+	 * Mail the person the outcome of their registration.
+	 *
+	 * @param array<string, mixed>     $campaignEvent The event.
+	 * @param array<string, mixed>     $person        The person who signed up.
+	 * @param EventRegistrationOutcome $outcome       What the registration did.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 */
+	private function mailOutcome(array $campaignEvent, array $person, EventRegistrationOutcome $outcome): void {
+		if ($this->eventMails === null) {
+			return;
+		}
+
+		if ($outcome->status === EventRegistrationOutcome::CLOSED) {
+			$this->eventMails->sendClosed(event: $campaignEvent, person: $person);
+			return;
+		}
+
+		$isNew = in_array($outcome->status, [EventRegistrationOutcome::REGISTERED, EventRegistrationOutcome::WAITLISTED], true);
+		if ($isNew === false || $outcome->registration === null) {
+			return;
+		}
+
+		if ($this->eventMails->sendConfirmation(event: $campaignEvent, registration: $outcome->registration) === true) {
+			$this->eventRegistrations?->stamp(registration: $outcome->registration, field: 'confirmationSentAt');
+		}
+	}//end mailOutcome()
+
+	/**
+	 * Acknowledge a redelivered submission whose nonce already has a touchpoint.
+	 *
+	 * @param LandingPageFormSubmittedEvent $event The submission.
+	 *
+	 * @return bool True when the submission was recorded before and is now acknowledged.
+	 */
+	private function alreadyRecorded(LandingPageFormSubmittedEvent $event): bool {
 		$nonce = trim($event->getNonce());
 		if ($nonce !== '' && $this->touchpoints->existsForNonce(nonce: $nonce) === true) {
 			$this->logger->info(
@@ -146,43 +261,32 @@ class LandingPageFormSubmittedListener implements IEventListener {
 				['form' => $event->getFormId()]
 			);
 			$event->setHandled(true);
-			return;
+			return true;
 		}
 
-		$campaignId = $this->campaignIdFor(event: $event);
-		$campaign = ($this->campaigns->find(id: $campaignId) ?? []);
-		$values = $event->getValues();
+		return false;
+	}//end alreadyRecorded()
+
+	/**
+	 * Match or create the contact and write the lead, both only when an address was given.
+	 *
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 *
+	 * @return SubmissionRecords The contact and lead ids, empty when not written.
+	 */
+	private function recordsFor(LandingSubmission $submission): SubmissionRecords {
+		$values = $submission->event->getValues();
 		$email = strtolower(trim((string)($values['email'] ?? '')));
 
 		$contactId = '';
 		$leadId = '';
 		if ($email !== '') {
 			$contactId = $this->matchOrCreateContact(email: $email, values: $values);
-			$leadId = $this->createLead(
-				event: $event,
-				campaignId: $campaignId,
-				campaign: $campaign,
-				contactId: $contactId,
-				values: $values
-			);
+			$leadId = $this->createLead(submission: $submission, contactId: $contactId);
 		}
 
-		$this->touchpoints->append(
-			touchpoint: $this->touchpointFor(
-				event: $event,
-				campaignId: $campaignId,
-				contactId: $contactId,
-				leadId: $leadId,
-				nonce: $nonce
-			)
-		);
-
-		if ($leadId !== '') {
-			$event->setLeadId($leadId);
-		}
-
-		$event->setHandled(true);
-	}//end ingest()
+		return new SubmissionRecords(contactId: $contactId, leadId: $leadId);
+	}//end recordsFor()
 
 	/**
 	 * The campaign this submission belongs to.
@@ -272,35 +376,19 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * account list that nobody asked for and that the shillinq lookup
 	 * would then try to match against an invoice.
 	 *
-	 * @param LandingPageFormSubmittedEvent $event The submission.
-	 * @param string $campaignId The campaign id.
-	 * @param array<string, mixed> $campaign The campaign row, may be empty.
-	 * @param string $contactId The contact id.
-	 * @param array<string, mixed> $values The submitted values.
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 * @param string            $contactId  The contact id.
 	 *
 	 * @return string The lead id, or an empty string when the write failed.
 	 */
-	private function createLead(
-		LandingPageFormSubmittedEvent $event,
-		string $campaignId,
-		array $campaign,
-		string $contactId,
-		array $values,
-	): string {
-		$title = trim((string)($campaign['name'] ?? ''));
-		if ($title === '') {
-			$title = trim($event->getPageRoute());
-		}
-
-		if ($title === '') {
-			$title = 'Landing page';
-		}
-
+	private function createLead(LandingSubmission $submission, string $contactId): string {
+		$event = $submission->event;
+		$values = $event->getValues();
 		$payload = [
-			'title' => ($title . ': ' . trim((string)($values['name'] ?? $event->getPortal()))),
+			'title' => ($this->leadTitle(submission: $submission) . ': ' . trim((string)($values['name'] ?? $event->getPortal()))),
 			'source' => self::SOURCE,
 			'status' => 'open',
-			'campaignId' => $campaignId,
+			'campaignId' => $submission->campaign->id,
 			'firstTouch' => $this->utmBlock(utm: $event->getUtmFirstTouch()),
 			'lastTouch' => $this->utmBlock(utm: $event->getUtmLastTouch()),
 			'description' => $this->describe(event: $event, values: $values),
@@ -317,6 +405,26 @@ class LandingPageFormSubmittedListener implements IEventListener {
 
 		return $this->store->idOf(payload: $this->store->save(schemaSlug: self::LEAD_SCHEMA_SLUG, payload: $payload));
 	}//end createLead()
+
+	/**
+	 * The lead's title prefix: the campaign name, else the page route, else 'Landing page'.
+	 *
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 *
+	 * @return string
+	 */
+	private function leadTitle(LandingSubmission $submission): string {
+		$title = trim((string)($submission->campaign->row['name'] ?? ''));
+		if ($title === '') {
+			$title = trim($submission->event->getPageRoute());
+		}
+
+		if ($title === '') {
+			$title = 'Landing page';
+		}
+
+		return $title;
+	}//end leadTitle()
 
 	/**
 	 * Find the client with this organisation name, or create one.
@@ -347,35 +455,46 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	/**
 	 * The touchpoint this submission appends.
 	 *
-	 * @param LandingPageFormSubmittedEvent $event The submission.
-	 * @param string $campaignId The campaign id.
-	 * @param string $contactId The contact id.
-	 * @param string $leadId The lead id.
-	 * @param string $nonce The submission's nonce.
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 * @param SubmissionRecords $records    The contact and lead it produced.
 	 *
 	 * @return array<string, mixed> The touchpoint row.
 	 */
-	private function touchpointFor(
-		LandingPageFormSubmittedEvent $event,
-		string $campaignId,
-		string $contactId,
-		string $leadId,
-		string $nonce,
-	): array {
+	private function touchpointFor(LandingSubmission $submission, SubmissionRecords $records): array {
+		$event = $submission->event;
 		$utm = $this->utmBlock(utm: $event->getUtmLastTouch());
 
 		return [
-			'campaignId' => $campaignId,
-			'contactId' => $contactId,
-			'leadId' => $leadId,
+			'campaignId' => $submission->campaign->id,
+			'contactId' => $records->contactId,
+			'leadId' => $records->leadId,
 			'kind' => 'submit',
 			'channel' => $this->touchpoints->channelForMedium(medium: (string)($utm['medium'] ?? '')),
 			'utm' => $utm,
 			'sourceRef' => $event->getPageId(),
 			'occurredAt' => $event->getSubmittedAt(),
-			'nonce' => $nonce,
+			'nonce' => trim($event->getNonce()),
 		];
 	}//end touchpointFor()
+
+	/**
+	 * The page a submission came from: the portal and the page route.
+	 *
+	 * @param LandingPageFormSubmittedEvent $event The submission.
+	 *
+	 * @return string `<portal>/<route>`, or whichever of the two is known.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md
+	 */
+	private function landingPageOf(LandingPageFormSubmittedEvent $event): string {
+		$portal = trim($event->getPortal(), " \t/");
+		$route = trim($event->getPageRoute(), " \t/");
+		if ($portal === '' || $route === '') {
+			return ($portal . $route);
+		}
+
+		return ($portal . '/' . $route);
+	}//end landingPageOf()
 
 	/**
 	 * Normalise a UTM block to the five keys the schemas declare.

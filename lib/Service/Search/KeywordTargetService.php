@@ -31,13 +31,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Search;
 
+use OCA\Pipelinq\Kernel\Contracts\KeywordTargetServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 use UnexpectedValueException;
@@ -45,9 +46,9 @@ use UnexpectedValueException;
 /**
  * Reads keyword targets, and creates one when a person confirms a proposal.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
-class KeywordTargetService {
+class KeywordTargetService implements KeywordTargetServiceInterface {
 
 	/**
 	 * The schema slug the register fragment declares.
@@ -90,7 +91,7 @@ class KeywordTargetService {
 	 * @param ListObjectStore $store Register-scoped object access.
 	 * @param ITimeFactory $time Time factory for the confirmation stamp.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -103,7 +104,7 @@ class KeywordTargetService {
 	 *
 	 * @return array<int, array<string, mixed>> The targets.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function all(): array {
 		return $this->store->findAll(schemaSlug: $this->schemaSlug());
@@ -115,7 +116,7 @@ class KeywordTargetService {
 	 *
 	 * @return array<int, string> The lowercase terms.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function confirmedTerms(): array {
 		$terms = [];
@@ -139,7 +140,7 @@ class KeywordTargetService {
 	 *
 	 * @throws UnexpectedValueException When the term is empty or a vocabulary value is unknown.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function confirm(array $payload, string $uid): ?array {
 		$term = trim((string)($payload['term'] ?? ''));
@@ -150,15 +151,26 @@ class KeywordTargetService {
 		$record = [
 			'term' => $term,
 			'status' => $this->oneOf(value: (string)($payload['status'] ?? 'watch'), allowed: self::STATUSES, field: 'status'),
-			'proposalKind' => $this->oneOf(
-				value: (string)($payload['proposalKind'] ?? 'manual'),
-				allowed: self::PROPOSAL_KINDS,
-				field: 'proposalKind'
-			),
+			'proposalKind' => $this->oneOf(value: (string)($payload['proposalKind'] ?? 'manual'), allowed: self::PROPOSAL_KINDS, field: 'proposalKind'),
 			'createdBy' => $uid,
 			'createdAt' => gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime()),
 		];
 
+		return $this->store->save(schemaSlug: $this->schemaSlug(), payload: $this->withOptional(record: $record, payload: $payload));
+	}//end confirm()
+
+	/**
+	 * The record with the confirmation's intent (when given, and known) and
+	 * its page, property and notes (each when not blank, trimmed).
+	 *
+	 * @param array<string, mixed> $record  The record so far.
+	 * @param array<string, mixed> $payload The confirmation.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws UnexpectedValueException When the intent is unknown.
+	 */
+	private function withOptional(array $record, array $payload): array {
 		$intent = trim((string)($payload['intent'] ?? ''));
 		if ($intent !== '') {
 			$record['intent'] = $this->oneOf(value: $intent, allowed: self::INTENTS, field: 'intent');
@@ -171,15 +183,15 @@ class KeywordTargetService {
 			}
 		}
 
-		return $this->store->save(schemaSlug: $this->schemaSlug(), payload: $record);
-	}//end confirm()
+		return $record;
+	}//end withOptional()
 
 	/**
 	 * The schema slug in use.
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function schemaSlug(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA_SLUG);

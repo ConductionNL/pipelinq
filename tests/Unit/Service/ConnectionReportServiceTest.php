@@ -385,4 +385,33 @@ class ConnectionReportServiceTest extends TestCase {
 			$this->assertContains(needle: 'social-' . $network, haystack: ConnectionReportService::KEYS);
 		}
 	}//end testEverySocialNetworkHasADeclaredKey()
+
+	/**
+	 * Golden: a ready network keeps its own reason, or gets the filed-application message; a preview always says preview.
+	 *
+	 * @return void
+	 */
+	public function testSocialReadinessMessagesAreExact(): void {
+		$this->service()->reportSocialReadiness(
+			readiness: [
+				'mastodon' => ['state' => SocialBrokerGateway::READY, 'reason' => '  Filed by Marieke.  '],
+				'bluesky' => ['state' => SocialBrokerGateway::READY],
+				'threads' => ['state' => SocialBrokerGateway::PREVIEW],
+			]
+		);
+
+		$messages = [];
+		foreach ($this->sent as $event) {
+			$messages[$event->key] = [$event->status, $event->message];
+		}
+
+		$this->assertSame(
+			expected: [
+				'social-mastodon' => ['configured', 'Filed by Marieke.'],
+				'social-bluesky' => ['configured', 'A developer application is filed for this network in the credential broker.'],
+				'social-threads' => ['limited', ConnectionReportService::PREVIEW_MESSAGE],
+			],
+			actual: $messages
+		);
+	}//end testSocialReadinessMessagesAreExact()
 }//end class

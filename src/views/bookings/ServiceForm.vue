@@ -15,7 +15,7 @@
   sums to multi-step total"); enforced client-side here AND server-side by
   AvailabilityService when the booking is created.
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
 	<div class="service-form" data-testid="service-form">
@@ -294,7 +294,7 @@ export default {
 		/**
 		 * A blank service, priced in the reporting currency.
 		 *
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		emptyForm() {
 			return {
@@ -383,7 +383,7 @@ export default {
 		/**
 		 * Validate and emit the service, steps included.
 		 *
-		 * @spec openspec/changes/round3-review-points/specs/appointment-booking/spec.md
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		onSave() {
 			if (!this.validateAll()) {
@@ -409,16 +409,6 @@ export default {
 	padding: 0 4px;
 }
 
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
-}
-
 .form-group textarea {
 	width: 100%;
 	padding: 8px;
@@ -427,30 +417,11 @@ export default {
 	resize: vertical;
 }
 
-.form-row {
-	display: flex;
-	gap: 16px;
-	flex-wrap: wrap;
-}
-
-.form-row .form-group {
-	flex: 1 1 200px;
-}
-
-.toggle-group {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.toggle-group label {
-	margin: 0;
-	font-weight: normal;
-}
-
 .service-form__actions {
 	display: flex;
 	gap: 12px;
 	margin-top: 24px;
 }
 </style>
+
+<style scoped src="./bookingForm.css"></style>

@@ -19,8 +19,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007
  */
 
 declare(strict_types=1);
@@ -29,20 +29,24 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Gift card lifecycle.
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive gift-card lifecycle; splitting would fragment a single domain.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
  */
-class GiftCardService {
+class GiftCardService implements GiftCardServiceInterface {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -68,7 +72,7 @@ class GiftCardService {
 	 *
 	 * @return array{card: array<string, mixed>, pin: string} Card + plaintext PIN (returned ONCE).
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006-01
 	 */
 	public function issueGiftCard(
 		?string $programmeId,
@@ -125,7 +129,7 @@ class GiftCardService {
 	 *
 	 * @return ?array<string, mixed>
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006-03
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006-03
 	 */
 	public function activateGiftCard(string $giftCardId, ?string $posTransactionId = null): ?array {
 		$card = $this->getCard(giftCardId: $giftCardId);
@@ -145,13 +149,8 @@ class GiftCardService {
 		// Already-active stays idempotent: re-scanning an activated card is a
 		// normal thing to do and answering the card is the right reply. Every
 		// other status is a refusal the caller has to see.
-		$status = (string)($card['status'] ?? '');
-		if ($status === 'active') {
+		if ($this->needsActivation(card: $card) === false) {
 			return $card;
-		}
-
-		if ($status !== 'issued') {
-			throw new RuntimeException('Gift card cannot be activated from status "' . $status . '".');
 		}
 
 		$card['status'] = 'active';
@@ -159,13 +158,47 @@ class GiftCardService {
 
 		// No new ledger entry required for activation per REQ-LOY-006-03; the
 		// initial 'issue' entry already records balansNa.
+		$this->logActivation(giftCardId: $giftCardId, posTransactionId: $posTransactionId);
+
+		return $saved;
+	}//end activateGiftCard()
+
+	/**
+	 * Log a card activation.
+	 *
+	 * @param string      $giftCardId       The card UUID.
+	 * @param string|null $posTransactionId The POS transaction id.
+	 *
+	 * @return void
+	 */
+	private function logActivation(string $giftCardId, ?string $posTransactionId): void {
 		$this->logger->info(
 			'Pipelinq: gift card activated',
 			['giftCardId' => $giftCardId, 'posTransactionId' => $posTransactionId]
 		);
+	}//end logActivation()
 
-		return $saved;
-	}//end activateGiftCard()
+	/**
+	 * Whether a card still has to be activated.
+	 *
+	 * @param array<string, mixed> $card The card.
+	 *
+	 * @return bool True for an issued card, false for one already active.
+	 *
+	 * @throws RuntimeException For any other status: activating it is refused.
+	 */
+	private function needsActivation(array $card): bool {
+		$status = (string)($card['status'] ?? '');
+		if ($status === 'active') {
+			return false;
+		}
+
+		if ($status !== 'issued') {
+			throw new RuntimeException('Gift card cannot be activated from status "' . $status . '".');
+		}
+
+		return true;
+	}//end needsActivation()
 
 	/**
 	 * Redeem (debit) an amount from a gift card. Supports partial redemption.
@@ -179,11 +212,8 @@ class GiftCardService {
 	 *
 	 * @throws RuntimeException On invalid PIN, expired, blocked, or non-active card.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation guards; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation guards; extraction adds no clarity.
-	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007-01
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007-02
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007-02
 	 */
 	public function redeemGiftCard(
 		string $giftCardId,
@@ -191,33 +221,32 @@ class GiftCardService {
 		float $amount,
 		?string $posTransactionId = null,
 	): array {
-		if ($amount <= 0) {
+		return $this->redeem(
+			redemption: new GiftCardRedemption(giftCardId: $giftCardId, pin: $pin, amount: $amount, posTransactionId: $posTransactionId)
+		);
+	}//end redeemGiftCard()
+
+	/**
+	 * Redeem (debit) an amount from a gift card, described as one redemption.
+	 *
+	 * The refusals run in a fixed order: amount, card, status, expiry, PIN.
+	 * Only then is the POS transaction checked for a recorded redemption.
+	 *
+	 * @param GiftCardRedemption $redemption The card, PIN, amount and POS transaction.
+	 *
+	 * @return array{amountApplied: float, balanceAfter: float, changeAmount: float, status: string}
+	 *
+	 * @throws RuntimeException On invalid PIN, expired, blocked, or non-active card.
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-007-02
+	 */
+	public function redeem(GiftCardRedemption $redemption): array {
+		if ($redemption->amount <= 0) {
 			throw new RuntimeException('Redemption amount must be positive.');
 		}
 
-		$card = $this->getCard(giftCardId: $giftCardId);
-		if ($card === null) {
-			throw new RuntimeException('Gift card not found.');
-		}
-
-		$status = (string)($card['status'] ?? '');
-		if ($status === 'blocked') {
-			throw new RuntimeException('Gift card is blocked.');
-		}
-
-		if (in_array($status, ['active'], true) === false) {
-			throw new RuntimeException('Gift card is not active.');
-		}
-
-		$expiresOn = (string)($card['expiresOn'] ?? '');
-		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-		if ($expiresOn !== '' && $expiresOn < $now) {
-			throw new RuntimeException('Gift card has expired.');
-		}
-
-		if ($this->verifyPin(plaintext: $pin, hash: (string)($card['pin'] ?? '')) === false) {
-			throw new RuntimeException('Invalid PIN.');
-		}
+		$card = $this->loadRedeemableCard(redemption: $redemption);
 
 		// 🔴 A POS RETRY MUST NOT DEBIT THE CARD TWICE.
 		//
@@ -231,48 +260,123 @@ class GiftCardService {
 		// key: a redemption already recorded against this card and this POS
 		// transaction replays its result instead of applying a second debit.
 		$replay = $this->findRedemptionByPosTransaction(
-			giftCardId: $giftCardId,
-			posTransactionId: $posTransactionId
+			giftCardId: $redemption->giftCardId,
+			posTransactionId: $redemption->posTransactionId
 		);
 		if ($replay !== null) {
 			return $replay;
 		}
 
-		$balance = (float)($card['currentBalance'] ?? 0);
-		$applied = min($amount, $balance);
-		$change = max(0.0, $amount - $applied);
-		$after = round($balance - $applied, 2);
+		return $this->applyDebit(card: $card, redemption: $redemption);
+	}//end redeem()
 
-		$card['currentBalance'] = $after;
-		$type = 'partial_redeem';
-		if ($after <= 0.0) {
-			$after = 0.0;
-			$card['currentBalance'] = 0.0;
-			$card['status'] = 'depleted';
-			// When the requested amount equals the balance and consumes everything → type "redeem".
-			if (abs($applied - $balance) < 0.005 && $change === 0.0) {
-				$type = 'redeem';
-			}
+	/**
+	 * Load the card of a redemption and refuse it unless it may be debited.
+	 *
+	 * @param GiftCardRedemption $redemption The redemption.
+	 *
+	 * @return array<string, mixed> The card.
+	 *
+	 * @throws RuntimeException When the card is missing, unusable or the PIN is wrong.
+	 */
+	private function loadRedeemableCard(GiftCardRedemption $redemption): array {
+		$card = $this->getCard(giftCardId: $redemption->giftCardId);
+		if ($card === null) {
+			throw new RuntimeException('Gift card not found.');
 		}
 
-		$this->persistCard(payload: $card, uuid: $giftCardId);
+		$this->assertRedeemableStatus(card: $card);
 
-		$this->logTransaction(
-			giftCardId: $giftCardId,
-			type: $type,
-			amount: $applied,
-			balanceAfter: $after,
-			posTransactionId: $posTransactionId,
-			processedBy: 'gift-card-service'
-		);
+		if ($this->verifyPin(plaintext: $redemption->pin, hash: (string)($card['pin'] ?? '')) === false) {
+			throw new RuntimeException('Invalid PIN.');
+		}
+
+		return $card;
+	}//end loadRedeemableCard()
+
+	/**
+	 * Refuse a blocked, inactive or expired card.
+	 *
+	 * @param array<string, mixed> $card The card.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the card may not be debited.
+	 */
+	private function assertRedeemableStatus(array $card): void {
+		$status = (string)($card['status'] ?? '');
+		if ($status === 'blocked') {
+			throw new RuntimeException('Gift card is blocked.');
+		}
+
+		if (in_array($status, ['active'], true) === false) {
+			throw new RuntimeException('Gift card is not active.');
+		}
+
+		if ($this->isExpired(card: $card) === true) {
+			throw new RuntimeException('Gift card has expired.');
+		}
+	}//end assertRedeemableStatus()
+
+	/**
+	 * Whether a card's expiry moment lies in the past.
+	 *
+	 * @param array<string, mixed> $card The card.
+	 *
+	 * @return bool True when the card carries an expiry before now.
+	 */
+	private function isExpired(array $card): bool {
+		$expiresOn = (string)($card['expiresOn'] ?? '');
+		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+
+		return $expiresOn !== '' && $expiresOn < $now;
+	}//end isExpired()
+
+	/**
+	 * Debit the card, record the ledger entry and answer the redemption result.
+	 *
+	 * @param array<string, mixed> $card       The card to debit.
+	 * @param GiftCardRedemption   $redemption The redemption.
+	 *
+	 * @return array{amountApplied: float, balanceAfter: float, changeAmount: float, status: string}
+	 */
+	private function applyDebit(array $card, GiftCardRedemption $redemption): array {
+		$debit = GiftCardDebit::fromBalance(balance: (float)($card['currentBalance'] ?? 0), amount: $redemption->amount);
+
+		$card['currentBalance'] = $debit->balanceAfter;
+		if ($debit->depleted === true) {
+			$card['status'] = 'depleted';
+		}
+
+		$this->persistCard(payload: $card, uuid: $redemption->giftCardId);
+		$this->recordDebit(redemption: $redemption, debit: $debit);
 
 		return [
-			'amountApplied' => $applied,
-			'balanceAfter' => $after,
-			'changeAmount' => $change,
+			'amountApplied' => $debit->applied,
+			'balanceAfter' => $debit->balanceAfter,
+			'changeAmount' => $debit->change,
 			'status' => (string)($card['status'] ?? 'active'),
 		];
-	}//end redeemGiftCard()
+	}//end applyDebit()
+
+	/**
+	 * Write the ledger entry of a debit.
+	 *
+	 * @param GiftCardRedemption $redemption The redemption.
+	 * @param GiftCardDebit      $debit      The debit applied.
+	 *
+	 * @return void
+	 */
+	private function recordDebit(GiftCardRedemption $redemption, GiftCardDebit $debit): void {
+		$this->logTransaction(
+			giftCardId: $redemption->giftCardId,
+			type: $debit->type,
+			amount: $debit->applied,
+			balanceAfter: $debit->balanceAfter,
+			posTransactionId: $redemption->posTransactionId,
+			processedBy: 'gift-card-service'
+		);
+	}//end recordDebit()
 
 	/**
 	 * A redemption already recorded for this card and POS transaction.
@@ -293,32 +397,30 @@ class GiftCardService {
 	 * @return array<string, mixed>|null The previous result, or null to proceed.
 	 */
 	private function findRedemptionByPosTransaction(string $giftCardId, ?string $posTransactionId): ?array {
-		if ($posTransactionId === null || $posTransactionId === '') {
+		if ((string)$posTransactionId === '') {
 			return null;
 		}
 
-		[$register, $schema] = $this->config(schemaKey: 'giftCardTransaction_schema');
-		if ($register === '' || $schema === '') {
+		$filters = $this->scopedFilters(
+			schemaKey: 'giftCardTransaction_schema',
+			filters: ['giftCardId' => $giftCardId, 'posTransactionId' => $posTransactionId]
+		);
+		if ($filters === null) {
 			return null;
 		}
 
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'giftCardId' => $giftCardId,
-						'posTransactionId' => $posTransactionId,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1,
-				]
-			);
-		} catch (\Throwable $e) {
-			return null;
-		}
+		return $this->firstReplay(rows: $this->findFirstRows(filters: $filters));
+	}//end findRedemptionByPosTransaction()
 
-		foreach ((array)$rows as $row) {
+	/**
+	 * The replay of the first stored row that is a redemption.
+	 *
+	 * @param array<int|string, mixed> $rows Stored giftCardTransaction rows.
+	 *
+	 * @return array<string, mixed>|null The result to replay, or null when none is a redemption.
+	 */
+	private function firstReplay(array $rows): ?array {
+		foreach ($rows as $row) {
 			$replay = $this->replayFromTransactionRow(row: $row);
 			if ($replay !== null) {
 				return $replay;
@@ -326,7 +428,7 @@ class GiftCardService {
 		}
 
 		return null;
-	}//end findRedemptionByPosTransaction()
+	}//end firstReplay()
 
 	/**
 	 * Rebuild a redemption result from a stored transaction row.
@@ -341,6 +443,45 @@ class GiftCardService {
 	 *                                   row is not a redemption.
 	 */
 	private function replayFromTransactionRow(mixed $row): ?array {
+		$array = $this->transactionRowToArray(row: $row);
+		if ($array === null || in_array((string)($array['type'] ?? ''), ['redeem', 'partial_redeem'], true) === false) {
+			return null;
+		}
+
+		$balanceAfter = (float)($array['balanceAfter'] ?? 0);
+
+		return [
+			'amountApplied' => (float)($array['amount'] ?? 0),
+			'balanceAfter' => $balanceAfter,
+			'changeAmount' => 0.0,
+			'status' => $this->balanceStatus(balanceAfter: $balanceAfter),
+		];
+	}//end replayFromTransactionRow()
+
+	/**
+	 * The card status a remaining balance implies.
+	 *
+	 * @param float $balanceAfter The balance left on the card.
+	 *
+	 * @return string 'depleted' when nothing is left, otherwise 'active'.
+	 */
+	private function balanceStatus(float $balanceAfter): string {
+		if ($balanceAfter <= 0.0) {
+			return 'depleted';
+		}
+
+		return 'active';
+	}//end balanceStatus()
+
+	/**
+	 * A stored transaction row as an array, or null when it is neither an
+	 * array nor a serialisable entity.
+	 *
+	 * @param mixed $row A stored giftCardTransaction row.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function transactionRowToArray(mixed $row): ?array {
 		$array = $row;
 		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
 			$array = $row->jsonSerialize();
@@ -350,24 +491,8 @@ class GiftCardService {
 			return null;
 		}
 
-		$type = (string)($array['type'] ?? '');
-		if ($type !== 'redeem' && $type !== 'partial_redeem') {
-			return null;
-		}
-
-		$balanceAfter = (float)($array['balanceAfter'] ?? 0);
-		$status = 'active';
-		if ($balanceAfter <= 0.0) {
-			$status = 'depleted';
-		}
-
-		return [
-			'amountApplied' => (float)($array['amount'] ?? 0),
-			'balanceAfter' => $balanceAfter,
-			'changeAmount' => 0.0,
-			'status' => $status,
-		];
-	}//end replayFromTransactionRow()
+		return $array;
+	}//end transactionRowToArray()
 
 	/**
 	 * Refund an amount onto a card.
@@ -377,7 +502,7 @@ class GiftCardService {
 	 * @param ?string $posTransactionId Optional POS transaction id.
 	 *
 	 * @return array<string, mixed> The updated card.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
 	 */
 	public function refundGiftCard(
 		string $giftCardId,
@@ -393,6 +518,19 @@ class GiftCardService {
 			throw new RuntimeException('Gift card not found.');
 		}
 
+		$card = $this->refundedCard(card: $card, amount: $amount);
+		return $this->saveRefund(card: $card, giftCardId: $giftCardId, amount: $amount, posTransactionId: $posTransactionId);
+	}//end refundGiftCard()
+
+	/**
+	 * The card with the refund added to its balance; a depleted card becomes active again.
+	 *
+	 * @param array<string, mixed> $card   The card.
+	 * @param float                $amount Amount to refund (positive).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function refundedCard(array $card, float $amount): array {
 		$balance = (float)($card['currentBalance'] ?? 0);
 		$after = round($balance + $amount, 2);
 		$card['currentBalance'] = $after;
@@ -401,19 +539,33 @@ class GiftCardService {
 			$card['status'] = 'active';
 		}
 
+		return $card;
+	}//end refundedCard()
+
+	/**
+	 * Save the refunded card and log the refund transaction.
+	 *
+	 * @param array<string, mixed> $card             The refunded card.
+	 * @param string               $giftCardId       The card UUID.
+	 * @param float                $amount           Amount refunded.
+	 * @param string|null          $posTransactionId Optional POS transaction id.
+	 *
+	 * @return array<string, mixed> The updated card.
+	 */
+	private function saveRefund(array $card, string $giftCardId, float $amount, string|null $posTransactionId): array {
 		$saved = $this->persistCard(payload: $card, uuid: $giftCardId);
 
 		$this->logTransaction(
 			giftCardId: $giftCardId,
 			type: 'refund',
 			amount: $amount,
-			balanceAfter: $after,
+			balanceAfter: $card['currentBalance'],
 			posTransactionId: $posTransactionId,
 			processedBy: 'gift-card-service'
 		);
 
 		return $saved;
-	}//end refundGiftCard()
+	}//end saveRefund()
 
 	/**
 	 * Block a card (e.g. fraud / dispute).
@@ -422,7 +574,7 @@ class GiftCardService {
 	 * @param string $reason Free-text reason.
 	 *
 	 * @return ?array<string, mixed>
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
 	 */
 	public function blockGiftCard(string $giftCardId, string $reason): ?array {
 		$card = $this->getCard(giftCardId: $giftCardId);
@@ -461,7 +613,7 @@ class GiftCardService {
 	 * @return array{balance: float, status: string, expiryDate: ?string}
 	 *
 	 * @throws RuntimeException On invalid PIN.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006
 	 */
 	public function getCardDetails(string $giftCardId, string $pin): array {
 		$card = $this->getCard(giftCardId: $giftCardId);
@@ -493,49 +645,92 @@ class GiftCardService {
 	public function validateBySerial(string $serial, string $pin): array {
 		$card = $this->findBySerial(serial: $serial);
 		if ($card === null) {
-			return ['valid' => false, 'balance' => 0.0, 'expiryDate' => null, 'giftCardId' => null, 'reason' => 'Not found'];
+			return $this->refusedValidation(reason: 'Not found');
 		}
 
-		$status = (string)($card['status'] ?? '');
-		if (in_array($status, ['blocked'], true) === true) {
-			return [
-				'valid' => false,
-				'balance' => (float)($card['currentBalance'] ?? 0),
-				'expiryDate' => ($card['expiresOn'] ?? null),
-				'giftCardId' => $this->extractUuid(object: $card),
-				'reason' => 'Blocked',
-			];
-		}
-
-		$expiresOn = (string)($card['expiresOn'] ?? '');
-		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-		if ($expiresOn !== '' && $expiresOn < $now) {
-			return [
-				'valid' => false,
-				'balance' => (float)($card['currentBalance'] ?? 0),
-				'expiryDate' => $expiresOn,
-				'giftCardId' => $this->extractUuid(object: $card),
-				'reason' => 'Expired',
-			];
+		$reason = $this->validationRefusal(card: $card);
+		if ($reason !== null) {
+			return $this->cardValidation(card: $card, reason: $reason);
 		}
 
 		if ($this->verifyPin(plaintext: $pin, hash: (string)($card['pin'] ?? '')) === false) {
-			return ['valid' => false, 'balance' => 0.0, 'expiryDate' => null, 'giftCardId' => null, 'reason' => 'Invalid PIN'];
+			return $this->refusedValidation(reason: 'Invalid PIN');
 		}
 
-		$expiryDate = null;
-		if ($expiresOn !== '') {
-			$expiryDate = $expiresOn;
+		return $this->cardValidation(card: $card, reason: null);
+	}//end validateBySerial()
+
+	/**
+	 * Why a found card fails validation before its PIN is checked.
+	 *
+	 * @param array<string, mixed> $card The card.
+	 *
+	 * @return string|null 'Blocked', 'Expired', or null when the card may be validated.
+	 */
+	private function validationRefusal(array $card): ?string {
+		if (in_array((string)($card['status'] ?? ''), ['blocked'], true) === true) {
+			return 'Blocked';
+		}
+
+		if ($this->isExpired(card: $card) === true) {
+			return 'Expired';
+		}
+
+		return null;
+	}//end validationRefusal()
+
+	/**
+	 * A validation answer that discloses nothing about the card.
+	 *
+	 * @param string $reason The refusal reason.
+	 *
+	 * @return array{valid: bool, balance: float, expiryDate: ?string, giftCardId: ?string, reason: ?string}
+	 */
+	private function refusedValidation(string $reason): array {
+		return ['valid' => false, 'balance' => 0.0, 'expiryDate' => null, 'giftCardId' => null, 'reason' => $reason];
+	}//end refusedValidation()
+
+	/**
+	 * A validation answer carrying the card's balance, expiry and id.
+	 *
+	 * A blocked card answers its stored expiry as is; any other card answers
+	 * it as a string, or null when it has none.
+	 *
+	 * @param array<string, mixed> $card   The card.
+	 * @param string|null          $reason The refusal reason, or null when valid.
+	 *
+	 * @return array{valid: bool, balance: float, expiryDate: ?string, giftCardId: ?string, reason: ?string}
+	 */
+	private function cardValidation(array $card, ?string $reason): array {
+		$expiryDate = $this->storedExpiry(card: $card);
+		if ($reason === 'Blocked') {
+			$expiryDate = ($card['expiresOn'] ?? null);
 		}
 
 		return [
-			'valid' => true,
+			'valid' => $reason === null,
 			'balance' => (float)($card['currentBalance'] ?? 0),
 			'expiryDate' => $expiryDate,
 			'giftCardId' => $this->extractUuid(object: $card),
-			'reason' => null,
+			'reason' => $reason,
 		];
-	}//end validateBySerial()
+	}//end cardValidation()
+
+	/**
+	 * The card's expiry as a string, or null when it has none.
+	 *
+	 * @param array<string, mixed> $card The card.
+	 *
+	 * @return string|null
+	 */
+	private function storedExpiry(array $card): ?string {
+		$expiresOn = (string)($card['expiresOn'] ?? '');
+		if ($expiresOn === '') {
+			return null;
+		}
+
+		return $expiresOn;
+	}//end storedExpiry()
 
 	/**
 	 * Get a card by UUID.
@@ -562,7 +757,7 @@ class GiftCardService {
 			return null;
 		}
 
-		return $this->toArray(object: $object);
+		return $this->toArray(value: $object);
 	}//end getCard()
 
 	/**
@@ -575,37 +770,53 @@ class GiftCardService {
 	 * @spec exclude mechanical phpmd cleanup — no behaviour change
 	 */
 	public function findBySerial(string $serial): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'giftCard_schema');
-		if ($register === '' || $schema === '' || $serial === '') {
+		$filters = $this->scopedFilters(schemaKey: 'giftCard_schema', filters: ['serial' => $serial]);
+		if ($filters === null || $serial === '') {
 			return null;
 		}
 
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'serial' => $serial,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1,
-				]
-			);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if (is_array($rows) === false) {
-			$rows = [];
-		}
-
-		$rows = array_values($rows);
+		$rows = $this->findFirstRows(filters: $filters);
 		if ($rows === []) {
 			return null;
 		}
 
-		return $this->toArray(object: reset($rows));
+		return $this->toArray(value: reset($rows));
 	}//end findBySerial()
+
+	/**
+	 * Filters scoped to the configured register and a schema.
+	 *
+	 * @param string               $schemaKey The schema config key.
+	 * @param array<string, mixed> $filters   The record filters.
+	 *
+	 * @return array<string, mixed>|null The filters plus register and schema, or
+	 *                                   null when either is unconfigured.
+	 */
+	private function scopedFilters(string $schemaKey, array $filters): ?array {
+		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		return array_merge($filters, ['register' => $register, 'schema' => $schema]);
+	}//end scopedFilters()
+
+	/**
+	 * The first matching row, as a list; empty when none matches or the read fails.
+	 *
+	 * @param array<string, mixed> $filters The scoped filters.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function findFirstRows(array $filters): array {
+		try {
+			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters, 'limit' => 1]);
+		} catch (\Throwable $e) {
+			return [];
+		}
+
+		return array_values($rows);
+	}//end findFirstRows()
 
 	/**
 	 * List gift cards owned by a klantId (used by GDPR export).
@@ -759,7 +970,7 @@ class GiftCardService {
 			uuid: $uuid
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persistCard()
 
 	/**
@@ -778,8 +989,8 @@ class GiftCardService {
 	 *                                     when unconfigured.
 	 */
 	private function config(string $schemaKey): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/schema not configured; OpenRegister calls are refused, not run unscoped',
@@ -805,35 +1016,6 @@ class GiftCardService {
 
 		return $object['giftCardId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Normalise OR entity/array to array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$decoded = $object->getObject();
-			if (is_array($decoded) === true) {
-				return $decoded;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the ObjectService.

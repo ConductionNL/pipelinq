@@ -1,0 +1,52 @@
+{
+  "components": {
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "pipeline",
+          "slug": "pipelinq-default-sales-pipeline"
+        },
+        "title": "Sales",
+        "description": "The pipeline a converted website enquiry lands in. Marked as the default so the enquiry conversion flow can find it without anyone pasting a uuid into a flow definition.",
+        "isDefault": true,
+        "stages": [
+          {
+            "name": "Nieuw",
+            "order": 1,
+            "isDefault": true,
+            "probability": 10
+          },
+          {
+            "name": "Gekwalificeerd",
+            "order": 2,
+            "probability": 30
+          },
+          {
+            "name": "Voorstel",
+            "order": 3,
+            "probability": 60
+          },
+          {
+            "name": "Onderhandeling",
+            "order": 4,
+            "probability": 80
+          },
+          {
+            "name": "Gewonnen",
+            "order": 5,
+            "probability": 100,
+            "isWon": true,
+            "isClosed": true
+          },
+          {
+            "name": "Verloren",
+            "order": 6,
+            "probability": 0,
+            "isClosed": true
+          }
+        ]
+      }
+    ]
+  }
+}

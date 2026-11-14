@@ -30,7 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -41,7 +42,7 @@ use Throwable;
  *
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
-class DeliverabilityCheckService {
+class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface {
 	/**
 	 * Default register slug used when no `register` app config value is set.
 	 */
@@ -115,8 +116,20 @@ class DeliverabilityCheckService {
 			return null;
 		}
 
+		return $this->transportAsArray(found: $this->findTransport(objectService: $objectService, id: $id));
+	}//end loadOne()
+
+	/**
+	 * Find the mail transport; null (logged) when the lookup throws.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $id The transport id.
+	 *
+	 * @return mixed The found object, or null.
+	 */
+	private function findTransport(object $objectService, string $id) {
 		try {
-			$found = $objectService->find(
+			return $objectService->find(
 				id: $id,
 				register: $this->getRegisterSlug(),
 				schema: $this->getMailTransportSchemaSlug(),
@@ -125,7 +138,16 @@ class DeliverabilityCheckService {
 			$this->logger->info('DeliverabilityCheckService.loadOne: not found', ['id' => $id, 'exception' => $e->getMessage()]);
 			return null;
 		}
+	}//end findTransport()
 
+	/**
+	 * The found transport as an array, or null when it is missing or not serialisable.
+	 *
+	 * @param mixed $found The found object.
+	 *
+	 * @return array<string, mixed>|null The transport.
+	 */
+	private function transportAsArray($found): array|null {
 		if ($found === null) {
 			return null;
 		}
@@ -139,7 +161,7 @@ class DeliverabilityCheckService {
 		}
 
 		return null;
-	}//end loadOne()
+	}//end transportAsArray()
 
 	/**
 	 * Return the cached verdict for a transport's `senderDomain`, refreshing
@@ -323,7 +345,7 @@ class DeliverabilityCheckService {
 	 * @return string
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -337,7 +359,7 @@ class DeliverabilityCheckService {
 	 * @return string
 	 */
 	private function getMailTransportSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailTransport_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'mailTransport_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}

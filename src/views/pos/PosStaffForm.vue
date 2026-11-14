@@ -4,7 +4,7 @@
   -
   - POS staff admin form (create / edit).
   -
-  - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+  - @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.4
   -->
 <template>
 	<div class="pos-staff-form">
@@ -88,8 +88,6 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -98,6 +96,8 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
+import { fetchPosRoles } from '../../services/posRolesApi.js'
+import posRecordFormMixin from './posRecordFormMixin.js'
 
 export default {
 	name: 'PosStaffForm',
@@ -110,9 +110,7 @@ export default {
 		NcTextField,
 	},
 
-	props: {
-		id: { type: String, default: '' },
-	},
+	mixins: [posRecordFormMixin],
 
 	emits: ['done'],
 
@@ -127,18 +125,11 @@ export default {
 			},
 
 			roles: [],
-			loading: false,
-			saving: false,
-			errorMessage: '',
-			showDeleteConfirm: false,
+			recordPath: 'staff',
 		}
 	},
 
 	computed: {
-		isNew() {
-			return !this.id
-		},
-
 		roleOptions() {
 			return this.roles.map((r) => ({ value: r.id, label: r.name || r.id }))
 		},
@@ -173,79 +164,45 @@ export default {
 		 * @spec exclude POS roles have no owning requirement, see PinLoginModal::loadStaff
 		 */
 		async loadRoles() {
-			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/roles')
-				const response = await axios.get(url)
-				this.roles = response?.data?.roles || []
-			} catch {
-				this.roles = []
-			}
+			this.roles = await fetchPosRoles()
 		},
 
 		async load() {
-			this.loading = true
-			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/staff/{id}', {
-					id: this.id,
-				})
-				const response = await axios.get(url)
-				const staff = response?.data?.staff || {}
-				this.form.displayName = staff.displayName || ''
-				this.form.userId = staff.userId || ''
-				this.form.posRole = staff.posRole || ''
-				this.form.isActive = staff.isActive !== false
-				this.form.pin = ''
-			} catch (error) {
-				this.errorMessage =
-					error?.response?.data?.error
-					|| t('pipelinq', 'Failed to load staff')
-			} finally {
-				this.loading = false
-			}
+			await this.loadRecord({
+				read: (data) => this.readStaff(data.staff || {}),
+				failure: t('pipelinq', 'Failed to load staff'),
+			})
 		},
 
 		/**
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+		 * @param {object} staff The stored staff member; the PIN is never read back.
+		 * @return {void}
+		 */
+		readStaff(staff) {
+			this.form.displayName = staff.displayName || ''
+			this.form.userId = staff.userId || ''
+			this.form.posRole = staff.posRole || ''
+			this.form.isActive = staff.isActive !== false
+			this.form.pin = ''
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.4
 		 */
 		async save() {
-			this.saving = true
-			this.errorMessage = ''
-			try {
-				const url = this.isNew
-					? generateUrl('/apps/pipelinq/api/pos/staff')
-					: generateUrl('/apps/pipelinq/api/pos/staff/{id}', {
-							id: this.id,
-						})
-				const method = this.isNew ? 'post' : 'put'
-				const payload = {
-					displayName: this.form.displayName,
-					userId: this.form.userId,
-					posRole: this.form.posRole,
-					isActive: this.form.isActive,
-				}
-				if (this.form.pin) {
-					payload.pin = this.form.pin
-				}
-				await axios[method](url, payload)
-				this.$emit('done')
-			} catch (error) {
-				this.errorMessage =
-					error?.response?.data?.error
-					|| t('pipelinq', 'Failed to save staff')
-			} finally {
-				this.saving = false
+			const payload = {
+				displayName: this.form.displayName,
+				userId: this.form.userId,
+				posRole: this.form.posRole,
+				isActive: this.form.isActive,
 			}
-		},
-
-		/**
-		 * Open the delete confirmation.
-		 *
-		 * @return {void}
-		 *
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
-		 */
-		confirmDelete() {
-			this.showDeleteConfirm = true
+			if (this.form.pin) {
+				payload.pin = this.form.pin
+			}
+			await this.saveRecord({
+				payload,
+				failure: t('pipelinq', 'Failed to save staff'),
+			})
 		},
 
 		/**
@@ -253,35 +210,10 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.4
 		 */
 		async performDelete() {
-			this.showDeleteConfirm = false
-			this.saving = true
-			this.errorMessage = ''
-			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/staff/{id}', {
-					id: this.id,
-				})
-				await axios.delete(url)
-				this.$emit('done')
-			} catch (error) {
-				this.errorMessage =
-					error?.response?.data?.error
-					|| t('pipelinq', 'Failed to delete staff')
-			} finally {
-				this.saving = false
-			}
-		},
-
-		/**
-		 * Leave the form. The host (PosStaffManager, on the admin page) closes the
-		 * dialog — this form no longer routes back to a list page of its own.
-		 *
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
-		 */
-		goBack() {
-			this.$emit('done')
+			await this.deleteRecord(t('pipelinq', 'Failed to delete staff'))
 		},
 	},
 }

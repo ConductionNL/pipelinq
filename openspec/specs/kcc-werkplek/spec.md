@@ -23,6 +23,7 @@ The KCC werkplek is a composite view that orchestrates data from multiple source
 - **BRP/KVK enrichment**: Retrieved via OpenConnector sources for person/business lookup
 - **Kennisartikel**: OpenRegister object in the `pipelinq` register using the `kennisartikel` schema (see kennisbank spec)
 - **Taak/Terugbelverzoek**: OpenRegister object for backoffice routing and callback requests
+
 ## Requirements
 
 ---
@@ -520,7 +521,7 @@ The system MUST provide a structured wrap-up form at the end of each contact tha
 
 - GIVEN an agent clicks "Afronden" to complete a phone contact
 - WHEN the wrap-up form is displayed
-- THEN the system MUST require: resultaat (afgehandeld/doorverwezen/terugbelverzoek/escalatie), onderwerp category (from taxonomy), and a brief summary
+- THEN the system MUST require: uitkomst (Opgelost, Terugbellen, Geëscaleerd, Verkeerd nummer, Geen gehoor, Opgehangen), onderwerp category (from taxonomy), and a brief summary
 - AND optional fields MUST include: follow-up date, linked zaak, internal notes, and client satisfaction score (1-5 if surveyed)
 - AND the form MUST NOT allow submission without the required fields
 
@@ -528,12 +529,12 @@ The system MUST provide a structured wrap-up form at the end of each contact tha
 
 - GIVEN an agent has handled a simple status inquiry lasting under 2 minutes
 - WHEN the agent clicks "Snel afronden"
-- THEN the system MUST offer a simplified one-click wrap-up with preset: resultaat "Afgehandeld", category "Status informatieverzoek"
+- THEN the system MUST offer a simplified one-click wrap-up with preset: uitkomst "Opgelost", category "Status informatieverzoek"
 - AND the agent MUST be able to override these defaults if needed
 
 #### Scenario: Wrap-up triggers follow-up task creation
 
-- GIVEN an agent selects resultaat "Terugbelverzoek" in the wrap-up form
+- GIVEN an agent selects uitkomst "Terugbellen" in the wrap-up form
 - WHEN the agent fills in follow-up date "morgen 10:00" and target "Afdeling Burgerzaken"
 - THEN the system MUST automatically create a terugbelverzoek task linked to the contactmoment and client
 - AND the task MUST appear in the target department's task queue with the specified deadline
@@ -691,6 +692,114 @@ The system MUST allow agents to set their availability status, which affects que
 - AND break duration MUST be tracked for workforce reporting
 
 ---
+
+### Requirement: The ticket list shows the newest ticket first, and "Niet toegewezen" the longest-waiting first
+
+The ticket list in the simple structure SHALL sort on `occurredAt` descending by default, so a ticket that just came in is on the first page. The "Niet toegewezen" view SHALL sort on waiting time instead, longest first. The count line SHALL name the order. A click on a column head SHALL sort differently.
+
+#### Scenario: A resident's question reaches the KCC agent
+- **GIVEN** 83 tickets, most of them weeks old
+- **WHEN** a resident asks a question through the portal and a KCC agent opens Vragen en meldingen
+- **THEN** the resident's ticket SHALL be the first row
+- **AND** the count line SHALL read "... · nieuwste eerst"
+
+#### Scenario: A KCC agent opens the unassigned tickets
+- **GIVEN** 46 tickets, 8 of them unassigned
+- **WHEN** a KCC agent opens the "Niet toegewezen" view
+- **THEN** the ticket that waits longest SHALL be the first row
+- **AND** the count line SHALL read "8 van 46 · langst wachtend eerst"
+
+@e2e exclude A list declaration; the vitest pins the declaration and the library's index page applies sortKey and sortOrder.
+
+### Requirement: Tickets can be imported from the ticket list
+
+The ticket list's Actions menu MUST offer Import, which opens the mass import dialog for tickets.
+
+#### Scenario: importing a counter export
+
+- GIVEN an agent on the ticket list
+- WHEN they open Actions and choose Import
+- THEN the import dialog for tickets opens
+
+### Requirement: The werkplek in a call names the caller
+
+While a call is on, the werkplek MUST be titled "Gesprek met <client name>". It MUST show a card on the client in the call with their name, type and address, source, preference and language.
+
+#### Scenario: Sanne calls
+- GIVEN the werkplek opened for a call with Sanne de Vries
+- THEN the title reads "Gesprek met Sanne de Vries"
+- AND "Wie is het" names Sanne de Vries with a link to her customer page
+
+### Requirement: The in-call page draws three columns
+
+While a call is on, the contact centre page SHALL draw who is it in the left column, the contact form and the client's
+requests in the middle column, and the knowledge base, the client's tasks and callback requests and the earlier contact
+in the right column. Without a call the page SHALL keep its own layout.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call from a known client
+- **THEN** "Wie is het" heads the left column, the contact form heads the middle column and the knowledge base heads the
+  right column
+
+### Requirement: The in-call page offers the next steps as tiles
+
+While a call is on, the contact centre page SHALL draw a row of six tiles above the in-call cards: new request, call
+back, book an appointment, to the back office, register a complaint and another channel. Each tile SHALL open its form
+or dialog with the client on the line filled in.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call from a known client and clicks "Terugbellen"
+- **THEN** the callback form opens with the client filled in
+
+### Requirement: The in-call header marks the call
+
+While a call is on, the header SHALL show "In gesprek" as a menu that sets the agent's availability, the call's running
+time as a separate chip, and the pills "Telefoon, inkomend" and "Geïdentificeerd" at the start of the line under the
+title. Ending the call SHALL remove the menu state, the chip and the pills.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call from a known client
+- **THEN** the header reads "In gesprek" with a timer chip beside it
+- **AND** the line under the title opens with "Telefoon, inkomend" and "Geïdentificeerd"
+
+### Requirement: The in-call cards carry the board's titles
+
+While a call is on, the contact form SHALL be titled "Dit contactmoment", the client's requests "Openstaande zaken" and
+the earlier contact moments "Eerder contact". Without a call the cards SHALL keep their dashboard titles.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call
+- **THEN** the middle column opens with "Dit contactmoment" above "Openstaande zaken"
+
+### Requirement: The in-call columns are drawn at the board's widths
+
+In a call the contact centre page SHALL draw its three columns as board PqWerkplekKlant does: 332px, 415px and 332px wide on the 1120px content width. Outside a call the page SHALL keep its twelve equal shares.
+
+#### Scenario: A call is on
+- **GIVEN** the simple profile's contact centre page while `callActive` holds
+- **THEN** "Wie is het" is 332px wide, "Dit contactmoment" and "Openstaande zaken" 415px, the knowledge base, tasks and earlier contact 332px
+
+#### Scenario: No call
+- **GIVEN** the same page without a call
+- **THEN** its cards keep the twelve shares
+
+### Requirement: The in-call lists are rows
+
+While a call is on, the client's open matters, the tasks and callback requests and the earlier contact SHALL each be
+drawn as rows with a title, a meta line and, for matters and tasks, a pill, without a table head. A handled matter
+SHALL read "Klaar", an open one with an SLA deadline "Uiterlijk {date}". The earlier contact SHALL link to all the
+client's contact moments. While a call is on the header SHALL NOT offer "Contact vastleggen", since the page carries
+its own contact form.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call from a known client with an open request due 11 October
+- **THEN** "Openstaande zaken" shows the request as a row with "Uiterlijk 11 okt"
+- **AND** the header shows "Beëindigen en afronden" but not "Contact vastleggen"
 
 ## Notes
 

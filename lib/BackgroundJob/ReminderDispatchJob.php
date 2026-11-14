@@ -29,15 +29,17 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AppointmentEmailService;
-use OCA\Pipelinq\Service\BookingService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
+use OCA\Pipelinq\Util\EntityIdOf;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * ReminderDispatchJob — 5-minute reminder dispatcher.
@@ -51,6 +53,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  edges behind an extra indirection without removing any of them.
  */
 class ReminderDispatchJob extends TimedJob {
+	use EntityIdOf;
+	use NullablePayloadToArray;
+
 	/**
 	 * Job interval in seconds (5 minutes).
 	 *
@@ -104,69 +109,85 @@ class ReminderDispatchJob extends TimedJob {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	protected function run(mixed $argument): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, BookingService::BOOKING_SCHEMA_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, BookingServiceInterface::BOOKING_SCHEMA_KEY, '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug('ReminderDispatchJob: register/booking schema not configured, skipping');
 			return;
 		}
 
+		$window = $this->startCycle();
+		$counts = ['sent' => 0, 'skipped' => 0, 'failures' => 0];
+		foreach ($this->loadDueBookings(register: $register, schema: $schema) as $row) {
+			$counts[$this->dispatchOne(row: $row, window: $window)]++;
+		}
+
+		$this->logger->info('ReminderDispatchJob: cycle complete', $counts);
+	}//end run()
+
+	/**
+	 * The window of this cycle, logged as the cycle starts.
+	 *
+	 * @return ReminderWindow The bookings' start-time window.
+	 */
+	private function startCycle(): ReminderWindow {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$windowStartIso = $now->modify('+' . self::WINDOW_LOWER_SECONDS . ' seconds')->format('Y-m-d\TH:i:sP');
-		$windowEndIso = $now->modify('+' . self::WINDOW_UPPER_SECONDS . ' seconds')->format('Y-m-d\TH:i:sP');
+		$window = new ReminderWindow(
+			startIso: $now->modify('+' . self::WINDOW_LOWER_SECONDS . ' seconds')->format('Y-m-d\TH:i:sP'),
+			endIso: $now->modify('+' . self::WINDOW_UPPER_SECONDS . ' seconds')->format('Y-m-d\TH:i:sP')
+		);
 
 		$this->logger->info(
 			'ReminderDispatchJob: starting cycle',
-			['window_start' => $windowStartIso, 'window_end' => $windowEndIso]
+			['window_start' => $window->startIso, 'window_end' => $window->endIso]
 		);
+		return $window;
+	}//end startCycle()
 
-		$rows = $this->loadDueBookings(register: $register, schema: $schema);
+	/**
+	 * Send the reminder of one booking row when it is due.
+	 *
+	 * @param mixed          $row    One booking row.
+	 * @param ReminderWindow $window The cycle's window.
+	 *
+	 * @return string The outcome: sent, skipped or failures.
+	 */
+	private function dispatchOne(mixed $row, ReminderWindow $window): string {
+		$booking = $this->toArray(object: $row);
+		if ($booking === null || $this->isDueForReminder(booking: $booking, windowStartIso: $window->startIso, windowEndIso: $window->endIso) === false) {
+			return 'skipped';
+		}
 
-		$sent = 0;
-		$skipped = 0;
-		$failures = 0;
-		foreach ($rows as $row) {
-			$booking = $this->toArray(object: $row);
-			if ($booking === null) {
-				++$skipped;
-				continue;
+		$bookingId = $this->idOf(object: $booking);
+		if ($bookingId === '') {
+			return 'skipped';
+		}
+
+		return $this->sendReminder(bookingId: $bookingId);
+	}//end dispatchOne()
+
+	/**
+	 * Ask the email service for the reminder; a failure is logged and the cycle continues.
+	 *
+	 * @param string $bookingId The booking id.
+	 *
+	 * @return string The outcome: sent or failures.
+	 */
+	private function sendReminder(string $bookingId): string {
+		try {
+			if ($this->emailService()->sendReminder(bookingId: $bookingId) === true) {
+				return 'sent';
 			}
 
-			if ($this->isDueForReminder(booking: $booking, windowStartIso: $windowStartIso, windowEndIso: $windowEndIso) === false) {
-				++$skipped;
-				continue;
-			}
-
-			$bookingId = $this->idOf(object: $booking);
-			if ($bookingId === '') {
-				++$skipped;
-				continue;
-			}
-
-			try {
-				$emailService = $this->emailService();
-				$reminderSent = $emailService->sendReminder(bookingId: $bookingId);
-				if ($reminderSent === true) {
-					++$sent;
-					continue;
-				}
-
-				++$failures;
-			} catch (\Throwable $e) {
-				++$failures;
-				$this->logger->warning(
-					'ReminderDispatchJob: per-booking dispatch failed, continuing',
-					['booking' => $bookingId, 'exception' => $e->getMessage()]
-				);
-				continue;
-			}
-		}//end foreach
-
-		$this->logger->info(
-			'ReminderDispatchJob: cycle complete',
-			['sent' => $sent, 'skipped' => $skipped, 'failures' => $failures]
-		);
-	}//end run()
+			return 'failures';
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'ReminderDispatchJob: per-booking dispatch failed, continuing',
+				['booking' => $bookingId, 'exception' => $e->getMessage()]
+			);
+			return 'failures';
+		}
+	}//end sendReminder()
 
 	/**
 	 * True when the booking is `confirmed`, has no `reminderSentAt`, and starts
@@ -233,10 +254,10 @@ class ReminderDispatchJob extends TimedJob {
 	/**
 	 * Resolve the AppointmentEmailService via the DI container.
 	 *
-	 * @return AppointmentEmailService
+	 * @return AppointmentEmailServiceInterface
 	 */
-	private function emailService(): AppointmentEmailService {
-		return $this->container->get(AppointmentEmailService::class);
+	private function emailService(): AppointmentEmailServiceInterface {
+		return $this->container->get(AppointmentEmailServiceInterface::class);
 	}//end emailService()
 
 	/**
@@ -247,76 +268,4 @@ class ReminderDispatchJob extends TimedJob {
 	private function getObjectService(): object {
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Pull the canonical id off an OR entity or array.
-	 *
-	 * @param array<string, mixed>|object $object Object or array.
-	 *
-	 * @return string
-	 */
-	private function idOf(array|object $object): string {
-		$arr = $this->toArray(object: $object);
-		if ($arr === null) {
-			return '';
-		}
-
-		if (isset($arr['@self']) === true && is_array($arr['@self']) === true) {
-			$self = $arr['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($arr['id']) === true) {
-			return (string)$arr['id'];
-		}
-
-		if (isset($arr['uuid']) === true) {
-			return (string)$arr['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OR entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 }//end class

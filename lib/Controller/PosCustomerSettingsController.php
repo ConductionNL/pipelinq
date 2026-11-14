@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -40,14 +40,14 @@ use Throwable;
 /**
  * Admin settings controller for POS customer-link configuration.
  *
- * The `#[AuthorizedAdminSetting(Application::APP_ID)]` attribute restricts
+ * The `#[AuthorizedAdminSetting(AppIdentity::APP_ID)]` attribute restricts
  * both endpoints to admins authorised to manage the pipelinq app's
  * settings (Nextcloud middleware enforces this before the action runs).
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the standard
  *  Nextcloud controller collaborators (request, config, logger).
  *
- * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+ * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
  */
 class PosCustomerSettingsController extends Controller {
 	/**
@@ -74,7 +74,7 @@ class PosCustomerSettingsController extends Controller {
 	 *
 	 * @var array<int, int>
 	 */
-	private const ALLOWED_DEPTHS = [10, 20, 50];
+	private const ALLOWED_DEPTHS = [5, 10, 20, 50];
 
 	/**
 	 * Constructor.
@@ -88,7 +88,7 @@ class PosCustomerSettingsController extends Controller {
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -96,9 +96,9 @@ class PosCustomerSettingsController extends Controller {
 	 *
 	 * @return JSONResponse The settings.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function index(): JSONResponse {
 		return new JSONResponse(['settings' => $this->readAll()]);
 	}//end index()
@@ -116,9 +116,9 @@ class PosCustomerSettingsController extends Controller {
 	 *
 	 * @return JSONResponse The updated settings, or 422 on validation error.
 	 *
-	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-006
+	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-006
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function update(): JSONResponse {
 		try {
 			$this->applyFieldsParam();
@@ -145,7 +145,7 @@ class PosCustomerSettingsController extends Controller {
 	 */
 	private function readAll(): array {
 		$fields = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'customerSearchFields',
 			self::DEFAULTS['customerSearchFields']
 		);
@@ -162,7 +162,7 @@ class PosCustomerSettingsController extends Controller {
 		return [
 			'customerSearchFields' => $fieldList,
 			'customerHistoryDepth' => (int)$this->appConfig->getValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'customerHistoryDepth',
 				self::DEFAULTS['customerHistoryDepth']
 			),
@@ -179,7 +179,7 @@ class PosCustomerSettingsController extends Controller {
 	 * @return bool The setting value.
 	 */
 	private function readBool(string $key): bool {
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, self::DEFAULTS[$key]);
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, self::DEFAULTS[$key]);
 		return strtolower($value) !== 'false';
 	}//end readBool()
 
@@ -216,7 +216,7 @@ class PosCustomerSettingsController extends Controller {
 			throw new InvalidArgumentException('Ten minste één zoekveld is verplicht.');
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, 'customerSearchFields', implode(',', $fields));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, 'customerSearchFields', implode(',', $fields));
 	}//end applyFieldsParam()
 
 	/**
@@ -234,10 +234,10 @@ class PosCustomerSettingsController extends Controller {
 
 		$depth = (int)$raw;
 		if (in_array($depth, self::ALLOWED_DEPTHS, true) === false) {
-			throw new InvalidArgumentException('Geschiedenisdiepte moet 10, 20 of 50 zijn.');
+			throw new InvalidArgumentException('Geschiedenisdiepte moet 5, 10, 20 of 50 zijn.');
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, 'customerHistoryDepth', (string)$depth);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, 'customerHistoryDepth', (string)$depth);
 	}//end applyDepthParam()
 
 	/**
@@ -267,6 +267,6 @@ class PosCustomerSettingsController extends Controller {
 			$value = 'true';
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, $key, $value);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $value);
 	}//end applyBoolParam()
 }//end class

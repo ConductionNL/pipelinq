@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\WooRequestConversionServiceInterface;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,7 +41,7 @@ use Throwable;
  *
  * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
  */
-class WooRequestConversionService {
+class WooRequestConversionService implements WooRequestConversionServiceInterface {
 	/**
 	 * dossiq's one Woo request creation path (C5).
 	 *
@@ -130,37 +131,104 @@ class WooRequestConversionService {
 			return ['status' => 'not-convertible'];
 		}
 
+		$case = $this->startCase(intake: $intake, request: $this->request(ticketId: $ticketId, ticket: $ticket));
+		if ($case === null) {
+			return ['status' => 'intake-failed'];
+		}
+
+		$saved = $this->saveConverted(ticketId: $ticketId, ticket: $this->asConverted(ticket: $ticket, caseId: $case['caseReference']));
+		return ['status' => $this->statusAfter(saved: $saved)] + $case;
+	}//end convert()
+
+	/**
+	 * Start the Woo request; the case reference and URL, or null when the
+	 * intake refused (logged) or answered without a case id.
+	 *
+	 * @param object               $intake  dossiq's intake.
+	 * @param array<string, mixed> $request The C5 request.
+	 *
+	 * @return array{caseReference: string, caseUrl: string}|null
+	 */
+	private function startCase(object $intake, array $request): ?array {
 		try {
-			$result = $intake->start($this->request(ticketId: $ticketId, ticket: $ticket));
+			$result = $intake->start($request);
 		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: Woo request intake refused the conversion', ['ticket' => $ticketId, 'reason' => $e->getMessage()]);
-			return ['status' => 'intake-failed'];
+			$this->logger->warning(
+				'Pipelinq: Woo request intake refused the conversion',
+				['ticket' => $request['originReference'], 'reason' => $e->getMessage()]
+			);
+			return null;
 		}
 
-		$caseId = '';
-		$caseUrl = '';
-		if (is_array($result) === true) {
-			$caseId = (string)($result['caseId'] ?? '');
-			$caseUrl = (string)($result['caseUrl'] ?? '');
+		return $this->caseOf(result: $result);
+	}//end startCase()
+
+	/**
+	 * The case an intake answer names; null without a case id.
+	 *
+	 * @param mixed $result The intake's answer.
+	 *
+	 * @return array{caseReference: string, caseUrl: string}|null
+	 */
+	private function caseOf(mixed $result): ?array {
+		if (is_array($result) === false || (string)($result['caseId'] ?? '') === '') {
+			return null;
 		}
 
-		if ($caseId === '') {
-			return ['status' => 'intake-failed'];
-		}
+		return ['caseReference' => (string)$result['caseId'], 'caseUrl' => (string)($result['caseUrl'] ?? '')];
+	}//end caseOf()
 
+	/**
+	 * The ticket as a converted request carrying its case reference.
+	 *
+	 * @param array<string, mixed> $ticket The ticket.
+	 * @param string               $caseId The case id.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function asConverted(array $ticket, string $caseId): array {
 		$ticket['ticketType'] = TicketService::TYPE_REQUEST;
 		$ticket['status'] = self::STATUS_CONVERTED;
 		$ticket['caseReference'] = $caseId;
+
+		return $ticket;
+	}//end asConverted()
+
+	/**
+	 * Write the converted ticket; false (logged) when the write fails.
+	 *
+	 * @param string               $ticketId The ticket id.
+	 * @param array<string, mixed> $ticket   The converted ticket.
+	 *
+	 * @return bool
+	 */
+	private function saveConverted(string $ticketId, array $ticket): bool {
 		try {
 			$this->tickets->save(schemaKey: self::TICKET, data: $ticket, id: $ticketId);
 		} catch (Throwable $e) {
 			// The case exists; only the ticket write failed. Say so honestly.
 			$this->logger->warning('Pipelinq: converted ticket not saved', ['ticket' => $ticketId, 'reason' => $e->getMessage()]);
-			return ['status' => 'converted-unsynced', 'caseReference' => $caseId, 'caseUrl' => $caseUrl];
+			return false;
 		}
 
-		return ['status' => self::STATUS_CONVERTED, 'caseReference' => $caseId, 'caseUrl' => $caseUrl];
-	}//end convert()
+		return true;
+	}//end saveConverted()
+
+	/**
+	 * The status after a conversion: converted, or converted-unsynced when
+	 * the case exists but the ticket write failed.
+	 *
+	 * @param bool $saved Whether the ticket write succeeded.
+	 *
+	 * @return string
+	 */
+	private function statusAfter(bool $saved): string {
+		if ($saved === false) {
+			return 'converted-unsynced';
+		}
+
+		return self::STATUS_CONVERTED;
+	}//end statusAfter()
 
 	/**
 	 * The request array C5 defines, built from the ticket.
@@ -212,17 +280,26 @@ class WooRequestConversionService {
 			return null;
 		}
 
-		try {
-			$intake = $this->container->get($this->intakeClass);
-		} catch (Throwable $e) {
-			$this->logger->debug('Pipelinq: Woo request intake not resolvable', ['reason' => $e->getMessage()]);
-			return null;
-		}
-
+		$intake = $this->resolvedIntake();
 		if (is_object($intake) === false || method_exists($intake, 'start') === false) {
 			return null;
 		}
 
 		return $intake;
 	}//end intake()
+
+	/**
+	 * The container's entry for the intake class; null (logged at debug)
+	 * when it cannot build it.
+	 *
+	 * @return mixed
+	 */
+	private function resolvedIntake(): mixed {
+		try {
+			return $this->container->get($this->intakeClass);
+		} catch (Throwable $e) {
+			$this->logger->debug('Pipelinq: Woo request intake not resolvable', ['reason' => $e->getMessage()]);
+			return null;
+		}
+	}//end resolvedIntake()
 }//end class

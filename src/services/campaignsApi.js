@@ -21,7 +21,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {string} campaignId The campaign id.
  * @param {object} window Optional `{from, to}` as `YYYY-MM-DD`.
  * @return {Promise<object>} The report.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
 export async function fetchCampaignReport(campaignId, window = {}) {
 	const { data } = await axios.get(
@@ -41,7 +41,7 @@ export async function fetchCampaignReport(campaignId, window = {}) {
  * @param {string} campaignId The campaign id.
  * @param {object} options Optional `{portal, route}`.
  * @return {Promise<object>} `{error, portal, route, pageId, publicUrl, formId}`.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
  */
 export async function createCampaignLandingPage(campaignId, options = {}) {
 	try {
@@ -51,12 +51,23 @@ export async function createCampaignLandingPage(campaignId, options = {}) {
 		)
 		return data
 	} catch (error) {
-		const body = error?.response?.data
-		if (body && typeof body === 'object' && body.error) {
-			return body
-		}
-		throw error
+		return refusalOf(error)
 	}
+}
+
+/**
+ * The server's refusal (`{error}`) a failed write answered with; any other
+ * failure is thrown on.
+ *
+ * @param {unknown} error The failure.
+ * @return {object} The refusal.
+ */
+function refusalOf(error) {
+	const body = error?.response?.data
+	if (body && typeof body === 'object' && body.error) {
+		return body
+	}
+	throw error
 }
 
 /**
@@ -68,7 +79,7 @@ export async function createCampaignLandingPage(campaignId, options = {}) {
  *
  * @param {number} limit Page size.
  * @return {Promise<Array<object>>} The campaigns.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
 export async function fetchCampaigns(limit = 100) {
 	const { data } = await axios.get(
@@ -82,7 +93,7 @@ export async function fetchCampaigns(limit = 100) {
  * The source and medium vocabularies an administrator maintains.
  *
  * @return {Promise<{sources: Array<string>, mediums: Array<string>}>} Both lists.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
  */
 export async function fetchCampaignVocabularies() {
 	const { data } = await axios.get(
@@ -103,7 +114,7 @@ export async function fetchCampaignVocabularies() {
  * @param {object} payload The campaign fields.
  * @param {string} id The campaign to update, empty to create.
  * @return {Promise<object>} `{campaign}` on success, `{error, value, allowed}` on a refusal.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
  */
 export async function saveCampaign(payload, id = '') {
 	const url = id
@@ -115,10 +126,6 @@ export async function saveCampaign(payload, id = '') {
 			: await axios.post(url, payload)
 		return { campaign: data }
 	} catch (error) {
-		const body = error?.response?.data
-		if (body && typeof body === 'object' && body.error) {
-			return body
-		}
-		throw error
+		return refusalOf(error)
 	}
 }

@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.5
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -26,23 +26,24 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Opt-out lookup + recording service.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006
  *
  * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash() is a pure,
  *  side-effect-free hashing utility shared across BSN-handling services; injecting
  *  it as a collaborator would not change behaviour.
  */
-class OptOutService {
+class OptOutService implements OptOutServiceInterface {
 	/**
 	 * Constructor.
 	 *
@@ -64,9 +65,12 @@ class OptOutService {
 	 *
 	 * @return bool True when an unexpired OptOutVlag exists.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
-	public function hasOptOut(string $rawBsn): bool {
+	public function hasOptOut(
+		#[\SensitiveParameter]
+		string $rawBsn,
+	): bool {
 		return $this->getOptOut(rawBsn: $rawBsn) !== null;
 	}//end hasOptOut()
 
@@ -77,9 +81,12 @@ class OptOutService {
 	 *
 	 * @return array<string,mixed>|null Returns the array representation when active, else null.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
-	public function getOptOut(string $rawBsn): ?array {
+	public function getOptOut(
+		#[\SensitiveParameter]
+		string $rawBsn,
+	): ?array {
 		try {
 			[$register, $schema] = $this->config();
 			$hash = BsnValidationService::hash($rawBsn);
@@ -120,9 +127,13 @@ class OptOutService {
 	 *
 	 * @return bool True when an OptOutVlag was newly created / refreshed.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
-	public function recordFromBrpResponse(string $rawBsn, string $indicationSecret): bool {
+	public function recordFromBrpResponse(
+		#[\SensitiveParameter]
+		string $rawBsn,
+		string $indicationSecret,
+	): bool {
 		if ($indicationSecret !== '1') {
 			return false;
 		}
@@ -166,9 +177,14 @@ class OptOutService {
 	 *
 	 * @return bool True on success.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-02
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-02
 	 */
-	public function recordLocalOptOut(string $rawBsn, string $actor, ?string $note = null): bool {
+	public function recordLocalOptOut(
+		#[\SensitiveParameter]
+		string $rawBsn,
+		string $actor,
+		?string $note = null,
+	): bool {
 		try {
 			[$register, $schema] = $this->config();
 			$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
@@ -209,6 +225,22 @@ class OptOutService {
 	private function isActive(array $arr, DateTimeImmutable $today): bool {
 		$ingang = (string)($arr['effectiveDate'] ?? '');
 		$endDate = $arr['endDate'] ?? null;
+		if ($this->hasStarted(ingang: $ingang, today: $today) === false) {
+			return false;
+		}
+
+		return $this->hasNotEnded(endDate: $endDate, today: $today);
+	}//end isActive()
+
+	/**
+	 * Whether a readable effective date has been reached.
+	 *
+	 * @param string            $ingang The effective date.
+	 * @param DateTimeImmutable $today  Today's UTC date.
+	 *
+	 * @return bool
+	 */
+	private function hasStarted(string $ingang, DateTimeImmutable $today): bool {
 		if ($ingang === '') {
 			return false;
 		}
@@ -223,6 +255,18 @@ class OptOutService {
 			return false;
 		}
 
+		return true;
+	}//end hasStarted()
+
+	/**
+	 * Whether the end date, if any, has not passed; an unreadable end date never ends.
+	 *
+	 * @param mixed             $endDate The end date, or null.
+	 * @param DateTimeImmutable $today   Today's UTC date.
+	 *
+	 * @return bool
+	 */
+	private function hasNotEnded(mixed $endDate, DateTimeImmutable $today): bool {
 		if ($endDate !== null && $endDate !== '') {
 			try {
 				$endDt = new DateTimeImmutable((string)$endDate, new DateTimeZone('UTC'));
@@ -236,7 +280,7 @@ class OptOutService {
 		}
 
 		return true;
-	}//end isActive()
+	}//end hasNotEnded()
 
 	/**
 	 * Normalise an OR object (entity or array) to an array.
@@ -270,8 +314,8 @@ class OptOutService {
 	 * @throws RuntimeException If misconfigured.
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'optOutVlag_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'optOutVlag_schema', '');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('optOutVlag register/schema not configured.');
 		}

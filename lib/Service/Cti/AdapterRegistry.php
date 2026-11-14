@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use RuntimeException;
  * Built-in adapters (CallVoip, RingCentral, Asterisk) are auto-registered.
  * Extra adapters can register themselves via {@see self::register()}.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.1
  */
 class AdapterRegistry {
 

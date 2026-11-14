@@ -8,7 +8,7 @@ average rating, how many responses there are, whether the last 90 days are
 better or worse than the 90 before, and the three latest comments. A client
 nobody has surveyed gets a sentence saying so.
 
-@spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+@spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 -->
 <template>
 	<div class="client-satisfaction">
@@ -63,6 +63,7 @@ nobody has surveyed gets a sentence saying so.
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { fetchClientSatisfaction } from '../../services/satisfactionApi.js'
+import { sectionObjectId } from '../../utils/sectionContext.js'
 
 export default {
 	name: 'ClientSatisfactionSection',
@@ -92,23 +93,17 @@ export default {
 		 * The client id from the prop or the section context.
 		 *
 		 * @return {string} The id.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+		 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		resolvedId() {
-			if (this.clientId) {
-				return this.clientId
-			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
-			return (bag && bag.objectId) || ''
+			return this.clientId || sectionObjectId(this.cnSectionContext)
 		},
 
 		/**
 		 * Up to three latest comments.
 		 *
 		 * @return {Array<object>} The comments.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+		 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		verbatims() {
 			return (
@@ -120,7 +115,7 @@ export default {
 		 * The trend in words.
 		 *
 		 * @return {string} The label.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+		 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		trendLabel() {
 			const labels = {
@@ -137,7 +132,7 @@ export default {
 
 	watch: {
 		/**
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+		 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		resolvedId() {
 			this.load()
@@ -153,7 +148,7 @@ export default {
 		 * Read the panel for this client.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+		 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		async load() {
 			if (!this.resolvedId) {

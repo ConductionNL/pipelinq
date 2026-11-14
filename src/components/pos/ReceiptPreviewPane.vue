@@ -2,6 +2,11 @@
   - SPDX-License-Identifier: EUPL-1.2
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
   -->
+<!--
+The receipt preview in the print and email dialogs (PqKassaAfrekenen): a label,
+a spinner while the preview loads, then the receipt text as typed in a
+fixed-width font through nextcloud-vue CnTextWidget `monospace`.
+-->
 <template>
 	<div class="receipt-preview">
 		<span class="receipt-preview__label">{{
@@ -10,18 +15,25 @@
 		<div v-if="loading" class="receipt-preview__loading">
 			<NcLoadingIcon :size="20" />
 		</div>
-		<pre v-else class="receipt-preview__body">{{
-			content || t('pipelinq', 'No preview available')
-		}}</pre>
+		<CnTextWidget
+			v-else
+			class="receipt-preview__body"
+			:content="receiptContent"
+			:objectData="receiptData" />
 	</div>
 </template>
 
 <script>
+import { CnTextWidget } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
+
+const RECEIPT_CONTENT = Object.freeze({ monospace: true, textField: 'receipt' })
 
 export default {
 	name: 'ReceiptPreviewPane',
 	components: {
+		CnTextWidget,
 		NcLoadingIcon,
 	},
 
@@ -34,6 +46,28 @@ export default {
 		loading: {
 			type: Boolean,
 			default: false,
+		},
+	},
+
+	computed: {
+		/**
+		 * The text widget's settings: the receipt as typed, read from the object below.
+		 *
+		 * @return {object} The widget content.
+		 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-the-receipt-preview-shows-the-text-as-typed
+		 */
+		receiptContent() {
+			return RECEIPT_CONTENT
+		},
+
+		/**
+		 * The receipt text, or a line that says there is none.
+		 *
+		 * @return {{receipt: string}} The object the widget reads.
+		 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-the-receipt-preview-shows-the-text-as-typed
+		 */
+		receiptData() {
+			return { receipt: this.content || t('pipelinq', 'No preview available') }
 		},
 	},
 }
@@ -59,15 +93,8 @@ export default {
 }
 
 .receipt-preview__body {
-	font-family: monospace;
-	font-size: 12px;
-	line-height: 1.35;
-	white-space: pre-wrap;
-	background: var(--color-background-dark);
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
-	padding: 12px;
-	margin: 0;
 	max-height: 320px;
 	overflow-y: auto;
 }

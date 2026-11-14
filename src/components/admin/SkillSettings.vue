@@ -7,8 +7,12 @@
 		">
 		<NcLoadingIcon v-if="loading" />
 
-		<div v-else class="skill-settings">
-			<div v-for="skill in skills" :key="skill.id" class="skill-item">
+		<div v-else class="skill-settings cn-settings-list">
+			<div
+				v-for="skill in skills"
+				:key="skill.id"
+				class="skill-item"
+				:class="{ 'cn-settings-row': editingId !== skill.id }">
 				<div v-if="editingId !== skill.id" class="skill-item__display">
 					<div class="skill-item__info">
 						<span class="skill-title">{{ skill.title }}</span>
@@ -22,11 +26,11 @@
 							}}
 						</span>
 					</div>
-					<div class="skill-item__actions">
+					<div class="skill-item__actions cn-settings-row-actions">
 						<NcButton @click="startEdit(skill)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton variant="error" @click="deleteSkill(skill)">
+						<NcButton variant="error" @click="askDelete(skill)">
 							{{ t('pipelinq', 'Delete') }}
 						</NcButton>
 					</div>
@@ -78,49 +82,60 @@
 
 			<div class="skill-add">
 				<NcButton @click="addSkill">
-					{{ t('pipelinq', '+ Add Skill') }}
+					<template #icon>
+						<Plus :size="20" />
+					</template>
+					{{ t('pipelinq', 'Add skill') }}
 				</NcButton>
 			</div>
 		</div>
+		<CnDeleteDialog
+			v-if="deleting"
+			ref="deleteDialog"
+			:item="deleting"
+			nameField="title"
+			:dialogTitle="t('pipelinq', 'Delete skill')"
+			@confirm="confirmDelete"
+			@close="deleting = null" />
 	</NcSettingsSection>
 </template>
 
 <script>
+import { CnDeleteDialog } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useSkillsStore } from '../../store/modules/skills.js'
+import inlineEditRowsMixin from './inlineEditRowsMixin.js'
 
 export default {
 	name: 'SkillSettings',
 	components: {
+		Plus,
+		CnDeleteDialog,
 		NcButton,
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
 
-	data() {
-		return {
-			editingId: null,
-			editForm: {},
-		}
-	},
+	mixins: [inlineEditRowsMixin],
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-28
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-28
 		 */
 		skillsStore() {
 			return useSkillsStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-25
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-25
 		 */
 		loading() {
 			return this.skillsStore.loading
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-27
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-27
 		 */
 		skills() {
 			return this.skillsStore.skills
@@ -134,7 +149,7 @@ export default {
 	methods: {
 		/**
 		 * @param {object} skill The skill to edit.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-29
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-29
 		 */
 		startEdit(skill) {
 			this.editingId = skill.id
@@ -145,15 +160,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-23
-		 */
-		cancelEdit() {
-			this.editingId = null
-			this.editForm = {}
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-26
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-26
 		 */
 		async saveEdit() {
 			const data = {
@@ -171,7 +178,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-22
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-22
 		 */
 		async addSkill() {
 			await this.skillsStore.saveSkill({
@@ -182,21 +189,21 @@ export default {
 		},
 
 		/**
-		 * @param {object} skill The skill to delete.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-24
+		 * Delete the row the dialog asked about, and tell the dialog how it went.
+		 *
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
 		 */
-		async deleteSkill(skill) {
-			if (
-				confirm(
-					t('pipelinq', 'Delete skill "{title}"?', { title: skill.title }),
-				)
-			) {
-				await this.skillsStore.deleteSkill(skill.id)
-			}
+		async confirmDelete() {
+			const deleted = await this.skillsStore.deleteSkill(this.deleting.id)
+			this.$refs.deleteDialog?.setResult(deleted
+				? { success: true }
+				: { error: this.skillsStore.error || t('pipelinq', 'Deleting failed.') })
 		},
 	},
 }
 </script>
+
+<style scoped src="./inlineEditRows.css"></style>
 
 <style scoped>
 .skill-settings {
@@ -250,28 +257,11 @@ export default {
 	gap: 8px;
 }
 
-.edit-field {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.edit-field label {
-	font-weight: 600;
-	font-size: 13px;
-}
-
 .edit-field input,
 .edit-field textarea {
 	padding: 6px 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
-}
-
-.edit-actions {
-	display: flex;
-	gap: 4px;
-	justify-content: flex-end;
 }
 
 .skill-add {

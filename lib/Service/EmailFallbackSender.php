@@ -23,17 +23,19 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-003
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-003
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-FALLBACK-004
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
+use OCP\Mail\IMessage;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -125,7 +127,7 @@ class EmailFallbackSender {
 	 *
 	 * @throws RuntimeException If the recipient address is invalid.
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-FALLBACK-004
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $appendNotice selects between the
@@ -133,63 +135,146 @@ class EmailFallbackSender {
 	 *  behaviour toggle to be split into two methods.
 	 */
 	public function send(array $message, string $toEmail, bool $appendNotice = true): bool {
+		$decision = $this->consentFor(message: $message, toEmail: $toEmail);
+		if ($decision['send'] === false) {
+			return false;
+		}
+
+		$html = $this->bodyWithNotice(message: $message, appendNotice: $appendNotice);
+		$html .= $this->unsubscribeParagraph(unsubscribe: $decision['unsubscribe']);
+		try {
+			$msg = $this->withBody(msg: $this->addressedMessage(toEmail: $toEmail, message: $message), html: $html);
+			$this->unsubscribeMail->applyHeaders(message: $msg, unsubscribe: $decision['unsubscribe']);
+			return empty($this->mailer->send($msg)) === true;
+		} catch (\Throwable $e) {
+			throw $this->dispatchFailure(error: $e);
+		}
+	}//end send()
+
+	/**
+	 * Refuse an empty or invalid recipient address.
+	 *
+	 * @param string $toEmail Recipient address.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException If the recipient address is invalid.
+	 */
+	private function assertValidRecipient(string $toEmail): void {
 		if ($toEmail === '' || $this->mailer->validateMailAddress($toEmail) === false) {
 			throw new RuntimeException('Invalid recipient address.');
 		}
+	}//end assertValidRecipient()
 
-		// Ask integriq with the category of the message this falls back for
-		// (default service). A refusal is logged; the Berichtenbox status is
-		// left as it is by the caller.
+	/**
+	 * Check the recipient, then ask integriq about the fallback; a refusal is remembered and logged.
+	 *
+	 * The Berichtenbox status is left as it is by the caller.
+	 *
+	 * @param array<string,mixed> $message The message.
+	 * @param string              $toEmail Recipient address.
+	 *
+	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
+	 *
+	 * @throws RuntimeException If the recipient address is invalid.
+	 */
+	private function consentFor(array $message, string $toEmail): array {
+		$this->assertValidRecipient(toEmail: $toEmail);
 		$this->lastRefusal = null;
-		$category = $this->categoryOf(message: $message);
-
-		$decision = $this->integriq->decideOne(channel: 'email', category: $category, requiresConsent: false, address: $toEmail);
+		$ask = new ConsentAsk(channel: 'email', category: $this->categoryOf(message: $message), requiresConsent: false);
+		$decision = $this->integriq->decideOne(ask: $ask, recipient: ['address' => $toEmail]);
 		if ($decision['send'] === false) {
 			$this->lastRefusal = ['code' => $decision['code'], 'reason' => $decision['reason']];
 			$this->logger->warning(
 				'Berichtenbox fallback email not sent: integriq refused it.',
-				['messageId' => (string)($message['uuid'] ?? ''), 'code' => $decision['code'], 'category' => $category]
+				['messageId' => (string)($message['uuid'] ?? ''), 'code' => $decision['code'], 'category' => $ask->category]
 			);
-			return false;
 		}
 
-		$subject = (string)($message['subject'] ?? '');
+		return $decision;
+	}//end consentFor()
+
+	/**
+	 * The message body, after the MijnOverheid notice when asked for.
+	 *
+	 * @param array<string,mixed> $message      The message.
+	 * @param bool                $appendNotice Whether to prepend the notice.
+	 *
+	 * @return string The HTML body.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Carries send()'s documented fallback mode.
+	 */
+	private function bodyWithNotice(array $message, bool $appendNotice): string {
 		$body = (string)($message['body'] ?? '');
 		if ($appendNotice === true) {
-			$body = '<p>' . htmlspecialchars(self::FALLBACK_NOTICE, ENT_XHTML, 'UTF-8') . '</p>' . $body;
+			return '<p>' . htmlspecialchars(self::FALLBACK_NOTICE, ENT_XHTML, 'UTF-8') . '</p>' . $body;
 		}
 
-		$line = $this->unsubscribeMail->bodyLine(unsubscribe: $decision['unsubscribe']);
-		if ($line !== '') {
-			$body .= '<p>' . htmlspecialchars($line, ENT_XHTML, 'UTF-8') . '</p>';
+		return $body;
+	}//end bodyWithNotice()
+
+	/**
+	 * Integriq's unsubscribe line as a paragraph, or '' when there is none.
+	 *
+	 * @param array<string,mixed>|null $unsubscribe Integriq's material.
+	 *
+	 * @return string The paragraph.
+	 */
+	private function unsubscribeParagraph(?array $unsubscribe): string {
+		$line = $this->unsubscribeMail->bodyLine(unsubscribe: $unsubscribe);
+		if ($line === '') {
+			return '';
 		}
 
-		try {
-			$msg = $this->mailer->createMessage();
-			$msg->setTo([$toEmail]);
-			$msg->setSubject($subject);
-			$msg->setHtmlBody($body);
-			$msg->setPlainBody(strip_tags($body));
+		return '<p>' . htmlspecialchars($line, ENT_XHTML, 'UTF-8') . '</p>';
+	}//end unsubscribeParagraph()
 
-			$from = $this->appConfig->getValueString(
-				Application::APP_ID,
-				self::CONFIG_FROM_ADDRESS,
-				''
-			);
-			if ($from !== '' && $this->mailer->validateMailAddress($from) === true) {
-				$msg->setFrom([$from]);
-			}
+	/**
+	 * A new message to the recipient with the Berichtenbox message's subject.
+	 *
+	 * @param string              $toEmail Recipient address.
+	 * @param array<string,mixed> $message The message.
+	 *
+	 * @return IMessage The mail message.
+	 */
+	private function addressedMessage(string $toEmail, array $message): IMessage {
+		$msg = $this->mailer->createMessage();
+		$msg->setTo([$toEmail]);
+		$msg->setSubject((string)($message['subject'] ?? ''));
+		return $msg;
+	}//end addressedMessage()
 
-			$this->unsubscribeMail->applyHeaders(message: $msg, unsubscribe: $decision['unsubscribe']);
+	/**
+	 * Set the HTML and plain bodies, and the configured From when it is valid.
+	 *
+	 * @param IMessage $msg  The message.
+	 * @param string   $html The HTML body.
+	 *
+	 * @return IMessage The same message.
+	 */
+	private function withBody(IMessage $msg, string $html): IMessage {
+		$msg->setHtmlBody($html);
+		$msg->setPlainBody(strip_tags($html));
+		$from = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_FROM_ADDRESS, '');
+		if ($from !== '' && $this->mailer->validateMailAddress($from) === true) {
+			$msg->setFrom([$from]);
+		}
 
-			$failed = $this->mailer->send($msg);
-			return empty($failed) === true;
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Berichtenbox fallback email dispatch failed.',
-				['exception' => $e->getMessage()]
-			);
-			throw new RuntimeException('Fallback email dispatch failed: ' . $e->getMessage(), 0, $e);
-		}//end try
-	}//end send()
+		return $msg;
+	}//end withBody()
+
+	/**
+	 * Log a dispatch failure and wrap it.
+	 *
+	 * @param \Throwable $error What the mailer threw.
+	 *
+	 * @return RuntimeException The wrapped failure.
+	 */
+	private function dispatchFailure(\Throwable $error): RuntimeException {
+		$this->logger->warning(
+			'Berichtenbox fallback email dispatch failed.',
+			['exception' => $error->getMessage()]
+		);
+		return new RuntimeException('Fallback email dispatch failed: ' . $error->getMessage(), 0, $error);
+	}//end dispatchFailure()
 }//end class

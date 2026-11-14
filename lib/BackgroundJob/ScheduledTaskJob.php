@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-4
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\ScheduledTaskService;
+use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -37,19 +37,19 @@ use Psr\Log\LoggerInterface;
  *
  * Runs every 5 minutes; never rethrows so the queue cannot be poisoned.
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-4
  */
 class ScheduledTaskJob extends TimedJob {
 	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory (required by TimedJob).
-	 * @param ScheduledTaskService $scheduledTaskService The scheduled task service.
+	 * @param ScheduledTaskServiceInterface $scheduledTaskService The scheduled task service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private ScheduledTaskService $scheduledTaskService,
+		private ScheduledTaskServiceInterface $scheduledTaskService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -69,7 +69,7 @@ class ScheduledTaskJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-4
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */

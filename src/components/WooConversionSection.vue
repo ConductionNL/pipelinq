@@ -37,6 +37,25 @@ import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcNoteCard } from '@nextcloud/vue'
 
+/**
+ * @param {unknown} url The case link the server sent.
+ * @return {string} It when it is a local or http(s) address, else ''.
+ */
+function safeCaseUrl(url) {
+	return /^(\/|https?:\/\/)/.test(String(url || '')) ? String(url) : ''
+}
+
+/**
+ * @param {object|null} err The failure.
+ * @return {string} Why the question was not converted.
+ */
+function conversionError(err) {
+	const body = (err && err.response && err.response.data) || {}
+	return body.status === 'intake-failed'
+		? t('pipelinq', 'dossiq could not start the Woo request. Try again later.')
+		: t('pipelinq', 'This question can no longer be converted.')
+}
+
 export default {
 	name: 'WooConversionSection',
 	components: {
@@ -122,6 +141,33 @@ export default {
 		},
 
 		/**
+		 * Ask the server to start the Woo request for this ticket.
+		 *
+		 * @return {Promise<object>} The response.
+		 */
+		requestWooConversion() {
+			return axios.post(
+				generateUrl('/apps/pipelinq/api/tickets/{id}/woo-request', {
+					id: this.objectId,
+				}),
+				{},
+			)
+		},
+
+		/**
+		 * Show the case the question became, linking it only to a local or
+		 * http(s) address.
+		 *
+		 * @param {object} data The answer.
+		 */
+		showConverted(data) {
+			this.status = 'converted'
+			this.caseReference = data.caseReference || ''
+			this.caseUrl = safeCaseUrl(data.caseUrl)
+			this.canConvert = false
+		},
+
+		/**
 		 * Start the Woo request in dossiq and record it on the ticket.
 		 *
 		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
@@ -133,27 +179,10 @@ export default {
 			this.busy = true
 			this.error = ''
 			try {
-				const { data } = await axios.post(
-					generateUrl('/apps/pipelinq/api/tickets/{id}/woo-request', {
-						id: this.objectId,
-					}),
-					{},
-				)
-				this.status = 'converted'
-				this.caseReference = data.caseReference || ''
-				this.caseUrl = /^(\/|https?:\/\/)/.test(String(data.caseUrl || ''))
-					? String(data.caseUrl)
-					: ''
-				this.canConvert = false
+				const { data } = await this.requestWooConversion()
+				this.showConverted(data)
 			} catch (err) {
-				const body = (err && err.response && err.response.data) || {}
-				this.error =
-					body.status === 'intake-failed'
-						? t(
-								'pipelinq',
-								'dossiq could not start the Woo request. Try again later.',
-							)
-						: t('pipelinq', 'This question can no longer be converted.')
+				this.error = conversionError(err)
 				await this.loadAvailability()
 			} finally {
 				this.busy = false

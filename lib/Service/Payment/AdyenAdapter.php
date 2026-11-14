@@ -22,19 +22,18 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
-use Throwable;
 
 /**
  * Adyen payment adapter.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 class AdyenAdapter extends AbstractPaymentAdapter {
 	/**
@@ -56,11 +55,29 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
 	 */
 	public function getName(): string {
 		return 'adyen';
 	}//end getName()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string The display name.
+	 */
+	protected function label(): string {
+		return 'Adyen';
+	}//end label()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, string> The API-key header.
+	 */
+	protected function authHeaders(): array {
+		return ['X-API-Key' => $this->credential(key: 'apiKey')];
+	}//end authHeaders()
 
 	/**
 	 * Initiate an Adyen payment.
@@ -71,7 +88,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, redirectUrl: string|null, status: string, error?: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 	 */
 	public function initiate(array $transactionData, float $amount, string $paymentMethod): array {
 		$apiKey = $this->credential(key: 'apiKey');
@@ -81,57 +98,44 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 			return $this->failedInitiate(message: 'Adyen API key or merchantAccount not configured');
 		}
 
-		$cents = $this->toCents(amount: $amount);
-		if ($cents <= 0) {
+		$payment = new PspPayment(transactionData: $transactionData, cents: $this->toCents(amount: $amount));
+		if ($payment->cents <= 0) {
 			return $this->failedInitiate(message: 'Invalid amount');
 		}
 
-		$reference = (string)($transactionData['reference'] ?? ('PIPELINQ-' . uniqid()));
+		$rawBody = (string)json_encode($this->paymentPayload(payment: $payment, paymentMethod: $paymentMethod));
+		$response = $this->send(call: new PspCall(url: $this->baseUrl() . '/payments', context: 'initiate failed'), body: $rawBody);
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedInitiate(message: $error);
+		}
 
-		$payload = [
+		return $this->pending(sessionId: (string)($response['body']['pspReference'] ?? ''), redirectUrl: null);
+	}//end initiate()
+
+	/**
+	 * The Adyen /payments request body; a transaction without a reference gets a generated one.
+	 *
+	 * @param PspPayment $payment       The payment.
+	 * @param string     $paymentMethod The normalised method name.
+	 *
+	 * @return array<string, mixed> The request body.
+	 */
+	private function paymentPayload(PspPayment $payment, string $paymentMethod): array {
+		return [
 			'amount' => [
-				'value' => $cents,
+				'value' => $payment->cents,
 				'currency' => 'EUR',
 			],
-			'reference' => $reference,
-			'merchantAccount' => $merchantAccount,
+			'reference' => (string)($payment->transactionData['reference'] ?? ('PIPELINQ-' . uniqid())),
+			'merchantAccount' => $this->configValue(key: 'merchantAccount', default: ''),
 			'paymentMethod' => ['type' => $this->mapMethod(method: $paymentMethod)],
 			'metadata' => [
-				'transactionId' => (string)($transactionData['id'] ?? ''),
+				'transactionId' => $payment->transactionId(),
 				'app' => 'pipelinq',
 			],
 		];
-
-		$rawBody = (string)json_encode($payload);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: $this->baseUrl() . '/payments',
-				headers: [
-					'X-API-Key' => $apiKey,
-					'Content-Type' => 'application/json',
-				],
-				body: $rawBody
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'initiate failed', e: $e);
-			return $this->failedInitiate(message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedInitiate(message: 'Adyen returned HTTP ' . $response['status']);
-		}
-
-		$body = $response['body'];
-		$sessionId = (string)($body['pspReference'] ?? '');
-
-		return [
-			'sessionId' => $sessionId,
-			'redirectUrl' => null,
-			'status' => 'pending',
-		];
-	}//end initiate()
+	}//end paymentPayload()
 
 	/**
 	 * Capture is a status read for Adyen (auto-capture by default).
@@ -140,7 +144,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, status: string, error?: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
 	 */
 	public function capture(string $sessionId): array {
 		$apiKey = $this->credential(key: 'apiKey');
@@ -149,35 +153,14 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 			return $this->failedCapture(sessionId: $sessionId, message: 'Adyen API key or session missing');
 		}
 
-		$payload = [
-			'merchantAccount' => $merchantAccount,
-		];
-		$rawBody = (string)json_encode($payload);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: $this->baseUrl() . '/payments/' . urlencode($sessionId) . '/captures',
-				headers: [
-					'X-API-Key' => $apiKey,
-					'Content-Type' => 'application/json',
-				],
-				body: $rawBody
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'capture failed', e: $e);
-			return $this->failedCapture(sessionId: $sessionId, message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedCapture(sessionId: $sessionId, message: 'Adyen returned HTTP ' . $response['status']);
+		$rawBody = (string)json_encode(['merchantAccount' => $merchantAccount]);
+		$call = new PspCall(url: $this->baseUrl() . '/payments/' . urlencode($sessionId) . '/captures', context: 'capture failed');
+		$error = $this->replyError(response: $this->send(call: $call, body: $rawBody));
+		if ($error !== null) {
+			return $this->failedCapture(sessionId: $sessionId, message: $error);
 		}
 
-		return [
-			'sessionId' => $sessionId,
-			'status' => 'captured',
-			'error' => null,
-		];
+		return $this->settled(sessionId: $sessionId, status: 'captured');
 	}//end capture()
 
 	/**
@@ -188,7 +171,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, refundId: string, status: string, error?: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
 	 */
 	public function refund(string $sessionId, string $reason): array {
 		$apiKey = $this->credential(key: 'apiKey');
@@ -197,44 +180,18 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 			return $this->failedRefund(sessionId: $sessionId, message: 'Adyen API key or session missing');
 		}
 
-		$refundReason = 'Refund via Pipelinq POS';
-		if ($reason !== '') {
-			$refundReason = $reason;
-		}
-
 		$payload = [
 			'merchantAccount' => $merchantAccount,
-			'merchantRefundReason' => $refundReason,
+			'merchantRefundReason' => $this->refundReason(reason: $reason),
 		];
-		$rawBody = (string)json_encode($payload);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: $this->baseUrl() . '/payments/' . urlencode($sessionId) . '/refunds',
-				headers: [
-					'X-API-Key' => $apiKey,
-					'Content-Type' => 'application/json',
-				],
-				body: $rawBody
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'refund failed', e: $e);
-			return $this->failedRefund(sessionId: $sessionId, message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedRefund(sessionId: $sessionId, message: 'Adyen returned HTTP ' . $response['status']);
+		$call = new PspCall(url: $this->baseUrl() . '/payments/' . urlencode($sessionId) . '/refunds', context: 'refund failed');
+		$response = $this->send(call: $call, body: (string)json_encode($payload));
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedRefund(sessionId: $sessionId, message: $error);
 		}
 
-		$refundId = (string)($response['body']['pspReference'] ?? '');
-
-		return [
-			'sessionId' => $sessionId,
-			'refundId' => $refundId,
-			'status' => 'refunded',
-			'error' => null,
-		];
+		return $this->refunded(sessionId: $sessionId, refundId: (string)($response['body']['pspReference'] ?? ''));
 	}//end refund()
 
 	/**
@@ -245,7 +202,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function validateWebhook(string $rawPayload, string $signature): bool {
 		if ($rawPayload === '' || $signature === '') {
@@ -283,7 +240,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, status: string, eventId: string, error: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function parseWebhook(array $payload): array {
 		$item = $payload;
@@ -309,17 +266,14 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{status: string, message: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function testConnection(): array {
 		$apiKey = $this->credential(key: 'apiKey');
 		$merchantAccount = $this->configValue(key: 'merchantAccount', default: '');
 
 		if ($apiKey === '' || $merchantAccount === '') {
-			return [
-				'status' => 'error',
-				'message' => 'API key of merchantAccount niet ingesteld',
-			];
+			return $this->notConfigured(message: 'API key of merchantAccount niet ingesteld');
 		}
 
 		$payload = [
@@ -330,37 +284,8 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 				'currency' => 'EUR',
 			],
 		];
-		$rawBody = (string)json_encode($payload);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: $this->baseUrl() . '/paymentMethods',
-				headers: [
-					'X-API-Key' => $apiKey,
-					'Content-Type' => 'application/json',
-				],
-				body: $rawBody
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'testConnection failed', e: $e);
-			return [
-				'status' => 'error',
-				'message' => 'Verbinding met Adyen mislukt',
-			];
-		}//end try
-
-		if ($response['status'] >= 200 && $response['status'] < 300) {
-			return [
-				'status' => 'ok',
-				'message' => 'Verbinding met Adyen succesvol',
-			];
-		}
-
-		return [
-			'status' => 'error',
-			'message' => 'Adyen gaf HTTP ' . $response['status'] . ' terug',
-		];
+		$call = new PspCall(url: $this->baseUrl() . '/paymentMethods', context: 'testConnection failed');
+		return $this->connectionVerdict(response: $this->send(call: $call, body: (string)json_encode($payload)));
 	}//end testConnection()
 
 	/**
@@ -369,11 +294,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 * @return string
 	 */
 	private function baseUrl(): string {
-		if ($this->isSandbox() === true) {
-			return self::SANDBOX_URL;
-		}
-
-		return self::LIVE_URL;
+		return $this->environmentUrl(sandboxUrl: self::SANDBOX_URL, liveUrl: self::LIVE_URL);
 	}//end baseUrl()
 
 	/**

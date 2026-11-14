@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,9 +31,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\BackgroundJob\BlastSendJob;
-use OCA\Pipelinq\Service\WebhookProcessorService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BlastSendJobInterface;
+use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -79,7 +79,8 @@ use Throwable;
  *  individually simple; splitting the class would only scatter one cohesive
  *  concern (provider event ingestion) across several files.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class BlastWebhookController extends Controller {
 	/**
@@ -92,20 +93,20 @@ class BlastWebhookController extends Controller {
 	 *
 	 * @param IRequest $request Request.
 	 * @param IAppConfig $appConfig App config — webhook secrets.
-	 * @param BlastSendJob $blastSendJob Queue tail (enqueueWebhookEvent).
-	 * @param WebhookProcessorService $webhookProcessor Synchronous fast-path helper.
+	 * @param BlastSendJobInterface $blastSendJob Queue tail (enqueueWebhookEvent).
+	 * @param WebhookProcessorServiceInterface $webhookProcessor Synchronous fast-path helper.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function __construct(
 		IRequest $request,
 		private IAppConfig $appConfig,
-		private BlastSendJob $blastSendJob,
-		private WebhookProcessorService $webhookProcessor,
+		private BlastSendJobInterface $blastSendJob,
+		private WebhookProcessorServiceInterface $webhookProcessor,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -124,7 +125,7 @@ class BlastWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Acknowledgement (`accepted` count).
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -167,7 +168,7 @@ class BlastWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Acknowledgement.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -212,7 +213,7 @@ class BlastWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Acknowledgement.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -622,7 +623,7 @@ class BlastWebhookController extends Controller {
 		}
 
 		$secret = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::SECRET_KEY_PREFIX . $provider,
 			'',
 		);
@@ -665,57 +666,75 @@ class BlastWebhookController extends Controller {
 	 */
 	private function normaliseSesEvent(array $event): array {
 		$type = strtolower((string)($event['notificationType'] ?? $event['eventType'] ?? ''));
-		if ($type === 'bounce') {
-			$bounce = ($event['bounce'] ?? []);
-			$bounceArray = [];
-			if (is_array($bounce) === true) {
-				$bounceArray = $bounce;
-			}
-
-			$bType = strtolower((string)($bounceArray['bounceType'] ?? ''));
-			$bounceTypeOut = 'soft';
-			if ($bType === 'permanent') {
-				$bounceTypeOut = 'hard';
-			}
-
-			return [
-				'eventType' => 'bounce',
-				'bounceType' => $bounceTypeOut,
-				'providerId' => (string)($event['mail']['messageId'] ?? ''),
-				'email' => (string)($bounceArray['bouncedRecipients'][0]['emailAddress'] ?? ''),
-				'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
-				'reason' => (string)($bounceArray['bouncedRecipients'][0]['diagnosticCode'] ?? ''),
-			];
-		}//end if
-
-		if ($type === 'complaint') {
-			$complaint = ($event['complaint'] ?? []);
-			$complaintArray = [];
-			if (is_array($complaint) === true) {
-				$complaintArray = $complaint;
-			}
-
-			return [
-				'eventType' => 'complaint',
-				'providerId' => (string)($event['mail']['messageId'] ?? ''),
-				'email' => (string)($complaintArray['complainedRecipients'][0]['emailAddress'] ?? ''),
-				'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
-			];
-		}
-
-		if ($type === 'delivery') {
-			return [
+		return match ($type) {
+			'bounce' => $this->sesBounce(event: $event),
+			'complaint' => $this->sesComplaint(event: $event),
+			'delivery' => [
 				'eventType' => 'delivered',
 				'providerId' => (string)($event['mail']['messageId'] ?? ''),
 				'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
-			];
+			],
+			default => ['eventType' => $type, 'providerId' => (string)($event['mail']['messageId'] ?? '')],
+		};
+	}//end normaliseSesEvent()
+
+	/**
+	 * Normalise an SES bounce: `Permanent` is hard, anything else soft.
+	 *
+	 * @param array<string, mixed> $event SES event.
+	 *
+	 * @return array<string, mixed> Normalised event.
+	 */
+	private function sesBounce(array $event): array {
+		$bounce = $this->sesSection(event: $event, key: 'bounce');
+		$bounceTypeOut = 'soft';
+		if (strtolower((string)($bounce['bounceType'] ?? '')) === 'permanent') {
+			$bounceTypeOut = 'hard';
 		}
 
 		return [
-			'eventType' => $type,
+			'eventType' => 'bounce',
+			'bounceType' => $bounceTypeOut,
 			'providerId' => (string)($event['mail']['messageId'] ?? ''),
+			'email' => (string)($bounce['bouncedRecipients'][0]['emailAddress'] ?? ''),
+			'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
+			'reason' => (string)($bounce['bouncedRecipients'][0]['diagnosticCode'] ?? ''),
 		];
-	}//end normaliseSesEvent()
+	}//end sesBounce()
+
+	/**
+	 * Normalise an SES complaint.
+	 *
+	 * @param array<string, mixed> $event SES event.
+	 *
+	 * @return array<string, mixed> Normalised event.
+	 */
+	private function sesComplaint(array $event): array {
+		$complaint = $this->sesSection(event: $event, key: 'complaint');
+		return [
+			'eventType' => 'complaint',
+			'providerId' => (string)($event['mail']['messageId'] ?? ''),
+			'email' => (string)($complaint['complainedRecipients'][0]['emailAddress'] ?? ''),
+			'timestamp' => (string)($event['mail']['timestamp'] ?? ''),
+		];
+	}//end sesComplaint()
+
+	/**
+	 * One section of an SES event, or [] when it is missing or not an array.
+	 *
+	 * @param array<string, mixed> $event SES event.
+	 * @param string               $key   Section key.
+	 *
+	 * @return array<string, mixed> The section.
+	 */
+	private function sesSection(array $event, string $key): array {
+		$section = ($event[$key] ?? []);
+		if (is_array($section) === false) {
+			return [];
+		}
+
+		return $section;
+	}//end sesSection()
 
 	/**
 	 * Normalise a Twilio SMS status callback into our event shape.

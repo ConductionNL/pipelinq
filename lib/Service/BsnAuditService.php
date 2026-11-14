@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.4
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  */
 
 declare(strict_types=1);
@@ -26,14 +26,16 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
+use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Append-only audit-trail service for BSN bevragingen.
@@ -44,9 +46,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * via {@see pseudonymise()} — the rest of the audit chain (actor / doelbinding /
  * tijdstip) remains traceable.
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005
  */
-class BsnAuditService {
+class BsnAuditService implements BsnAuditServiceInterface {
 	use EntityAccessorTrait;
 
 	/**
@@ -77,125 +79,103 @@ class BsnAuditService {
 	 * persistent path; callers MUST pass the raw BSN so it can be hashed in-process and
 	 * immediately discarded.
 	 *
-	 * @param string $actor Actor user UID.
-	 * @param string $rawBsn Raw 9-digit BSN (hashed in-process; never stored).
-	 * @param string $verzoekreden Verzoekreden (compliance audit field).
-	 * @param string $purposeBinding Doelbinding (compliance audit field).
-	 * @param string $outcome Outcome enum value (see schema).
-	 * @param string $action Action enum value (default `brp-lookup-uitgevoerd`).
-	 * @param int|null $responseCode HTTP status from HaalCentraal (200, 404, 503).
-	 * @param string|null $haalcentraalCorrelationId Correlation ID for trace.
-	 * @param string|null $linkedRequest UUID of linked Pipelinq verzoek.
-	 * @param string|null $actorRole Role of actor (behandelaar-burgerzaken).
-	 * @param bool $vogScreening VOG-screening flag for Justis.
-	 * @param string|null $bsnHash The subject's ALREADY-COMPUTED hash, for callers
-	 *                             that hold it but cannot reconstruct the raw BSN.
-	 *                             Takes precedence over hashing $rawBsn.
+	 * @param string      $actor  Actor user UID.
+	 * @param LookupAudit $lookup The subject, grounds, outcome and actor role of the lookup.
 	 *
 	 * @return string The UUID of the written audit record (empty string if writing fails).
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005-01
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) One audit record maps 1:1 to these compliance fields; a DTO would only shift the list.
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)    $vogScreening is an audit fact recorded verbatim on the record, not a behaviour switch.
-	 * @SuppressWarnings(PHPMD.LongVariable)           $haalcentraalCorrelationId mirrors the named-arg caller; renaming breaks the call site.
-	 * @SuppressWarnings(PHPMD.StaticAccess)           BsnValidationService hash/mask are pure stateless helpers.
+	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::mask is a pure stateless helper.
 	 */
-	public function recordLookup(
-		string $actor,
-		string $rawBsn,
-		string $verzoekreden,
-		string $purposeBinding,
-		string $outcome,
-		string $action = 'brp-lookup-executed',
-		?int $responseCode = null,
-		?string $haalcentraalCorrelationId = null,
-		?string $linkedRequest = null,
-		?string $actorRole = null,
-		bool $vogScreening = false,
-		?string $bsnHash = null,
-	): string {
-		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$retainUntil = $now->modify('+' . self::RETENTION_YEARS . ' years');
-
-		$subjectHash = $this->resolveSubjectHash(rawBsn: $rawBsn, bsnHash: $bsnHash);
-
-		$record = [
-			'action' => $action,
-			// A caller that already HOLDS the subject's hash passes it through.
-			// Hashing an empty `$rawBsn` yields sha256("") — the same constant for
-			// every person — which is an audit record that names no data subject.
-			// That is what BrpController::revealAddress produced for every
-			// geheimhouding reveal, because the raw BSN is not reconstructible
-			// there and the persoon already carries its own hash.
-			'bsnHash' => $subjectHash,
-			'actor' => $actor,
-			'actorRole' => $actorRole,
-			'moment' => $now->format(DATE_ATOM),
-			'verzoekreden' => $verzoekreden,
-			'purposeBinding' => $purposeBinding,
-			'outcome' => $outcome,
-			'responseCode' => $responseCode,
-			'ipAddress' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
-			'userAgent' => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
-			'haalcentraalCorrelationId' => $haalcentraalCorrelationId,
-			'linkedRequest' => $linkedRequest,
-			'vogScreening' => $vogScreening,
-			'retainUntil' => $retainUntil->format(DATE_ATOM),
-		];
-
-		// Drop nulls — they pollute the audit record.
-		$record = array_filter($record, static fn ($v) => $v !== null);
+	public function recordLookup(string $actor, LookupAudit $lookup): string {
+		$record = $this->auditRecord(actor: $actor, lookup: $lookup);
 
 		// Mask the BSN in logs (REQ-BSN-009-01) — never the raw value.
-		$maskedBsn = BsnValidationService::mask($rawBsn);
+		$logContext = [
+			'action' => $lookup->result->action,
+			'actor' => $actor,
+			'bsn' => BsnValidationService::mask($lookup->subject->rawBsn),
+		];
 
 		try {
-			[$register, $schema] = $this->config();
-			$saved = $this->getObjectService()->saveObject(
-				object: $record,
-				extend: [],
-				register: $register,
-				schema: $schema,
-			);
-
-			$uuid = '';
-			if (is_array($saved) === true) {
-				$uuid = (string)($saved['@self']['id'] ?? $saved['id'] ?? '');
-			} elseif (is_object($saved) === true) {
-				// SaveObject() returns an ObjectEntity whose getUuid() is served by
-				// Entity::__call — method_exists() is FALSE for it, so every AVG/BSN
-				// audit record was written and its handle returned as ''
-				// (pipelinq#807); four callers consume that handle.
-				$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
-			}
-
-			$this->logger->info(
-				'BSN audit record written',
-				[
-					'action' => $action,
-					'actor' => $actor,
-					'bsn' => $maskedBsn,
-					'outcome' => $outcome,
-				]
-			);
+			$uuid = $this->saveRecord(record: $record);
+			$this->logger->info('BSN audit record written', [...$logContext, 'outcome' => $lookup->result->outcome]);
 			return $uuid;
 		} catch (Throwable $e) {
 			// Failing to write the audit record must NOT crash the calling flow — the
 			// outcome is still surfaced through the controller. Log the error with the
 			// masked BSN so postmortems are possible.
-			$this->logger->error(
-				'BSN audit record write failed',
-				[
-					'action' => $action,
-					'actor' => $actor,
-					'bsn' => $maskedBsn,
-					'error' => $e->getMessage(),
-				]
-			);
+			$this->logger->error('BSN audit record write failed', [...$logContext, 'error' => $e->getMessage()]);
 			return '';
-		}//end try
+		}
 	}//end recordLookup()
+
+	/**
+	 * The bsnAuditRecord row for one lookup, without null fields.
+	 *
+	 * @param string      $actor  Actor user UID.
+	 * @param LookupAudit $lookup The lookup.
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private function auditRecord(string $actor, LookupAudit $lookup): array {
+		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$retainUntil = $now->modify('+' . self::RETENTION_YEARS . ' years');
+
+		$record = [
+			'action' => $lookup->result->action,
+			'bsnHash' => $this->resolveSubjectHash(rawBsn: $lookup->subject->rawBsn, bsnHash: $lookup->subject->bsnHash),
+			'actor' => $actor,
+			'actorRole' => $lookup->actorRole,
+			'moment' => $now->format(DATE_ATOM),
+			'verzoekreden' => $lookup->reason->verzoekreden,
+			'purposeBinding' => $lookup->reason->purposeBinding,
+			'outcome' => $lookup->result->outcome,
+			'responseCode' => $lookup->result->responseCode,
+			'ipAddress' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
+			'userAgent' => 'Pipelinq/' . (AppIdentity::APP_ID) . ' (Nextcloud)',
+			'haalcentraalCorrelationId' => $lookup->result->correlationId,
+			'linkedRequest' => $lookup->reason->linkedRequest,
+			'vogScreening' => $lookup->reason->vogScreening,
+			'retainUntil' => $retainUntil->format(DATE_ATOM),
+		];
+
+		// Drop nulls — they pollute the audit record.
+		return array_filter($record, static fn ($v) => $v !== null);
+	}//end auditRecord()
+
+	/**
+	 * Save an audit row and return its UUID.
+	 *
+	 * @param array<string, mixed> $record The row.
+	 *
+	 * @return string The UUID, or empty when the store returned none.
+	 *
+	 * @throws Throwable When the register is not configured or the save fails.
+	 */
+	private function saveRecord(array $record): string {
+		[$register, $schema] = $this->config();
+		$saved = $this->getObjectService()->saveObject(
+			object: $record,
+			extend: [],
+			register: $register,
+			schema: $schema,
+		);
+
+		if (is_array($saved) === true) {
+			return (string)($saved['@self']['id'] ?? $saved['id'] ?? '');
+		}
+
+		if (is_object($saved) === true) {
+			// SaveObject() returns an ObjectEntity whose getUuid() is served by
+			// Entity::__call — method_exists() is FALSE for it, so the handle is
+			// read through the entity accessor (pipelinq#807).
+			return $this->readEntityValue(entity: $saved, getter: 'getUuid');
+		}
+
+		return '';
+	}//end saveRecord()
 
 	/**
 	 * The hash that identifies the data subject of an audit record.
@@ -218,7 +198,11 @@ class BsnAuditService {
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper — the same
 	 * justification recordLookup() already carries for the call this was extracted from.
 	 */
-	private function resolveSubjectHash(string $rawBsn, ?string $bsnHash): string {
+	private function resolveSubjectHash(
+		#[\SensitiveParameter]
+		string $rawBsn,
+		?string $bsnHash,
+	): string {
 		if ($bsnHash !== null && $bsnHash !== '') {
 			return $bsnHash;
 		}
@@ -239,69 +223,14 @@ class BsnAuditService {
 	 *
 	 * @return int Number of records pseudonymised.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-008-02
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
 	 */
-	public function pseudonymise(string $rawBsn): int {
+	public function pseudonymise(
+		#[\SensitiveParameter]
+		string $rawBsn,
+	): int {
 		try {
-			[$register, $schema] = $this->config();
-			$oldHash = BsnValidationService::hash($rawBsn);
-			// Pseudonym = HMAC(bsn, secret) — caller-side; we just bump it once.
-			$secret = $this->appConfig->getValueString(
-				Application::APP_ID,
-				'brp.pseudonym_secret',
-				''
-			);
-			if ($secret === '') {
-				$this->logger->warning(
-					'No pseudonym secret configured; RTBF pseudonymise skipped',
-					['actor' => 'system']
-				);
-				return 0;
-			}
-
-			$newHash = hash_hmac('sha256', $rawBsn, $secret);
-
-			$records = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'bsnHash' => $oldHash,
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
-
-			$count = 0;
-			foreach (($records ?? []) as $record) {
-				$arr = [];
-				if (is_array($record) === true) {
-					$arr = $record;
-				} elseif (method_exists($record, 'jsonSerialize') === true) {
-					$arr = (array)$record->jsonSerialize();
-				}
-
-				$uuid = (string)($arr['@self']['id'] ?? $arr['id'] ?? '');
-				if ($uuid === '') {
-					continue;
-				}
-
-				// Immutable schema: callers MUST go through the system pseudonym path.
-				$arr['bsnHash'] = $newHash;
-				$arr['action'] = 'brp-rtbf-pseudonymised';
-				$arr['outcome'] = 'pseudonymised';
-				$this->getObjectService()->saveObject(
-					object: $arr,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: $uuid,
-				);
-				$count++;
-			}//end foreach
-
-			return $count;
+			return $this->pseudonymiseRecords(rawBsn: $rawBsn);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'BSN audit pseudonymise failed',
@@ -312,13 +241,161 @@ class BsnAuditService {
 	}//end pseudonymise()
 
 	/**
+	 * Rewrite the bsnHash of every audit record linked to a BSN to its pseudonym.
+	 *
+	 * @param string $rawBsn Raw BSN of the citizen exercising RTBF.
+	 *
+	 * @return int Number of records pseudonymised; 0 when no pseudonym secret is configured.
+	 *
+	 * @throws RuntimeException When the audit register or schema is not configured.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
+	 */
+	private function pseudonymiseRecords(
+		#[\SensitiveParameter]
+		string $rawBsn,
+	): int {
+		[$register, $schema] = $this->config();
+		$oldHash = BsnValidationService::hash($rawBsn);
+		// Pseudonym = HMAC(bsn, secret) — caller-side; we just bump it once.
+		$secret = $this->pseudonymSecret();
+		if ($secret === '') {
+			return 0;
+		}
+
+		$newHash = hash_hmac('sha256', $rawBsn, $secret);
+
+		$records = $this->recordsWithHash(hash: $oldHash, register: $register, schema: $schema);
+		return $this->rewriteRecords(records: $records, newHash: $newHash, register: $register, schema: $schema);
+	}//end pseudonymiseRecords()
+
+	/**
+	 * Read the configured pseudonym secret, warning when none is set.
+	 *
+	 * @return string The secret, or an empty string when none is configured.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function pseudonymSecret(): string {
+		$secret = $this->appConfig->getValueString(
+			AppIdentity::APP_ID,
+			'brp.pseudonym_secret',
+			''
+		);
+		if ($secret === '') {
+			$this->logger->warning(
+				'No pseudonym secret configured; RTBF pseudonymise skipped',
+				['actor' => 'system']
+			);
+		}
+
+		return $secret;
+	}//end pseudonymSecret()
+
+	/**
+	 * Find the audit records that carry a given bsnHash.
+	 *
+	 * @param string $hash The bsnHash to match.
+	 * @param string $register The register id.
+	 * @param string $schema The audit record schema id.
+	 *
+	 * @return mixed The findAll result.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function recordsWithHash(string $hash, string $register, string $schema) {
+		return $this->getObjectService()->findAll(
+			config: [
+				'filters' => [
+					'bsnHash' => $hash,
+					'register' => $register,
+					'schema' => $schema,
+				],
+			]
+		);
+	}//end recordsWithHash()
+
+	/**
+	 * Rewrite each record to the new hash and count the records saved.
+	 *
+	 * @param mixed $records The records found for the old hash.
+	 * @param string $newHash The pseudonym hash.
+	 * @param string $register The register id.
+	 * @param string $schema The audit record schema id.
+	 *
+	 * @return int Number of records saved.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function rewriteRecords($records, string $newHash, string $register, string $schema): int {
+		$count = 0;
+		foreach (($records ?? []) as $record) {
+			if ($this->rewriteRecord(record: $record, newHash: $newHash, register: $register, schema: $schema) === true) {
+				$count++;
+			}
+		}
+
+		return $count;
+	}//end rewriteRecords()
+
+	/**
+	 * Save one record under the new hash.
+	 *
+	 * @param mixed $record The record as returned by OpenRegister.
+	 * @param string $newHash The pseudonym hash.
+	 * @param string $register The register id.
+	 * @param string $schema The audit record schema id.
+	 *
+	 * @return bool Whether the record was saved; false when it has no id.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function rewriteRecord($record, string $newHash, string $register, string $schema): bool {
+		$arr = $this->recordArray(record: $record);
+
+		$uuid = (string)($arr['@self']['id'] ?? $arr['id'] ?? '');
+		if ($uuid === '') {
+			return false;
+		}
+
+		// Immutable schema: callers MUST go through the system pseudonym path.
+		$arr['bsnHash'] = $newHash;
+		$arr['action'] = 'brp-rtbf-pseudonymised';
+		$arr['outcome'] = 'pseudonymised';
+		$this->getObjectService()->saveObject(object: $arr, extend: [], register: $register, schema: $schema, uuid: $uuid);
+		return true;
+	}//end rewriteRecord()
+
+	/**
+	 * Coerce an OpenRegister record into an array.
+	 *
+	 * @param mixed $record The record.
+	 *
+	 * @return array<mixed> The record data; empty when it is neither an array nor serialisable.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
+	 */
+	private function recordArray($record): array {
+		$arr = [];
+		if (is_array($record) === true) {
+			$arr = $record;
+		} elseif (method_exists($record, 'jsonSerialize') === true) {
+			$arr = (array)$record->jsonSerialize();
+		}
+
+		return $arr;
+	}//end recordArray()
+
+	/**
 	 * Anonymise an IPv4 address by zeroing the last octet (ipv6: zero the last 80 bits).
 	 *
 	 * @param string $ipAddress Raw IP from request scope.
 	 *
 	 * @return string Anonymised IP suitable for audit storage.
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-009-01
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
 	public static function anonymiseIp(string $ipAddress): string {
 		if ($ipAddress === '') {
@@ -358,8 +435,8 @@ class BsnAuditService {
 	 * @throws RuntimeException If configuration is missing.
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'bsnAuditRecord_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'bsnAuditRecord_schema', '');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('bsnAuditRecord register/schema not configured.');
 		}

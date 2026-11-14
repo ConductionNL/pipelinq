@@ -5,7 +5,7 @@
   BookingRowsEditor. Used by ResourceForm and by the resource edit dialog's
   `#field-vacations` slot.
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
 	<BookingRowsEditor
@@ -55,39 +55,17 @@
 import { NcTextField } from '@nextcloud/vue'
 import BookingRowsEditor from './BookingRowsEditor.vue'
 import { vacationsError } from '../../utils/resourceValidation.js'
+import resourceRowsFieldMixin from './resourceRowsFieldMixin.js'
 
 export default {
 	name: 'ResourceVacationsEditor',
 	components: { BookingRowsEditor, NcTextField },
 
-	props: {
-		/** The rows: `{ startDate, endDate, label }[]`. */
-		modelValue: {
-			type: Array,
-			default: () => [],
-		},
-
-		/** An error from the host form, shown instead of the live rule check. */
-		error: {
-			type: String,
-			default: '',
-		},
-	},
+	mixins: [resourceRowsFieldMixin],
 
 	emits: ['update:modelValue'],
 
 	computed: {
-		/**
-		 * The vacation rows, or none when the value is not an array.
-		 *
-		 * @return {Array<object>}
-		 *
-		 * @spec openspec/specs/appointment-booking/spec.md
-		 */
-		rows() {
-			return Array.isArray(this.modelValue) ? this.modelValue : []
-		},
-
 		/**
 		 * The first rule the rows break, or an empty string.
 		 *

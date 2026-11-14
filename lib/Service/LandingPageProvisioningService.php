@@ -30,14 +30,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LandingPageProvisioningServiceInterface;
+use OCA\Pipelinq\Service\Marketing\CampaignFormDestination;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -47,9 +49,9 @@ use Throwable;
 /**
  * LandingPageProvisioningService: one campaign asks Portaliq for one page.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
  */
-class LandingPageProvisioningService {
+class LandingPageProvisioningService implements LandingPageProvisioningServiceInterface {
 
 	/**
 	 * Portaliq's request event. A string, never a `use`: importing it
@@ -93,7 +95,7 @@ class LandingPageProvisioningService {
 	 * @param IL10N $l10n Translates the form labels the visitor reads.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function __construct(
 		private IEventDispatcher $dispatcher,
@@ -114,7 +116,7 @@ class LandingPageProvisioningService {
 	 * @return array{error: string, portal: string, route: string, pageId: string, publicUrl: string, formId: string}
 	 *         `error` is empty on success, otherwise Portaliq's own code or `portaliq_missing`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function createFor(string $campaignId, string $portal = '', string $route = ''): array {
 		$campaign = $this->campaigns->find(id: $campaignId);
@@ -138,10 +140,8 @@ class LandingPageProvisioningService {
 		}
 
 		return $this->dispatchAndRecord(
-			campaignId: $campaignId,
-			campaign: $campaign,
-			portal: $targetPortal,
-			route: $targetRoute
+			order: new LandingPageOrder(campaignId: $campaignId, campaign: $campaign),
+			placement: new LandingPlacement(portal: $targetPortal, route: $targetRoute)
 		);
 	}//end createFor()
 
@@ -151,7 +151,7 @@ class LandingPageProvisioningService {
 	 *
 	 * @return bool True when Portaliq is present.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	protected function isPortaliqInstalled(): bool {
 		return class_exists(self::REQUEST_EVENT_CLASS);
@@ -168,7 +168,7 @@ class LandingPageProvisioningService {
 	 *
 	 * @return array<string, mixed> `summary`, `body`, `heroImageRef`, `links`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function articleFor(array $campaign): array {
 		return [
@@ -188,7 +188,7 @@ class LandingPageProvisioningService {
 	 *
 	 * @return array<string, mixed> `fields`, `submitLabel`, `consentText`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function formDefinition(): array {
 		return [
@@ -203,6 +203,27 @@ class LandingPageProvisioningService {
 	}//end formDefinition()
 
 	/**
+	 * The form of one campaign: its fields, and the lead a submit creates.
+	 *
+	 * Decision 179: the form names its destination, so the page that hosts it
+	 * creates the lead in the visitor's own request. Without `destination`
+	 * the form is made but cannot be submitted.
+	 *
+	 * @param string               $campaignId The campaign id.
+	 * @param array<string, mixed> $campaign   The campaign row.
+	 *
+	 * @return array<string, mixed> `fields`, `submitLabel`, `consentText`, `destination`.
+	 *
+	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
+	 */
+	public function formFor(string $campaignId, array $campaign): array {
+		$form = $this->formDefinition();
+		$form['destination'] = (new CampaignFormDestination())->forCampaign(campaignId: $campaignId, campaign: $campaign);
+
+		return $form;
+	}//end formFor()
+
+	/**
 	 * The route a campaign's page gets when the caller names none.
 	 *
 	 * @param array<string, mixed> $campaign The campaign.
@@ -210,7 +231,7 @@ class LandingPageProvisioningService {
 	 *
 	 * @return string A route with a leading slash.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function routeFor(array $campaign, string $requested = ''): string {
 		$route = trim($requested);
@@ -228,71 +249,147 @@ class LandingPageProvisioningService {
 	/**
 	 * Dispatch the request and record what Portaliq answered.
 	 *
-	 * @param string $campaignId The campaign id.
-	 * @param array<string, mixed> $campaign The campaign row.
-	 * @param string $portal The portal slug.
-	 * @param string $route The in-portal route.
+	 * @param LandingPageOrder $order     The campaign id and row.
+	 * @param LandingPlacement $placement The portal slug and in-portal route.
 	 *
 	 * @return array{error: string, portal: string, route: string, pageId: string, publicUrl: string, formId: string}
 	 */
-	private function dispatchAndRecord(string $campaignId, array $campaign, string $portal, string $route): array {
-		$eventClass = self::REQUEST_EVENT_CLASS;
+	private function dispatchAndRecord(LandingPageOrder $order, LandingPlacement $placement): array {
+		$event = $this->dispatchRequest(order: $order, placement: $placement);
+		if ($event === null) {
+			return $this->failure(error: 'write_failed');
+		}
 
+		$error = self::refusalOf(event: $event);
+		if ($error !== '') {
+			return $this->failure(error: $error, portal: $placement->portal, route: $placement->route);
+		}
+
+		$landingPage = $this->landingPageOf(placement: $placement, event: $event);
+		$formId = (string)($event->getFormId() ?? '');
+
+		$this->campaigns->recordLandingPage(id: $order->campaignId, landingPage: $landingPage, formId: $formId);
+
+		return self::created(landingPage: $landingPage, formId: $formId);
+	}//end dispatchAndRecord()
+
+	/**
+	 * Build and dispatch Portaliq's request event; null (logged) when that throws.
+	 *
+	 * @param LandingPageOrder $order     The campaign id and row.
+	 * @param LandingPlacement $placement The portal slug and in-portal route.
+	 *
+	 * @return object|null The dispatched event.
+	 */
+	private function dispatchRequest(LandingPageOrder $order, LandingPlacement $placement): ?object {
 		try {
-			$event = new $eventClass(
-				self::SOURCE_APP,
-				$portal,
-				$route,
-				trim((string)($campaign['name'] ?? '')),
-				$this->l10n->getLanguageCode(),
-				$this->articleFor(campaign: $campaign),
-				$this->formDefinition(),
-				[
-					'campaign' => (string)($campaign['utmCampaign'] ?? ''),
-					'source' => (string)($campaign['utmSource'] ?? ''),
-					'medium' => (string)($campaign['utmMedium'] ?? ''),
-				],
-				('pipelinq:campaign:' . $campaignId),
-				('pipelinq-campaign-' . $campaignId)
-			);
+			$event = $this->requestEvent(order: $order, placement: $placement);
 			$this->dispatcher->dispatchTyped($event);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'LandingPageProvisioningService: dispatching the landing page request failed',
-				['campaign' => $campaignId, 'portal' => $portal, 'exception' => $e->getMessage()]
+				['campaign' => $order->campaignId, 'portal' => $placement->portal, 'exception' => $e->getMessage()]
 			);
-			return $this->failure(error: 'write_failed');
+			return null;
 		}
 
+		return $event;
+	}//end dispatchRequest()
+
+	/**
+	 * Portaliq's request event for a campaign's landing page.
+	 *
+	 * @param LandingPageOrder $order     The campaign id and row.
+	 * @param LandingPlacement $placement The portal slug and in-portal route.
+	 *
+	 * @return object The event.
+	 */
+	private function requestEvent(LandingPageOrder $order, LandingPlacement $placement): object {
+		$eventClass = self::REQUEST_EVENT_CLASS;
+		$campaign = $order->campaign;
+
+		return new $eventClass(
+			self::SOURCE_APP,
+			$placement->portal,
+			$placement->route,
+			trim((string)($campaign['name'] ?? '')),
+			$this->l10n->getLanguageCode(),
+			$this->articleFor(campaign: $campaign),
+			$this->formFor(campaignId: $order->campaignId, campaign: $campaign),
+			self::utmOf(campaign: $campaign),
+			(new CampaignFormDestination())->referenceFor(campaignId: $order->campaignId),
+			('pipelinq-campaign-' . $order->campaignId)
+		);
+	}//end requestEvent()
+
+	/**
+	 * The campaign's UTM values as Portaliq takes them.
+	 *
+	 * @param array<string, mixed> $campaign The campaign row.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function utmOf(array $campaign): array {
+		return [
+			'campaign' => (string)($campaign['utmCampaign'] ?? ''),
+			'source' => (string)($campaign['utmSource'] ?? ''),
+			'medium' => (string)($campaign['utmMedium'] ?? ''),
+		];
+	}//end utmOf()
+
+	/**
+	 * Portaliq's refusal code: its own error, portaliq_missing when nobody
+	 * handled the request, '' when the page was created.
+	 *
+	 * @param object $event The dispatched event.
+	 *
+	 * @return string
+	 */
+	private static function refusalOf(object $event): string {
 		$error = (string)($event->getError() ?? '');
-		if ($error !== '' || $event->isHandled() === false) {
-			if ($error === '') {
-				$error = self::ERROR_PORTALIQ_MISSING;
-			}
-
-			return $this->failure(error: $error, portal: $portal, route: $route);
+		if ($error !== '' || $event->isHandled() === true) {
+			return $error;
 		}
 
-		$landingPage = [
-			'portal' => $portal,
-			'route' => $this->firstNonEmpty(preferred: $event->getRoute(), fallback: $route),
+		return self::ERROR_PORTALIQ_MISSING;
+	}//end refusalOf()
+
+	/**
+	 * The landing page record for the campaign, from what Portaliq answered.
+	 *
+	 * @param LandingPlacement $placement The portal and route that were asked for.
+	 * @param object           $event     The handled event.
+	 *
+	 * @return array{portal: string, route: string, pageId: string, publicUrl: string, createdAt: string}
+	 */
+	private function landingPageOf(LandingPlacement $placement, object $event): array {
+		return [
+			'portal' => $placement->portal,
+			'route' => $this->firstNonEmpty(preferred: $event->getRoute(), fallback: $placement->route),
 			'pageId' => (string)($event->getPageId() ?? ''),
 			'publicUrl' => (string)($event->getPublicUrl() ?? ''),
 			'createdAt' => gmdate('Y-m-d\TH:i:sP'),
 		];
-		$formId = (string)($event->getFormId() ?? '');
+	}//end landingPageOf()
 
-		$this->campaigns->recordLandingPage(id: $campaignId, landingPage: $landingPage, formId: $formId);
-
+	/**
+	 * The success envelope for a recorded landing page.
+	 *
+	 * @param array<string, string> $landingPage The recorded landing page.
+	 * @param string                $formId      The form Portaliq created.
+	 *
+	 * @return array{error: string, portal: string, route: string, pageId: string, publicUrl: string, formId: string}
+	 */
+	private static function created(array $landingPage, string $formId): array {
 		return [
 			'error' => '',
-			'portal' => $portal,
+			'portal' => $landingPage['portal'],
 			'route' => $landingPage['route'],
 			'pageId' => $landingPage['pageId'],
 			'publicUrl' => $landingPage['publicUrl'],
 			'formId' => $formId,
 		];
-	}//end dispatchAndRecord()
+	}//end created()
 
 	/**
 	 * The first of two values that is not empty.
@@ -316,12 +413,12 @@ class LandingPageProvisioningService {
 	 * @return string The slug, or an empty string when none is configured.
 	 */
 	private function configuredPortal(): string {
-		$portal = trim($this->appConfig->getValueString(Application::APP_ID, self::PORTAL_CONFIG_KEY, ''));
+		$portal = trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::PORTAL_CONFIG_KEY, ''));
 		if ($portal !== '') {
 			return $portal;
 		}
 
-		return trim($this->appConfig->getValueString(Application::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
 	}//end configuredPortal()
 
 	/**

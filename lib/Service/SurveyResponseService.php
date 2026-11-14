@@ -28,7 +28,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 
 declare(strict_types=1);
@@ -38,7 +38,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SurveyResponseServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -46,9 +47,32 @@ use Throwable;
 /**
  * Open and answer a survey by its per-invitation token.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
+ *
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
-class SurveyResponseService {
+class SurveyResponseService implements SurveyResponseServiceInterface {
+	/**
+	 * App-config key of the satisfaction survey schema.
+	 *
+	 * @var string
+	 */
+	private const SURVEY_SCHEMA_KEY = 'survey_schema';
+
+	/**
+	 * App-config key of the client schema.
+	 *
+	 * @var string
+	 */
+	private const CLIENT_SCHEMA_KEY = 'client_schema';
+
+	/**
+	 * The survey fields the public page shows.
+	 *
+	 * @var array<int, string>
+	 */
+	private const SURVEY_PAGE_FIELDS = ['id', 'title', 'description', 'questions'];
+
 	/**
 	 * Constructor.
 	 *
@@ -81,7 +105,7 @@ class SurveyResponseService {
 	 *
 	 * @return string One of open, closed, expired, unknown.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function stateOf(?array $invitation, ?DateTimeImmutable $now = null): string {
 		if ($invitation === null) {
@@ -89,6 +113,21 @@ class SurveyResponseService {
 		}
 
 		$now = ($now ?? new DateTimeImmutable());
+
+		return $this->stateAt(invitation: $invitation, now: $now);
+	}//end stateOf()
+
+	/**
+	 * The state of a known invitation at a moment.
+	 *
+	 * @param array<string, mixed> $invitation The invitation.
+	 * @param DateTimeImmutable $now The reference time.
+	 *
+	 * @return string open, closed, expired or unknown.
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 */
+	private function stateAt(array $invitation, DateTimeImmutable $now): string {
 		$status = (string)($invitation['status'] ?? '');
 
 		if ($status === 'responded') {
@@ -99,20 +138,48 @@ class SurveyResponseService {
 			return 'expired';
 		}
 
+		if ($this->pastExpiry(invitation: $invitation, now: $now) === true) {
+			return 'expired';
+		}
+
+		return $this->liveState(status: $status);
+	}//end stateAt()
+
+	/**
+	 * Whether the invitation carries a readable expiry before the moment.
+	 *
+	 * @param array<string, mixed> $invitation The invitation.
+	 * @param DateTimeImmutable $now The reference time.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 */
+	private function pastExpiry(array $invitation, DateTimeImmutable $now): bool {
 		$expiresAt = trim((string)($invitation['expiresAt'] ?? ''));
 		if ($expiresAt !== '') {
 			try {
 				if (new DateTimeImmutable($expiresAt) < $now) {
-					return 'expired';
+					return true;
 				}
 			} catch (Throwable $e) {
-				$this->logger->debug(
-					'SurveyResponseService: an invitation carries an unusable expiry',
-					['expiresAt' => $expiresAt]
-				);
+				$this->logger->debug('SurveyResponseService: an invitation carries an unusable expiry', ['expiresAt' => $expiresAt]);
 			}
 		}
 
+		return false;
+	}//end pastExpiry()
+
+	/**
+	 * The state of an unexpired invitation by its status.
+	 *
+	 * @param string $status The invitation status.
+	 *
+	 * @return string open or unknown.
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 */
+	private function liveState(string $status): string {
 		if ($status === 'sent' || $status === 'scheduled') {
 			return 'open';
 		}
@@ -120,7 +187,7 @@ class SurveyResponseService {
 		// Suppressed and failed: nothing was ever delivered under this token,
 		// so it is not a link anybody legitimately holds.
 		return 'unknown';
-	}//end stateOf()
+	}//end liveState()
 
 	/**
 	 * The HTTP status a refused token answers with.
@@ -173,7 +240,7 @@ class SurveyResponseService {
 	 *
 	 * @return array<string, mixed> `status` plus either the survey or `state`.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function show(string $token): array {
 		$invitation = $this->invitationFor(token: $token);
@@ -186,7 +253,10 @@ class SurveyResponseService {
 		return [
 			'status' => 200,
 			'state' => 'open',
-			'survey' => $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), what: 'survey'),
+			'survey' => array_intersect_key(
+				$this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), schemaKey: self::SURVEY_SCHEMA_KEY),
+				array_flip(self::SURVEY_PAGE_FIELDS)
+			),
 		];
 	}//end show()
 
@@ -202,45 +272,88 @@ class SurveyResponseService {
 	 * @return array{npsScore: int|null, averageRating: float|null, verbatim: string}
 	 *   The scored answers.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function score(array $survey, array $answers): array {
-		$nps = null;
-		$ratings = [];
-		$verbatim = '';
+		$parts = ['nps' => null, 'ratings' => [], 'verbatim' => ''];
 
 		foreach (($survey['questions'] ?? []) as $question) {
-			$key = (string)($question['key'] ?? '');
-			$kind = (string)($question['kind'] ?? '');
-			$answer = ($answers[$key] ?? null);
-
-			if ($kind === 'nps' && is_numeric($answer) === true) {
-				$nps = (int)$answer;
-				continue;
-			}
-
-			if ($kind === 'rating' && is_numeric($answer) === true) {
-				$ratings[] = (float)$answer;
-				continue;
-			}
-
-			if ($verbatim === '') {
-				$verbatim = $this->verbatimOf(kind: $kind, answer: $answer);
-			}
+			$parts = $this->scoreAnswer(parts: $parts, question: $question, answers: $answers);
 		}
 
+		return [
+			'npsScore' => $parts['nps'],
+			'averageRating' => $this->averageRating(ratings: $parts['ratings']),
+			'verbatim' => $parts['verbatim'],
+		];
+	}//end score()
+
+	/**
+	 * Add one question's answer to the score parts.
+	 *
+	 * @param array{nps: int|null, ratings: list<float>, verbatim: string} $parts The parts so far.
+	 * @param mixed $question The question.
+	 * @param array<string, mixed> $answers The answers, keyed by question key.
+	 *
+	 * @return array{nps: int|null, ratings: list<float>, verbatim: string}
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 */
+	private function scoreAnswer(array $parts, $question, array $answers): array {
+		$key = (string)($question['key'] ?? '');
+		$kind = (string)($question['kind'] ?? '');
+		$answer = ($answers[$key] ?? null);
+
+		if ($kind === 'nps' && is_numeric($answer) === true) {
+			$parts['nps'] = (int)$answer;
+			return $parts;
+		}
+
+		if ($kind === 'rating' && is_numeric($answer) === true) {
+			$parts['ratings'][] = (float)$answer;
+			return $parts;
+		}
+
+		return $this->withVerbatim(parts: $parts, kind: $kind, answer: $answer);
+	}//end scoreAnswer()
+
+	/**
+	 * Take the answer as the verbatim when none was found yet.
+	 *
+	 * @param array{nps: int|null, ratings: list<float>, verbatim: string} $parts The parts so far.
+	 * @param string $kind The question kind.
+	 * @param mixed $answer The answer.
+	 *
+	 * @return array{nps: int|null, ratings: list<float>, verbatim: string}
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 */
+	private function withVerbatim(array $parts, string $kind, $answer): array {
+		if ($parts['verbatim'] === '') {
+			$parts['verbatim'] = $this->verbatimOf(kind: $kind, answer: $answer);
+		}
+
+		return $parts;
+	}//end withVerbatim()
+
+	/**
+	 * The average rating, rounded to two decimals.
+	 *
+	 * @param list<float> $ratings The ratings given.
+	 *
+	 * @return float|null Null, not 0, when nobody rated.
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 */
+	private function averageRating(array $ratings): float|null {
 		// Null, not 0: nobody rated is not the same as everybody rated zero.
 		$averageRating = null;
 		if ($ratings !== []) {
 			$averageRating = round((array_sum($ratings) / count($ratings)), 2);
 		}
 
-		return [
-			'npsScore' => $nps,
-			'averageRating' => $averageRating,
-			'verbatim' => $verbatim,
-		];
-	}//end score()
+		return $averageRating;
+	}//end averageRating()
 
 	/**
 	 * The verbatim a single answer contributes, or '' when it contributes none.
@@ -269,7 +382,7 @@ class SurveyResponseService {
 	 *
 	 * @return array<string, mixed> `status` plus either the response or `state`.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function submit(string $token, array $answers, ?bool $optOut = null): array {
 		$invitation = $this->invitationFor(token: $token);
@@ -280,7 +393,7 @@ class SurveyResponseService {
 		}
 
 		$now = new DateTimeImmutable();
-		$survey = $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), what: 'survey');
+		$survey = $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), schemaKey: self::SURVEY_SCHEMA_KEY);
 		$scored = $this->score(survey: $survey, answers: $answers);
 
 		$response = array_merge(
@@ -320,53 +433,93 @@ class SurveyResponseService {
 
 		$response = $this->followUp->process(
 			response: $response,
-			client: $this->readPublic(uuid: (string)($invitation['clientRef'] ?? ''), what: 'client'),
+			client: $this->readPublic(uuid: (string)($invitation['clientRef'] ?? ''), schemaKey: self::CLIENT_SCHEMA_KEY),
 		);
 
 		return ['status' => 201, 'response' => $response];
 	}//end submit()
 
 	/**
-	 * Read one object on the public path.
+	 * Read one object on the public path, only from pipelinq's register and
+	 * the schema the app config names for it, under OpenRegister's RBAC.
 	 *
-	 * The survey and the client were two readers doing the same thing, which
-	 * is how they drifted: one logged what it could not read and the other
-	 * swallowed it. One reader, one behaviour.
+	 * An id that names an object of any other register or schema reads as
+	 * nothing, so an invitation can only point at a survey or a client.
 	 *
-	 * @param string $uuid The object's uuid.
-	 * @param string $what What is being read, for the log line.
+	 * @param string $uuid      The object's uuid.
+	 * @param string $schemaKey The app-config key of the schema it must belong to.
 	 *
 	 * @return array<string, mixed> The object, or [].
 	 */
-	private function readPublic(string $uuid, string $what): array {
-		if (trim($uuid) === '') {
+	private function readPublic(string $uuid, string $schemaKey): array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
+		if (trim($uuid) === '' || $register === '' || $schema === '') {
 			return [];
 		}
 
+		$entity = $this->findPublic(uuid: $uuid, register: $register, schema: $schema, schemaKey: $schemaKey);
+		if ($this->outOfScope(entity: $entity, register: $register, schema: $schema) === true) {
+			return [];
+		}
+
+		return $this->entityData(entity: $entity);
+	}//end readPublic()
+
+	/**
+	 * Find an object on the public path, or null when it cannot be read.
+	 *
+	 * @param string $uuid The object uuid.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 * @param string $schemaKey The app-config key of the schema, for the log.
+	 *
+	 * @return mixed
+	 */
+	private function findPublic(string $uuid, string $register, string $schema, string $schemaKey) {
 		try {
-			// RBAC off: this is the PUBLIC path, where the token is the
-			// authorisation and there is no session to check anything against.
-			$entity = $this->objectService->find(id: $uuid, _rbac: false, _multitenancy: false);
+			return $this->objectService->find(id: $uuid, register: $register, schema: $schema, _multitenancy: false);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SurveyResponseService: an object on the public path could not be read',
-				['what' => $what, 'uuid' => $uuid, 'exception' => $e->getMessage()]
+				['schemaKey' => $schemaKey, 'uuid' => $uuid, 'exception' => $e->getMessage()]
 			);
 
-			return [];
+			return null;
 		}
+	}//end findPublic()
 
-		$data = null;
-		if ($entity !== null) {
-			$data = $entity->jsonSerialize();
-		}
+	/**
+	 * Whether the entity is missing or lives outside the expected register and schema.
+	 *
+	 * @param mixed $entity The found entity, or null.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 *
+	 * @return bool
+	 */
+	private function outOfScope($entity, string $register, string $schema): bool {
+		return $entity === null
+			|| (string)$entity->getRegister() !== $register
+			|| (string)$entity->getSchema() !== $schema;
+	}//end outOfScope()
+
+	/**
+	 * The entity's serialised data, or an empty array when it does not serialise to one.
+	 *
+	 * @param mixed $entity The entity.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function entityData($entity): array {
+		$data = $entity->jsonSerialize();
 
 		if (is_array($data) === false) {
 			return [];
 		}
 
 		return $data;
-	}//end readPublic()
+	}//end entityData()
 
 	/**
 	 * The uuid a stored row carries, under either of the two names it uses.
@@ -387,8 +540,8 @@ class SurveyResponseService {
 	 * @return string The response's uuid, or '' when it could not be written.
 	 */
 	private function writeResponse(array $response): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'surveyResponse_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'surveyResponse_schema', '');
 		if ($register === '' || $schema === '') {
 			return '';
 		}

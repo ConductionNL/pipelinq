@@ -1,0 +1,22 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "Labels for the product type, which PqProduct and PqProducten print as Product or Dienst instead of the stored code. Presentation only."
+	},
+	"components": {
+		"schemas": {
+			"product": {
+				"slug": "product",
+				"properties": {
+					"type": {
+						"x-enum-labels": {
+							"product": "Product",
+							"service": "Service"
+						}
+					}
+				}
+			}
+		}
+	}
+}

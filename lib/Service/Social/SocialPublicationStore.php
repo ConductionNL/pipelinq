@@ -30,21 +30,22 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Kernel\Contracts\SocialPublicationStoreInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 
 /**
  * The per-account publication rows.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
-class SocialPublicationStore {
+class SocialPublicationStore implements SocialPublicationStoreInterface {
 	/**
 	 * The publication schema slug, matching the register fragment.
 	 *
@@ -109,7 +110,7 @@ class SocialPublicationStore {
 	 *
 	 * @return string The schema slug.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function schema(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA);
@@ -122,7 +123,7 @@ class SocialPublicationStore {
 	 *
 	 * @return array<int, array<string, mixed>> The publications.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function forPost(string $postId): array {
 		return $this->store->findAll(schemaSlug: $this->schema(), filters: ['postId' => $postId]);
@@ -135,7 +136,7 @@ class SocialPublicationStore {
 	 *
 	 * @return array<int, array<string, mixed>> The publications.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function findAll(array $filters = []): array {
 		return $this->store->findAll(schemaSlug: $this->schema(), filters: $filters);
@@ -148,7 +149,7 @@ class SocialPublicationStore {
 	 *
 	 * @return array<string, mixed>|null The publication, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function find(string $publicationId): ?array {
 		return $this->store->find(schemaSlug: $this->schema(), id: $publicationId);
@@ -167,7 +168,7 @@ class SocialPublicationStore {
 	 *
 	 * @return array<string, mixed>|null The row, or null when it could not be written.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function open(string $postId, string $accountId, string $network): ?array {
 		foreach ($this->forPost(postId: $postId) as $row) {
@@ -199,7 +200,7 @@ class SocialPublicationStore {
 	 *
 	 * @return array<string, mixed>|null The saved row, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function save(array $publication): ?array {
 		return $this->store->save(
@@ -216,7 +217,7 @@ class SocialPublicationStore {
 	 *
 	 * @return string The id, or an empty string.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function idOf(?array $publication): string {
 		return $this->store->idOf(payload: $publication);
@@ -230,7 +231,7 @@ class SocialPublicationStore {
 	 *
 	 * @return array<string, mixed>|null The saved row, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function record(array $publication, SocialPublishOutcome $outcome): ?array {
 		$publication['attempts'] = ((int)($publication['attempts'] ?? 0) + 1);

@@ -17,26 +17,30 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyProgrammeServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Programme activation + validation service.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001
  */
-class LoyaltyProgrammeService {
+class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
+	use PayloadToArray;
+
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the programme status graph.
 	 *
@@ -67,7 +71,7 @@ class LoyaltyProgrammeService {
 	 *
 	 * @return array<int, string> List of validation errors (empty when valid).
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001-01
 	 */
 	public function validateForActivation(string $programmeId): array {
 		$errors = [];
@@ -107,7 +111,7 @@ class LoyaltyProgrammeService {
 	 * @return array<string, mixed> The activated programme.
 	 *
 	 * @throws RuntimeException When validation fails.
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001
 	 */
 	public function activate(string $programmeId, string $activatedBy): array {
 		$programme = $this->getProgramme(programmeId: $programmeId);
@@ -195,7 +199,7 @@ class LoyaltyProgrammeService {
 			return null;
 		}
 
-		return $this->toArray(object: $object);
+		return $this->toArray(value: $object);
 	}//end getProgramme()
 
 	/**
@@ -256,7 +260,7 @@ class LoyaltyProgrammeService {
 			uuid: $uuid
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persist()
 
 	/**
@@ -275,8 +279,8 @@ class LoyaltyProgrammeService {
 	 *                                     when unconfigured.
 	 */
 	private function config(string $schemaKey): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/schema not configured; OpenRegister calls are refused, not run unscoped',
@@ -286,35 +290,6 @@ class LoyaltyProgrammeService {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Normalise OR entity/array to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

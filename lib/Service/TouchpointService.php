@@ -26,21 +26,22 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\TouchpointServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 
 /**
  * TouchpointService: append and read the campaign touchpoint log.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
-class TouchpointService {
+class TouchpointService implements TouchpointServiceInterface {
 
 	/**
 	 * The schema slug the register fragment declares.
@@ -61,14 +62,24 @@ class TouchpointService {
 	 *
 	 * @var array<int, string>
 	 */
-	public const KINDS = ['click', 'visit', 'submit', 'reply'];
+	public const KINDS = ['click', 'visit', 'submit', 'reply', 'attend'];
+
+	/**
+	 * The contact schema a submission's touches are written on.
+	 */
+	public const CONTACT_SLUG = 'contact';
+
+	/**
+	 * The client schema a submission's touches are written on.
+	 */
+	public const CLIENT_SLUG = 'client';
 
 	/**
 	 * Constructor.
 	 *
 	 * @param ListObjectStore $store Register-scoped object access.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -80,7 +91,7 @@ class TouchpointService {
 	 *
 	 * @return string The slug.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function schemaSlug(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA_SLUG);
@@ -99,7 +110,7 @@ class TouchpointService {
 	 *
 	 * @return array<int, array<string, mixed>> The touchpoints.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
 	public function forCampaign(string $campaignId): array {
 		if (trim($campaignId) === '') {
@@ -141,7 +152,7 @@ class TouchpointService {
 	 *
 	 * @return bool True when the interaction was already recorded.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function existsForNonce(string $nonce): bool {
 		if (trim($nonce) === '') {
@@ -159,7 +170,7 @@ class TouchpointService {
 	 *
 	 * @return array<string, mixed>|null The saved row, or null when the write failed.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function append(array $touchpoint): ?array {
 		$kind = (string)($touchpoint['kind'] ?? '');
@@ -178,13 +189,123 @@ class TouchpointService {
 	}//end append()
 
 	/**
+	 * Record a form submission: append its touchpoint, naming the contact's client
+	 * and the landing page, and update the contact's and the client's touches.
+	 *
+	 * The first touch is written once and never replaced; the last touch is
+	 * replaced on every submission. A contact without a client updates only the
+	 * contact; a submission without a contact only appends the touchpoint.
+	 *
+	 * @param array<string, mixed> $touchpoint  The row, as append() takes it: `contactId`,
+	 *                                          `campaignId`, `utm`, `kind`, `occurredAt`, ...
+	 * @param string               $landingPage The page the form was submitted on.
+	 *
+	 * @return array<string, mixed>|null The saved touchpoint, or null when the write failed.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md
+	 */
+	public function recordSubmission(array $touchpoint, string $landingPage): ?array {
+		$contactId = trim((string)($touchpoint['contactId'] ?? ''));
+		$contact = null;
+		if ($contactId !== '') {
+			$contact = $this->store->find(schemaSlug: self::CONTACT_SLUG, id: $contactId);
+		}
+
+		$clientId = $this->referenceId(value: ($contact['client'] ?? null));
+		$row = array_merge($touchpoint, ['clientId' => $clientId, 'landingPage' => trim($landingPage)]);
+		$saved = $this->append(touchpoint: $row);
+		if ($saved === null) {
+			return null;
+		}
+
+		$touch = $this->touchOf(touchpoint: $saved);
+		if ($contact !== null) {
+			$this->updateTouches(schemaSlug: self::CONTACT_SLUG, id: $contactId, record: $contact, touch: $touch);
+		}
+
+		if ($clientId !== '') {
+			$client = $this->store->find(schemaSlug: self::CLIENT_SLUG, id: $clientId);
+			if ($client !== null) {
+				$this->updateTouches(schemaSlug: self::CLIENT_SLUG, id: $clientId, record: $client, touch: $touch);
+			}
+		}
+
+		return $saved;
+	}//end recordSubmission()
+
+	/**
+	 * The uuid in a reference: a plain string, or the `id`/`uuid` of an expanded object.
+	 *
+	 * @param mixed $value The reference.
+	 *
+	 * @return string '' when it holds none.
+	 */
+	private function referenceId(mixed $value): string {
+		if (is_array($value) === true) {
+			$value = ($value['id'] ?? $value['uuid'] ?? '');
+		}
+
+		if (is_string($value) === false) {
+			return '';
+		}
+
+		return trim($value);
+	}//end referenceId()
+
+	/**
+	 * The touch a submission leaves on its contact and client.
+	 *
+	 * @param array<string, mixed> $touchpoint The saved touchpoint.
+	 *
+	 * @return array<string, string>
+	 */
+	private function touchOf(array $touchpoint): array {
+		$utm = $touchpoint['utm'] ?? [];
+		if (is_array($utm) === false) {
+			$utm = [];
+		}
+
+		$touch = [];
+		foreach (['campaign', 'source', 'medium', 'term', 'content'] as $key) {
+			$touch[$key] = trim((string)($utm[$key] ?? ''));
+		}
+
+		$touch['campaignId'] = trim((string)($touchpoint['campaignId'] ?? ''));
+		$touch['landingPage'] = trim((string)($touchpoint['landingPage'] ?? ''));
+		$touch['at'] = trim((string)($touchpoint['occurredAt'] ?? ''));
+
+		return $touch;
+	}//end touchOf()
+
+	/**
+	 * Set the last touch, and the first touch when there is none yet, on a record.
+	 *
+	 * @param string               $schemaSlug The record's schema.
+	 * @param string               $id         The record.
+	 * @param array<string, mixed> $record     The record as read.
+	 * @param array<string, string> $touch      The touch.
+	 *
+	 * @return void
+	 */
+	private function updateTouches(string $schemaSlug, string $id, array $record, array $touch): void {
+		$first = $record['firstTouch'] ?? null;
+		if (is_array($first) === false || $first === []) {
+			$record['firstTouch'] = $touch;
+		}
+
+		$record['lastTouch'] = $touch;
+		unset($record['@self']);
+		$this->store->save(schemaSlug: $schemaSlug, payload: $record, id: $id);
+	}//end updateTouches()
+
+	/**
 	 * The canonical id of a touchpoint row.
 	 *
 	 * @param array<string, mixed>|null $touchpoint The touchpoint.
 	 *
 	 * @return string The id, or an empty string.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function idOf(?array $touchpoint): string {
 		return $this->store->idOf(payload: $touchpoint);
@@ -202,7 +323,7 @@ class TouchpointService {
 	 *
 	 * @return string The channel.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 	 */
 	public function channelForMedium(string $medium): string {
 		$value = strtolower(trim($medium));

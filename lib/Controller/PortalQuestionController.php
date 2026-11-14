@@ -37,9 +37,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Portal\PortalAssertionVerifier;
-use OCA\Pipelinq\Service\DossierQuestionService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DossierQuestionServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalAssertionVerifierInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -56,6 +56,7 @@ use RuntimeException;
  * Receives portaliq's forwarded question actions.
  *
  * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalQuestionController extends Controller {
 	/**
@@ -83,8 +84,8 @@ class PortalQuestionController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                $request   The request.
-	 * @param PortalAssertionVerifier $verifier  Verifies portaliq's assertion.
-	 * @param DossierQuestionService  $questions Files questions and replies.
+	 * @param PortalAssertionVerifierInterface $verifier  Verifies portaliq's assertion.
+	 * @param DossierQuestionServiceInterface  $questions Files questions and replies.
 	 * @param IThrottler              $throttler Counts rejected calls.
 	 * @param LoggerInterface         $logger    Logger.
 	 *
@@ -92,12 +93,12 @@ class PortalQuestionController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PortalAssertionVerifier $verifier,
-		private readonly DossierQuestionService $questions,
+		private readonly PortalAssertionVerifierInterface $verifier,
+		private readonly DossierQuestionServiceInterface $questions,
 		private readonly IThrottler $throttler,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -119,10 +120,35 @@ class PortalQuestionController extends Controller {
 
 		$collectionId = $this->text(name: 'collectionId');
 		$question = $this->text(name: 'question');
-		if ($collectionId === '' || $question === '' || mb_strlen($question) > self::MAX_TEXT) {
+		if ($this->isInvalidQuestion(collectionId: $collectionId, question: $question) === true) {
 			return new JSONResponse(['error' => 'invalid_request'], Http::STATUS_BAD_REQUEST);
 		}
 
+		return $this->fileQuestion(subjectRef: $subjectRef, collectionId: $collectionId, question: $question);
+	}//end ask()
+
+	/**
+	 * Whether a question names no collection, is empty, or is too long.
+	 *
+	 * @param string $collectionId The dossier collection id.
+	 * @param string $question     The question text.
+	 *
+	 * @return bool
+	 */
+	private function isInvalidQuestion(string $collectionId, string $question): bool {
+		return $collectionId === '' || $question === '' || mb_strlen($question) > self::MAX_TEXT;
+	}//end isInvalidQuestion()
+
+	/**
+	 * File the question: 201 with the ticket, 404 (throttled) for a dossier not theirs, 503 when it cannot be saved.
+	 *
+	 * @param string $subjectRef   The resident's subject reference.
+	 * @param string $collectionId The dossier collection id.
+	 * @param string $question     The question text.
+	 *
+	 * @return JSONResponse
+	 */
+	private function fileQuestion(string $subjectRef, string $collectionId, string $question): JSONResponse {
 		try {
 			$result = $this->questions->ask(
 				subjectRef: $subjectRef,
@@ -141,7 +167,7 @@ class PortalQuestionController extends Controller {
 		}
 
 		return new JSONResponse($result, Http::STATUS_CREATED);
-	}//end ask()
+	}//end fileQuestion()
 
 	/**
 	 * `replyToQuestion`: add the resident's reply to their own question.
@@ -187,7 +213,7 @@ class PortalQuestionController extends Controller {
 	 * @return string|JSONResponse
 	 */
 	private function subjectRef(): string|JSONResponse {
-		$claims = $this->verifier->verify((string)$this->request->getHeader(PortalAssertionVerifier::HEADER));
+		$claims = $this->verifier->verify((string)$this->request->getHeader(PortalAssertionVerifierInterface::HEADER));
 		if ($claims === null) {
 			$this->registerRejected();
 			return new JSONResponse(['error' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);

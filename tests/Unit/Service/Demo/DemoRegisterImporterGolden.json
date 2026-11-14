@@ -1,0 +1,470 @@
+{
+    "import": {
+        "result": {
+            "returned": {
+                "imported": 3,
+                "skipped": 3
+            }
+        },
+        "events": [
+            {
+                "call": "withRealUsers",
+                "args": {
+                    "count": 7
+                }
+            },
+            {
+                "call": "importFromApp",
+                "args": {
+                    "appId": "pipelinq.demo",
+                    "data": {
+                        "components": {
+                            "objects": [
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-same"
+                                    },
+                                    "name": "Widget",
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-renamed"
+                                    },
+                                    "name": "Gadget",
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-unnamed"
+                                    },
+                                    "price": 3,
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-title"
+                                    },
+                                    "title": "Titled",
+                                    "name": [
+                                        "not",
+                                        "scalar"
+                                    ],
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-archived"
+                                    },
+                                    "name": "Kept",
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-serialised"
+                                    },
+                                    "code": "C1",
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "missing",
+                                        "slug": "m-1"
+                                    },
+                                    "name": "Nowhere",
+                                    "owner": "admin"
+                                }
+                            ]
+                        }
+                    },
+                    "version": "1.2.3",
+                    "force": true
+                }
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "Pipelinq example records imported",
+                    "context": {
+                        "imported": 3,
+                        "skipped": 3
+                    }
+                }
+            }
+        ]
+    },
+    "import, descriptor missing": {
+        "result": {
+            "returned": {
+                "imported": 0,
+                "skipped": 0
+            }
+        },
+        "events": [
+            {
+                "call": "log.error",
+                "args": {
+                    "message": "Pipelinq example records descriptor missing",
+                    "context": {
+                        "path": "<app>/lib/Settings/pipelinq_example_register.json"
+                    }
+                }
+            }
+        ]
+    },
+    "import, descriptor not json": {
+        "result": {
+            "returned": {
+                "imported": 0,
+                "skipped": 0
+            }
+        },
+        "events": [
+            {
+                "call": "log.error",
+                "args": {
+                    "message": "Pipelinq example records descriptor invalid",
+                    "context": {
+                        "path": "<app>/lib/Settings/pipelinq_example_register.json"
+                    }
+                }
+            }
+        ]
+    },
+    "import, descriptor without list": {
+        "result": {
+            "returned": {
+                "imported": 0,
+                "skipped": 0
+            }
+        },
+        "events": [
+            {
+                "call": "log.error",
+                "args": {
+                    "message": "Pipelinq example records descriptor invalid",
+                    "context": {
+                        "path": "<app>/lib/Settings/pipelinq_example_register.json"
+                    }
+                }
+            }
+        ]
+    },
+    "import, empty result": {
+        "result": {
+            "returned": {
+                "imported": 0,
+                "skipped": 0
+            }
+        },
+        "events": [
+            {
+                "call": "withRealUsers",
+                "args": {
+                    "count": 7
+                }
+            },
+            {
+                "call": "importFromApp",
+                "args": {
+                    "appId": "pipelinq.demo",
+                    "data": {
+                        "components": {
+                            "objects": [
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-same"
+                                    },
+                                    "name": "Widget",
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-renamed"
+                                    },
+                                    "name": "Gadget",
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-unnamed"
+                                    },
+                                    "price": 3,
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-title"
+                                    },
+                                    "title": "Titled",
+                                    "name": [
+                                        "not",
+                                        "scalar"
+                                    ],
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-archived"
+                                    },
+                                    "name": "Kept",
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "product",
+                                        "slug": "p-serialised"
+                                    },
+                                    "code": "C1",
+                                    "owner": "admin"
+                                },
+                                {
+                                    "@self": {
+                                        "schema": "missing",
+                                        "slug": "m-1"
+                                    },
+                                    "name": "Nowhere",
+                                    "owner": "admin"
+                                }
+                            ]
+                        }
+                    },
+                    "version": "1.2.3",
+                    "force": true
+                }
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "Pipelinq example records imported",
+                    "context": {
+                        "imported": 0,
+                        "skipped": 0
+                    }
+                }
+            }
+        ]
+    },
+    "remove": {
+        "result": {
+            "returned": {
+                "removed": 6,
+                "retained": 1
+            }
+        },
+        "events": [
+            {
+                "call": "softDeleteAppImports",
+                "args": {
+                    "appId": "pipelinq.demo"
+                }
+            },
+            {
+                "call": "schemaMapper.find",
+                "args": {
+                    "slug": "product"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "7",
+                            "schema": "42"
+                        },
+                        "limit": 5000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-same",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-unnamed",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-title",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-archived",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-serialised",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "schemaMapper.find",
+                "args": {
+                    "slug": "missing"
+                }
+            },
+            {
+                "call": "log.info",
+                "args": {
+                    "message": "Pipelinq example records removed",
+                    "context": {
+                        "removed": 6,
+                        "retained": 1
+                    }
+                }
+            }
+        ]
+    },
+    "remove, delete fails": {
+        "result": {
+            "threw": "RuntimeException",
+            "message": "database gone"
+        },
+        "events": [
+            {
+                "call": "softDeleteAppImports",
+                "args": {
+                    "appId": "pipelinq.demo"
+                }
+            },
+            {
+                "call": "schemaMapper.find",
+                "args": {
+                    "slug": "product"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "7",
+                            "schema": "42"
+                        },
+                        "limit": 5000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-same",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-unnamed",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-title",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-archived",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-serialised",
+                    "register": "7",
+                    "schema": "42"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "id-fails",
+                    "register": "7",
+                    "schema": "42"
+                }
+            }
+        ]
+    },
+    "remove, descriptor missing": {
+        "result": {
+            "returned": {
+                "removed": 2,
+                "retained": 0
+            }
+        },
+        "events": [
+            {
+                "call": "softDeleteAppImports",
+                "args": {
+                    "appId": "pipelinq.demo"
+                }
+            },
+            {
+                "call": "log.error",
+                "args": {
+                    "message": "Pipelinq example records descriptor missing",
+                    "context": {
+                        "path": "<app>/lib/Settings/pipelinq_example_register.json"
+                    }
+                }
+            }
+        ]
+    },
+    "remove, no register": {
+        "result": {
+            "returned": {
+                "removed": 2,
+                "retained": 0
+            }
+        },
+        "events": [
+            {
+                "call": "softDeleteAppImports",
+                "args": {
+                    "appId": "pipelinq.demo"
+                }
+            }
+        ]
+    }
+}

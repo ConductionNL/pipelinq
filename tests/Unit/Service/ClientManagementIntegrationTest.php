@@ -27,6 +27,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Service\ClientManagementIntegration;
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\ContactAddressLookup;
 use OCA\Pipelinq\Service\SchemaMapService;
@@ -83,7 +84,7 @@ class ClientManagementIntegrationTest extends TestCase {
 		self::assertSame([], $row['evidence']);
 
 		// A new contact with the same address is still refused a service mail.
-		$decision = $client->decideOne(channel: 'email', category: 'service', requiresConsent: false, address: 'jan@example.nl', contactRef: 'c-9');
+		$decision = $client->decideOne(ask: new ConsentAsk(channel: 'email', category: 'service', requiresConsent: false), recipient: ['address' => 'jan@example.nl', 'contactRef' => 'c-9']);
 		self::assertFalse($decision['send']);
 		self::assertSame('opted-out', $decision['code']);
 	}//end testAnErasedContactIsStillNotMailed()

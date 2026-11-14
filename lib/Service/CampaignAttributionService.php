@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
  */
 
 declare(strict_types=1);
@@ -44,7 +44,9 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 /**
  * CampaignAttributionService: first touch, last touch, linear, and the close.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
+ *
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
  */
 class CampaignAttributionService {
 
@@ -108,7 +110,7 @@ class CampaignAttributionService {
 	 * @param TouchpointService $touchpoints The touchpoint log.
 	 * @param ShillinqInvoiceReader $invoices Paid AR invoices, read only.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -127,7 +129,7 @@ class CampaignAttributionService {
 	 * @return array<string, mixed> `touchpoints[]`, `leads[]`, `totals` and
 	 *         `models`: the whole attribution record.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
 	public function forCampaign(string $campaignId, string $from = '', string $to = ''): array {
 		$touchpoints = $this->touchpoints->forCampaign(campaignId: $campaignId);
@@ -156,9 +158,28 @@ class CampaignAttributionService {
 	 *
 	 * @return array<string, float> Touchpoint id to attributed value.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
 	public function split(array $touchpoints, float $value, string $model): array {
+		$ids = $this->distinctIds(touchpoints: $touchpoints);
+
+		if ($ids === [] || $value === 0.0) {
+			return [];
+		}
+
+		return $this->splitByModel(ids: $ids, value: $value, model: $model);
+	}//end split()
+
+	/**
+	 * The distinct, non-empty touchpoint ids, in order.
+	 *
+	 * @param array<int, array<string, mixed>> $touchpoints The lead's touchpoints, oldest first.
+	 *
+	 * @return list<string>
+	 *
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 */
+	private function distinctIds(array $touchpoints): array {
 		$ids = [];
 		foreach ($touchpoints as $touchpoint) {
 			$id = $this->touchpoints->idOf(touchpoint: $touchpoint);
@@ -167,10 +188,21 @@ class CampaignAttributionService {
 			}
 		}
 
-		if ($ids === [] || $value === 0.0) {
-			return [];
-		}
+		return $ids;
+	}//end distinctIds()
 
+	/**
+	 * Attribute the value to the first touchpoint, the last, or evenly over all.
+	 *
+	 * @param list<string> $ids The distinct touchpoint ids, oldest first; not empty.
+	 * @param float $value The lead's closed value.
+	 * @param string $model One of `first`, `last`, `linear`.
+	 *
+	 * @return array<string, float> Touchpoint id to attributed value.
+	 *
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 */
+	private function splitByModel(array $ids, float $value, string $model): array {
 		if ($model === 'first') {
 			return [$ids[0] => $value];
 		}
@@ -186,7 +218,7 @@ class CampaignAttributionService {
 		}
 
 		return $split;
-	}//end split()
+	}//end splitByModel()
 
 	/**
 	 * What one lead closed on, and for how much.
@@ -199,30 +231,15 @@ class CampaignAttributionService {
 	 * @return array{basis: string, value: float, currency: string, invoiceIds: array<int, string>}
 	 *         The close.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function closeFor(array $lead, string $from, string $to, array $claimed = []): array {
 		$customerRef = $this->customerRefFor(lead: $lead);
 		if ($customerRef !== '') {
 			$invoices = $this->invoices->paidInvoicesFor(customerRef: $customerRef, from: $from, to: $to);
-			$total = 0.0;
-			$ids = [];
-			foreach ($invoices as $invoice) {
-				if (isset($claimed[$invoice['id']]) === true) {
-					continue;
-				}
-
-				$total += $invoice['amount'];
-				$ids[] = $invoice['id'];
-			}
-
-			if ($ids !== []) {
-				return [
-					'basis' => self::BASIS_PAID_INVOICE,
-					'value' => $total,
-					'currency' => 'EUR',
-					'invoiceIds' => $ids,
-				];
+			$close = self::invoiceClose(invoices: $invoices, claimed: $claimed);
+			if ($close !== null) {
+				return $close;
 			}
 		}
 
@@ -239,6 +256,38 @@ class CampaignAttributionService {
 	}//end closeFor()
 
 	/**
+	 * The paid-invoice close over the invoices no other lead counted yet, or null when none is left.
+	 *
+	 * @param array<int, array<string, mixed>> $invoices The client's paid invoices in the window.
+	 * @param array<string, string>            $claimed  Invoice id to the lead that already counted it.
+	 *
+	 * @return array{basis: string, value: float, currency: string, invoiceIds: array<int, string>}|null
+	 */
+	private static function invoiceClose(array $invoices, array $claimed): ?array {
+		$total = 0.0;
+		$ids = [];
+		foreach ($invoices as $invoice) {
+			if (isset($claimed[$invoice['id']]) === true) {
+				continue;
+			}
+
+			$total += $invoice['amount'];
+			$ids[] = $invoice['id'];
+		}
+
+		if ($ids === []) {
+			return null;
+		}
+
+		return [
+			'basis' => self::BASIS_PAID_INVOICE,
+			'value' => $total,
+			'currency' => 'EUR',
+			'invoiceIds' => $ids,
+		];
+	}//end invoiceClose()
+
+	/**
 	 * Whether a lead counts as won.
 	 *
 	 * Both spellings are accepted because the app carries both: the
@@ -249,7 +298,7 @@ class CampaignAttributionService {
 	 *
 	 * @return bool True when the lead is won.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function isWon(array $lead): bool {
 		if (strtolower(trim((string)($lead['status'] ?? ''))) === 'won') {

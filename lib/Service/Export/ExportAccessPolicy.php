@@ -21,14 +21,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportAccessPolicyInterface;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -41,9 +42,9 @@ use OCP\IGroupManager;
  * closed: an empty user, or an unconfigured group, never grants access beyond
  * the explicit admin check.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
-class ExportAccessPolicy {
+class ExportAccessPolicy implements ExportAccessPolicyInterface {
 	/**
 	 * App-config key for the export-analyst group.
 	 *
@@ -74,7 +75,7 @@ class ExportAccessPolicy {
 	 *
 	 * @return bool Whether the user may use the export surface.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	public function isExportAdmin(string $userId): bool {
 		if ($userId === '') {
@@ -85,7 +86,7 @@ class ExportAccessPolicy {
 			return true;
 		}
 
-		$group = $this->appConfig->getValueString(Application::APP_ID, self::ANALYST_GROUP_KEY, '');
+		$group = $this->appConfig->getValueString(AppIdentity::APP_ID, self::ANALYST_GROUP_KEY, '');
 		if ($group === '') {
 			return false;
 		}

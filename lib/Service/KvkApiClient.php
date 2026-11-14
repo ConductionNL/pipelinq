@@ -23,12 +23,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Client for the KVK Handelsregister Zoeken API.
@@ -74,7 +73,7 @@ class KvkApiClient {
 	private function getApiBase(): string {
 		return rtrim(
 			$this->appConfig->getValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'kvk.api_base_url',
 				self::DEFAULT_API_BASE
 			),
@@ -83,7 +82,8 @@ class KvkApiClient {
 	}//end getApiBase()
 
 	/**
-	 * Search the KVK API for companies matching the given criteria.
+	 * Search the KVK API for companies matching the given criteria. Without an
+	 * API key only OpenRegister's KvK source is asked.
 	 *
 	 * @param string $apiKey The KVK API key.
 	 * @param array $criteria The search criteria.
@@ -93,10 +93,6 @@ class KvkApiClient {
 	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-kvk-api-integration
 	 */
 	public function search(string $apiKey, array $criteria): array {
-		if ($apiKey === '') {
-			return [];
-		}
-
 		$results = [];
 		$sbiCodes = $criteria['sbiCodes'] ?? [];
 
@@ -106,6 +102,32 @@ class KvkApiClient {
 
 		return array_values(array: $results);
 	}//end search()
+
+	/**
+	 * The KvK rows for one KvK number, through OpenRegister's KvK source.
+	 *
+	 * @param string $kvkNumber The KvK number.
+	 *
+	 * @return array<int, array<string, mixed>> The rows; empty when the source answers nothing.
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	public function companyByNumber(string $kvkNumber): array {
+		return ($this->getViaOpenRegister(path: 'company', query: ['kvkNumber' => $kvkNumber]) ?? []);
+	}//end companyByNumber()
+
+	/**
+	 * The KvK rows for a company name, through OpenRegister's KvK source.
+	 *
+	 * @param string $name The company name.
+	 *
+	 * @return array<int, array<string, mixed>> The rows; empty when the source answers nothing.
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	public function searchByName(string $name): array {
+		return ($this->getViaOpenRegister(path: 'search', query: ['q' => $name, 'limit' => 10, 'page' => 1]) ?? []);
+	}//end searchByName()
 
 	/**
 	 * Search for a single SBI code and merge results.
@@ -157,6 +179,11 @@ class KvkApiClient {
 			return ['resultaten' => $viaOr];
 		}
 
+		// The direct KvK path needs a key; OpenRegister's source holds its own.
+		if ($apiKey === '') {
+			return [];
+		}
+
 		$queryParams = [
 			'apikey' => $apiKey,
 			'type' => 'hoofdvestiging',
@@ -166,23 +193,7 @@ class KvkApiClient {
 		];
 
 		$url = $this->getApiBase() . '/zoeken?' . http_build_query(data: $queryParams);
-
-		$client = $this->clientService->newClient();
-		$response = $client->get(
-			uri: $url,
-			options: [
-				'headers' => ['Accept' => 'application/json'],
-				'timeout' => 15,
-			]
-		);
-
-		$decoded = json_decode(json: $response->getBody(), associative: true);
-
-		if (is_array(value: $decoded) === true) {
-			return $decoded;
-		}
-
-		return [];
+		return $this->http()->getJson(url: $url);
 	}//end fetchResults()
 
 	/**
@@ -206,50 +217,37 @@ class KvkApiClient {
 	 * @spec openspec/changes/archive/2026-06-21-pipelinq-lookups-via-or-leaf/specs/company-lookup/spec.md
 	 */
 	private function fetchViaOpenRegister(string $sbiCode): ?array {
-		$params = http_build_query(
-			[
+		return $this->getViaOpenRegister(
+			path: 'search',
+			query: [
 				'sbiHoofdActiviteit' => $sbiCode,
 				'type' => 'hoofdvestiging',
 				'limit' => 50,
 				'page' => 1,
 			]
 		);
-		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/kvk/search?' . $params);
-
-		try {
-			$client = $this->clientService->newClient();
-			$response = $client->get(
-				$url,
-				[
-					'timeout' => 15,
-					'connect_timeout' => 3,
-					'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
-					'nextcloud' => ['allow_local_address' => true],
-				]
-			);
-		} catch (Throwable $e) {
-			// 503 (source not usable) surfaces as a client exception here — fall
-			// back to the legacy path. Also covers connection refused / OR absent.
-			$this->logger->debug('KVK OR search unavailable, falling back to direct path', ['exception' => $e]);
-			return null;
-		}
-
-		if ($response->getStatusCode() !== 200) {
-			return null;
-		}
-
-		$decoded = json_decode((string)$response->getBody(), true);
-		if (is_array($decoded) === false || isset($decoded['results']) === false || is_array($decoded['results']) === false) {
-			return null;
-		}
-
-		$rows = [];
-		foreach ($decoded['results'] as $row) {
-			if (is_array($row) === true) {
-				$rows[] = $row;
-			}
-		}
-
-		return $rows;
 	}//end fetchViaOpenRegister()
+
+	/**
+	 * GET one of OpenRegister's KvK endpoints and return its result rows.
+	 *
+	 * @param string               $path  `search` or `company`.
+	 * @param array<string, mixed> $query The query parameters.
+	 *
+	 * @return array<int, array<string, mixed>>|null The rows, or null when the source is not usable.
+	 */
+	private function getViaOpenRegister(string $path, array $query): ?array {
+		$params = http_build_query($query);
+		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/kvk/' . $path . '?' . $params);
+		return $this->http()->leafRows(url: $url, unavailable: 'KVK OR search unavailable, falling back to direct path');
+	}//end getViaOpenRegister()
+
+	/**
+	 * The shared registry HTTP plumbing on this client's HTTP client and logger.
+	 *
+	 * @return CompanyRegistryHttp The plumbing.
+	 */
+	private function http(): CompanyRegistryHttp {
+		return new CompanyRegistryHttp(clientService: $this->clientService, logger: $this->logger);
+	}//end http()
 }//end class

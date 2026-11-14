@@ -18,7 +18,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-bbk-010
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-BBK-010
  */
 
 declare(strict_types=1);

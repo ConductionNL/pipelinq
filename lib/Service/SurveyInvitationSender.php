@@ -26,24 +26,26 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\SurveyInvitationSenderInterface;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
+use OCP\Mail\IMessage;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
  * Deliver an invitation over its channel.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
-class SurveyInvitationSender {
+class SurveyInvitationSender implements SurveyInvitationSenderInterface {
 	/**
 	 * Constructor.
 	 *
@@ -68,7 +70,7 @@ class SurveyInvitationSender {
 	 * @param string $token The per-invitation token.
 	 *
 	 * @return string The url.
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
 	public function linkFor(string $token): string {
 		return $this->urlGenerator->getAbsoluteURL(
@@ -85,7 +87,7 @@ class SurveyInvitationSender {
 	 *
 	 * @return bool True when the hand-off succeeded.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
 	 */
 	public function send(array $invitation, string $address = ''): bool {
 		$channel = trim((string)($invitation['channel'] ?? 'email'));
@@ -101,31 +103,47 @@ class SurveyInvitationSender {
 			return false;
 		}
 
+		$address = $this->deliverableAddress(invitation: $invitation, address: $address);
+		if ($address === '') {
+			return false;
+		}
+
+		return $this->mail(address: $address, link: $this->linkFor(token: (string)($invitation['token'] ?? '')));
+	}//end send()
+
+	/**
+	 * The trimmed address to deliver to (the given one, else the recorded one);
+	 * '' when it is empty or not a valid mail address.
+	 *
+	 * @param array<string, mixed> $invitation The invitation.
+	 * @param string               $address    The address the caller gave, may be ''.
+	 *
+	 * @return string
+	 */
+	private function deliverableAddress(array $invitation, string $address): string {
 		if ($address === '') {
 			$address = (string)($invitation['deliveryAddress'] ?? '');
 		}
 
 		$address = trim($address);
 		if ($address === '' || $this->mailer->validateMailAddress($address) === false) {
-			return false;
+			return '';
 		}
 
-		$link = $this->linkFor(token: (string)($invitation['token'] ?? ''));
+		return $address;
+	}//end deliverableAddress()
 
+	/**
+	 * Mail the invitation; a failure is logged and answered false.
+	 *
+	 * @param string $address The validated address.
+	 * @param string $link    The survey link.
+	 *
+	 * @return bool True when the hand-off succeeded.
+	 */
+	private function mail(string $address, string $link): bool {
 		try {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$address]);
-			$message->setSubject('How did we do?');
-			$message->setHtmlBody(
-				'<p>We would like to know how the last contact went.</p>'
-				. '<p><a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">'
-				. 'Answer a few questions</a></p>'
-			);
-			$message->setPlainBody(
-				"We would like to know how the last contact went.\n\n" . $link
-			);
-
-			$this->mailer->send($message);
+			$this->mailer->send($this->message(address: $address, link: $link));
 
 			return true;
 		} catch (Throwable $e) {
@@ -136,5 +154,29 @@ class SurveyInvitationSender {
 
 			return false;
 		}
-	}//end send()
+	}//end mail()
+
+	/**
+	 * The invitation message to the address, carrying the survey link.
+	 *
+	 * @param string $address The validated address.
+	 * @param string $link    The survey link.
+	 *
+	 * @return IMessage
+	 */
+	private function message(string $address, string $link): IMessage {
+		$message = $this->mailer->createMessage();
+		$message->setTo([$address]);
+		$message->setSubject('How did we do?');
+		$message->setHtmlBody(
+			'<p>We would like to know how the last contact went.</p>'
+			. '<p><a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">'
+			. 'Answer a few questions</a></p>'
+		);
+		$message->setPlainBody(
+			"We would like to know how the last contact went.\n\n" . $link
+		);
+
+		return $message;
+	}//end message()
 }//end class

@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
  */
 
 declare(strict_types=1);
@@ -49,7 +49,9 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *  collections and one external reader; splitting it per field would put the
  *  memo that makes the whole thing affordable in four places.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class SegmentSignalService {
 
@@ -110,6 +112,13 @@ class SegmentSignalService {
 	public const FIELD_STALLED_DAYS = 'pipelinqStalledLeadDays';
 
 	/**
+	 * The moment of the customer's latest contact moment, a date-time string.
+	 *
+	 * @var string
+	 */
+	public const FIELD_LAST_CONTACT_AT = 'pipelinqLastContactAt';
+
+	/**
 	 * The dunning states a promotional send is suppressed on by default.
 	 *
 	 * @var array<int, string>
@@ -152,13 +161,75 @@ class SegmentSignalService {
 	private ?array $catalogue = null;
 
 	/**
+	 * The signal catalogue, in the order a builder lists it (see catalogue()).
+	 *
+	 * @var array<string, array{type: string, title: string, source: string, description: string}>
+	 */
+	private const CATALOGUE = [
+		self::FIELD_REVENUE => [
+			'type' => 'number',
+			'title' => 'Recognised revenue',
+			'source' => 'shillinq',
+			'description' => 'Paid invoices for this customer over the signal window.',
+		],
+		self::FIELD_VALUE_TIER => [
+			'type' => 'string',
+			'title' => 'Value tier',
+			'source' => 'shillinq',
+			'description' => 'top, mid, low or none, from recognised revenue against the tier thresholds.',
+		],
+		self::FIELD_MONTHS_SINCE_INVOICE => [
+			'type' => 'integer',
+			'title' => 'Months since the last invoice',
+			'source' => 'shillinq',
+			'description' => 'Whole months since the most recent invoice that left the draft stage.',
+		],
+		self::FIELD_PRODUCTS => [
+			'type' => 'array',
+			'title' => 'Purchased products',
+			'source' => 'shillinq',
+			'description' => 'Catalogue products named on this customer\'s invoice lines.',
+		],
+		self::FIELD_SERVICES => [
+			'type' => 'array',
+			'title' => 'Purchased services',
+			'source' => 'shillinq',
+			'description' => 'Catalogue services named on this customer\'s invoice lines.',
+		],
+		self::FIELD_DUNNING => [
+			'type' => 'string',
+			'title' => 'Dunning state',
+			'source' => 'shillinq',
+			'description' => 'current, overdue, disputed, written-off or unknown.',
+		],
+		self::FIELD_RENEWAL_DAYS => [
+			'type' => 'integer',
+			'title' => 'Days to contract renewal',
+			'source' => 'pipelinq',
+			'description' => 'Days until the nearest contract of this customer ends.',
+		],
+		self::FIELD_STALLED_DAYS => [
+			'type' => 'integer',
+			'title' => 'Days a lead has been stalled',
+			'source' => 'pipelinq',
+			'description' => 'Days the longest-waiting open lead has sat in its current stage.',
+		],
+		self::FIELD_LAST_CONTACT_AT => [
+			'type' => 'string',
+			'title' => 'Last contact',
+			'source' => 'pipelinq',
+			'description' => 'When the latest contact moment with this customer took place.',
+		],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ListObjectStore $store Register-scoped object plumbing.
 	 * @param BookkeepingSignals $bookkeeping The six shillinq-derived fields.
 	 * @param ITimeFactory $time Clock.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -177,59 +248,10 @@ class SegmentSignalService {
 	 * @return array<string, array{type: string, title: string, source: string, description: string}>
 	 *         The catalogue, in the order a builder lists it.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function catalogue(): array {
-		return [
-			self::FIELD_REVENUE => [
-				'type' => 'number',
-				'title' => 'Recognised revenue',
-				'source' => 'shillinq',
-				'description' => 'Paid invoices for this customer over the signal window.',
-			],
-			self::FIELD_VALUE_TIER => [
-				'type' => 'string',
-				'title' => 'Value tier',
-				'source' => 'shillinq',
-				'description' => 'top, mid, low or none, from recognised revenue against the tier thresholds.',
-			],
-			self::FIELD_MONTHS_SINCE_INVOICE => [
-				'type' => 'integer',
-				'title' => 'Months since the last invoice',
-				'source' => 'shillinq',
-				'description' => 'Whole months since the most recent invoice that left the draft stage.',
-			],
-			self::FIELD_PRODUCTS => [
-				'type' => 'array',
-				'title' => 'Purchased products',
-				'source' => 'shillinq',
-				'description' => 'Catalogue products named on this customer\'s invoice lines.',
-			],
-			self::FIELD_SERVICES => [
-				'type' => 'array',
-				'title' => 'Purchased services',
-				'source' => 'shillinq',
-				'description' => 'Catalogue services named on this customer\'s invoice lines.',
-			],
-			self::FIELD_DUNNING => [
-				'type' => 'string',
-				'title' => 'Dunning state',
-				'source' => 'shillinq',
-				'description' => 'current, overdue, disputed, written-off or unknown.',
-			],
-			self::FIELD_RENEWAL_DAYS => [
-				'type' => 'integer',
-				'title' => 'Days to contract renewal',
-				'source' => 'pipelinq',
-				'description' => 'Days until the nearest contract of this customer ends.',
-			],
-			self::FIELD_STALLED_DAYS => [
-				'type' => 'integer',
-				'title' => 'Days a lead has been stalled',
-				'source' => 'pipelinq',
-				'description' => 'Days the longest-waiting open lead has sat in its current stage.',
-			],
-		];
+		return self::CATALOGUE;
 	}//end catalogue()
 
 	/**
@@ -242,7 +264,7 @@ class SegmentSignalService {
 	 *
 	 * @return array<string, array{type: string, title: string, description: string}> Property map.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
 	 */
 	public function schemaProperties(): array {
 		$properties = [];
@@ -264,7 +286,7 @@ class SegmentSignalService {
 	 *
 	 * @return bool True when the field is one of the eight.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
 	 */
 	public function isSignalField(string $field): bool {
 		return array_key_exists($field, $this->catalogue());
@@ -275,7 +297,7 @@ class SegmentSignalService {
 	 *
 	 * @return array{shillinq: bool, reason: string} The availability report.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
 	public function availability(): array {
 		$available = $this->bookkeeping->isAvailable();
@@ -299,7 +321,7 @@ class SegmentSignalService {
 	 *
 	 * @return bool True when {@see valueFor()} has an answer.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
 	public function resolves(string $field, array $entity): bool {
 		return ($this->valueFor(field: $field, entity: $entity) !== null);
@@ -313,7 +335,7 @@ class SegmentSignalService {
 	 *
 	 * @return mixed The value, or null when it does not resolve.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function valueFor(string $field, array $entity): mixed {
 		if ($this->isSignalField(field: $field) === false) {
@@ -341,7 +363,7 @@ class SegmentSignalService {
 	 *
 	 * @return array<string, mixed> Field to value, nulls included.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function signalsFor(string $clientId): array {
 		if (array_key_exists($clientId, $this->memo) === true) {
@@ -374,7 +396,7 @@ class SegmentSignalService {
 	 *
 	 * @return string|null The dunning state, or null when there is no answer.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	public function dunningStateForContact(string $contactId): ?string {
 		$contactId = trim($contactId);
@@ -406,7 +428,7 @@ class SegmentSignalService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function forget(): void {
 		$this->memo = [];
@@ -414,16 +436,17 @@ class SegmentSignalService {
 	}//end forget()
 
 	/**
-	 * The two pipelinq signals for one client.
+	 * The three pipelinq signals for one client.
 	 *
 	 * @param string $clientId The pipelinq client id.
 	 *
-	 * @return array<string, int|null> The renewal and stall day counts.
+	 * @return array<string, int|string|null> The renewal and stall day counts and the last contact.
 	 */
 	private function crmSignals(string $clientId): array {
 		return [
 			self::FIELD_RENEWAL_DAYS => $this->renewalDays(clientId: $clientId),
 			self::FIELD_STALLED_DAYS => $this->stalledDays(clientId: $clientId),
+			self::FIELD_LAST_CONTACT_AT => (new LastContactReader(store: $this->store))->forClient(clientId: $clientId),
 		];
 	}//end crmSignals()
 
@@ -478,28 +501,68 @@ class SegmentSignalService {
 
 		$longest = null;
 		foreach ($rows as $row) {
-			if ((string)($row['client'] ?? '') !== $clientId) {
+			if ($this->isOpenLeadOf(row: $row, clientId: $clientId) === false) {
 				continue;
 			}
 
-			$status = strtolower(trim((string)($row['status'] ?? '')));
-			if ($status !== '' && in_array($status, self::OPEN_LEAD_STATUSES, true) === false) {
-				continue;
-			}
-
-			$days = $this->daysUntil(value: ($row['stageEnteredAt'] ?? null));
-			if ($days === null) {
-				continue;
-			}
-
-			$waited = -$days;
-			if ($longest === null || $waited > $longest) {
-				$longest = $waited;
-			}
+			$longest = $this->longerWait(longest: $longest, waited: $this->stageWait(row: $row));
 		}
 
 		return $longest;
 	}//end stalledDays()
+
+	/**
+	 * Whether a lead row belongs to the client and is open (a lead without a status counts as open).
+	 *
+	 * @param array<string, mixed> $row      The lead row.
+	 * @param string               $clientId The pipelinq client id.
+	 *
+	 * @return bool
+	 */
+	private function isOpenLeadOf(array $row, string $clientId): bool {
+		if ((string)($row['client'] ?? '') !== $clientId) {
+			return false;
+		}
+
+		$status = strtolower(trim((string)($row['status'] ?? '')));
+		return ($status === '' || in_array($status, self::OPEN_LEAD_STATUSES, true) === true);
+	}//end isOpenLeadOf()
+
+	/**
+	 * Days a lead has sat in its stage, or null when it carries no stage date.
+	 *
+	 * @param array<string, mixed> $row The lead row.
+	 *
+	 * @return int|null
+	 */
+	private function stageWait(array $row): int|null {
+		$days = $this->daysUntil(value: ($row['stageEnteredAt'] ?? null));
+		if ($days === null) {
+			return null;
+		}
+
+		return -$days;
+	}//end stageWait()
+
+	/**
+	 * The longer of the longest wait so far and a lead's wait.
+	 *
+	 * @param int|null $longest The longest wait so far, or null.
+	 * @param int|null $waited  This lead's wait, or null when undated.
+	 *
+	 * @return int|null
+	 */
+	private function longerWait(int|null $longest, int|null $waited): int|null {
+		if ($waited === null) {
+			return $longest;
+		}
+
+		if ($longest === null || $waited > $longest) {
+			return $waited;
+		}
+
+		return $longest;
+	}//end longerWait()
 
 	/**
 	 * Whole CALENDAR days from today to a date, negative when it has passed.

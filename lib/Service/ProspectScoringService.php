@@ -47,52 +47,63 @@ class ProspectScoringService {
 	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-fit-scoring
 	 */
 	public function score(array $prospect, array $criteria): array {
-		$breakdown = [
-			'sbiMatch' => 0,
-			'employeeMatch' => 0,
-			'locationMatch' => 0,
-			'legalFormMatch' => 0,
-			'activeMatch' => 0,
-		];
-
-		// SBI code match (30 points).
-		$breakdown['sbiMatch'] = $this->scoreSbi(
-			sbiCode: $prospect['sbiCode'] ?? '',
-			targetCodes: $criteria['sbiCodes'] ?? []
-		);
-
-		// Employee count match (25 points).
-		$breakdown['employeeMatch'] = $this->scoreEmployeeCount(
-			count: $prospect['employeeCount'] ?? null,
-			min: $criteria['employeeCountMin'] ?? 0,
-			max: $criteria['employeeCountMax'] ?? 0
-		);
-
-		// Location match (20 points).
-		$breakdown['locationMatch'] = $this->scoreLocation(
-			province: $prospect['address']['province'] ?? '',
-			targetProvinces: $criteria['provinces'] ?? []
-		);
-
-		// Legal form match (15 points).
-		$breakdown['legalFormMatch'] = $this->scoreLegalForm(
-			legalForm: $prospect['legalForm'] ?? '',
-			targetForms: $criteria['legalForms'] ?? []
-		);
-
-		// Active registration (10 points).
-		$isActive = ($prospect['isActive'] ?? false) === true;
-
-		$breakdown['activeMatch'] = 0;
-		if ($isActive === true) {
-			$breakdown['activeMatch'] = 10;
-		}
+		$breakdown = $this->breakdown(prospect: $prospect, criteria: $criteria);
 
 		$prospect['fitScore'] = array_sum(array: $breakdown);
 		$prospect['fitBreakdown'] = $breakdown;
 
 		return $prospect;
 	}//end score()
+
+	/**
+	 * The points per rule: SBI code (30), employee count (25), location (20),
+	 * legal form (15) and an active registration (10).
+	 *
+	 * @param array $prospect The prospect data.
+	 * @param array $criteria The ICP criteria.
+	 *
+	 * @return array<string, int> Rule => points, in this order.
+	 */
+	private function breakdown(array $prospect, array $criteria): array {
+		return [
+			'sbiMatch' => $this->scoreSbi(sbiCode: $prospect['sbiCode'] ?? '', targetCodes: $criteria['sbiCodes'] ?? []),
+			'employeeMatch' => $this->employeeMatch(prospect: $prospect, criteria: $criteria),
+			'locationMatch' => $this->scoreLocation(province: $prospect['address']['province'] ?? '', targetProvinces: $criteria['provinces'] ?? []),
+			'legalFormMatch' => $this->scoreLegalForm(legalForm: $prospect['legalForm'] ?? '', targetForms: $criteria['legalForms'] ?? []),
+			'activeMatch' => $this->activeMatch(prospect: $prospect),
+		];
+	}//end breakdown()
+
+	/**
+	 * The employee count points for the prospect against the criteria's range.
+	 *
+	 * @param array $prospect The prospect data.
+	 * @param array $criteria The ICP criteria.
+	 *
+	 * @return int The employee score (0 or 25).
+	 */
+	private function employeeMatch(array $prospect, array $criteria): int {
+		return $this->scoreEmployeeCount(
+			count: $prospect['employeeCount'] ?? null,
+			min: $criteria['employeeCountMin'] ?? 0,
+			max: $criteria['employeeCountMax'] ?? 0
+		);
+	}//end employeeMatch()
+
+	/**
+	 * The active registration points: 10 only for a literal `true`.
+	 *
+	 * @param array $prospect The prospect data.
+	 *
+	 * @return int The active score (0 or 10).
+	 */
+	private function activeMatch(array $prospect): int {
+		if (($prospect['isActive'] ?? false) === true) {
+			return 10;
+		}
+
+		return 0;
+	}//end activeMatch()
 
 	/**
 	 * Score multiple prospects and sort by fit score descending.
@@ -153,24 +164,45 @@ class ProspectScoringService {
 	 * @return int The employee score (0 or 25).
 	 */
 	private function scoreEmployeeCount(?int $count, int $min, int $max): int {
-		if ($count === null) {
+		if ($count === null || ($min === 0 && $max === 0)) {
 			return 0;
 		}
 
-		if ($min === 0 && $max === 0) {
-			return 0;
-		}
+		return $this->rangePoints(count: $count, range: [$min, $max]);
+	}//end scoreEmployeeCount()
 
-		if ($max > 0 && $count >= $min && $count <= $max) {
-			return 25;
-		}
-
-		if ($max === 0 && $count >= $min) {
+	/**
+	 * The employee points for a count at or over the minimum and within the maximum.
+	 *
+	 * @param int                $count The prospect's employee count.
+	 * @param array{0:int, 1:int} $range The minimum and the maximum (0 for none).
+	 *
+	 * @return int The employee score (0 or 25).
+	 */
+	private function rangePoints(int $count, array $range): int {
+		[$min, $max] = $range;
+		if ($count >= $min && $this->withinMax(count: $count, max: $max) === true) {
 			return 25;
 		}
 
 		return 0;
-	}//end scoreEmployeeCount()
+	}//end rangePoints()
+
+	/**
+	 * Whether a count is under the maximum; no maximum (0) means no upper bound.
+	 *
+	 * @param int $count The prospect's employee count.
+	 * @param int $max   The maximum desired count, 0 for none.
+	 *
+	 * @return bool
+	 */
+	private function withinMax(int $count, int $max): bool {
+		if ($max === 0) {
+			return true;
+		}
+
+		return $max > 0 && $count <= $max;
+	}//end withinMax()
 
 	/**
 	 * Score location match.
@@ -181,15 +213,8 @@ class ProspectScoringService {
 	 * @return int The location score (0 or 20).
 	 */
 	private function scoreLocation(string $province, array $targetProvinces): int {
-		if (count($targetProvinces) === 0 || $province === '') {
-			return 0;
-		}
-
-		$normalised = strtolower(string: trim(string: $province));
-		foreach ($targetProvinces as $target) {
-			if (strtolower(string: trim(string: (string)$target)) === $normalised) {
-				return 20;
-			}
+		if ($this->matchesAnyName(value: $province, targets: $targetProvinces) === true) {
+			return 20;
 		}
 
 		return 0;
@@ -204,17 +229,34 @@ class ProspectScoringService {
 	 * @return int The legal form score (0 or 15).
 	 */
 	private function scoreLegalForm(string $legalForm, array $targetForms): int {
-		if (count($targetForms) === 0 || $legalForm === '') {
-			return 0;
-		}
-
-		$normalised = strtolower(string: trim(string: $legalForm));
-		foreach ($targetForms as $target) {
-			if (strtolower(string: trim(string: (string)$target)) === $normalised) {
-				return 15;
-			}
+		if ($this->matchesAnyName(value: $legalForm, targets: $targetForms) === true) {
+			return 15;
 		}
 
 		return 0;
 	}//end scoreLegalForm()
+
+	/**
+	 * Whether a non-empty value equals one of the targets, trimmed and
+	 * case-insensitive; never with no targets.
+	 *
+	 * @param string $value   The prospect's value.
+	 * @param array  $targets The target values.
+	 *
+	 * @return bool
+	 */
+	private function matchesAnyName(string $value, array $targets): bool {
+		if (count($targets) === 0 || $value === '') {
+			return false;
+		}
+
+		$normalised = strtolower(string: trim(string: $value));
+		foreach ($targets as $target) {
+			if (strtolower(string: trim(string: (string)$target)) === $normalised) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end matchesAnyName()
 }//end class

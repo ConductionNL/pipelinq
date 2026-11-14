@@ -284,6 +284,59 @@ class SocialPostControllerTest extends TestCase {
 	}
 
 	/**
+	 * GET /api/social-performance/networks answers the per-network totals for
+	 * the period asked, clamped to at least one day.
+	 *
+	 * @return void
+	 */
+	public function testNetworkPerformanceAnswersThePerNetworkTotals(): void {
+		$this->signIn(uid: 'marieke');
+		$this->policy->method('isPrivileged')->willReturn(true);
+		$this->metrics->expects($this->once())->method('networkTotals')
+			->with(30)
+			->willReturn([['network' => 'mastodon', 'published' => 12]]);
+
+		$response = $this->controller->networkPerformance(days: 30);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: 'mastodon', actual: $response->getData()['data'][0]['network']);
+	}
+
+	/**
+	 * A user without marketing access gets a 403 and no publication is read.
+	 *
+	 * @return void
+	 */
+	public function testNetworkPerformanceRefusesWithoutMarketingAccess(): void {
+		$this->signIn(uid: 'buurman');
+		$this->policy->method('isPrivileged')->willReturn(false);
+		$this->metrics->expects($this->never())->method('networkTotals');
+
+		$response = $this->controller->networkPerformance();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+	}
+
+	/**
+	 * A forged user in the request does not change who is asked: the policy
+	 * hears only the session user, and the refusal reads nothing.
+	 *
+	 * @return void
+	 */
+	public function testNetworkPerformanceAsksThePolicyOnlyAboutTheSessionUser(): void {
+		$this->signIn(uid: 'buurman');
+		$this->request->method('getParam')->willReturn('marieke');
+		$this->request->method('getParams')->willReturn(['userId' => 'marieke', 'uid' => 'marieke', 'user' => 'marieke']);
+		$this->policy->expects($this->once())->method('isPrivileged')->with('buurman')->willReturn(false);
+		$this->metrics->expects($this->never())->method('networkTotals');
+
+		$response = $this->controller->networkPerformance(days: 30);
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Forbidden'], actual: $response->getData());
+	}
+
+	/**
 	 * GET /api/social-publications/{id}/share answers the prepared text for
 	 * the account's owner, WITHOUT requiring a marketing group: the colleague
 	 * being asked to post may be in none.

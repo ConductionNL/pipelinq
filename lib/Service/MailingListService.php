@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\MailingListServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 
 /**
@@ -39,7 +40,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
  */
-class MailingListService {
+class MailingListService implements MailingListServiceInterface {
 	/**
 	 * Opt-in mode requiring a confirmed link before a mailing is sent.
 	 *
@@ -191,39 +192,77 @@ class MailingListService {
 			return ['error' => 'Not found'];
 		}
 
-		$merged = $existing;
+		return $this->validatedSave(
+			list: $this->patched(list: $existing, patch: $patch),
+			id: $this->extractObjectId(payload: $existing)
+		);
+	}//end updateMailingList()
+
+	/**
+	 * The list with the patch's set fields: the six text fields trimmed, the
+	 * signup flag cast, the opt-in mode and status normalised.
+	 *
+	 * @param array<string, mixed> $list  The stored list.
+	 * @param array<string, mixed> $patch The patch.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function patched(array $list, array $patch): array {
 		foreach (['name', 'description', 'senderName', 'senderEmail', 'replyTo', 'footerAddress'] as $key) {
 			if (isset($patch[$key]) === true) {
-				$merged[$key] = trim((string)$patch[$key]);
+				$list[$key] = trim((string)$patch[$key]);
 			}
 		}
 
+		return $this->withSettings(list: $list, patch: $patch);
+	}//end patched()
+
+	/**
+	 * The list with the patch's signup flag, opt-in mode and status, each when set.
+	 *
+	 * @param array<string, mixed> $list  The list so far.
+	 * @param array<string, mixed> $patch The patch.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withSettings(array $list, array $patch): array {
 		if (isset($patch['publicSignup']) === true) {
-			$merged['publicSignup'] = (bool)$patch['publicSignup'];
+			$list['publicSignup'] = (bool)$patch['publicSignup'];
 		}
 
 		if (isset($patch['optInMode']) === true) {
-			$merged['optInMode'] = $this->normaliseOptInMode(value: $patch['optInMode']);
+			$list['optInMode'] = $this->normaliseOptInMode(value: $patch['optInMode']);
 		}
 
 		if (isset($patch['status']) === true) {
-			$merged['status'] = $this->normaliseStatus(value: $patch['status']);
+			$list['status'] = $this->normaliseStatus(value: $patch['status']);
 		}
 
-		$error = $this->validatePayload(payload: $merged);
+		return $list;
+	}//end withSettings()
+
+	/**
+	 * Validate the merged list, stamp it and save it under its id.
+	 *
+	 * @param array<string, mixed> $list The merged list.
+	 * @param string               $id   The stored list's id.
+	 *
+	 * @return array{list?: array<string, mixed>, error?: string}
+	 */
+	private function validatedSave(array $list, string $id): array {
+		$error = $this->validatePayload(payload: $list);
 		if ($error !== null) {
 			return ['error' => $error];
 		}
 
-		$merged['updatedAt'] = $this->nowIso();
-
-		$saved = $this->save(payload: $merged, id: $this->extractObjectId(payload: $existing));
+		$list['updatedAt'] = $this->nowIso();
+		$saved = $this->save(payload: $list, id: $id);
 		if ($saved === null) {
 			return ['error' => 'The mailing list could not be saved'];
 		}
 
 		return ['list' => $saved];
-	}//end updateMailingList()
+	}//end validatedSave()
 
 	/**
 	 * Whether a list currently accepts public signup.
@@ -286,16 +325,40 @@ class MailingListService {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 	 */
 	public function validatePayload(array $payload): ?string {
-		if (trim((string)($payload['name'] ?? '')) === '') {
-			return 'A mailing list needs a name';
+		$names = ['name' => 'A mailing list needs a name', 'senderName' => 'A mailing list needs a sender name'];
+		return $this->missingText(payload: $payload, fields: $names)
+			?? $this->addressError(payload: $payload)
+			?? $this->missingText(payload: $payload, fields: ['footerAddress' => 'A mailing list needs a postal address for the footer']);
+	}//end validatePayload()
+
+	/**
+	 * The message of the first field that is empty once trimmed, or null.
+	 *
+	 * @param array<string, mixed>  $payload The list.
+	 * @param array<string, string> $fields  Field => message, in checking order.
+	 *
+	 * @return string|null
+	 */
+	private function missingText(array $payload, array $fields): ?string {
+		foreach ($fields as $field => $message) {
+			if (trim((string)($payload[$field] ?? '')) === '') {
+				return $message;
+			}
 		}
 
-		if (trim((string)($payload['senderName'] ?? '')) === '') {
-			return 'A mailing list needs a sender name';
-		}
+		return null;
+	}//end missingText()
 
-		$senderEmail = trim((string)($payload['senderEmail'] ?? ''));
-		if (filter_var($senderEmail, FILTER_VALIDATE_EMAIL) === false) {
+	/**
+	 * The message for an invalid sender address, or an invalid non-empty
+	 * reply-to address; null when both are fine.
+	 *
+	 * @param array<string, mixed> $payload The list.
+	 *
+	 * @return string|null
+	 */
+	private function addressError(array $payload): ?string {
+		if (filter_var(trim((string)($payload['senderEmail'] ?? '')), FILTER_VALIDATE_EMAIL) === false) {
 			return 'A mailing list needs a valid sender address';
 		}
 
@@ -304,12 +367,8 @@ class MailingListService {
 			return 'The reply-to address is not a valid email address';
 		}
 
-		if (trim((string)($payload['footerAddress'] ?? '')) === '') {
-			return 'A mailing list needs a postal address for the footer';
-		}
-
 		return null;
-	}//end validatePayload()
+	}//end addressError()
 
 	/**
 	 * Resolve the MailingList schema slug from app config.
@@ -410,8 +469,6 @@ class MailingListService {
 	private function nowIso(): string {
 		return gmdate('Y-m-d\TH:i:s\Z');
 	}//end nowIso()
-
-
 
 	/**
 	 * Extract the canonical id from an OpenRegister entity payload.

@@ -19,14 +19,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\SearchConsole\SearchConsoleImportService;
+use OCA\Pipelinq\Kernel\Contracts\SearchConsoleImportServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -36,17 +36,17 @@ use Throwable;
 /**
  * Console entrypoint for the Search Console import.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 class SearchConsoleImportCommand extends Command {
 
 	/**
 	 * Constructor.
 	 *
-	 * @param SearchConsoleImportService $importer The importer.
+	 * @param SearchConsoleImportServiceInterface $importer The importer.
 	 */
 	public function __construct(
-		private SearchConsoleImportService $importer,
+		private SearchConsoleImportServiceInterface $importer,
 	) {
 		parent::__construct();
 	}//end __construct()
@@ -56,7 +56,7 @@ class SearchConsoleImportCommand extends Command {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	protected function configure(): void {
 		$this->setName(name: 'pipelinq:marketing:search-console:import')
@@ -72,7 +72,7 @@ class SearchConsoleImportCommand extends Command {
 	 *
 	 * @return int The exit code.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		if ($this->importer->hasKey() === false) {
@@ -97,6 +97,18 @@ class SearchConsoleImportCommand extends Command {
 			)
 		);
 
+		return $this->import(output: $output, days: $days);
+	}//end execute()
+
+	/**
+	 * Run the import, print each property's error and the summary, and answer the exit code.
+	 *
+	 * @param OutputInterface $output The console output.
+	 * @param int             $days   How many days back to import.
+	 *
+	 * @return int `FAILURE` when the import failed or no property was imported.
+	 */
+	private function import(OutputInterface $output, int $days): int {
 		try {
 			$result = $this->importer->importRecent(days: $days);
 		} catch (Throwable $e) {
@@ -117,7 +129,7 @@ class SearchConsoleImportCommand extends Command {
 		}
 
 		return Command::SUCCESS;
-	}//end execute()
+	}//end import()
 
 	/**
 	 * "property" or "properties".

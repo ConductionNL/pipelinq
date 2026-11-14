@@ -35,7 +35,7 @@
 						: t('pipelinq', 'Drops can only be added to an open shift.')
 				">
 				<NcButton
-					variant="secondary"
+					class="cn-button--tonal"
 					:disabled="busy || !canDrop"
 					@click="showDrop = true">
 					<template #icon>
@@ -66,6 +66,7 @@ import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import CashShiftDropDialog from '../../modals/CashShiftDropDialog.vue'
 import { postShiftAction } from '../../services/posShiftActions.js'
+import posDetailWidgetMixin from './posDetailWidgetMixin.js'
 
 export default {
 	name: 'CashShiftDropsWidget',
@@ -78,6 +79,8 @@ export default {
 		Plus,
 	},
 
+	mixins: [posDetailWidgetMixin],
+
 	// The host also spreads the content keys and register / schema / store;
 	// none of them belong on the root element.
 	inheritAttrs: false,
@@ -87,24 +90,6 @@ export default {
 		content: {
 			type: Object,
 			default: () => ({}),
-		},
-
-		/** The shift, from the detail page. */
-		objectData: {
-			type: Object,
-			default: null,
-		},
-
-		/** The shift id, from the detail page. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
 		},
 	},
 
@@ -121,7 +106,7 @@ export default {
 		 *
 		 * @return {string} The shift id, or '' when unknown.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 * @spec openspec/specs/pos-cash-management/spec.md#REQ-CCM-002
 		 */
 		shiftId() {
 			return this.objectId || this.objectData?.id || ''
@@ -132,7 +117,7 @@ export default {
 		 *
 		 * @return {boolean} Whether to offer Add drop.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 * @spec openspec/specs/pos-cash-management/spec.md#REQ-CCM-002
 		 */
 		canDrop() {
 			return (
@@ -146,7 +131,7 @@ export default {
 		 *
 		 * @return {object} The object-list content.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 * @spec openspec/specs/pos-cash-management/spec.md#REQ-CCM-002
 		 */
 		listContent() {
 			return { ...this.content, allowCreate: false }
@@ -160,16 +145,15 @@ export default {
 		 * @param {object} payload The drop payload (amount, reason).
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 * @spec openspec/specs/pos-cash-management/spec.md#REQ-CCM-002
 		 */
 		async recordDrop(payload) {
 			this.busy = true
-			const ok = await postShiftAction(
-				this.shiftId,
-				'drop',
-				payload,
-				t('pipelinq', 'Drop recorded.'),
-			)
+			const ok = await postShiftAction(this.shiftId, {
+				path: 'drop',
+				body: payload,
+				successMessage: t('pipelinq', 'Drop recorded.'),
+			})
 			this.busy = false
 			if (ok) {
 				this.showDrop = false

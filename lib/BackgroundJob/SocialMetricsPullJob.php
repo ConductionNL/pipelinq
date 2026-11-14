@@ -24,14 +24,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+ * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\SocialMetricsService;
+use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -40,21 +40,21 @@ use Throwable;
 /**
  * The daily social metrics pull.
  *
- * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+ * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
  */
 class SocialMetricsPullJob extends TimedJob {
 	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param SocialMetricsService $metrics The pull and the normalisation.
+	 * @param SocialMetricsServiceInterface $metrics The pull and the normalisation.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly SocialMetricsService $metrics,
+		private readonly SocialMetricsServiceInterface $metrics,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -73,7 +73,7 @@ class SocialMetricsPullJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The TimedJob contract
 	 *  passes an argument this job does not take.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	protected function run($argument): void {
 		try {

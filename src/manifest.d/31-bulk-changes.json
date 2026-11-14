@@ -1,0 +1,22 @@
+{
+	"menu": [
+		{
+			"id": "BulkChanges",
+			"label": "Bulk changes",
+			"icon": "Undo",
+			"route": "BulkChanges",
+			"order": 35
+		}
+	],
+	"pages": [
+		{
+			"id": "BulkChanges",
+			"_note": "clients-bulk-edit-and-undo D4. Custom because it lists OpenRegister bulk jobs (GET /apps/openregister/api/bulk-jobs, the caller's own), not register objects, and undoes one through POST .../reverse then .../commit; no declarative page type reads that endpoint or runs a two-step action with a preview.",
+			"route": "/bulk-changes",
+			"type": "custom",
+			"title": "Bulk changes",
+			"component": "BulkChangesView",
+			"config": { "register": "pipelinq", "schema": "client" }
+		}
+	]
+}

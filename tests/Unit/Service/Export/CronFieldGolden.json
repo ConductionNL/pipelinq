@@ -1,0 +1,465 @@
+{
+    "valid": {
+        "[*] minute": true,
+        "[*] hour": true,
+        "[*] dow": true,
+        "[*] dom": true,
+        "[*/1] minute": true,
+        "[*/1] hour": true,
+        "[*/1] dow": true,
+        "[*/1] dom": true,
+        "[*/0] minute": false,
+        "[*/0] hour": false,
+        "[*/0] dow": false,
+        "[*/0] dom": false,
+        "[*/x] minute": false,
+        "[*/x] hour": false,
+        "[*/x] dow": false,
+        "[*/x] dom": false,
+        "[*/15] minute": true,
+        "[*/15] hour": true,
+        "[*/15] dow": true,
+        "[*/15] dom": true,
+        "[*/60] minute": true,
+        "[*/60] hour": true,
+        "[*/60] dow": true,
+        "[*/60] dom": true,
+        "[*/] minute": false,
+        "[*/] hour": false,
+        "[*/] dow": false,
+        "[*/] dom": false,
+        "[/5] minute": false,
+        "[/5] hour": false,
+        "[/5] dow": false,
+        "[/5] dom": false,
+        "[5] minute": true,
+        "[5] hour": true,
+        "[5] dow": true,
+        "[5] dom": true,
+        "[59] minute": true,
+        "[59] hour": false,
+        "[59] dow": false,
+        "[59] dom": false,
+        "[60] minute": false,
+        "[60] hour": false,
+        "[60] dow": false,
+        "[60] dom": false,
+        "[05] minute": true,
+        "[05] hour": true,
+        "[05] dow": true,
+        "[05] dom": true,
+        "[-1] minute": false,
+        "[-1] hour": false,
+        "[-1] dow": false,
+        "[-1] dom": false,
+        "[a] minute": false,
+        "[a] hour": false,
+        "[a] dow": false,
+        "[a] dom": false,
+        "[10-20] minute": true,
+        "[10-20] hour": true,
+        "[10-20] dow": false,
+        "[10-20] dom": true,
+        "[20-10] minute": false,
+        "[20-10] hour": false,
+        "[20-10] dow": false,
+        "[20-10] dom": false,
+        "[10-20/5] minute": true,
+        "[10-20/5] hour": true,
+        "[10-20/5] dow": false,
+        "[10-20/5] dom": true,
+        "[10-20/0] minute": false,
+        "[10-20/0] hour": false,
+        "[10-20/0] dow": false,
+        "[10-20/0] dom": false,
+        "[0-59/7] minute": true,
+        "[0-59/7] hour": false,
+        "[0-59/7] dow": false,
+        "[0-59/7] dom": false,
+        "[0-60] minute": false,
+        "[0-60] hour": false,
+        "[0-60] dow": false,
+        "[0-60] dom": false,
+        "[10-] minute": false,
+        "[10-] hour": false,
+        "[10-] dow": false,
+        "[10-] dom": false,
+        "[-10] minute": false,
+        "[-10] hour": false,
+        "[-10] dow": false,
+        "[-10] dom": false,
+        "[1-2-3] minute": false,
+        "[1-2-3] hour": false,
+        "[1-2-3] dow": false,
+        "[1-2-3] dom": false,
+        "[x-5] minute": false,
+        "[x-5] hour": false,
+        "[x-5] dow": false,
+        "[x-5] dom": false,
+        "[5-x] minute": false,
+        "[5-x] hour": false,
+        "[5-x] dow": false,
+        "[5-x] dom": false,
+        "[1,2] minute": true,
+        "[1,2] hour": true,
+        "[1,2] dow": true,
+        "[1,2] dom": true,
+        "[1,,2] minute": false,
+        "[1,,2] hour": false,
+        "[1,,2] dow": false,
+        "[1,,2] dom": false,
+        "[1,*] minute": true,
+        "[1,*] hour": true,
+        "[1,*] dow": true,
+        "[1,*] dom": true,
+        "[*/5,7] minute": true,
+        "[*/5,7] hour": true,
+        "[*/5,7] dow": true,
+        "[*/5,7] dom": true,
+        "[58-59,0-1] minute": true,
+        "[58-59,0-1] hour": false,
+        "[58-59,0-1] dow": false,
+        "[58-59,0-1] dom": false,
+        "[] minute": false,
+        "[] hour": false,
+        "[] dow": false,
+        "[] dom": false,
+        "[1.5] minute": false,
+        "[1.5] hour": false,
+        "[1.5] dow": false,
+        "[1.5] dom": false,
+        "[+3] minute": false,
+        "[+3] hour": false,
+        "[+3] dow": false,
+        "[+3] dom": false,
+        "[ 5] minute": true,
+        "[ 5] hour": true,
+        "[ 5] dow": true,
+        "[ 5] dom": true,
+        "[*/1x] minute": false,
+        "[*/1x] hour": false,
+        "[*/1x] dow": false,
+        "[*/1x] dom": false,
+        "[*/+2] minute": false,
+        "[*/+2] hour": false,
+        "[*/+2] dow": false,
+        "[*/+2] dom": false,
+        "[0] minute": true,
+        "[0] hour": true,
+        "[0] dow": true,
+        "[0] dom": false,
+        "[0-5] minute": true,
+        "[0-5] hour": true,
+        "[0-5] dow": true,
+        "[0-5] dom": false
+    },
+    "fires": {
+        "*/20 * * * *": [
+            648,
+            [
+                "Fri 27 00:00",
+                "Fri 27 00:20",
+                "Fri 27 00:40",
+                "Fri 27 01:00",
+                "Fri 27 01:20",
+                "Fri 27 01:40",
+                "Fri 27 02:00",
+                "Fri 27 02:20",
+                "Fri 27 02:40",
+                "Fri 27 03:00",
+                "Fri 27 03:20",
+                "Fri 27 03:40"
+            ],
+            [
+                "Sat 07 22:40",
+                "Sat 07 23:00",
+                "Sat 07 23:20",
+                "Sat 07 23:40"
+            ]
+        ],
+        "7 */5 * * *": [
+            45,
+            [
+                "Fri 27 00:07",
+                "Fri 27 05:07",
+                "Fri 27 10:07",
+                "Fri 27 15:07",
+                "Fri 27 20:07",
+                "Sat 28 00:07",
+                "Sat 28 05:07",
+                "Sat 28 10:07",
+                "Sat 28 15:07",
+                "Sat 28 20:07",
+                "Sun 01 00:07",
+                "Sun 01 05:07"
+            ],
+            [
+                "Sat 07 05:07",
+                "Sat 07 10:07",
+                "Sat 07 15:07",
+                "Sat 07 20:07"
+            ]
+        ],
+        "0 9-17/4 * * *": [
+            27,
+            [
+                "Fri 27 09:00",
+                "Fri 27 13:00",
+                "Fri 27 17:00",
+                "Sat 28 09:00",
+                "Sat 28 13:00",
+                "Sat 28 17:00",
+                "Sun 01 09:00",
+                "Sun 01 13:00",
+                "Sun 01 17:00",
+                "Mon 02 09:00",
+                "Mon 02 13:00",
+                "Mon 02 17:00"
+            ],
+            [
+                "Fri 06 17:00",
+                "Sat 07 09:00",
+                "Sat 07 13:00",
+                "Sat 07 17:00"
+            ]
+        ],
+        "30 22 * * 1-5": [
+            6,
+            [
+                "Fri 27 22:30",
+                "Mon 02 22:30",
+                "Tue 03 22:30",
+                "Wed 04 22:30",
+                "Thu 05 22:30",
+                "Fri 06 22:30"
+            ],
+            [
+                "Tue 03 22:30",
+                "Wed 04 22:30",
+                "Thu 05 22:30",
+                "Fri 06 22:30"
+            ]
+        ],
+        "15 0 * * 0": [
+            1,
+            [
+                "Sun 01 00:15"
+            ],
+            [
+                "Sun 01 00:15"
+            ]
+        ],
+        "15 0 * * 7": [
+            1,
+            [
+                "Sun 01 00:15"
+            ],
+            [
+                "Sun 01 00:15"
+            ]
+        ],
+        "0 12 1-7 * 1": [
+            7,
+            [
+                "Sun 01 12:00",
+                "Mon 02 12:00",
+                "Tue 03 12:00",
+                "Wed 04 12:00",
+                "Thu 05 12:00",
+                "Fri 06 12:00",
+                "Sat 07 12:00"
+            ],
+            [
+                "Wed 04 12:00",
+                "Thu 05 12:00",
+                "Fri 06 12:00",
+                "Sat 07 12:00"
+            ]
+        ],
+        "0 12 2 * *": [
+            1,
+            [
+                "Mon 02 12:00"
+            ],
+            [
+                "Mon 02 12:00"
+            ]
+        ],
+        "0 0 * 3 *": [
+            7,
+            [
+                "Sun 01 00:00",
+                "Mon 02 00:00",
+                "Tue 03 00:00",
+                "Wed 04 00:00",
+                "Thu 05 00:00",
+                "Fri 06 00:00",
+                "Sat 07 00:00"
+            ],
+            [
+                "Wed 04 00:00",
+                "Thu 05 00:00",
+                "Fri 06 00:00",
+                "Sat 07 00:00"
+            ]
+        ],
+        "45 6,18 * * 6": [
+            4,
+            [
+                "Sat 28 06:45",
+                "Sat 28 18:45",
+                "Sat 07 06:45",
+                "Sat 07 18:45"
+            ],
+            [
+                "Sat 28 06:45",
+                "Sat 28 18:45",
+                "Sat 07 06:45",
+                "Sat 07 18:45"
+            ]
+        ],
+        "0 0 31 * *": [
+            0,
+            [],
+            []
+        ],
+        "5-10/2 3 * * *": [
+            27,
+            [
+                "Fri 27 03:05",
+                "Fri 27 03:07",
+                "Fri 27 03:09",
+                "Sat 28 03:05",
+                "Sat 28 03:07",
+                "Sat 28 03:09",
+                "Sun 01 03:05",
+                "Sun 01 03:07",
+                "Sun 01 03:09",
+                "Mon 02 03:05",
+                "Mon 02 03:07",
+                "Mon 02 03:09"
+            ],
+            [
+                "Fri 06 03:09",
+                "Sat 07 03:05",
+                "Sat 07 03:07",
+                "Sat 07 03:09"
+            ]
+        ],
+        "0 4 */2 * *": [
+            5,
+            [
+                "Fri 27 04:00",
+                "Sun 01 04:00",
+                "Tue 03 04:00",
+                "Thu 05 04:00",
+                "Sat 07 04:00"
+            ],
+            [
+                "Sun 01 04:00",
+                "Tue 03 04:00",
+                "Thu 05 04:00",
+                "Sat 07 04:00"
+            ]
+        ],
+        "0 4 * * */3": [
+            4,
+            [
+                "Sat 28 04:00",
+                "Sun 01 04:00",
+                "Wed 04 04:00",
+                "Sat 07 04:00"
+            ],
+            [
+                "Sat 28 04:00",
+                "Sun 01 04:00",
+                "Wed 04 04:00",
+                "Sat 07 04:00"
+            ]
+        ],
+        "0 4 3-5 * 2-3": [
+            3,
+            [
+                "Tue 03 04:00",
+                "Wed 04 04:00",
+                "Thu 05 04:00"
+            ],
+            [
+                "Tue 03 04:00",
+                "Wed 04 04:00",
+                "Thu 05 04:00"
+            ]
+        ],
+        "0 0 * * 5-7": [
+            5,
+            [
+                "Fri 27 00:00",
+                "Sat 28 00:00",
+                "Sun 01 00:00",
+                "Fri 06 00:00",
+                "Sat 07 00:00"
+            ],
+            [
+                "Sat 28 00:00",
+                "Sun 01 00:00",
+                "Fri 06 00:00",
+                "Sat 07 00:00"
+            ]
+        ],
+        "0 0 1 3 0": [
+            1,
+            [
+                "Sun 01 00:00"
+            ],
+            [
+                "Sun 01 00:00"
+            ]
+        ],
+        "*/59 23 * * *": [
+            18,
+            [
+                "Fri 27 23:00",
+                "Fri 27 23:59",
+                "Sat 28 23:00",
+                "Sat 28 23:59",
+                "Sun 01 23:00",
+                "Sun 01 23:59",
+                "Mon 02 23:00",
+                "Mon 02 23:59",
+                "Tue 03 23:00",
+                "Tue 03 23:59",
+                "Wed 04 23:00",
+                "Wed 04 23:59"
+            ],
+            [
+                "Fri 06 23:00",
+                "Fri 06 23:59",
+                "Sat 07 23:00",
+                "Sat 07 23:59"
+            ]
+        ],
+        "0 * * * *": [
+            216,
+            [
+                "Fri 27 00:00",
+                "Fri 27 01:00",
+                "Fri 27 02:00",
+                "Fri 27 03:00",
+                "Fri 27 04:00",
+                "Fri 27 05:00",
+                "Fri 27 06:00",
+                "Fri 27 07:00",
+                "Fri 27 08:00",
+                "Fri 27 09:00",
+                "Fri 27 10:00",
+                "Fri 27 11:00"
+            ],
+            [
+                "Sat 07 20:00",
+                "Sat 07 21:00",
+                "Sat 07 22:00",
+                "Sat 07 23:00"
+            ]
+        ]
+    }
+}

@@ -11,7 +11,7 @@
  * the leads sit on another reads as "you have no leads", so the board opens
  * where the open leads are.
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md
+ * @spec openspec/specs/pipeline/spec.md
  */
 
 /**
@@ -44,7 +44,7 @@ function isOpen(lead) {
  * @param {Array<object>} leads The leads.
  * @return {Map<string, number>} Open leads by pipeline id.
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-opens-where-the-open-leads-are-req-raf-021
+ * @spec openspec/specs/pipeline/spec.md#requirement-the-board-opens-where-the-open-leads-are-req-raf-021
  */
 export function openLeadCounts(leads) {
 	const counts = new Map()
@@ -68,7 +68,7 @@ export function openLeadCounts(leads) {
  * @param {Array<object>} leads The leads, of every pipeline.
  * @return {string|null} The pipeline id, or null without pipelines.
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-opens-where-the-open-leads-are-req-raf-021
+ * @spec openspec/specs/pipeline/spec.md#requirement-the-board-opens-where-the-open-leads-are-req-raf-021
  */
 export function choosePipeline(pipelines, leads) {
 	const list = (pipelines || []).filter((p) => p && p.id)
@@ -102,7 +102,7 @@ export function choosePipeline(pipelines, leads) {
  * @param {Array<object>} pipelines The pipelines.
  * @return {Array<{lead: object, reason: 'pipeline'|'stage'}>} The leads and why.
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-names-leads-that-are-on-no-board-req-raf-020
+ * @spec openspec/specs/pipeline/spec.md#requirement-the-board-names-leads-that-are-on-no-board-req-raf-020
  */
 export function findOrphanedLeads(leads, pipelines) {
 	const byId = new Map(
@@ -110,15 +110,40 @@ export function findOrphanedLeads(leads, pipelines) {
 	)
 	const out = []
 	for (const lead of leads || []) {
-		if (!lead || !lead.pipeline) continue
-		const pipeline = byId.get(lead.pipeline)
-		if (!pipeline) {
-			out.push({ lead, reason: 'pipeline' })
-			continue
-		}
-		if (lead.stage && !stageNames(pipeline).has(lead.stage)) {
-			out.push({ lead, reason: 'stage' })
+		const reason = orphanReason(lead, byId)
+		if (reason !== null) {
+			out.push({ lead, reason })
 		}
 	}
 	return out
+}
+
+/**
+ * Why no board column shows a lead, or null when one does (or it has no
+ * pipeline, which the board handles itself).
+ *
+ * @param {object|null} lead The lead.
+ * @param {Map<string, object>} byId The pipelines by id.
+ * @return {'pipeline'|'stage'|null} The reason.
+ *
+ * @spec openspec/specs/pipeline/spec.md#requirement-the-board-names-leads-that-are-on-no-board-req-raf-020
+ */
+function orphanReason(lead, byId) {
+	if (!lead || !lead.pipeline) {
+		return null
+	}
+	const pipeline = byId.get(lead.pipeline)
+	if (!pipeline) {
+		return 'pipeline'
+	}
+	return isUnknownStage(lead, pipeline) ? 'stage' : null
+}
+
+/**
+ * @param {object} lead The lead.
+ * @param {object} pipeline Its pipeline.
+ * @return {boolean} Whether the lead names a stage the pipeline does not have.
+ */
+function isUnknownStage(lead, pipeline) {
+	return Boolean(lead.stage) && !stageNames(pipeline).has(lead.stage)
 }

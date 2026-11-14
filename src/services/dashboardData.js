@@ -16,6 +16,7 @@ import { subscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import { initializeStores } from '../store/store.js'
+import { fetchRegisteredObjects } from './objectFetch.js'
 
 const CACHE_TTL_MS = 5 * 60 * 1000
 const cache = new Map()
@@ -38,28 +39,6 @@ export function getDashboardRefreshSignal() {
 }
 
 /**
- * Build the OR query URL for a registered object type.
- *
- * @param {object} typeConfig - { register, schema } from objectTypeRegistry.
- * @param {object} params - Query parameters.
- * @return {string} Fully-qualified path.
- */
-function buildUrl(typeConfig, params = {}) {
-	const queryParams = new URLSearchParams()
-	for (const [key, value] of Object.entries(params)) {
-		if (value === undefined || value === null || value === '') continue
-		queryParams.set(key, value)
-	}
-	return generateUrl(
-		'/apps/openregister/api/objects/'
-			+ typeConfig.register
-			+ '/'
-			+ typeConfig.schema
-			+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-	)
-}
-
-/**
  * Raw fetch helper — identical to the per-widget fetchRaw the legacy
  * widgets defined locally. Returns `[]` when the object type is not
  * registered in the app's settings (graceful no-op).
@@ -71,20 +50,7 @@ function buildUrl(typeConfig, params = {}) {
  */
 async function fetchRaw(type, params = {}) {
 	const { objectStore } = await initializeStores()
-	const typeConfig = objectStore.objectTypeRegistry[type]
-	if (!typeConfig) return []
-
-	const response = await fetch(buildUrl(typeConfig, params), {
-		headers: {
-			'Content-Type': 'application/json',
-			requesttoken: OC.requestToken,
-			'OCS-APIREQUEST': 'true',
-		},
-	})
-
-	if (!response.ok) throw new Error('Failed to fetch ' + type)
-	const data = await response.json()
-	return data.results || data || []
+	return fetchRegisteredObjects(objectStore.objectTypeRegistry, { type, params })
 }
 
 /**
@@ -113,7 +79,7 @@ function cached(key, fetcher) {
 }
 
 /**
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-17
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-17
  */
 export function getLeads() {
 	return cached('lead', () => fetchRaw('lead', { _limit: 500 }))
@@ -124,7 +90,7 @@ export function getLeads() {
  * `request` subtype (unify-ticket-supertype).
  *
  * @return {Promise<Array>} The request-type ticket records.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-21
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-21
  */
 export function getRequests() {
 	return cached('ticket:request', () =>
@@ -136,7 +102,7 @@ export function getRequests() {
 }
 
 /**
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-20
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-20
  */
 export function getPipelines() {
 	return cached('pipeline', () => fetchRaw('pipeline', { _limit: 100 }))
@@ -158,7 +124,7 @@ export function getContracts() {
  * `complaint` subtype (unify-ticket-supertype).
  *
  * @return {Promise<Array>} The complaint-type ticket records.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-16
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-16
  */
 export function getComplaints() {
 	return cached('ticket:complaint', () =>
@@ -170,14 +136,14 @@ export function getComplaints() {
 }
 
 /**
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-14
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-14
  */
 export function getClients() {
 	return cached('client', () => fetchRaw('client', { _limit: 500 }))
 }
 
 /**
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-18
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-18
  */
 export function getMyLeads() {
 	const uid = window.OC?.getCurrentUser?.()?.uid
@@ -195,7 +161,7 @@ export function getMyLeads() {
  * narrowed to the `request` subtype (unify-ticket-supertype).
  *
  * @return {Promise<Array>} The request-type ticket records assigned to the user.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-19
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-19
  */
 export function getMyRequests() {
 	const uid = window.OC?.getCurrentUser?.()?.uid
@@ -286,7 +252,7 @@ export function getAnalyticsTrend(metric, period) {
  * after creating a new object so the dashboard reflects the change
  * on the next widget mount/remount.
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-22
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-22
  */
 export function invalidateDashboardData() {
 	cache.clear()
@@ -319,7 +285,7 @@ subscribe('cn:page:refresh', () => {
  *
  * @param {Array} pipelines - Pipeline records.
  * @return {Set<string>} Names of stages flagged isClosed.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-15
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-15
  */
 export function getClosedStageNames(pipelines) {
 	const names = new Set()

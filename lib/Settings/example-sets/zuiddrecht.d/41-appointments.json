@@ -1,0 +1,556 @@
+{
+	"$comment": "pipelinq's appointments in the Zuiddrecht set: the skills, the resources services are booked on (staff, desks, the photo station, the council chamber) and the services residents book, as PqServices, PqService and PqResource draw them.",
+	"objects": [
+		{
+			"key": "vaardigheid-burgerzaken",
+			"register": "pipelinq",
+			"schema": "skill",
+			"data": {
+				"title": "Burgerzaken",
+				"description": "Paspoorten, ID-kaarten, rijbewijzen en de BRP.",
+				"isActive": true
+			}
+		},
+		{
+			"key": "vaardigheid-identiteitscontrole",
+			"register": "pipelinq",
+			"schema": "skill",
+			"data": {
+				"title": "Identiteitscontrole",
+				"description": "De identiteit van de aanvrager vaststellen.",
+				"isActive": true
+			}
+		},
+		{
+			"key": "vaardigheid-biometrie",
+			"register": "pipelinq",
+			"schema": "skill",
+			"data": {
+				"title": "Biometrie",
+				"description": "Pasfoto en vingerafdrukken afnemen.",
+				"isActive": true
+			}
+		},
+		{
+			"key": "vaardigheid-bouwvergunningen",
+			"register": "pipelinq",
+			"schema": "skill",
+			"data": {
+				"title": "Bouwvergunningen",
+				"description": "Advies over bouwplannen en vergunningen.",
+				"isActive": true
+			}
+		},
+		{
+			"key": "vaardigheid-schuldhulp",
+			"register": "pipelinq",
+			"schema": "skill",
+			"data": {
+				"title": "Schuldhulp",
+				"description": "Intake en begeleiding bij schulden.",
+				"isActive": true
+			}
+		},
+		{
+			"key": "vaardigheid-trouwambtenaar",
+			"register": "pipelinq",
+			"schema": "skill",
+			"data": {
+				"title": "Trouwambtenaar",
+				"description": "Een huwelijk of partnerschap voltrekken.",
+				"isActive": true
+			}
+		},
+		{
+			"key": "resource-fatma-yildiz",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Fatma Yildiz",
+				"type": "staff",
+				"skills": [
+					"burgerzaken",
+					"identiteitscontrole"
+				],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"userId": "{{cast:fatmayildiz.uid}}",
+				"calendarSyncId": "werkagenda-fatma.yildiz",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "12:30"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "12:30"
+					}
+				],
+				"vacations": [
+					{
+						"startDate": "{{date:12}}",
+						"endDate": "{{date:16}}",
+						"label": "Herfstvakantie"
+					},
+					{
+						"startDate": "{{date:78}}",
+						"endDate": "{{date:87}}",
+						"label": "Kerst"
+					}
+				]
+			}
+		},
+		{
+			"key": "resource-joris-bakker",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Joris Bakker",
+				"type": "staff",
+				"skills": [
+					"burgerzaken",
+					"identiteitscontrole"
+				],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"userId": "{{cast:joris.uid}}",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "resource-pieter-jansen",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Pieter Jansen",
+				"type": "staff",
+				"skills": [
+					"bouwvergunningen"
+				],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"userId": "{{cast:pieter.uid}}",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "resource-balie-1",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Balie 1, stadskantoor",
+				"type": "room",
+				"skills": [],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "resource-balie-2",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Balie 2, stadskantoor",
+				"type": "room",
+				"skills": [],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "resource-fotostation",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Foto- en vingerafdrukstation",
+				"type": "equipment",
+				"skills": [
+					"biometrie"
+				],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"workingHours": [
+					{
+						"day": "monday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "tuesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "wednesday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "08:30",
+						"closeTime": "20:00"
+					},
+					{
+						"day": "friday",
+						"openTime": "08:30",
+						"closeTime": "17:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "resource-raadzaal",
+			"register": "pipelinq",
+			"schema": "appointmentResource",
+			"data": {
+				"name": "Raadzaal",
+				"type": "room",
+				"skills": [
+					"trouwambtenaar"
+				],
+				"bookable": true,
+				"maxConcurrent": 1,
+				"status": "active",
+				"workingHours": [
+					{
+						"day": "tuesday",
+						"openTime": "10:00",
+						"closeTime": "16:00"
+					},
+					{
+						"day": "thursday",
+						"openTime": "10:00",
+						"closeTime": "16:00"
+					}
+				]
+			}
+		},
+		{
+			"key": "dienst-aanvraag-paspoort",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Aanvraag paspoort",
+				"description": "Vraag een paspoort aan bij de balie. Neem een pasfoto en je oude paspoort mee.",
+				"durationMinutes": 20,
+				"bufferBeforeMinutes": 0,
+				"bufferAfterMinutes": 5,
+				"bookableOnline": true,
+				"requiredResourceTypes": [
+					"staff",
+					"equipment"
+				],
+				"requiredSkills": [
+					"burgerzaken",
+					"identiteitscontrole"
+				],
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"currency": "EUR",
+				"status": "active",
+				"price": 81.4,
+				"noShowFee": 10,
+				"cancellationHoursBefore": 24,
+				"multiStep": [
+					{
+						"durationMinutes": 5,
+						"skillRequired": "identiteitscontrole",
+						"resourceType": "staff",
+						"allowGap": false,
+						"quantity": 1,
+						"unit": "piece"
+					},
+					{
+						"durationMinutes": 10,
+						"skillRequired": "biometrie",
+						"resourceType": "equipment",
+						"allowGap": false,
+						"quantity": 1,
+						"unit": "piece"
+					},
+					{
+						"durationMinutes": 5,
+						"skillRequired": "burgerzaken",
+						"resourceType": "staff",
+						"allowGap": true,
+						"quantity": 1,
+						"unit": "piece"
+					}
+				]
+			}
+		},
+		{
+			"key": "dienst-document-ophalen",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Paspoort of ID-kaart ophalen",
+				"description": "Een document ophalen dat klaar is.",
+				"durationMinutes": 10,
+				"bufferBeforeMinutes": 0,
+				"bufferAfterMinutes": 0,
+				"bookableOnline": true,
+				"requiredResourceTypes": [
+					"staff",
+					"room"
+				],
+				"requiredSkills": [
+					"burgerzaken"
+				],
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"currency": "EUR",
+				"status": "active"
+			}
+		},
+		{
+			"key": "dienst-rijbewijs-verlengen",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Rijbewijs verlengen",
+				"description": "Verlengen aan de balie, met vingerafdruk en foto.",
+				"durationMinutes": 15,
+				"bufferBeforeMinutes": 0,
+				"bufferAfterMinutes": 5,
+				"bookableOnline": true,
+				"requiredResourceTypes": [
+					"staff",
+					"equipment"
+				],
+				"requiredSkills": [
+					"biometrie"
+				],
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"currency": "EUR",
+				"status": "active"
+			}
+		},
+		{
+			"key": "dienst-bouwadviseur",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Gesprek met een bouwadviseur",
+				"description": "Voordat je een vergunning aanvraagt.",
+				"durationMinutes": 45,
+				"bufferBeforeMinutes": 5,
+				"bufferAfterMinutes": 15,
+				"bookableOnline": true,
+				"requiredResourceTypes": [
+					"staff",
+					"room"
+				],
+				"requiredSkills": [
+					"bouwvergunningen"
+				],
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"currency": "EUR",
+				"status": "active"
+			}
+		},
+		{
+			"key": "dienst-huwelijk-melden",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Huwelijk of partnerschap melden",
+				"description": "Melding voorgenomen huwelijk.",
+				"durationMinutes": 30,
+				"bufferBeforeMinutes": 0,
+				"bufferAfterMinutes": 10,
+				"bookableOnline": true,
+				"requiredResourceTypes": [
+					"staff"
+				],
+				"requiredSkills": [
+					"burgerzaken"
+				],
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"currency": "EUR",
+				"status": "active"
+			}
+		},
+		{
+			"key": "dienst-intake-schuldhulp",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Intake schuldhulp",
+				"description": "Eerste gesprek, alleen na doorverwijzing.",
+				"durationMinutes": 60,
+				"bufferBeforeMinutes": 0,
+				"bufferAfterMinutes": 15,
+				"bookableOnline": false,
+				"requiredResourceTypes": [
+					"staff",
+					"room"
+				],
+				"requiredSkills": [
+					"schuldhulp"
+				],
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"currency": "EUR",
+				"status": "active"
+			}
+		},
+		{
+			"key": "dienst-trouwen-raadzaal",
+			"register": "pipelinq",
+			"schema": "appointmentService",
+			"data": {
+				"name": "Trouwen in de raadzaal",
+				"description": "Ceremonie op een doordeweekse dag.",
+				"durationMinutes": 60,
+				"bufferBeforeMinutes": 15,
+				"bufferAfterMinutes": 30,
+				"bookableOnline": false,
+				"requiredResourceTypes": [
+					"staff",
+					"room"
+				],
+				"requiredSkills": [
+					"trouwambtenaar"
+				],
+				"requiresDeposit": false,
+				"cancellationPolicy": "free",
+				"currency": "EUR",
+				"status": "draft",
+				"price": 395
+			}
+		}
+	]
+}

@@ -30,7 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConsentMigrationServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -41,7 +42,7 @@ use Throwable;
  *
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
  */
-class ConsentMigrationService {
+class ConsentMigrationService implements ConsentMigrationServiceInterface {
 
 	/**
 	 * Constructor.
@@ -86,11 +87,32 @@ class ConsentMigrationService {
 			return $this->result(status: 'integriq-missing');
 		}
 
+		$this->migrateMessagingRecords();
+		$this->migrateConsentRecords();
+
+		$result = $this->result(status: $this->cutOverWhenClean());
+		$this->logger->info('Pipelinq consent migration into integriq', $result);
+		return $result;
+	}//end run()
+
+	/**
+	 * Hand the latest messaging consent of every contact and channel to integriq.
+	 *
+	 * @return void
+	 */
+	private function migrateMessagingRecords(): void {
 		foreach ($this->messaging->latestPerPair(rows: $this->messaging->allRecords()) as $row) {
 			$address = $this->addresses->addressFor(contactId: (string)($row['contactId'] ?? ''), channel: (string)($row['channel'] ?? ''));
 			$this->hand(request: $this->messaging->changeRequestFor(row: $row, address: $address));
 		}
+	}//end migrateMessagingRecords()
 
+	/**
+	 * Hand every marketing consent record to integriq; a bounce is skipped and counted.
+	 *
+	 * @return void
+	 */
+	private function migrateConsentRecords(): void {
 		foreach ($this->consentRecords() as $row) {
 			$request = $this->marketing->changeRequestFor(row: $row, id: $this->uuidOf(row: $row));
 			if ($request === null) {
@@ -100,24 +122,29 @@ class ConsentMigrationService {
 
 			$this->hand(request: $request);
 		}
+	}//end migrateConsentRecords()
 
+	/**
+	 * Without refusals, stamp the first cut-over moment and switch the store to integriq.
+	 *
+	 * @return string `done`, or `refusals` when integriq refused a record.
+	 */
+	private function cutOverWhenClean(): string {
 		$status = 'done';
 		if ($this->counts['refused'] === 0) {
 			if ($this->integriq->isCutover() === false) {
-				$this->appConfig->setValueString(Application::APP_ID, IntegriqConsentClient::CONFIG_CUTOVER_AT, (string)time());
+				$this->appConfig->setValueString(AppIdentity::APP_ID, IntegriqConsentClient::CONFIG_CUTOVER_AT, (string)time());
 			}
 
-			$this->appConfig->setValueString(Application::APP_ID, IntegriqConsentClient::CONFIG_STORE, IntegriqConsentClient::STORE_INTEGRIQ);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, IntegriqConsentClient::CONFIG_STORE, IntegriqConsentClient::STORE_INTEGRIQ);
 		}
 
 		if ($this->counts['refused'] > 0) {
 			$status = 'refusals';
 		}
 
-		$result = $this->result(status: $status);
-		$this->logger->info('Pipelinq consent migration into integriq', $result);
-		return $result;
-	}//end run()
+		return $status;
+	}//end cutOverWhenClean()
 
 	/**
 	 * Hand one request to integriq and count the outcome.
@@ -162,15 +189,7 @@ class ConsentMigrationService {
 	 * @return array<int,array<string,mixed>> The records.
 	 */
 	private function consentRecords(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'consent_record_schema', '');
-		if ($register === '') {
-			$register = 'pipelinq';
-		}
-
-		if ($schema === '') {
-			$schema = 'consentRecord';
-		}
+		[$register, $schema] = $this->consentTarget();
 
 		try {
 			$rows = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService')
@@ -180,8 +199,38 @@ class ConsentMigrationService {
 			return [];
 		}
 
+		return $this->plainRecords(rows: (array)$rows);
+	}//end consentRecords()
+
+	/**
+	 * The register and consentRecord schema, defaulting to pipelinq's own slugs.
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private function consentTarget(): array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'consent_record_schema', '');
+		if ($register === '') {
+			$register = 'pipelinq';
+		}
+
+		if ($schema === '') {
+			$schema = 'consentRecord';
+		}
+
+		return [$register, $schema];
+	}//end consentTarget()
+
+	/**
+	 * Rows as plain arrays; a row with no array shape is dropped.
+	 *
+	 * @param array<mixed> $rows The rows OpenRegister returned.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function plainRecords(array $rows): array {
 		$out = [];
-		foreach ((array)$rows as $row) {
+		foreach ($rows as $row) {
 			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
 				$row = $row->jsonSerialize();
 			}
@@ -192,7 +241,7 @@ class ConsentMigrationService {
 		}
 
 		return $out;
-	}//end consentRecords()
+	}//end plainRecords()
 
 	/**
 	 * The UUID of a record.

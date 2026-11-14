@@ -22,7 +22,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-008
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-008
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for ZgwCoexistenceValidator.
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-008
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-008
  */
 class ZgwCoexistenceValidatorTest extends TestCase {
 	/**
@@ -164,5 +164,32 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 			self::assertContains('stuf:stuf-zo', $e->conflictEndpointIds);
 		}
 	}//end testExceptionCarriesConflictingIds()
+
+	/**
+	 * The refusal, exactly: the warning names the municipality and the
+	 * endpoints, and the message lists each endpoint once.
+	 *
+	 * @return void
+	 */
+	public function testTheRefusalIsExact(): void {
+		$registers = $this->registerAccessWith([
+			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
+				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'active' => true, 'readOnly' => false],
+			],
+			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
+				['id' => 'stuf-zo', 'municipalityCode' => '0637', 'write' => 'on'],
+			],
+		]);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with('ZGW: double-write conflict detected', ['gemeente' => '0637', 'conflicting' => ['zgw:zgw-zo', 'stuf:stuf-zo']]);
+
+		try {
+			(new ZgwCoexistenceValidator($registers, $logger))->validateWritePath('0637');
+			self::fail('expected DoubleWritePathException');
+		} catch (DoubleWritePathException $e) {
+			self::assertSame('ZGW: dubbele schrijfpad-conflict voor gemeente "0637" — schakel een van de volgende endpoints uit: zgw:zgw-zo, stuf:stuf-zo', $e->getMessage());
+			self::assertSame(['zgw:zgw-zo', 'stuf:stuf-zo'], $e->conflictEndpointIds);
+		}
+	}//end testTheRefusalIsExact()
 
 }//end class

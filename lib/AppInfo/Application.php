@@ -23,63 +23,22 @@ namespace OCA\Pipelinq\AppInfo;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Contract\RegisterSlugResolverInterface;
-use OCA\OpenRegister\Event\ObjectCreatedEvent;
-use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\OpenRegister\Event\ObjectDeletedEvent;
-use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\OpenRegister\Event\SchemaUpdatedEvent;
-use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
-use OCA\Pipelinq\Adapter\BigQueryExportAdapter;
-use OCA\Pipelinq\Adapter\ExportSinkRegistry;
-use OCA\Pipelinq\Adapter\GcsExportAdapter;
-use OCA\Pipelinq\Adapter\PostgresExportAdapter;
-use OCA\Pipelinq\Adapter\S3ExportAdapter;
-use OCA\Pipelinq\Adapter\SftpExportAdapter;
-use OCA\Pipelinq\Adapter\SnowflakeExportAdapter;
-use OCA\Pipelinq\Dashboard\CreateLeadWidget;
-use OCA\Pipelinq\Dashboard\DealsOverviewWidget;
-use OCA\Pipelinq\Dashboard\FindClientWidget;
-use OCA\Pipelinq\Dashboard\MyLeadsWidget;
-use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
-use OCA\Pipelinq\Dashboard\StartRequestWidget;
-use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
-use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
+use OCA\Pipelinq\Adapter\AdapterRegistrar;
+use OCA\Pipelinq\BackgroundJob\JobRegistrar;
+use OCA\Pipelinq\Dashboard\DashboardRegistrar;
 use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
-use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
-use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
-use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
-use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
-use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
-use OCA\Pipelinq\Listener\ContactErasedListener;
-use OCA\Pipelinq\Listener\DealCreatedListener;
-use OCA\Pipelinq\Listener\DealUpdatedListener;
-use OCA\Pipelinq\Listener\ExpenseApprovalListener;
-use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
-use OCA\Pipelinq\Listener\LeadStageCreatingListener;
-use OCA\Pipelinq\Listener\ObjectEventListener;
-use OCA\Pipelinq\Listener\QuestionAnsweredListener;
-use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
-use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
-use OCA\Pipelinq\Listener\SchemaChangeListener;
-use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
-use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
-use OCA\Pipelinq\Listener\SurveyDispatchListener;
-use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
-use OCA\Pipelinq\Listener\TimeApprovalListener;
+use OCA\Pipelinq\Integration\IntegrationRegistrar;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\RoadmapFeatureCatalogInterface;
+use OCA\Pipelinq\Kernel\Contracts\VatRatesInterface;
+use OCA\Pipelinq\Lifecycle\LifecycleRegistrar;
+use OCA\Pipelinq\Listener\ListenerRegistrar;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
-use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
-use OCA\Pipelinq\Service\AppointmentEmailService;
-use OCA\Pipelinq\Service\AppointmentPaymentProvider;
-use OCA\Pipelinq\Service\AvailabilityService;
-use OCA\Pipelinq\Service\BookingService;
-use OCA\Pipelinq\Service\BsnValidationService;
-use OCA\Pipelinq\Service\ForecastService;
-use OCA\Pipelinq\Service\Gdpr\PipelinqApRegulatorEscalateProvider;
-use OCA\Pipelinq\Service\Gdpr\PipelinqBsnIdentityVerifyProvider;
-use OCA\Pipelinq\Service\HaalCentraalClient;
-use OCA\Pipelinq\Service\RoadmapFeatureCatalog;
-use OCA\Pipelinq\Service\VatRates;
+use OCA\Pipelinq\Middleware\ApiContractMiddleware;
+use OCA\Pipelinq\Notification\NotificationRegistrar;
+use OCA\Pipelinq\Portal\PortalRegistrar;
+use OCA\Pipelinq\Service\ServiceRegistrar;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -89,21 +48,18 @@ use OCP\AppFramework\Services\IInitialState;
 use OCP\Comments\ICommentsManager;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;
-use OCP\IGroupManager;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Main application class for the Pipelinq client and request management app.
  *
- * @spec exclude Main app bootstrap class; per-change spec coverage lives on the changed methods.
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-004
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
 class Application extends App implements IBootstrap {
-	public const APP_ID = 'pipelinq';
+	public const APP_ID = AppIdentity::APP_ID;
 
 	/**
 	 * Constructor for the Application class.
@@ -135,6 +91,10 @@ class Application extends App implements IBootstrap {
 	 *  avoid.
 	 */
 	public function register(IRegistrationContext $context): void {
+		// The API contract (version header, deprecation of unversioned paths,
+		// problem details). Registered first: Nextcloud runs afterController in
+		// reverse order, so it sees the final response of every other middleware.
+		$context->registerMiddleware(class: ApiContractMiddleware::class);
 
 		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never its
 		// concrete class, so this app's unit tests can mock a type they are able to
@@ -189,138 +149,11 @@ class Application extends App implements IBootstrap {
 		// Preferences / repair plumbing stays bespoke.
 		$this->registerAppHost(context: $context);
 
-		// Notifier registration. A <notification> element in info.xml is never read by core
-		// (and app-info.xsd rejects it); the IBootstrap registration below is the canonical path.
-		$context->registerNotifierService(\OCA\Pipelinq\Notification\Notifier::class);
+		(new NotificationRegistrar())->register(context: $context);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\PortalServiceAccountCheck::class);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\MessagingServiceAccountCheck::class);
 
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: ObjectEventListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: ObjectEventListener::class
-		);
-		// A saved answer on a resident's portal question tells them, with
-		// pipelinq's own message (portal-questions-in-dutch).
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: QuestionAnsweredListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: DealCreatedListener::class
-		);
-		// Every new lead sits in a pipeline stage (pipeline-numbers-tell-the-truth).
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: LeadStageCreatingListener::class
-		);
-		// A new task records who created it (round3-review-points).
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: TaskCreatedByCreatingListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: DealUpdatedListener::class
-		);
-		// Burgerportaal / MijnOverheid Berichtenbox bridge:
-		// listen for zaak status transitions and queue an outbound
-		// Berichtenbox message via BerichtenboxService
-		// (burgerportaal-mijnoverheid-bridge / REQ-OUTBOUND-001).
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: BerichtenboxZaakStatusListener::class
-		);
-
-		// Shillinq WIP integration: time-entry approval dispatches a CloudEvent
-		// to Shillinq (pipelinq-time-to-shillinq-wip / REQ-WIP-001). The listener
-		// is idempotent and a no-op when the Shillinq app is not installed.
-		$context->registerEventListener(
-			event: TimeEntryApprovedEvent::class,
-			listener: TimeApprovalListener::class
-		);
-
-		// Loyalty program: POS transaction completion fires the loyalty engine
-		// (loyalty-program / REQ-LOY-002). The listener filters to posTransaction
-		// entities + completed/settled/paid statuses, catches all errors, and never
-		// throws so the POS flow is unaffected (REQ-LOY-002-05).
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: PosTransactionCompletedListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: PosTransactionCompletedListener::class
-		);
-
-		// Expense → Shillinq AP voucher dispatch on status=approved transitions
-		// (pipelinq-expense-to-shillinq-ap / REQ-AP-002). Listener is filtered
-		// to the expense schema and idempotent on apSyncStatus=synced so a
-		// re-fired update event cannot create a duplicate AP voucher.
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: ExpenseApprovalListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: ExpenseApprovalListener::class
-		);
-
-		// SLA engine (sla-engine-and-escalation / REQ-001, REQ-003, REQ-007):
-		// initialise slaStatus on tracked-object create, re-evaluate /
-		// pause / resume / escalate on update. Listener exceptions are
-		// swallowed (REQ-007 fail-safe).
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: SlaObjectCreatedListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: SlaObjectUpdatedListener::class
-		);
-
-		// Satisfaction surveys (customer-satisfaction-closed-loop): a ticket
-		// that reaches a status an enabled survey rule names gets its
-		// invitations written, in the deferred job (pipelinq#2072). Created as
-		// well as updated, because a ticket can be logged already closed.
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: SurveyDispatchListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: SurveyDispatchListener::class
-		);
-
-		// MDM: OpenRegister now materialises the golden record on save via its
-		// SurvivorshipRecomputeListener (x-openregister-survivorship), so the
-		// app-side recompute-on-source-change listener is retired. Instead we
-		// subscribe to OR's ObjectsMergedEvent to enqueue downstream sync after a
-		// merge / reversal (REQ-MDM-004; ADR-041 event-not-RPC propagation).
-		$context->registerEventListener(
-			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
-			listener: ObjectsMergedSyncListener::class
-		);
-		// Contact erasure keeps the opt-out in integriq (opt-out-before-send REQ-CII-005).
-		// An API delete is a soft delete, which OpenRegister reports as an update
-		// (erase-on-soft-delete REQ-CII-008); the purge is the deleted event.
-		$context->registerEventListener(event: ObjectDeletedEvent::class, listener: ContactErasedListener::class);
-		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: ContactErasedListener::class);
-
-		// Marketing: portaliq relays a landing-page form submission by
-		// dispatching PIPELINQ'S OWN event class, which it resolves by the
-		// sourceApp on the form and class_exists()-guards (ADR-041,
-		// landing-page-provisioning). The event is ours, so this is an
-		// ordinary same-app registration: nothing here needs portaliq to be
-		// installed, and with portaliq absent the listener simply never fires.
-		$context->registerEventListener(
-			event: LandingPageFormSubmittedEvent::class,
-			listener: LandingPageFormSubmittedListener::class
-		);
+		(new ListenerRegistrar())->register(context: $context);
 
 		// Marketing: contribute the competitor-watch step to OpenRegister's
 		// flow catalogue (ADR-065, ADR-094). The engine owns the schedule and
@@ -334,12 +167,7 @@ class Application extends App implements IBootstrap {
 			listener: PipelinqFlowNodeListener::class
 		);
 
-		$context->registerDashboardWidget(DealsOverviewWidget::class);
-		$context->registerDashboardWidget(MyLeadsWidget::class);
-		$context->registerDashboardWidget(RecentActivitiesWidget::class);
-		$context->registerDashboardWidget(FindClientWidget::class);
-		$context->registerDashboardWidget(StartRequestWidget::class);
-		$context->registerDashboardWidget(CreateLeadWidget::class);
+		(new DashboardRegistrar())->register(context: $context);
 
 		// Register PipelinqScannableServices as the MCP attribute-scan opt-in for the
 		// AI Chat Companion (ADR-063 chain 3/3, openregister PR #363). The alias key
@@ -358,61 +186,13 @@ class Application extends App implements IBootstrap {
 			PipelinqScannableServices::class
 		);
 
-		// Wave-4 external-API ports (low-volume families).
-		//
-		// - Logius Berichtenbox (burgerportaal-mijnoverheid-bridge):
-		// the BBK 1.7 dispatch/verify/mailbox-check seam. The
-		// existing concrete `LogiusConnector` HTTP client is
-		// intentionally NOT bound here — it stays available for a
-		// downstream activation step to wire in. The default
-		// binding is the dormant log-only adapter so test +
-		// staging environments never contact Logius.
-		$context->registerServiceAlias(
-			\OCA\Pipelinq\Service\External\Berichtenbox\BerichtenboxAdapterInterface::class,
-			\OCA\Pipelinq\Service\External\Berichtenbox\LogBerichtenboxAdapter::class
-		);
-
-		$this->registerPosLifecycleGuards(context: $context);
-		$this->registerExportServices(context: $context);
-		$this->registerGdprSeamProviders(context: $context);
+		(new ServiceRegistrar())->register(context: $context);
+		(new LifecycleRegistrar())->register(context: $context);
+		(new AdapterRegistrar())->register(context: $context);
+		(new PortalRegistrar())->register(context: $context);
+		(new IntegrationRegistrar())->register(context: $context);
+		(new JobRegistrar())->register(context: $context);
 	}//end register()
-
-	/**
-	 * Register pipelinq's two AVG/DSAR integration-seam providers as services
-	 * (ADR-047 Phase-3 / ADR-019). The providers implement OpenRegister's
-	 * `IdentityVerifyProvider` / `RegulatorEscalateProvider` contracts; they are
-	 * registered here as lazy service factories and are added to OR's registries
-	 * from {@see wireGdprSeamProviders()} in `boot()` — matching the OR registry
-	 * contract's "each app registers its provider from its own boot hook"
-	 * guidance, where the cross-app OR registry can be safely resolved. Both
-	 * factories only construct the OR-interface-implementing class on resolve, so
-	 * a disabled / absent OpenRegister never fatals bootstrap.
-	 *
-	 * @param IRegistrationContext $context The registration context.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
-	 */
-	private function registerGdprSeamProviders(IRegistrationContext $context): void {
-		$context->registerService(
-			PipelinqBsnIdentityVerifyProvider::class,
-			static function ($c): PipelinqBsnIdentityVerifyProvider {
-				return new PipelinqBsnIdentityVerifyProvider(
-					bsnValidation: $c->get(BsnValidationService::class),
-					brpClient: $c->get(HaalCentraalClient::class),
-					logger: $c->get(LoggerInterface::class),
-				);
-			}
-		);
-
-		$context->registerService(
-			PipelinqApRegulatorEscalateProvider::class,
-			static function ($c): PipelinqApRegulatorEscalateProvider {
-				return new PipelinqApRegulatorEscalateProvider(logger: $c->get(LoggerInterface::class));
-			}
-		);
-	}//end registerGdprSeamProviders()
 
 	/**
 	 * Wire the OpenRegister AppHost engine (ADR-040), scoped to the parity-safe
@@ -449,7 +229,7 @@ class Application extends App implements IBootstrap {
 	 *         disabled-OpenRegister-safe pattern); neither is a compile-time
 	 *         dependency, so static analysis cannot resolve them.
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-16-adopt-apphost/tasks.md#task-2.1
 	 */
 	private function registerAppHost(IRegistrationContext $context): void {
 		$appId = self::APP_ID;
@@ -487,109 +267,6 @@ class Application extends App implements IBootstrap {
 	}//end registerAppHost()
 
 	/**
-	 * Register the BI-export sink registry and the schema-change listener.
-	 *
-	 * The {@see ExportSinkRegistry} is wired with every concrete sink adapter
-	 * so {@see \OCA\Pipelinq\Service\Export\ExportUploadService} stays decoupled
-	 * from the warehouse transports. The {@see SchemaChangeListener} records
-	 * column drift on pipelinq schemas for the export audit (ADR-009).
-	 *
-	 * @param IRegistrationContext $context The registration context.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
-	 */
-	private function registerExportServices(IRegistrationContext $context): void {
-		$context->registerService(
-			ExportSinkRegistry::class,
-			static function ($c): ExportSinkRegistry {
-				return new ExportSinkRegistry(
-					sinks: [
-						$c->get(S3ExportAdapter::class),
-						$c->get(BigQueryExportAdapter::class),
-						$c->get(SnowflakeExportAdapter::class),
-						$c->get(PostgresExportAdapter::class),
-						$c->get(AzureDataLakeExportAdapter::class),
-						$c->get(GcsExportAdapter::class),
-						$c->get(SftpExportAdapter::class),
-					]
-				);
-			}
-		);
-
-		$context->registerEventListener(
-			event: SchemaUpdatedEvent::class,
-			listener: SchemaChangeListener::class
-		);
-	}//end registerExportServices()
-
-	/**
-	 * Register the POS lifecycle guards keyed by the FQCN tag the
-	 * posTransaction / posRefund schemas reference in their
-	 * x-openregister-lifecycle.transitions[*].requires.
-	 *
-	 * OpenRegister's LifecycleGuardRegistry resolves the `requires` tag to a
-	 * concrete LifecycleGuardInterface instance via the app container (with the
-	 * NC server container as FQCN fallback). The registry is fail-closed: a
-	 * transition that references an unregistered guard tag cannot proceed, so
-	 * these registrations are load-bearing for the POS lifecycle.
-	 *
-	 * @param IRegistrationContext $context The registration context.
-	 *
-	 * @return void
-	 */
-	private function registerPosLifecycleGuards(IRegistrationContext $context): void {
-		$context->registerService(
-			PosAccessPolicy::class,
-			static function ($c): PosAccessPolicy {
-				return new PosAccessPolicy(
-					appConfig: $c->get(IAppConfig::class),
-					groupManager: $c->get(IGroupManager::class),
-				);
-			}
-		);
-
-		$context->registerService(
-			PosTransactionAccessGuard::class,
-			static function ($c): PosTransactionAccessGuard {
-				return new PosTransactionAccessGuard(policy: $c->get(PosAccessPolicy::class));
-			}
-		);
-
-		$context->registerService(
-			PosTransactionConfirmGuard::class,
-			static function ($c): PosTransactionConfirmGuard {
-				return new PosTransactionConfirmGuard(
-					policy: $c->get(PosAccessPolicy::class),
-					container: $c->get(ContainerInterface::class),
-					appConfig: $c->get(IAppConfig::class),
-					logger: $c->get(LoggerInterface::class),
-				);
-			}
-		);
-
-		$context->registerService(
-			PosTransactionRefundGuard::class,
-			static function ($c): PosTransactionRefundGuard {
-				return new PosTransactionRefundGuard(policy: $c->get(PosAccessPolicy::class));
-			}
-		);
-
-		$context->registerService(
-			PosRefundManagerGuard::class,
-			static function ($c): PosRefundManagerGuard {
-				return new PosRefundManagerGuard(
-					policy: $c->get(PosAccessPolicy::class),
-					container: $c->get(ContainerInterface::class),
-					appConfig: $c->get(IAppConfig::class),
-					logger: $c->get(LoggerInterface::class),
-				);
-			}
-		);
-	}//end registerPosLifecycleGuards()
-
-	/**
 	 * Boot the application and register comment display name resolvers.
 	 *
 	 * @param IBootContext $context The boot context
@@ -618,10 +295,9 @@ class Application extends App implements IBootstrap {
 
 		try {
 			$initialState = $this->getContainer()->get(IInitialState::class);
-			$initialState->provideInitialState(
-				'features_roadmap_features',
-				$this->getContainer()->get(RoadmapFeatureCatalog::class)->load()
-			);
+			$roadmap = $this->getContainer()->get(RoadmapFeatureCatalogInterface::class);
+			$initialState->provideInitialState('features_roadmap_features', $roadmap->load());
+			$initialState->provideInitialState('features_roadmap_categories', $roadmap->categories());
 
 			$dependencies = $this->readManifestDependencies();
 			$dependencyStatus = $this->resolveDependencyStatuses(context: $context, dependencies: $dependencies);
@@ -636,8 +312,8 @@ class Application extends App implements IBootstrap {
 				'config',
 				[
 					'currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR'),
-					'vat_rates' => (new VatRates(appConfig: $appConfig))->rates(),
-					'pipelineTarget' => $appConfig->getValueInt(self::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0),
+					'vat_rates' => $this->getContainer()->get(VatRatesInterface::class)->rates(),
+					'pipelineTarget' => $appConfig->getValueInt(self::APP_ID, ForecastServiceInterface::PIPELINE_TARGET_KEY, 0),
 				]
 			);
 		} catch (\Exception $e) {
@@ -646,66 +322,6 @@ class Application extends App implements IBootstrap {
 
 		$this->bootNonPageSurfaces(server: $server);
 	}//end boot()
-
-	/**
-	 * Add pipelinq's two AVG/DSAR seam providers to OpenRegister's registries
-	 * (ADR-047 Phase-3 / ADR-019, first-wins). The registries are OR-owned
-	 * shared services resolved from the app container at boot; the whole wiring
-	 * is wrapped per registry so a disabled / absent OpenRegister (or an OR build
-	 * predating the Gdpr seams) never fatals boot — in that case the NL pack's
-	 * selector simply resolves to OR's fail-closed default provider and identity
-	 * stays unverified / escalation stays refused (ADR-005 / CWE-863).
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
-	 */
-	private function wireGdprSeamProviders(): void {
-		$identityClass = 'OCA\\OpenRegister\\Service\\Gdpr\\Identity\\IdentityVerifyRegistry';
-		$regulatorClass = 'OCA\\OpenRegister\\Service\\Gdpr\\Regulator\\RegulatorEscalateRegistry';
-		$container = $this->getContainer();
-
-		try {
-			$identityRegistry = $container->get($identityClass);
-			$identityRegistry->addProvider($container->get(PipelinqBsnIdentityVerifyProvider::class));
-		} catch (Throwable $e) {
-			// OpenRegister absent or the identity-verify seam not present — the
-			// NL pack selector resolves OR's fail-closed default (unverified).
-		}
-
-		try {
-			$regulatorRegistry = $container->get($regulatorClass);
-			$regulatorRegistry->addProvider($container->get(PipelinqApRegulatorEscalateProvider::class));
-		} catch (Throwable $e) {
-			// OpenRegister absent or the regulator-escalate seam not present — the
-			// NL pack selector resolves OR's fail-closed default (refused).
-		}
-	}//end wireGdprSeamProviders()
-
-	/**
-	 * Register pipelinq's CRM objects as an evidence source in OpenRegister's
-	 * DSAR case engine (ADR-047 Phase 3 / ADR-019 seam).
-	 *
-	 * OpenRegister's EvidenceHarvestService enumerates only providers added to
-	 * its EvidenceSourceRegistry, so this registration is what makes pipelinq
-	 * data reachable during a data-subject request. The registry is resolved
-	 * lazily through the container so a disabled / absent OpenRegister never
-	 * fatals bootstrap — the registration is simply skipped.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016-pipelinq-evidence-source-registration
-	 */
-	private function registerDsarEvidenceSource(): void {
-		try {
-			$registry = $this->getContainer()->get('OCA\\OpenRegister\\Service\\Gdpr\\Evidence\\EvidenceSourceRegistry');
-			$provider = $this->getContainer()->get(\OCA\Pipelinq\Service\PipelinqEvidenceSourceProvider::class);
-			$registry->addProvider($provider);
-		} catch (\Throwable $e) {
-			// OpenRegister absent or DSAR engine not present — pipelinq boots
-			// without contributing DSAR evidence. No Throwable escapes.
-		}
-	}//end registerDsarEvidenceSource()
 
 	/**
 	 * Whether this request will render a page that can read initial state.
@@ -763,9 +379,7 @@ class Application extends App implements IBootstrap {
 	 */
 	private function bootNonPageSurfaces($server): void {
 		$this->registerCommentResolvers(server: $server);
-		$this->wireAppointmentSeams();
-		$this->wireGdprSeamProviders();
-		$this->registerDsarEvidenceSource();
+		(new ServiceRegistrar())->boot(container: $this->getContainer());
 
 	}//end bootNonPageSurfaces()
 
@@ -895,30 +509,8 @@ class Application extends App implements IBootstrap {
 
 		$dependencyStatus = [];
 		foreach ($dependencies as $depId) {
-			$onDisk = false;
-			$category = 'organization';
-			try {
-				$appManager->getAppPath($depId);
-				$onDisk = true;
-				// Public IAppManager::getAppInfo(): the private \OC_App::getAppInfo()
-				// used here before no longer exists, so the category always fell
-				// through to the app-store lookup below.
-				$appInfo = $appManager->getAppInfo($depId);
-				if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
-					$category = (string)((array)$appInfo['category'])[0];
-				}
-			} catch (\Throwable) {
-				if (empty($appStoreLookup[$depId][0]) === false) {
-					$category = (string)$appStoreLookup[$depId][0];
-				}
-			}
-
-			$dependencyStatus[$depId] = [
-				'installed' => $onDisk,
-				'enabled' => $appManager->isEnabledForUser($depId),
-				'category' => $category,
-			];
-		}//end foreach
+			$dependencyStatus[$depId] = $this->dependencyStatus(appManager: $appManager, depId: $depId, appStoreLookup: $appStoreLookup);
+		}
 
 		// 5 minutes: an app being installed or enabled is a rare, operator-driven
 		// event, and the page shows install hints — a stale hint for a few
@@ -929,67 +521,53 @@ class Application extends App implements IBootstrap {
 	}//end resolveDependencyStatuses()
 
 	/**
-	 * Wire the three optional appointment-booking seams onto their consumers.
+	 * Whether a dependency is installed and enabled, and its category.
 	 *
-	 * BookingService and AvailabilityService are constructed WITHOUT these
-	 * collaborators and take them through setters, so the lifecycle code never
-	 * depends on an email, calendar or payment transport. Boot is where they are
-	 * attached, which is why they are attached here:
+	 * @param IAppManager $appManager The app manager.
+	 * @param string $depId The dependency app id.
+	 * @param array<string, mixed> $appStoreLookup App store categories by app id.
 	 *
-	 *  - confirmation email (chain member 07): confirmation mail goes out on
-	 *    booking create and confirm.
-	 *  - calendar leaf (member 10): AvailabilityService merges leaf-synced staff
-	 *    VEVENTs into slot computation, and BookingService pushes a confirmed
-	 *    booking back to those calendars (REQ-APT-018).
-	 *  - fee payment (member 08): no-show and late-cancellation fees are routed
-	 *    to Integriq instead of only being recorded in statusHistory.
-	 *
-	 * Each seam is wired inside its OWN try. That is the property this method has
-	 * to keep, and it is why the three are a loop rather than one block: a
-	 * container that cannot build the calendar provider must still leave the
-	 * email and payment seams attached. A seam that fails to wire stays null and
-	 * the documented degradation applies — bookings still transition, the fee is
-	 * still recorded, nothing is transported.
-	 *
-	 * This replaced three near-identical private methods (wireAppointmentEmailSeam,
-	 * wireAppointmentCalendarSeam, wireAppointmentPaymentSeam) that differed only
-	 * in which setter they called. Collapsing them took this class back under
-	 * phpmd's ExcessiveClassLength threshold, which the slug-resolver binding
-	 * above had pushed it over by five lines.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/appointment-booking/spec.md
+	 * @return array{installed: bool, enabled: bool, category: string} The dependency status.
 	 */
-	private function wireAppointmentSeams(): void {
-		$seams = [
-			// Confirmation email.
-			static function (ContainerInterface $container): void {
-				$container->get(BookingService::class)->setEmailProvider(
-					provider: $container->get(AppointmentEmailService::class)
-				);
-			},
-			// Calendar leaf, consumed by two services.
-			static function (ContainerInterface $container): void {
-				$calendarProvider = $container->get(AppointmentCalendarLeafProvider::class);
-				$container->get(AvailabilityService::class)->setCalendarProvider(provider: $calendarProvider);
-				$container->get(BookingService::class)->setCalendarProvider(provider: $calendarProvider);
-			},
-			// No-show and late-cancellation fee transport.
-			static function (ContainerInterface $container): void {
-				$container->get(BookingService::class)->setPaymentProvider(
-					provider: $container->get(AppointmentPaymentProvider::class)
-				);
-			},
-		];
+	private function dependencyStatus(IAppManager $appManager, string $depId, array $appStoreLookup): array {
+		[$onDisk, $category] = $this->dependencyPresence(appManager: $appManager, depId: $depId, appStoreLookup: $appStoreLookup);
 
-		foreach ($seams as $wire) {
-			try {
-				$wire($this->getContainer());
-			} catch (Throwable $e) {
-				// OpenRegister or one of the collaborators is unavailable. This
-				// seam stays null; the other two are unaffected.
+		return [
+			'installed' => $onDisk,
+			'enabled' => $appManager->isEnabledForUser($depId),
+			'category' => $category,
+		];
+	}//end dependencyStatus()
+
+	/**
+	 * Whether the dependency is on disk, and its category from its info.xml or else the app store.
+	 *
+	 * @param IAppManager $appManager The app manager.
+	 * @param string $depId The dependency app id.
+	 * @param array<string, mixed> $appStoreLookup App store categories by app id.
+	 *
+	 * @return array{0: bool, 1: string} On disk, and the category.
+	 */
+	private function dependencyPresence(IAppManager $appManager, string $depId, array $appStoreLookup): array {
+		$onDisk = false;
+		$category = 'organization';
+		try {
+			$appManager->getAppPath($depId);
+			$onDisk = true;
+			// Public IAppManager::getAppInfo(): the private \OC_App::getAppInfo()
+			// used here before no longer exists, so the category always fell
+			// through to the app-store lookup below.
+			$appInfo = $appManager->getAppInfo($depId);
+			if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
+				$category = (string)((array)$appInfo['category'])[0];
+			}
+		} catch (\Throwable) {
+			if (empty($appStoreLookup[$depId][0]) === false) {
+				$category = (string)$appStoreLookup[$depId][0];
 			}
 		}
-	}//end wireAppointmentSeams()
+
+		return [$onDisk, $category];
+	}//end dependencyPresence()
+
 }//end class

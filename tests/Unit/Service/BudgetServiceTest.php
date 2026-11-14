@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
  * Tests for BudgetService — hard-stop, soft-alert, period reset,
  * cost accumulation.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class BudgetServiceTest extends TestCase {
 	private ContainerInterface $container;

@@ -30,7 +30,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
  */
 
 declare(strict_types=1);
@@ -40,12 +40,11 @@ namespace OCA\Pipelinq\Service\Competitor;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
 use SimpleXMLElement;
-use Throwable;
 
 /**
  * RSS and Atom entries out of a feed.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (WatchOutcome). A value
@@ -68,7 +67,7 @@ class FeedWatchReader {
 	 *
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -83,7 +82,7 @@ class FeedWatchReader {
 	 *
 	 * @return WatchOutcome The entries, or the reason there are none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
 	 */
 	public function read(string $url, string $sourceId = ''): WatchOutcome {
 		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $url, sourceId: $sourceId);
@@ -109,7 +108,7 @@ class FeedWatchReader {
 	 *
 	 * @return array<int, array<string, mixed>>|null The entries, or null when the document is not a feed.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
 	 */
 	public function parse(string $document): ?array {
 		$xml = $this->load(document: $document);
@@ -138,33 +137,70 @@ class FeedWatchReader {
 			return null;
 		}
 
+		return $this->rssEntries(channel: $channel);
+	}//end rssItems()
+
+	/**
+	 * The channel's items that carry a link, up to MAX_ENTRIES.
+	 *
+	 * @param SimpleXMLElement $channel The `<channel>` element.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function rssEntries(SimpleXMLElement $channel): array {
 		$out = [];
 		foreach ($channel->item as $item) {
-			$link = trim((string)$item->link);
-			if ($link === '') {
+			$entry = $this->rssEntry(item: $item);
+			if ($entry === null) {
 				continue;
 			}
 
-			$guid = trim((string)$item->guid);
-			$stamp = $guid;
-			if ($stamp === '') {
-				$stamp = trim((string)$item->pubDate);
-			}
-
-			$out[] = [
-				'url' => $link,
-				'title' => trim((string)$item->title),
-				'summary' => $this->shorten(value: trim((string)$item->description)),
-				'stamp' => $stamp,
-				'publishedAt' => $this->instant(value: trim((string)$item->pubDate)),
-			];
+			$out[] = $entry;
 			if (count($out) >= self::MAX_ENTRIES) {
 				break;
 			}
 		}
 
 		return $out;
-	}//end rssItems()
+	}//end rssEntries()
+
+	/**
+	 * One RSS item as an entry, or null when it has no link.
+	 *
+	 * @param SimpleXMLElement $item The `<item>` element.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function rssEntry(SimpleXMLElement $item): array|null {
+		$link = trim((string)$item->link);
+		if ($link === '') {
+			return null;
+		}
+
+		return [
+			'url' => $link,
+			'title' => trim((string)$item->title),
+			'summary' => $this->shorten(value: trim((string)$item->description)),
+			'stamp' => $this->orElse(value: trim((string)$item->guid), fallback: trim((string)$item->pubDate)),
+			'publishedAt' => $this->instant(value: trim((string)$item->pubDate)),
+		];
+	}//end rssEntry()
+
+	/**
+	 * The value, or the fallback when the value is empty.
+	 *
+	 * @param string $value The preferred value.
+	 * @param string $fallback The value to use instead of an empty one.
+	 *
+	 * @return string
+	 */
+	private function orElse(string $value, string $fallback): string {
+		if ($value === '') {
+			return $fallback;
+		}
+
+		return $value;
+	}//end orElse()
 
 	/**
 	 * The `<entry>` children of an Atom feed, or null when this is not Atom.
@@ -180,32 +216,12 @@ class FeedWatchReader {
 
 		$out = [];
 		foreach ($xml->entry as $entry) {
-			$link = trim((string)($entry->link['href'] ?? ''));
-			if ($link === '') {
-				$link = trim((string)$entry->id);
-			}
-
-			if ($link === '') {
+			$item = $this->atomEntry(entry: $entry);
+			if ($item === null) {
 				continue;
 			}
 
-			$stamp = trim((string)$entry->id);
-			if ($stamp === '') {
-				$stamp = trim((string)$entry->updated);
-			}
-
-			$published = trim((string)$entry->published);
-			if ($published === '') {
-				$published = trim((string)$entry->updated);
-			}
-
-			$out[] = [
-				'url' => $link,
-				'title' => trim((string)$entry->title),
-				'summary' => $this->shorten(value: trim((string)$entry->summary)),
-				'stamp' => $stamp,
-				'publishedAt' => $this->instant(value: $published),
-			];
+			$out[] = $item;
 			if (count($out) >= self::MAX_ENTRIES) {
 				break;
 			}
@@ -213,6 +229,28 @@ class FeedWatchReader {
 
 		return $out;
 	}//end atomEntries()
+
+	/**
+	 * One Atom entry: its link (else its id), stamp (id, else updated) and date (published, else updated).
+	 *
+	 * @param SimpleXMLElement $entry The `<entry>` element.
+	 *
+	 * @return array<string, mixed>|null The entry, or null when it has neither link nor id.
+	 */
+	private function atomEntry(SimpleXMLElement $entry): ?array {
+		$link = $this->orElse(value: trim((string)($entry->link['href'] ?? '')), fallback: trim((string)$entry->id));
+		if ($link === '') {
+			return null;
+		}
+
+		return [
+			'url' => $link,
+			'title' => trim((string)$entry->title),
+			'summary' => $this->shorten(value: trim((string)$entry->summary)),
+			'stamp' => $this->orElse(value: trim((string)$entry->id), fallback: trim((string)$entry->updated)),
+			'publishedAt' => $this->instant(value: $this->orElse(value: trim((string)$entry->published), fallback: trim((string)$entry->updated))),
+		];
+	}//end atomEntry()
 
 	/**
 	 * Parse the document as XML with libxml's own errors collected, never
@@ -223,25 +261,7 @@ class FeedWatchReader {
 	 * @return SimpleXMLElement|null The root, or null.
 	 */
 	private function load(string $document): ?SimpleXMLElement {
-		if (trim($document) === '') {
-			return null;
-		}
-
-		$previous = libxml_use_internal_errors(true);
-		try {
-			$xml = simplexml_load_string($document, SimpleXMLElement::class, (LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING));
-		} catch (Throwable) {
-			return null;
-		} finally {
-			libxml_clear_errors();
-			libxml_use_internal_errors($previous);
-		}
-
-		if ($xml === false) {
-			return null;
-		}
-
-		return $xml;
+		return (new QuietXmlParser())->parse(document: $document);
 	}//end load()
 
 	/**

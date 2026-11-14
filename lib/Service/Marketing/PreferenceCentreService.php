@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\PreferenceCentreServiceInterface;
 use OCA\Pipelinq\Service\ListTokenService;
 use OCA\Pipelinq\Service\MailingListService;
 use OCA\Pipelinq\Service\SubscriptionService;
@@ -40,7 +41,7 @@ use OCA\Pipelinq\Service\SubscriptionService;
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-the-preference-centre-shows-and-saves-a-subscribers-lists
  */
-class PreferenceCentreService {
+class PreferenceCentreService implements PreferenceCentreServiceInterface {
 	/**
 	 * Constructor.
 	 *
@@ -97,11 +98,33 @@ class PreferenceCentreService {
 			return null;
 		}
 
+		return $this->listPreferences(states: $this->subscriptionStates(contactId: $contactId));
+	}//end preferencesForToken()
+
+	/**
+	 * The contact's subscription state per list id.
+	 *
+	 * @param string $contactId The contact id.
+	 *
+	 * @return array<string, string> List id to subscription state.
+	 */
+	private function subscriptionStates(string $contactId): array {
 		$states = [];
 		foreach ($this->queries->listSubscriptionsForContact(contactId: $contactId) as $subscription) {
 			$states[(string)($subscription['listId'] ?? '')] = (string)($subscription['state'] ?? '');
 		}
 
+		return $states;
+	}//end subscriptionStates()
+
+	/**
+	 * Every non-archived mailing list, public fields only, with whether the contact is subscribed.
+	 *
+	 * @param array<string, string> $states List id to subscription state.
+	 *
+	 * @return array<int, array<string, mixed>> The preferences.
+	 */
+	private function listPreferences(array $states): array {
 		$out = [];
 		foreach ($this->lists->listMailingLists(page: 1, limit: 100)['data'] as $list) {
 			if ((string)($list['status'] ?? 'active') === 'archived') {
@@ -118,7 +141,7 @@ class PreferenceCentreService {
 		}
 
 		return $out;
-	}//end preferencesForToken()
+	}//end listPreferences()
 
 	/**
 	 * Save a preference choice.
@@ -141,30 +164,55 @@ class PreferenceCentreService {
 		}
 
 		$existing = $this->queries->listSubscriptionsForContact(contactId: $contactId);
-		$selected = array_flip(array_map('strval', $selectedListIds));
+		$choice = new PreferenceChoice(contactId: $contactId, selected: array_flip(array_map('strval', $selectedListIds)));
 
-		// Every membership belongs to the same person, so any address on one
-		// of them is the address a newly ticked list is stored under. Without
-		// it a new membership cannot be written at all: `email` is required.
-		$email = '';
+		$unsubscribed = $this->closeUnticked(choice: $choice, existing: $existing);
+		$confirmed = $this->confirmTicked(choice: $choice, email: self::addressOf(existing: $existing));
+
+		return ['status' => 'saved', 'confirmed' => $confirmed, 'unsubscribed' => $unsubscribed];
+	}//end savePreferences()
+
+	/**
+	 * The address a newly ticked list is stored under.
+	 *
+	 * Every membership belongs to the same person, so any address on one
+	 * of them is the address a newly ticked list is stored under. Without
+	 * it a new membership cannot be written at all: `email` is required.
+	 *
+	 * @param array<int, array<string, mixed>> $existing The contact's memberships.
+	 *
+	 * @return string The first address on file, or ''.
+	 */
+	private static function addressOf(array $existing): string {
 		foreach ($existing as $subscription) {
 			$candidate = (string)($subscription['email'] ?? '');
 			if ($candidate !== '') {
-				$email = $candidate;
-				break;
+				return $candidate;
 			}
 		}
 
+		return '';
+	}//end addressOf()
+
+	/**
+	 * Close every membership whose list was not ticked.
+	 *
+	 * @param PreferenceChoice                 $choice   The contact and the ticked lists.
+	 * @param array<int, array<string, mixed>> $existing The contact's memberships.
+	 *
+	 * @return int How many were closed.
+	 */
+	private function closeUnticked(PreferenceChoice $choice, array $existing): int {
 		$unsubscribed = 0;
 		foreach ($existing as $subscription) {
 			$listId = (string)($subscription['listId'] ?? '');
-			if (isset($selected[$listId]) === true) {
+			if (isset($choice->selected[$listId]) === true) {
 				continue;
 			}
 
 			$closed = $this->subscriptions->unsubscribeFromList(
 				listId: $listId,
-				contactId: $contactId,
+				contactId: $choice->contactId,
 				reason: 'preference-centre',
 			);
 			if ($closed === true) {
@@ -172,11 +220,23 @@ class PreferenceCentreService {
 			}
 		}
 
+		return $unsubscribed;
+	}//end closeUnticked()
+
+	/**
+	 * Confirm the contact on every ticked list.
+	 *
+	 * @param PreferenceChoice $choice The contact and the ticked lists.
+	 * @param string           $email  The address to store a new membership under.
+	 *
+	 * @return int How many were confirmed.
+	 */
+	private function confirmTicked(PreferenceChoice $choice, string $email): int {
 		$confirmed = 0;
-		foreach (array_keys($selected) as $listId) {
+		foreach (array_keys($choice->selected) as $listId) {
 			$done = $this->subscriptions->confirmForContact(
 				listId: (string)$listId,
-				contactId: $contactId,
+				contactId: $choice->contactId,
 				email: $email,
 			);
 			if ($done === true) {
@@ -184,8 +244,8 @@ class PreferenceCentreService {
 			}
 		}
 
-		return ['status' => 'saved', 'confirmed' => $confirmed, 'unsubscribed' => $unsubscribed];
-	}//end savePreferences()
+		return $confirmed;
+	}//end confirmTicked()
 
 	/**
 	 * Resolve the contact a preferences token points at.

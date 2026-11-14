@@ -40,7 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -248,36 +248,86 @@ class ListTokenService {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-public-list-endpoints-are-throttled-and-fail-closed
 	 */
 	public function verify(string $token, string $purpose): ?array {
+		$encoded = $this->signedPayload(token: $token);
+		if ($encoded === null) {
+			return null;
+		}
+
+		return $this->liveClaims(decoded: json_decode($this->base64UrlDecode(data: $encoded), true), purpose: $purpose);
+	}//end verify()
+
+	/**
+	 * The encoded payload of a token whose two non-empty parts carry a valid
+	 * signature; null otherwise.
+	 *
+	 * @param string $token The token.
+	 *
+	 * @return string|null
+	 */
+	private function signedPayload(string $token): ?string {
+		$parts = $this->partsOf(token: $token);
+		if ($parts === null) {
+			return null;
+		}
+
+		$expected = $this->base64UrlEncode(data: hash_hmac('sha256', $parts[0], $this->signingKey(), true));
+		if (hash_equals($expected, $parts[1]) === false) {
+			return null;
+		}
+
+		return $parts[0];
+	}//end signedPayload()
+
+	/**
+	 * A token's payload and signature; null unless it is exactly two
+	 * non-empty parts.
+	 *
+	 * @param string $token The token.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function partsOf(string $token): ?array {
 		$parts = explode('.', $token);
-		if (count($parts) !== 2) {
+		if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
 			return null;
 		}
 
-		[$encoded, $signature] = $parts;
-		if ($encoded === '' || $signature === '') {
-			return null;
-		}
+		return $parts;
+	}//end partsOf()
 
-		$expected = $this->base64UrlEncode(data: hash_hmac('sha256', $encoded, $this->signingKey(), true));
-		if (hash_equals($expected, $signature) === false) {
-			return null;
-		}
-
-		$decoded = json_decode($this->base64UrlDecode(data: $encoded), true);
+	/**
+	 * The decoded claims when they are an object with an expiry, for this
+	 * purpose, and not expired; null otherwise.
+	 *
+	 * @param mixed  $decoded The decoded payload.
+	 * @param string $purpose The purpose the caller expects.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function liveClaims($decoded, string $purpose): ?array {
 		if (is_array($decoded) === false || isset($decoded['exp']) === false) {
 			return null;
 		}
 
-		if ((string)($decoded['p'] ?? '') !== $purpose) {
-			return null;
-		}
-
-		if ((int)$decoded['exp'] < $this->time->getTime()) {
+		if ($this->isLiveFor(claims: $decoded, purpose: $purpose) === false) {
 			return null;
 		}
 
 		return $decoded;
-	}//end verify()
+	}//end liveClaims()
+
+	/**
+	 * Whether the claims name this purpose and have not expired (the clock is
+	 * read only for the right purpose).
+	 *
+	 * @param array<string, mixed> $claims  The claims, with an expiry.
+	 * @param string               $purpose The purpose the caller expects.
+	 *
+	 * @return bool
+	 */
+	private function isLiveFor(array $claims, string $purpose): bool {
+		return (string)($claims['p'] ?? '') === $purpose && (int)$claims['exp'] >= $this->time->getTime();
+	}//end isLiveFor()
 
 	/**
 	 * Absolute URL of the confirmation endpoint for a token.
@@ -346,10 +396,10 @@ class ListTokenService {
 	 * @return string The signing key.
 	 */
 	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, '');
+		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, '');
 		if ($key === '') {
 			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
 		}
 
 		return $key;
@@ -364,7 +414,7 @@ class ListTokenService {
 	 * @return int Lifetime in seconds.
 	 */
 	private function ttlSeconds(string $key, int $default): int {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, $key, (string)$default);
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, (string)$default);
 		if (is_numeric($raw) === false) {
 			return ($default * 86400);
 		}

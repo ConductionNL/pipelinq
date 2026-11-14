@@ -37,24 +37,24 @@ would return 500 on every route in this app rather than only the store's.
 
 ### Requirement: REQ-PLQ-STORE-002 No registry means no network call
 
-With no `registry_url` configured, the store surface SHALL report
+With no `registry_url` configured, the marketplace surface SHALL report
 `not_configured`, render the app's built-in templates, and make no outbound
 request.
 
-A local-only card grid is a Templates page. It may only be labelled "Store"
+A local-only card grid is a Templates page. It may only be labelled "Marketplace"
 because the registry path exists and is merely unconfigured.
 
 #### Scenario: An unconfigured instance stays offline
 
 - **GIVEN** an instance with no `registry_url` set
-- **WHEN** the store surface is opened
+- **WHEN** the marketplace surface is opened
 - **THEN** the response outcome MUST be `not_configured`
 - **AND** no outbound HTTP request MUST be made
 
 #### Scenario: The page still renders
 
 - **GIVEN** the same unconfigured instance
-- **THEN** the Store page MUST render pipelinq's built-in templates rather than
+- **THEN** the Marketplace page MUST render pipelinq's built-in templates rather than
   an error
 
 ### Requirement: REQ-PLQ-STORE-003 Install accepts configuration and refuses records
@@ -78,27 +78,27 @@ hold a customer's file and a company's money.
 
 #### Scenario: A configuration component installs
 
-- **GIVEN** a store item carrying one `pipeline` component
+- **GIVEN** a marketplace item carrying one `pipeline` component
 - **WHEN** it is installed
 - **THEN** the pipeline MUST be written through the app's configured register
 - **AND** the result MUST report that component as installed
 
 #### Scenario: A record component is refused
 
-- **GIVEN** a store item carrying one `lead` component
+- **GIVEN** a marketplace item carrying one `lead` component
 - **WHEN** it is installed
 - **THEN** nothing MUST be written for that component
 - **AND** the result MUST name it as refused
 
 #### Scenario: A mixed item installs the half it may
 
-- **GIVEN** a store item carrying a `pipeline` and a `client`
+- **GIVEN** a marketplace item carrying a `pipeline` and a `client`
 - **WHEN** it is installed
 - **THEN** the pipeline MUST be written and the client MUST be refused
 
 ### Requirement: REQ-PLQ-STORE-004 The registry token is write-only
 
-Reading the store settings SHALL expose whether a token is set, never its
+Reading the marketplace settings SHALL expose whether a token is set, never its
 value.
 
 Saving an empty token SHALL leave the stored token unchanged, so an
@@ -109,7 +109,7 @@ administrator editing the registry URL does not silently clear the credential.
 #### Scenario: A read never returns the token
 
 - **GIVEN** a configured registry with a token
-- **WHEN** the store settings are read
+- **WHEN** the marketplace settings are read
 - **THEN** the response MUST carry `registryTokenSet: true`
 - **AND** the response MUST NOT carry the token value under any key
 
@@ -121,7 +121,7 @@ administrator editing the registry URL does not silently clear the credential.
 
 ### Requirement: REQ-PLQ-STORE-005 Browsing is authenticated, installing is administrative
 
-Search SHALL require an authenticated user. Install and the store settings
+Search SHALL require an authenticated user. Install and the marketplace settings
 SHALL require administrator authorization.
 
 Installing writes the pipelines, queues and catalogues every salesperson and
@@ -143,8 +143,9 @@ is not.
 
 ### Requirement: REQ-PLQ-STORE-006 The menu entry names the concept
 
-The store menu entry SHALL be labelled `Store` and render the `StoreOutline`
-icon, in the footer section between Documentation and Reports.
+The store menu entry SHALL be labelled `Marketplace`, in Dutch "Marktplaats", and
+render the `StoreOutline` icon, in the footer section between Documentation and
+Reports.
 
 The icon SHALL be registered in `src/icons.js`. An unregistered name renders NO
 icon in the navigation rather than a fallback glyph, so the entry would ship
@@ -153,7 +154,7 @@ blank.
 #### Scenario: The entry carries the Tier A glyph
 
 - **GIVEN** the pipelinq manifest
-- **THEN** the entry labelled `Store` MUST declare `icon: "StoreOutline"`
+- **THEN** the entry labelled `Marketplace` MUST declare `icon: "StoreOutline"`
 - **AND** it MUST sit in the `footer` section with an order between
   Documentation and Reports
 
@@ -171,7 +172,7 @@ NEW local object.
 OpenRegister resolves the object it writes from the payload itself:
 `saveObject` reads `@self.id` first and `id` second, and treats a match as the
 uuid to UPDATE. The write is PUT-semantic, so keys the payload omits are nulled
-rather than left alone. A store item carrying the uuid of a live pipeline would
+rather than left alone. A marketplace item carrying the uuid of a live pipeline would
 therefore not merely change it, it would gut it.
 
 The schema allowlist does NOT cover this. It governs which schema a component
@@ -185,7 +186,7 @@ idempotent it SHALL key on something pipelinq controls.
 
 #### Scenario: A component carrying an id installs as a new object
 
-- **GIVEN** a store item whose component object carries `id`, `uuid` and `@self`
+- **GIVEN** a marketplace item whose component object carries `id`, `uuid` and `@self`
 - **WHEN** it is installed
 - **THEN** none of those keys MUST reach the write
 - **AND** the rest of the component MUST still install
@@ -207,3 +208,43 @@ the install would report success while having stored nothing.
 - **WHEN** it is installed
 - **THEN** no write MUST be attempted for that component
 - **AND** the result MUST report it as an error
+
+### Requirement: The store knows what this instance installed
+
+After an install that wrote every component, pipelinq MUST record the item's slug and version. A marketplace search MUST mark each card as installed or not. For an installed card it MUST give the installed version, whether the registry's version is newer, and where an item of that kind is used. It MUST also return when the registry last answered.
+
+#### Scenario: an installed item with an update
+
+@e2e exclude Asserted in tests/Unit/Service/Store/StoreInstallLedgerTest.php and tests/Unit/Controller/StoreControllerTest.php; the pixel check against board PqStore covers the drawn page.
+
+- GIVEN Routering voor de servicedesk installed at 2.0.1 and the registry offering 2.1.0
+- WHEN the marketplace page searches
+- THEN that card is installed, with installed version 2.0.1 and an update available
+
+#### Scenario: a refused install is not recorded
+
+@e2e exclude Asserted in tests/Unit/Controller/StoreControllerTest.php.
+
+- GIVEN a marketplace item whose only component is a lead
+- WHEN an administrator installs it
+- THEN nothing is written and the item is not recorded as installed
+
+### Requirement: An administrator publishes a template from local configuration
+
+Pipelinq MUST list the local configuration objects a marketplace item of a kind may carry. It MUST publish an item whose components are copies of the chosen objects without their identity, to the configured registry, and only for a user OpenRegister's `canPublish()` admits. An object outside the kind, or one that is not on this instance, MUST refuse the publish.
+
+#### Scenario: publish the Woo pipeline
+
+@e2e exclude Asserted in tests/Unit/Service/Store/StoreTemplateAssemblerTest.php and tests/Unit/Controller/StoreControllerTest.php; the dialog is covered by nextcloud-vue's CnStorePagePublish test.
+
+- GIVEN the pipeline "Woo-vragen" on this instance and the store's registry is `local`
+- WHEN an administrator publishes "Pipeline voor Woo-vragen" 1.0.0 of kind pipeline with that pipeline chosen
+- THEN the registry holds a commercial-template "Pipeline voor Woo-vragen" whose one component is the pipeline without its id or owner
+
+#### Scenario: someone who may not publish
+
+@e2e exclude Asserted in tests/Unit/Controller/StoreControllerTest.php.
+
+- GIVEN a user who is not an administrator
+- WHEN they publish
+- THEN the answer is 403 and nothing is sent

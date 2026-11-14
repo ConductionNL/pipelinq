@@ -1,0 +1,3834 @@
+{
+    "lookup: no session user": {
+        "status": 401,
+        "body": {
+            "error": "Authentication required"
+        },
+        "calls": []
+    },
+    "lookup: not privileged": {
+        "status": 403,
+        "body": {
+            "error": "Forbidden"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-unauthorised",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 403,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: verzoekreden missing": {
+        "status": 400,
+        "body": {
+            "errorCode": "doelbinding-missing",
+            "errorMessage": "Verzoekreden en doelbinding zijn verplicht."
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-missing-purpose",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 400,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: doelbinding missing": {
+        "status": 400,
+        "body": {
+            "errorCode": "doelbinding-missing",
+            "errorMessage": "Verzoekreden en doelbinding zijn verplicht."
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-missing-purpose",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 400,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: refused without a role": {
+        "status": 403,
+        "body": {
+            "errorCode": "unauthorized",
+            "errorMessage": "U bent niet bevoegd voor deze lookup."
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-burgerzaken"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-burgerzaken",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-avg"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-avg",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-unauthorised",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 403,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: refused without a role, linked request": {
+        "status": 403,
+        "body": {
+            "errorCode": "unauthorized",
+            "errorMessage": "U bent niet bevoegd voor deze lookup."
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-burgerzaken"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-burgerzaken",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-avg"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-avg",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "refused-unauthorised",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 403,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: refused, member of an unknown group": {
+        "status": 403,
+        "body": {
+            "errorCode": "unauthorized",
+            "errorMessage": "U bent niet bevoegd voor deze lookup."
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-burgerzaken"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-avg"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-unauthorised",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 403,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: role from a default group": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-burgerzaken"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-burgerzaken",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-avg"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-avg",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": ""
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "behandelaar-avg",
+                        "requestMoment": "<time>",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "behandelaar-avg"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: role from a configured group": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "g1"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "g1",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "g2"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "g2",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": ""
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "g2",
+                        "requestMoment": "<time>",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "g2"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: configured groups replace the defaults": {
+        "status": 403,
+        "body": {
+            "errorCode": "unauthorized",
+            "errorMessage": "U bent niet bevoegd voor deze lookup."
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "g1"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "g1",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-unauthorised",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 403,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: invalid bsn with a message": {
+        "status": 400,
+        "body": {
+            "errorCode": "invalid-bsn",
+            "errorMessage": "Elfproef faalt"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-invalid-bsn",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 400,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: invalid bsn without a message": {
+        "status": 400,
+        "body": {
+            "errorCode": "invalid-bsn",
+            "errorMessage": "Ongeldig BSN."
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "refused-invalid-bsn",
+                        "action": "brp-lookup-refused",
+                        "responseCode": 400,
+                        "correlationId": null,
+                        "actorRole": null
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, defaults": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": ""
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, basis and links": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "AVG art 6",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "contact-3",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": true,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "verifiedBSN": true,
+                        "brpPersonId": "person-1",
+                        "secrecy": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-contact",
+                    "uuid": "contact-3"
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP",
+                        "identityCheck": "paspoort"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, secret, no meta": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Piet",
+                "indicationSecret": "1",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "1"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Piet",
+                        "indicationSecret": "1",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseContainsSecrecy": true,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Piet",
+                        "indicationSecret": "1",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "contact-3",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 200,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "verifiedBSN": true,
+                        "brpPersonId": "person-1",
+                        "secrecy": true
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-contact",
+                    "uuid": "contact-3"
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP",
+                        "identityCheck": "paspoort"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, no request schema": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": ""
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "verifiedBSN": true,
+                        "brpPersonId": "person-1",
+                        "secrecy": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-contact",
+                    "uuid": "contact-3"
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP",
+                        "identityCheck": "paspoort"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, store throws": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": ""
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "lookupVerzoek save failed",
+                    "context": {
+                        "error": "store down"
+                    }
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "verifiedBSN": true,
+                        "brpPersonId": "person-1",
+                        "secrecy": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-contact",
+                    "uuid": "contact-3"
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "contact stamp with verifiedBSN failed",
+                    "context": {
+                        "contactId": "contact-3",
+                        "error": "store down"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP",
+                        "identityCheck": "paspoort"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "client identity stamp failed",
+                    "context": {
+                        "clientId": "client-5",
+                        "error": "store down"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, saved without an id": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": ""
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "verifiedBSN": true,
+                        "brpPersonId": "person-1",
+                        "secrecy": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-contact",
+                    "uuid": "contact-3"
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP",
+                        "identityCheck": "paspoort"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, no person schema": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "verifiedBSN": true,
+                        "brpPersonId": "person-1",
+                        "secrecy": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-contact",
+                    "uuid": "contact-3"
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP",
+                        "identityCheck": "paspoort"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, no contact or client schema": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "contact-3",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, contact and client not found": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "contact-3",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "contact stamp with verifiedBSN failed",
+                    "context": {
+                        "contactId": "contact-3",
+                        "error": "method_exists(): Argument #1 ($object_or_class) must be of type object|string, null given"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, contact and client empty": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "contact-3",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, find throws": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "contact-3",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "contact stamp with verifiedBSN failed",
+                    "context": {
+                        "contactId": "contact-3",
+                        "error": "find down"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "client identity stamp failed",
+                    "context": {
+                        "clientId": "client-5",
+                        "error": "find down"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, no identity check": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan",
+                "indicationSecret": "0",
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "gekoppeldContact": "contact-3",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 203,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "verifiedBSN": true,
+                        "brpPersonId": "person-1",
+                        "secrecy": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-contact",
+                    "uuid": "contact-3"
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            }
+        ]
+    },
+    "lookup: remote hit, hash key already present": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                "lookupRequestId": "saved-schema-verzoek",
+                "givenNames": "Kees",
+                "gekoppeldContact": "contact-3",
+                "@self": {
+                    "id": "person-1"
+                },
+                "retentionTo": "<time>"
+            },
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "givenNames": "Kees",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "saved-schema-verzoek",
+                        "givenNames": "Kees",
+                        "gekoppeldContact": "contact-3",
+                        "@self": {
+                            "id": "person-1"
+                        },
+                        "retentionTo": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-persoon",
+                    "uuid": "person-1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 200,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "verifiedBSN": true,
+                        "brpPersonId": "person-1",
+                        "secrecy": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-contact",
+                    "uuid": "contact-3"
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP",
+                        "identityCheck": "paspoort"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            }
+        ]
+    },
+    "lookup: cache write fails": {
+        "status": 503,
+        "body": {
+            "errorCode": "brp-unavailable",
+            "errorMessage": "BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.",
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "BrpCacheService::set": {
+                    "person": {
+                        "givenNames": "Jan",
+                        "indicationSecret": "0",
+                        "bsn": "123456782",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "lookupRequestId": "",
+                        "gekoppeldContact": "contact-3"
+                    }
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "Unexpected BRP lookup failure",
+                    "context": {
+                        "error": "boom"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "error",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "error",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 500,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: opt-out write fails": {
+        "status": 503,
+        "body": {
+            "errorCode": "brp-unavailable",
+            "errorMessage": "BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.",
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "Unexpected BRP lookup failure",
+                    "context": {
+                        "error": "boom"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "error",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-9",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "error",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 500,
+                        "correlationId": "corr-9",
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: opt-out raises a haalcentraal timeout": {
+        "status": 503,
+        "body": {
+            "errorCode": "brp-unavailable",
+            "errorMessage": "BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.",
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "OptOutService::recordFromBrpResponse": {
+                    "rawBsn": "123456782",
+                    "indicationSecret": "0"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "timeout",
+                        "responseMoment": "<time>",
+                        "responseDurationMs": 41,
+                        "haalcentraalCorrelationId": "corr-t",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "timeout",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 0,
+                        "correlationId": "corr-t",
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: cache hit": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "@self": {
+                    "id": "cached-1"
+                },
+                "givenNames": "Jan",
+                "indicationSecret": "1",
+                "retentionTo": "<time>"
+            },
+            "responseInCache": true,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseContainsSecrecy": true,
+                        "responseInCache": true,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 200,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: cache hit with links": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "@self": {
+                    "id": "cached-1"
+                },
+                "givenNames": "Jan",
+                "indicationSecret": "1",
+                "retentionTo": "<time>"
+            },
+            "responseInCache": true,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseContainsSecrecy": true,
+                        "responseInCache": true,
+                        "cacheExpiresOn": "<time>"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 200,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "contact-3",
+                    "register": "reg-1",
+                    "schema": "schema-contact"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "verifiedBSN": true,
+                        "brpPersonId": "cached-1",
+                        "secrecy": true
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-contact",
+                    "uuid": "contact-3"
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP",
+                        "identityCheck": "paspoort"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            }
+        ]
+    },
+    "lookup: cache hit without a person id": {
+        "status": 200,
+        "body": {
+            "persoon": {
+                "givenNames": "Jan"
+            },
+            "responseInCache": true,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "succeeded",
+                        "responseMoment": "<time>",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": true
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "succeeded",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 200,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::find": {
+                    "id": "client-5",
+                    "register": "reg-1",
+                    "schema": "schema-client"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "uuid": "existing",
+                        "name": "Bestaand",
+                        "identityVerifiedAt": "<time>",
+                        "identityVerifiedVia": "BRP",
+                        "identityCheck": "paspoort"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-client",
+                    "uuid": "client-5"
+                }
+            }
+        ]
+    },
+    "lookup: not found": {
+        "status": 404,
+        "body": {
+            "errorCode": "not-found",
+            "errorMessage": "BSN niet aangetroffen in BRP — controleer invoer.",
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "not-found",
+                        "responseMoment": "<time>",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "not-found",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 404,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: haalcentraal timeout": {
+        "status": 503,
+        "body": {
+            "errorCode": "brp-unavailable",
+            "errorMessage": "BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.",
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "responseStatus": "timeout",
+                        "responseMoment": "<time>",
+                        "haalcentraalCorrelationId": "corr-t",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "timeout",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 0,
+                        "correlationId": "corr-t",
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: haalcentraal error": {
+        "status": 503,
+        "body": {
+            "errorCode": "brp-unavailable",
+            "errorMessage": "BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.",
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782",
+                    "requestIdContext": "req-7"
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "linkedRequest": "req-7",
+                        "gekoppeldContact": "contact-3",
+                        "responseStatus": "error",
+                        "responseMoment": "<time>",
+                        "haalcentraalCorrelationId": "corr-e",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": "req-7",
+                        "vogScreening": false,
+                        "outcome": "error",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 502,
+                        "correlationId": "corr-e",
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "lookup: unexpected failure": {
+        "status": 503,
+        "body": {
+            "errorCode": "brp-unavailable",
+            "errorMessage": "BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.",
+            "responseInCache": false,
+            "lookupRequestId": "saved-schema-verzoek"
+        },
+        "calls": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": {
+                    "uid": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnValidationService::validate": {
+                    "bsnInput": "123456782"
+                }
+            },
+            {
+                "BrpCacheService::get": {
+                    "rawBsn": "123456782"
+                }
+            },
+            {
+                "HaalCentraalClient::lookupPersoon": {
+                    "bsn": "123456782"
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "Unexpected BRP lookup failure",
+                    "context": {
+                        "error": "boom"
+                    }
+                }
+            },
+            {
+                "ObjectServiceInterface::saveObject": {
+                    "object": {
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "basis": "Wet BRP",
+                        "requestedBy": "behandelaar1",
+                        "requestedOnBehalfOf": "beheerder",
+                        "requestMoment": "<time>",
+                        "responseStatus": "error",
+                        "responseMoment": "<time>",
+                        "responseContainsSecrecy": false,
+                        "responseInCache": false
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-verzoek"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "123456782",
+                        "bsnHash": null,
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "error",
+                        "action": "brp-lookup-executed",
+                        "responseCode": 500,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "reveal: no session user": {
+        "status": 401,
+        "body": {
+            "error": "Authentication required"
+        },
+        "calls": []
+    },
+    "reveal: no role": {
+        "status": 403,
+        "body": {
+            "errorCode": "unauthorized",
+            "errorMessage": "U bent niet bevoegd voor deze actie."
+        },
+        "calls": [
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-burgerzaken"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-burgerzaken",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-avg"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-avg",
+                    "user": "user:behandelaar1"
+                }
+            }
+        ]
+    },
+    "reveal: no person schema": {
+        "status": 404,
+        "body": {
+            "errorCode": "not-found",
+            "errorMessage": "Geen BRP-persoon gekoppeld aan dit contact."
+        },
+        "calls": [
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            }
+        ]
+    },
+    "reveal: no person for the contact": {
+        "status": 404,
+        "body": {
+            "errorCode": "not-found",
+            "errorMessage": "Geen BRP-persoon gekoppeld aan dit contact."
+        },
+        "calls": [
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "ObjectServiceInterface::findAll": {
+                    "config": {
+                        "filters": {
+                            "gekoppeldContact": "contact-1",
+                            "register": "reg-1",
+                            "schema": "schema-persoon"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "reveal: search throws": {
+        "status": 404,
+        "body": {
+            "errorCode": "not-found",
+            "errorMessage": "Geen BRP-persoon gekoppeld aan dit contact."
+        },
+        "calls": [
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "ObjectServiceInterface::findAll": {
+                    "config": {
+                        "filters": {
+                            "gekoppeldContact": "contact-1",
+                            "register": "reg-1",
+                            "schema": "schema-persoon"
+                        }
+                    }
+                }
+            },
+            {
+                "LoggerInterface::error": {
+                    "message": "findLatestPersoonForContact failed",
+                    "context": {
+                        "error": "search down"
+                    }
+                }
+            }
+        ]
+    },
+    "reveal: audit write failed": {
+        "status": 500,
+        "body": {
+            "error": "Address reveal could not be recorded",
+            "errorMessage": "De onthulling kon niet worden vastgelegd in het BSN-auditlogboek. Het adres is daarom niet getoond."
+        },
+        "calls": [
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "ObjectServiceInterface::findAll": {
+                    "config": {
+                        "filters": {
+                            "gekoppeldContact": "contact-1",
+                            "register": "reg-1",
+                            "schema": "schema-persoon"
+                        }
+                    }
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "",
+                        "bsnHash": "h-new",
+                        "verzoekreden": "Adres onthuld op behandelaarsverantwoording",
+                        "purposeBinding": "Wet BRP art. 3.3 (uitzondering geheimhouding)",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "address-revealed",
+                        "action": "brp-address-revealed",
+                        "responseCode": 200,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "reveal: latest person, admin": {
+        "status": 200,
+        "body": {
+            "residence": {
+                "straat": "Geheim"
+            }
+        },
+        "calls": [
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "ObjectServiceInterface::findAll": {
+                    "config": {
+                        "filters": {
+                            "gekoppeldContact": "contact-1",
+                            "register": "reg-1",
+                            "schema": "schema-persoon"
+                        }
+                    }
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "",
+                        "bsnHash": "h-new",
+                        "verzoekreden": "Adres onthuld op behandelaarsverantwoording",
+                        "purposeBinding": "Wet BRP art. 3.3 (uitzondering geheimhouding)",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "address-revealed",
+                        "action": "brp-address-revealed",
+                        "responseCode": 200,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    },
+    "reveal: latest person, group member": {
+        "status": 200,
+        "body": {
+            "residence": {
+                "straat": "Geheim"
+            }
+        },
+        "calls": [
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-burgerzaken"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-burgerzaken",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "ObjectServiceInterface::findAll": {
+                    "config": {
+                        "filters": {
+                            "gekoppeldContact": "contact-1",
+                            "register": "reg-1",
+                            "schema": "schema-persoon"
+                        }
+                    }
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "IGroupManager::get": {
+                    "gid": "behandelaar-burgerzaken"
+                }
+            },
+            {
+                "IGroup::inGroup": {
+                    "group": "behandelaar-burgerzaken",
+                    "user": "user:behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "",
+                        "bsnHash": "h-new",
+                        "verzoekreden": "Adres onthuld op behandelaarsverantwoording",
+                        "purposeBinding": "Wet BRP art. 3.3 (uitzondering geheimhouding)",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "address-revealed",
+                        "action": "brp-address-revealed",
+                        "responseCode": 200,
+                        "correlationId": null,
+                        "actorRole": "behandelaar-burgerzaken"
+                    }
+                }
+            }
+        ]
+    },
+    "reveal: person without hash or residence": {
+        "status": 200,
+        "body": {
+            "residence": null
+        },
+        "calls": [
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "ObjectServiceInterface::findAll": {
+                    "config": {
+                        "filters": {
+                            "gekoppeldContact": "contact-1",
+                            "register": "reg-1",
+                            "schema": "schema-persoon"
+                        }
+                    }
+                }
+            },
+            {
+                "IGroupManager::isAdmin": {
+                    "userId": "behandelaar1"
+                }
+            },
+            {
+                "BsnAuditService::recordLookup": {
+                    "actor": "behandelaar1",
+                    "lookup": {
+                        "rawBsn": "",
+                        "bsnHash": "",
+                        "verzoekreden": "Adres onthuld op behandelaarsverantwoording",
+                        "purposeBinding": "Wet BRP art. 3.3 (uitzondering geheimhouding)",
+                        "linkedRequest": null,
+                        "vogScreening": false,
+                        "outcome": "address-revealed",
+                        "action": "brp-address-revealed",
+                        "responseCode": 200,
+                        "correlationId": null,
+                        "actorRole": "beheerder"
+                    }
+                }
+            }
+        ]
+    }
+}

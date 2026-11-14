@@ -32,7 +32,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
  */
 
 declare(strict_types=1);
@@ -40,7 +40,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -48,9 +49,9 @@ use Throwable;
 /**
  * The party kind vocabulary, the acceptance per record type, and the refusals.
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
  */
-class PartyKindRegistryService {
+class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 	/**
 	 * Upper bound on the rows read per question.
 	 *
@@ -81,7 +82,7 @@ class PartyKindRegistryService {
 	 *
 	 * @return array<string, array<string, mixed>> The vocabulary.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function vocabulary(): array {
 		$byCode = [];
@@ -107,7 +108,7 @@ class PartyKindRegistryService {
 	 *
 	 * @return array<int, array<string, mixed>> The offered kinds, in order.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-the-picker-shall-offer-only-the-declared-kinds-in-the-declared-order-req-pkr-003
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-the-picker-shall-offer-only-the-declared-kinds-in-the-declared-order-req-pkr-003
 	 */
 	public function kindsFor(string $recordType): array {
 		$vocabulary = $this->vocabulary();
@@ -193,33 +194,76 @@ class PartyKindRegistryService {
 	 * @return array{allowed: bool, reason: string} The answer, with the reason
 	 *   a refusal names.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function mayLink(string $recordType, string $recordId, string $kind, string $party = ''): array {
 		$recordType = trim($recordType);
 		$kind = trim($kind);
 
+		$refusal = $this->kindRefusal(recordType: $recordType, kind: $kind);
+		if ($refusal !== '') {
+			return ['allowed' => false, 'reason' => $refusal];
+		}
+
+		if ($this->holdsOne(kind: $kind) === false) {
+			return ['allowed' => true, 'reason' => ''];
+		}
+
+		$holder = self::otherHolder(links: $this->linksOn(recordType: $recordType, recordId: $recordId), slot: ['kind' => $kind, 'party' => $party]);
+		if ($holder !== null) {
+			return self::slotTaken(kind: $kind, holder: $holder);
+		}
+
+		return ['allowed' => true, 'reason' => ''];
+	}//end mayLink()
+
+	/**
+	 * Why a kind may not be linked to a record type at all; '' when it may.
+	 *
+	 * @param string $recordType The trimmed `<app>:<schema>:<type>` literal.
+	 * @param string $kind       The trimmed party kind code.
+	 *
+	 * @return string
+	 */
+	private function kindRefusal(string $recordType, string $kind): string {
 		if ($kind === '') {
-			return ['allowed' => false, 'reason' => 'A party kind is required.'];
+			return 'A party kind is required.';
 		}
 
 		$declared = $this->acceptanceFor(recordType: $recordType);
 		if ($declared !== null && in_array($kind, $declared, true) === false) {
-			return [
-				'allowed' => false,
-				'reason' => "{$recordType} does not accept a party of kind {$kind}.",
-			];
+			return "{$recordType} does not accept a party of kind {$kind}.";
 		}
 
+		return '';
+	}//end kindRefusal()
+
+	/**
+	 * Whether a kind holds at most one party per record.
+	 *
+	 * @param string $kind The party kind code.
+	 *
+	 * @return bool
+	 */
+	private function holdsOne(string $kind): bool {
 		$vocabulary = $this->vocabulary();
 		$declaredKind = ($vocabulary[$kind] ?? null);
-		$maxPerRecord = (int)($declaredKind['maxPerRecord'] ?? 0);
-		if ($maxPerRecord !== 1) {
-			return ['allowed' => true, 'reason' => ''];
-		}
 
-		foreach ($this->linksOn(recordType: $recordType, recordId: $recordId) as $link) {
-			if ((string)($link['kind'] ?? '') !== $kind) {
+		return (int)($declaredKind['maxPerRecord'] ?? 0) === 1;
+	}//end holdsOne()
+
+	/**
+	 * The party other than the one being linked that holds the kind's slot on
+	 * the record through a link that has not ended; null when the slot is free.
+	 *
+	 * @param array<int, array<string, mixed>> $links The links on the record.
+	 * @param array{kind: string, party: string} $slot The kind and the party being linked.
+	 *
+	 * @return string|null
+	 */
+	private static function otherHolder(array $links, array $slot): ?string {
+		foreach ($links as $link) {
+			if ((string)($link['kind'] ?? '') !== $slot['kind']) {
 				continue;
 			}
 
@@ -230,18 +274,28 @@ class PartyKindRegistryService {
 			}
 
 			$holder = (string)($link['party'] ?? '');
-			if ($holder === $party) {
-				continue;
+			if ($holder !== $slot['party']) {
+				return $holder;
 			}
-
-			return [
-				'allowed' => false,
-				'reason' => "This record already holds a {$kind}: party {$holder}.",
-			];
 		}
 
-		return ['allowed' => true, 'reason' => ''];
-	}//end mayLink()
+		return null;
+	}//end otherHolder()
+
+	/**
+	 * The refusal of a held slot, naming its holder.
+	 *
+	 * @param string $kind   The party kind code.
+	 * @param string $holder The party that holds it.
+	 *
+	 * @return array{allowed: bool, reason: string}
+	 */
+	private static function slotTaken(string $kind, string $holder): array {
+		return [
+			'allowed' => false,
+			'reason' => "This record already holds a {$kind}: party {$holder}.",
+		];
+	}//end slotTaken()
 
 	/**
 	 * Judge a batch of links by exactly the rule one link is judged by.
@@ -257,47 +311,72 @@ class PartyKindRegistryService {
 	 * @return array{accepted: array<int, array<string, string>>, refused: array<int, array<string, string>>}
 	 *   The verdict per row.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function judgeBatch(string $recordType, string $recordId, array $rows): array {
-		$accepted = [];
-		$refused = [];
-		$taken = [];
+		$verdict = ['accepted' => [], 'refused' => [], 'taken' => []];
 
 		foreach ($rows as $row) {
-			$kind = trim((string)($row['kind'] ?? ''));
-			$party = trim((string)($row['party'] ?? ''));
-
-			$answer = $this->mayLink(
-				recordType: $recordType,
-				recordId: $recordId,
-				kind: $kind,
-				party: $party,
-			);
-
-			// A batch judges itself as well as the store: two aanvragers in
-			// one import must not both land because neither was written yet.
-			if ($answer['allowed'] === true && isset($taken[$kind]) === true) {
-				$vocabulary = $this->vocabulary();
-				if ((int)($vocabulary[$kind]['maxPerRecord'] ?? 0) === 1) {
-					$answer = [
-						'allowed' => false,
-						'reason' => "This record already holds a {$kind}: party {$taken[$kind]}.",
-					];
-				}
-			}
-
-			if ($answer['allowed'] === true) {
-				$accepted[] = ['party' => $party, 'kind' => $kind];
-				$taken[$kind] = $party;
-				continue;
-			}
-
-			$refused[] = ['party' => $party, 'kind' => $kind, 'reason' => $answer['reason']];
+			$verdict = $this->judgeRow(recordType: $recordType, recordId: $recordId, row: $row, verdict: $verdict);
 		}
 
-		return ['accepted' => $accepted, 'refused' => $refused];
+		return ['accepted' => $verdict['accepted'], 'refused' => $verdict['refused']];
 	}//end judgeBatch()
+
+	/**
+	 * Judge one row against the store and against the rows of the batch accepted so far.
+	 *
+	 * @param string $recordType The `<app>:<schema>:<type>` literal.
+	 * @param string $recordId The record.
+	 * @param array<string, string> $row The row, with `party` and `kind`.
+	 * @param array<string, array<array-key, mixed>> $verdict The accepted and refused rows so far, and the party taking each kind.
+	 *
+	 * @return array<string, array<array-key, mixed>>
+	 *
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 */
+	private function judgeRow(string $recordType, string $recordId, array $row, array $verdict): array {
+		$kind = trim((string)($row['kind'] ?? ''));
+		$party = trim((string)($row['party'] ?? ''));
+
+		$answer = $this->mayLink(
+			recordType: $recordType,
+			recordId: $recordId,
+			kind: $kind,
+			party: $party,
+		);
+
+		// A batch judges itself as well as the store: two aanvragers in
+		// one import must not both land because neither was written yet.
+		if ($answer['allowed'] === true && isset($verdict['taken'][$kind]) === true && $this->holdsOne(kind: $kind) === true) {
+			$answer = self::slotTaken(kind: $kind, holder: $verdict['taken'][$kind]);
+		}
+
+		return $this->recordVerdict(verdict: $verdict, answer: $answer, kind: $kind, party: $party);
+	}//end judgeRow()
+
+	/**
+	 * Record a row as accepted (taking its kind's slot) or refused with the answer's reason.
+	 *
+	 * @param array<string, array<array-key, mixed>> $verdict The accepted and refused rows so far, and the party taking each kind.
+	 * @param array<string, mixed> $answer The answer for the row.
+	 * @param string $kind The row's kind.
+	 * @param string $party The row's party.
+	 *
+	 * @return array<string, array<array-key, mixed>>
+	 *
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 */
+	private function recordVerdict(array $verdict, array $answer, string $kind, string $party): array {
+		if ($answer['allowed'] === true) {
+			$verdict['accepted'][] = ['party' => $party, 'kind' => $kind];
+			$verdict['taken'][$kind] = $party;
+			return $verdict;
+		}
+
+		$verdict['refused'][] = ['party' => $party, 'kind' => $kind, 'reason' => $answer['reason']];
+		return $verdict;
+	}//end recordVerdict()
 
 	/**
 	 * The links currently written on one record.
@@ -328,21 +407,15 @@ class PartyKindRegistryService {
 	 * @return array<int, array<string, mixed>> The rows.
 	 */
 	private function read(string $schemaKey, array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-		if ($register === '' || $schema === '') {
-			$this->logger->debug(
-				'PartyKindRegistryService: the party kind surface is not configured',
-				['schemaKey' => $schemaKey]
-			);
-
+		$scope = $this->scopeOf(schemaKey: $schemaKey);
+		if ($scope === null) {
 			return [];
 		}
 
 		try {
 			$rows = $this->objectService->findAll(
 				[
-					'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
+					'filters' => array_merge($scope, $filters),
 					'limit' => self::LIMIT,
 				]
 			);
@@ -355,6 +428,40 @@ class PartyKindRegistryService {
 			return [];
 		}
 
+		return self::plainRows(rows: $rows);
+	}//end read()
+
+	/**
+	 * The register and schema filters of a schema key; null (logged) when either is unset.
+	 *
+	 * @param string $schemaKey The app-config key holding the schema id.
+	 *
+	 * @return array{register: string, schema: string}|null
+	 */
+	private function scopeOf(string $schemaKey): ?array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
+		if ($register === '' || $schema === '') {
+			$this->logger->debug(
+				'PartyKindRegistryService: the party kind surface is not configured',
+				['schemaKey' => $schemaKey]
+			);
+
+			return null;
+		}
+
+		return ['register' => $register, 'schema' => $schema];
+	}//end scopeOf()
+
+	/**
+	 * The rows as plain arrays: arrays as they are, serialisable entities by
+	 * what they serialise to; anything else is dropped.
+	 *
+	 * @param iterable<mixed> $rows The rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function plainRows($rows): array {
 		$out = [];
 		foreach ($rows as $row) {
 			if (is_array($row) === true) {
@@ -371,5 +478,5 @@ class PartyKindRegistryService {
 		}
 
 		return $out;
-	}//end read()
+	}//end plainRows()
 }//end class

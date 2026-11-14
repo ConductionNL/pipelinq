@@ -18,20 +18,22 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for POS role business operations.
@@ -41,9 +43,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * posStaff record. All persistence flows through OpenRegister's ObjectService
  * (real API: find / findAll / saveObject / deleteObject).
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2
  */
-class PosRoleService {
+class PosRoleService implements PosRoleServiceInterface {
+	use CastingPayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -63,7 +67,7 @@ class PosRoleService {
 	 *
 	 * @return array<int, array<string, mixed>> The role objects.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function listRoles(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
@@ -95,7 +99,7 @@ class PosRoleService {
 	 *
 	 * @throws OCSNotFoundException If the role is not found.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function getRole(string $id): array {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
@@ -127,7 +131,7 @@ class PosRoleService {
 	 *
 	 * @throws OCSBadRequestException If maxDiscountPercent is out of bounds or name is empty.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function saveRole(array $data, string $id = ''): array {
 		$name = trim((string)($data['name'] ?? ''));
@@ -182,7 +186,7 @@ class PosRoleService {
 	 * @throws OCSNotFoundException If the role is not found.
 	 * @throws OCSForbiddenException If the role is still assigned to active staff.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function deleteRole(string $id): void {
 		// Ensure the role exists first (throws OCSNotFoundException).
@@ -213,7 +217,7 @@ class PosRoleService {
 	 *
 	 * @return int Number of active staff assigned to the role.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function countActiveStaffForRole(string $roleId): int {
 		try {
@@ -263,11 +267,11 @@ class PosRoleService {
 	 *
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
@@ -281,42 +285,13 @@ class PosRoleService {
 	 *
 	 * @return object The object service.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old
 		// catch was unreachable — phpstan reports it as a dead catch.
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 
 	/**
 	 * Generate a v4 UUID.

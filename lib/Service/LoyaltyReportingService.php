@@ -19,8 +19,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-009
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-009
  */
 
 declare(strict_types=1);
@@ -29,13 +29,15 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyReportingServiceInterface;
+use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Read-only reporting service.
@@ -49,9 +51,11 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *  account/ledger/programme services, logger); splitting them would add
  *  indirection without reducing real coupling.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008
  */
-class LoyaltyReportingService {
+class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
+	use OptionalPayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -62,6 +66,8 @@ class LoyaltyReportingService {
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-084).
 	 * @param AggregationRunner $aggregationRunner Runs the reporting aggregations.
+	 * @param TierService $tierService Reads the programme's tier rules, which name the tiers.
+	 * @param ReportingService $reportingService Writes the CSV downloads.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -71,8 +77,69 @@ class LoyaltyReportingService {
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly AggregationRunner $aggregationRunner,
+		private readonly TierService $tierService,
+		private readonly ReportingService $reportingService,
 	) {
 	}//end __construct()
+
+	/**
+	 * The window of the last `$days` days, ending today (UTC), as ISO dates.
+	 *
+	 * @param int $days The number of days, at least one.
+	 *
+	 * @return array{from: string, to: string}
+	 *
+	 * @spec exclude This app has no canonical loyalty spec; see
+	 *  LoyaltyReportingController::tierDistribution().
+	 */
+	public function lastDaysWindow(int $days): array {
+		$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+
+		return [
+			'from' => $today->modify(sprintf('-%d days', max(1, $days)))->format('Y-m-d'),
+			'to' => $today->format('Y-m-d'),
+		];
+	}//end lastDaysWindow()
+
+	/**
+	 * The KPIs as CSV: one metric and value line per scalar KPI.
+	 *
+	 * @param array<string, mixed> $kpis The KPIs from {@see getKpis()}.
+	 *
+	 * @return string The CSV text.
+	 *
+	 * @spec exclude This app has no canonical loyalty spec; see
+	 *  LoyaltyReportingController::tierDistribution().
+	 */
+	public function kpisToCsv(array $kpis): string {
+		$rows = [];
+		foreach ($kpis as $metric => $value) {
+			if (is_scalar($value) === true) {
+				$rows[] = [(string)$metric, (string)$value];
+			}
+		}
+
+		return $this->reportingService->generateCsv(headers: ['metric', 'value'], rows: $rows);
+	}//end kpisToCsv()
+
+	/**
+	 * The tier report as CSV: one tier and account count line per tier.
+	 *
+	 * @param array<int, array<string, mixed>> $tiers The rows from {@see getTierReport()}.
+	 *
+	 * @return string The CSV text.
+	 *
+	 * @spec exclude This app has no canonical loyalty spec; see
+	 *  LoyaltyReportingController::tierDistribution().
+	 */
+	public function tiersToCsv(array $tiers): string {
+		$rows = [];
+		foreach ($tiers as $tier) {
+			$rows[] = [(string)($tier['name'] ?? $tier['tierId'] ?? ''), (string)($tier['accountCount'] ?? 0)];
+		}
+
+		return $this->reportingService->generateCsv(headers: ['tier', 'accounts'], rows: $rows);
+	}//end tiersToCsv()
 
 	/**
 	 * Compute the headline KPIs for a programme over a date window.
@@ -83,11 +150,32 @@ class LoyaltyReportingService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
 	 */
 	public function getKpis(string $programmeId, ?string $from = null, ?string $to = null): array {
 		$accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
+		$totals = $this->accountTotals(accounts: $accounts);
+		[$debits, $points] = $this->ledgerPoints(programmeId: $programmeId, from: $from, to: $to);
 
+		$programme = $this->programmeService->getProgramme(programmeId: $programmeId);
+		$pointValue = (float)($programme['pointValue'] ?? 0.01);
+
+		return ['activeAccounts' => $totals['activeAccounts']]
+			+ $points
+			+ $this->valueKpis(totals: $totals, debits: $debits, pointValue: $pointValue)
+			+ ['period' => ['from' => $from, 'to' => $to]];
+	}//end getKpis()
+
+	/**
+	 * Count active accounts, the tier distribution and the outstanding points.
+	 *
+	 * @param array<int, array<string, mixed>> $accounts The programme's accounts.
+	 *
+	 * @return array{activeAccounts: int, tierDistribution: array<string, int>, outstandingPoints: int}
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function accountTotals(array $accounts): array {
 		$activeAccounts = 0;
 		$tierDistribution = [];
 		$outstandingPoints = 0;
@@ -101,59 +189,116 @@ class LoyaltyReportingService {
 			$outstandingPoints += max(0, (int)($a['currentBalance'] ?? 0));
 		}
 
-		$credits = $this->ledgerService->getLedgerEntriesForProgramme(
-			programmeId: $programmeId,
-			type: 'credit',
-			from: $from,
-			to: $to
-		);
-		$debits = $this->ledgerService->getLedgerEntriesForProgramme(
-			programmeId: $programmeId,
-			type: 'debit',
-			from: $from,
-			to: $to
-		);
-		$expiries = $this->ledgerService->getLedgerEntriesForProgramme(
-			programmeId: $programmeId,
-			type: 'expiry',
-			from: $from,
-			to: $to
-		);
+		return ['activeAccounts' => $activeAccounts, 'tierDistribution' => $tierDistribution, 'outstandingPoints' => $outstandingPoints];
+	}//end accountTotals()
+
+	/**
+	 * Read the credit, debit and expiry ledger entries and sum their points.
+	 *
+	 * @param string $programmeId The programme UUID.
+	 * @param string|null $from ISO date lower bound (inclusive).
+	 * @param string|null $to ISO date upper bound (inclusive).
+	 *
+	 * @return array{0: array<int, array<string, mixed>>, 1: array<string, int|float>} The debit entries and the point KPIs.
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function ledgerPoints(string $programmeId, string|null $from, string|null $to): array {
+		$credits = $this->ledgerEntries(programmeId: $programmeId, type: 'credit', from: $from, to: $to);
+		$debits = $this->ledgerEntries(programmeId: $programmeId, type: 'debit', from: $from, to: $to);
+		$expiries = $this->ledgerEntries(programmeId: $programmeId, type: 'expiry', from: $from, to: $to);
 
 		$pointsIssued = (int)array_sum(array_map(fn (array $e): int => (int)($e['count'] ?? 0), $credits));
 		$pointsRedeemed = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $debits));
 		$pointsExpired = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $expiries));
 
-		$breakagePercent = 0.0;
-		if ($pointsIssued > 0) {
-			$breakagePercent = round($pointsExpired / $pointsIssued * 100, 2);
+		return [$debits, $this->pointKpis(issued: $pointsIssued, redeemed: $pointsRedeemed, expired: $pointsExpired)];
+	}//end ledgerPoints()
+
+	/**
+	 * Read the ledger entries of one type for a programme and date window.
+	 *
+	 * @param string $programmeId The programme UUID.
+	 * @param string $type The ledger entry type (credit, debit or expiry).
+	 * @param string|null $from ISO date lower bound (inclusive).
+	 * @param string|null $to ISO date upper bound (inclusive).
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function ledgerEntries(string $programmeId, string $type, string|null $from, string|null $to): array {
+		return $this->ledgerService->getLedgerEntriesForProgramme(
+			programmeId: $programmeId,
+			type: $type,
+			from: $from,
+			to: $to
+		);
+	}//end ledgerEntries()
+
+	/**
+	 * The point KPIs: issued, redeemed and expired points with breakage and redemption rates.
+	 *
+	 * @param int $issued Points issued.
+	 * @param int $redeemed Points redeemed.
+	 * @param int $expired Points expired.
+	 *
+	 * @return array{pointsIssued: int, pointsRedeemed: int, pointsExpired: int, breakagePercent: float, redemptionRate: float}
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function pointKpis(int $issued, int $redeemed, int $expired): array {
+		return [
+			'pointsIssued' => $issued,
+			'pointsRedeemed' => $redeemed,
+			'pointsExpired' => $expired,
+			'breakagePercent' => $this->percentOf(part: $expired, whole: $issued),
+			'redemptionRate' => $this->percentOf(part: $redeemed, whole: $issued),
+		];
+	}//end pointKpis()
+
+	/**
+	 * A part as a percentage of a whole, rounded to two decimals; 0.0 when the whole is not positive.
+	 *
+	 * @param int $part The part.
+	 * @param int $whole The whole.
+	 *
+	 * @return float
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function percentOf(int $part, int $whole): float {
+		$percent = 0.0;
+		if ($whole > 0) {
+			$percent = round($part / $whole * 100, 2);
 		}
 
-		$redemptionRate = 0.0;
-		if ($pointsIssued > 0) {
-			$redemptionRate = round($pointsRedeemed / $pointsIssued * 100, 2);
-		}
+		return $percent;
+	}//end percentOf()
 
-		$programme = $this->programmeService->getProgramme(programmeId: $programmeId);
-		$pointValue = (float)($programme['pointValue'] ?? 0.01);
-		$estimatedLiability = round($outstandingPoints * $pointValue, 2);
+	/**
+	 * The cost, tier and liability KPIs.
+	 *
+	 * @param array{activeAccounts: int, tierDistribution: array<string, int>, outstandingPoints: int} $totals The account totals.
+	 * @param array<int, array<string, mixed>> $debits The debit ledger entries.
+	 * @param float $pointValue The euro value of one point.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function valueKpis(array $totals, array $debits, float $pointValue): array {
+		$estimatedLiability = round($totals['outstandingPoints'] * $pointValue, 2);
 		$programmeCostPercent = $this->estimateProgrammeCostPercent(debits: $debits);
 
 		return [
-			'activeAccounts' => $activeAccounts,
-			'pointsIssued' => $pointsIssued,
-			'pointsRedeemed' => $pointsRedeemed,
-			'pointsExpired' => $pointsExpired,
-			'breakagePercent' => $breakagePercent,
-			'redemptionRate' => $redemptionRate,
 			'programmeCostPercent' => $programmeCostPercent,
-			'tierDistribution' => $tierDistribution,
-			'outstandingPoints' => $outstandingPoints,
+			'tierDistribution' => $totals['tierDistribution'],
+			'outstandingPoints' => $totals['outstandingPoints'],
 			'estimatedLiability' => $estimatedLiability,
 			'pointValue' => $pointValue,
-			'period' => ['from' => $from, 'to' => $to],
 		];
-	}//end getKpis()
+	}//end valueKpis()
 
 	/**
 	 * Liability snapshot per IFRS 15 / RJ 270.
@@ -162,7 +307,7 @@ class LoyaltyReportingService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-009-01
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-009-01
 	 */
 	public function getLiabilitySnapshot(string $programmeId): array {
 		$accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
@@ -238,13 +383,41 @@ class LoyaltyReportingService {
 			$byTier[$tierId] = ($byTier[$tierId] ?? 0) + (int)($group['value'] ?? 0);
 		}
 
+		return $this->nameTiers(programmeId: $programmeId, byTier: $byTier);
+	}//end getTierReport()
+
+	/**
+	 * The report rows for per-tier counts: every tier rule of the programme in
+	 * rule order with its name, also a tier no account holds, then any other
+	 * tier id the accounts carry (such as `unassigned`) as it came.
+	 *
+	 * @param string $programmeId The programme UUID.
+	 * @param array<string, int> $byTier Account count by tier id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function nameTiers(string $programmeId, array $byTier): array {
 		$report = [];
+		foreach ($this->tierService->getTierRules(programmeId: $programmeId) as $rule) {
+			$tierId = (string)($rule['@self']['id'] ?? $rule['id'] ?? '');
+			if ($tierId === '') {
+				continue;
+			}
+
+			$report[] = [
+				'tierId' => $tierId,
+				'accountCount' => (int)($byTier[$tierId] ?? 0),
+				'name' => (string)($rule['name'] ?? $tierId),
+			];
+			unset($byTier[$tierId]);
+		}
+
 		foreach ($byTier as $tierId => $count) {
-			$report[] = ['tierId' => $tierId, 'accountCount' => $count];
+			$report[] = ['tierId' => (string)$tierId, 'accountCount' => $count];
 		}
 
 		return $report;
-	}//end getTierReport()
+	}//end nameTiers()
 
 	/**
 	 * PHP fallback for {@see getTierReport()} — the original hydrate-and-bucket
@@ -264,12 +437,7 @@ class LoyaltyReportingService {
 			$byTier[$tierId] = ($byTier[$tierId] ?? 0) + 1;
 		}
 
-		$result = [];
-		foreach ($byTier as $tierId => $count) {
-			$result[] = ['tierId' => $tierId, 'accountCount' => $count];
-		}
-
-		return $result;
+		return $this->nameTiers(programmeId: $programmeId, byTier: $byTier);
 	}//end getTierReportPhp()
 
 	/**
@@ -287,12 +455,7 @@ class LoyaltyReportingService {
 
 		$programme = $this->programmeService->getProgramme(programmeId: $programmeId);
 		$policy = $programme['expiryPolicy'] ?? [];
-		$type = 'none';
-		if (is_array($policy) === true) {
-			$type = (string)($policy['type'] ?? 'none');
-		}
-
-		if ($type !== 'inactivityMonths') {
+		if ($this->expiryPolicyType(policy: $policy) !== 'inactivityMonths') {
 			return [
 				'points' => 0,
 				'accounts' => 0,
@@ -300,14 +463,80 @@ class LoyaltyReportingService {
 			];
 		}
 
+		return $this->inactivityForecast(accounts: $accounts, months: $this->policyMonths(policy: $policy), days: $days);
+	}//end getExpiryForecast()
+
+	/**
+	 * The expiry policy type, 'none' when the policy is not a map.
+	 *
+	 * @param mixed $policy The programme's expiryPolicy value.
+	 *
+	 * @return string
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function expiryPolicyType($policy): string {
+		$type = 'none';
+		if (is_array($policy) === true) {
+			$type = (string)($policy['type'] ?? 'none');
+		}
+
+		return $type;
+	}//end expiryPolicyType()
+
+	/**
+	 * The inactivity window in months, 12 when the policy is not a map.
+	 *
+	 * @param mixed $policy The programme's expiryPolicy value.
+	 *
+	 * @return int
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function policyMonths($policy): int {
 		$months = 12;
 		if (is_array($policy) === true) {
 			$months = (int)($policy['value'] ?? 12);
 		}
 
+		return $months;
+	}//end policyMonths()
+
+	/**
+	 * Forecast the points of accounts that pass the inactivity cutoff within the window.
+	 *
+	 * @param array<int, array<string, mixed>> $accounts The programme's accounts.
+	 * @param int $months The inactivity window in months.
+	 * @param int $days Window size in days.
+	 *
+	 * @return array{points: int, accounts: int, until: string}
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function inactivityForecast(array $accounts, int $months, int $days): array {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$cutoff = $now->modify('-' . max(0, $months - ((int)round($days / 30))) . ' months');
 
+		[$points, $count] = $this->expiringBalances(accounts: $accounts, cutoff: $cutoff->format('c'));
+
+		return [
+			'points' => $points,
+			'accounts' => $count,
+			'until' => $now->modify("+{$days} days")->format('c'),
+		];
+	}//end inactivityForecast()
+
+	/**
+	 * Sum the positive balances of accounts last active before the cutoff.
+	 *
+	 * @param array<int, array<string, mixed>> $accounts The programme's accounts.
+	 * @param string $cutoff The ISO-8601 cutoff.
+	 *
+	 * @return array{0: int, 1: int} The points and the number of accounts.
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function expiringBalances(array $accounts, string $cutoff): array {
 		$points = 0;
 		$count = 0;
 		foreach ($accounts as $a) {
@@ -316,38 +545,35 @@ class LoyaltyReportingService {
 				continue;
 			}
 
-			if ($last < $cutoff->format('c') && (int)($a['currentBalance'] ?? 0) > 0) {
+			if ($last < $cutoff && (int)($a['currentBalance'] ?? 0) > 0) {
 				$points += (int)($a['currentBalance'] ?? 0);
 				$count++;
 			}
 		}
 
-		return [
-			'points' => $points,
-			'accounts' => $count,
-			'until' => $now->modify("+{$days} days")->format('c'),
-		];
-	}//end getExpiryForecast()
+		return [$points, $count];
+	}//end expiringBalances()
 
 	/**
-	 * Estimate the programme cost percent: cost of redemptions / sales attached to the redemption.
+	 * Estimate the programme cost percent: the cost of the redemptions as a share
+	 * of the sales they were redeemed in (REQ-LOY-008-03).
 	 *
-	 * Approximation: sum each debit entry's optionId.costBasisEur and divide by
-	 * matched POS transaction totaal (looked up via posTransaction_schema if
-	 * present). Returns 0.0 when sales data is unavailable.
+	 * The cost is each debit's redemption option costBasisEur. The sales are the
+	 * totals of the distinct POS transactions those redemptions were used in
+	 * (redemption.posTransactionId), each counted once. Returns 0.0 when there is
+	 * no cost or no associated sale to divide by.
 	 *
 	 * @param array<int, array<string, mixed>> $debits The debit ledger entries in period.
 	 *
 	 * @return float
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-03
 	 */
 	private function estimateProgrammeCostPercent(array $debits): float {
-		if ($debits === []) {
-			return 0.0;
-		}
-
 		$totalCost = 0.0;
+		$sales = [];
 		foreach ($debits as $entry) {
-			$source = $entry['sourceDocument'] ?? [];
+			$source = ($entry['sourceDocument'] ?? []);
 			if (is_array($source) === false || isset($source['optionId']) === false) {
 				continue;
 			}
@@ -358,17 +584,62 @@ class LoyaltyReportingService {
 			}
 
 			$totalCost += (float)($option['costBasisEur'] ?? 0);
+			$sales += $this->associatedSale(redemptionId: (string)($source['redemptionId'] ?? ''));
 		}
 
-		// For now we approximate associated sales = totalCost / 0.10 (placeholder
-		// assumption: redemption-driving baskets average a 10% cost ratio when
-		// POS data is unavailable; refined by financeq integration).
-		if ($totalCost <= 0) {
+		$salesTotal = (float)array_sum($sales);
+		if ($totalCost <= 0 || $salesTotal <= 0) {
 			return 0.0;
 		}
 
-		return round(($totalCost / max(0.01, $totalCost / 0.10)) * 100, 2);
+		return round(($totalCost / $salesTotal) * 100, 2);
 	}//end estimateProgrammeCostPercent()
+
+	/**
+	 * The POS sale a redemption was used in, as [posTransactionId => total], or [] when it has none.
+	 *
+	 * @param string $redemptionId The redemption.
+	 *
+	 * @return array<string, float>
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-03
+	 */
+	private function associatedSale(string $redemptionId): array {
+		$redemption = $this->findObject(schemaKey: 'redemption_schema', id: $redemptionId);
+		$saleId = (string)($redemption['posTransactionId'] ?? '');
+		$sale = $this->findObject(schemaKey: 'posTransaction_schema', id: $saleId);
+		if ($sale === null) {
+			return [];
+		}
+
+		return [$saleId => (float)($sale['total'] ?? 0)];
+	}//end associatedSale()
+
+	/**
+	 * One object of a configured schema, or null when unconfigured, unknown or unreadable.
+	 *
+	 * @param string $schemaKey The app-config key of the schema.
+	 * @param string $id        The object id.
+	 *
+	 * @return ?array<string, mixed>
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-03
+	 */
+	private function findObject(string $schemaKey, string $id): ?array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
+		if ($register === '' || $schema === '' || $id === '') {
+			return null;
+		}
+
+		try {
+			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+		} catch (\Throwable $e) {
+			return null;
+		}
+
+		return $this->toArray(object: $object);
+	}//end findObject()
 
 	/**
 	 * Look up a RedemptionOption.
@@ -378,8 +649,8 @@ class LoyaltyReportingService {
 	 * @return ?array<string, mixed>
 	 */
 	private function getOption(string $optionId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'redemptionOption_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'redemptionOption_schema', '');
 		if ($register === '' || $schema === '' || $optionId === '') {
 			return null;
 		}
@@ -390,47 +661,8 @@ class LoyaltyReportingService {
 			return null;
 		}
 
-		return $this->normalizeOptionResult(object: $object);
+		return $this->toArray(object: $object);
 	}//end getOption()
-
-	/**
-	 * Normalize a RedemptionOption lookup result to a plain array.
-	 *
-	 * Mirrors the previous inline `getOption()` tail exactly: null passes
-	 * through as null, arrays pass through, objects exposing
-	 * `jsonSerialize()` are serialized, objects exposing `getObject()` are
-	 * unwrapped, anything else yields null.
-	 *
-	 * @param mixed $object The raw ObjectService::find() result.
-	 *
-	 * @return array<string, mixed>|null The normalized option, or null when it
-	 *                                   could not be normalized to an array.
-	 */
-	private function normalizeOptionResult(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end normalizeOptionResult()
 
 	/**
 	 * Get the ObjectService.
@@ -469,8 +701,8 @@ class LoyaltyReportingService {
 	 * @throws RuntimeException When the register or schema is not configured.
 	 */
 	private function accountConfig(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'klantLoyaltyAccount_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'klantLoyaltyAccount_schema', '');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('CustomerLoyaltyAccount register/schema is not configured.');
 		}

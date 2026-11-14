@@ -1,14 +1,16 @@
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'New Client')"
-		:open="true"
-		size="normal"
+	<CnDialog
+		:name="t('pipelinq', 'New client')"
+		:eyebrow="t('pipelinq', 'Residents and businesses')"
+		width="form"
 		data-testid="client-create-dialog"
 		@closing="$emit('close')">
 		<ClientForm
 			ref="form"
 			:initialName="prefillName"
+			:initialValues="values"
 			:showActions="false"
+			boardLayout
 			@save="onSave"
 			@update:valid="(v) => (valid = v)" />
 		<template #actions>
@@ -20,25 +22,34 @@
 				:disabled="!valid || saving"
 				data-testid="client-form-save"
 				@click="submit">
+				<template #icon>
+					<Check :size="20" />
+				</template>
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { NcButton } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import ClientForm from '../views/clients/ClientForm.vue'
+import createDialogMixin from '../mixins/createDialogMixin.js'
 import { createWithContact } from '../services/contactSyncApi.js'
 
 export default {
 	name: 'ClientCreateDialog',
 	components: {
-		NcButton,
-		NcDialog,
+		Check,
 		ClientForm,
+		CnDialog,
+		NcButton,
 	},
+
+	mixins: [createDialogMixin],
 
 	props: {
 		/** The name typed into a client picker, prefilled in the form. */
@@ -57,6 +68,16 @@ export default {
 		},
 
 		/**
+		 * Field values to start the form with, e.g. what Paste or scan
+		 * proposed. Unlike `initialData` it does not mean a picker opened the
+		 * dialog: the new client is opened after Save.
+		 */
+		values: {
+			type: Object,
+			default: null,
+		},
+
+		/**
 		 * Stay on the page that opened the dialog and hand the new client
 		 * back, instead of opening the client. Set by every picker.
 		 */
@@ -67,19 +88,13 @@ export default {
 	},
 
 	emits: ['created', 'close'],
-	data() {
-		return {
-			valid: false,
-			saving: false,
-		}
-	},
 
 	computed: {
 		/**
 		 * The name to start the form with.
 		 *
 		 * @return {string} The typed name, or ''.
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 * @spec openspec/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		prefillName() {
 			return this.name || this.initialData?.name || ''
@@ -89,7 +104,7 @@ export default {
 		 * Whether a form opened this dialog, so the new client goes back to it.
 		 *
 		 * @return {boolean} True when opened from a picker.
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 * @spec openspec/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		returnsToForm() {
 			return this.stayOnPage || this.initialData !== null
@@ -98,22 +113,12 @@ export default {
 
 	methods: {
 		/**
-		 * Navigate to the created record and close.
+		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
 		 *
-		 * A registry modal is mounted by CnAppRoot, which forwards only
-		 * `close` — there is no parent to route on the dialog's behalf the way
-		 * the old bespoke header-actions component did.
-		 *
-		 * @param {string} route The detail route name.
-		 * @param {string} id The created object's id.
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+		 * @spec openspec/specs/unify-client-contact/spec.md
 		 */
-		goToDetail(route, id) {
-			this.$emit('close')
-			if (id && this.$router) {
-				this.$router.push({ name: route, params: { id } }).catch(() => {})
-			}
+		submit() {
+			this.$refs.form.onSave()
 		},
 
 		/**
@@ -124,7 +129,7 @@ export default {
 		 *
 		 * @param {object} created The created client.
 		 * @return {void}
-		 * @spec openspec/changes/pipelinq-forms-review/specs/walkthrough/spec.md
+		 * @spec openspec/specs/walkthrough/spec.md
 		 */
 		notifyWalkthrough(created) {
 			window.dispatchEvent(
@@ -132,15 +137,6 @@ export default {
 					detail: { ...created, register: 'pipelinq', schema: 'client' },
 				}),
 			)
-		},
-
-		/**
-		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
-		 *
-		 * @spec openspec/specs/unify-client-contact/spec.md
-		 */
-		submit() {
-			this.$refs.form.onSave()
 		},
 
 		/**
@@ -157,8 +153,8 @@ export default {
 		 *
 		 * @param {object} formData The raw create-form fields.
 		 * @spec openspec/specs/unify-client-contact/spec.md
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
+		 * @spec openspec/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		async onSave(formData) {
 			this.saving = true

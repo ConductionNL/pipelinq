@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * The outcome of one brokered call to a social network.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 class SocialGatewayResult {
 	/**
@@ -144,7 +144,7 @@ class SocialGatewayResult {
 	 *
 	 * @return self The success result.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public static function succeeded(int $status, array $body): self {
 		return new self(accepted: true, status: $status, body: $body, failureCode: '', failureReason: '');
@@ -159,7 +159,7 @@ class SocialGatewayResult {
 	 *
 	 * @return self The failure result.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public static function failed(string $code, string $reason, int $status = 0): self {
 		$known = $code;
@@ -179,7 +179,7 @@ class SocialGatewayResult {
 	 *
 	 * @return bool True when a retry is worth offering.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function isRetryable(): bool {
 		return ($this->accepted === false && in_array($this->failureCode, self::RETRYABLE, true) === true);

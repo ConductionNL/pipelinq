@@ -1,0 +1,181 @@
+{
+	"$comment": "pipelinq's Welkom nieuwe inwoners journey as a flow, as PqJourney draws it: the flow its compiler makes (an address change on a client, 3 days, consent for e-mail, the journey's mailing), the journey's flowUuid pointing at it, and its history: made on 30 sep, turned into a flow and activated by Pieter on 2 okt. The loader writes flows disabled.",
+	"flows": [
+		{
+			"key": "flow-journey-welkom",
+			"data": {
+				"name": "Journey: Welkom nieuwe inwoners",
+				"description": "Verwelkomt nieuwe inwoners met de afvalkalender en het overzicht van vergunningen",
+				"trigger": "object.updated",
+				"triggerRegister": "pipelinq",
+				"triggerSchema": "client",
+				"nodes": [
+					{
+						"id": "start",
+						"type": "openregister.trigger-object",
+						"name": "Een inwoner geeft een nieuw adres in Zuiddrecht door",
+						"position": {
+							"x": 40,
+							"y": 40
+						},
+						"config": {
+							"event": "object.updated",
+							"register": "pipelinq",
+							"schema": "client"
+						}
+					},
+					{
+						"id": "hold",
+						"type": "openregister.wait",
+						"name": "3 dagen wachten",
+						"position": {
+							"x": 40,
+							"y": 160
+						},
+						"config": {
+							"for": "P3D"
+						}
+					},
+					{
+						"id": "gate",
+						"type": "openregister.switch",
+						"name": "Nieuw adres en toestemming voor e-mail?",
+						"position": {
+							"x": 40,
+							"y": 280
+						},
+						"config": {},
+						"exits": [
+							{
+								"id": "match",
+								"condition": {
+									"and": [
+										{
+											"in": [
+												"address",
+												{
+													"var": "context.changed"
+												}
+											]
+										},
+										{
+											"==": [
+												{
+													"var": "json.marketingConsentEmail"
+												},
+												"true"
+											]
+										}
+									]
+								}
+							},
+							{
+								"id": "skip"
+							}
+						]
+					},
+					{
+						"id": "act",
+						"type": "pipelinq.journey-action",
+						"name": "Nieuwsbrief Welkom in Zuiddrecht versturen",
+						"position": {
+							"x": 40,
+							"y": 400
+						},
+						"config": {
+							"journey": "{{object:journey-welkom.id}}"
+						}
+					},
+					{
+						"id": "end",
+						"type": "openregister.end",
+						"name": "Einde",
+						"position": {
+							"x": 40,
+							"y": 520
+						},
+						"config": {}
+					}
+				],
+				"edges": [
+					{
+						"from": "start",
+						"to": "hold"
+					},
+					{
+						"from": "hold",
+						"to": "gate"
+					},
+					{
+						"from": "gate",
+						"to": "act",
+						"fromExit": "match"
+					},
+					{
+						"from": "act",
+						"to": "end"
+					},
+					{
+						"from": "gate",
+						"to": "end",
+						"fromExit": "skip"
+					}
+				]
+			}
+		}
+	],
+	"changes": [
+		{
+			"key": "journey-welkom-flow",
+			"register": "pipelinq",
+			"schema": "journey",
+			"where": {
+				"name": "Welkom nieuwe inwoners"
+			},
+			"set": {
+				"flowUuid": "{{flow:flow-journey-welkom.uuid}}"
+			}
+		}
+	],
+	"auditEntries": [
+		{
+			"key": "journey-welkom-aangemaakt",
+			"data": {
+				"object": "{{object:journey-welkom.id}}",
+				"action": "create",
+				"user": "{{cast:pieter.uid}}",
+				"at": "{{datetime:-7 14:20}}"
+			}
+		},
+		{
+			"key": "journey-welkom-omgezet",
+			"data": {
+				"object": "{{object:journey-welkom.id}}",
+				"action": "update",
+				"user": "{{cast:pieter.uid}}",
+				"at": "{{datetime:-5 10:05}}",
+				"changed": {
+					"flowStatus": {
+						"old": "not_compiled",
+						"new": "compiled"
+					}
+				}
+			}
+		},
+		{
+			"key": "journey-welkom-geactiveerd",
+			"data": {
+				"object": "{{object:journey-welkom.id}}",
+				"action": "update",
+				"user": "{{cast:pieter.uid}}",
+				"at": "{{datetime:-5 10:07}}",
+				"changed": {
+					"status": {
+						"old": "draft",
+						"new": "active"
+					}
+				}
+			}
+		}
+	]
+}

@@ -195,6 +195,8 @@ class PortalRequestServiceTest extends TestCase {
 		$this->assertSame('new', $stored['status']);
 		$this->assertSame('contact-a', $stored['contact']);
 		$this->assertSame(['f1'], $stored['attachmentIds']);
+		$this->assertSame($result['requestId'], $result['reference'], 'Without a case reference the answer names the ticket by its id');
+		$this->assertSame($stored['occurredAt'], $result['receivedAt']);
 	}//end testSubmitCreatesRequestTicket()
 
 	/**
@@ -381,4 +383,22 @@ class PortalRequestServiceTest extends TestCase {
 
 		$this->assertNull($this->service->previewDetail(ticket: ['ticketType' => 'complaint'], exposeAssigneeName: false));
 	}//end testThePreviewEqualsThePortalDetail()
+
+	/**
+	 * A list of linked ids yields its first usable one, read from a plain id or
+	 * an `{id}` / `{uuid}` reference; a list with no usable id links nothing.
+	 *
+	 * @return void
+	 */
+	public function testSubmitLinksTheFirstUsableIdOfALinkedList(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', [
+			'linkedContactId' => ['', ['name' => 'no id'], ['uuid' => 'contact-b'], 'contact-c'],
+			'linkedOrganisationId' => [null, ['name' => 'no id']],
+		]);
+		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
+
+		$stored = $this->reader->find('ticket', $result['requestId']);
+		$this->assertSame('contact-b', $stored['contact']);
+		$this->assertNull($stored['client'] ?? null);
+	}//end testSubmitLinksTheFirstUsableIdOfALinkedList()
 }//end class

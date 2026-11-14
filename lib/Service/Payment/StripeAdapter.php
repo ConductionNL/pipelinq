@@ -23,20 +23,19 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
-use Throwable;
 
 /**
  * Stripe payment adapter.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
  */
 class StripeAdapter extends AbstractPaymentAdapter {
 	/**
@@ -58,11 +57,38 @@ class StripeAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
 	 */
 	public function getName(): string {
 		return 'stripe';
 	}//end getName()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string The display name.
+	 */
+	protected function label(): string {
+		return 'Stripe';
+	}//end label()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, string> The bearer authorisation header with the secret key.
+	 */
+	protected function authHeaders(): array {
+		return ['Authorization' => 'Bearer ' . $this->secretKey()];
+	}//end authHeaders()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string Stripe takes form-encoded bodies.
+	 */
+	protected function bodyType(): string {
+		return 'application/x-www-form-urlencoded';
+	}//end bodyType()
 
 	/**
 	 * Create a Stripe PaymentIntent.
@@ -73,67 +99,75 @@ class StripeAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, redirectUrl: string|null, status: string, error?: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 	 */
 	public function initiate(array $transactionData, float $amount, string $paymentMethod): array {
+		if ($this->secretKey() === '') {
+			return $this->failedInitiate(message: 'Stripe API secret not configured');
+		}
+
+		$payment = new PspPayment(transactionData: $transactionData, cents: $this->toCents(amount: $amount));
+		if ($payment->cents <= 0) {
+			return $this->failedInitiate(message: 'Invalid amount');
+		}
+
+		$body = http_build_query($this->intentForm(payment: $payment));
+		$response = $this->send(call: new PspCall(url: self::BASE_URL . '/payment_intents', context: 'initiate failed'), body: $body);
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedInitiate(message: $error);
+		}
+
+		return $this->pending(sessionId: $this->intentId(body: $response['body']), redirectUrl: null);
+	}//end initiate()
+
+	/**
+	 * The PaymentIntent create form.
+	 *
+	 * @param PspPayment $payment The payment.
+	 *
+	 * @return array<string, string> The form fields.
+	 */
+	private function intentForm(PspPayment $payment): array {
+		return [
+			'amount' => (string)$payment->cents,
+			'currency' => 'eur',
+			'metadata[reference]' => $payment->reference(),
+			'metadata[transactionId]' => $payment->transactionId(),
+			'metadata[app]' => 'pipelinq',
+		];
+	}//end intentForm()
+
+	/**
+	 * The PaymentIntent id in a create reply, falling back to its client secret.
+	 *
+	 * @param array<string, mixed> $body The reply body.
+	 *
+	 * @return string The session id.
+	 */
+	private function intentId(array $body): string {
+		$sessionId = (string)($body['id'] ?? '');
+		$clientSecret = (string)($body['client_secret'] ?? '');
+		if ($sessionId !== '') {
+			return $sessionId;
+		}
+
+		return $clientSecret;
+	}//end intentId()
+
+	/**
+	 * The secret key: the API secret, or the API key when no secret is set.
+	 *
+	 * @return string The key, or '' when neither is set.
+	 */
+	private function secretKey(): string {
 		$apiKey = $this->credential(key: 'apiSecret');
 		if ($apiKey === '') {
 			$apiKey = $this->credential(key: 'apiKey');
 		}
 
-		if ($apiKey === '') {
-			return $this->failedInitiate(message: 'Stripe API secret not configured');
-		}
-
-		$cents = $this->toCents(amount: $amount);
-		if ($cents <= 0) {
-			return $this->failedInitiate(message: 'Invalid amount');
-		}
-
-		$reference = (string)($transactionData['reference'] ?? '');
-
-		$form = [
-			'amount' => (string)$cents,
-			'currency' => 'eur',
-			'metadata[reference]' => $reference,
-			'metadata[transactionId]' => (string)($transactionData['id'] ?? ''),
-			'metadata[app]' => 'pipelinq',
-		];
-
-		$body = http_build_query($form);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: self::BASE_URL . '/payment_intents',
-				headers: [
-					'Authorization' => 'Bearer ' . $apiKey,
-					'Content-Type' => 'application/x-www-form-urlencoded',
-				],
-				body: $body
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'initiate failed', e: $e);
-			return $this->failedInitiate(message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedInitiate(message: 'Stripe returned HTTP ' . $response['status']);
-		}
-
-		$sessionId = (string)($response['body']['id'] ?? '');
-		$clientSecret = (string)($response['body']['client_secret'] ?? '');
-		$finalSession = $clientSecret;
-		if ($sessionId !== '') {
-			$finalSession = $sessionId;
-		}
-
-		return [
-			'sessionId' => $finalSession,
-			'redirectUrl' => null,
-			'status' => 'pending',
-		];
-	}//end initiate()
+		return $apiKey;
+	}//end secretKey()
 
 	/**
 	 * Capture a Stripe PaymentIntent.
@@ -142,44 +176,22 @@ class StripeAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, status: string, error?: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
 	 */
 	public function capture(string $sessionId): array {
-		$apiKey = $this->credential(key: 'apiSecret');
-		if ($apiKey === '') {
-			$apiKey = $this->credential(key: 'apiKey');
-		}
-
-		if ($apiKey === '' || $sessionId === '') {
+		if ($this->secretKey() === '' || $sessionId === '') {
 			return $this->failedCapture(sessionId: $sessionId, message: 'Stripe API key or session missing');
 		}
 
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: self::BASE_URL . '/payment_intents/' . urlencode($sessionId) . '/capture',
-				headers: [
-					'Authorization' => 'Bearer ' . $apiKey,
-					'Content-Type' => 'application/x-www-form-urlencoded',
-				],
-				body: ''
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'capture failed', e: $e);
-			return $this->failedCapture(sessionId: $sessionId, message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedCapture(sessionId: $sessionId, message: 'Stripe returned HTTP ' . $response['status']);
+		$call = new PspCall(url: self::BASE_URL . '/payment_intents/' . urlencode($sessionId) . '/capture', context: 'capture failed');
+		$response = $this->send(call: $call, body: '');
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedCapture(sessionId: $sessionId, message: $error);
 		}
 
 		$status = (string)($response['body']['status'] ?? 'pending');
-
-		return [
-			'sessionId' => $sessionId,
-			'status' => $this->mapStatus(providerStatus: $status),
-			'error' => null,
-		];
+		return $this->settled(sessionId: $sessionId, status: $this->mapStatus(providerStatus: $status));
 	}//end capture()
 
 	/**
@@ -190,59 +202,26 @@ class StripeAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, refundId: string, status: string, error?: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
 	 */
 	public function refund(string $sessionId, string $reason): array {
-		$apiKey = $this->credential(key: 'apiSecret');
-		if ($apiKey === '') {
-			$apiKey = $this->credential(key: 'apiKey');
-		}
-
-		if ($apiKey === '' || $sessionId === '') {
+		if ($this->secretKey() === '' || $sessionId === '') {
 			return $this->failedRefund(sessionId: $sessionId, message: 'Stripe API key or session missing');
-		}
-
-		$refundReason = 'Refund via Pipelinq POS';
-		if ($reason !== '') {
-			$refundReason = $reason;
 		}
 
 		$form = [
 			'payment_intent' => $sessionId,
 			'reason' => 'requested_by_customer',
-			'metadata[reason]' => $refundReason,
+			'metadata[reason]' => $this->refundReason(reason: $reason),
 			'metadata[app]' => 'pipelinq',
 		];
-
-		$body = http_build_query($form);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: self::BASE_URL . '/refunds',
-				headers: [
-					'Authorization' => 'Bearer ' . $apiKey,
-					'Content-Type' => 'application/x-www-form-urlencoded',
-				],
-				body: $body
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'refund failed', e: $e);
-			return $this->failedRefund(sessionId: $sessionId, message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedRefund(sessionId: $sessionId, message: 'Stripe returned HTTP ' . $response['status']);
+		$response = $this->send(call: new PspCall(url: self::BASE_URL . '/refunds', context: 'refund failed'), body: http_build_query($form));
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedRefund(sessionId: $sessionId, message: $error);
 		}
 
-		$refundId = (string)($response['body']['id'] ?? '');
-
-		return [
-			'sessionId' => $sessionId,
-			'refundId' => $refundId,
-			'status' => 'refunded',
-			'error' => null,
-		];
+		return $this->refunded(sessionId: $sessionId, refundId: (string)($response['body']['id'] ?? ''));
 	}//end refund()
 
 	/**
@@ -253,7 +232,7 @@ class StripeAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function validateWebhook(string $rawPayload, string $signature): bool {
 		if ($rawPayload === '' || $signature === '') {
@@ -292,7 +271,7 @@ class StripeAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, status: string, eventId: string, error: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function parseWebhook(array $payload): array {
 		$eventId = (string)($payload['id'] ?? '');
@@ -313,47 +292,15 @@ class StripeAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{status: string, message: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function testConnection(): array {
-		$apiKey = $this->credential(key: 'apiSecret');
-		if ($apiKey === '') {
-			$apiKey = $this->credential(key: 'apiKey');
+		if ($this->secretKey() === '') {
+			return $this->notConfigured(message: 'API secret niet ingesteld');
 		}
 
-		if ($apiKey === '') {
-			return [
-				'status' => 'error',
-				'message' => 'API secret niet ingesteld',
-			];
-		}
-
-		try {
-			$response = $this->transport()->request(
-				method: 'GET',
-				url: self::BASE_URL . '/balance',
-				headers: ['Authorization' => 'Bearer ' . $apiKey],
-				body: null
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'testConnection failed', e: $e);
-			return [
-				'status' => 'error',
-				'message' => 'Verbinding met Stripe mislukt',
-			];
-		}//end try
-
-		if ($response['status'] >= 200 && $response['status'] < 300) {
-			return [
-				'status' => 'ok',
-				'message' => 'Verbinding met Stripe succesvol',
-			];
-		}
-
-		return [
-			'status' => 'error',
-			'message' => 'Stripe gaf HTTP ' . $response['status'] . ' terug',
-		];
+		$response = $this->send(call: new PspCall(url: self::BASE_URL . '/balance', context: 'testConnection failed'), body: null);
+		return $this->connectionVerdict(response: $response);
 	}//end testConnection()
 
 	/**

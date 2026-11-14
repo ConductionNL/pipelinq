@@ -1,0 +1,6 @@
+- [x] CtiEscalationQueues reads `cti_escalation_queues` (id, label, groupId; malformed entries skipped)
+- [x] CtiDispositionService routes an escalated call to the chosen queue's group (`assigneeGroupId`); unknown queue rejected; default = first queue
+- [x] CtiController: `queue` parameter on disposition; `GET /api/cti/escalation-queues`
+- [x] ctiApi.submitDisposition sends `queue`; ctiApi.getEscalationQueues; IncomingCallCard passes `queueOptions`
+- [x] Zuiddrecht example set: queues + groups
+- [x] Tests: PHPUnit for the queue reader and the routing; vitest for submitDisposition carrying `queue`

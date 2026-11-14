@@ -31,7 +31,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ContractController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\ContractFiguresService;
 use OCA\Pipelinq\Service\ContractService;
 use OCA\Pipelinq\Service\RecurringRevenueService;
 use OCP\AppFramework\Http;
@@ -385,13 +387,19 @@ class ContractControllerTest extends TestCase {
 				container: $container,
 				logger: $logger,
 			),
-			userSession: $this->userSession,
+			privilege: new CrmPrivilegeCheck($this->userSession, new ObjectOwnerAccessPolicy(
+				groupManager: $this->groupManager,
+				appConfig: $this->createMock(IAppConfig::class)
+			)),
 			accessPolicy: new ObjectOwnerAccessPolicy(
 				groupManager: $this->groupManager,
 				appConfig: $this->createMock(IAppConfig::class)
 			),
 			container: $container,
 			logger: $logger,
+			figuresService: new ContractFiguresService(
+				revenueService: new RecurringRevenueService(appConfig: $appConfig, container: $container, logger: $logger),
+			),
 		);
 	}//end buildController()
 
@@ -720,4 +728,46 @@ class ContractControllerTest extends TestCase {
 		$this->assertSame(0, $response->getData()['churned']);
 		$this->assertSame(0.0, $response->getData()['churnedMrr']);
 	}//end testRenewalMetricsExcludesSoftDeletedContracts()
+	/**
+	 * The figures endpoint answers the contract's figures to its owner.
+	 *
+	 * @return void
+	 */
+	public function testFiguresReadTheContract(): void {
+		$this->signIn();
+		$this->objects->seed('c-9', 'salesContract', ['status' => 'expiring', 'ownerId' => 'owner-1', 'billingInterval' => 'annual', 'valuePerInterval' => 42000]);
+
+		$response = $this->buildController($this->objects)->figures(id: 'c-9');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(3500.0, $response->getData()['monthlyValue']);
+	}//end testFiguresReadTheContract()
+
+	/**
+	 * A stranger gets no figures.
+	 *
+	 * @return void
+	 */
+	public function testFiguresAreRefusedToAStranger(): void {
+		$this->signIn(uid: 'intruder');
+		$this->groupManager->method('isInGroup')->willReturn(false);
+		$this->objects->seed('c-9', 'salesContract', ['status' => 'active', 'ownerId' => 'owner-1']);
+
+		$response = $this->buildController($this->objects)->figures(id: 'c-9');
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testFiguresAreRefusedToAStranger()
+
+	/**
+	 * Without a session the figures are refused.
+	 *
+	 * @return void
+	 */
+	public function testFiguresRequireAuthentication(): void {
+		$this->userSession->method('getUser')->willReturn(null);
+
+		$response = $this->buildController($this->objects)->figures(id: 'c-9');
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testFiguresRequireAuthentication()
 }//end class

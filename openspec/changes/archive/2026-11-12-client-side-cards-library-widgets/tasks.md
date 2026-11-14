@@ -1,0 +1,4 @@
+- [x] 1. ClientDetail `client-channels` as `field-groups`, `client-relationships` as `object-links`.
+- [x] 2. Remove `ContactChannelsCard` and `ContactRelationshipsCard` from the registry, and `headerAdd` from the two sections.
+- [x] 3. nl/en strings for the type labels and channel kinds.
+- [x] 4. `tests/vitest/clientSideCardsLibraryWidgets.spec.js`; `clientSideCardsTitleAdd.spec.js` keeps the section-widget and notes checks.

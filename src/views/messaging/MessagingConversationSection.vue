@@ -18,10 +18,10 @@
   - since OpenRegister has no native cross-schema join) and lets the agent
   - pick which contact person to converse with via a picker.
   -
-  - @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+  - @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
   -->
 <template>
-	<section class="messaging-conversation">
+	<section class="messaging-conversation cn-board-form">
 		<header class="messaging-conversation__head">
 			<h3>
 				{{ t('pipelinq', 'Messages') }}
@@ -32,7 +32,7 @@
 				</span>
 			</h3>
 			<NcButton
-				variant="primary"
+				variant="secondary"
 				:disabled="!effectiveContactId"
 				@click="openComposer">
 				{{ t('pipelinq', 'Send message') }}
@@ -65,7 +65,7 @@
 				{{ t('pipelinq', 'SMS consent:') }}
 				<strong :class="consentClass(preflightConsent.sms)">{{
 					/**
-					 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+					 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 					 */
 					consentLabel(preflightConsent.sms)
 				}}</strong>
@@ -87,7 +87,7 @@
 					{{
 						preflight && preflight.whatsappSessionOpen
 							? t('pipelinq', 'Open (24h window)')
-							: t('pipelinq', 'Closed — template required')
+							: t('pipelinq', 'Closed, template required')
 					}}
 				</strong>
 			</span>
@@ -111,7 +111,7 @@
 					}}</span>
 					<span class="messaging-conversation__direction">{{
 						/**
-						 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+						 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 						 */
 						directionLabel(message.direction)
 					}}</span>
@@ -155,6 +155,9 @@
 			v-if="showComposer"
 			:contactId="effectiveContactId"
 			:clientId="effectiveClientId"
+			:clientName="(clientRecord && clientRecord.name) || ''"
+			:recipientName="(selectedContact && selectedContact.name) || ''"
+			:recipientPhone="(selectedContact && selectedContact.phone) || ''"
 			:preflight="preflightForModal"
 			:initialChannel="composerChannel"
 			:placeholderValues="placeholderValues"
@@ -166,18 +169,30 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
+import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import SendMessageModal from '../../modals/SendMessageModal.vue'
+import { formatLocalTimestamp } from '../../services/localeUtils.js'
 import { PAGE_REFRESH_CHANNEL } from '../../services/pageRefreshOnCreate.js'
 import { useObjectStore } from '../../store/modules/object.js'
+
+/** Event-bus channel: open the composer for an entity (`{ entityId }`), sent by the client page's contact strip. */
+const COMPOSE_CHANNEL = 'pipelinq:messaging:compose'
 
 const EMPTY_PREFLIGHT = {
 	channels: { sms: false, whatsapp: false },
 	whatsappSessionOpen: false,
 	consent: { sms: 'unknown', whatsapp: 'unknown' },
 	templates: [],
+}
+
+/**
+ * @param {string} id The message.
+ * @return {string} The URL that sends it again.
+ */
+function resendUrl(id) {
+	return generateUrl('/apps/pipelinq/api/messaging/messages/{id}/resend', { id })
 }
 
 export default {
@@ -230,7 +245,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -238,7 +253,7 @@ export default {
 
 		/** The contactId every fetch/send in this component is keyed on. */
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		effectiveContactId() {
 			return this.entityType === 'contact'
@@ -248,7 +263,7 @@ export default {
 
 		/** The clientId passed to the composer for the send-request audit trail. */
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		effectiveClientId() {
 			return this.entityType === 'client'
@@ -257,7 +272,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		contactOptions() {
 			return this.linkedContacts.map((c) => ({
@@ -270,7 +285,7 @@ export default {
 		 * The selected contact, from the page or from the client's contacts.
 		 *
 		 * @return {object|null}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		selectedContact() {
 			if (this.entityType === 'contact') {
@@ -286,7 +301,7 @@ export default {
 		 * Saved reply placeholder values this section holds.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		placeholderValues() {
 			return {
@@ -301,7 +316,7 @@ export default {
 		 * The contact's correspondence language.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		contactLanguage() {
 			const contact = this.selectedContact
@@ -318,7 +333,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		preflightForModal() {
 			return this.preflight || EMPTY_PREFLIGHT
@@ -326,7 +341,7 @@ export default {
 
 		/** Most recently active conversation thread for the current contact, if any. */
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		latestConversation() {
 			if (this.conversations.length === 0) {
@@ -352,10 +367,11 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+	 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 	 */
 	async mounted() {
 		subscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
+		subscribe(COMPOSE_CHANNEL, this.onComposeRequested)
 		if (this.entityType === 'contact') {
 			await this.resolveContactClient()
 			await Promise.all([
@@ -370,6 +386,7 @@ export default {
 
 	beforeUnmount() {
 		unsubscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
+		unsubscribe(COMPOSE_CHANNEL, this.onComposeRequested)
 	},
 
 	methods: {
@@ -380,7 +397,7 @@ export default {
 		 * item 2).
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async onPageRefresh() {
 			if (this.entityType === 'client') {
@@ -390,7 +407,7 @@ export default {
 
 		/**
 		 * @param {string} status The conversation status.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		conversationStatusLabel(status) {
 			const labels = {
@@ -409,7 +426,7 @@ export default {
 
 		/**
 		 * @param {string} status The delivery status.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		deliveryStatusClass(status) {
 			if (status === 'failed' || status === 'expired') {
@@ -432,7 +449,7 @@ export default {
 
 		/**
 		 * @param {string} state The consent state.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		consentClass(state) {
 			if (state === 'opted-in') {
@@ -444,19 +461,10 @@ export default {
 			return 'messaging-conversation__consent--warn'
 		},
 
-		formatDate(value) {
-			if (!value) {
-				return '—'
-			}
-			const parsed = new Date(value)
-			if (Number.isNaN(parsed.getTime())) {
-				return value
-			}
-			return parsed.toLocaleString()
-		},
+		formatDate: formatLocalTimestamp,
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async resolveContactClient() {
 			try {
@@ -475,8 +483,8 @@ export default {
 		/**
 		 * Fetch the client's contacts. A refetch keeps the selected contact when it is still linked.
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
-		 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async fetchLinkedContacts() {
 			this.loadingContacts = true
@@ -501,8 +509,8 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
 		 */
 		async fetchMessages() {
 			if (!this.effectiveContactId) {
@@ -529,7 +537,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async fetchConversations() {
 			if (!this.effectiveContactId) {
@@ -548,7 +556,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async fetchPreflight() {
 			if (!this.effectiveContactId) {
@@ -572,7 +580,7 @@ export default {
 		 * Read the client's name for the saved reply placeholders.
 		 *
 		 * @param {string} clientId The client id, or empty.
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		async fetchClient(clientId) {
 			if (!clientId) {
@@ -588,7 +596,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		openComposer() {
 			if (!this.effectiveContactId) {
@@ -599,7 +607,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		closeComposer() {
 			this.showComposer = false
@@ -612,7 +620,7 @@ export default {
 		 *
 		 * @param {object} message A channelMessage row.
 		 * @return {boolean}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		canResend(message) {
 			const metadata = (message && message.metadata) || {}
@@ -631,7 +639,7 @@ export default {
 		 * shows the server's reason on the row.
 		 *
 		 * @param {object} message The failed row.
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		async resend(message) {
 			if (this.resending) {
@@ -639,22 +647,35 @@ export default {
 			}
 			this.resending = message.id
 			this.resendErrors = { ...this.resendErrors, [message.id]: '' }
-			let status
+			const status = await this.requestResend(message)
+			this.showResendOutcome(message, status)
+		},
+
+		/**
+		 * Ask the server to send the message again.
+		 *
+		 * @param {object} message The message.
+		 * @return {Promise<string>} The status it answered, `failed` when none.
+		 */
+		async requestResend(message) {
 			try {
-				const { data } = await axios.post(
-					generateUrl(
-						'/apps/pipelinq/api/messaging/messages/{id}/resend',
-						{
-							id: message.id,
-						},
-					),
-				)
-				status = (data && data.status) || 'failed'
+				const { data } = await axios.post(resendUrl(message.id))
+				return (data && data.status) || 'failed'
 			} catch (error) {
-				status = error?.response?.data?.status || 'failed'
+				return error?.response?.data?.status || 'failed'
 			} finally {
 				this.resending = ''
 			}
+		},
+
+		/**
+		 * Reload when it was sent, open the WhatsApp composer when a template
+		 * is required, else show the reason on the row.
+		 *
+		 * @param {object} message The message.
+		 * @param {string} status The resend status.
+		 */
+		showResendOutcome(message, status) {
 			if (status === 'sent') {
 				this.onSent()
 				return
@@ -675,7 +696,7 @@ export default {
 		 *
 		 * @param {string} status The server's status.
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 		 */
 		resendReason(status) {
 			const reasons = {
@@ -716,13 +737,26 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		onSent() {
 			this.showComposer = false
 			this.fetchMessages()
 			this.fetchConversations()
 			this.fetchPreflight()
+			emit('cn:timeline:changed', { objectId: this.entityId, source: 'messaging' })
+		},
+
+		/**
+		 * Open the composer when the contact strip asks for it on this entity.
+		 *
+		 * @param {object} payload `{ entityId }`.
+		 * @spec openspec/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
+		 */
+		onComposeRequested(payload) {
+			if (payload && payload.entityId === this.entityId) {
+				this.openComposer()
+			}
 		},
 	},
 }
@@ -746,6 +780,15 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+/* Board look (PqKlant, PqOrganisatie "Berichten"): the title is a card
+   title, 17/700 on its normal line, and `cn-board-form` draws the contact
+   picker's label above a 40px field and "Send message" 40px. */
+.cn-look-board .messaging-conversation h3 {
+	font-size: 17px;
+	font-weight: 700;
+	line-height: normal;
 }
 
 .messaging-conversation__badge {

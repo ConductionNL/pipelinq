@@ -3,6 +3,72 @@
     "schemas": {
       "client": {
         "slug": "client",
+        "x-openregister-lifecycle": {
+          "field": "accountStatus",
+          "transitions": {
+            "endRelationship": {
+              "from": [
+                "active",
+                "blocked"
+              ],
+              "to": "inactive",
+              "description": "The relationship ends. Stamps relationshipEndedAt, from which the client's retention term counts.",
+              "actions": [
+                {
+                  "trigger": "x-openregister-lifecycle-action",
+                  "action": "set-fields",
+                  "description": "Stamp relationshipEndedAt with the moment the relationship ended; the retention term counts from it.",
+                  "actionParameters": {
+                    "relationshipEndedAt": "@now"
+                  }
+                }
+              ]
+            },
+            "reactivate": {
+              "from": [
+                "inactive",
+                "blocked"
+              ],
+              "to": "active",
+              "description": "The client comes back. Clears relationshipEndedAt, which takes the client off the destruction schedule.",
+              "actions": [
+                {
+                  "trigger": "x-openregister-lifecycle-action",
+                  "action": "set-fields",
+                  "description": "Clear relationshipEndedAt; a client that comes back has no destruction date.",
+                  "actionParameters": {
+                    "relationshipEndedAt": null
+                  }
+                }
+              ]
+            },
+            "block": {
+              "from": [
+                "active",
+                "inactive"
+              ],
+              "to": "blocked",
+              "description": "Block the account. Blocking neither ends a relationship nor revives one, so relationshipEndedAt is left as it is."
+            }
+          }
+        },
+        "archive": {
+          "enabled": true,
+          "afleidingswijze": "ander_datumkenmerk",
+          "sourceDateProperty": "relationshipEndedAt",
+          "defaultBewaartermijn": "P2Y",
+          "defaultNominatie": "vernietigen",
+          "anonymisation": {
+            "name": {"treatment": "fixed", "value": "Anonymised client"},
+            "email": "remove",
+            "emails": "remove",
+            "phone": "remove",
+            "phones": "remove",
+            "address": "remove",
+            "website": "remove",
+            "notes": "remove"
+          }
+        },
         "required": [
           "name",
           "type",
@@ -94,6 +160,14 @@
               "blocked"
             ],
             "default": "active",
+            "facetable": true
+          },
+          "relationshipEndedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Relationship ended",
+            "description": "When the account status last moved to inactive. Set by the account status lifecycle and cleared when the client becomes active again; the client's retention term counts from it.",
+            "readOnly": true,
             "facetable": true
           }
         }

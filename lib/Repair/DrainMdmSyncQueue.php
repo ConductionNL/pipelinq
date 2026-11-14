@@ -39,7 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\Mdm\MdmObjectRepository;
+use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
 use OCP\EventDispatcher\Event;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -78,12 +78,12 @@ class DrainMdmSyncQueue implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param MdmObjectRepository $repository The MDM object repository.
+	 * @param MdmObjectRepositoryInterface $repository The MDM object repository.
 	 * @param ContainerInterface $container The DI container (lazy OR WebhookService resolve).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private readonly MdmObjectRepository $repository,
+		private readonly MdmObjectRepositoryInterface $repository,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 	) {
@@ -114,16 +114,8 @@ class DrainMdmSyncQueue implements IRepairStep {
 	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-014-one-time-drain-of-in-flight-queue-rows
 	 */
 	public function run(IOutput $output): void {
-		try {
-			$items = $this->repository->findAll(self::SCHEMA);
-		} catch (\Throwable $e) {
-			// Fresh install / unprovisioned register / schema already gone.
-			$output->info('Pipelinq MDM sync-queue drain: no queue schema present, nothing to drain (' . $e->getMessage() . ').');
-			return;
-		}
-
-		if ($items === []) {
-			$output->info('Pipelinq MDM sync-queue drain: queue is empty, nothing to drain.');
+		$items = $this->queueItems(output: $output);
+		if ($items === null) {
 			return;
 		}
 
@@ -134,59 +126,124 @@ class DrainMdmSyncQueue implements IRepairStep {
 			return;
 		}
 
-		$drained = 0;
-		$skipped = 0;
-		$failed = 0;
-
+		$counts = ['drained' => 0, 'skipped' => 0, 'failed' => 0];
 		foreach ($items as $item) {
-			$status = (string)($item['status'] ?? '');
-			if (in_array($status, self::NON_TERMINAL, true) === false) {
-				$skipped++;
-				continue;
-			}
+			$counts[$this->drainItem(item: $item, webhookService: $webhookService)]++;
+		}
 
-			$id = (string)($item['id'] ?? ($item['uuid'] ?? ''));
+		$this->reportDrain(output: $output, counts: $counts);
+	}//end run()
 
-			try {
-				$webhookService->dispatchEvent(
-					_event: new Event(),
-					eventName: self::EVENT_SYNC,
-					payload: [
-						'targetSystem' => ($item['targetSystem'] ?? ''),
-						'changeType' => ($item['changeType'] ?? ''),
-						'masterEntity' => ($item['masterEntity'] ?? ''),
-						'payload' => ($item['payload'] ?? []),
-					]
-				);
+	/**
+	 * The queue rows, or null (said on the output) when there is nothing to drain.
+	 *
+	 * @param IOutput $output Repair output.
+	 *
+	 * @return array<int, array<string, mixed>>|null The rows.
+	 */
+	private function queueItems(IOutput $output): ?array {
+		try {
+			$items = $this->repository->findAll(self::SCHEMA);
+		} catch (\Throwable $e) {
+			// Fresh install / unprovisioned register / schema already gone.
+			$output->info('Pipelinq MDM sync-queue drain: no queue schema present, nothing to drain (' . $e->getMessage() . ').');
+			return null;
+		}
 
-				$item['status'] = 'sent';
-				$item['errorMessage'] = '';
-				$item['acknowledgmentReference'] = 'drained:' . $this->repository->now();
-				$this->repository->save(self::SCHEMA, $item, $this->nullableId(id: $id));
-				$drained++;
-			} catch (\Throwable $e) {
-				// Hand-off failed: leave the row non-terminal and report it.
-				$failed++;
-				$this->logger->error(
-					'Pipelinq MDM sync-queue drain: hand-off failed; row left in place',
-					['item' => $id, 'target' => ($item['targetSystem'] ?? ''), 'exception' => $e->getMessage()]
-				);
-			}//end try
-		}//end foreach
+		if ($items === []) {
+			$output->info('Pipelinq MDM sync-queue drain: queue is empty, nothing to drain.');
+			return null;
+		}
 
+		return $items;
+	}//end queueItems()
+
+	/**
+	 * Hand one non-terminal row off; terminal rows are skipped.
+	 *
+	 * @param array<string, mixed> $item           The queue row.
+	 * @param object               $webhookService OpenRegister's WebhookService.
+	 *
+	 * @return string The outcome: drained, skipped or failed.
+	 */
+	private function drainItem(array $item, object $webhookService): string {
+		if (in_array((string)($item['status'] ?? ''), self::NON_TERMINAL, true) === false) {
+			return 'skipped';
+		}
+
+		try {
+			$this->handOff(item: $item, webhookService: $webhookService);
+			return 'drained';
+		} catch (\Throwable $e) {
+			// Hand-off failed: leave the row non-terminal and report it.
+			$this->logger->error(
+				'Pipelinq MDM sync-queue drain: hand-off failed; row left in place',
+				['item' => self::itemId(item: $item), 'target' => ($item['targetSystem'] ?? ''), 'exception' => $e->getMessage()]
+			);
+			return 'failed';
+		}
+	}//end drainItem()
+
+	/**
+	 * Dispatch the row's sync event and mark the row sent.
+	 *
+	 * @param array<string, mixed> $item           The queue row.
+	 * @param object               $webhookService OpenRegister's WebhookService.
+	 *
+	 * @return void
+	 */
+	private function handOff(array $item, object $webhookService): void {
+		$id = self::itemId(item: $item);
+		$webhookService->dispatchEvent(
+			_event: new Event(),
+			eventName: self::EVENT_SYNC,
+			payload: [
+				'targetSystem' => ($item['targetSystem'] ?? ''),
+				'changeType' => ($item['changeType'] ?? ''),
+				'masterEntity' => ($item['masterEntity'] ?? ''),
+				'payload' => ($item['payload'] ?? []),
+			]
+		);
+
+		$item['status'] = 'sent';
+		$item['errorMessage'] = '';
+		$item['acknowledgmentReference'] = 'drained:' . $this->repository->now();
+		$this->repository->save(self::SCHEMA, $item, $this->nullableId(id: $id));
+	}//end handOff()
+
+	/**
+	 * The id of a queue row, '' when it has none.
+	 *
+	 * @param array<string, mixed> $item The queue row.
+	 *
+	 * @return string The id.
+	 */
+	private static function itemId(array $item): string {
+		return (string)($item['id'] ?? ($item['uuid'] ?? ''));
+	}//end itemId()
+
+	/**
+	 * Report the counts on the output and in the log, and warn about the rows left.
+	 *
+	 * @param IOutput            $output Repair output.
+	 * @param array<string, int> $counts The drained, skipped and failed counts.
+	 *
+	 * @return void
+	 */
+	private function reportDrain(IOutput $output, array $counts): void {
 		$summary = sprintf(
 			'Pipelinq MDM sync-queue drain: %d drained, %d skipped (terminal), %d failed (left non-terminal).',
-			$drained,
-			$skipped,
-			$failed,
+			$counts['drained'],
+			$counts['skipped'],
+			$counts['failed'],
 		);
 		$output->info($summary);
 		$this->logger->info($summary);
 
-		if ($failed > 0) {
-			$output->warning('Pipelinq MDM sync-queue drain: ' . $failed . ' row(s) could not be handed off — they remain for the next run.');
+		if ($counts['failed'] > 0) {
+			$output->warning('Pipelinq MDM sync-queue drain: ' . $counts['failed'] . ' row(s) could not be handed off — they remain for the next run.');
 		}
-	}//end run()
+	}//end reportDrain()
 
 	/**
 	 * Normalise an empty id to null so save() generates a fresh uuid.

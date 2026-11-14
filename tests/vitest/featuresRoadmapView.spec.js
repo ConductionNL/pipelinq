@@ -19,6 +19,8 @@
  */
 
 import { mount } from '@vue/test-utils'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
@@ -35,6 +37,7 @@ vi.mock('@nextcloud/l10n', () => ({
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnFeaturesAndRoadmapPage: {
 		name: 'CnFeaturesAndRoadmapPage',
+		props: { board: { type: Object, default: null }, compareUrl: { type: [String, Object], default: '' }, compareLabel: { type: String, default: '' } },
 		render() {
 			return h('div', { class: 'cn-features-and-roadmap-view' })
 		},
@@ -64,29 +67,21 @@ describe('FeaturesRoadmapView', () => {
 		expect(text).not.toContain('Totals over all')
 	})
 
-	it('links to the comparison on the public site, in a new tab', () => {
+	it('hands the comparison on the public site to the library page, which draws the link', () => {
 		const wrapper = mount(FeaturesRoadmapView, {
 			props: { documentationUrl: 'https://pipelinq.conduction.nl/' },
 		})
-		const link = wrapper.find('a.features-roadmap__compare-link')
+		const page = wrapper.findComponent({ name: 'CnFeaturesAndRoadmapPage' })
 
-		expect(link.exists()).toBe(true)
-		expect(link.text()).toBe('How pipelinq compares to other help desks')
-		expect(link.attributes('href')).toBe(
-			'https://pipelinq.conduction.nl/compare',
-		)
-		expect(link.attributes('target')).toBe('_blank')
-		expect(link.attributes('rel')).toContain('noopener')
-		// The new-tab warning is tied to the link, so a screen reader hears it.
-		const hint = wrapper.find(`#${link.attributes('aria-describedby')}`)
-		expect(hint.text()).toBe('Opens pipelinq.conduction.nl in a new tab.')
+		expect(page.props('compareUrl')).toBe('https://pipelinq.conduction.nl/compare')
+		expect(page.props('compareLabel')).toBe('How pipelinq compares to other help desks')
+		// One link only: the page draws no copy of its own beside the library's.
+		expect(wrapper.find('a.features-roadmap__compare-link').exists()).toBe(false)
 	})
 
 	it('falls back to the public site when the manifest names none', () => {
 		const wrapper = mount(FeaturesRoadmapView)
-		expect(
-			wrapper.find('a.features-roadmap__compare-link').attributes('href'),
-		).toBe('https://pipelinq.conduction.nl/compare')
+		expect(wrapper.findComponent({ name: 'CnFeaturesAndRoadmapPage' }).props('compareUrl')).toBe('https://pipelinq.conduction.nl/compare')
 	})
 
 	it('sends a Dutch reader to the Dutch page', () => {
@@ -94,8 +89,20 @@ describe('FeaturesRoadmapView', () => {
 		const wrapper = mount(FeaturesRoadmapView, {
 			props: { documentationUrl: 'https://pipelinq.conduction.nl' },
 		})
-		expect(
-			wrapper.find('a.features-roadmap__compare-link').attributes('href'),
-		).toBe('https://pipelinq.conduction.nl/nl/compare')
+		expect(wrapper.findComponent({ name: 'CnFeaturesAndRoadmapPage' }).props('compareUrl')).toBe('https://pipelinq.conduction.nl/nl/compare')
+	})
+
+	it('hands the manifest board options to the library page (PqRoadmap subtitle)', () => {
+		const board = { subtitle: 'What Pipelinq does now and what is coming, {count} features' }
+		const wrapper = mount(FeaturesRoadmapView, { props: { board } })
+		expect(wrapper.findComponent({ name: 'CnFeaturesAndRoadmapPage' }).props('board')).toEqual(board)
+	})
+
+	it('draws the board subtitle with the feature count, as PqRoadmap does', () => {
+		const manifest = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'))
+		const page = manifest.pages.find((p) => p.id === 'FeaturesRoadmap')
+		expect(page.config.board.subtitle).toBe('What Pipelinq does now and what is coming, {count} features')
+		const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8'))
+		expect(nl.translations[page.config.board.subtitle]).toBe('Wat Pipelinq nu doet en wat eraan komt, {count} functies')
 	})
 })

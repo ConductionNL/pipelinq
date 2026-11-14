@@ -24,16 +24,16 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+ * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SatisfactionAggregationService;
-use OCA\Pipelinq\Service\SurveyDispatchService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SatisfactionAggregationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -42,22 +42,22 @@ use OCP\IRequest;
 /**
  * Routes for the satisfaction panel and the response rate.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 class SatisfactionController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SatisfactionAggregationService $aggregation The per-client panel.
-	 * @param SurveyDispatchService $dispatchService Reads invitations.
+	 * @param SatisfactionAggregationServiceInterface $aggregation The per-client panel.
+	 * @param SurveyDispatchServiceInterface $dispatchService Reads invitations.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SatisfactionAggregationService $aggregation,
-		private readonly SurveyDispatchService $dispatchService,
+		private readonly SatisfactionAggregationServiceInterface $aggregation,
+		private readonly SurveyDispatchServiceInterface $dispatchService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -67,7 +67,7 @@ class SatisfactionController extends Controller {
 	 *
 	 * @return JSONResponse The panel, empty state included.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+	 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	#[NoAdminRequired]
 	public function clientPanel(string $clientId): JSONResponse {
@@ -83,7 +83,7 @@ class SatisfactionController extends Controller {
 	 *
 	 * @return JSONResponse The figures, with a per-channel breakdown.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	#[NoAdminRequired]
 	public function responseRate(string $surveyId = '', string $channel = '', int $days = 0): JSONResponse {

@@ -1,0 +1,27 @@
+{
+	"$comment": "pipelinq's client for Joke Smit's flower shop on the Markt in the Zuiddrecht set: a one-person business under her own name, the ondernemer the Nieuwsbrief ondernemers already lists as joke@smitbloemen.example. It has no e-mail consent record, so the segment 'Ondernemers centrum' counts her among the seven businesses PqNieuwsbriefWizard's step 6 names. Her consent as Sportclub Zuiddrecht 1958's contact person is a separate record and stays.",
+	"objects": [
+		{
+			"key": "client-joke-smit-bloemen",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "Joke Smit",
+				"type": "organization",
+				"legalForm": "eenmanszaak",
+				"address": "Markt 6, 2999BA Zuiddrecht",
+				"place": "Zuiddrecht",
+				"email": "joke@smitbloemen.example",
+				"contactsUid": "example-joke-smit-bloemen",
+				"industry": [
+					"Bloemenwinkel"
+				],
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Bloemenwinkel Smit Bloemen aan de Markt."
+			}
+		}
+	]
+}

@@ -23,7 +23,7 @@
  * This module only rewrites the profile file and the built manifest. It never
  * looks at who the reader is: every page keeps its own permission checks.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md
+ * @spec openspec/specs/navigation-ia/spec.md
  */
 
 /** The app setting, and the initial-state key the page controller provides. */
@@ -39,7 +39,7 @@ export const MODULES_SETTING = 'menu_modules'
  * @param {object} profileFile The profile file that declares the modules.
  * @return {Array<string>} The known keys, in the order the file declares them.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-104
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-104
  */
 export function resolveMenuModules(raw, profileFile) {
 	const known = Object.keys(profileFile?.modules || {})
@@ -67,32 +67,71 @@ export function resolveMenuModules(raw, profileFile) {
  * @param {Array<string>} enabled The module keys that are on.
  * @return {object} A new profile file. The one passed in is not changed.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-104
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-104
  */
 export function applyMenuModules(profileFile, enabled) {
 	const modules = profileFile?.modules
 	if (!modules || typeof modules !== 'object') {
 		return profileFile
 	}
-	const on = new Set(Array.isArray(enabled) ? enabled : [])
-	const removals = new Set(profileFile.removals || [])
-	const menu = [...(profileFile.menu || [])]
-	let anyOn = false
+	const on = new Set(listOf(enabled))
+	const result = startingLists(profileFile)
 	for (const key of Object.keys(modules)) {
-		const module = modules[key] || {}
-		const ids = Array.isArray(module.ids) ? module.ids : []
-		if (on.has(key)) {
-			anyOn = true
-			ids.forEach((id) => removals.delete(id))
-			menu.push(...(Array.isArray(module.menu) ? module.menu : []))
-		} else {
-			ids.forEach((id) => removals.add(id))
-		}
+		applyModule(modules[key] || {}, { isOn: on.has(key), result })
 	}
-	if (anyOn && profileFile.modulesCaption) {
-		menu.push(profileFile.modulesCaption)
+	if (Object.keys(modules).some((key) => on.has(key))) {
+		pushCaption(result.menu, profileFile.modulesCaption)
 	}
-	return { ...profileFile, removals: [...removals], menu }
+	return { ...profileFile, removals: [...result.removals], menu: result.menu }
+}
+
+/**
+ * @param {unknown} value A value.
+ * @return {Array} The value when it is an array, else an empty list.
+ */
+function listOf(value) {
+	return Array.isArray(value) ? value : []
+}
+
+/**
+ * @param {object} profileFile The profile file.
+ * @return {{removals: Set<string>, menu: Array<object>}} Copies of its removals and its menu.
+ */
+function startingLists(profileFile) {
+	return {
+		removals: new Set(profileFile.removals || []),
+		menu: [...(profileFile.menu || [])],
+	}
+}
+
+/**
+ * Switch one module on (its ids out of the removals, its menu added) or off
+ * (its ids into the removals).
+ *
+ * @param {object} module The module.
+ * @param {{isOn: boolean, result: {removals: Set<string>, menu: Array<object>}}} change Whether it is on, and the lists it changes.
+ * @return {void}
+ */
+function applyModule(module, change) {
+	const { removals, menu } = change.result
+	const ids = listOf(module.ids)
+	if (change.isOn) {
+		ids.forEach((id) => removals.delete(id))
+		menu.push(...listOf(module.menu))
+		return
+	}
+	ids.forEach((id) => removals.add(id))
+}
+
+/**
+ * @param {Array<object>} menu The menu.
+ * @param {(object|undefined)} caption The modules caption.
+ * @return {void}
+ */
+function pushCaption(menu, caption) {
+	if (caption) {
+		menu.push(caption)
+	}
 }
 
 /**
@@ -111,7 +150,7 @@ export function applyMenuModules(profileFile, enabled) {
  * @return {{ manifest: object, homePage: string|null }} The manifest, and the
  *   page id `/` must redirect to (null when nothing moved).
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-105
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-105
  */
 export function applyHomePage(manifest, home) {
 	const pages = manifest?.pages || []
@@ -153,7 +192,7 @@ export function applyHomePage(manifest, home) {
  * @param {object} manifest The built manifest.
  * @return {object} The manifest, with the tours it cannot carry taken out.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-106
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-106
  */
 export function holdUnreachableTours(manifest) {
 	const tours = manifest?.walkthrough?.tours

@@ -19,15 +19,18 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-009
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-010
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-009
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-010
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Zgw;
 
+use OCA\Pipelinq\Service\Zgw\InitiatorLink;
+use OCA\Pipelinq\Service\Zgw\RolAssignment;
+use OCA\Pipelinq\Service\Zgw\RolType;
 use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
 use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
 use OCA\Pipelinq\Service\Zgw\ZrcClient;
@@ -37,7 +40,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for ZrcClient.
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
  */
 class ZrcClientTest extends TestCase {
 	/**
@@ -116,10 +119,15 @@ class ZrcClientTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 		);
 
-		$url = $client->linkInitiator($this->endpoint,
-			['zgwUrl' => 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/abc'],
-			['bsn' => '123456789', 'name' => 'Jeroen van der Velde'],
-			'https://ztc/roltype/initiator'
+		$url = $client->linkInitiator(
+			$this->endpoint,
+			new InitiatorLink(
+				['zgwUrl' => 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/abc'],
+				new RolAssignment(
+					['bsn' => '123456789', 'name' => 'Jeroen van der Velde'],
+					new RolType('https://ztc/roltype/initiator')
+				)
+			)
 		);
 
 		self::assertSame($existingRoleUrl, $url);

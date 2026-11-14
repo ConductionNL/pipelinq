@@ -25,6 +25,7 @@ use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\ListTokenService;
 use OCA\Pipelinq\Service\MailingListService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
+use OCA\Pipelinq\Service\Marketing\RecipientNameReader;
 use OCA\Pipelinq\Service\Marketing\SubscriptionQueryService;
 use OCA\Pipelinq\Service\SubscriptionService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -148,10 +149,16 @@ class SubscriptionServiceTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 		);
 
+		$names = $this->createMock(originalClassName: RecipientNameReader::class);
+		$names->method('fullName')->willReturnCallback(
+			fn (string $id): string => (['contact-1' => 'Bakkerij De Graaf'][$id] ?? '')
+		);
+
 		$this->queries = new SubscriptionQueryService(
 			store: $this->store,
 			compliance: $this->compliance,
 			tokens: $this->tokens,
+			names: $names,
 		);
 
 		$this->seedList(slug: 'list-news', optInMode: 'double', publicSignup: true);
@@ -461,6 +468,38 @@ class SubscriptionServiceTest extends TestCase {
 	}//end testEveryAudienceMemberCarriesItsOwnUnsubscribeLink()
 
 	/**
+	 * Every way an audience row ends: an empty list id reads nothing; a
+	 * membership without a contact is keyed and consent-checked on its
+	 * email; a missing state is skipped; skipped and queued keep the list's
+	 * order; a member carries exactly its contact, email, id and link.
+	 *
+	 * @return void
+	 */
+	public function testEveryWayAnAudienceRowEnds(): void {
+		$this->assertSame(['members' => [], 'skipped' => []], $this->queries->getBlastAudienceForList(listId: ''));
+
+		$first = $this->seedConfirmed(listId: 'list-news', contactId: 'contact-1', email: 'a@a.nl');
+		$this->store->save(schemaSlug: 'subscription', payload: ['listId' => 'list-news', 'contactId' => 'contact-2', 'email' => 'b@a.nl']);
+		$byMail = $this->seedSubscription(listId: 'list-news', contactId: '', email: 'm@a.nl', state: 'confirmed');
+		$this->seedSubscription(listId: 'list-news', contactId: '', email: 'n@a.nl', state: 'confirmed');
+		$this->listConsent['m@a.nl|list-news'] = true;
+		$this->seedSubscription(listId: 'list-other', contactId: 'contact-9', email: 'z@a.nl', state: 'confirmed');
+
+		$audience = $this->queries->getBlastAudienceForList(listId: 'list-news');
+
+		$this->assertSame(['contact-2', 'n@a.nl'], $audience['skipped']);
+		$this->assertSame(['contact-1', 'm@a.nl'], array_column($audience['members'], 'contactId'));
+		$this->assertSame(['contactId', 'email', 'subscriptionId', 'unsubscribeUrl'], array_keys($audience['members'][0]));
+		$this->assertSame('a@a.nl', $audience['members'][0]['email']);
+		$this->assertSame($first, $audience['members'][0]['subscriptionId']);
+		$this->assertSame($byMail, $audience['members'][1]['subscriptionId']);
+		$this->assertSame(
+			$this->queries->unsubscribeUrlFor(subscriptionId: $byMail, contactId: 'm@a.nl'),
+			$audience['members'][1]['unsubscribeUrl']
+		);
+	}//end testEveryWayAnAudienceRowEnds()
+
+	/**
 	 * A membership with no id gets no link rather than a link that names
 	 * nothing: a signed token for an empty subscription would verify and
 	 * then resolve to no row, which reads to a subscriber as a broken page.
@@ -491,6 +530,29 @@ class SubscriptionServiceTest extends TestCase {
 		$this->assertSame(0, $counts['bounced']);
 		$this->assertSame(2, $counts['total']);
 	}//end testCountsNameEveryStateEvenAtZero()
+
+	/**
+	 * A list's subscriber rows carry their contact's name; a signup with no
+	 * contact, or a contact that names no record, keeps its address alone.
+	 *
+	 * @return void
+	 */
+	public function testListRowsCarryTheContactsName(): void {
+		$this->seedConfirmed(listId: 'list-news', contactId: 'contact-1', email: 'info@bakkerij.nl');
+		$this->seedSubscription(listId: 'list-news', contactId: 'contact-9', email: 'b@a.nl', state: 'pending');
+		$this->seedSubscription(listId: 'list-news', contactId: '', email: 'c@a.nl', state: 'pending');
+
+		$rows = $this->queries->listSubscriptionsForList(listId: 'list-news', page: 1, limit: 25)['data'];
+		$names = [];
+		foreach ($rows as $row) {
+			$names[$row['email']] = ($row['name'] ?? null);
+		}
+
+		$this->assertSame(
+			expected: ['info@bakkerij.nl' => 'Bakkerij De Graaf', 'b@a.nl' => null, 'c@a.nl' => null],
+			actual: $names
+		);
+	}//end testListRowsCarryTheContactsName()
 
 	/**
 	 * A store backed by a plain array, so each step reads what the last wrote.

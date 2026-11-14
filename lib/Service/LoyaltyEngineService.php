@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 
 declare(strict_types=1);
@@ -29,24 +29,31 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyEngineServiceInterface;
+use OCA\Pipelinq\Service\Loyalty\LoyaltyPurchase;
+use OCA\Pipelinq\Service\Loyalty\PointsCreditRun;
+use OCA\Pipelinq\Service\Loyalty\PointsGrant;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Orchestrates the end-to-end loyalty credit flow on a POS-trigger.
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) end-to-end POS credit orchestration is inherently branchy; split across small focused methods
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrator necessarily wires account/ledger/rule/tier/event collaborators
  */
-class LoyaltyEngineService {
+class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
+	use PayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -94,56 +101,54 @@ class LoyaltyEngineService {
 			return [];
 		}
 
+		$purchase = new LoyaltyPurchase(customerId: $customerId, transaction: $transaction);
 		$results = [];
-		$programmes = $this->getActiveProgrammes();
-		foreach ($programmes as $programme) {
+		foreach ($this->getActiveProgrammes() as $programme) {
 			$programmeId = $this->extractProgrammeUuid(programme: $programme);
-			if ($programmeId === null) {
-				continue;
+			if ($programmeId !== null) {
+				$results[] = $this->processSafely(purchase: $purchase, programmeId: $programmeId);
 			}
-
-			try {
-				$results[] = $this->processForProgramme(
-					customerId: $customerId,
-					programmeId: $programmeId,
-					transaction: $transaction
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'Pipelinq: loyalty processing failed for programme; POS flow unaffected',
-					[
-						'programmeId' => $programmeId,
-						'customerId' => $customerId,
-						'exception' => $e->getMessage(),
-					]
-				);
-				$results[] = [
-					'programmeId' => $programmeId,
-					'status' => 'error',
-					'reason' => $e->getMessage(),
-				];
-			}//end try
-		}//end foreach
+		}
 
 		return $results;
 	}//end processPosTransaction()
 
 	/**
-	 * Process for a single programme.
+	 * Process one programme; a failure is logged and answered, never thrown,
+	 * so the POS flow is unaffected.
 	 *
-	 * @param string $customerId The contact UID.
-	 * @param string $programmeId The programme UUID.
-	 * @param array<string, mixed> $transaction The transaction context.
+	 * @param LoyaltyPurchase $purchase    The customer and the transaction.
+	 * @param string          $programmeId The programme UUID.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function processForProgramme(
-		string $customerId,
-		string $programmeId,
-		array $transaction,
-	): array {
+	private function processSafely(LoyaltyPurchase $purchase, string $programmeId): array {
+		try {
+			return $this->processForProgramme(purchase: $purchase, programmeId: $programmeId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: loyalty processing failed for programme; POS flow unaffected',
+				['programmeId' => $programmeId, 'customerId' => $purchase->customerId, 'exception' => $e->getMessage()]
+			);
+			return [
+				'programmeId' => $programmeId,
+				'status' => 'error',
+				'reason' => $e->getMessage(),
+			];
+		}
+	}//end processSafely()
+
+	/**
+	 * Process for a single programme.
+	 *
+	 * @param LoyaltyPurchase $purchase    The customer and the transaction.
+	 * @param string          $programmeId The programme UUID.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function processForProgramme(LoyaltyPurchase $purchase, string $programmeId): array {
 		$account = $this->accountService->findAccountByKlantAndProgramme(
-			customerId: $customerId,
+			customerId: $purchase->customerId,
 			programmeId: $programmeId
 		);
 
@@ -156,95 +161,128 @@ class LoyaltyEngineService {
 			];
 		}
 
-		$accountId = (string)$this->extractUuid(object: $account);
+		$run = new PointsCreditRun(
+			programmeId: $programmeId,
+			accountId: (string)$this->extractUuid(object: $account),
+			transaction: $purchase->transaction,
+			context: $this->buildTransactionContext(transaction: $purchase->transaction)
+		);
 		if ((string)($account['status'] ?? '') !== 'active') {
 			$this->logger->info(
 				'Pipelinq: account disabled, points credit skipped',
-				['accountId' => $accountId, 'customerId' => $customerId]
+				['accountId' => $run->accountId, 'customerId' => $purchase->customerId]
 			);
-			return [
-				'programmeId' => $programmeId,
-				'accountId' => $accountId,
-				'status' => 'blocked',
-				'reason' => 'account ' . (string)($account['status'] ?? 'unknown'),
-			];
+			return self::blockedResult(run: $run, account: $account);
 		}
 
-		return $this->awardPointsForActiveAccount(
-			programmeId: $programmeId,
-			account: $account,
-			accountId: $accountId,
-			transaction: $transaction
-		);
+		return $this->awardPointsForActiveAccount(run: $run, account: $account);
 	}//end processForProgramme()
+
+	/**
+	 * The answer for an account that is not active.
+	 *
+	 * @param PointsCreditRun      $run     The programme and account.
+	 * @param array<string, mixed> $account The account, for its status.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function blockedResult(PointsCreditRun $run, array $account): array {
+		return [
+			'programmeId' => $run->programmeId,
+			'accountId' => $run->accountId,
+			'status' => 'blocked',
+			'reason' => 'account ' . (string)($account['status'] ?? 'unknown'),
+		];
+	}//end blockedResult()
 
 	/**
 	 * Evaluate rules and credit points for an already-resolved, active account.
 	 *
-	 * @param string $programmeId The programme UUID.
+	 * @param PointsCreditRun      $run     The programme, account, transaction and its rule context.
 	 * @param array<string, mixed> $account The active loyalty account.
-	 * @param string $accountId The account UUID.
-	 * @param array<string, mixed> $transaction The transaction context.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function awardPointsForActiveAccount(string $programmeId, array $account, string $accountId, array $transaction): array {
-		$context = $this->buildTransactionContext(transaction: $transaction);
-
-		$matches = $this->ruleEngine->evaluateRules(
-			programmeId: $programmeId,
-			trigger: (string)($transaction['trigger'] ?? 'purchase'),
-			context: $context
-		);
-		$rule = $this->ruleEngine->getHighestPriorityRule($matches);
+	private function awardPointsForActiveAccount(PointsCreditRun $run, array $account): array {
+		$rule = $this->matchingRule(run: $run);
 		if ($rule === null) {
 			return [
-				'programmeId' => $programmeId,
-				'accountId' => $accountId,
+				'programmeId' => $run->programmeId,
+				'accountId' => $run->accountId,
 				'status' => 'skipped',
 				'reason' => 'no matching rule',
 			];
 		}
 
-		$multiplier = $this->resolveTierMultiplier(account: $account, programmeId: $programmeId);
+		$multiplier = $this->resolveTierMultiplier(account: $account, programmeId: $run->programmeId);
+		$rawPoints = $this->ruleEngine->calculatePoints(
+			formula: self::formulaOf(rule: $rule),
+			amount: $run->context['amount'],
+			multiplier: $multiplier
+		);
 
+		$toAward = $this->enforceMaxPerPeriod(rule: $rule, accountId: $run->accountId, rawPoints: $rawPoints);
+		if ($toAward <= 0) {
+			return $this->maxReached(run: $run, rule: $rule);
+		}
+
+		return $this->creditAndFinalize(run: $run, grant: new PointsGrant(rule: $rule, points: $toAward, multiplier: $multiplier));
+	}//end awardPointsForActiveAccount()
+
+	/**
+	 * The highest-priority rule matching the transaction, or null.
+	 *
+	 * @param PointsCreditRun $run The programme, transaction and its rule context.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function matchingRule(PointsCreditRun $run): ?array {
+		$matches = $this->ruleEngine->evaluateRules(
+			programmeId: $run->programmeId,
+			trigger: (string)($run->transaction['trigger'] ?? 'purchase'),
+			context: $run->context
+		);
+
+		return $this->ruleEngine->getHighestPriorityRule($matches);
+	}//end matchingRule()
+
+	/**
+	 * The rule's formula, an empty list when it carries none.
+	 *
+	 * @param array<string, mixed> $rule The rule.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function formulaOf(array $rule): array {
 		$formula = $rule['formula'] ?? [];
 		if (is_array($formula) === false) {
-			$formula = [];
+			return [];
 		}
 
-		$rawPoints = $this->ruleEngine->calculatePoints(
-			formula: $formula,
-			amount: $context['amount'],
-			multiplier: $multiplier
+		return $formula;
+	}//end formulaOf()
+
+	/**
+	 * Log and answer a credit the period maximum (or a zero formula) stopped.
+	 *
+	 * @param PointsCreditRun      $run  The programme and account.
+	 * @param array<string, mixed> $rule The matched rule.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function maxReached(PointsCreditRun $run, array $rule): array {
+		$this->logger->info(
+			'Pipelinq: max-per-period reached or zero points; skipping credit',
+			['accountId' => $run->accountId, 'ruleId' => $this->extractUuid(object: $rule)]
 		);
-
-		$toAward = $this->enforceMaxPerPeriod(rule: $rule, accountId: $accountId, rawPoints: $rawPoints);
-
-		if ($toAward <= 0) {
-			$this->logger->info(
-				'Pipelinq: max-per-period reached or zero points; skipping credit',
-				['accountId' => $accountId, 'ruleId' => $this->extractUuid(object: $rule)]
-			);
-			return [
-				'programmeId' => $programmeId,
-				'accountId' => $accountId,
-				'status' => 'skipped',
-				'reason' => 'max reached for this customer this period',
-				'points' => 0,
-			];
-		}
-
-		return $this->creditAndFinalize(
-			programmeId: $programmeId,
-			accountId: $accountId,
-			rule: $rule,
-			toAward: $toAward,
-			context: $context,
-			transaction: $transaction,
-			multiplier: $multiplier
-		);
-	}//end awardPointsForActiveAccount()
+		return [
+			'programmeId' => $run->programmeId,
+			'accountId' => $run->accountId,
+			'status' => 'skipped',
+			'reason' => 'max reached for this customer this period',
+			'points' => 0,
+		];
+	}//end maxReached()
 
 	/**
 	 * Build the rule-evaluation context from the raw transaction payload.
@@ -325,54 +363,37 @@ class LoyaltyEngineService {
 	/**
 	 * Credit the ledger, re-evaluate tier, emit the event, and build the result.
 	 *
-	 * @param string $programmeId The programme UUID.
-	 * @param string $accountId The account UUID.
-	 * @param array<string, mixed> $rule The matched PointsRule.
-	 * @param int $toAward Points to credit.
-	 * @param array<string, mixed> $context The rule-evaluation context.
-	 * @param array<string, mixed> $transaction The transaction context.
-	 * @param float $multiplier The applied tier multiplier.
+	 * @param PointsCreditRun $run   The transaction, programme and account.
+	 * @param PointsGrant     $grant The rule, points and multiplier to credit.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function creditAndFinalize(
-		string $programmeId,
-		string $accountId,
-		array $rule,
-		int $toAward,
-		array $context,
-		array $transaction,
-		float $multiplier,
-	): array {
-		$ledgerEntry = $this->ledgerService->creditPoints(
-			accountId: $accountId,
-			amount: $toAward,
-			ruleId: $this->extractUuid(object: $rule),
-			sourceDocument: [
-				'transactionId' => $transaction['posTransactionId'] ?? null,
-				'amount' => $context['amount'],
-				'channel' => $context['channel'],
-			],
-			processedBy: (string)($transaction['posTerminalId'] ?? 'system')
+	private function creditAndFinalize(PointsCreditRun $run, PointsGrant $grant): array {
+		$ledgerEntry = $this->ledgerService->forOperation(operationId: $run->operationId())->creditPoints(
+			accountId: $run->accountId,
+			amount: $grant->points,
+			ruleId: $this->extractUuid(object: $grant->rule),
+			sourceDocument: $run->sourceDocument(),
+			processedBy: $run->processedBy()
 		);
 
 		// Re-evaluate tier.
-		$tierResult = $this->tierService->updateTierIfNeeded(accountId: $accountId);
+		$tierResult = $this->tierService->updateTierIfNeeded(accountId: $run->accountId);
 
 		$this->emitCreditedEvent(
-			accountId: $accountId,
-			programmeId: $programmeId,
+			accountId: $run->accountId,
+			programmeId: $run->programmeId,
 			ledgerEntry: $ledgerEntry
 		);
 
 		return [
-			'programmeId' => $programmeId,
-			'accountId' => $accountId,
+			'programmeId' => $run->programmeId,
+			'accountId' => $run->accountId,
 			'status' => 'credited',
-			'points' => $toAward,
-			'ruleId' => $this->extractUuid(object: $rule),
+			'points' => $grant->points,
+			'ruleId' => $this->extractUuid(object: $grant->rule),
 			'tierChanged' => $tierResult['changed'],
-			'multiplier' => $multiplier,
+			'multiplier' => $grant->multiplier,
 		];
 	}//end creditAndFinalize()
 
@@ -382,8 +403,8 @@ class LoyaltyEngineService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function getActiveProgrammes(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'loyaltyProgramme_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'loyaltyProgramme_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -519,37 +540,6 @@ class LoyaltyEngineService {
 
 		return $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Normalise OR entity/array to array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) invoked via array_map([$this, 'toArray'], ...) callable reference, not statically detected
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the ObjectService.

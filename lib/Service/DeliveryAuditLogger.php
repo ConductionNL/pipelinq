@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -42,7 +42,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Append-only audit logger.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
  */
 class DeliveryAuditLogger {
 	/**
@@ -274,13 +274,13 @@ class DeliveryAuditLogger {
 	 *
 	 * @return DateTimeImmutable
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface is a native immutable factory; no DI alternative.
 	 */
 	public function calculateRetentionUntil(string $caseType, ?DateTimeInterface $from = null): DateTimeImmutable {
 		$years = (int)$this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'selectielijst.' . $caseType,
 			(string)self::DEFAULT_RETENTION_YEARS
 		);
@@ -381,9 +381,9 @@ class DeliveryAuditLogger {
 	 * @return array{0: string, 1: string}
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'deliveryAuditLog_schema',
 			''
 		);

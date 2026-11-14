@@ -1,5 +1,5 @@
 <template>
-	<NcDialog :name="t('pipelinq', 'Delete pipeline')" @closing="$emit('cancel')">
+	<CnDialog width="confirm" :name="t('pipelinq', 'Delete pipeline')" @closing="$emit('cancel')">
 		<p>
 			{{
 				t('pipelinq', 'Are you sure you want to delete "{title}"?', {
@@ -28,24 +28,25 @@
 			}}
 		</p>
 		<template #actions>
-			<NcButton variant="tertiary" @click="$emit('cancel')">
+			<NcButton @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="error" @click="$emit('confirm')">
 				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'DeletePipelineDialog',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 	},
 
 	props: {

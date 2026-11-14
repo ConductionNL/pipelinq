@@ -21,12 +21,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-010
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-010
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
+
+use OCA\Pipelinq\Kernel\Contracts\PortalCleanupServiceInterface;
+use OCA\Pipelinq\Util\NullableRowIdOf;
 
 /**
  * Pseudonymises contacts of closed portal accounts when retention allows.
@@ -39,7 +42,9 @@ namespace OCA\Pipelinq\Service\Portal;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalCleanupService {
+class PortalCleanupService implements PortalCleanupServiceInterface {
+	use NullableRowIdOf;
+
 	/**
 	 * Schema slug for accounts.
 	 *
@@ -95,41 +100,55 @@ class PortalCleanupService {
 	 */
 	public function processClosedAccount(array $account): bool {
 		$contactId = ($account['linkedContactId'] ?? null);
-		if ($contactId === null || $contactId === '') {
-			return false;
-		}
-
-		if ($this->hasRetentionObligation(contactId: (string)$contactId) === true) {
+		if ($contactId === null || $contactId === '' || $this->hasRetentionObligation(contactId: (string)$contactId) === true) {
 			return false;
 		}
 
 		$contact = $this->reader->find('contact', (string)$contactId);
 		if ($contact === null) {
 			// Contact already gone; just detach.
-			$account['linkedContactId'] = null;
-			$this->repository->save(self::ACCOUNT_SCHEMA, $account, $this->repository->idOf(object: $account));
+			$this->detach(account: $account, id: $this->repository->idOf(object: $account));
 			return false;
 		}
 
+		return $this->pseudonymise(account: $account, contact: $contact);
+	}//end processClosedAccount()
+
+	/**
+	 * Pseudonymise the account's contact (name and email hashed, phone
+	 * cleared), detach it from the account, and audit it.
+	 *
+	 * @param array<string, mixed> $account The closed account.
+	 * @param array<string, mixed> $contact Its contact.
+	 *
+	 * @return bool True.
+	 */
+	private function pseudonymise(array $account, array $contact): bool {
 		$contact['name'] = '#' . substr(hash('sha256', (string)($contact['name'] ?? '')), 0, 16);
 		$contact['email'] = '#' . substr(hash('sha256', (string)($contact['email'] ?? '')), 0, 16);
 		$contact['phone'] = null;
 		$this->reader->save('contact', $contact, $this->idOf(object: $contact));
 
+		$target = ['targetObjectType' => 'contact', 'targetObjectId' => (string)$account['linkedContactId']];
 		$accountId = (string)$this->repository->idOf(object: $account);
-		$account['linkedContactId'] = null;
-		$this->repository->save(self::ACCOUNT_SCHEMA, $account, $accountId);
-
-		$this->audit->log(
-			$accountId,
-			(string)($account['tenantId'] ?? ''),
-			'account-pseudonymised',
-			'success',
-			['targetObjectType' => 'contact', 'targetObjectId' => (string)$contactId]
-		);
+		$this->detach(account: $account, id: $accountId);
+		$this->audit->log($accountId, (string)($account['tenantId'] ?? ''), 'account-pseudonymised', 'success', $target);
 
 		return true;
-	}//end processClosedAccount()
+	}//end pseudonymise()
+
+	/**
+	 * Save the account without its contact link, under the given id.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 * @param string|null          $id      Its id.
+	 *
+	 * @return void
+	 */
+	private function detach(array $account, ?string $id): void {
+		$account['linkedContactId'] = null;
+		$this->repository->save(self::ACCOUNT_SCHEMA, $account, $id);
+	}//end detach()
 
 	/**
 	 * Whether a contact still has a retention obligation (any non-final
@@ -156,28 +175,4 @@ class PortalCleanupService {
 
 		return false;
 	}//end hasRetentionObligation()
-
-	/**
-	 * Extract the stable id from a main-register object array.
-	 *
-	 * @param array<string, mixed> $object The object.
-	 *
-	 * @return string|null The id.
-	 */
-	private function idOf(array $object): ?string {
-		$self = ($object['@self'] ?? null);
-		if (is_array($self) === true) {
-			$id = ($self['id'] ?? $self['uuid'] ?? null);
-			if ($id !== null) {
-				return (string)$id;
-			}
-		}
-
-		$id = ($object['id'] ?? $object['uuid'] ?? null);
-		if ($id === null) {
-			return null;
-		}
-
-		return (string)$id;
-	}//end idOf()
 }//end class

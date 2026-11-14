@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTime;
+use OCA\Pipelinq\Kernel\Contracts\CallbackServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IGroupManager;
 use OCP\IUserSession;
@@ -35,10 +36,10 @@ use Psr\Log\LoggerInterface;
  * Handles attempt logging, claim validation, status transitions,
  * and attempt threshold checks for terugbelverzoeken.
  *
- * @spec openspec/changes/callback-management/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
  * @spec openspec/specs/callback-management/spec.md#requirement-callback-service
  */
-class CallbackService {
+class CallbackService implements CallbackServiceInterface {
 	/**
 	 * Maximum unsuccessful attempts before suggesting closure.
 	 *
@@ -125,7 +126,7 @@ class CallbackService {
 	 *
 	 * @return array<string, mixed> The modified task data with the new attempt.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function addAttempt(array $taskData, string $result, string $notes = ''): array {
 		$attempts = $taskData['attempts'] ?? [];
@@ -157,7 +158,7 @@ class CallbackService {
 	 *
 	 * @return bool True if the threshold has been reached.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function isAttemptThresholdReached(array $taskData): bool {
 		$attempts = $taskData['attempts'] ?? [];
@@ -179,47 +180,44 @@ class CallbackService {
 	 *
 	 * @return array{eligible: bool, reason: string} Validation result.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function validateClaim(array $taskData): array {
-		$groupId = $taskData['assigneeGroupId'] ?? null;
+		$reason = $this->claimRefusal(taskData: $taskData);
+		return [
+			'eligible' => $reason === '',
+			'reason' => $reason,
+		];
+	}//end validateClaim()
 
+	/**
+	 * Why the current user may not claim the task, or '' when they may.
+	 *
+	 * @param array<string, mixed> $taskData The task data array.
+	 *
+	 * @return string The refusal reason.
+	 */
+	private function claimRefusal(array $taskData): string {
+		$groupId = $taskData['assigneeGroupId'] ?? null;
 		if (empty($groupId) === true) {
-			return [
-				'eligible' => false,
-				'reason' => 'Task is not assigned to a group',
-			];
+			return 'Task is not assigned to a group';
 		}
 
 		if (empty($taskData['assigneeUserId']) === false) {
-			return [
-				'eligible' => false,
-				'reason' => 'Task is already claimed by a user',
-			];
+			return 'Task is already claimed by a user';
 		}
 
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return [
-				'eligible' => false,
-				'reason' => 'No authenticated user',
-			];
+			return 'No authenticated user';
 		}
 
-		$isMember = $this->groupManager->isInGroup($user->getUID(), $groupId);
-
-		if ($isMember === false) {
-			return [
-				'eligible' => false,
-				'reason' => 'User is not a member of the assigned group',
-			];
+		if ($this->groupManager->isInGroup($user->getUID(), $groupId) === false) {
+			return 'User is not a member of the assigned group';
 		}
 
-		return [
-			'eligible' => true,
-			'reason' => '',
-		];
-	}//end validateClaim()
+		return '';
+	}//end claimRefusal()
 
 	/**
 	 * Validate whether a status transition is allowed.
@@ -229,7 +227,7 @@ class CallbackService {
 	 *
 	 * @return array{valid: bool, reason: string} Validation result.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function validateStatusTransition(string $currentStatus, string $targetStatus): array {
 		$graph = $this->transitionGraph();
@@ -255,7 +253,7 @@ class CallbackService {
 	 *
 	 * @return array<string, mixed> The modified task data.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function applyClaim(array $taskData): array {
 		$user = $this->userSession->getUser();
@@ -278,7 +276,7 @@ class CallbackService {
 	 *
 	 * @return array<string, mixed> The modified task data.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function applyCompletion(array $taskData, string $resultText): array {
 		$taskData['status'] = 'completed';
@@ -297,7 +295,7 @@ class CallbackService {
 	 *
 	 * @return array<string, mixed> The modified task data.
 	 *
-	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function applyReassignment(array $taskData, string $assignee, string $assigneeType): array {
 		if ($assigneeType === 'user') {

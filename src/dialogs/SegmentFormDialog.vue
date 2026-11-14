@@ -7,14 +7,14 @@
   - and then calls the slot's `refresh` so the list shows the result.
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
 		:name="
 			isEditing ? t('pipelinq', 'Edit segment') : t('pipelinq', 'New segment')
 		"
-		:open="true"
-		size="large"
-		:closeOnClickOutside="false"
+		:eyebrow="t('pipelinq', 'Marketing · segments')"
+		:subtitle="t('pipelinq', 'Who belongs to it follows from the rules, every time the segment is used')"
+		width="wizard"
 		@closing="close()">
 		<div class="segment-form">
 			<NcLoadingIcon v-if="loading" :size="32" class="segment-form__loading" />
@@ -24,16 +24,21 @@
 
 			<template v-else>
 				<section class="segment-form__details">
-					<NcTextField
-						v-model="model.name"
-						:label="t('pipelinq', 'Segment name')"
-						:placeholder="t('pipelinq', 'Inactive Leads')"
-						required
-						class="segment-form__name" />
+					<div class="segment-form__field">
+						<label for="segment-form-name" class="segment-form__label">{{ t('pipelinq', 'Segment name') }}</label>
+						<NcTextField
+							id="segment-form-name"
+							v-model="model.name"
+							:label="t('pipelinq', 'Segment name')"
+							labelOutside
+							:placeholder="t('pipelinq', 'Inactive Leads')"
+							required
+							class="segment-form__name" />
+					</div>
 					<!-- The reason sits on a wrapper: a disabled select gets no
 					     mouse events, so a `title` on it would never show. -->
 					<div
-						class="segment-form__audience"
+						class="segment-form__field segment-form__audience"
 						:class="{ 'segment-form__audience--locked': isEditing }"
 						:title="
 							isEditing
@@ -43,10 +48,13 @@
 									)
 								: null
 						">
+						<label for="segment-form-audience" class="segment-form__label">{{ t('pipelinq', 'Audience') }}</label>
 						<NcSelect
 							v-model="entityTypeOption"
+							inputId="segment-form-audience"
 							:options="entityTypeOptions"
 							:inputLabel="t('pipelinq', 'Audience')"
+							labelOutside
 							label="label"
 							:clearable="false"
 							:searchable="false"
@@ -55,12 +63,16 @@
 							{{ audienceHint }}
 						</p>
 					</div>
-					<NcTextArea
-						v-model="model.description"
-						:label="t('pipelinq', 'Description')"
-						resize="vertical"
-						rows="2"
-						class="segment-form__description" />
+					<div class="segment-form__field segment-form__description">
+						<label for="segment-form-description" class="segment-form__label">{{ t('pipelinq', 'Description') }}</label>
+						<NcTextArea
+							id="segment-form-description"
+							v-model="model.description"
+							:label="t('pipelinq', 'Description')"
+							labelOutside
+							resize="vertical"
+							rows="2" />
+					</div>
 				</section>
 
 				<section class="segment-form__rules">
@@ -85,12 +97,13 @@
 			<span v-if="saveHint" class="segment-form__save-hint">
 				{{ saveHint }}
 			</span>
-			<NcButton variant="tertiary" @click="close()">
+			<NcButton variant="secondary" @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="primary" :disabled="!canSave" @click="save">
-				<template v-if="saving" #icon>
-					<NcLoadingIcon :size="20" />
+				<template #icon>
+					<NcLoadingIcon v-if="saving" :size="20" />
+					<Check v-else :size="20" />
 				</template>
 				{{
 					isEditing
@@ -99,24 +112,27 @@
 				}}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
 	NcTextArea,
 	NcTextField,
 } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import SegmentBuilder from '../components/SegmentBuilder.vue'
 import { fieldOptionsFor } from '../services/segmentFieldOptions.js'
+import { cloneTree } from '../services/segmentRules.js'
+import hostedFormDialogMixin from './hostedFormDialogMixin.js'
 
 /**
  * @return {object} A blank segment.
@@ -133,8 +149,9 @@ function blankModel() {
 export default {
 	name: 'SegmentFormDialog',
 	components: {
+		Check,
+		CnDialog,
 		NcButton,
-		NcDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -143,33 +160,7 @@ export default {
 		SegmentBuilder,
 	},
 
-	inheritAttrs: false,
-
-	props: {
-		/** Whether the index page has the dialog open. */
-		show: {
-			type: Boolean,
-			default: false,
-		},
-
-		/** The row being edited, or null to create. */
-		item: {
-			type: Object,
-			default: null,
-		},
-
-		/** Closes the dialog. */
-		close: {
-			type: Function,
-			default: () => {},
-		},
-
-		/** Re-reads the index page's list. */
-		refresh: {
-			type: Function,
-			default: null,
-		},
-	},
+	mixins: [hostedFormDialogMixin],
 
 	data() {
 		return {
@@ -188,7 +179,7 @@ export default {
 		 *
 		 * @return {string|null}
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
+		 * @spec openspec/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
 		 */
 		segmentId() {
 			return (
@@ -310,25 +301,16 @@ export default {
 		},
 	},
 
-	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Reset the form each time the dialog opens.
-			 *
-			 * @param {boolean} open Whether the dialog is open.
-			 *
-			 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
-			 */
-			handler(open) {
-				if (open) {
-					this.reset()
-				}
-			},
-		},
-	},
-
 	methods: {
+		/**
+		 * Reset the form each time the dialog opens.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
+		 */
+		prepareOnOpen() {
+			this.reset()
+		},
+
 		/**
 		 * Clear the form, and read the segment when editing one.
 		 *
@@ -347,7 +329,7 @@ export default {
 		/**
 		 * Read the segment being edited into the form.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
+		 * @spec openspec/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
 		 */
 		async loadSegment() {
 			this.loading = true
@@ -371,7 +353,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+		 * @spec openspec/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
 		 */
 		async save() {
 			if (!this.canSave) {
@@ -383,7 +365,7 @@ export default {
 				name: this.model.name.trim(),
 				description: this.model.description,
 				entityType: this.model.entityType,
-				rules: this.model.rules,
+				rules: cloneTree(this.model.rules),
 			}
 			try {
 				if (this.isEditing) {
@@ -436,9 +418,17 @@ export default {
 	grid-column: 1 / -1;
 }
 
-/* Lines the select up with the name field beside it. */
-.segment-form__audience {
-	margin-top: 6px;
+/* The label above the field, as board PqSegmentBouwer draws it. */
+.segment-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.segment-form__label {
+	font-size: 14px;
+	font-weight: 600;
 }
 
 .segment-form__audience :deep(.v-select.select) {

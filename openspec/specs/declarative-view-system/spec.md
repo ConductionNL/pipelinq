@@ -1,8 +1,10 @@
 # declarative-view-system Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-views-to-declarative-r1. Update Purpose after archive.
+Pipelinq renders its list, detail and reporting pages from declarative manifest pages (`type:"index"`, `type:"detail"`, `type:"dashboard"`) instead of custom Vue views. A page that needs a primitive the manifest does not offer yet stays custom, with the reason recorded in the manifest.
+
 ## Requirements
+
 ### Requirement: Convertible list pages MUST render from a declarative type:index manifest page
 
 The system MUST render the PosTransactions, PosRefunds, Blasts, ZReports and
@@ -274,3 +276,42 @@ record a precise `_note` on the page definition naming the missing primitive.
   current-period token, a tab-container body primitive, or a client-side
   statistical widget source)
 
+### Requirement: Persisted overrides are only requested from an installed buildiq (REQ-DVS-OVERRIDE-PROBE)
+At boot pipelinq MUST ask buildiq for persisted manifest overrides only when
+buildiq (or its old app id openbuild) is enabled for the current user. Without
+it, pipelinq MUST use the bundled manifest and MUST NOT send the request.
+
+#### Scenario: buildiq is not installed
+@e2e exclude Asserted in tests/vitest/persistedOverrides.spec.js with the library's real useAppStatus; checked live on :8099.
+- **GIVEN** an instance where buildiq and openbuild are not enabled
+- **WHEN** a user opens any pipelinq page
+- **THEN** no request MUST go to `/apps/buildiq/api/app-overrides/pipelinq`
+- **AND** the page MUST render from the bundled manifest
+
+#### Scenario: buildiq is installed
+@e2e exclude Asserted in tests/vitest/persistedOverrides.spec.js.
+- **GIVEN** an instance where buildiq is enabled and holds an override for pipelinq
+- **WHEN** a user opens any pipelinq page
+- **THEN** pipelinq MUST request `/apps/buildiq/api/app-overrides/pipelinq` once
+- **AND** MUST apply the returned delta over the bundled manifest
+
+### Requirement: A list shows its board's page size
+
+An index page whose board draws a page of rows SHALL set that page size with
+`pagination.limit`: 5 for Campaigns and Contacts, 8 for Bookings and Clients.
+The Templates list SHALL sort by name. Every cash shift row SHALL carry a row
+actions button whose View action opens the shift. The organisations list
+SHALL show the columns the dossiq organisations list shows: Name, KvK
+number, Legal form, Place, Open cases, Open tickets and Last contact.
+
+#### Scenario: Campaigns show five a page
+
+- **GIVEN** the Zuiddrecht set with six campaigns
+- **WHEN** a user opens Campaigns
+- **THEN** the table shows 5 rows and the pager offers a second page
+
+#### Scenario: A cash shift row has its actions button
+
+- **GIVEN** the cash drawer list
+- **WHEN** a user opens it
+- **THEN** every row ends with an actions button whose View opens the shift

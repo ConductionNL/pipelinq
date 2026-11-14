@@ -7,7 +7,7 @@
  * the pure helpers, the picker over the object store, the picker inside the
  * Send message dialog, and the Write email link.
  *
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -55,6 +55,14 @@ function stub(name, tag = 'div') {
 	}
 }
 
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		render() {
+			return h('div', { class: 'cn-dialog' }, [this.$slots.default?.(), this.$slots.actions?.()])
+		},
+	},
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: stub('NcButton', 'button'),
 	NcModal: stub('NcModal'),
@@ -133,11 +141,8 @@ describe('saved reply helpers', () => {
 
 	it('opens the Mail composer with the encoded address, subject and body', () => {
 		const url = composeUrl(
-			'jan@example.nl',
-			'Uw vraag & meer',
-			'Regel 1\nRegel 2',
-			true,
-			(p) => '/index.php' + p,
+			{ address: 'jan@example.nl', subject: 'Uw vraag & meer', body: 'Regel 1\nRegel 2' },
+			{ enabled: true, generateUrl: (p) => '/index.php' + p },
 		)
 		expect(url.startsWith('/index.php/apps/mail/compose?uri=')).toBe(true)
 		const mailto = decodeURIComponent(url.split('?uri=')[1])
@@ -148,7 +153,7 @@ describe('saved reply helpers', () => {
 
 	it('falls back to a mailto link when Mail is not enabled', () => {
 		expect(
-			composeUrl('jan@example.nl', 'Hoi', 'Tekst', false, () => 'never'),
+			composeUrl({ address: 'jan@example.nl', subject: 'Hoi', body: 'Tekst' }, { enabled: false, generateUrl: () => 'never' }),
 		).toBe('mailto:jan@example.nl?subject=Hoi&body=Tekst')
 	})
 })

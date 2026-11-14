@@ -74,7 +74,7 @@ export default {
 		 * The replies that fit this channel.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		options() {
 			return repliesForChannel(this.replies, this.channel, this.language)
@@ -82,7 +82,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 	 */
 	async mounted() {
 		this.loading = true
@@ -108,7 +108,7 @@ export default {
 		 * @param {string} label Its label.
 		 * @param {string} search The typed text.
 		 * @return {boolean}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		matches(option, label, search) {
 			const needle = String(search || '').toLowerCase()
@@ -126,7 +126,7 @@ export default {
 		 * Hand the filled text to the host.
 		 *
 		 * @param {object|null} reply The picked reply.
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		pick(reply) {
 			if (!reply) {

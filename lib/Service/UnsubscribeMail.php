@@ -45,7 +45,7 @@ class UnsubscribeMail {
 	/**
 	 * OpenRegister's shared helper, named by string so pipelinq loads without it.
 	 */
-	public const HEADER_HELPER = 'OCA\\OpenRegister\\Service\\Notification\\UnsubscribeHeaders';
+	public const HEADER_HELPER = 'OCA\\OpenRegister\\Notifications\\Service\\Notification\\UnsubscribeHeaders';
 
 	/**
 	 * Constructor.

@@ -1,0 +1,127 @@
+{
+	"$comment": "pipelinq's social connections in the Zuiddrecht set, the rows PqVerbindingscontrole and PqZoekinzicht draw: whether we follow a client's account and whether it follows us, checked today at 07:00. The board's Zuiddrecht Sportcentrum, Bakkerij De Gouden Korst and Installatiebedrijf Verbeek are the cast's Sportclub Zuiddrecht 1958, Bakkerij De Molen and Installatiebedrijf Van Dam. The totals (48 handles at 31 clients) follow from what is seeded.",
+	"objects": [
+		{
+			"key": "verbinding-dekroon-mastodon",
+			"register": "pipelinq",
+			"schema": "socialConnection",
+			"data": {
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"clientId": "{{object:client-cafe-dekroon.id}}",
+				"counterpartHandle": "dekroon@mastodon.example",
+				"counterpartUrl": "https://mastodon.example/@dekroon",
+				"weFollowThem": "yes",
+				"theyFollowUs": "no",
+				"seenAt": "{{datetime:0 07:00}}"
+			}
+		},
+		{
+			"key": "verbinding-buurtoost-bluesky",
+			"register": "pipelinq",
+			"schema": "socialConnection",
+			"data": {
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"clientId": "{{object:client-buurtoost.id}}",
+				"counterpartHandle": "oost.zuiddrecht.example",
+				"counterpartUrl": "https://bsky.example/profile/oost.zuiddrecht.example",
+				"weFollowThem": "no",
+				"theyFollowUs": "yes",
+				"seenAt": "{{datetime:0 07:00}}"
+			}
+		},
+		{
+			"key": "verbinding-sportclub-mastodon",
+			"register": "pipelinq",
+			"schema": "socialConnection",
+			"data": {
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"clientId": "{{object:client-sportclub.id}}",
+				"counterpartHandle": "sportclub@social.zuiddrecht.example",
+				"counterpartUrl": "https://social.zuiddrecht.example/@sportclub",
+				"weFollowThem": "yes",
+				"theyFollowUs": "yes",
+				"seenAt": "{{datetime:0 07:00}}"
+			}
+		},
+		{
+			"key": "verbinding-bakkerijdemolen-instagram",
+			"register": "pipelinq",
+			"schema": "socialConnection",
+			"data": {
+				"accountId": "{{object:sociaal-account-instagram.id}}",
+				"network": "instagram",
+				"clientId": "{{object:client-bakkerijdemolen.id}}",
+				"counterpartHandle": "bakkerijdemolen",
+				"counterpartUrl": "https://instagram.example/bakkerijdemolen",
+				"weFollowThem": "unknown",
+				"theyFollowUs": "unknown",
+				"seenAt": "{{datetime:0 07:00}}",
+				"reason": "Instagram geeft geen volgerslijst aan andere apps"
+			}
+		},
+		{
+			"key": "verbinding-vandam-bluesky",
+			"register": "pipelinq",
+			"schema": "socialConnection",
+			"data": {
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"clientId": "{{object:client-vandam.id}}",
+				"counterpartHandle": "vandam-installatie.bsky.example",
+				"counterpartUrl": "https://bsky.example/profile/vandam-installatie.bsky.example",
+				"weFollowThem": "no",
+				"theyFollowUs": "no",
+				"seenAt": "{{datetime:0 07:00}}"
+			}
+		},
+		{
+			"key": "verbinding-drechtwonen-mastodon",
+			"register": "pipelinq",
+			"schema": "socialConnection",
+			"data": {
+				"accountId": "{{object:sociaal-account-mastodon.id}}",
+				"network": "mastodon",
+				"clientId": "{{object:client-drechtwonen.id}}",
+				"counterpartHandle": "drechtwonen@mastodon.example",
+				"counterpartUrl": "https://mastodon.example/@drechtwonen",
+				"weFollowThem": "yes",
+				"theyFollowUs": "no",
+				"seenAt": "{{datetime:0 07:00}}"
+			}
+		},
+		{
+			"key": "verbinding-sportclub-bluesky",
+			"register": "pipelinq",
+			"schema": "socialConnection",
+			"data": {
+				"accountId": "{{object:sociaal-account-bluesky.id}}",
+				"network": "bluesky",
+				"clientId": "{{object:client-sportclub.id}}",
+				"counterpartHandle": "sportclubzd.bsky.example",
+				"counterpartUrl": "https://bsky.example/profile/sportclubzd.bsky.example",
+				"weFollowThem": "no",
+				"theyFollowUs": "yes",
+				"seenAt": "{{datetime:0 07:00}}"
+			}
+		},
+		{
+			"key": "verbinding-bakkerijdegraaf-linkedin",
+			"register": "pipelinq",
+			"schema": "socialConnection",
+			"data": {
+				"accountId": "{{object:sociaal-account-linkedin.id}}",
+				"network": "linkedin",
+				"clientId": "{{object:client-bakkerijdegraaf.id}}",
+				"counterpartHandle": "Bakkerij De Graaf",
+				"counterpartUrl": "https://www.linkedin.example/company/bakkerij-de-graaf",
+				"weFollowThem": "unknown",
+				"theyFollowUs": "unknown",
+				"seenAt": "{{datetime:0 07:00}}",
+				"reason": "LinkedIn publiceert geen volgerslijst"
+			}
+		}
+	]
+}

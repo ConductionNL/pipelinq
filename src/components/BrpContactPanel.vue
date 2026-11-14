@@ -10,13 +10,13 @@
   - then discarded. The response is held in component state and rendered as Persoon
   - details, with adres hidden when `geheimhouding` is true.
   -
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.2
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.4
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.5
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006
   -->
 <template>
 	<CnDetailCard :title="t('pipelinq', 'BSN and BRP')">
@@ -159,7 +159,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		bsnFeedback() {
 			if (!this.rawBsn) return ''
@@ -180,7 +180,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		canLookup() {
 			return this.validation.isFormallyValid && this.lookupState !== 'loading'
@@ -197,7 +197,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		address() {
 			if (!this.persoon) return null
@@ -217,7 +217,7 @@ export default {
 
 		/**
 		 * @param {object} payload The BRP lookup request.
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		async onLookup(payload) {
 			this.showModal = false
@@ -255,7 +255,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		async revealAddress() {
 			try {

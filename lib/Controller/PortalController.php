@@ -31,9 +31,11 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AppointmentDepositService;
-use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
+use OCA\Pipelinq\Util\EntityIdOf;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -66,8 +68,12 @@ use RuntimeException;
  *  their input-validation / link-signing helpers belong together.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalController extends Controller {
+	use EntityIdOf;
+	use NullablePayloadToArray;
+
 	/**
 	 * Signing-key app-config key (per-instance HMAC secret, ADR-005).
 	 *
@@ -96,8 +102,8 @@ class PortalController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param BookingService $bookingService Booking lifecycle service (member 04).
-	 * @param AppointmentDepositService $depositService Deposit payment orchestrator (member 08).
+	 * @param BookingServiceInterface $bookingService Booking lifecycle service (member 04).
+	 * @param AppointmentDepositServiceInterface $depositService Deposit payment orchestrator (member 08).
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppManager $appManager The app manager (OR-availability guard).
@@ -108,8 +114,8 @@ class PortalController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private BookingService $bookingService,
-		private AppointmentDepositService $depositService,
+		private BookingServiceInterface $bookingService,
+		private AppointmentDepositServiceInterface $depositService,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
 		private IAppManager $appManager,
@@ -118,7 +124,7 @@ class PortalController extends Controller {
 		private ISecureRandom $secureRandom,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -242,21 +248,48 @@ class PortalController extends Controller {
 	 * @spec openspec/specs/appointment-booking/spec.md#req-apt-010
 	 */
 	private function resolvePaymentRedirect(string $bookingId, array $created): ?string {
-		$requiresDeposit = (bool)($created['requiresDeposit'] ?? false);
-		$depositAmount = (float)($created['depositAmount'] ?? 0.0);
-		if ($requiresDeposit === false || $depositAmount <= 0.0) {
-			return null;
-		}
-
-		$amountCents = (int)round($depositAmount * 100);
+		$amountCents = $this->depositCents(created: $created);
 		if ($amountCents <= 0) {
 			return null;
 		}
 
-		$returnUrl = $this->urlGenerator->getAbsoluteURL(
-			'/index.php/apps/pipelinq/portal/api/booking/' . rawurlencode($bookingId)
-		);
+		$returnUrl = $this->urlGenerator->getAbsoluteURL('/index.php/apps/pipelinq/portal/api/booking/' . rawurlencode($bookingId));
+		$sessionUrl = $this->depositSessionUrl(bookingId: $bookingId, created: $created, amountCents: $amountCents, returnUrl: $returnUrl);
+		if ($sessionUrl === '') {
+			return null;
+		}
 
+		return $sessionUrl;
+	}//end resolvePaymentRedirect()
+
+	/**
+	 * The deposit due on a freshly created booking, in cents; 0 when none is due.
+	 *
+	 * @param array<string, mixed> $created The createBookingFromPortal result.
+	 *
+	 * @return int
+	 */
+	private function depositCents(array $created): int {
+		$requiresDeposit = (bool)($created['requiresDeposit'] ?? false);
+		$depositAmount = (float)($created['depositAmount'] ?? 0.0);
+		if ($requiresDeposit === false || $depositAmount <= 0.0) {
+			return 0;
+		}
+
+		return (int)round($depositAmount * 100);
+	}//end depositCents()
+
+	/**
+	 * Open a deposit session and return its hosted checkout URL, or '' when it could not be opened.
+	 *
+	 * @param string               $bookingId   The freshly created booking UUID.
+	 * @param array<string, mixed> $created     The createBookingFromPortal result.
+	 * @param int                  $amountCents The deposit in cents.
+	 * @param string               $returnUrl   The portal URL the customer returns to.
+	 *
+	 * @return string
+	 */
+	private function depositSessionUrl(string $bookingId, array $created, int $amountCents, string $returnUrl): string {
 		try {
 			$session = $this->depositService->createDepositSession(
 				bookingId: $bookingId,
@@ -266,20 +299,12 @@ class PortalController extends Controller {
 				returnUrl: $returnUrl
 			);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq portal: deposit session could not be opened',
-				['booking' => $bookingId]
-			);
-			return null;
+			$this->logger->warning('Pipelinq portal: deposit session could not be opened', ['booking' => $bookingId]);
+			return '';
 		}
 
-		$sessionUrl = (string)$session['sessionUrl'];
-		if ($sessionUrl === '') {
-			return null;
-		}
-
-		return $sessionUrl;
-	}//end resolvePaymentRedirect()
+		return (string)$session['sessionUrl'];
+	}//end depositSessionUrl()
 
 	/**
 	 * GET /portal/booking/{bookingId} — fetch a booking (optionally signed).
@@ -338,17 +363,23 @@ class PortalController extends Controller {
 			return new JSONResponse(['error' => 'token and newStartAt are required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$payload = $this->openSignedLink(token: $token);
-		if (is_string($payload) === true) {
-			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
+		$link = $this->openBookingLink(token: $token, action: 'reschedule');
+		if ($link instanceof JSONResponse) {
+			return $link;
 		}
 
-		$bookingId = (string)($payload['bookingId'] ?? '');
-		$action = (string)($payload['action'] ?? '');
-		if ($bookingId === '' || $action !== 'reschedule') {
-			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
-		}
+		return $this->rescheduleLinkedBooking(bookingId: (string)$link['bookingId'], newStartAt: $newStartAt);
+	}//end reschedule()
 
+	/**
+	 * Reschedule the booking a valid link names and answer the new id.
+	 *
+	 * @param string $bookingId  The linked booking.
+	 * @param string $newStartAt The new ISO-8601 start.
+	 *
+	 * @return JSONResponse 200 with both ids, 400 on an invalid request, 503 on a failure.
+	 */
+	private function rescheduleLinkedBooking(string $bookingId, string $newStartAt): JSONResponse {
 		try {
 			$newId = $this->bookingService->rescheduleBooking(bookingId: $bookingId, newStartAt: $newStartAt);
 		} catch (InvalidArgumentException $e) {
@@ -359,7 +390,39 @@ class PortalController extends Controller {
 		}
 
 		return new JSONResponse(['bookingId' => $newId, 'previousBookingId' => $bookingId], Http::STATUS_OK);
-	}//end reschedule()
+	}//end rescheduleLinkedBooking()
+
+	/**
+	 * The payload of a signed link that is valid, names a booking and grants
+	 * the given action; a 410 response otherwise.
+	 *
+	 * @param string $token  The presented token.
+	 * @param string $action The action the endpoint performs.
+	 *
+	 * @return array<string, mixed>|JSONResponse
+	 */
+	private function openBookingLink(string $token, string $action): array|JSONResponse {
+		$payload = $this->openSignedLink(token: $token);
+		if (is_string($payload) === true) {
+			return $this->linkGone();
+		}
+
+		$bookingId = (string)($payload['bookingId'] ?? '');
+		if ($bookingId === '' || (string)($payload['action'] ?? '') !== $action) {
+			return $this->linkGone();
+		}
+
+		return $payload;
+	}//end openBookingLink()
+
+	/**
+	 * The 410 answer to an expired, invalid or misused signed link.
+	 *
+	 * @return JSONResponse
+	 */
+	private function linkGone(): JSONResponse {
+		return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
+	}//end linkGone()
 
 	/**
 	 * POST /portal/cancel — cancel a booking via signed link.
@@ -382,23 +445,28 @@ class PortalController extends Controller {
 			return new JSONResponse(['error' => 'token is required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$payload = $this->openSignedLink(token: $token);
-		if (is_string($payload) === true) {
-			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
+		$link = $this->openBookingLink(token: $token, action: 'cancel');
+		if ($link instanceof JSONResponse) {
+			return $link;
 		}
 
-		$bookingId = (string)($payload['bookingId'] ?? '');
-		$action = (string)($payload['action'] ?? '');
-		$customerId = (string)($payload['customerId'] ?? '');
-		if ($bookingId === '' || $action !== 'cancel') {
-			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
-		}
+		return $this->cancelLinkedBooking(link: $link, reason: $reason);
+	}//end cancel()
 
+	/**
+	 * Cancel the booking a valid link names, on behalf of its customer.
+	 *
+	 * @param array<string, mixed> $link   The link payload.
+	 * @param string               $reason The customer's reason.
+	 *
+	 * @return JSONResponse 200 with the receipt, 400 on an invalid request, 503 on a failure.
+	 */
+	private function cancelLinkedBooking(array $link, string $reason): JSONResponse {
 		try {
 			$this->bookingService->cancelBooking(
-				bookingId: $bookingId,
+				bookingId: (string)$link['bookingId'],
 				reason: substr($reason, 0, self::MAX_TEXT_LENGTH),
-				cancelledBy: $customerId
+				cancelledBy: (string)($link['customerId'] ?? '')
 			);
 		} catch (InvalidArgumentException $e) {
 			return new JSONResponse(['error' => 'Invalid cancel request'], Http::STATUS_BAD_REQUEST);
@@ -407,8 +475,8 @@ class PortalController extends Controller {
 			return new JSONResponse(['error' => 'Cancellation failed'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		return new JSONResponse(['bookingId' => $bookingId, 'cancelled' => true], Http::STATUS_OK);
-	}//end cancel()
+		return new JSONResponse(['bookingId' => (string)$link['bookingId'], 'cancelled' => true], Http::STATUS_OK);
+	}//end cancelLinkedBooking()
 
 	/**
 	 * Collect and normalise the `/portal/book` body.
@@ -434,11 +502,8 @@ class PortalController extends Controller {
 	 * @return JSONResponse|null A 400 response on the first failure, null when valid.
 	 */
 	private function validateBookParams(array $params): ?JSONResponse {
-		$required = ['customerName', 'email', 'phone', 'serviceId', 'startAt'];
-		foreach ($required as $field) {
-			if (($params[$field] ?? '') === '') {
-				return new JSONResponse(['error' => 'Missing required field'], Http::STATUS_BAD_REQUEST);
-			}
+		if ($this->hasRequiredBookFields(params: $params) === false) {
+			return new JSONResponse(['error' => 'Missing required field'], Http::STATUS_BAD_REQUEST);
 		}
 
 		if (filter_var($params['email'], FILTER_VALIDATE_EMAIL) === false) {
@@ -451,6 +516,23 @@ class PortalController extends Controller {
 
 		return null;
 	}//end validateBookParams()
+
+	/**
+	 * Whether every required `/portal/book` field is filled.
+	 *
+	 * @param array<string, string> $params The collected body.
+	 *
+	 * @return bool
+	 */
+	private function hasRequiredBookFields(array $params): bool {
+		foreach (['customerName', 'email', 'phone', 'serviceId', 'startAt'] as $field) {
+			if (($params[$field] ?? '') === '') {
+				return false;
+			}
+		}
+
+		return true;
+	}//end hasRequiredBookFields()
 
 	/**
 	 * Create a Booking from validated portal input.
@@ -527,21 +609,40 @@ class PortalController extends Controller {
 			throw new RuntimeException('Service register/schema not configured');
 		}
 
+		$rows = $this->findBookableRows(
+			filters: [
+				'register' => $register,
+				'schema' => $schema,
+				'bookableOnline' => true,
+			]
+		);
+		return $this->publicServices(rows: $rows);
+	}//end listBookableServices()
+
+	/**
+	 * The stored Services matching the filters; none when the read fails.
+	 *
+	 * @param array<string, mixed> $filters The register, schema and bookableOnline filters.
+	 *
+	 * @return mixed The rows as findAll() answers them.
+	 */
+	private function findBookableRows(array $filters): mixed {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'bookableOnline' => true,
-					],
-				]
-			);
+			return $this->getObjectService()->findAll(config: ['filters' => $filters]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: services findAll failed');
 			return [];
 		}
+	}//end findBookableRows()
 
+	/**
+	 * The public projection of every row that really is bookable online.
+	 *
+	 * @param mixed $rows The rows, bare or under `results`.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function publicServices(mixed $rows): array {
 		$results = ($rows['results'] ?? $rows);
 		if (is_array($results) === false) {
 			return [];
@@ -549,30 +650,55 @@ class PortalController extends Controller {
 
 		$out = [];
 		foreach ($results as $row) {
-			$data = $this->toArray(object: $row);
-			if ($data === null) {
-				continue;
+			$service = $this->publicService(row: $row);
+			if ($service !== null) {
+				$out[] = $service;
 			}
-
-			// Defence in depth: the OR filter is best-effort, never trust it.
-			if (($data['bookableOnline'] ?? false) !== true) {
-				continue;
-			}
-
-			$out[] = [
-				'id' => $this->idOf(object: $data),
-				'name' => (string)($data['name'] ?? ''),
-				'description' => (string)($data['description'] ?? ''),
-				'durationMinutes' => (int)($data['durationMinutes'] ?? 0),
-				'price' => (float)($data['price'] ?? 0.0),
-				'currency' => (string)($data['currency'] ?? 'EUR'),
-				'requiresDeposit' => (bool)($data['requiresDeposit'] ?? false),
-				'depositAmount' => (float)($data['depositAmount'] ?? 0.0),
-			];
-		}//end foreach
+		}
 
 		return $out;
-	}//end listBookableServices()
+	}//end publicServices()
+
+	/**
+	 * One row's public projection; null when it is not bookable online.
+	 *
+	 * @param mixed $row A stored Service.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function publicService(mixed $row): ?array {
+		$data = $this->toArray(object: $row);
+		if ($data === null) {
+			return null;
+		}
+
+		// Defence in depth: the OR filter is best-effort, never trust it.
+		if (($data['bookableOnline'] ?? false) !== true) {
+			return null;
+		}
+
+		return $this->serviceProjection(data: $data);
+	}//end publicService()
+
+	/**
+	 * The fields of a Service a customer may see.
+	 *
+	 * @param array<string, mixed> $data The Service.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function serviceProjection(array $data): array {
+		return [
+			'id' => $this->idOf(object: $data),
+			'name' => (string)($data['name'] ?? ''),
+			'description' => (string)($data['description'] ?? ''),
+			'durationMinutes' => (int)($data['durationMinutes'] ?? 0),
+			'price' => (float)($data['price'] ?? 0.0),
+			'currency' => (string)($data['currency'] ?? 'EUR'),
+			'requiresDeposit' => (bool)($data['requiresDeposit'] ?? false),
+			'depositAmount' => (float)($data['depositAmount'] ?? 0.0),
+		];
+	}//end serviceProjection()
 
 	/**
 	 * Load a Service by id (best-effort — returns null on miss).
@@ -613,6 +739,22 @@ class PortalController extends Controller {
 	 * @return array<string, mixed>|null
 	 */
 	private function loadBookingPublic(string $bookingId): ?array {
+		$data = $this->findBookingData(bookingId: $bookingId);
+		if ($data === null) {
+			return null;
+		}
+
+		return $this->publicBooking(data: $data);
+	}//end loadBookingPublic()
+
+	/**
+	 * Load a booking as an array, or null when it is unconfigured or cannot be read.
+	 *
+	 * @param string $bookingId The booking UUID.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findBookingData(string $bookingId): array|null {
 		$register = $this->registerId();
 		$schema = $this->schemaId(key: 'booking_schema');
 		if ($register === '' || $schema === '' || $bookingId === '') {
@@ -620,20 +762,22 @@ class PortalController extends Controller {
 		}
 
 		try {
-			$found = $this->getObjectService()->find(
-				id: $bookingId,
-				register: $register,
-				schema: $schema
-			);
+			$found = $this->getObjectService()->find(id: $bookingId, register: $register, schema: $schema);
 		} catch (\Throwable $e) {
 			return null;
 		}
 
-		$data = $this->toArray(object: $found);
-		if ($data === null) {
-			return null;
-		}
+		return $this->toArray(object: $found);
+	}//end findBookingData()
 
+	/**
+	 * The fields of a booking the portal UI may show.
+	 *
+	 * @param array<string, mixed> $data The booking.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function publicBooking(array $data): array {
 		return [
 			'id' => $this->idOf(object: $data),
 			'serviceId' => (string)($data['serviceId'] ?? ''),
@@ -641,7 +785,7 @@ class PortalController extends Controller {
 			'endAt' => (string)($data['endAt'] ?? ''),
 			'status' => (string)($data['status'] ?? ''),
 		];
-	}//end loadBookingPublic()
+	}//end publicBooking()
 
 	/**
 	 * Upsert a customer contact by email.
@@ -656,10 +800,6 @@ class PortalController extends Controller {
 	 * @return string The contact UUID (empty when the schema is unconfigured).
 	 *
 	 * @throws RuntimeException If OpenRegister is unavailable.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Find-or-create with defensive OR-shape guards
-	 *   (results/toArray/idOf null-checks) and two fault-tolerant try/catch fallbacks to the
-	 *   email-token id; each guard maps one distinct fallback, not nested branching.
 	 */
 	private function upsertCustomer(string $name, string $email, string $phone): string {
 		$register = $this->registerId();
@@ -668,64 +808,135 @@ class PortalController extends Controller {
 			// Without a customer mirror the booking still records the email
 			// verbatim via the customerId field as a fallback. The BookingService
 			// does not require a real OR entity, only a non-empty id token.
-			return ('email:' . substr($email, 0, 240));
+			return $this->emailToken(email: $email);
 		}
 
+		$id = $this->findCustomerId(register: $register, schema: $schema, email: $email);
+		if ($id !== '') {
+			return $id;
+		}
+
+		$object = $this->customerObject(name: $name, email: $email, phone: $phone);
+		return $this->createCustomer(object: $object, register: $register, schema: $schema);
+	}//end upsertCustomer()
+
+	/**
+	 * The id token that stands in for a customer contact: the email itself.
+	 *
+	 * @param string $email The customer's email.
+	 *
+	 * @return string
+	 */
+	private function emailToken(string $email): string {
+		return ('email:' . substr($email, 0, 240));
+	}//end emailToken()
+
+	/**
+	 * The id of the contact with this email, or '' when none is found or the lookup fails.
+	 *
+	 * @param string $register The register id.
+	 * @param string $schema   The contact schema id.
+	 * @param string $email    Lookup key.
+	 *
+	 * @return string
+	 */
+	private function findCustomerId(string $register, string $schema, string $email): string {
 		try {
 			$rows = $this->getObjectService()->findAll(
 				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'email' => $email,
-					],
+					'filters' => ['register' => $register, 'schema' => $schema, 'email' => $email],
 					'limit' => 1,
 				]
 			);
-			$results = ($rows['results'] ?? $rows);
-			if (is_array($results) === true && $results !== []) {
-				$existing = $this->toArray(object: $results[0]);
-				if ($existing !== null) {
-					$id = $this->idOf(object: $existing);
-					if ($id !== '') {
-						return $id;
-					}
-				}
-			}
+			return $this->firstCustomerId(rows: $rows);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: customer lookup failed');
 		}//end try
 
+		return '';
+	}//end findCustomerId()
+
+	/**
+	 * The id of the first found contact, or '' when there is none.
+	 *
+	 * @param mixed $rows The findAll answer.
+	 *
+	 * @return string
+	 */
+	private function firstCustomerId(mixed $rows): string {
+		$results = ($rows['results'] ?? $rows);
+		if (is_array($results) === false || $results === []) {
+			return '';
+		}
+
+		$existing = $this->toArray(object: $results[0]);
+		if ($existing === null) {
+			return '';
+		}
+
+		return $this->idOf(object: $existing);
+	}//end firstCustomerId()
+
+	/**
+	 * The contact object minted for a new portal customer.
+	 *
+	 * @param string $name  Display name.
+	 * @param string $email The customer's email.
+	 * @param string $phone Optional phone.
+	 *
+	 * @return array<string, string>
+	 */
+	private function customerObject(string $name, string $email, string $phone): array {
+		return [
+			'name' => substr($name, 0, 255),
+			'email' => $email,
+			'phone' => substr($phone, 0, 64),
+			'source' => 'portal',
+		];
+	}//end customerObject()
+
+	/**
+	 * Save a new contact and return its id, or the email token when that fails.
+	 *
+	 * @param array<string, string> $object   The contact object.
+	 * @param string                $register The register id.
+	 * @param string                $schema   The contact schema id.
+	 *
+	 * @return string
+	 *
+	 * @throws RuntimeException If OpenRegister is unavailable.
+	 */
+	private function createCustomer(array $object, string $register, string $schema): string {
 		try {
-			$saved = $this->getObjectService()->saveObject(
-				object: [
-					'name' => substr($name, 0, 255),
-					'email' => $email,
-					'phone' => substr($phone, 0, 64),
-					'source' => 'portal',
-				],
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: null
-			);
+			$saved = $this->getObjectService()->saveObject(object: $object, extend: [], register: $register, schema: $schema, uuid: null);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: customer save failed');
-			return ('email:' . substr($email, 0, 240));
+			return $this->emailToken(email: $object['email']);
 		}
 
-		$data = $this->toArray(object: $saved);
-		if ($data === null) {
-			return ('email:' . substr($email, 0, 240));
-		}
-
-		$id = $this->idOf(object: $data);
+		$id = $this->savedCustomerId(saved: $saved);
 		if ($id === '') {
-			return ('email:' . substr($email, 0, 240));
+			return $this->emailToken(email: $object['email']);
 		}
 
 		return $id;
-	}//end upsertCustomer()
+	}//end createCustomer()
+
+	/**
+	 * The id of a saved contact, or '' when the save answered nothing usable.
+	 *
+	 * @param mixed $saved The saveObject answer.
+	 *
+	 * @return string
+	 */
+	private function savedCustomerId(mixed $saved): string {
+		$data = $this->toArray(object: $saved);
+		if ($data === null) {
+			return '';
+		}
+
+		return $this->idOf(object: $data);
+	}//end savedCustomerId()
 
 	/**
 	 * Compute endAt = startAt + durationMinutes.
@@ -761,8 +972,8 @@ class PortalController extends Controller {
 		$customerId = $this->lookupCustomerForBooking(bookingId: $bookingId);
 		$base = $this->urlGenerator->getAbsoluteURL('/index.php/apps/pipelinq/portal/api/booking/' . rawurlencode($bookingId));
 		return [
-			'reschedule' => ($base . '?token=' . rawurlencode($this->signLink(bookingId: $bookingId, action: 'reschedule', customerId: $customerId))),
-			'cancel' => ($base . '?token=' . rawurlencode($this->signLink(bookingId: $bookingId, action: 'cancel', customerId: $customerId))),
+			'reschedule' => sprintf('%s?token=%s', $base, rawurlencode($this->signLink(bookingId: $bookingId, action: 'reschedule', customerId: $customerId))),
+			'cancel' => sprintf('%s?token=%s', $base, rawurlencode($this->signLink(bookingId: $bookingId, action: 'cancel', customerId: $customerId))),
 		];
 	}//end buildManageLinks()
 
@@ -807,14 +1018,8 @@ class PortalController extends Controller {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function openSignedLink(string $token): array|string {
-		$parts = explode('.', $token);
-		if (count($parts) !== 2) {
-			return 'invalid';
-		}
-
-		[$encoded, $signature] = $parts;
-		$expected = $this->base64UrlEncode(data: hash_hmac('sha256', $encoded, $this->signingKey(), true));
-		if (hash_equals($expected, $signature) === false) {
+		$encoded = $this->verifiedLinkBody(token: $token);
+		if ($encoded === null) {
 			return 'invalid';
 		}
 
@@ -829,6 +1034,28 @@ class PortalController extends Controller {
 
 		return $decoded;
 	}//end openSignedLink()
+
+	/**
+	 * The encoded payload of a token whose shape and signature check out.
+	 *
+	 * @param string $token The presented token.
+	 *
+	 * @return string|null The encoded payload, or null when the token is malformed or forged.
+	 */
+	private function verifiedLinkBody(string $token): ?string {
+		$parts = explode('.', $token);
+		if (count($parts) !== 2) {
+			return null;
+		}
+
+		[$encoded, $signature] = $parts;
+		$expected = $this->base64UrlEncode(data: hash_hmac('sha256', $encoded, $this->signingKey(), true));
+		if (hash_equals($expected, $signature) === false) {
+			return null;
+		}
+
+		return $encoded;
+	}//end verifiedLinkBody()
 
 	/**
 	 * Validate a signed link bound to a specific booking id.
@@ -889,10 +1116,10 @@ class PortalController extends Controller {
 	 * @return string The signing key.
 	 */
 	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(Application::APP_ID, self::SIGNING_KEY_CONFIG, '');
+		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SIGNING_KEY_CONFIG, '');
 		if ($key === '') {
 			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(Application::APP_ID, self::SIGNING_KEY_CONFIG, $key, false, true);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SIGNING_KEY_CONFIG, $key, false, true);
 		}
 
 		return $key;
@@ -936,7 +1163,7 @@ class PortalController extends Controller {
 	 * @return string The configured register id, or '' when unconfigured.
 	 */
 	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
@@ -954,80 +1181,8 @@ class PortalController extends Controller {
 	 * @return string
 	 */
 	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaId()
-
-	/**
-	 * Pull the canonical id out of a normalised OpenRegister object.
-	 *
-	 * @param array<string, mixed>|object $object The object.
-	 *
-	 * @return string
-	 */
-	private function idOf(array|object $object): string {
-		$arr = $this->toArray(object: $object);
-		if ($arr === null) {
-			return '';
-		}
-
-		if (isset($arr['@self']) === true && is_array($arr['@self']) === true) {
-			$self = $arr['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($arr['id']) === true) {
-			return (string)$arr['id'];
-		}
-
-		if (isset($arr['uuid']) === true) {
-			return (string)$arr['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

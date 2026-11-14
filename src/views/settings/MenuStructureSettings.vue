@@ -9,7 +9,7 @@ The choice is read at page load by the app's boot code, before it builds the
 navigation, so a change shows the next time somebody opens Pipelinq. The
 section says so, because a setting that seems to do nothing gets changed back.
 
-@spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+@spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
 -->
 <template>
 	<NcSettingsSection
@@ -21,68 +21,73 @@ section says so, because a setting that seems to do nothing gets changed back.
 			)
 		"
 		data-testid="menu-structure">
-		<fieldset class="menu-structure__choices" :disabled="saving">
-			<legend class="hidden-visually">
-				{{ t('pipelinq', 'Menu structure') }}
-			</legend>
-			<NcCheckboxRadioSwitch
-				v-model="structure"
-				value="simple"
-				name="menu_structure"
-				type="radio"
-				data-testid="menu-structure-simple"
-				@update:modelValue="save">
-				{{ t('pipelinq', 'Simple') }}
-			</NcCheckboxRadioSwitch>
-			<p class="menu-structure__help">
-				{{
-					t(
-						'pipelinq',
-						'Nine menu entries for customer contact. Everything else is one step further, on the Modules page or in settings.',
-					)
-				}}
-			</p>
-			<NcCheckboxRadioSwitch
-				v-model="structure"
-				value="full"
-				name="menu_structure"
-				type="radio"
-				data-testid="menu-structure-full"
-				@update:modelValue="save">
-				{{ t('pipelinq', 'Full') }}
-			</NcCheckboxRadioSwitch>
-			<p class="menu-structure__help">
-				{{ t('pipelinq', 'Every entry in the menu, as it was before.') }}
-			</p>
-		</fieldset>
+		<!-- Board PqBeheer: the structure choice left, the modules right. -->
+		<div class="menu-structure__columns">
+			<fieldset class="menu-structure__choices" :disabled="saving">
+				<legend class="hidden-visually">
+					{{ t('pipelinq', 'Menu structure') }}
+				</legend>
+				<NcCheckboxRadioSwitch
+					v-model="structure"
+					value="simple"
+					name="menu_structure"
+					type="radio"
+					data-testid="menu-structure-simple"
+					@update:modelValue="save">
+					{{ t('pipelinq', 'Simple') }}
+				</NcCheckboxRadioSwitch>
+				<p class="menu-structure__help">
+					{{
+						t(
+							'pipelinq',
+							'Nine menu entries for customer contact. Everything else is one step further, on the Modules page or in settings.',
+						)
+					}}
+				</p>
+				<NcCheckboxRadioSwitch
+					v-model="structure"
+					value="full"
+					name="menu_structure"
+					type="radio"
+					data-testid="menu-structure-full"
+					@update:modelValue="save">
+					{{ t('pipelinq', 'Full') }}
+				</NcCheckboxRadioSwitch>
+				<p class="menu-structure__help">
+					{{ t('pipelinq', 'Every entry in the menu, as it was before.') }}
+				</p>
+			</fieldset>
 
-		<fieldset
-			class="menu-structure__choices"
-			:disabled="saving || structure !== 'simple'"
-			data-testid="menu-modules">
-			<legend class="menu-structure__legend">
-				{{ t('pipelinq', 'Modules in the simple menu') }}
-			</legend>
-			<p class="menu-structure__help menu-structure__help--flush">
-				{{
-					t(
-						'pipelinq',
-						'Switch on what your organisation uses. A module that is off stays reachable from the Modules page.',
-					)
-				}}
-			</p>
-			<NcCheckboxRadioSwitch
-				v-for="module in moduleOptions"
-				:key="module.key"
-				v-model="modules"
-				:value="module.key"
-				name="menu_modules"
-				type="checkbox"
-				:data-testid="`menu-module-${module.key}`"
-				@update:modelValue="save">
-				{{ t('pipelinq', module.label) }}
-			</NcCheckboxRadioSwitch>
-		</fieldset>
+			<fieldset
+				class="menu-structure__choices"
+				:disabled="saving || structure !== 'simple'"
+				data-testid="menu-modules">
+				<legend class="menu-structure__legend">
+					{{ t('pipelinq', 'Modules in the simple menu') }}
+				</legend>
+				<p class="menu-structure__help menu-structure__help--flush">
+					{{
+						t(
+							'pipelinq',
+							'Switch on what your organisation uses. A module that is off stays reachable from the Modules page.',
+						)
+					}}
+				</p>
+				<div class="menu-structure__modules">
+					<NcCheckboxRadioSwitch
+						v-for="module in moduleOptions"
+						:key="module.key"
+						v-model="modules"
+						:value="module.key"
+						name="menu_modules"
+						type="checkbox"
+						:data-testid="`menu-module-${module.key}`"
+						@update:modelValue="save">
+						{{ t('pipelinq', module.label) }}
+					</NcCheckboxRadioSwitch>
+				</div>
+			</fieldset>
+		</div>
 
 		<p class="menu-structure__note" role="status">
 			{{
@@ -116,7 +121,7 @@ import {
 /**
  * The menu structure choice on the admin settings page.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 export default {
 	name: 'MenuStructureSettings',
@@ -145,7 +150,7 @@ export default {
 		 *
 		 * @return {Array<{key: string, label: string}>} One option per module.
 		 *
-		 * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-104
+		 * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-104
 		 */
 		moduleOptions() {
 			return Object.entries(simpleMenuLayout.modules).map(([key, module]) => ({
@@ -160,7 +165,7 @@ export default {
 		/**
 		 * Store the choice, and put the controls back when that fails.
 		 *
-		 * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+		 * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
 		 */
 		async save() {
 			this.saving = true
@@ -199,6 +204,17 @@ export default {
 </script>
 
 <style scoped>
+.menu-structure__columns {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: calc(var(--default-grid-baseline) * 6);
+}
+
+.menu-structure__modules {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .menu-structure__choices {
 	border: 0;
 	margin: 0 0 calc(var(--default-grid-baseline) * 4);

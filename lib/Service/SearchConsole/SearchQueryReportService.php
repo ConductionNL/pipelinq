@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
 
 declare(strict_types=1);
@@ -28,7 +28,10 @@ namespace OCA\Pipelinq\Service\SearchConsole;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SearchQueryReportServiceInterface;
+use OCA\Pipelinq\Service\ObjectPageReader;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -38,9 +41,10 @@ use Throwable;
 /**
  * SearchQueryReportService: top queries by clicks over a window.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
-class SearchQueryReportService {
+class SearchQueryReportService implements SearchQueryReportServiceInterface {
+	use SerialisedToArray;
 
 	/**
 	 * Default window in days when none is given.
@@ -71,7 +75,7 @@ class SearchQueryReportService {
 	 * @param ITimeFactory $time Time factory for the default window.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -91,7 +95,7 @@ class SearchQueryReportService {
 	 *
 	 * @return array{from: string, to: string, rows: array<int, array<string, mixed>>, totalQueries: int}
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	public function topQueries(?string $from = null, ?string $to = null, int $limit = 50, ?string $property = null): array {
 		[$from, $to] = $this->window(from: $from, to: $to);
@@ -123,7 +127,7 @@ class SearchQueryReportService {
 	 *
 	 * @return array{from: string, to: string, rows: array<int, array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function rows(?string $from = null, ?string $to = null, ?string $property = null): array {
 		[$from, $to] = $this->window(from: $from, to: $to);
@@ -139,49 +143,21 @@ class SearchQueryReportService {
 	 *
 	 * @return array<int, array<string, mixed>> One row per query, ordered by clicks then impressions, descending.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	public function aggregate(array $rows): array {
 		$byQuery = [];
 		foreach ($rows as $row) {
 			$query = trim((string)($row['query'] ?? ''));
-			if ($query === '') {
-				continue;
+			if ($query !== '') {
+				$byQuery[$query] = self::addRow(
+					entry: ($byQuery[$query] ?? ['query' => $query, 'clicks' => 0, 'impressions' => 0, 'weightedPosition' => 0.0, 'pages' => []]),
+					row: $row
+				);
 			}
-
-			$impressions = max(0, (int)($row['impressions'] ?? 0));
-			$entry = ($byQuery[$query] ?? ['query' => $query, 'clicks' => 0, 'impressions' => 0, 'weightedPosition' => 0.0, 'pages' => []]);
-			$entry['clicks'] += max(0, (int)($row['clicks'] ?? 0));
-			$entry['impressions'] += $impressions;
-			$entry['weightedPosition'] += ((float)($row['position'] ?? 0.0) * $impressions);
-			$page = (string)($row['page'] ?? '');
-			if ($page !== '') {
-				$entry['pages'][$page] = true;
-			}
-
-			$byQuery[$query] = $entry;
 		}
 
-		$out = [];
-		foreach ($byQuery as $entry) {
-			$impressions = (int)$entry['impressions'];
-			$ctr = 0.0;
-			$position = 0.0;
-			if ($impressions > 0) {
-				$ctr = round(($entry['clicks'] / $impressions), 4);
-				$position = round(($entry['weightedPosition'] / $impressions), 1);
-			}
-
-			$out[] = [
-				'query' => $entry['query'],
-				'clicks' => (int)$entry['clicks'],
-				'impressions' => $impressions,
-				'ctr' => $ctr,
-				'position' => $position,
-				'pages' => count($entry['pages']),
-			];
-		}
-
+		$out = array_map(static fn (array $entry): array => self::reportRow(entry: $entry), array_values($byQuery));
 		usort(
 			$out,
 			static function (array $a, array $b): int {
@@ -191,6 +167,53 @@ class SearchQueryReportService {
 
 		return $out;
 	}//end aggregate()
+
+	/**
+	 * Add one row to a query's running totals and the pages it landed on.
+	 *
+	 * @param array<string, mixed> $entry The running totals.
+	 * @param array<string, mixed> $row   The row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function addRow(array $entry, array $row): array {
+		$impressions = max(0, (int)($row['impressions'] ?? 0));
+		$entry['clicks'] += max(0, (int)($row['clicks'] ?? 0));
+		$entry['impressions'] += $impressions;
+		$entry['weightedPosition'] += ((float)($row['position'] ?? 0.0) * $impressions);
+		$page = (string)($row['page'] ?? '');
+		if ($page !== '') {
+			$entry['pages'][$page] = true;
+		}
+
+		return $entry;
+	}//end addRow()
+
+	/**
+	 * One query's report row: rate and impression-weighted position, rounded.
+	 *
+	 * @param array<string, mixed> $entry The query's totals.
+	 *
+	 * @return array{query: string, clicks: int, impressions: int, ctr: float, position: float, pages: int}
+	 */
+	private static function reportRow(array $entry): array {
+		$impressions = (int)$entry['impressions'];
+		$ctr = 0.0;
+		$position = 0.0;
+		if ($impressions > 0) {
+			$ctr = round(($entry['clicks'] / $impressions), 4);
+			$position = round(($entry['weightedPosition'] / $impressions), 1);
+		}
+
+		return [
+			'query' => $entry['query'],
+			'clicks' => (int)$entry['clicks'],
+			'impressions' => $impressions,
+			'ctr' => $ctr,
+			'position' => $position,
+			'pages' => count($entry['pages']),
+		];
+	}//end reportRow()
 
 	/**
 	 * Resolve the window: valid explicit dates win, else the last 28 days.
@@ -247,82 +270,36 @@ class SearchQueryReportService {
 			return [];
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'pipelinq');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', 'pipelinq');
 		$schemaKey = (SearchConsoleImportService::SCHEMA . '_schema');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, SearchConsoleImportService::SCHEMA);
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, SearchConsoleImportService::SCHEMA);
 		$dayAfter = (new DateTimeImmutable($to, new DateTimeZone('UTC')))->modify('+1 day')->format('Y-m-d');
 		$filters = ['register' => $register, 'schema' => $schema, 'date' => ['gte' => $from, 'lt' => $dayAfter]];
 		if ($property !== null && trim($property) !== '') {
 			$filters['property'] = trim($property);
 		}
 
-		return $this->pages(objectService: $objectService, filters: $filters, pageSize: self::PAGE, maxRows: self::MAX_ROWS);
+		return $this->pages(objectService: $objectService, filters: $filters);
 	}//end loadRows()
 
 	/**
-	 * Read matching rows page by page until a short page or the cap.
+	 * Read matching rows page by page until a short page or the cap, as the
+	 * system; a failed read is logged and ends the read.
 	 *
-	 * @param object $objectService The OpenRegister object service.
-	 * @param array<string, mixed> $filters The filters, register and schema included.
-	 * @param int $pageSize Rows per page.
-	 * @param int $maxRows Never read more than this many rows.
+	 * @param object               $objectService The OpenRegister object service.
+	 * @param array<string, mixed> $filters       The filters, register and schema included.
 	 *
 	 * @return array<int, array<string, mixed>> Plain rows.
 	 */
-	private function pages(object $objectService, array $filters, int $pageSize, int $maxRows): array {
-		$rows = [];
-		$offset = 0;
-		while ($offset < $maxRows) {
-			try {
-				$page = $objectService->findAll(
-					config: ['filters' => $filters, 'limit' => $pageSize, 'offset' => $offset],
-					_rbac: false,
-					_multitenancy: false
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning('SearchQueryReportService: findAll failed', ['exception' => $e->getMessage()]);
-				break;
-			}
-
-			if (is_iterable($page) === false) {
-				break;
-			}
-
-			$count = 0;
-			foreach ($page as $row) {
-				$rows[] = $this->toArray(value: $row);
-				$count++;
-			}
-
-			if ($count < $pageSize) {
-				break;
-			}
-
-			$offset += $pageSize;
+	private function pages(object $objectService, array $filters): array {
+		$reader = new ObjectPageReader(objectService: $objectService, withRights: false);
+		$reader->pageSize = self::PAGE;
+		$reader->maxRows = self::MAX_ROWS;
+		$rows = $reader->readAll(filters: $filters);
+		if ($reader->failure !== null) {
+			$this->logger->warning('SearchQueryReportService: findAll failed', ['exception' => $reader->failure->getMessage()]);
 		}
 
-		return $rows;
+		return array_map(fn (mixed $row): array => $this->toArray(value: $row), $rows);
 	}//end pages()
-
-	/**
-	 * Normalise an OpenRegister entity or array to a plain array.
-	 *
-	 * @param mixed $value Entity object or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

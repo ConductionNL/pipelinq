@@ -247,7 +247,7 @@ class ActivityServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/r6-contact-activity-relations-copy/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-each-object-type-publishes-its-own-created-activity
 	 */
 	public function testPublishCreatedForContactPublishesNothing(): void {
 		$this->activityManager->expects($this->never())->method('generateEvent');

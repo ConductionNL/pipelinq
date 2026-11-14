@@ -53,7 +53,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/archive/2026-06-14-zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-008
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-008
  */
 
 declare(strict_types=1);
@@ -98,7 +98,7 @@ class ZgwCoexistenceValidator {
 	 * throws rather than returning, so wiring it changes behaviour on a live
 	 * ZGW/StUF coexistence path and is a decision, not a refactor. Pending in
 	 * pipelinq#764.
-	 * @spec openspec/changes/archive/2026-06-14-zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-008
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-008
 	 */
 	public function validateWritePath(string $municipalityCode): void {
 		if ($municipalityCode === '') {
@@ -107,24 +107,32 @@ class ZgwCoexistenceValidator {
 
 		$zgwWriters = $this->activeZgwWriters(municipalityCode: $municipalityCode);
 		$stufWriters = $this->activeStufWriters(municipalityCode: $municipalityCode);
-
 		if ($zgwWriters !== [] && $stufWriters !== []) {
-			$conflicting = array_values(array_unique(array_merge($zgwWriters, $stufWriters)));
-			$msg = sprintf(
+			$this->refuseDoubleWrite(municipalityCode: $municipalityCode, conflicting: array_values(array_unique(array_merge($zgwWriters, $stufWriters))));
+		}
+	}//end validateWritePath()
+
+	/**
+	 * Log and refuse a municipality that has both a ZGW and a StUF writer active.
+	 *
+	 * @param string            $municipalityCode The municipality.
+	 * @param array<int, string> $conflicting      The conflicting endpoints.
+	 *
+	 * @return void
+	 *
+	 * @throws DoubleWritePathException Always.
+	 */
+	private function refuseDoubleWrite(string $municipalityCode, array $conflicting): void {
+		$this->logger->warning('ZGW: double-write conflict detected', ['gemeente' => $municipalityCode, 'conflicting' => $conflicting]);
+		throw new DoubleWritePathException(
+			sprintf(
 				'ZGW: dubbele schrijfpad-conflict voor gemeente "%s" — schakel een van de volgende endpoints uit: %s',
 				$municipalityCode,
 				implode(', ', $conflicting)
-			);
-			$this->logger->warning(
-				'ZGW: double-write conflict detected',
-				[
-					'gemeente' => $municipalityCode,
-					'conflicting' => $conflicting,
-				]
-			);
-			throw new DoubleWritePathException($msg, $conflicting);
-		}
-	}//end validateWritePath()
+			),
+			$conflicting
+		);
+	}//end refuseDoubleWrite()
 
 	/**
 	 * IDs of all active ZGW write endpoints for a gemeente.

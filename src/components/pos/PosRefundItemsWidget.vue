@@ -75,39 +75,23 @@ import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { collectionRows } from '../../services/collectionRows.js'
 import {
 	fetchOriginalLines,
 	fetchRefundLines,
 } from '../../services/posRefundLines.js'
 import { formatEur } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import posDetailWidgetMixin from './posDetailWidgetMixin.js'
 
 export default {
 	name: 'PosRefundItemsWidget',
 	components: { CnIcon, CnWidgetWrapper, NcLoadingIcon },
+	mixins: [posDetailWidgetMixin],
+
 	// The host also hands over register / schema / store and the widget
 	// content; none of them belong on the root element.
 	inheritAttrs: false,
-
-	props: {
-		/** The refund, from the detail page. */
-		objectData: {
-			type: Object,
-			default: null,
-		},
-
-		/** The refund id, from the detail page. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
-		},
-	},
 
 	data() {
 		return {
@@ -235,7 +219,7 @@ export default {
 				const store = useObjectStore()
 				this.lines = await fetchRefundLines(store, this.refundId)
 				await store.fetchCollection('refundReason', { _limit: 100 })
-				this.reasons = store.getCollection('refundReason')?.results || []
+				this.reasons = collectionRows(store.getCollection('refundReason'))
 				this.originalLines = await fetchOriginalLines(
 					store,
 					this.originalTransaction,

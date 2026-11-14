@@ -21,13 +21,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-010
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-010
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalAccountServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\IL10N;
 
@@ -39,7 +40,7 @@ use OCP\IL10N;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalAccountService {
+class PortalAccountService implements PortalAccountServiceInterface {
 	/**
 	 * Schema slug for accounts.
 	 *
@@ -119,33 +120,9 @@ class PortalAccountService {
 	 *   audit are all unspecified
 	 */
 	public function close(string $token, string $tenantId): void {
-		$account = $this->repository->findOneBy(
-			self::SCHEMA,
-			['closeTokenHash' => $this->tokens->hash(plain: $token), 'tenantId' => $tenantId]
-		);
-		$tokenValid = false;
-		if ($account !== null) {
-			$tokenValid = $this->tokens->verify(
-				plain: $token,
-				storedHash: ($account['closeTokenHash'] ?? null),
-				expiresAt: ($account['closeExpiresAt'] ?? null)
-			);
-		}
-
-		if ($account === null || $tokenValid === false) {
-			throw new PortalException(
-				Http::STATUS_BAD_REQUEST,
-				'invalidToken',
-				'Deze bevestigings-link is ongeldig of verlopen.'
-			);
-		}
-
+		$account = $this->accountForCloseToken(token: $token, tenantId: $tenantId);
 		$accountId = (string)$this->repository->idOf(object: $account);
-		$account['status'] = 'closed';
-		$account['closeTokenHash'] = null;
-		$account['closeExpiresAt'] = null;
-		// The linkedContactId is RETAINED for legal retention (handled by cleanup).
-		$this->repository->save(self::SCHEMA, $account, $accountId);
+		$this->repository->save(self::SCHEMA, $this->asClosed(account: $account), $accountId);
 
 		$this->sessions->revokeAllForAccount(accountId: $accountId, reason: 'account-closure');
 		$this->mail->send(
@@ -155,4 +132,63 @@ class PortalAccountService {
 		);
 		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'account-close', outcome: 'success');
 	}//end close()
+
+	/**
+	 * The tenant's account the close token belongs to, when the token is
+	 * valid and unexpired.
+	 *
+	 * @param string $token    The plaintext close token.
+	 * @param string $tenantId The tenant.
+	 *
+	 * @return array<string, mixed> The account.
+	 *
+	 * @throws PortalException When no account holds the token, or it is invalid or expired.
+	 */
+	private function accountForCloseToken(string $token, string $tenantId): array {
+		$account = $this->repository->findOneBy(
+			self::SCHEMA,
+			['closeTokenHash' => $this->tokens->hash(plain: $token), 'tenantId' => $tenantId]
+		);
+		if ($account === null || $this->closeTokenHolds(account: $account, token: $token) === false) {
+			throw new PortalException(
+				Http::STATUS_BAD_REQUEST,
+				'invalidToken',
+				'Deze bevestigings-link is ongeldig of verlopen.'
+			);
+		}
+
+		return $account;
+	}//end accountForCloseToken()
+
+	/**
+	 * Whether the token matches the account's stored close token and is unexpired.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 * @param string               $token   The plaintext close token.
+	 *
+	 * @return bool
+	 */
+	private function closeTokenHolds(array $account, string $token): bool {
+		return $this->tokens->verify(
+			plain: $token,
+			storedHash: ($account['closeTokenHash'] ?? null),
+			expiresAt: ($account['closeExpiresAt'] ?? null)
+		);
+	}//end closeTokenHolds()
+
+	/**
+	 * The account closed, with its close token cleared. The linkedContactId
+	 * is RETAINED for legal retention (handled by cleanup).
+	 *
+	 * @param array<string, mixed> $account The account.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function asClosed(array $account): array {
+		$account['status'] = 'closed';
+		$account['closeTokenHash'] = null;
+		$account['closeExpiresAt'] = null;
+
+		return $account;
+	}//end asClosed()
 }//end class

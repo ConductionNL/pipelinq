@@ -20,16 +20,17 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SegmentServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -41,24 +42,26 @@ use Throwable;
 /**
  * REST controller for Segment entities.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
  */
 class SegmentController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SegmentService $segmentService Segment service (member 02).
+	 * @param SegmentServiceInterface $segmentService Segment service (member 02).
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param ComplianceServiceInterface $complianceService Consent per member, for a send.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SegmentService $segmentService,
+		private readonly SegmentServiceInterface $segmentService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly ComplianceServiceInterface $complianceService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -73,15 +76,11 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A segment is a saved query over
 		// the customer base; listing or evaluating one exposes who is in it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$envelope = $this->segmentService->listSegments(page: $page, limit: $limit);
@@ -98,17 +97,13 @@ class SegmentController extends Controller {
 	 *
 	 * @return JSONResponse `{catalogue, availability}`.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
 	 */
 	#[NoAdminRequired]
 	public function signals(): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		return new JSONResponse([
@@ -126,9 +121,9 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$user = $this->requireUser();
-		if ($user === null) {
-			return $this->unauthorized();
+		$user = $this->crmGate()->privilegedUserId();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$payload = $this->collectSegmentBody();
@@ -147,15 +142,11 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A segment is a saved query over
 		// the customer base; listing or evaluating one exposes who is in it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$segment = $this->segmentService->getSegmentById(segmentId: $id);
@@ -179,20 +170,60 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function members(string $id, int $limit = 50): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A segment is a saved query over
 		// the customer base; listing or evaluating one exposes who is in it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$rows = $this->segmentService->previewSegmentMembers(segmentId: $id, limit: $limit);
 		return new JSONResponse(['members' => $rows]);
 	}//end members()
+
+	/**
+	 * GET /api/segments/:id/compliance — which members a send on a channel
+	 * would skip for lack of consent, named, before the blast is created.
+	 *
+	 * @param string $id Segment UUID or slug.
+	 * @param string $channel The channel ("email" or "sms").
+	 *
+	 * @return JSONResponse `{missingConsent: [{id, name, email}], missingCount, suppressedCount}`.
+	 *
+	 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
+	 */
+	#[NoAdminRequired]
+	public function compliance(string $id, string $channel = 'email'): JSONResponse {
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		$result = $this->complianceService->checkSegmentCompliance(segmentId: $id, channel: $channel);
+		$byId   = [];
+		foreach ($this->segmentService->getMembersForBlast(segmentId: $id) as $member) {
+			$byId[(string)($member['contactId'] ?? '')] = $member;
+		}
+
+		$missing = [];
+		foreach ((array)($result['missingConsent'] ?? []) as $contactId) {
+			$member    = ($byId[(string)$contactId] ?? []);
+			$name      = trim(((string)($member['firstName'] ?? '')).' '.((string)($member['lastName'] ?? '')));
+			$missing[] = [
+				'id' => (string)$contactId,
+				'name' => $name,
+				'email' => (string)($member['email'] ?? ''),
+			];
+		}
+
+		return new JSONResponse(
+			[
+				'missingConsent' => $missing,
+				'missingCount' => count($missing),
+				'suppressedCount' => count((array)($result['suppressed'] ?? [])),
+			]
+		);
+	}//end compliance()
 
 	/**
 	 * POST /api/segments/preview — validate + estimate an unsaved rule tree.
@@ -206,19 +237,15 @@ class SegmentController extends Controller {
 	 *
 	 * @return JSONResponse `{valid, error, estimatedSize}`.
 	 *
-	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+	 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 	 */
 	#[NoAdminRequired]
 	public function preview(): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A rule-tree preview reveals a
 		// count over the customer base; only privileged CRM users may run it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$entityType = strtolower((string)$this->request->getParam('entityType', ''));
@@ -238,17 +265,13 @@ class SegmentController extends Controller {
 	 *
 	 * @return JSONResponse 200 with segment+estimatedSize, 400 on invalid input, 404 when missing.
 	 *
-	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+	 * @spec openspec/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$payload = $this->collectSegmentBody();
@@ -267,15 +290,11 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function refreshSize(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Authentication is not authorization. A segment is a saved query over
 		// the customer base; listing or evaluating one exposes who is in it.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		try {
@@ -294,29 +313,6 @@ class SegmentController extends Controller {
 
 		return new JSONResponse(['estimatedSize' => $size]);
 	}//end refreshSize()
-
-	/**
-	 * Resolve the authenticated user id.
-	 *
-	 * @return string|null UID or null.
-	 */
-	private function requireUser(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		return $user->getUID();
-	}//end requireUser()
-
-	/**
-	 * Deny a caller who is authenticated but not a CRM user.
-	 *
-	 * @return JSONResponse The 403 response.
-	 */
-	private function forbidden(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end forbidden()
 
 	/**
 	 * Collect a sanitised Segment create body.
@@ -411,15 +407,6 @@ class SegmentController extends Controller {
 	}//end renderCreate()
 
 	/**
-	 * Generic 401 response.
-	 *
-	 * @return JSONResponse
-	 */
-	private function unauthorized(): JSONResponse {
-		return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-	}//end unauthorized()
-
-	/**
 	 * Generic 404 response.
 	 *
 	 * @return JSONResponse
@@ -427,4 +414,13 @@ class SegmentController extends Controller {
 	private function notFound(): JSONResponse {
 		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 	}//end notFound()
+
+	/**
+	 * The caller check shared by the marketing controllers.
+	 *
+	 * @return CrmCallerGate The gate.
+	 */
+	private function crmGate(): CrmCallerGate {
+		return new CrmCallerGate(userSession: $this->userSession, policy: $this->policy);
+	}//end crmGate()
 }//end class

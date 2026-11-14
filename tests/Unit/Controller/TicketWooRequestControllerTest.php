@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\TicketWooRequestController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCA\Pipelinq\Service\WooRequestConversionService;
@@ -59,7 +60,7 @@ class TicketWooRequestControllerTest extends TestCase {
 		$policy->method('isPrivileged')->willReturn($privileged);
 
 		$tickets = $this->createMock(MainRegisterReader::class);
-		$tickets->method('find')->willReturn($ticket);
+		$tickets->method('findAsCaller')->willReturn($ticket);
 
 		$conversion = $this->createMock(WooRequestConversionService::class);
 		$conversion->method('convert')->willReturn($result);
@@ -69,8 +70,7 @@ class TicketWooRequestControllerTest extends TestCase {
 			request: $this->createMock(IRequest::class),
 			conversion: $conversion,
 			tickets: $tickets,
-			userSession: $session,
-			accessPolicy: $policy
+			privilege: new CrmPrivilegeCheck($session, $policy)
 		);
 	}//end controller()
 
@@ -129,7 +129,7 @@ class TicketWooRequestControllerTest extends TestCase {
 		$policy = $this->createMock(ObjectOwnerAccessPolicy::class);
 		$policy->method('isPrivileged')->willReturn(true);
 		$tickets = $this->createMock(MainRegisterReader::class);
-		$tickets->method('find')->willThrowException(new \RuntimeException('Main register schema is not configured.'));
+		$tickets->method('findAsCaller')->willThrowException(new \RuntimeException('Main register schema is not configured.'));
 		$conversion = $this->createMock(WooRequestConversionService::class);
 		$conversion->expects($this->never())->method('convert');
 
@@ -137,8 +137,7 @@ class TicketWooRequestControllerTest extends TestCase {
 			request: $this->createMock(IRequest::class),
 			conversion: $conversion,
 			tickets: $tickets,
-			userSession: $session,
-			accessPolicy: $policy
+			privilege: new CrmPrivilegeCheck($session, $policy)
 		);
 
 		$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $controller->convert(id: 't-9')->getStatus());

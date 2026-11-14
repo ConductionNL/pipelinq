@@ -78,7 +78,7 @@ if (class_exists(LandingPageRequestedEvent::class) === false) {
 		 * @param string $title The page title.
 		 * @param string $locale The page's content locale.
 		 * @param array<string, mixed> $article `{summary, body, heroImageRef, links}`.
-		 * @param array<string, mixed> $form `{fields, submitLabel, consentText}`.
+		 * @param array<string, mixed> $form `{fields, submitLabel, consentText, destination}`; `destination` is `{register, schema, fields, fixed}`.
 		 * @param array<string, mixed> $utm `{campaign, source, medium}`.
 		 * @param string $externalReference The requester's own reference.
 		 * @param string $correlationId Correlation id for tracing.

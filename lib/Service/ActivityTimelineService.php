@@ -4,7 +4,8 @@
  * Pipelinq ActivityTimelineService.
  *
  * Service that aggregates CRM activity instances (contactmomenten, tasks,
- * emailLinks, calendarLinks) for an entity into a unified timeline, and
+ * emailLinks, calendarLinks, notes, WhatsApp/SMS messages) for an entity into
+ * a unified timeline, and
  * provides worklog read/create operations stored as contactmomenten with
  * channel='worklog'.
  *
@@ -26,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/activity-timeline/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-activity-timeline/tasks.md#task-1
  * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
  * @spec openspec/specs/activity-timeline/spec.md#requirement-every-entity-must-have-a-timeline-view
  * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
@@ -39,13 +40,13 @@ namespace OCA\Pipelinq\Service;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ActivityTimelineServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Aggregates CRM activity data from multiple OpenRegister schemas.
@@ -53,9 +54,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
- * @spec openspec/changes/activity-timeline/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-activity-timeline/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class ActivityTimelineService {
+class ActivityTimelineService implements ActivityTimelineServiceInterface {
 	/**
 	 * Maximum allowed page size for list endpoints.
 	 */
@@ -67,13 +70,6 @@ class ActivityTimelineService {
 	private const DEFAULT_LIMIT = 20;
 
 	/**
-	 * Per-schema fetch ceiling when aggregating timelines. The service queries
-	 * each source schema, merges results, sorts by date desc and applies
-	 * pagination in PHP, so we must cap the per-schema window.
-	 */
-	private const PER_SCHEMA_CEILING = 500;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config service.
@@ -82,27 +78,18 @@ class ActivityTimelineService {
 	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype —
 	 *                                     contactmomenten (incl. worklogs) are tickets with
 	 *                                     `ticketType=contactmoment`, not their own schema.
-	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param ActivityTimelineReader $reader Reads the raw rows of every source.
+	 * @param ActivityItemNormalizer $itemNormalizer Turns a source row into an activity item.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
-		private readonly ObjectServiceInterface $objectService,
+		private readonly ActivityTimelineReader $reader,
+		private readonly ActivityItemNormalizer $itemNormalizer,
 	) {
 	}//end __construct()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The OpenRegister ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Read the configured register and schema IDs.
@@ -118,10 +105,10 @@ class ActivityTimelineService {
 	 * @return array<string,string> Map of source-key => value.
 	 */
 	private function getConfig(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$task = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
-		$emailLink = $this->appConfig->getValueString(Application::APP_ID, 'emailLink_schema', '');
-		$calendarLink = $this->appConfig->getValueString(Application::APP_ID, 'calendarLink_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$task = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
+		$emailLink = $this->appConfig->getValueString(AppIdentity::APP_ID, 'emailLink_schema', '');
+		$calendarLink = $this->appConfig->getValueString(AppIdentity::APP_ID, 'calendarLink_schema', '');
 		if ($register === '') {
 			$this->logger->warning('Pipelinq: "register" is not configured; the activity timeline is refused, not run unscoped');
 		}
@@ -147,36 +134,69 @@ class ActivityTimelineService {
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-every-entity-must-have-a-timeline-view
 	 */
 	public function getTimeline(string $entityType, string $entityId, array $params): array {
-		$page = max(1, (int)($params['_page'] ?? 1));
-		$limit = $this->normaliseLimit(rawLimit: ($params['_limit'] ?? null));
+		return $this->timeline(entity: new TimelineEntity(entityType: $entityType, entityId: $entityId), params: $params);
+	}//end getTimeline()
 
-		$config = $this->getConfig();
-		$registerId = $config['register'];
+	/**
+	 * Build the merged, sorted, paginated activity timeline for an entity.
+	 *
+	 * @param TimelineEntity      $entity The entity.
+	 * @param array<string,mixed> $params Request parameters: from, to, types[], _page, _limit.
+	 *
+	 * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int}
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-every-entity-must-have-a-timeline-view
+	 */
+	public function timeline(TimelineEntity $entity, array $params): array {
+		$pageRequest = $this->pageRequest(params: $params);
 
 		// If no register is configured, return an empty timeline (do not raise).
-		if ($registerId === '') {
-			return $this->emptyResult(page: $page);
+		$config = $this->getConfig();
+		if ($config['register'] === '') {
+			return $this->emptyResult(page: $pageRequest->page);
 		}
 
-		$merged = $this->collectActivities(
-			entityType: $entityType,
-			entityId: $entityId,
-			params: $params,
-			config: $config
-		);
+		$run = new TimelineRun(entity: $entity, filter: $this->timelineFilter(params: $params));
+		$merged = $this->collectActivities(run: $run, config: $config);
 
 		// Sort by date descending (newest first).
 		usort(
 			$merged,
 			static function (array $left, array $right): int {
-				$leftDate = (string)($left['date'] ?? '');
-				$rightDate = (string)($right['date'] ?? '');
-				return strcmp($rightDate, $leftDate);
+				return strcmp((string)($right['date'] ?? ''), (string)($left['date'] ?? ''));
 			}
 		);
 
-		return $this->paginate(merged: $merged, page: $page, limit: $limit);
-	}//end getTimeline()
+		return (new TimelinePages())->timelinePage(merged: $merged, pageRequest: $pageRequest);
+	}//end timeline()
+
+	/**
+	 * The page and the clamped page size a request asks for.
+	 *
+	 * @param array<string,mixed> $params Request parameters: _page, _limit.
+	 *
+	 * @return PageRequest The page request.
+	 */
+	private function pageRequest(array $params): PageRequest {
+		return new PageRequest(
+			page: max(1, (int)($params['_page'] ?? 1)),
+			limit: $this->normaliseLimit(rawLimit: ($params['_limit'] ?? null))
+		);
+	}//end pageRequest()
+
+	/**
+	 * The types and date bounds a request narrows the timeline to.
+	 *
+	 * @param array<string,mixed> $params Request parameters: types[], from, to.
+	 *
+	 * @return TimelineFilter The filter.
+	 */
+	private function timelineFilter(array $params): TimelineFilter {
+		$types = $this->normaliseTypes(rawTypes: ($params['types'] ?? null));
+		[$from, $to] = $this->extractDateBounds(params: $params);
+
+		return new TimelineFilter(types: $types, bounds: new DateBounds(from: $from, to: $to));
+	}//end timelineFilter()
 
 	/**
 	 * Clamp a raw limit param into the [1, MAX_LIMIT] range.
@@ -199,55 +219,179 @@ class ActivityTimelineService {
 	}//end normaliseLimit()
 
 	/**
-	 * Query every configured schema and merge the normalized activities for an entity.
+	 * Query every configured schema and the extra sources, and merge the
+	 * normalized activities for an entity.
 	 *
-	 * @param string $entityType The entity type.
-	 * @param string $entityId The entity UUID.
-	 * @param array<string,mixed> $params Request params (types[], from, to).
+	 * @param TimelineRun         $run    The entity and the filter.
 	 * @param array<string,mixed> $config The resolved register/schema config.
 	 *
 	 * @return array<int,array<string,mixed>> The merged, unsorted activities.
 	 */
-	private function collectActivities(string $entityType, string $entityId, array $params, array $config): array {
-		$typesFilter = $this->normaliseTypes(rawTypes: ($params['types'] ?? null));
-		[$from, $to] = $this->extractDateBounds(params: $params);
-		$perSchemaFilters = $this->resolveEntityQueryParams(entityType: $entityType, entityId: $entityId);
-		$registerId = $config['register'];
+	private function collectActivities(TimelineRun $run, array $config): array {
+		$merged = $this->schemaActivities(run: $run, config: $config);
 
+		return $this->withoutDuplicateEvents(
+			activities: array_merge($merged, $this->extraSourceActivities(run: $run, registerId: $config['register']))
+		);
+	}//end collectActivities()
+
+	/**
+	 * Drop calendar items whose event UID another item already shows.
+	 *
+	 * The calendar leaf's item wins: it is read live, the others may be stale
+	 * copies. Items without a UID are never dropped.
+	 *
+	 * @param array<int,array<string,mixed>> $activities The merged items.
+	 *
+	 * @return array<int,array<string,mixed>> The items, each event once.
+	 *
+	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+	 */
+	public function withoutDuplicateEvents(array $activities): array {
+		$leafUids = $this->calendarLeafUids(activities: $activities);
+		return $this->keepEachEventOnce(activities: $activities, leafUids: $leafUids);
+	}//end withoutDuplicateEvents()
+
+	/**
+	 * The UIDs the calendar leaf delivered, as a set.
+	 *
+	 * @param array<int,array<string,mixed>> $activities The merged items.
+	 *
+	 * @return array<string, true>
+	 */
+	private function calendarLeafUids(array $activities): array {
+		$leafUids = [];
+		foreach ($activities as $activity) {
+			if (($activity['metadata']['source'] ?? null) === 'calendar-leaf') {
+				$leafUids[(string)$activity['metadata']['uid']] = true;
+			}
+		}
+
+		return $leafUids;
+	}//end calendarLeafUids()
+
+	/**
+	 * Keep every non-event item, and each calendar event once, the leaf's copy first.
+	 *
+	 * @param array<int,array<string,mixed>> $activities The merged items.
+	 * @param array<string, true>            $leafUids   The UIDs the calendar leaf delivered.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function keepEachEventOnce(array $activities, array $leafUids): array {
+		$seen = [];
+		$kept = [];
+		foreach ($activities as $activity) {
+			$uid = (string)($activity['metadata']['uid'] ?? '');
+			if ($uid === '' || ($activity['type'] ?? '') !== 'calendar') {
+				$kept[] = $activity;
+				continue;
+			}
+
+			if ($this->isShadowedEvent(activity: $activity, uid: $uid, seen: $seen, leafUids: $leafUids) === true) {
+				continue;
+			}
+
+			$seen[$uid] = true;
+			$kept[] = $activity;
+		}
+
+		return $kept;
+	}//end keepEachEventOnce()
+
+	/**
+	 * Whether a calendar event was kept already, or is a stale copy of one the leaf delivered.
+	 *
+	 * @param array<string,mixed> $activity The item.
+	 * @param string              $uid      Its event UID.
+	 * @param array<string, true> $seen     The UIDs kept so far.
+	 * @param array<string, true> $leafUids The UIDs the calendar leaf delivered.
+	 *
+	 * @return bool
+	 */
+	private function isShadowedEvent(array $activity, string $uid, array $seen, array $leafUids): bool {
+		$fromLeaf = (($activity['metadata']['source'] ?? null) === 'calendar-leaf');
+		return (isset($seen[$uid]) === true || ($fromLeaf === false && isset($leafUids[$uid]) === true));
+	}//end isShadowedEvent()
+
+	/**
+	 * The activities of every configured schema the filter includes.
+	 *
+	 * @param TimelineRun         $run    The entity and the filter.
+	 * @param array<string,mixed> $config The resolved register/schema config.
+	 *
+	 * @return array<int,array<string,mixed>> The normalized activities, in source order.
+	 */
+	private function schemaActivities(TimelineRun $run, array $config): array {
 		$merged = [];
-
+		$perSchemaFilters = $this->resolveEntityQueryParams(entityType: $run->entity->entityType, entityId: $run->entity->entityId);
 		foreach ($perSchemaFilters as $sourceType => $sourceFilter) {
-			// Skip filtered-out types (only if the user explicitly limited types).
-			if ($typesFilter !== null && in_array($this->sourceToActivityType(sourceType: $sourceType), $typesFilter, true) === false) {
+			// Skip filtered-out types (only if the user explicitly limited types) and unconfigured schemas.
+			if ($this->includesSource(run: $run, sourceType: $sourceType) === false || ($config[$sourceType] ?? '') === '') {
 				continue;
 			}
 
-			$schemaId = $config[$sourceType] ?? '';
-			if ($schemaId === '') {
-				continue;
-			}
-
-			$objects = $this->querySchema(
-				registerId: $registerId,
-				schemaId: $schemaId,
-				filters: $sourceFilter
-			);
-
-			$merged = array_merge(
-				$merged,
-				$this->normalizeSchemaObjects(
-					objects: $objects,
-					sourceType: $sourceType,
-					entityType: $entityType,
-					entityId: $entityId,
-					from: $from,
-					to: $to
-				)
-			);
-		}//end foreach
+			$objects = $this->reader->query(registerId: $config['register'], schemaId: $config[$sourceType], filters: $sourceFilter);
+			$source = new TimelineSource(sourceType: $sourceType, objects: $objects);
+			$merged = array_merge($merged, $this->normalizeSourceObjects(source: $source, run: $run));
+		}
 
 		return $merged;
-	}//end collectActivities()
+	}//end schemaActivities()
+
+	/**
+	 * The activities of the notes, messages, bookings and linked emails the
+	 * filter includes; each source is read only when it is included.
+	 *
+	 * @param TimelineRun $run        The entity and the filter.
+	 * @param string      $registerId The configured register.
+	 *
+	 * @return array<int,array<string,mixed>> The normalized activities, in source order.
+	 */
+	private function extraSourceActivities(TimelineRun $run, string $registerId): array {
+		$merged = [];
+		foreach ($this->extraSources(run: $run, registerId: $registerId) as $sourceType => $read) {
+			if ($this->includesSource(run: $run, sourceType: $sourceType) === true) {
+				$source = new TimelineSource(sourceType: $sourceType, objects: $read());
+				$merged = array_merge($merged, $this->normalizeSourceObjects(source: $source, run: $run));
+			}
+		}
+
+		return $merged;
+	}//end extraSourceActivities()
+
+	/**
+	 * The readers of the sources that are not a configured schema.
+	 *
+	 * @param TimelineRun $run        The entity and the filter.
+	 * @param string      $registerId The configured register.
+	 *
+	 * @return array<string,callable(): array<mixed>> Source type => reader.
+	 */
+	private function extraSources(TimelineRun $run, string $registerId): array {
+		$entityType = $run->entity->entityType;
+		$entityId = $run->entity->entityId;
+		return [
+			'note' => fn (): array => $this->reader->notes(entityId: $entityId),
+			'message' => fn (): array => $this->reader->messages(entityType: $entityType, entityId: $entityId, registerId: $registerId),
+			'booking' => fn (): array => $this->reader->bookings(entityType: $entityType, entityId: $entityId, registerId: $registerId),
+			'linkedEmail' => fn (): array => $this->reader->linkedEmails(entityId: $entityId),
+			'leafEvent' => fn (): array => $this->reader->linkedEvents(entityId: $entityId),
+		];
+	}//end extraSources()
+
+	/**
+	 * Whether the filter includes a source: always without a types filter.
+	 *
+	 * @param TimelineRun $run        The entity and the filter.
+	 * @param string      $sourceType The source type.
+	 *
+	 * @return bool True when the source's activity type is shown.
+	 */
+	private function includesSource(TimelineRun $run, string $sourceType): bool {
+		return $run->filter->types === null
+			|| in_array($this->sourceToActivityType(sourceType: $sourceType), $run->filter->types, true) === true;
+	}//end includesSource()
 
 	/**
 	 * Extract the optional from/to date bounds from request params.
@@ -271,80 +415,29 @@ class ActivityTimelineService {
 	}//end extractDateBounds()
 
 	/**
-	 * Normalize a single schema's objects into activities, applying the date filter.
+	 * Normalize one source's objects into activities, applying the date filter.
 	 *
-	 * @param iterable<mixed> $objects The raw objects from the schema query.
-	 * @param string $sourceType The source type / schema config key.
-	 * @param string $entityType The entity type.
-	 * @param string $entityId The entity UUID.
-	 * @param string|null $from The lower date bound (inclusive) or null.
-	 * @param string|null $to The upper date bound (inclusive) or null.
+	 * @param TimelineSource $source The source type and its raw objects.
+	 * @param TimelineRun    $run    The entity and the filter.
 	 *
 	 * @return array<int,array<string,mixed>> The normalized, in-range activities.
 	 */
-	private function normalizeSchemaObjects(
-		iterable $objects,
-		string $sourceType,
-		string $entityType,
-		string $entityId,
-		?string $from,
-		?string $to,
-	): array {
+	private function normalizeSourceObjects(TimelineSource $source, TimelineRun $run): array {
 		$activities = [];
-		foreach ($objects as $object) {
+		foreach ($source->objects as $object) {
 			$normalized = $this->normalizeActivity(
-				sourceType: $sourceType,
+				sourceType: $source->sourceType,
 				object: $object,
-				entityType: $entityType,
-				entityId: $entityId
+				entityType: $run->entity->entityType,
+				entityId: $run->entity->entityId
 			);
-			if ($normalized === null) {
-				continue;
+			if ($normalized !== null && $this->withinDateRange(date: $normalized['date'], bounds: $run->filter->bounds) === true) {
+				$activities[] = $normalized;
 			}
-
-			if ($this->withinDateRange(date: $normalized['date'], from: $from, to: $to) === false) {
-				continue;
-			}
-
-			$activities[] = $normalized;
 		}
 
 		return $activities;
-	}//end normalizeSchemaObjects()
-
-	/**
-	 * Slice a sorted activity list into the requested page envelope.
-	 *
-	 * @param array<int,array<string,mixed>> $merged The sorted activities.
-	 * @param int $page The 1-based requested page.
-	 * @param int $limit The page size.
-	 *
-	 * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int}
-	 */
-	private function paginate(array $merged, int $page, int $limit): array {
-		$total = count($merged);
-
-		$pages = 1;
-		if ($total !== 0) {
-			$pages = (int)ceil($total / $limit);
-		}
-
-		$start = (($page - 1) * $limit);
-		$page = min($page, $pages);
-
-		if ($start < 0) {
-			$start = 0;
-		}
-
-		$slice = array_slice($merged, $start, $limit);
-
-		return [
-			'items' => array_values($slice),
-			'total' => $total,
-			'page' => $page,
-			'pages' => $pages,
-		];
-	}//end paginate()
+	}//end normalizeSourceObjects()
 
 	/**
 	 * Map an internal source-type (matching schema config key) onto the public activity type label.
@@ -359,8 +452,8 @@ class ActivityTimelineService {
 		return match ($sourceType) {
 			'interaction' => 'interaction',
 			'task' => 'task',
-			'emailLink' => 'email',
-			'calendarLink' => 'calendar',
+			'emailLink', 'linkedEmail' => 'email',
+			'calendarLink', 'booking', 'leafEvent' => 'calendar',
 			default => $sourceType,
 		};
 	}//end sourceToActivityType()
@@ -384,7 +477,7 @@ class ActivityTimelineService {
 			$rawTypes = explode(',', (string)$rawTypes);
 		}
 
-		$allowed = ['interaction', 'task', 'email', 'calendar', 'worklog'];
+		$allowed = ['interaction', 'task', 'email', 'calendar', 'worklog', 'note', 'message'];
 		$result = [];
 		foreach ($rawTypes as $type) {
 			$type = strtolower(trim((string)$type));
@@ -401,119 +494,17 @@ class ActivityTimelineService {
 	}//end normaliseTypes()
 
 	/**
-	 * Query a single OpenRegister schema using a set of equality filters.
-	 *
-	 * @param string $registerId The register ID.
-	 * @param string $schemaId The schema ID.
-	 * @param array<string,mixed> $filters Field equality filters.
-	 *
-	 * @return array<int,array<string,mixed>> The raw object arrays.
-	 *
-	 * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
-	 */
-	private function querySchema(string $registerId, string $schemaId, array $filters): array {
-		try {
-			$objectService = $this->getObjectService();
-
-			$params = [
-				'filters' => array_merge(
-					[
-						'register' => $registerId,
-						'schema' => $schemaId,
-					],
-					$filters
-				),
-				'limit' => self::PER_SCHEMA_CEILING,
-			];
-
-			$results = $objectService->findAll($params);
-
-			return $this->normaliseResultset(results: $results);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'ActivityTimelineService: failed to query schema',
-				[
-					'exception' => $e->getMessage(),
-					'schemaId' => $schemaId,
-				]
-			);
-			return [];
-		}//end try
-	}//end querySchema()
-
-	/**
-	 * Normalise an OpenRegister findAll result into an array of plain arrays.
-	 *
-	 * @param mixed $results The raw ObjectService->findAll return value.
-	 *
-	 * @return array<int,array<string,mixed>> A list of plain object arrays.
-	 *
-	 * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
-	 */
-	private function normaliseResultset(mixed $results): array {
-		if (is_array($results) === false) {
-			return [];
-		}
-
-		$output = [];
-		foreach ($results as $item) {
-			$normalised = $this->normaliseResultItem(item: $item);
-			if ($normalised !== null) {
-				$output[] = $normalised;
-			}
-		}//end foreach
-
-		return $output;
-	}//end normaliseResultset()
-
-	/**
-	 * Normalise a single result-set entry into an array payload.
-	 *
-	 * Arrays pass through unchanged; OpenRegister entities are unwrapped via
-	 * getObject() (promoting id/uuid when missing); other objects are cast to
-	 * array. Scalars yield null.
-	 *
-	 * @param mixed $item The raw result entry.
-	 *
-	 * @return array<string,mixed>|null The normalised payload, or null to skip.
-	 */
-	private function normaliseResultItem(mixed $item): ?array {
-		if (is_array($item) === true) {
-			return $item;
-		}
-
-		if (is_object($item) === false) {
-			return null;
-		}
-
-		if (method_exists($item, 'getObject') === true) {
-			$value = $item->getObject();
-			if (is_array($value) === true) {
-				// Promote id/uuid into the object payload if missing.
-				if (isset($value['id']) === false && method_exists($item, 'getUuid') === true) {
-					$value['id'] = $item->getUuid();
-				}
-
-				return $value;
-			}
-		}
-
-		return (array)$item;
-	}//end normaliseResultItem()
-
-	/**
 	 * Apply optional date range filtering to a normalised item.
 	 *
-	 * @param string|null $date The item's date in ISO 8601 form (or null).
-	 * @param string|null $from Optional inclusive start date.
-	 * @param string|null $to Optional inclusive end date.
+	 * @param string|null $date   The item's date in ISO 8601 form (or null).
+	 * @param DateBounds  $bounds Optional inclusive start and end dates.
 	 *
 	 * @return bool True if the date falls inside the requested range.
 	 *
 	 * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-4
 	 */
-	private function withinDateRange(?string $date, ?string $from, ?string $to): bool {
-		if ($from === null && $to === null) {
+	private function withinDateRange(?string $date, DateBounds $bounds): bool {
+		if ($bounds->from === null && $bounds->to === null) {
 			return true;
 		}
 
@@ -527,8 +518,8 @@ class ActivityTimelineService {
 			return false;
 		}
 
-		return $this->isAfterFrom(itemTs: $itemTs, from: $from)
-			&& $this->isBeforeTo(itemTs: $itemTs, to: $to);
+		return $this->isAfterFrom(itemTs: $itemTs, from: $bounds->from)
+			&& $this->isBeforeTo(itemTs: $itemTs, to: $bounds->to);
 	}//end withinDateRange()
 
 	/**
@@ -622,7 +613,10 @@ class ActivityTimelineService {
 	/**
 	 * Normalise a raw object array into the unified activity item shape.
 	 *
-	 * @param string $sourceType The internal source-type key (contactmoment|task|emailLink|calendarLink).
+	 * Every item carries `userName`, its author's display name (the user id
+	 * when the user is unknown).
+	 *
+	 * @param string $sourceType The internal source-type key (interaction|task|emailLink|calendarLink|note|message).
 	 * @param array<string,mixed> $object The raw object array from OpenRegister.
 	 * @param string $entityType The originating entityType for back-reference.
 	 * @param string $entityId The originating entityId for back-reference.
@@ -630,87 +624,10 @@ class ActivityTimelineService {
 	 * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
 	 *
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
 	 */
 	public function normalizeActivity(string $sourceType, array $object, string $entityType, string $entityId): ?array {
-		$id = (string)($object['id'] ?? $object['uuid'] ?? '');
-
-		switch ($sourceType) {
-			case 'interaction':
-				// Ticket field names (unify-ticket-supertype): subject -> title,
-				// summary -> description, contactedAt -> occurredAt, agent -> assignee.
-				$channel = (string)($object['channel'] ?? '');
-				$type = 'interaction';
-				if ($channel === 'worklog') {
-					$type = 'worklog';
-				}
-				return [
-					'type' => $type,
-					'id' => $id,
-					'title' => (string)($object['title'] ?? $object['description'] ?? ''),
-					'description' => (string)($object['description'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['occurredAt'] ?? null)),
-					'user' => $this->stringOrNull(value: ($object['assignee'] ?? null)),
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'channel' => $channel,
-						'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
-						'duration' => $this->stringOrNull(value: ($object['duration'] ?? null)),
-						'outcome' => $this->stringOrNull(value: ($object['outcome'] ?? null)),
-					],
-				];
-
-			case 'task':
-				return [
-					'type' => 'task',
-					'id' => $id,
-					'title' => (string)($object['subject'] ?? $object['title'] ?? ''),
-					'description' => (string)($object['description'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['deadline'] ?? $object['createdAt'] ?? null)),
-					'user' => $this->stringOrNull(value: ($object['assigneeUserId'] ?? null)),
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'status' => $this->stringOrNull(value: ($object['status'] ?? null)),
-						'priority' => $this->stringOrNull(value: ($object['priority'] ?? null)),
-					],
-				];
-
-			case 'emailLink':
-				return [
-					'type' => 'email',
-					'id' => $id,
-					'title' => (string)($object['subject'] ?? ''),
-					'description' => (string)($object['sender'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['date'] ?? null)),
-					'user' => null,
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
-						'messageId' => $this->stringOrNull(value: ($object['messageId'] ?? null)),
-					],
-				];
-
-			case 'calendarLink':
-				return [
-					'type' => 'calendar',
-					'id' => $id,
-					'title' => (string)($object['title'] ?? $object['subject'] ?? ''),
-					'description' => (string)($object['notes'] ?? $object['description'] ?? ''),
-					'date' => $this->stringOrNull(value: ($object['startDate'] ?? null)),
-					'user' => null,
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-					'metadata' => [
-						'endDate' => $this->stringOrNull(value: ($object['endDate'] ?? null)),
-						'location' => $this->stringOrNull(value: ($object['location'] ?? null)),
-					],
-				];
-
-			default:
-				return null;
-		}//end switch
+		return $this->itemNormalizer->normalize(sourceType: $sourceType, object: $object, entityType: $entityType, entityId: $entityId);
 	}//end normalizeActivity()
 
 	/**
@@ -740,27 +657,7 @@ class ActivityTimelineService {
 			throw new RuntimeException('Contactmoment register or schema not configured.');
 		}
 
-		$user = $this->userSession->getUser();
-
-		$agentUid = '';
-		if ($user !== null) {
-			$agentUid = (string)$user->getUID();
-		}
-
-		$duration = $this->stringOrNull(value: ($data['duration'] ?? null));
-		$summary = $this->stringOrNull(value: ($data['description'] ?? null));
-		$date = $this->stringOrNull(value: ($data['date'] ?? null)) ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-
-		$payload = [
-			'channel' => 'worklog',
-			// A worklog is a handler writing down what they did, not contact
-			// with the party, so it is internal by construction.
-			'direction' => 'internal',
-			'description' => $summary ?? '',
-			'duration' => $duration ?? '',
-			'occurredAt' => $date,
-			'assignee' => $agentUid,
-		];
+		$payload = $this->worklogPayload(data: $data);
 
 		if ($entityType === 'client') {
 			$payload['client'] = $entityId;
@@ -782,6 +679,39 @@ class ActivityTimelineService {
 	}//end createWorklog()
 
 	/**
+	 * The contact moment a worklog becomes, before it is tied to its entity.
+	 *
+	 * The assignee is the signed-in agent, never a payload value; a missing date is now.
+	 *
+	 * @param array<string,mixed> $data The worklog data (duration, description, date).
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function worklogPayload(array $data): array {
+		$user = $this->userSession->getUser();
+
+		$agentUid = '';
+		if ($user !== null) {
+			$agentUid = (string)$user->getUID();
+		}
+
+		$duration = $this->stringOrNull(value: ($data['duration'] ?? null));
+		$summary = $this->stringOrNull(value: ($data['description'] ?? null));
+		$date = $this->stringOrNull(value: ($data['date'] ?? null)) ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+
+		return [
+			'channel' => 'worklog',
+			// A worklog is a handler writing down what they did, not contact
+			// with the party, so it is internal by construction.
+			'direction' => 'internal',
+			'description' => $summary ?? '',
+			'duration' => $duration ?? '',
+			'occurredAt' => $date,
+			'assignee' => $agentUid,
+		];
+	}//end worklogPayload()
+
+	/**
 	 * Return paginated worklog entries (contactmomenten where channel='worklog')
 	 * for an entity, including a summed `totalDuration` field.
 	 *
@@ -794,44 +724,31 @@ class ActivityTimelineService {
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
 	 */
 	public function getWorklog(string $entityType, string $entityId, array $params): array {
-		$page = max(1, (int)($params['_page'] ?? 1));
-		$limit = $this->normaliseLimit(rawLimit: ($params['_limit'] ?? null));
+		return $this->worklog(entity: new TimelineEntity(entityType: $entityType, entityId: $entityId), params: $params);
+	}//end getWorklog()
+
+	/**
+	 * List the worklog entries for an entity, newest first, paged, with
+	 * the total duration of all its entries.
+	 *
+	 * @param TimelineEntity      $entity The entity (client|request).
+	 * @param array<string,mixed> $params Request params: _page, _limit.
+	 *
+	 * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int, totalDuration: string}
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
+	 */
+	public function worklog(TimelineEntity $entity, array $params): array {
+		$pageRequest = $this->pageRequest(params: $params);
 
 		$config = $this->getConfig();
 		if ($config['register'] === '' || $config['interaction'] === '') {
-			return [
-				'items' => [],
-				'total' => 0,
-				'page' => $page,
-				'pages' => 1,
-				'totalDuration' => 'PT0S',
-			];
+			return ['items' => [], 'total' => 0, 'page' => $pageRequest->page, 'pages' => 1, 'totalDuration' => 'PT0S'];
 		}
 
-		// Worklogs are contactmoment tickets: narrow the unified `ticket` schema
-		// with the discriminator, and back-reference a request through the ticket
-		// field `parentTicket` (formerly contactmoment.request).
-		$filters = [
-			'ticketType' => TicketService::TYPE_CONTACTMOMENT,
-			'channel' => 'worklog',
-		];
-		if ($entityType === 'client') {
-			$filters['client'] = $entityId;
-		} elseif ($entityType === 'request') {
-			$filters['parentTicket'] = $entityId;
-		}
-
-		$rawObjects = $this->querySchema(
-			registerId: $config['register'],
-			schemaId: $config['interaction'],
-			filters: $filters
-		);
-
-		[$items, $totalSeconds] = $this->collectWorklogItems(
-			rawObjects: $rawObjects,
-			entityType: $entityType,
-			entityId: $entityId
-		);
+		$filters = self::worklogFilters(entity: $entity);
+		$rawObjects = $this->reader->query(registerId: $config['register'], schemaId: $config['interaction'], filters: $filters);
+		[$items, $totalSeconds] = $this->collectWorklogItems(rawObjects: $rawObjects, entity: $entity);
 
 		usort(
 			$items,
@@ -840,54 +757,59 @@ class ActivityTimelineService {
 			}
 		);
 
-		$total = count($items);
+		$worklogPage = (new TimelinePages())->worklogPage(items: $items, pageRequest: $pageRequest);
+		return $worklogPage + ['totalDuration' => $this->secondsToIsoDuration(seconds: $totalSeconds)];
+	}//end worklog()
 
-		$pages = 1;
-		if ($total !== 0) {
-			$pages = (int)ceil($total / $limit);
-		}
-
-		$page = min($page, $pages);
-		$start = (($page - 1) * $limit);
-		if ($start < 0) {
-			$start = 0;
-		}
-
-		return [
-			'items' => array_values(array_slice($items, $start, $limit)),
-			'total' => $total,
-			'page' => $page,
-			'pages' => $pages,
-			'totalDuration' => $this->secondsToIsoDuration(seconds: $totalSeconds),
+	/**
+	 * The ticket filters of an entity's worklog.
+	 *
+	 * Worklogs are contactmoment tickets: narrow the unified `ticket` schema
+	 * with the discriminator, and back-reference a request through the ticket
+	 * field `parentTicket` (formerly contactmoment.request).
+	 *
+	 * @param TimelineEntity $entity The entity.
+	 *
+	 * @return array<string,string> The filters.
+	 */
+	private static function worklogFilters(TimelineEntity $entity): array {
+		$filters = [
+			'ticketType' => TicketService::TYPE_CONTACTMOMENT,
+			'channel' => 'worklog',
 		];
-	}//end getWorklog()
+		if ($entity->entityType === 'client') {
+			$filters['client'] = $entity->entityId;
+		} elseif ($entity->entityType === 'request') {
+			$filters['parentTicket'] = $entity->entityId;
+		}
+
+		return $filters;
+	}//end worklogFilters()
 
 	/**
 	 * Normalise worklog contactmoments and accumulate their total duration.
 	 *
 	 * @param iterable<mixed> $rawObjects The raw worklog objects from the query.
-	 * @param string $entityType The entity type.
-	 * @param string $entityId The entity UUID.
+	 * @param TimelineEntity  $entity     The entity.
 	 *
 	 * @return array{0: array<int,array<string,mixed>>, 1: int} Tuple of (items, totalSeconds).
 	 */
-	private function collectWorklogItems(iterable $rawObjects, string $entityType, string $entityId): array {
+	private function collectWorklogItems(iterable $rawObjects, TimelineEntity $entity): array {
 		$items = [];
 		$totalSeconds = 0;
 		foreach ($rawObjects as $object) {
 			$normalised = $this->normalizeActivity(
 				sourceType: 'interaction',
 				object: $object,
-				entityType: $entityType,
-				entityId: $entityId
+				entityType: $entity->entityType,
+				entityId: $entity->entityId
 			);
 			if ($normalised === null) {
 				continue;
 			}
 
 			$items[] = $normalised;
-			$duration = (string)($normalised['metadata']['duration'] ?? '');
-			$totalSeconds += $this->isoDurationToSeconds(duration: $duration);
+			$totalSeconds += $this->isoDurationToSeconds(duration: (string)($normalised['metadata']['duration'] ?? ''));
 		}
 
 		return [$items, $totalSeconds];

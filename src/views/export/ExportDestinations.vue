@@ -12,6 +12,7 @@
 					'Data-warehouse and object-storage targets for BI exports',
 				)
 			"
+			:pageTabs="pageTabs"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -49,6 +50,7 @@ import { NcButton } from '@nextcloud/vue'
 import { inject } from 'vue'
 import { exportApi } from '../../services/exportApi.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import exportListMixin from './exportListMixin.js'
 
 export default {
 	name: 'ExportDestinations',
@@ -57,17 +59,12 @@ export default {
 		NcButton,
 	},
 
+	mixins: [exportListMixin],
+
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()
 		return useListView('exportDestination', { sidebarState, objectStore })
-	},
-
-	data() {
-		return {
-			busyId: null,
-			refreshing: false,
-		}
 	},
 
 	computed: {
@@ -88,21 +85,6 @@ export default {
 	},
 
 	methods: {
-		/**
-		 * Refresh handler for the Actions-menu Refresh item. Drives the
-		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
-		 *
-		 * @spec exclude presentational refresh-button spinner wiring — no business logic
-		 */
-		async onRefresh() {
-			this.refreshing = true
-			try {
-				await this.refresh()
-			} finally {
-				this.refreshing = false
-			}
-		},
-
 		/**
 		 * Navigate to a destination's edit form.
 		 *

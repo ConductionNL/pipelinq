@@ -146,7 +146,7 @@ describe('callers', () => {
 	it('the Leads list has a sortable score column and a Call first toggle', () => {
 		const list = read('src/views/leads/LeadList.vue')
 		expect(list).toMatch(
-			/key: 'qualificationScore',[\s\S]{0,120}widget: 'lead-win-chance'/,
+			/key: 'qualificationScore',[\s\S]{0,120}widget: 'progress'/,
 		)
 		expect(list).toMatch(/Call first/)
 		expect(list).toMatch(/CALL_FIRST_SORT/)
@@ -173,7 +173,7 @@ describe('callers', () => {
 			/<LeadScoreBadge/,
 		)
 		const board = read('src/views/pipeline/PipelineBoard.vue')
-		expect(board).toMatch(/toggleSort\('score'\)/)
+		expect(board).toMatch(/\{ key: 'score', label: this\.t\('pipelinq', 'Score'\) \}/)
 		expect(board).toMatch(/compareCallFirst/)
 	})
 })

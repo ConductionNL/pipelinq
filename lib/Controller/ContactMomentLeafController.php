@@ -26,40 +26,62 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Integration\ContactMomentLeafProvider;
-use OCA\Pipelinq\Service\ContactMomentFilingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentLeafProviderInterface;
+use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 
 /**
  * Routes for the contact moments leaf.
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
 class ContactMomentLeafController extends Controller {
+	use ReadsTypedRequestParameters;
+
+	/**
+	 * The request parameters create() reads: name => [type, default]. The
+	 * host id is required.
+	 *
+	 * @var array<string, array{0: string, 1: string|null}>
+	 */
+	private const CREATE_PARAMETERS = [
+		'hostId' => ['string', null],
+		'title' => ['string', ''],
+		'channel' => ['string', ''],
+		'direction' => ['string', ''],
+		'outcome' => ['?string', null],
+		'summary' => ['?string', null],
+		'occurredAt' => ['?string', null],
+		'client' => ['?string', null],
+	];
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ContactMomentLeafProvider $provider The leaf's data provider.
-	 * @param ContactMomentFilingService $filingService The two filing acts.
+	 * @param ContactMomentLeafProviderInterface $provider The leaf's data provider.
+	 * @param ContactMomentFilingServiceInterface $filingService The two filing acts.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContactMomentLeafProvider $provider,
-		private readonly ContactMomentFilingService $filingService,
+		private readonly ContactMomentLeafProviderInterface $provider,
+		private readonly ContactMomentFilingServiceInterface $filingService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -76,12 +98,12 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @return JSONResponse The rows, or the provider's refusal.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	#[NoAdminRequired]
 	public function index(
 		string $hostId,
-		int $limit = ContactMomentLeafProvider::DEFAULT_LIMIT,
+		int $limit = ContactMomentLeafProviderInterface::DEFAULT_LIMIT,
 		string $partyId = '',
 	): JSONResponse {
 		$result = $this->provider->list(hostId: $hostId, limit: $limit, partyId: $partyId);
@@ -92,41 +114,28 @@ class ContactMomentLeafController extends Controller {
 	/**
 	 * Append one contact moment to a host object.
 	 *
-	 * @param string $hostId The host object's uuid.
-	 * @param string $title The subject of the contact moment.
-	 * @param string $channel The channel it ran over.
-	 * @param string $direction inbound, outbound or internal.
-	 * @param string|null $outcome Optional disposition.
-	 * @param string|null $summary Optional free text.
-	 * @param string|null $occurredAt Optional instant; defaults to now.
-	 * @param string|null $client The party this contact moment is with.
+	 * Request parameters: `hostId`, the host object's uuid (required);
+	 * `title`, the subject; `channel`, the channel it ran over; `direction`,
+	 * inbound, outbound or internal; and the optional `outcome`, `summary`,
+	 * `occurredAt` (defaults to now) and `client`, the party it is with. All
+	 * are strings.
 	 *
-	 * @return JSONResponse The created row, or the provider's refusal.
+	 * @return Response The created row, the provider's refusal, or a bare 400 when a parameter is missing or not a string.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	#[NoAdminRequired]
-	public function create(
-		string $hostId,
-		string $title = '',
-		string $channel = '',
-		string $direction = '',
-		?string $outcome = null,
-		?string $summary = null,
-		?string $occurredAt = null,
-		?string $client = null,
-	): JSONResponse {
+	public function create(): Response {
+		$payload = $this->typedRequestParameters(spec: self::CREATE_PARAMETERS);
+		if ($payload === null) {
+			return new Response(Http::STATUS_BAD_REQUEST);
+		}
+
+		$hostId = $payload['hostId'];
+		unset($payload['hostId']);
 		$result = $this->provider->create(
 			hostId: $hostId,
-			payload: [
-				'title' => $title,
-				'channel' => $channel,
-				'direction' => $direction,
-				'outcome' => ($outcome ?? ''),
-				'summary' => ($summary ?? ''),
-				'occurredAt' => ($occurredAt ?? ''),
-				'client' => ($client ?? ''),
-			],
+			payload: array_map(static fn (?string $value): string => ($value ?? ''), $payload),
 		);
 
 		return $this->respond(result: $result);
@@ -144,7 +153,7 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @return JSONResponse The updated contact moment, or the refusal.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
 	 */
 	#[NoAdminRequired]
 	public function fileOnAlsoCase(string $momentId, string $caseId = ''): JSONResponse {
@@ -163,7 +172,7 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @return JSONResponse The updated contact moment, or the refusal.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-cannot-be-left-with-no-case-req-cms-006
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-cannot-be-left-with-no-case-req-cms-006
 	 */
 	#[NoAdminRequired]
 	public function unfileFromCase(string $momentId, string $caseId, ?string $newPrimary = null): JSONResponse {

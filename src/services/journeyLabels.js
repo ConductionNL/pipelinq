@@ -20,7 +20,7 @@
  * @param {string} state The stored state.
  * @param {function(string, string): string} t The translator.
  * @return {string} The label, falling back to the stored value.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
  */
 export function runStateLabel(state, t) {
 	const labels = {
@@ -38,7 +38,7 @@ export function runStateLabel(state, t) {
  * @param {string} reason The stored reason.
  * @param {function(string, string): string} t The translator.
  * @return {string} The label, falling back to the stored value.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
  */
 export function runReasonLabel(reason, t) {
 	const labels = {
@@ -64,7 +64,7 @@ export function runReasonLabel(reason, t) {
  *
  * @param {Array<object>} runs The journey runs.
  * @return {object} `{sent, refused, failed}`.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
  */
 export function runCounts(runs) {
 	const counts = { sent: 0, refused: 0, failed: 0 }
@@ -84,7 +84,7 @@ export function runCounts(runs) {
  * @param {object} journey The stored journey.
  * @param {function(string, string, object=): string} t The translator.
  * @return {string} The message, empty when the journey compiled.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
 export function flowStatusMessage(journey, t) {
 	if (journey?.flowStatus === 'engine_missing') {
@@ -109,7 +109,7 @@ export function flowStatusMessage(journey, t) {
  *
  * @param {object} review The composed review.
  * @return {Array<string>} The empty source slugs.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 export function degradedSources(review) {
 	const degraded = review?.degraded
@@ -117,11 +117,29 @@ export function degradedSources(review) {
 }
 
 /**
+ * A review's highlight lines, each with the direction its figure moved
+ * against the week before. A review stored before it carried directions
+ * gives every line none.
+ *
+ * @param {object} review The composed review.
+ * @return {Array<{text: string, direction: string}>} `up`, `down`, `flat` or ''.
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+ */
+export function highlightLines(review) {
+	const lines = Array.isArray(review?.highlights) ? review.highlights : []
+	const directions = Array.isArray(review?.highlightDirections) ? review.highlightDirections : []
+	return lines.map((text, index) => ({
+		text,
+		direction: ['up', 'down', 'flat'].includes(directions[index]) ? directions[index] : '',
+	}))
+}
+
+/**
  * Whether a review's narrative was written by an agent (ADR-088).
  *
  * @param {object} review The composed review.
  * @return {boolean} True when an agent wrote it.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-narrative-mark-has-storage-and-a-renderer-and-no-writer-yet
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-narrative-mark-has-storage-and-a-renderer-and-no-writer-yet
  */
 export function isAgentAuthored(review) {
 	return Boolean(review?.agentAuthored) && Boolean(review?.agentAuthoredBy)

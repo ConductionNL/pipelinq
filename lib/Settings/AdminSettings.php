@@ -23,10 +23,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Settings;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\IntegrationDetector;
-use OCA\Pipelinq\Service\Settings\MenuStructure;
-use OCA\Pipelinq\Service\SettingsService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\IntegrationDetectorInterface;
+use OCA\Pipelinq\Kernel\Contracts\MenuStructureInterface;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
@@ -44,18 +44,18 @@ class AdminSettings implements IDelegatedSettings {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService The settings service.
+	 * @param SettingsServiceInterface $settingsService The settings service.
 	 * @param IAppManager $appManager The app manager.
 	 * @param IInitialState $initialState The initial state service.
-	 * @param MenuStructure $menuStructure How the stored structure settings read.
-	 * @param IntegrationDetector $integrations Detects Shillinq and XWiki for the read-only integrations card.
+	 * @param MenuStructureInterface $menuStructure How the stored structure settings read.
+	 * @param IntegrationDetectorInterface $integrations Detects Shillinq and XWiki for the read-only integrations card.
 	 */
 	public function __construct(
-		private SettingsService $settingsService,
+		private SettingsServiceInterface $settingsService,
 		private IAppManager $appManager,
 		private IInitialState $initialState,
-		private MenuStructure $menuStructure,
-		private IntegrationDetector $integrations,
+		private MenuStructureInterface $menuStructure,
+		private IntegrationDetectorInterface $integrations,
 	) {
 	}//end __construct()
 
@@ -65,28 +65,28 @@ class AdminSettings implements IDelegatedSettings {
 	 * @return TemplateResponse The settings form template.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
-	 * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	public function getForm(): TemplateResponse {
 		$config = $this->settingsService->getSettings();
-		$version = $this->appManager->getAppVersion(appId: Application::APP_ID);
+		$version = $this->appManager->getAppVersion(appId: AppIdentity::APP_ID);
 
 		$this->initialState->provideInitialState('version', $version);
 		$this->initialState->provideInitialState(
-			MenuStructure::KEY,
-			$this->menuStructure->normalise(stored: (string)($config[MenuStructure::KEY] ?? ''))
+			MenuStructureInterface::KEY,
+			$this->menuStructure->normalise(stored: (string)($config[MenuStructureInterface::KEY] ?? ''))
 		);
 		$this->initialState->provideInitialState(
-			MenuStructure::MODULES_KEY,
-			$this->menuStructure->normaliseModules(stored: (string)($config[MenuStructure::MODULES_KEY] ?? ''))
+			MenuStructureInterface::MODULES_KEY,
+			$this->menuStructure->normaliseModules(stored: (string)($config[MenuStructureInterface::MODULES_KEY] ?? ''))
 		);
 
 		// Detected, never typed: the admin page shows what this instance has.
 		$this->initialState->provideInitialState('detected_integrations', $this->integrations->all());
 
 		return new TemplateResponse(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'settings/admin',
 			[
 				'config' => json_encode($config),

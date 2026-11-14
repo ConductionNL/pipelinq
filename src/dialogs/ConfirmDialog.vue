@@ -16,7 +16,7 @@
   @spec openspec/specs/declarative-view-system/spec.md
 -->
 <template>
-	<NcDialog :name="name" @closing="$emit('cancel')">
+	<CnDialog width="confirm" :name="name" @closing="$emit('cancel')">
 		<p class="confirm-dialog__message">
 			{{ message }}
 		</p>
@@ -28,15 +28,16 @@
 				{{ confirmLabel || t('pipelinq', 'Confirm') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'ConfirmDialog',
-	components: { NcButton, NcDialog },
+	components: { NcButton, CnDialog },
 	props: {
 		/** Dialog title. */
 		name: { type: String, required: true },

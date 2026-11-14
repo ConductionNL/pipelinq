@@ -33,9 +33,9 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-009
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-010
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-009
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-010
  */
 
 declare(strict_types=1);
@@ -44,6 +44,7 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\Pipelinq\Kernel\Contracts\ZrcClientInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -57,7 +58,7 @@ use Throwable;
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
-class ZrcClient {
+class ZrcClient implements ZrcClientInterface {
 	public const SCOPE_LEZEN = 'zaken.lezen';
 
 	/**
@@ -141,7 +142,7 @@ class ZrcClient {
 	 * @param array<string, mixed> $statusData Body for POST /statussen.
 	 *
 	 * @return string URL of the created status.
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
 	 */
 	public function addStatus(array $endpoint, array $caseMap, array $statusData): string {
 		$client = $this->requireClient(endpoint: $endpoint);
@@ -191,76 +192,141 @@ class ZrcClient {
 	 *    for natural persons, innNnpId for organisations).
 	 *
 	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param array<string, mixed> $caseMap ZgwResourceMapping for the parent zaak.
-	 * @param array<string, mixed> $contact Pipelinq Contact payload.
-	 * @param string $roltypeUrl Roltype URL (from ZtcClient::resolveRoltype).
-	 * @param string $roltoelichting Free-text role description.
+	 * @param InitiatorLink        $link     The parent zaak and the rol to assign on it.
 	 *
 	 * @return string Rol URL (existing or newly created).
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
 	 */
-	public function linkInitiator(
-		array $endpoint,
-		array $caseMap,
-		array $contact,
-		string $roltypeUrl,
-		string $roltoelichting = 'Initiator',
-	): string {
-		$client = $this->requireClient(endpoint: $endpoint);
-		$zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
-		$caseUrl = (string)($caseMap['zgwUrl'] ?? '');
-		[$betrType, $ident] = self::contactIdentification(contact: $contact);
+	public function linkInitiator(array $endpoint, InitiatorLink $link): string {
+		$zrc = new ZrcConnection(
+			client: $this->requireClient(endpoint: $endpoint),
+			url: $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc')
+		);
 
-		// Pre-flight: list existing rollen on the zaak.
+		$existing = $this->findExistingRol(zrc: $zrc, link: $link);
+		if ($existing !== null) {
+			return $existing;
+		}
+
+		return $this->createRol(zrc: $zrc, link: $link);
+	}//end linkInitiator()
+
+	/**
+	 * Pre-flight: the URL of a rol on the zaak that already identifies the contact.
+	 *
+	 * A failed listing is logged and answers null, so the caller falls through to POST.
+	 *
+	 * @param ZrcConnection $zrc  The resolved client and ZRC URL.
+	 * @param InitiatorLink $link The link request.
+	 *
+	 * @return string|null The existing rol URL, or null when there is none.
+	 */
+	private function findExistingRol(ZrcConnection $zrc, InitiatorLink $link): ?string {
 		try {
-			$existing = $this->api->callComponent(
-				componentUrl: $zrcUrl,
-				method: 'GET',
-				path: '/rollen',
-				client: $client,
-				query: ['zaak' => $caseUrl, 'betrokkeneType' => $betrType]
-			);
-			$rows = $existing['body']['results'] ?? $existing['body'];
-			if (is_array($rows) === true) {
-				foreach ($rows as $row) {
-					if (is_array($row) === false) {
-						continue;
-					}
-
-					$hit = $row['betrokkeneIdentificatie'] ?? [];
-					if (is_array($hit) === true && self::identMatches(a: $hit, b: $ident) === true) {
-						$url = (string)($row['url'] ?? '');
-						if ($url !== '') {
-							return $url;
-						}
-					}
-				}
-			}
+			$ident = self::contactIdentification(contact: $link->rol->contact)[1];
+			return self::matchingRolUrl(rows: $this->listRollen(zrc: $zrc, link: $link), ident: $ident);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'ZGW ZRC: linkInitiator GET /rollen failed (will fall through to POST)',
 				['err' => $e->getMessage()]
 			);
-		}//end try
+		}
 
+		return null;
+	}//end findExistingRol()
+
+	/**
+	 * GET the rollen of the zaak for the contact's betrokkeneType.
+	 *
+	 * @param ZrcConnection $zrc  The resolved client and ZRC URL.
+	 * @param InitiatorLink $link The link request.
+	 *
+	 * @return mixed The result rows (paginated `results` or the bare body).
+	 */
+	private function listRollen(ZrcConnection $zrc, InitiatorLink $link): mixed {
+		$existing = $this->api->callComponent(
+			componentUrl: $zrc->url,
+			method: 'GET',
+			path: '/rollen',
+			client: $zrc->client,
+			query: ['zaak' => $link->caseUrl(), 'betrokkeneType' => self::contactIdentification(contact: $link->rol->contact)[0]]
+		);
+
+		return $existing['body']['results'] ?? $existing['body'];
+	}//end listRollen()
+
+	/**
+	 * The URL of the first row whose identification overlaps the contact's.
+	 *
+	 * @param mixed                $rows  The listed rollen.
+	 * @param array<string, mixed> $ident The contact's identification.
+	 *
+	 * @return string|null
+	 */
+	private static function matchingRolUrl(mixed $rows, array $ident): ?string {
+		if (is_array($rows) === false) {
+			return null;
+		}
+
+		foreach ($rows as $row) {
+			$url = self::rolUrlWhenMatching(row: $row, ident: $ident);
+			if ($url !== '') {
+				return $url;
+			}
+		}
+
+		return null;
+	}//end matchingRolUrl()
+
+	/**
+	 * The row's URL when its identification overlaps the contact's, otherwise ''.
+	 *
+	 * @param mixed                $row   One listed rol.
+	 * @param array<string, mixed> $ident The contact's identification.
+	 *
+	 * @return string
+	 */
+	private static function rolUrlWhenMatching(mixed $row, array $ident): string {
+		if (is_array($row) === false) {
+			return '';
+		}
+
+		$hit = $row['betrokkeneIdentificatie'] ?? [];
+		if (is_array($hit) === false || self::identMatches(a: $hit, b: $ident) === false) {
+			return '';
+		}
+
+		return (string)($row['url'] ?? '');
+	}//end rolUrlWhenMatching()
+
+	/**
+	 * POST a new rol for the contact on the zaak.
+	 *
+	 * @param ZrcConnection $zrc  The resolved client and ZRC URL.
+	 * @param InitiatorLink $link The link request.
+	 *
+	 * @return string The created rol URL (Location header, body url, or '').
+	 */
+	private function createRol(ZrcConnection $zrc, InitiatorLink $link): string {
+		[$betrType, $ident] = self::contactIdentification(contact: $link->rol->contact);
 		$body = [
-			'zaak' => $caseUrl,
+			'zaak' => $link->caseUrl(),
 			'betrokkeneType' => $betrType,
 			'betrokkeneIdentificatie' => $ident,
-			'roltype' => $roltypeUrl,
-			'roltoelichting' => $roltoelichting,
+			'roltype' => $link->rol->roltype->url,
+			'roltoelichting' => $link->rol->roltype->toelichting,
 		];
 
 		$response = $this->api->callComponent(
-			componentUrl: $zrcUrl,
+			componentUrl: $zrc->url,
 			method: 'POST',
 			path: '/rollen',
-			client: $client,
+			client: $zrc->client,
 			body: $body
 		);
 
 		return (string)($response['headers']['location'] ?? $response['body']['url'] ?? '');
-	}//end linkInitiator()
+	}//end createRol()
 
 	/**
 	 * Translate a pipelinq Contact into ZGW betrokkeneType + identification map.
@@ -268,7 +334,7 @@ class ZrcClient {
 	 * @param array<string, mixed> $contact Pipelinq Contact payload.
 	 *
 	 * @return array{0:string,1:array<string,mixed>} [betrokkeneType, ident]
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
 	 */
 	public static function contactIdentification(array $contact): array {
 		$bsn = (string)($contact['bsn'] ?? '');

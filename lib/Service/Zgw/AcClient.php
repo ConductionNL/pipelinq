@@ -32,14 +32,14 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-006
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -97,7 +97,7 @@ class AcClient {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-006
 	 */
 	public function refreshScopes(array $endpoint, array $client): void {
 		$endpointId = (string)($endpoint['id'] ?? ($endpoint['@self']['slug'] ?? ''));
@@ -106,33 +106,39 @@ class AcClient {
 			return;
 		}
 
-		try {
-			$response = $this->api->callComponent(
-				componentUrl: $acUrl,
-				method: 'GET',
-				path: '/autorisaties',
-				client: $client
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ZGW AC: refreshScopes failed',
-				['endpoint' => $endpointId, 'err' => $e->getMessage()]
-			);
+		$results = $this->autorisaties(source: ['endpoint' => $endpointId, 'ac' => $acUrl], client: $client);
+		if ($results === null) {
 			return;
+		}
+
+		$scopes = $this->buildScopeMap(results: $results, clientIdentifier: (string)($client['clientIdentifier'] ?? ''));
+		$this->cache[$endpointId] = ['refreshedAt' => time(), 'scopes' => $scopes];
+	}//end refreshScopes()
+
+	/**
+	 * The AC's authorisation entries for the client (its `results`, else the
+	 * bare body); null when the read fails (logged) or answers no list.
+	 *
+	 * @param array{endpoint: string, ac: string} $source The endpoint id and its AC.
+	 * @param array<string, mixed>                $client The ZGW client.
+	 *
+	 * @return array<mixed>|null
+	 */
+	private function autorisaties(array $source, array $client): ?array {
+		try {
+			$response = $this->api->callComponent(componentUrl: $source['ac'], method: 'GET', path: '/autorisaties', client: $client);
+		} catch (Throwable $e) {
+			$this->logger->warning('ZGW AC: refreshScopes failed', ['endpoint' => $source['endpoint'], 'err' => $e->getMessage()]);
+			return null;
 		}
 
 		$results = $response['body']['results'] ?? $response['body'];
 		if (is_array($results) === false) {
-			return;
+			return null;
 		}
 
-		$scopes = $this->buildScopeMap(
-			results: $results,
-			clientIdentifier: (string)($client['clientIdentifier'] ?? '')
-		);
-
-		$this->cache[$endpointId] = ['refreshedAt' => time(), 'scopes' => $scopes];
-	}//end refreshScopes()
+		return $results;
+	}//end autorisaties()
 
 	/**
 	 * Build the `resourceUrl → [scope, ...]` map from `/autorisaties` results.
@@ -307,7 +313,7 @@ class AcClient {
 	 * @return void
 	 *
 	 * @throws InsufficientScopeException When the scope is not granted.
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-006
 	 */
 	public function require(array $endpoint, string $resourceUrl, string $scope): void {
 		if ($this->hasScope(endpoint: $endpoint, resourceUrl: $resourceUrl, scope: $scope) === true) {
@@ -342,7 +348,7 @@ class AcClient {
 	 * @return int
 	 */
 	private function refreshInterval(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.ac_refresh_interval', self::DEFAULT_REFRESH_S);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'zgw.ac_refresh_interval', self::DEFAULT_REFRESH_S);
 		if ($value > 0) {
 			return $value;
 		}

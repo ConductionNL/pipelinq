@@ -45,7 +45,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
+ * @spec openspec/specs/berichtenbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -60,9 +60,33 @@ use Psr\Log\LoggerInterface;
 /**
  * Dormant log-backed Pipelinq Berichtenbox / Logius BBK 1.7 adapter.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
+ * @spec openspec/specs/berichtenbox/spec.md
  */
 class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
+
+	/**
+	 * What to bind for real transport.
+	 *
+	 * @var string
+	 */
+	private const NOTE_DISPATCH = 'Bind LogiusConnector (or an openconnector source slug `logius-berichtenbox`) by overriding '
+		. 'BerichtenboxAdapterInterface in Application::register() to enable real transport.';
+
+	/**
+	 * What to bind for real webhook verification.
+	 *
+	 * @var string
+	 */
+	private const NOTE_VERIFY = 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
+		. 'to enable real webhook HMAC verification.';
+
+	/**
+	 * What to bind for real mailbox checks.
+	 *
+	 * @var string
+	 */
+	private const NOTE_MAILBOX = 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
+		. 'to enable real mailbox reachability checks. NEVER log BSN values.';
 	/**
 	 * Construct the log-backed Berichtenbox adapter.
 	 *
@@ -83,45 +107,62 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * @param array<string,mixed> $message BBK 1.7 envelope.
 	 *
 	 * @return BerichtenboxResult The dispatch outcome.
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
+	 * @spec openspec/specs/berichtenbox/spec.md
 	 */
 	public function dispatchMessage(array $message): BerichtenboxResult {
-		$sanitised = $message;
-		if (isset($sanitised['recipientBsn']) === true) {
-			$sanitised['recipientBsn'] = '[REDACTED]';
-		}
-
-		if (isset($sanitised['body']) === true) {
-			$sanitised['body'] = '[REDACTED-body-bytes=' . strlen((string)$sanitised['body']) . ']';
-		}
-
-		if (isset($sanitised['attachments']) === true && is_array($sanitised['attachments']) === true) {
-			$sanitised['attachments'] = [
-				'_redacted' => true,
-				'count' => count($sanitised['attachments']),
-			];
-		}
-
 		$reference = 'bbk-log-' . bin2hex(random_bytes(8));
 		$this->logger->info(
 			'Pipelinq Berichtenbox dispatch deferred (no outbound connector bound)',
 			[
 				'logiusKenmerk' => $reference,
-				'message' => $sanitised,
+				'message' => $this->redacted(message: $message),
 			]
 		);
 
-		return new BerichtenboxResult(
-			outcome: 'DISPATCH_DEFERRED',
-			logiusReference: $reference,
-			dormant: true,
-			extras: [
-				'reason' => 'no-outbound-connector-bound',
-				'note' => 'Bind LogiusConnector (or an openconnector source slug `logius-berichtenbox`) by overriding '
-					. 'BerichtenboxAdapterInterface in Application::register() to enable real transport.',
-			],
-		);
+		return $this->deferred(outcome: 'DISPATCH_DEFERRED', trail: ['reference' => $reference, 'note' => self::NOTE_DISPATCH]);
 	}//end dispatchMessage()
+
+	/**
+	 * The message as it may be logged: the BSN replaced, the body by its
+	 * byte length, a list of attachments by its count.
+	 *
+	 * @param array<string, mixed> $message The message.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function redacted(array $message): array {
+		if (isset($message['recipientBsn']) === true) {
+			$message['recipientBsn'] = '[REDACTED]';
+		}
+
+		if (isset($message['body']) === true) {
+			$message['body'] = '[REDACTED-body-bytes=' . strlen((string)$message['body']) . ']';
+		}
+
+		if (isset($message['attachments']) === true && is_array($message['attachments']) === true) {
+			$message['attachments'] = ['_redacted' => true, 'count' => count($message['attachments'])];
+		}
+
+		return $message;
+	}//end redacted()
+
+	/**
+	 * A deferred result: dormant, under the logged reference, saying no
+	 * outbound connector is bound and what to bind.
+	 *
+	 * @param string                                $outcome The deferred outcome.
+	 * @param array{reference: string, note: string} $trail   The logged reference and the note.
+	 *
+	 * @return BerichtenboxResult
+	 */
+	private function deferred(string $outcome, array $trail): BerichtenboxResult {
+		return new BerichtenboxResult(
+			outcome: $outcome,
+			logiusReference: $trail['reference'],
+			dormant: true,
+			extras: ['reason' => 'no-outbound-connector-bound', 'note' => $trail['note']],
+		);
+	}//end deferred()
 
 	/**
 	 * Log the webhook-verify intent + synthesise a VERIFY_DEFERRED
@@ -135,7 +176,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * @param array<string,string> $headers Inbound headers.
 	 *
 	 * @return BerichtenboxResult The verification outcome.
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
+	 * @spec openspec/specs/berichtenbox/spec.md
 	 */
 	public function verifyDeliveryWebhook(string $rawBody, array $headers): BerichtenboxResult {
 		$signature = $headers['X-Logius-Signature'] ?? ($headers['x-logius-signature'] ?? '');
@@ -152,16 +193,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 			]
 		);
 
-		return new BerichtenboxResult(
-			outcome: 'VERIFY_DEFERRED',
-			logiusReference: $reference,
-			dormant: true,
-			extras: [
-				'reason' => 'no-outbound-connector-bound',
-				'note' => 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
-					. 'to enable real webhook HMAC verification.',
-			],
-		);
+		return $this->deferred(outcome: 'VERIFY_DEFERRED', trail: ['reference' => $reference, 'note' => self::NOTE_VERIFY]);
 	}//end verifyDeliveryWebhook()
 
 	/**
@@ -179,9 +211,12 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * @orphan-auth exclude belongs to the log-only Berichtenbox adapter, the stand-in used until a real
 	 * mailbox integration lands; the method is the shape that integration will
 	 * call. Pending in pipelinq#764.
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
+	 * @spec openspec/specs/berichtenbox/spec.md
 	 */
-	public function checkMailbox(string $bsn): BerichtenboxResult {
+	public function checkMailbox(
+		#[\SensitiveParameter]
+		string $bsn,
+	): BerichtenboxResult {
 		$reference = 'bbk-mbox-log-' . bin2hex(random_bytes(6));
 		$this->logger->info(
 			'Pipelinq Berichtenbox checkMailbox deferred (no outbound connector bound)',
@@ -192,16 +227,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 			]
 		);
 
-		return new BerichtenboxResult(
-			outcome: 'MAILBOX_DEFERRED',
-			logiusReference: $reference,
-			dormant: true,
-			extras: [
-				'reason' => 'no-outbound-connector-bound',
-				'note' => 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
-					. 'to enable real mailbox reachability checks. NEVER log BSN values.',
-			],
-		);
+		return $this->deferred(outcome: 'MAILBOX_DEFERRED', trail: ['reference' => $reference, 'note' => self::NOTE_MAILBOX]);
 	}//end checkMailbox()
 
 	/**

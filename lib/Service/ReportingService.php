@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
  * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
  * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
  * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateInterval;
 use DateTimeImmutable;
+use OCA\Pipelinq\Kernel\Contracts\ReportingServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -45,9 +46,9 @@ use Psr\Log\LoggerInterface;
  *  single-purpose methods over one contactmoment reporting concern; splitting
  *  it would scatter one cohesive reporting surface across several classes.
  *
- * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
  */
-class ReportingService {
+class ReportingService implements ReportingServiceInterface {
 	/**
 	 * Default SLA targets.
 	 *
@@ -85,47 +86,11 @@ class ReportingService {
 	 *
 	 * @return array{total: int, fcrRate: float, avgHandlingTime: string, slaCompliance: float} KPI data.
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getKpis(string $from, string $to): array {
 		try {
-			$contactmomenten = $this->fetchContactmomenten(from: $from, to: $to);
-
-			$total = count($contactmomenten);
-			$fcrRate = $this->calculateFcr(contactmomenten: $contactmomenten);
-			$avgHandlingTime = $this->calculateAverageHandlingTime(
-				durations: array_values(
-					array_filter(
-						array_column($contactmomenten, 'duration'),
-						static fn ($v) => $v !== null && $v !== '',
-					)
-				)
-			);
-
-			// Compute SLA compliance across all channels.
-			$slaCompliance = 0.0;
-			if ($total > 0) {
-				// Group by channel preserving full moment arrays for SLA threshold evaluation.
-				$channelGroups = [];
-				foreach ($contactmomenten as $moment) {
-					$channelName = $moment['channel'] ?? 'unknown';
-					$channelGroups[$channelName][] = $moment;
-				}
-
-				$totalWithin = 0;
-				foreach ($channelGroups as $channel => $items) {
-					$totalWithin += $this->countWithinSla(channel: $channel, moments: $items);
-				}
-
-				$slaCompliance = round(($totalWithin / $total) * 100, 1);
-			}
-
-			return [
-				'total' => $total,
-				'fcrRate' => $fcrRate,
-				'avgHandlingTime' => $avgHandlingTime,
-				'slaCompliance' => $slaCompliance,
-			];
+			return $this->kpisOf(contactmomenten: $this->fetchContactmomenten(from: $from, to: $to));
 		} catch (\Throwable $e) {
 			$this->logger->error('ReportingService::getKpis failed', ['exception' => $e]);
 			return [
@@ -134,8 +99,81 @@ class ReportingService {
 				'avgHandlingTime' => '0:00',
 				'slaCompliance' => 0.0,
 			];
-		}//end try
+		}
 	}//end getKpis()
+
+	/**
+	 * The KPIs of a set of contactmomenten.
+	 *
+	 * @param array<array<string, mixed>> $contactmomenten The contactmoment data.
+	 *
+	 * @return array{total: int, fcrRate: float, avgHandlingTime: string, slaCompliance: float}
+	 */
+	private function kpisOf(array $contactmomenten): array {
+		return [
+			'total' => count($contactmomenten),
+			'fcrRate' => $this->calculateFcr(contactmomenten: $contactmomenten),
+			'avgHandlingTime' => $this->calculateAverageHandlingTime(durations: self::durationsOf(moments: $contactmomenten)),
+			// Compute SLA compliance across all channels.
+			'slaCompliance' => $this->overallSlaCompliance(contactmomenten: $contactmomenten),
+		];
+	}//end kpisOf()
+
+	/**
+	 * The share of contactmomenten handled within their channel's SLA, as a
+	 * percentage; 0.0 for none.
+	 *
+	 * @param array<array<string, mixed>> $contactmomenten The contactmoment data.
+	 *
+	 * @return float
+	 */
+	private function overallSlaCompliance(array $contactmomenten): float {
+		$total = count($contactmomenten);
+		if ($total === 0) {
+			return 0.0;
+		}
+
+		// Group by channel preserving full moment arrays for SLA threshold evaluation.
+		$totalWithin = 0;
+		foreach (self::groupedBy(moments: $contactmomenten, field: 'channel') as $channel => $items) {
+			$totalWithin += $this->countWithinSla(channel: $channel, moments: $items);
+		}
+
+		return round(($totalWithin / $total) * 100, 1);
+	}//end overallSlaCompliance()
+
+	/**
+	 * The non-empty handling durations of a set of contactmomenten, in order.
+	 *
+	 * @param array<array<string, mixed>> $moments The contactmoment data.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private static function durationsOf(array $moments): array {
+		return array_values(
+			array_filter(
+				array_column($moments, 'duration'),
+				static fn ($v) => $v !== null && $v !== '',
+			)
+		);
+	}//end durationsOf()
+
+	/**
+	 * Contactmomenten grouped by one of their fields ('unknown' when absent), in first-seen order.
+	 *
+	 * @param array<array<string, mixed>> $moments The contactmoment data.
+	 * @param string                      $field   `channel` or `agent`.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>>
+	 */
+	private static function groupedBy(array $moments, string $field): array {
+		$groups = [];
+		foreach ($moments as $moment) {
+			$groups[$moment[$field] ?? 'unknown'][] = $moment;
+		}
+
+		return $groups;
+	}//end groupedBy()
 
 	/**
 	 * Get channel distribution for the given date range.
@@ -145,7 +183,7 @@ class ReportingService {
 	 *
 	 * @return array<string, int> Contact counts keyed by channel.
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getChannelDistribution(string $from, string $to): array {
 		try {
@@ -168,39 +206,71 @@ class ReportingService {
 	 *
 	 * @return array<string, array<string, int>> Time-series data: channel => [date => count].
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getChannelTrend(string $from, string $to, string $granularity = 'daily'): array {
 		try {
 			$contactmomenten = $this->fetchContactmomenten(from: $from, to: $to);
-			$trend = [];
-
-			foreach ($contactmomenten as $moment) {
-				$channel = $moment['channel'] ?? 'unknown';
-				$contactedAt = $moment['contactedAt'] ?? null;
-				if ($contactedAt === null) {
-					continue;
-				}
-
-				try {
-					$dateTime = new DateTimeImmutable($contactedAt);
-					$key = $dateTime->format('Y-m-d');
-					if ($granularity === 'weekly') {
-						$key = $dateTime->format('o-W');
-					}
-				} catch (\Exception) {
-					continue;
-				}
-
-				$trend[$channel][$key] = ($trend[$channel][$key] ?? 0) + 1;
-			}
-
-			return $trend;
+			return $this->channelTrend(moments: $contactmomenten, granularity: $granularity);
 		} catch (\Throwable $e) {
 			$this->logger->error('ReportingService::getChannelTrend failed', ['exception' => $e]);
 			return [];
 		}//end try
 	}//end getChannelTrend()
+
+	/**
+	 * Count the contact moments per channel per day or ISO week.
+	 *
+	 * @param array<array<string, mixed>> $moments The contact moments.
+	 * @param string $granularity 'daily' or 'weekly'.
+	 *
+	 * @return array<string, array<string, int>> Time-series data: channel => [date => count].
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
+	 */
+	private function channelTrend(array $moments, string $granularity): array {
+		$trend = [];
+
+		foreach ($moments as $moment) {
+			$channel = $moment['channel'] ?? 'unknown';
+			$key = $this->trendKey(contactedAt: ($moment['contactedAt'] ?? null), granularity: $granularity);
+			if ($key === null) {
+				continue;
+			}
+
+			$trend[$channel][$key] = ($trend[$channel][$key] ?? 0) + 1;
+		}
+
+		return $trend;
+	}//end channelTrend()
+
+	/**
+	 * The day (Y-m-d) or ISO week (o-W) of a contact moment, or null when it has no readable date.
+	 *
+	 * @param mixed $contactedAt The contactedAt value.
+	 * @param string $granularity 'daily' or 'weekly'.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
+	 */
+	private function trendKey($contactedAt, string $granularity): string|null {
+		if ($contactedAt === null) {
+			return null;
+		}
+
+		try {
+			$dateTime = new DateTimeImmutable($contactedAt);
+			$key = $dateTime->format('Y-m-d');
+			if ($granularity === 'weekly') {
+				$key = $dateTime->format('o-W');
+			}
+		} catch (\Exception) {
+			return null;
+		}
+
+		return $key;
+	}//end trendKey()
 
 	/**
 	 * Get per-agent performance metrics for the given date range.
@@ -210,37 +280,14 @@ class ReportingService {
 	 *
 	 * @return array<string, array{count: int, fcrRate: float, avgHandlingTime: string}> Per-agent metrics.
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getAgentPerformance(string $from, string $to): array {
 		try {
-			$contactmomenten = $this->fetchContactmomenten(from: $from, to: $to);
-			$byAgent = [];
-
-			foreach ($contactmomenten as $moment) {
-				$agent = $moment['agent'] ?? 'unknown';
-				if (isset($byAgent[$agent]) === false) {
-					$byAgent[$agent] = [];
-				}
-
-				$byAgent[$agent][] = $moment;
-			}
-
-			$result = [];
-			foreach ($byAgent as $agent => $moments) {
-				$durations = array_values(
-					array_filter(
-						array_column($moments, 'duration'),
-						static fn ($v) => $v !== null && $v !== '',
-					)
-				);
-
-				$result[$agent] = [
-					'count' => count($moments),
-					'fcrRate' => $this->calculateFcr(contactmomenten: $moments),
-					'avgHandlingTime' => $this->calculateAverageHandlingTime(durations: $durations),
-				];
-			}
+			$result = array_map(
+				fn (array $moments): array => $this->agentMetrics(moments: $moments),
+				self::groupedBy(moments: $this->fetchContactmomenten(from: $from, to: $to), field: 'agent')
+			);
 
 			// Sort by contact count descending.
 			uasort($result, static fn ($a, $b) => $b['count'] <=> $a['count']);
@@ -249,8 +296,23 @@ class ReportingService {
 		} catch (\Throwable $e) {
 			$this->logger->error('ReportingService::getAgentPerformance failed', ['exception' => $e]);
 			return [];
-		}//end try
+		}
 	}//end getAgentPerformance()
+
+	/**
+	 * One agent's count, first-contact resolution and average handling time.
+	 *
+	 * @param array<array<string, mixed>> $moments The agent's contactmomenten.
+	 *
+	 * @return array{count: int, fcrRate: float, avgHandlingTime: string}
+	 */
+	private function agentMetrics(array $moments): array {
+		return [
+			'count' => count($moments),
+			'fcrRate' => $this->calculateFcr(contactmomenten: $moments),
+			'avgHandlingTime' => $this->calculateAverageHandlingTime(durations: self::durationsOf(moments: $moments)),
+		];
+	}//end agentMetrics()
 
 	/**
 	 * Get SLA compliance percentage for a given channel and date range.
@@ -263,7 +325,7 @@ class ReportingService {
 	 *
 	 * @return float Compliance as a percentage (0-100).
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getSlaCompliance(string $channel, string $from, string $to): float {
 		try {
@@ -298,7 +360,7 @@ class ReportingService {
 	 *
 	 * @return float FCR as a percentage (0-100).
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
 	 */
 	public function calculateFcr(array $contactmomenten): float {
@@ -322,7 +384,7 @@ class ReportingService {
 	 *
 	 * @return array<string, array<string, mixed>> SLA targets per channel.
 	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getSlaTargets(): array {
 		return $this->getAllSlaTargets();
@@ -523,7 +585,7 @@ class ReportingService {
 	 *
 	 * @return array<array<string, mixed>> Normalised contactmoment data arrays.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#scenario-contactmomenten-reporting-reads-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#scenario-contactmomenten-reporting-reads-tickets
 	 */
 	private function fetchContactmomenten(string $from, string $to): array {
 		$rows = $this->ticketService->findByType(ticketType: TicketService::TYPE_CONTACTMOMENT);
@@ -533,37 +595,64 @@ class ReportingService {
 
 		$moments = [];
 		foreach ($rows as $row) {
-			$data = $row;
-			if (is_array($data) === false) {
-				if (($row instanceof \JsonSerializable) === false) {
-					continue;
-				}
-
-				$data = $row->jsonSerialize();
-				if (is_array($data) === false) {
-					continue;
-				}
-			}
-
-			$occurredAt = (string)($data['occurredAt'] ?? '');
-			if ($this->withinRange(occurredAt: $occurredAt, from: $from, to: $to) === false) {
+			$data = self::ticketData(row: $row);
+			if ($data === null) {
 				continue;
 			}
 
-			$moments[] = [
-				// Renamed on the ticket schema — translate back for the calculators.
-				'contactedAt' => $occurredAt,
-				'agent' => ($data['assignee'] ?? 'unknown'),
-				// Unchanged between contactmoment and ticket.
-				'channel' => ($data['channel'] ?? 'unknown'),
-				'outcome' => ($data['outcome'] ?? ''),
-				'duration' => ($data['duration'] ?? null),
-				'channelMetadata' => ($data['channelMetadata'] ?? []),
-			];
-		}//end foreach
+			$occurredAt = (string)($data['occurredAt'] ?? '');
+			if ($this->withinRange(occurredAt: $occurredAt, from: $from, to: $to) === true) {
+				$moments[] = self::momentOf(data: $data, occurredAt: $occurredAt);
+			}
+		}
 
 		return $moments;
 	}//end fetchContactmomenten()
+
+	/**
+	 * A ticket row as an array: the row itself, or what it serialises to; null otherwise.
+	 *
+	 * @param mixed $row The ticket row or entity.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function ticketData($row): ?array {
+		if (is_array($row) === true) {
+			return $row;
+		}
+
+		$data = null;
+		if ($row instanceof \JsonSerializable) {
+			$data = $row->jsonSerialize();
+		}
+
+		if (is_array($data) === true) {
+			return $data;
+		}
+
+		return null;
+	}//end ticketData()
+
+	/**
+	 * The contactmoment the calculators read, from a ticket's data.
+	 *
+	 * @param array<string, mixed> $data       The ticket data.
+	 * @param string               $occurredAt The ticket's `occurredAt`.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function momentOf(array $data, string $occurredAt): array {
+		return [
+			// Renamed on the ticket schema — translate back for the calculators.
+			'contactedAt' => $occurredAt,
+			'agent' => ($data['assignee'] ?? 'unknown'),
+			// Unchanged between contactmoment and ticket.
+			'channel' => ($data['channel'] ?? 'unknown'),
+			'outcome' => ($data['outcome'] ?? ''),
+			'duration' => ($data['duration'] ?? null),
+			'channelMetadata' => ($data['channelMetadata'] ?? []),
+		];
+	}//end momentOf()
 
 	/**
 	 * Whether an occurrence timestamp falls inside an inclusive date window.
@@ -625,20 +714,44 @@ class ReportingService {
 	 * @return int Count of contacts within SLA target.
 	 */
 	private function countWithinSla(string $channel, array $moments): int {
-		$within = 0;
+		$threshold = $this->slaThreshold(channel: $channel);
+
+		if ($threshold === 0) {
+			return count($moments);
+		}
+
+		return $this->countMeasuredWithin(channel: $channel, moments: $moments, threshold: $threshold);
+	}//end countWithinSla()
+
+	/**
+	 * The channel's SLA threshold in seconds; 0 for a channel without a target.
+	 *
+	 * @param string $channel The channel.
+	 *
+	 * @return int
+	 */
+	private function slaThreshold(string $channel): int {
 		$targets = self::DEFAULT_SLA_TARGETS[$channel] ?? [];
-		$threshold = match ($channel) {
+		return match ($channel) {
 			'telefoon' => (int)($targets['wait_seconds'] ?? 30),
 			'balie' => (int)($targets['wait_minutes'] ?? 5) * 60,
 			'chat' => (int)($targets['response_seconds'] ?? 30),
 			'email' => (int)($targets['response_hours'] ?? 8) * 3600,
 			default => 0,
 		};
+	}//end slaThreshold()
 
-		if ($threshold === 0) {
-			return count($moments);
-		}
-
+	/**
+	 * Count the contact moments whose measured wait or response time is within the threshold.
+	 *
+	 * @param string $channel The channel.
+	 * @param array<array<string, mixed>> $moments The contactmoment data for this channel.
+	 * @param int $threshold The SLA threshold in seconds.
+	 *
+	 * @return int
+	 */
+	private function countMeasuredWithin(string $channel, array $moments, int $threshold): int {
+		$within = 0;
 		foreach ($moments as $moment) {
 			$metadata = $moment['channelMetadata'] ?? [];
 			$measured = match ($channel) {
@@ -652,7 +765,7 @@ class ReportingService {
 		}
 
 		return $within;
-	}//end countWithinSla()
+	}//end countMeasuredWithin()
 
 	/**
 	 * Neutralize a CSV cell value to prevent formula injection.

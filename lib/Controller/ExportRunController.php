@@ -26,25 +26,22 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Export\ExportAccessPolicy;
-use OCA\Pipelinq\Service\Export\ExportJobService;
-use OCA\Pipelinq\Service\Export\ExportRunService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportAccessPolicyInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -56,30 +53,30 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Thin read/retry surface
  *  delegating to the run + job services behind one error-handling helper.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011
  */
 class ExportRunController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ExportRunService $runs The run service.
-	 * @param ExportJobService $jobs The job service (retry).
-	 * @param ExportAccessPolicy $policy The export access policy.
+	 * @param ExportRunServiceInterface $runs The run service.
+	 * @param ExportJobServiceInterface $jobs The job service (retry).
+	 * @param ExportAccessPolicyInterface $policy The export access policy.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ExportRunService $runs,
-		private ExportJobService $jobs,
-		private ExportAccessPolicy $policy,
+		private ExportRunServiceInterface $runs,
+		private ExportJobServiceInterface $jobs,
+		private ExportAccessPolicyInterface $policy,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -89,7 +86,7 @@ class ExportRunController extends Controller {
 	 *
 	 * @return JSONResponse The matching runs.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
 	 */
 	#[NoAdminRequired]
 	public function listRuns(): JSONResponse {
@@ -113,7 +110,7 @@ class ExportRunController extends Controller {
 	 *
 	 * @return JSONResponse The run detail.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-02
 	 */
 	#[NoAdminRequired]
 	public function showRun(string $id): JSONResponse {
@@ -140,7 +137,7 @@ class ExportRunController extends Controller {
 	 *
 	 * @return JSONResponse The newly created pending run.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-03
 	 */
 	#[NoAdminRequired]
 	public function retryRun(string $id): JSONResponse {
@@ -177,20 +174,6 @@ class ExportRunController extends Controller {
 	}//end retryRun()
 
 	/**
-	 * The acting user UID (empty when no session).
-	 *
-	 * @return string The UID.
-	 */
-	private function actingUser(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-	}//end actingUser()
-
-	/**
 	 * Run an action behind the export-admin gate with shared error handling.
 	 *
 	 * Returns 401 unauthenticated, 403 when not an export admin/analyst, 404 /
@@ -202,29 +185,21 @@ class ExportRunController extends Controller {
 	 * @return JSONResponse The response.
 	 */
 	private function requireExportAdmin(callable $action, string $label): JSONResponse {
-		$uid = $this->actingUser();
-		if ($uid === '') {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		$refusal = $this->exportGate()->refusal(l10n: $this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		if ($this->policy->isExportAdmin(userId: $uid) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Insufficient permissions')], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-		} catch (\Throwable $e) {
-			$this->logger->error('ExportRunController::' . $label . ' failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		$response = new ExportActionResponse(l10n: $this->l10n, logger: $this->logger);
+		return $response->respond(action: $action, label: 'ExportRunController::' . $label);
 	}//end requireExportAdmin()
+
+	/**
+	 * The export-admin gate over this request's session.
+	 *
+	 * @return ExportAdminGate The gate.
+	 */
+	private function exportGate(): ExportAdminGate {
+		return new ExportAdminGate(userSession: $this->userSession, policy: $this->policy);
+	}//end exportGate()
 }//end class

@@ -24,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,11 +37,13 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AnalyticsServiceInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Cross-module analytics summary service.
@@ -51,12 +53,16 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * aggregates counts/sums in PHP and returns the four headline KPIs for the
  * Analytics dashboard.
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.1
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive analytics aggregator; splitting would fragment related KPI logic.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregation over many KPI dimensions; complexity is inherent, not accidental.
+ * @SuppressWarnings(PHPMD.TooManyMethods)           One private helper per KPI figure keeps each figure testable on its own.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Reads the stores and the forecast target of every KPI it aggregates.
  */
-class AnalyticsService {
+class AnalyticsService implements AnalyticsServiceInterface {
+	use PayloadToArray;
+
 	/**
 	 * Allowed period selectors (ADR-018, REQ-KB360-021).
 	 *
@@ -65,18 +71,11 @@ class AnalyticsService {
 	public const ALLOWED_PERIODS = ['week', 'month', 'quarter'];
 
 	/**
-	 * Default period when caller supplies none.
-	 *
-	 * @var string
-	 */
-	public const DEFAULT_PERIOD = 'month';
-
-	/**
 	 * Allowed trend metric identifiers.
 	 *
 	 * @var array<int, string>
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	public const ALLOWED_TREND_METRICS = [
@@ -124,7 +123,7 @@ class AnalyticsService {
 	 *
 	 * @var array<int, string>
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
 	 */
 	public const ALLOWED_OVERVIEW_PERIODS = ['week', 'month', 'quarter', 'year'];
 
@@ -157,12 +156,12 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	private function findTickets(string $ticketType): array {
 		$objects = [];
 		foreach ($this->ticketService->findByType(ticketType: $ticketType) as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
@@ -182,8 +181,8 @@ class AnalyticsService {
 	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
 	 */
 	private function findObjects(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			$this->logger->info(
 				message: '[AnalyticsService] register or schema not configured',
@@ -207,40 +206,11 @@ class AnalyticsService {
 
 		$objects = [];
 		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
+			$objects[] = $this->toArray(value: $result);
 		}
 
 		return $objects;
 	}//end findObjects()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity / array / unknown payload.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via DI container.
@@ -280,7 +250,8 @@ class AnalyticsService {
 	 * @throws InvalidArgumentException When the period is not recognised.
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
 	 */
 	public function getOverview(string $period = self::DEFAULT_PERIOD): array {
 		if (in_array($period, self::ALLOWED_OVERVIEW_PERIODS, true) === false) {
@@ -301,21 +272,14 @@ class AnalyticsService {
 		// exposes a query helper; see openspec/changes/migrate-forms-to-forms-leaf.
 		$responses = [];
 
+		$rows = ['leads' => $leads, 'requests' => $requests, 'cms' => $cms, 'responses' => $responses];
 		$current = $this->aggregateOverviewWindow(
-			from: $currentStart,
-			to: $now,
-			leads: $leads,
-			requests: $requests,
-			cms: $cms,
-			responses: $responses
+			window: ['from' => $currentStart->getTimestamp(), 'to' => $now->getTimestamp()],
+			rows: $rows
 		);
 		$previous = $this->aggregateOverviewWindow(
-			from: $previousStart,
-			to: $currentStart,
-			leads: $leads,
-			requests: $requests,
-			cms: $cms,
-			responses: $responses
+			window: ['from' => $previousStart->getTimestamp(), 'to' => $currentStart->getTimestamp()],
+			rows: $rows
 		);
 
 		return [
@@ -333,115 +297,145 @@ class AnalyticsService {
 	 *
 	 * Stateless helper called twice from getOverview() (current + previous).
 	 *
-	 * @param DateTimeInterface $from Inclusive lower bound.
-	 * @param DateTimeInterface $to Exclusive upper bound.
-	 * @param array<int, array<string, mixed>> $leads Lead rows.
-	 * @param array<int, array<string, mixed>> $requests Request-ticket rows.
-	 * @param array<int, array<string, mixed>> $cms Contactmoment-ticket rows.
-	 * @param array<int, array<string, mixed>> $responses Survey-response rows.
+	 * @param array{from: int, to: int} $window Inclusive lower and exclusive upper bound, as Unix timestamps.
+	 * @param array<string, array<int, array<string, mixed>>> $rows Rows under leads, requests, cms (contactmoment tickets) and responses (survey).
 	 *
 	 * @return array<string, float|int|null>
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential per-metric aggregation loops; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Independent guard clauses across four KPI loops inflate NPath without real branching depth.
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
 	 */
-	private function aggregateOverviewWindow(
-		DateTimeInterface $from,
-		DateTimeInterface $to,
-		array $leads,
-		array $requests,
-		array $cms,
-		array $responses,
-	): array {
-		$fromTs = $from->getTimestamp();
-		$toTs = $to->getTimestamp();
+	private function aggregateOverviewWindow(array $window, array $rows): array {
+		return [
+			'leadConversionRate' => $this->leadConversionRate(leads: $rows['leads'], window: $window),
+			'avgRequestResolutionTime' => $this->avgResolutionHours(requests: $rows['requests'], window: $window),
+			'contactMomentVolume' => $this->contactMomentVolume(cms: $rows['cms'], window: $window),
+			'customerSatisfactionScore' => $this->satisfactionScore(responses: $rows['responses'], window: $window),
+		];
+	}//end aggregateOverviewWindow()
 
-		// Lead conversion rate.
-		$totalLeads = 0;
-		$wonLeads = 0;
+	/**
+	 * Share of the leads created in the window that are won, in percent.
+	 *
+	 * @param array<int, array<string, mixed>> $leads Lead rows.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return float|null Null when no lead falls in the window.
+	 */
+	private function leadConversionRate(array $leads, array $window): ?float {
+		$statuses = [];
 		foreach ($leads as $lead) {
 			$timestamp = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
-			if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
-				continue;
-			}
-
-			$totalLeads++;
-			if (((string)($lead['status'] ?? '')) === 'won') {
-				$wonLeads++;
+			if ($this->inWindow(timestamp: $timestamp, window: $window) === true) {
+				$statuses[] = (string)($lead['status'] ?? '');
 			}
 		}
 
-		$leadConversionRate = null;
-		if ($totalLeads > 0) {
-			$leadConversionRate = round(($wonLeads * 100.0) / $totalLeads, 1);
+		if ($statuses === []) {
+			return null;
 		}
 
-		// Avg request resolution time. On the ticket schema the request's
-		// `requestedAt` is `occurredAt` and the completion timestamp is
-		// `resolvedAt` (`completedAt` kept as a fallback for legacy rows).
-		$resolutionHours = 0.0;
-		$resolvedCount = 0;
+		return round((count(array_keys($statuses, 'won', true)) * 100.0) / count($statuses), 1);
+	}//end leadConversionRate()
+
+	/**
+	 * Mean resolution time in hours of the requests completed in the window.
+	 *
+	 * On the ticket schema the request's `requestedAt` is `occurredAt` and the
+	 * completion timestamp is `resolvedAt` (`completedAt` kept as a fallback
+	 * for legacy rows).
+	 *
+	 * @param array<int, array<string, mixed>> $requests Request-ticket rows.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return float|null Null when no request was completed in the window.
+	 */
+	private function avgResolutionHours(array $requests, array $window): ?float {
+		$hours = [];
 		foreach ($requests as $request) {
 			$requestedTs = $this->extractTimestamp(row: $request, fields: ['occurredAt']);
 			$completedTs = $this->extractTimestamp(row: $request, fields: ['resolvedAt', 'completedAt']);
-			if ($requestedTs === null || $completedTs === null) {
+			if ($requestedTs === null || $this->inWindow(timestamp: $completedTs, window: $window) === false) {
 				continue;
 			}
 
-			if ($completedTs < $fromTs || $completedTs >= $toTs) {
-				continue;
-			}
-
-			$resolutionHours += max(0, ($completedTs - $requestedTs) / 3600.0);
-			$resolvedCount++;
+			$hours[] = max(0, ($completedTs - $requestedTs) / 3600.0);
 		}
 
-		$avgResolutionHours = null;
-		if ($resolvedCount > 0) {
-			$avgResolutionHours = round($resolutionHours / $resolvedCount, 2);
-		}
+		return $this->roundedMean(values: $hours, precision: 2);
+	}//end avgResolutionHours()
 
-		// Contact moment volume. The contactmoment's `contactedAt` is
-		// `occurredAt` on the ticket schema.
+	/**
+	 * Number of contact moments in the window. The contactmoment's
+	 * `contactedAt` is `occurredAt` on the ticket schema.
+	 *
+	 * @param array<int, array<string, mixed>> $cms Contactmoment-ticket rows.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return int
+	 */
+	private function contactMomentVolume(array $cms, array $window): int {
 		$cmCount = 0;
 		foreach ($cms as $cm) {
 			$timestamp = $this->extractTimestamp(row: $cm, fields: ['occurredAt', 'createdAt']);
-			if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
+			if ($this->inWindow(timestamp: $timestamp, window: $window) === true) {
+				$cmCount++;
+			}
+		}
+
+		return $cmCount;
+	}//end contactMomentVolume()
+
+	/**
+	 * Mean survey score (surveyResponse.score) of the responses in the window.
+	 *
+	 * @param array<int, array<string, mixed>> $responses Survey-response rows.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return float|null Null when no scored response falls in the window.
+	 */
+	private function satisfactionScore(array $responses, array $window): ?float {
+		$scores = [];
+		foreach ($responses as $response) {
+			$timestamp = $this->extractTimestamp(row: $response, fields: ['submittedAt', 'createdAt']);
+			if ($this->inWindow(timestamp: $timestamp, window: $window) === false
+				|| isset($response['score']) === false || is_numeric($response['score']) === false
+			) {
 				continue;
 			}
 
-			$cmCount++;
+			$scores[] = (float)$response['score'];
 		}
 
-		// Customer satisfaction score (mean of surveyResponse.score).
-		$scoreSum = 0.0;
-		$scoreN = 0;
-		foreach ($responses as $r) {
-			$timestamp = $this->extractTimestamp(row: $r, fields: ['submittedAt', 'createdAt']);
-			if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
-				continue;
-			}
+		return $this->roundedMean(values: $scores, precision: 2);
+	}//end satisfactionScore()
 
-			if (isset($r['score']) === false || is_numeric($r['score']) === false) {
-				continue;
-			}
-
-			$scoreSum += (float)$r['score'];
-			$scoreN++;
+	/**
+	 * The mean of the values, rounded, or null when there are none.
+	 *
+	 * @param array<int, float|int> $values The values.
+	 * @param int $precision Decimal digits to round to.
+	 *
+	 * @return float|null
+	 */
+	private function roundedMean(array $values, int $precision): ?float {
+		if ($values === []) {
+			return null;
 		}
 
-		$satisfactionScore = null;
-		if ($scoreN > 0) {
-			$satisfactionScore = round($scoreSum / $scoreN, 2);
-		}
+		return round(array_sum($values) / count($values), $precision);
+	}//end roundedMean()
 
-		return [
-			'leadConversionRate' => $leadConversionRate,
-			'avgRequestResolutionTime' => $avgResolutionHours,
-			'contactMomentVolume' => $cmCount,
-			'customerSatisfactionScore' => $satisfactionScore,
-		];
-	}//end aggregateOverviewWindow()
+	/**
+	 * Whether a timestamp falls in a window (lower bound inclusive, upper exclusive).
+	 *
+	 * @param int|null $timestamp The timestamp, null when the row had none.
+	 * @param array{from: int, to: int} $window The time window.
+	 *
+	 * @return bool
+	 */
+	private function inWindow(?int $timestamp, array $window): bool {
+		return $timestamp !== null && $timestamp >= $window['from'] && $timestamp < $window['to'];
+	}//end inWindow()
 
 	/**
 	 * Time-series trend data for the unified analytics charts.
@@ -460,7 +454,7 @@ class AnalyticsService {
 	 * @throws InvalidArgumentException When metric or period unsupported.
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
 	 */
 	public function getTrends(string $metric, string $period = self::DEFAULT_PERIOD): array {
 		if (in_array($metric, self::ALLOWED_TREND_METRICS, true) === false) {
@@ -497,26 +491,16 @@ class AnalyticsService {
 		$startTs = $start->getTimestamp();
 		$nowTs = $now->getTimestamp();
 
-		// Bucket granularity: day for week/month, week for quarter, month for year.
-		$bucketSize = match ($period) {
-			'week', 'month' => 86400,
-			// 1 day.
-			'quarter' => 86400 * 7,
-			// 1 week.
-			'year' => 86400 * 30,
-			// ~1 month.
-			default => 86400,
-		};
+		$bucketSize = $this->bucketSizeForPeriod(period: $period);
 
 		$buckets = [];
 		foreach ($leads as $lead) {
 			$timestamp = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
-			if ($timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
+			$key = $this->bucketKey(timestamp: $timestamp, startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+			if ($key === null) {
 				continue;
 			}
 
-			$bucketTs = $startTs + ((int)floor(($timestamp - $startTs) / $bucketSize)) * $bucketSize;
-			$key = date('Y-m-d', $bucketTs);
 			if (isset($buckets[$key]) === false) {
 				$buckets[$key] = 0;
 			}
@@ -529,6 +513,18 @@ class AnalyticsService {
 			$buckets[$key] += (float)($lead['value'] ?? 0);
 		}
 
+		return ['metric' => $metric, 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: $metric)];
+	}//end buildTimeBucketSeries()
+
+	/**
+	 * The buckets as a dated series in date order: whole counts for leads, cents for any other metric.
+	 *
+	 * @param array<string, int|float> $buckets The bucket totals by date.
+	 * @param string                   $metric  `leads`, `pipeline-value` or `revenue`.
+	 *
+	 * @return array<int, array{date: string, value: int|float}>
+	 */
+	private static function bucketSeries(array $buckets, string $metric): array {
 		ksort($buckets);
 		$series = [];
 		foreach ($buckets as $date => $value) {
@@ -540,8 +536,8 @@ class AnalyticsService {
 			$series[] = ['date' => $date, 'value' => $bucketValue];
 		}
 
-		return ['metric' => $metric, 'period' => $period, 'series' => $series];
-	}//end buildTimeBucketSeries()
+		return $series;
+	}//end bucketSeries()
 
 	/**
 	 * Build the requests-by-category series. Categories with zero requests in
@@ -579,6 +575,17 @@ class AnalyticsService {
 			$counts[$category]++;
 		}
 
+		return ['metric' => 'requests-by-category', 'period' => $period, 'series' => self::countSeries(counts: $counts)];
+	}//end buildCategorySeries()
+
+	/**
+	 * The counts as a series, largest first; a zero count is left out.
+	 *
+	 * @param array<string, int> $counts Count per category.
+	 *
+	 * @return array<int, array{date: string, value: int}>
+	 */
+	private static function countSeries(array $counts): array {
 		// Sort by descending count for stable rendering.
 		arsort($counts);
 
@@ -591,8 +598,8 @@ class AnalyticsService {
 			$series[] = ['date' => $category, 'value' => $count];
 		}
 
-		return ['metric' => 'requests-by-category', 'period' => $period, 'series' => $series];
-	}//end buildCategorySeries()
+		return $series;
+	}//end countSeries()
 
 	/**
 	 * Lead-to-close and request-to-resolved funnel data.
@@ -608,45 +615,60 @@ class AnalyticsService {
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
 	 */
 	public function getFunnels(): array {
 		$leads = $this->findObjects(schemaKey: 'lead_schema');
 		$requests = $this->findTickets(ticketType: TicketService::TYPE_REQUEST);
 
-		$leadCounts = ['open' => 0, 'won' => 0, 'lost' => 0];
-		foreach ($leads as $lead) {
-			$status = (string)($lead['status'] ?? '');
-			if (isset($leadCounts[$status]) === true) {
-				$leadCounts[$status]++;
-			}
-		}
-
+		$leadCounts = self::statusCounts(rows: $leads, counts: ['open' => 0, 'won' => 0, 'lost' => 0]);
 		$leadTotal = $leadCounts['open'] + $leadCounts['won'] + $leadCounts['lost'];
-		$leadConversionRate = null;
-		if ($leadTotal > 0) {
-			$leadConversionRate = round(($leadCounts['won'] * 100.0) / $leadTotal, 1);
-		}
+		$leadConversionRate = self::percentOf(part: $leadCounts['won'], total: $leadTotal);
 
-		$requestCounts = ['new' => 0, 'in_progress' => 0, 'completed' => 0, 'rejected' => 0];
-		foreach ($requests as $request) {
-			$status = (string)($request['status'] ?? '');
-			if (isset($requestCounts[$status]) === true) {
-				$requestCounts[$status]++;
-			}
-		}
-
+		$requestCounts = self::statusCounts(rows: $requests, counts: ['new' => 0, 'in_progress' => 0, 'completed' => 0, 'rejected' => 0]);
 		$requestTotal = array_sum($requestCounts);
-		$resolutionRate = null;
-		if ($requestTotal > 0) {
-			$resolutionRate = round(($requestCounts['completed'] * 100.0) / $requestTotal, 1);
-		}
+		$resolutionRate = self::percentOf(part: $requestCounts['completed'], total: $requestTotal);
 
 		return [
 			'leadFunnel' => array_merge($leadCounts, ['conversionRate' => $leadConversionRate]),
 			'requestFunnel' => array_merge($requestCounts, ['resolutionRate' => $resolutionRate]),
 		];
 	}//end getFunnels()
+
+	/**
+	 * How many rows carry each of the given statuses; other statuses are not counted.
+	 *
+	 * @param array<int, array<string, mixed>> $rows   The rows.
+	 * @param array<string, int>               $counts The statuses to count, at zero, in answer order.
+	 *
+	 * @return array<string, int>
+	 */
+	private static function statusCounts(array $rows, array $counts): array {
+		foreach ($rows as $row) {
+			$status = (string)($row['status'] ?? '');
+			if (isset($counts[$status]) === true) {
+				$counts[$status]++;
+			}
+		}
+
+		return $counts;
+	}//end statusCounts()
+
+	/**
+	 * A part of a total as a percentage with one decimal, or null for an empty total.
+	 *
+	 * @param int $part  The part.
+	 * @param int $total The total.
+	 *
+	 * @return float|null
+	 */
+	private static function percentOf(int $part, int $total): ?float {
+		if ($total > 0) {
+			return round(($part * 100.0) / $total, 1);
+		}
+
+		return null;
+	}//end percentOf()
 
 	/**
 	 * Commercial KPI overview for the Commercial dashboard.
@@ -658,19 +680,31 @@ class AnalyticsService {
 	 *   - avgDealSize:       mean won-lead value in window (null if none)
 	 *   - weightedForecast:  sum over OPEN leads of value * win chance (qualification score / 100)
 	 *   - openPipelineValue: sum of value over OPEN leads (forward-looking)
+	 *   - wonCount/lostCount: deals won and lost in window
+	 *   - openCount/scoredOpenCount: OPEN leads, and those with a qualification score
+	 *   - wonShareOfOpen:    won value as a whole percentage of the open value (null with nothing open)
+	 *   - targetRemaining/pipelineCover: target less won value, open value over it (null without a target)
 	 *   - previousPeriod:    windowed figures for the preceding equal-length window
 	 *
 	 * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+	 * @param array<string, mixed> $leadFilter Field filters the open-pipeline figures follow, as the leads list sends them.
 	 *
 	 * @return array{
 	 *   revenue: float,
 	 *   wonValue: float,
 	 *   winRate: float|null,
 	 *   avgDealSize: float|null,
+	 *   wonCount: int,
+	 *   lostCount: int,
 	 *   weightedForecast: float,
 	 *   openPipelineValue: float,
+	 *   openCount: int,
+	 *   scoredOpenCount: int,
+	 *   wonShareOfOpen: int|null,
+	 *   targetRemaining: float|null,
+	 *   pipelineCover: float|null,
 	 *   period: string,
-	 *   previousPeriod: array<string, float|null>
+	 *   previousPeriod: array<string, float|int|null>
 	 * }
 	 *
 	 * @throws InvalidArgumentException When the period is not recognised.
@@ -678,130 +712,220 @@ class AnalyticsService {
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
-	public function getCommercialOverview(string $period = self::DEFAULT_PERIOD): array {
+	public function getCommercialOverview(string $period = self::DEFAULT_PERIOD, array $leadFilter = []): array {
 		if (in_array($period, self::ALLOWED_OVERVIEW_PERIODS, true) === false) {
 			throw new InvalidArgumentException(message: 'Invalid period');
 		}
 
-		$days = self::PERIOD_DAYS[$period];
-		$now = new DateTimeImmutable();
-
-		$currentStart = $now->modify(sprintf('-%d days', $days));
-		$previousStart = $currentStart->modify(sprintf('-%d days', $days));
+		$windows = $this->overviewWindows(period: $period);
 
 		$leads = $this->findObjects(schemaKey: 'lead_schema');
 		$pos = $this->findObjects(schemaKey: 'posTransaction_schema');
 
-		$current = $this->aggregateCommercialWindow(from: $currentStart, to: $now, leads: $leads, pos: $pos);
-		$previous = $this->aggregateCommercialWindow(from: $previousStart, to: $currentStart, leads: $leads, pos: $pos);
+		$records = new CommercialRecords(leads: $leads, pos: $pos);
 
-		$forecast = $this->aggregateOpenPipeline(leads: $leads);
+		$current = $this->aggregateCommercialWindow(window: $windows['current'], records: $records);
+		$previous = $this->aggregateCommercialWindow(window: $windows['previous'], records: $records);
+
+		$forecast = $this->aggregateOpenPipeline(leads: $this->leadsMatching(leads: $leads, filter: $leadFilter));
+		$cover = $this->pipelineCover(openValue: $forecast['openPipelineValue'], wonValue: $current['wonValue']);
 
 		return [
 			'revenue' => $current['revenue'],
 			'wonValue' => $current['wonValue'],
 			'winRate' => $current['winRate'],
 			'avgDealSize' => $current['avgDealSize'],
+			'wonCount' => $current['wonCount'],
+			'lostCount' => $current['lostCount'],
 			'weightedForecast' => $forecast['weightedForecast'],
 			'openPipelineValue' => $forecast['openPipelineValue'],
+			'openCount' => $forecast['openCount'],
+			'scoredOpenCount' => $forecast['scoredOpenCount'],
+			'wonShareOfOpen' => $this->wonShareOfOpen(wonValue: $current['wonValue'], openValue: $forecast['openPipelineValue']),
+			'targetRemaining' => $cover['targetRemaining'],
+			'pipelineCover' => $cover['pipelineCover'],
 			'period' => $period,
 			'previousPeriod' => $previous,
 		];
 	}//end getCommercialOverview()
 
 	/**
-	 * Aggregate the windowed commercial figures for one time window.
+	 * The current trailing window of a period, ending now, and the window of
+	 * the same length before it; each upper bound is exclusive.
 	 *
-	 * @param DateTimeInterface $from Inclusive lower bound.
-	 * @param DateTimeInterface $to Exclusive upper bound.
-	 * @param array<int, array<string, mixed>> $leads Lead rows.
-	 * @param array<int, array<string, mixed>> $pos POS transaction rows.
+	 * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
 	 *
-	 * @return array{revenue: float, wonValue: float, winRate: float|null, avgDealSize: float|null}
-	 *
-	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential POS + lead window filters; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Independent guard clauses inflate NPath without real branching depth.
+	 * @return array{current: ReportingWindow, previous: ReportingWindow} The two windows.
 	 */
-	private function aggregateCommercialWindow(
-		DateTimeInterface $from,
-		DateTimeInterface $to,
-		array $leads,
-		array $pos,
-	): array {
-		$fromTs = $from->getTimestamp();
-		$toTs = $to->getTimestamp();
+	private function overviewWindows(string $period): array {
+		$days = self::PERIOD_DAYS[$period];
+		$now = new DateTimeImmutable();
 
-		$posRevenue = 0.0;
-		foreach ($pos as $txn) {
-			$timestamp = $this->posRevenueTimestamp(txn: $txn);
-			if ($this->isRevenueTransaction(txn: $txn) === false || $timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
-				continue;
-			}
-
-			$posRevenue += (float)($txn['total'] ?? 0);
-		}
-
-		$wonValue = 0.0;
-		$wonCount = 0;
-		$lostCount = 0;
-		foreach ($leads as $lead) {
-			$status = (string)($lead['status'] ?? '');
-			if ($status !== 'won' && $status !== 'lost') {
-				continue;
-			}
-
-			$timestamp = $this->leadCloseTimestamp(lead: $lead);
-			if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
-				continue;
-			}
-
-			if ($status === 'won') {
-				$wonValue += (float)($lead['value'] ?? 0);
-				$wonCount++;
-				continue;
-			}
-
-			$lostCount++;
-		}
-
-		$closed = ($wonCount + $lostCount);
-
-		$winRate = null;
-		if ($closed > 0) {
-			$winRate = round(($wonCount * 100.0) / $closed, 1);
-		}
-
-		$avgDealSize = null;
-		if ($wonCount > 0) {
-			$avgDealSize = round($wonValue / $wonCount, 2);
-		}
+		$currentStart = $now->modify(sprintf('-%d days', $days));
+		$previousStart = $currentStart->modify(sprintf('-%d days', $days));
 
 		return [
-			'revenue' => round(($posRevenue + $wonValue), 2),
-			'wonValue' => round($wonValue, 2),
-			'winRate' => $winRate,
-			'avgDealSize' => $avgDealSize,
+			'current' => new ReportingWindow(startTs: $currentStart->getTimestamp(), lastTs: ($now->getTimestamp() - 1)),
+			'previous' => new ReportingWindow(startTs: $previousStart->getTimestamp(), lastTs: ($currentStart->getTimestamp() - 1)),
+		];
+	}//end overviewWindows()
+
+	/**
+	 * Aggregate the windowed commercial figures for one time window.
+	 *
+	 * @param ReportingWindow   $window  The window, upper bound exclusive.
+	 * @param CommercialRecords $records The lead and POS transaction rows.
+	 *
+	 * @return array{revenue: float, wonValue: float, winRate: float|null, avgDealSize: float|null, wonCount: int, lostCount: int}
+	 *
+	 * @spec openspec/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
+	 */
+	private function aggregateCommercialWindow(ReportingWindow $window, CommercialRecords $records): array {
+		$posRevenue = $this->posRevenueTotal(pos: $this->revenueTransactionsWithin(pos: $records->pos, window: $window));
+		$closed = $this->closedDealsWithin(leads: $records->leads, window: $window);
+
+		return [
+			'revenue' => round(($posRevenue + $closed['wonValue']), 2),
+			'wonValue' => round($closed['wonValue'], 2),
+			'winRate' => $this->winRate(closed: $closed),
+			'avgDealSize' => $this->avgDealSize(closed: $closed),
+			'wonCount' => $closed['wonCount'],
+			'lostCount' => $closed['lostCount'],
 		];
 	}//end aggregateCommercialWindow()
+
+	/**
+	 * The POS transactions that realised revenue inside a window.
+	 *
+	 * @param array<int, array<string, mixed>> $pos    POS transaction rows.
+	 * @param ReportingWindow                  $window The window.
+	 *
+	 * @return array<int, array<string, mixed>> The revenue transactions inside the window.
+	 */
+	private function revenueTransactionsWithin(array $pos, ReportingWindow $window): array {
+		$within = [];
+		foreach ($pos as $txn) {
+			if ($this->isRevenueTransaction(txn: $txn) === true && $window->contains(timestamp: $this->posRevenueTimestamp(txn: $txn)) === true) {
+				$within[] = $txn;
+			}
+		}
+
+		return $within;
+	}//end revenueTransactionsWithin()
+
+	/**
+	 * The summed total of POS transactions.
+	 *
+	 * @param array<int, array<string, mixed>> $pos POS transaction rows.
+	 *
+	 * @return float The total.
+	 */
+	private function posRevenueTotal(array $pos): float {
+		$total = 0.0;
+		foreach ($pos as $txn) {
+			$total += (float)($txn['total'] ?? 0);
+		}
+
+		return $total;
+	}//end posRevenueTotal()
+
+	/**
+	 * The won value and the won and lost counts of the deals closed inside a window.
+	 *
+	 * @param array<int, array<string, mixed>> $leads  Lead rows.
+	 * @param ReportingWindow                  $window The window.
+	 *
+	 * @return array{wonValue: float, wonCount: int, lostCount: int}
+	 */
+	private function closedDealsWithin(array $leads, ReportingWindow $window): array {
+		$closed = ['wonValue' => 0.0, 'wonCount' => 0, 'lostCount' => 0];
+		foreach ($leads as $lead) {
+			$status = (string)($lead['status'] ?? '');
+			if (in_array($status, ['won', 'lost'], true) === false || $window->contains(timestamp: $this->leadCloseTimestamp(lead: $lead)) === false) {
+				continue;
+			}
+
+			$closed = $this->withClosedDeal(closed: $closed, lead: $lead);
+		}
+
+		return $closed;
+	}//end closedDealsWithin()
+
+	/**
+	 * Count one closed lead into the won value and the won or lost count.
+	 *
+	 * @param array{wonValue: float, wonCount: int, lostCount: int} $closed The tally so far.
+	 * @param array<string, mixed>                                  $lead   A won or lost lead row.
+	 *
+	 * @return array{wonValue: float, wonCount: int, lostCount: int} The tally with the lead counted.
+	 */
+	private function withClosedDeal(array $closed, array $lead): array {
+		if ((string)($lead['status'] ?? '') === 'won') {
+			$closed['wonValue'] += (float)($lead['value'] ?? 0);
+			$closed['wonCount']++;
+			return $closed;
+		}
+
+		$closed['lostCount']++;
+		return $closed;
+	}//end withClosedDeal()
+
+	/**
+	 * The share of closed deals that was won, as a percentage.
+	 *
+	 * @param array{wonValue: float, wonCount: int, lostCount: int} $closed The closed deals.
+	 *
+	 * @return float|null The win rate, null when no deal closed.
+	 */
+	private function winRate(array $closed): ?float {
+		$closedCount = ($closed['wonCount'] + $closed['lostCount']);
+		if ($closedCount === 0) {
+			return null;
+		}
+
+		return round(($closed['wonCount'] * 100.0) / $closedCount, 1);
+	}//end winRate()
+
+	/**
+	 * The average value of a won deal.
+	 *
+	 * @param array{wonValue: float, wonCount: int, lostCount: int} $closed The closed deals.
+	 *
+	 * @return float|null The average, null when no deal was won.
+	 */
+	private function avgDealSize(array $closed): ?float {
+		if ($closed['wonCount'] === 0) {
+			return null;
+		}
+
+		return round($closed['wonValue'] / $closed['wonCount'], 2);
+	}//end avgDealSize()
 
 	/**
 	 * Forward-looking open-pipeline figures (current state, not windowed).
 	 *
 	 * @param array<int, array<string, mixed>> $leads Lead rows.
 	 *
-	 * @return array{weightedForecast: float, openPipelineValue: float}
+	 * @return array{weightedForecast: float, openPipelineValue: float, openCount: int, scoredOpenCount: int}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
 	 */
 	private function aggregateOpenPipeline(array $leads): array {
 		$weightedForecast = 0.0;
 		$openPipelineValue = 0.0;
+		$openCount = 0;
+		$scoredOpenCount = 0;
 		foreach ($leads as $lead) {
 			if (((string)($lead['status'] ?? '')) !== 'open') {
 				continue;
+			}
+
+			$openCount++;
+			if (is_numeric($lead['qualificationScore'] ?? null) === true) {
+				$scoredOpenCount++;
 			}
 
 			$openPipelineValue += (float)($lead['value'] ?? 0);
@@ -811,8 +935,110 @@ class AnalyticsService {
 		return [
 			'weightedForecast' => round($weightedForecast, 2),
 			'openPipelineValue' => round($openPipelineValue, 2),
+			'openCount' => $openCount,
+			'scoredOpenCount' => $scoredOpenCount,
 		];
 	}//end aggregateOpenPipeline()
+
+	/**
+	 * The open pipeline over what is still to come in against the pipeline
+	 * target (the target less the won value of the window). Both are null
+	 * without a target; with the target met the remainder is 0 and there is
+	 * no cover to give.
+	 *
+	 * @param float $openValue The open pipeline value.
+	 * @param float $wonValue  The won value of the window.
+	 *
+	 * @return array{targetRemaining: float|null, pipelineCover: float|null}
+	 *
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-gives-the-pipeline-cover
+	 */
+	private function pipelineCover(float $openValue, float $wonValue): array {
+		$target = $this->appConfig->getValueInt(AppIdentity::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0);
+		if ($target <= 0) {
+			return ['targetRemaining' => null, 'pipelineCover' => null];
+		}
+
+		$remaining = max(0.0, ((float)$target - $wonValue));
+		if ($remaining <= 0.0) {
+			return ['targetRemaining' => 0.0, 'pipelineCover' => null];
+		}
+
+		return [
+			'targetRemaining' => round($remaining, 2),
+			'pipelineCover' => round(($openValue / $remaining), 1),
+		];
+	}//end pipelineCover()
+
+	/**
+	 * The won value as a whole percentage of the open pipeline value, null
+	 * when nothing is open.
+	 *
+	 * @param float $wonValue  The won value of the window.
+	 * @param float $openValue The open pipeline value.
+	 *
+	 * @return int|null The share.
+	 *
+	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-counts-the-deals-behind-its-figures
+	 */
+	private function wonShareOfOpen(float $wonValue, float $openValue): ?int {
+		if ($openValue <= 0.0) {
+			return null;
+		}
+
+		return (int)round(($wonValue * 100.0) / $openValue);
+	}//end wonShareOfOpen()
+
+	/**
+	 * The leads every filter field matches: equal to its value, or to one of
+	 * its values for a list. A key that is not a plain field name is ignored.
+	 *
+	 * @param array<int, array<string, mixed>> $leads Lead rows.
+	 * @param array<string, mixed> $filter Field filters.
+	 *
+	 * @return array<int, array<string, mixed>> The matching leads.
+	 *
+	 * @spec openspec/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
+	 */
+	private function leadsMatching(array $leads, array $filter): array {
+		$fields = $this->filterFields(filter: $filter);
+		if ($fields === []) {
+			return $leads;
+		}
+
+		return array_values(
+			array_filter(
+				$leads,
+				static function (array $lead) use ($fields): bool {
+					foreach ($fields as $key => $values) {
+						if (in_array((string)($lead[$key] ?? ''), $values, true) === false) {
+							return false;
+						}
+					}
+
+					return true;
+				}
+			)
+		);
+	}//end leadsMatching()
+
+	/**
+	 * The filter's safe field names mapped to their accepted values as strings.
+	 *
+	 * @param array<mixed, mixed> $filter The requested filter.
+	 *
+	 * @return array<string, array<int, string>> Field name to accepted values.
+	 */
+	private function filterFields(array $filter): array {
+		$fields = [];
+		foreach ($filter as $key => $expected) {
+			if (is_string($key) === true && preg_match('/^[A-Za-z0-9_]+$/', $key) === 1) {
+				$fields[$key] = array_map('strval', (array)$expected);
+			}
+		}
+
+		return $fields;
+	}//end filterFields()
 
 	/**
 	 * A lead's value weighted by its win chance.
@@ -827,7 +1053,7 @@ class AnalyticsService {
 	 *
 	 * @return float The weighted value.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	private function winChanceWeightedValue(array $lead): float {
 		$score = ($lead['qualificationScore'] ?? null);
@@ -856,8 +1082,25 @@ class AnalyticsService {
 		$startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
 		$nowTs = $now->getTimestamp();
 		$bucketSize = $this->bucketSizeForPeriod(period: $period);
+		$window = [$startTs, $nowTs, $bucketSize];
 
-		$buckets = [];
+		$buckets = $this->addPosRevenue(buckets: [], pos: $pos, window: $window);
+		$buckets = $this->addWonLeadRevenue(buckets: $buckets, leads: $leads, window: $window);
+
+		return ['metric' => 'revenue', 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: 'revenue')];
+	}//end buildRevenueSeries()
+
+	/**
+	 * Add each revenue POS transaction's total to its time bucket.
+	 *
+	 * @param array<string, float> $buckets The buckets so far.
+	 * @param array<int, array<string, mixed>> $pos The POS transactions.
+	 * @param array{0: int, 1: int, 2: int} $window The start timestamp, now timestamp and bucket size.
+	 *
+	 * @return array<string, float> The buckets.
+	 */
+	private function addPosRevenue(array $buckets, array $pos, array $window): array {
+		[$startTs, $nowTs, $bucketSize] = $window;
 		foreach ($pos as $txn) {
 			if ($this->isRevenueTransaction(txn: $txn) === false) {
 				continue;
@@ -869,6 +1112,20 @@ class AnalyticsService {
 			}
 		}
 
+		return $buckets;
+	}//end addPosRevenue()
+
+	/**
+	 * Add each won lead's value to the bucket of its close date.
+	 *
+	 * @param array<string, float> $buckets The buckets so far.
+	 * @param array<int, array<string, mixed>> $leads The leads.
+	 * @param array{0: int, 1: int, 2: int} $window The start timestamp, now timestamp and bucket size.
+	 *
+	 * @return array<string, float> The buckets.
+	 */
+	private function addWonLeadRevenue(array $buckets, array $leads, array $window): array {
+		[$startTs, $nowTs, $bucketSize] = $window;
 		foreach ($leads as $lead) {
 			if (((string)($lead['status'] ?? '')) !== 'won') {
 				continue;
@@ -880,14 +1137,8 @@ class AnalyticsService {
 			}
 		}
 
-		ksort($buckets);
-		$series = [];
-		foreach ($buckets as $date => $value) {
-			$series[] = ['date' => $date, 'value' => round((float)$value, 2)];
-		}
-
-		return ['metric' => 'revenue', 'period' => $period, 'series' => $series];
-	}//end buildRevenueSeries()
+		return $buckets;
+	}//end addWonLeadRevenue()
 
 	/**
 	 * Open-lead value summed per pipeline stage, ordered by stage order.
@@ -919,6 +1170,18 @@ class AnalyticsService {
 			}
 		}
 
+		return ['metric' => 'pipeline-by-stage', 'period' => $period, 'series' => self::stageSeries(byStage: $byStage, order: $order)];
+	}//end buildPipelineByStageSeries()
+
+	/**
+	 * The stage totals as a series in stage order, rounded to cents; equal orders keep first-seen order.
+	 *
+	 * @param array<string, float> $byStage Value per stage.
+	 * @param array<string, int>   $order   Order per stage.
+	 *
+	 * @return array<int, array{date: string, value: float}>
+	 */
+	private static function stageSeries(array $byStage, array $order): array {
 		$rows = [];
 		foreach ($byStage as $stage => $value) {
 			$rows[] = ['date' => (string)$stage, 'value' => round((float)$value, 2), 'order' => $order[$stage]];
@@ -936,8 +1199,8 @@ class AnalyticsService {
 			$series[] = ['date' => $row['date'], 'value' => $row['value']];
 		}
 
-		return ['metric' => 'pipeline-by-stage', 'period' => $period, 'series' => $series];
-	}//end buildPipelineByStageSeries()
+		return $series;
+	}//end stageSeries()
 
 	/**
 	 * POS line revenue grouped by the linked product's category.
@@ -951,63 +1214,117 @@ class AnalyticsService {
 	 * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential filter/index/group loops; extraction adds no clarity.
 	 */
 	private function buildRevenueByCategorySeries(string $period): array {
-		$days = self::PERIOD_DAYS[$period];
-		$now = new DateTimeImmutable();
-		$startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
-		$nowTs = $now->getTimestamp();
+		$window = $this->trailingWindow(period: $period);
 
 		$pos = $this->findObjects(schemaKey: 'posTransaction_schema');
 		$lines = $this->findObjects(schemaKey: 'posTransactionLine_schema');
 		$products = $this->findObjects(schemaKey: 'product_schema');
 		$categories = $this->findObjects(schemaKey: 'productCategory_schema');
 
-		$eligibleTxn = [];
-		foreach ($pos as $txn) {
-			$timestamp = $this->posRevenueTimestamp(txn: $txn);
-			if ($this->isRevenueTransaction(txn: $txn) === false || $timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
-				continue;
-			}
+		$eligibleTxn = $this->transactionIdSet(pos: $this->revenueTransactionsWithin(pos: $pos, window: $window));
+		$categoryNames = new ProductCategoryNames(
+			categoryByProduct: $this->productCategoryIndex(products: $products),
+			categoryNames: $this->categoryNameIndex(categories: $categories),
+		);
+		$byCategory = $this->lineRevenueByCategory(
+			lines: $this->linesOfTransactions(lines: $lines, transactionIds: $eligibleTxn),
+			categories: $categoryNames,
+		);
 
+		return ['metric' => 'revenue-by-product-category', 'period' => $period, 'series' => $this->descendingSeries(totals: $byCategory)];
+	}//end buildRevenueByCategorySeries()
+
+	/**
+	 * The trailing window of a period, ending now, both bounds inclusive.
+	 *
+	 * @param string $period One of ALLOWED_OVERVIEW_PERIODS.
+	 *
+	 * @return ReportingWindow The window.
+	 */
+	private function trailingWindow(string $period): ReportingWindow {
+		$days = self::PERIOD_DAYS[$period];
+		$now = new DateTimeImmutable();
+
+		$startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
+
+		return new ReportingWindow(startTs: $startTs, lastTs: $now->getTimestamp());
+	}//end trailingWindow()
+
+	/**
+	 * The ids of POS transactions, as a set.
+	 *
+	 * @param array<int, array<string, mixed>> $pos POS transaction rows.
+	 *
+	 * @return array<string, true> Transaction id => true; rows without an id are left out.
+	 */
+	private function transactionIdSet(array $pos): array {
+		$ids = [];
+		foreach ($pos as $txn) {
 			$id = $this->objectId(row: $txn);
 			if ($id !== '') {
-				$eligibleTxn[$id] = true;
+				$ids[$id] = true;
 			}
 		}
 
-		$categoryByProduct = $this->productCategoryIndex(products: $products);
-		// Product.category is a UUID reference to a productCategory; resolve
-		// it to the display name. Legacy free-text categories (no matching
-		// productCategory row) fall through to their own value.
-		$categoryNames = $this->categoryNameIndex(categories: $categories);
+		return $ids;
+	}//end transactionIdSet()
 
-		$byCategory = [];
+	/**
+	 * The POS lines that belong to one of the given transactions.
+	 *
+	 * @param array<int, array<string, mixed>> $lines          POS line rows.
+	 * @param array<string, true>              $transactionIds Transaction id set.
+	 *
+	 * @return array<int, array<string, mixed>> The matching lines.
+	 */
+	private function linesOfTransactions(array $lines, array $transactionIds): array {
+		$matching = [];
 		foreach ($lines as $line) {
 			$txnId = (string)($line['transaction'] ?? '');
-			if ($txnId === '' || isset($eligibleTxn[$txnId]) === false) {
-				continue;
+			if ($txnId !== '' && isset($transactionIds[$txnId]) === true) {
+				$matching[] = $line;
 			}
+		}
 
-			$categoryRef = ($categoryByProduct[(string)($line['product'] ?? '')] ?? '');
-			$category = ($categoryNames[$categoryRef] ?? $categoryRef);
-			if ($category === '') {
-				$category = 'Other';
-			}
+		return $matching;
+	}//end linesOfTransactions()
 
+	/**
+	 * POS line totals summed per product category.
+	 *
+	 * @param array<int, array<string, mixed>> $lines      POS line rows.
+	 * @param ProductCategoryNames             $categories The category of each product.
+	 *
+	 * @return array<string, float> Category name => summed line total.
+	 */
+	private function lineRevenueByCategory(array $lines, ProductCategoryNames $categories): array {
+		$byCategory = [];
+		foreach ($lines as $line) {
+			$category = $categories->nameOf(productId: (string)($line['product'] ?? ''));
 			$byCategory[$category] = (($byCategory[$category] ?? 0.0) + (float)($line['lineTotal'] ?? 0));
 		}
 
-		arsort($byCategory);
+		return $byCategory;
+	}//end lineRevenueByCategory()
+
+	/**
+	 * A label => value series, highest value first, values rounded to cents.
+	 *
+	 * @param array<string, float> $totals Label => value.
+	 *
+	 * @return array<int, array{date: string, value: float}> The series.
+	 */
+	private function descendingSeries(array $totals): array {
+		arsort($totals);
 		$series = [];
-		foreach ($byCategory as $category => $value) {
-			$series[] = ['date' => (string)$category, 'value' => round((float)$value, 2)];
+		foreach ($totals as $label => $value) {
+			$series[] = ['date' => (string)$label, 'value' => round((float)$value, 2)];
 		}
 
-		return ['metric' => 'revenue-by-product-category', 'period' => $period, 'series' => $series];
-	}//end buildRevenueByCategorySeries()
+		return $series;
+	}//end descendingSeries()
 
 	/**
 	 * Won-deal + POS revenue grouped by client, top N by value.
@@ -1017,47 +1334,78 @@ class AnalyticsService {
 	 * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential lead + POS grouping loops; extraction adds no clarity.
 	 */
 	private function buildTopCustomersSeries(string $period): array {
-		$days = self::PERIOD_DAYS[$period];
-		$now = new DateTimeImmutable();
-		$startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
-		$nowTs = $now->getTimestamp();
+		$window = $this->trailingWindow(period: $period);
 
 		$leads = $this->findObjects(schemaKey: 'lead_schema');
 		$pos = $this->findObjects(schemaKey: 'posTransaction_schema');
 		$clients = $this->findObjects(schemaKey: 'client_schema');
 
 		$nameByClient = $this->clientNameIndex(clients: $clients);
+		$byClient = $this->revenueByClient(
+			wonLeads: $this->wonLeadsWithin(leads: $leads, window: $window),
+			revenuePos: $this->revenueTransactionsWithin(pos: $pos, window: $window),
+		);
 
-		$byClient = [];
+		return ['metric' => 'top-customers', 'period' => $period, 'series' => $this->topCustomerSeries(byClient: $byClient, nameByClient: $nameByClient)];
+	}//end buildTopCustomersSeries()
+
+	/**
+	 * The won leads that closed inside a window.
+	 *
+	 * @param array<int, array<string, mixed>> $leads  Lead rows.
+	 * @param ReportingWindow                  $window The window.
+	 *
+	 * @return array<int, array<string, mixed>> The won leads inside the window.
+	 */
+	private function wonLeadsWithin(array $leads, ReportingWindow $window): array {
+		$within = [];
 		foreach ($leads as $lead) {
-			$timestamp = $this->leadCloseTimestamp(lead: $lead);
-			if (((string)($lead['status'] ?? '')) !== 'won' || $timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
-				continue;
+			if (((string)($lead['status'] ?? '')) === 'won' && $window->contains(timestamp: $this->leadCloseTimestamp(lead: $lead)) === true) {
+				$within[] = $lead;
 			}
+		}
 
+		return $within;
+	}//end wonLeadsWithin()
+
+	/**
+	 * Won-deal value, then POS revenue, summed per client.
+	 *
+	 * @param array<int, array<string, mixed>> $wonLeads   Won lead rows.
+	 * @param array<int, array<string, mixed>> $revenuePos Revenue POS transaction rows.
+	 *
+	 * @return array<string, float> Client id => revenue; '' collects rows without a client.
+	 */
+	private function revenueByClient(array $wonLeads, array $revenuePos): array {
+		$byClient = [];
+		foreach ($wonLeads as $lead) {
 			$client = (string)($lead['client'] ?? '');
 			$byClient[$client] = (($byClient[$client] ?? 0.0) + (float)($lead['value'] ?? 0));
 		}
 
-		foreach ($pos as $txn) {
-			$timestamp = $this->posRevenueTimestamp(txn: $txn);
-			if ($this->isRevenueTransaction(txn: $txn) === false || $timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
-				continue;
-			}
-
+		foreach ($revenuePos as $txn) {
 			$client = (string)($txn['client'] ?? ($txn['customer'] ?? ''));
 			$byClient[$client] = (($byClient[$client] ?? 0.0) + (float)($txn['total'] ?? 0));
 		}
 
+		return $byClient;
+	}//end revenueByClient()
+
+	/**
+	 * The top customers by revenue, named, rows without a client left out.
+	 *
+	 * @param array<string, float>  $byClient     Client id => revenue.
+	 * @param array<string, string> $nameByClient Client id => display name.
+	 *
+	 * @return array<int, array{date: string, value: float}> At most TOP_CUSTOMERS_LIMIT entries.
+	 */
+	private function topCustomerSeries(array $byClient, array $nameByClient): array {
 		arsort($byClient);
 		$series = [];
-		$count = 0;
 		foreach ($byClient as $client => $value) {
-			if ($count >= self::TOP_CUSTOMERS_LIMIT) {
+			if (count($series) >= self::TOP_CUSTOMERS_LIMIT) {
 				break;
 			}
 
@@ -1066,11 +1414,10 @@ class AnalyticsService {
 			}
 
 			$series[] = ['date' => ($nameByClient[(string)$client] ?? (string)$client), 'value' => round((float)$value, 2)];
-			$count++;
 		}
 
-		return ['metric' => 'top-customers', 'period' => $period, 'series' => $series];
-	}//end buildTopCustomersSeries()
+		return $series;
+	}//end topCustomerSeries()
 
 	/**
 	 * Whether a POS transaction counts as realised revenue.

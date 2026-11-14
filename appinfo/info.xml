@@ -52,7 +52,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.7-unstable.20261009150000</version>
+    <version>0.5.7-unstable.20261113110000</version>
+    <!-- @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-001, #REQ-PLAT-002 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -107,7 +108,9 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
     <background-jobs>
         <job>OCA\Pipelinq\BackgroundJob\ScheduledTaskJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SyncRegisterAccessJob</job>
         <job>OCA\Pipelinq\BackgroundJob\CallbackOverdueJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\FollowUpReminderJob</job>
         <job>OCA\Pipelinq\BackgroundJob\PortalCleanupJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportSchedulerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportWorkerJob</job>
@@ -117,6 +120,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\CtiEventLogCleanupJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BlastSendJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ReminderDispatchJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\EventReminderJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SurveyInvitationDispatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvailabilityCacheRefreshJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob</job>
@@ -124,8 +128,6 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\PosRetryBackoffJob</job>
         <job>OCA\Pipelinq\BackgroundJob\TenderPostedRetryJob</job>
         <job>OCA\Pipelinq\BackgroundJob\EmailMatchJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\BrpHealthCheckJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\BrpMonitorJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BrpRetentionJob</job>
         <job>OCA\Pipelinq\BackgroundJob\TemplateApprovalSyncJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BudgetPeriodResetJob</job>
@@ -135,6 +137,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\FallbackEmailJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob</job>
         <job>OCA\Pipelinq\BackgroundJob\RenewalWindowJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\ClientRiskJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BillingHandoffRetryJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SearchConsoleImportJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SocialPublishJob</job>
@@ -201,6 +204,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\RelinkOrphanedLeads</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
+            <!-- After InitializeSettings, which imports the ticket phoneE164 property it fills (contact-moments-phone-lookup). -->
+            <step>OCA\Pipelinq\Repair\BackfillTicketPhoneE164</step>
             <!--
                 After InitializeSettings, which imports 97-task-name.json: the
                 name comes from crmTask's objectNameField, so a save before the
@@ -210,6 +215,21 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 a task that has a name is not saved.
             -->
             <step>OCA\Pipelinq\Repair\BackfillTaskNames</step>
+            <!--
+                After InitializeSettings, which imports the client and contact
+                `archive` blocks: OpenRegister writes retention metadata on
+                create only, so clients and contact persons made before then
+                get it here, once. Idempotent: a record with a nomination is
+                not written. Without OpenRegister's retention service it
+                writes nothing.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillClientRetention</step>
+            <!--
+                After InitializeSettings: a campaign form made before forms named
+                their destination gets `lead` as its destination, once. A form
+                that already names one is left alone.
+            -->
+            <step>OCA\Pipelinq\Repair\NameFormDestinations</step>
             <!--
                 After NormaliseTicketTitle, and for the same reason it runs after
                 the import: this step rewrites rows, and the `direction` property
@@ -246,6 +266,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <!-- Hermiq is an optional peer: the step is a silent no-op without it. -->
             <step>OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate</step>
             <step>OCA\Pipelinq\Repair\RemoveRetiredAvgJobs</step>
+            <!-- brp-monitor-moves-to-integriq: the monitor jobs and their reports go; integriq monitors the source. -->
+            <step>OCA\Pipelinq\Repair\RemoveBrpMonitorState</step>
             <step>OCA\Pipelinq\Repair\DrainMdmSyncQueue</step>
             <step>OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar</step>
             <step>OCA\Pipelinq\Repair\RemoveLegacyPspKeys</step>
@@ -262,6 +284,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 without integriq; idempotent by legacyRef.
             -->
             <step>OCA\Pipelinq\Repair\MigrateConsentToIntegriq</step>
+            <!--
+                brp-monitor-moves-to-integriq: hands the BRP connection settings
+                and secrets to integriq and clears pipelinq's keys only after
+                integriq confirms every part. A no-op without integriq or settings.
+            -->
+            <step>OCA\Pipelinq\Repair\MoveBrpConnectionToIntegriq</step>
             <!-- The group the portal schemas grant; never picks an account. -->
             <step>OCA\Pipelinq\Repair\CreatePortalServiceGroup</step>
             <!-- The group the SMS and WhatsApp webhooks write with; never picks an account. -->
@@ -312,6 +340,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
     <commands>
         <command>OCA\Pipelinq\Command\ConsentMigrateCommand</command>
+        <command>OCA\Pipelinq\Command\RemoveMockPipelinesCommand</command>
     </commands>
 
     <settings>

@@ -29,7 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,9 +41,8 @@ use Throwable;
  *
  * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
-class CallerObjectReader
+class CallerObjectReader implements CallerObjectReaderInterface
 {
-
 
     /**
      * Constructor.
@@ -59,7 +59,6 @@ class CallerObjectReader
 
     }//end __construct()
 
-
     /**
      * This app's register id, or '' when unconfigured.
      *
@@ -69,10 +68,9 @@ class CallerObjectReader
      */
     public function register(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 
     }//end register()
-
 
     /**
      * One object's data, or null.
@@ -86,8 +84,23 @@ class CallerObjectReader
      */
     public function read(string $id, string $schemaKey): ?array
     {
+        return $this->readFromSchema(id: $id, schema: $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, ''));
+
+    }//end read()
+
+    /**
+     * One object's data from a schema named by id or slug, or null.
+     *
+     * @param string $id     The object id.
+     * @param string $schema The schema id or slug.
+     *
+     * @return array<string, mixed>|null The object's data.
+     *
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     */
+    public function readFromSchema(string $id, string $schema): ?array
+    {
         $register = $this->register();
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
         if ($register === '' || $schema === '' || $id === '') {
             return null;
         }
@@ -98,7 +111,7 @@ class CallerObjectReader
         } catch (Throwable $e) {
             $this->logger->warning(
                 'Pipelinq: a read-guard refused an object',
-                ['app' => Application::APP_ID, 'id' => $id, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'id' => $id, 'exception' => $e->getMessage()]
             );
             return null;
         }
@@ -109,8 +122,7 @@ class CallerObjectReader
 
         return self::data(object: $object);
 
-    }//end read()
-
+    }//end readFromSchema()
 
     /**
      * The data of an OpenRegister object, whether it came back as an entity or an array.
@@ -136,6 +148,5 @@ class CallerObjectReader
         return [];
 
     }//end data()
-
 
 }//end class

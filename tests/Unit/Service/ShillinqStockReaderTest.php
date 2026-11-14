@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+ * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
 
 declare(strict_types=1);
@@ -199,4 +199,80 @@ class ShillinqStockReaderTest extends TestCase {
 
 		$this->assertSame('no-access', $reader->stockFor('P-1')['state']);
 	}//end testARefusedReadIsNoAccess()
+	/**
+	 * Every way a read ends: the id is asked first and an id hit stops the
+	 * read; an empty id goes straight to the SKU; a missing object service is
+	 * no shillinq; a non-list answer is no stock; a refusal on the SKU read is
+	 * no access.
+	 *
+	 * @return void
+	 */
+	public function testEveryWayAStockReadEnds(): void {
+		[$reader, $objectService] = $this->reader([['productId' => 'P-1', 'productSku' => 'S-1', 'quantityOnHand' => 4, 'locationCode' => 'A']]);
+		$stock = $reader->stockFor(' P-1 ', ' S-1 ');
+		$this->assertSame(['state' => 'ok', 'available' => 4.0, 'onHand' => 4.0, 'reserved' => 0.0, 'locations' => [['code' => 'A', 'name' => 'A', 'available' => 4.0]]], $stock);
+		$this->assertCount(1, $objectService->calls);
+		$this->assertSame(['filters' => ['register' => 'shillinq', 'schema' => 'InventoryStock', 'productId' => 'P-1'], 'limit' => 50], $objectService->calls[0]['config']);
+		$this->assertTrue($objectService->calls[0]['_rbac']);
+
+		[$reader, $objectService] = $this->reader([['productSku' => 'S-1', 'quantityAvailable' => '2', 'locationName' => 'Hal']]);
+		$stock = $reader->stockFor('', 'S-1');
+		$this->assertSame([['code' => '', 'name' => 'Hal', 'available' => 2.0]], $stock['locations']);
+		$this->assertCount(1, $objectService->calls);
+		$this->assertSame('S-1', $objectService->calls[0]['config']['filters']['productSku']);
+
+		[$reader, $objectService] = $this->reader([]);
+		$this->assertSame(['state' => 'ok', 'available' => 0.0, 'onHand' => 0.0, 'reserved' => 0.0, 'locations' => []], $reader->stockFor('P-9', 'S-9'));
+		$this->assertCount(2, $objectService->calls);
+		$this->assertSame(['state' => 'ok', 'available' => 0.0, 'onHand' => 0.0, 'reserved' => 0.0, 'locations' => []], $reader->stockFor('', ''));
+		$this->assertCount(2, $objectService->calls);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willThrowException(new \RuntimeException('gone'));
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with('ShillinqStockReader: OpenRegister unavailable', ['exception' => 'gone']);
+		$this->assertSame('no-shillinq', $this->installed($container, $logger)->stockFor('P-1')['state']);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn(new class {
+			/**
+			 * A non-list answer for the id, a refusal for the SKU.
+			 *
+			 * @param array<string, mixed> $config Config.
+			 *
+			 * @return mixed
+			 */
+			public function findAll(array $config = []) {
+				if (isset($config['filters']['productSku']) === true) {
+					throw new \RuntimeException('denied');
+				}
+
+				return 'not a list';
+			}
+		});
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('info')->with('ShillinqStockReader: the user cannot read shillinq stock', ['product' => 'S-1', 'exception' => 'denied']);
+		$this->assertSame(['state' => 'no-access', 'available' => 0.0, 'onHand' => 0.0, 'reserved' => 0.0, 'locations' => []], $this->installed($container, $logger)->stockFor('P-1', 'S-1'));
+	}//end testEveryWayAStockReadEnds()
+
+	/**
+	 * A reader that sees shillinq installed, over the given container and logger.
+	 *
+	 * @param ContainerInterface $container Container.
+	 * @param LoggerInterface    $logger    Logger.
+	 *
+	 * @return ShillinqStockReader
+	 */
+	private function installed(ContainerInterface $container, LoggerInterface $logger): ShillinqStockReader {
+		return new class ($container, $logger) extends ShillinqStockReader {
+			/**
+			 * Shillinq is installed.
+			 *
+			 * @return bool
+			 */
+			protected function probe(): bool {
+				return true;
+			}
+		};
+	}//end installed()
 }//end class

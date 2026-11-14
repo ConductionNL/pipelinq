@@ -60,14 +60,15 @@ class KvkResultMapper {
 	}//end mapResult()
 
 	/**
-	 * Extract the trade name from a KVK result.
+	 * Extract the trade name from a KVK result: the first trade name, else the
+	 * Zoeken API's `naam`, else `name`.
 	 *
 	 * @param array $item The raw API result item.
 	 *
 	 * @return string The trade name.
 	 */
 	private function extractTradeName(array $item): string {
-		return $item['eersteHandelsnaam'] ?? ($item['name'] ?? '');
+		return $item['eersteHandelsnaam'] ?? ($item['naam'] ?? ($item['name'] ?? ''));
 	}//end extractTradeName()
 
 	/**
@@ -79,6 +80,10 @@ class KvkResultMapper {
 	 */
 	private function extractAddress(array $item): array {
 		$address = $item['adres'] ?? ($item['vestingAdres'] ?? []);
+		// The Zoeken API nests the visiting address one level down.
+		if (isset($address['binnenlandsAdres']) === true && is_array($address['binnenlandsAdres']) === true) {
+			$address = $address['binnenlandsAdres'];
+		}
 
 		return [
 			'street' => ($address['straatnaam'] ?? '') . ' ' . ($address['huisnummer'] ?? ''),

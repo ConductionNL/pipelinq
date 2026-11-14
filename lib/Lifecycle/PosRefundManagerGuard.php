@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
  */
 
 declare(strict_types=1);
@@ -37,7 +37,8 @@ namespace OCA\Pipelinq\Lifecycle;
 
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -52,9 +53,11 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.StaticAccess)           GuardResult exposes only the
  *  static allow()/deny() factories mandated by OpenRegister's contract.
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
  */
 class PosRefundManagerGuard implements LifecycleGuardInterface {
+	use CastingPayloadToArray;
+
 	/**
 	 * A one-cent tolerance applied to the over-refund cap so floating-point
 	 * rounding can never wrongly reject a legitimate full-quantity refund.
@@ -89,7 +92,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 * @return GuardResult Allow for a manager/admin (and, for complete, within
 	 *                     the over-refund cap); deny otherwise.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ($this->policy->isManager(userId: $userId) === false) {
@@ -111,7 +114,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 * @return GuardResult Allow when within the cap; deny when it would exceed
 	 *                     the original transaction total.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function checkOverRefundCap(array $refund): GuardResult {
 		$transactionId = (string)($refund['originalTransaction'] ?? '');
@@ -150,11 +153,11 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 *
 	 * @return array<string, mixed>|null The transaction, or null.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function fetchTransaction(string $id): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransaction_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}
@@ -188,34 +191,61 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 *
 	 * @return float The sum of completed refund gross amounts.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.5
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function sumCompletedRefunds(string $transactionId, string $excludeRefundId): float {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posRefund_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posRefund_schema', '');
 		if ($register === '' || $schema === '') {
 			return PHP_FLOAT_MAX;
 		}
 
+		$found = $this->completedRefunds(register: $register, schema: $schema, transactionId: $transactionId);
+		if ($found === []) {
+			return PHP_FLOAT_MAX;
+		}
+
+		return $this->sumExcluding(results: $found[0], excludeRefundId: $excludeRefundId);
+	}//end sumCompletedRefunds()
+
+	/**
+	 * Find the completed refunds of a transaction.
+	 *
+	 * @param string $register The register id.
+	 * @param string $schema The refund schema id.
+	 * @param string $transactionId The original transaction UUID.
+	 *
+	 * @return array<int, mixed> The findAll result as a one-element list, or an empty list when the lookup fails.
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
+	 */
+	private function completedRefunds(string $register, string $schema, string $transactionId): array {
 		try {
-			$results = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
+			return [$this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
 				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'originalTransaction' => $transactionId,
-						'status' => 'completed',
-					],
+					'filters' => ['register' => $register, 'schema' => $schema, 'originalTransaction' => $transactionId, 'status' => 'completed'],
 				]
-			);
+			)];
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: refund guard could not sum completed refunds (fail closed)',
 				['exception' => $e->getMessage(), 'transaction' => $transactionId]
 			);
-			return PHP_FLOAT_MAX;
+			return [];
 		}
+	}//end completedRefunds()
 
+	/**
+	 * The gross amount of the refunds, leaving out the one being completed.
+	 *
+	 * @param mixed $results The completed refunds.
+	 * @param string $excludeRefundId The refund being completed (excluded).
+	 *
+	 * @return float
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
+	 */
+	private function sumExcluding($results, string $excludeRefundId): float {
 		$sum = 0.0;
 		foreach (($results ?? []) as $result) {
 			$sibling = $this->toArray(object: $result);
@@ -228,34 +258,5 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 		}
 
 		return round($sum, 2);
-	}//end sumCompletedRefunds()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
+	}//end sumExcluding()
 }//end class

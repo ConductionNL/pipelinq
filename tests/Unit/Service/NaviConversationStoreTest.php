@@ -334,4 +334,29 @@ class NaviConversationStoreTest extends TestCase {
 			)
 		);
 	}
+	/**
+	 * Every stored record shape: nothing stored, unreadable JSON and a JSON
+	 * scalar all read as no turns; the stored record is exactly owner, id,
+	 * time and the compacted turns; an empty conversation id neither reads
+	 * nor writes.
+	 *
+	 * @return void
+	 */
+	public function testEveryStoredRecordShape(): void {
+		$store = $this->buildStore();
+		$this->assertSame([], $store->read(userId: 'alice', conversationId: self::CONVERSATION_ID));
+		$this->rows['alice:' . NaviConversationStore::PREFERENCE_KEY] = '{bad';
+		$this->assertSame([], $store->read(userId: 'alice', conversationId: self::CONVERSATION_ID));
+		$this->rows['alice:' . NaviConversationStore::PREFERENCE_KEY] = '"text"';
+		$this->assertSame([], $store->read(userId: 'alice', conversationId: self::CONVERSATION_ID));
+
+		$store->append(userId: 'alice', conversationId: '', history: [], turn: ['query' => 'x', 'intent' => 'search']);
+		$this->assertSame('"text"', $this->rows['alice:' . NaviConversationStore::PREFERENCE_KEY]);
+
+		$store->append(userId: 'alice', conversationId: self::CONVERSATION_ID, history: [], turn: ['query' => 'leads', 'intent' => 'search']);
+		$record = json_decode($this->rows['alice:' . NaviConversationStore::PREFERENCE_KEY], true);
+		$this->assertSame(['owner', 'conversationId', 'updatedAt', 'turns'], array_keys($record));
+		$this->assertSame(['alice', self::CONVERSATION_ID, $this->now], [$record['owner'], $record['conversationId'], $record['updatedAt']]);
+		$this->assertSame($record['turns'], $store->read(userId: 'alice', conversationId: self::CONVERSATION_ID));
+	}
 }

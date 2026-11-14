@@ -185,4 +185,61 @@ class EmailMatchJobTest extends TestCase {
 		return $time;
 	}//end buildTimeFactory()
 
+
+	/**
+	 * Every service call and log line, in order, across good, failing and string-counted users.
+	 *
+	 * @return void
+	 */
+	public function testPinsEveryCallInOrder(): void {
+		$calls = [];
+		$service = $this->createMock(EmailMatchService::class);
+		$service->method('runForUser')->willReturnCallback(
+			function (string $userId) use (&$calls): array {
+				$calls[] = ['runForUser', $userId];
+				if ($userId === 'bob') {
+					throw new \RuntimeException('imap gone');
+				}
+
+				return ($userId === 'cas') ? ['linked' => '3', 'scanned' => '4', 'extra' => 1] : ['linked' => 1, 'scanned' => 2];
+			}
+		);
+		$service->method('writeStatus')->willReturnCallback(
+			function (...$args) use (&$calls): void {
+				$calls[] = ['writeStatus', $args];
+			}
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		foreach (['info', 'warning', 'error', 'debug'] as $level) {
+			$logger->method($level)->willReturnCallback(
+				function (string $message, array $context = []) use (&$calls, $level): void {
+					$calls[] = [$level, $message, $context];
+				}
+			);
+		}
+
+		$users = ['ann', 'bob', 'cas', 'bob'];
+		$job = new EmailMatchJob(
+			$this->createMock(ITimeFactory::class),
+			$service,
+			$this->buildUserManager(array_map(fn (string $uid): IUser => $this->buildUser($uid), $users)),
+			$logger
+		);
+		$this->invokeRun($job);
+
+		$failed = [
+			['writeStatus', ['bob', 0, 0, 'Match run failed']],
+			['warning', 'Pipelinq: email match job failed for user', ['userId' => 'bob']],
+		];
+		$this->assertSame(
+			array_merge(
+				[['runForUser', 'ann'], ['runForUser', 'bob']],
+				$failed,
+				[['runForUser', 'cas'], ['runForUser', 'bob']],
+				$failed,
+				[['info', 'Pipelinq: email match job complete', ['linked' => 4, 'scanned' => 6, 'errors' => 2]]]
+			),
+			$calls
+		);
+	}//end testPinsEveryCallInOrder()
 }//end class

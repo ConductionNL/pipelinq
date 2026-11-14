@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\CtiController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Cti\Adapter\AsteriskAdapter;
 use OCA\Pipelinq\Service\Cti\Adapter\CallVoipAdapter;
@@ -141,8 +142,7 @@ class CtiControllerTest extends TestCase {
 	): CtiController {
 		return new CtiController($this->request(),
 			$service,
-			$this->session($uid),
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($this->session($uid), $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$groupManager ?? $this->createMock(originalClassName: IGroupManager::class),
 			$this->createMock(originalClassName: LoggerInterface::class),
 			$reports ?? $this->createMock(originalClassName: ConnectionReportService::class),
@@ -1060,4 +1060,47 @@ class CtiControllerTest extends TestCase {
 			$logger,
 		);
 	}//end realService()
+
+	/**
+	 * The signature is read from X-Pipelinq-Signature, then Validation-Token,
+	 * then the `signature` parameter, and is passed on as null when none is
+	 * set; without a JSON body the payload is the request parameters. The
+	 * two refusals answer exactly.
+	 *
+	 * @return void
+	 */
+	public function testWebhookReadsTheSignatureInOrderAndAnswersExactly(): void {
+		$cases = [
+			[['X-Pipelinq-Signature' => 'a', 'Validation-Token' => 'b'], ['signature' => 'c'], 'a'],
+			[['Validation-Token' => 'b'], ['signature' => 'c'], 'b'],
+			[[], ['signature' => 'c'], 'c'],
+			[[], [], null],
+		];
+		foreach ($cases as [$headers, $params, $expected]) {
+			$this->headers = $headers;
+			$this->params = $params + ['event' => 'ringing'];
+			$seen = [];
+			$service = $this->createMock(CtiService::class);
+			$service->method('handleWebhook')->willReturnCallback(
+				static function (string $platform, array $payload, string $rawBody, ?string $signature) use (&$seen): array {
+					$seen = [$platform, $payload, $rawBody, $signature];
+					return ['logged' => true, 'valid' => false];
+				}
+			);
+
+			$response = $this->controller($service, null)->webhook('callvoip');
+			$this->assertSame(['callvoip', $this->params, '', $expected], $seen);
+			$this->assertSame([422, ['error' => 'Invalid webhook signature', 'logged' => true]], [$response->getStatus(), $response->getData()]);
+		}
+
+		$service = $this->createMock(CtiService::class);
+		$service->method('handleWebhook')->willThrowException(new \InvalidArgumentException('bad xml'));
+		$response = $this->controller($service, null)->webhook('callvoip');
+		$this->assertSame([400, ['error' => 'The webhook payload could not be parsed']], [$response->getStatus(), $response->getData()]);
+
+		$service = $this->createMock(CtiService::class);
+		$service->method('handleWebhook')->willThrowException(new \RuntimeException('CTI adapter not registered for platform: nope'));
+		$response = $this->controller($service, null)->webhook('nope');
+		$this->assertSame([404, ['error' => 'CTI adapter not registered for platform: nope']], [$response->getStatus(), $response->getData()]);
+	}//end testWebhookReadsTheSignatureInOrderAndAnswersExactly()
 }//end class

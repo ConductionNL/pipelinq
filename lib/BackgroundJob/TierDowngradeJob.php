@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
  */
 
 declare(strict_types=1);
@@ -27,9 +27,9 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\LoyaltyAccountService;
-use OCA\Pipelinq\Service\TierService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TierServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -52,22 +52,22 @@ class TierDowngradeJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ContainerInterface $container The DI container.
-	 * @param LoyaltyAccountService $loyaltyService The account service.
-	 * @param TierService $tierService The tier service.
+	 * @param LoyaltyAccountServiceInterface $loyaltyService The account service.
+	 * @param TierServiceInterface $tierService The tier service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
-		private LoyaltyAccountService $loyaltyService,
-		private TierService $tierService,
+		private LoyaltyAccountServiceInterface $loyaltyService,
+		private TierServiceInterface $tierService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'loyalty.tier_downgrade.poll_interval_seconds',
 				self::DEFAULT_INTERVAL
 			)
@@ -82,7 +82,7 @@ class TierDowngradeJob extends TimedJob {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	protected function run($argument): void {
 		$programmes = $this->getActiveProgrammes();
@@ -94,29 +94,52 @@ class TierDowngradeJob extends TimedJob {
 				continue;
 			}
 
-			$accounts = $this->loyaltyService->listAccountsForProgramme(
-				programmeId: $programmeId,
-				limit: 10000
-			);
-
-			foreach ($accounts as $account) {
-				$accountId = (string)$this->extractUuid(object: $account);
-				$tierValidTo = (string)($account['tierValidTo'] ?? '');
-				if ($accountId === '' || $tierValidTo === '' || $tierValidTo > $now) {
-					continue;
-				}
-
-				try {
-					$this->tierService->updateTierIfNeeded(accountId: $accountId);
-				} catch (Throwable $e) {
-					$this->logger->warning(
-						'Pipelinq: tier downgrade processing failed for account',
-						['accountId' => $accountId, 'exception' => $e->getMessage()]
-					);
-				}
-			}
-		}//end foreach
+			$this->downgradeProgramme(programmeId: $programmeId, now: $now);
+		}
 	}//end run()
+
+	/**
+	 * Re-evaluate the tier of every programme account whose tier validity has passed.
+	 *
+	 * @param string $programmeId The programme uuid.
+	 * @param string $now The current time (ISO 8601).
+	 *
+	 * @return void
+	 */
+	private function downgradeProgramme(string $programmeId, string $now): void {
+		$accounts = $this->loyaltyService->listAccountsForProgramme(
+			programmeId: $programmeId,
+			limit: 10000
+		);
+
+		foreach ($accounts as $account) {
+			$accountId = (string)$this->extractUuid(object: $account);
+			$tierValidTo = (string)($account['tierValidTo'] ?? '');
+			if ($accountId === '' || $tierValidTo === '' || $tierValidTo > $now) {
+				continue;
+			}
+
+			$this->downgradeAccount(accountId: $accountId);
+		}
+	}//end downgradeProgramme()
+
+	/**
+	 * Update one account's tier; a failure is logged.
+	 *
+	 * @param string $accountId The account uuid.
+	 *
+	 * @return void
+	 */
+	private function downgradeAccount(string $accountId): void {
+		try {
+			$this->tierService->updateTierIfNeeded(accountId: $accountId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: tier downgrade processing failed for account',
+				['accountId' => $accountId, 'exception' => $e->getMessage()]
+			);
+		}
+	}//end downgradeAccount()
 
 	/**
 	 * Get active programmes.
@@ -124,34 +147,8 @@ class TierDowngradeJob extends TimedJob {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function getActiveProgrammes(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'loyaltyProgramme_schema', '');
-		if ($register === '' || $schema === '') {
-			return [];
-		}
-
-		try {
-			$rows = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-				config: [
-					'filters' => [
-						'status' => 'active',
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 500,
-				]
-			);
-		} catch (Throwable $e) {
-			return [];
-		}
-
-		$rowsToIterate = [];
-		if (is_array($rows) === true) {
-			$rowsToIterate = $rows;
-		}
-
 		$result = [];
-		foreach ($rowsToIterate as $row) {
+		foreach ((new ActiveLoyaltyProgrammes(appConfig: $this->appConfig, container: $this->container))->rows() as $row) {
 			$arr = $this->rowToArray(row: $row);
 			if ($arr !== null) {
 				$result[] = $arr;

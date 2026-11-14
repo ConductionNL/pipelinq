@@ -31,7 +31,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -76,19 +75,15 @@ class BillingHandoffAccessPolicy {
 	 * @spec openspec/specs/time-approval-workflow/spec.md
 	 */
 	public function isManager(string $userId): bool {
-		if ($userId === '') {
-			return false;
-		}
-
-		if ($this->groupManager->isAdmin($userId) === true) {
-			return true;
-		}
-
-		$managerGroup = $this->appConfig->getValueString(Application::APP_ID, self::MANAGER_GROUP_KEY, '');
-		if ($managerGroup === '') {
-			return false;
-		}
-
-		return $this->groupManager->isInGroup($userId, $managerGroup);
+		return $this->groupGate()->admits(userId: $userId, group: new ConfiguredGroup(key: self::MANAGER_GROUP_KEY));
 	}//end isManager()
+
+	/**
+	 * The admin-or-member gate over this policy's collaborators.
+	 *
+	 * @return ConfiguredGroupGate The gate.
+	 */
+	private function groupGate(): ConfiguredGroupGate {
+		return new ConfiguredGroupGate(appConfig: $this->appConfig, groupManager: $this->groupManager);
+	}//end groupGate()
 }//end class

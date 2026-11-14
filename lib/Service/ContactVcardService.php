@@ -23,47 +23,31 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCP\Contacts\IManager as IContactsManager;
-use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for syncing Pipelinq objects to Nextcloud Contacts as vCards.
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
-class ContactVcardService {
-	/**
-	 * Allowed object types for vCard sync.
-	 *
-	 * Only these values may be used to construct an IAppConfig key, preventing
-	 * an unvalidated caller-supplied $objectType from reaching arbitrary keys.
-	 *
-	 * @var string[]
-	 */
-	private const ALLOWED_OBJECT_TYPES = ['client', 'contact'];
-
+class ContactVcardService implements ContactVcardServiceInterface {
 	/**
 	 * Constructor.
 	 *
 	 * @param IContactsManager $contactsManager The contacts manager.
-	 * @param IAppConfig $appConfig The app config.
 	 * @param ContactVcardWriterService $writerService The vCard writer.
 	 * @param ContactVcardPropertyBuilder $propBuilder The property builder.
 	 * @param LoggerInterface $logger The logger.
-	 * @param RegisterResolverService $registerResolver The register resolver.
-	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param ContactObjectReader $objects Reads the client or contact to sync.
 	 */
 	public function __construct(
 		private IContactsManager $contactsManager,
-		private IAppConfig $appConfig,
 		private ContactVcardWriterService $writerService,
 		private ContactVcardPropertyBuilder $propBuilder,
 		private LoggerInterface $logger,
-		private RegisterResolverService $registerResolver,
-		private readonly ObjectServiceInterface $objectService,
+		private ContactObjectReader $objects,
 	) {
 	}//end __construct()
 
@@ -83,7 +67,7 @@ class ContactVcardService {
 			return null;
 		}
 
-		$objData = $this->fetchPipelinqObject(
+		$objData = $this->objects->fetch(
 			objectType: $objectType,
 			objectId: $objectId
 		);
@@ -130,16 +114,57 @@ class ContactVcardService {
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 */
 	public function provisionContactFromForm(array $form, string $objectType): ?array {
-		if (in_array($objectType, self::ALLOWED_OBJECT_TYPES, true) === false) {
-			$this->logger->warning('ContactVcardService: invalid objectType for provisioning', ['objectType' => $objectType]);
+		if ($this->canProvision(objectType: $objectType) === false) {
 			return null;
+		}
+
+		$contactsUid = $this->contactUidFor(form: $form, objectType: $objectType);
+		if ($contactsUid === null || $contactsUid === '') {
+			return null;
+		}
+
+		return [
+			'contactsUid' => $contactsUid,
+			'name' => (string)($form['name'] ?? ''),
+			'email' => (string)($form['email'] ?? ''),
+			'phone' => (string)($form['phone'] ?? ''),
+		];
+	}//end provisionContactFromForm()
+
+	/**
+	 * Whether a contact can be provisioned for the type, logging why not.
+	 *
+	 * @param string $objectType The object type ('client' or 'contact').
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function canProvision(string $objectType): bool {
+		if (in_array($objectType, ContactObjectReader::OBJECT_TYPES, true) === false) {
+			$this->logger->warning('ContactVcardService: invalid objectType for provisioning', ['objectType' => $objectType]);
+			return false;
 		}
 
 		if ($this->contactsManager->isEnabled() === false) {
 			$this->logger->warning('Pipelinq: cannot provision contact -- Contacts (IManager) not available');
-			return null;
+			return false;
 		}
 
+		return true;
+	}//end canProvision()
+
+	/**
+	 * The UID of the matching existing contact, or of a fresh vCard built from the form.
+	 *
+	 * @param array $form The raw create-form fields.
+	 * @param string $objectType The object type ('client' or 'contact').
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function contactUidFor(array $form, string $objectType): string|null {
 		// 1) Try to match an EXISTING contact (email first, then ORG for orgs) so
 		// we never create a duplicate identity when one already exists.
 		$contactsUid = $this->matchExistingContact(form: $form);
@@ -155,17 +180,8 @@ class ContactVcardService {
 			$contactsUid = $this->writerService->writeVcard(properties: $properties);
 		}
 
-		if ($contactsUid === null || $contactsUid === '') {
-			return null;
-		}
-
-		return [
-			'contactsUid' => $contactsUid,
-			'name' => (string)($form['name'] ?? ''),
-			'email' => (string)($form['email'] ?? ''),
-			'phone' => (string)($form['phone'] ?? ''),
-		];
-	}//end provisionContactFromForm()
+		return $contactsUid;
+	}//end contactUidFor()
 
 	/**
 	 * Match an existing Nextcloud Contact for a create form by email first, then
@@ -179,36 +195,10 @@ class ContactVcardService {
 	 * @return ?string The matched contactsUid, or null when none matches.
 	 */
 	private function matchExistingContact(array $form): ?string {
-		$searchTerms = [];
-
-		$email = (string)($form['email'] ?? '');
-		if ($email !== '') {
-			$searchTerms[] = ['term' => $email, 'props' => ['EMAIL', 'UID']];
-		}
-
-		if ((string)($form['type'] ?? '') === 'organization') {
-			$name = (string)($form['name'] ?? '');
-			if ($name !== '') {
-				$searchTerms[] = ['term' => $name, 'props' => ['ORG', 'UID']];
-			}
-		}
-
-		foreach ($searchTerms as $search) {
-			try {
-				$results = $this->contactsManager->search($search['term'], $search['props'], ['limit' => 1]);
-			} catch (\Exception $e) {
-				$this->logger->warning(
-					'Pipelinq: contact match search failed',
-					['term' => $search['term'], 'exception' => $e->getMessage()]
-				);
-				continue;
-			}
-
-			foreach ($results as $hit) {
-				$uid = (string)($hit['UID'] ?? '');
-				if ($uid !== '') {
-					return $uid;
-				}
+		foreach ($this->matchSearches(form: $form) as $search) {
+			$uid = $this->firstMatch(search: $search);
+			if ($uid !== null) {
+				return $uid;
 			}
 		}
 
@@ -216,69 +206,53 @@ class ContactVcardService {
 	}//end matchExistingContact()
 
 	/**
-	 * Fetch a Pipelinq object by type and ID.
+	 * The contact searches for a create form: its email, then an organisation's name.
 	 *
-	 * @param string $objectType The object type (client or contact).
-	 * @param string $objectId The object ID.
+	 * @param array $form The raw create-form fields.
 	 *
-	 * @return ?array The serialized object data or null on failure.
+	 * @return array<int, array{term: string, props: array<int, string>}> The searches, in order.
 	 */
-	private function fetchPipelinqObject(string $objectType, string $objectId): ?array {
-		if (in_array($objectType, self::ALLOWED_OBJECT_TYPES, true) === false) {
-			$this->logger->warning('ContactVcardService: invalid objectType', ['objectType' => $objectType]);
-			return null;
+	private function matchSearches(array $form): array {
+		$searchTerms = [];
+
+		$email = (string)($form['email'] ?? '');
+		if ($email !== '') {
+			$searchTerms[] = ['term' => $email, 'props' => ['EMAIL', 'UID']];
 		}
 
-		$objectService = $this->getObjectService();
-		$registerId = $this->registerResolver->resolve('contact');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
-
-		if ($registerId === '' || $schemaId === '') {
-			$this->logger->warning('Pipelinq: Cannot sync -- register or schema not configured');
-			return null;
+		$name = (string)($form['name'] ?? '');
+		if ((string)($form['type'] ?? '') === 'organization' && $name !== '') {
+			$searchTerms[] = ['term' => $name, 'props' => ['ORG', 'UID']];
 		}
 
+		return $searchTerms;
+	}//end matchSearches()
+
+	/**
+	 * The uid of the first hit of one search, or null; a failing search is logged.
+	 *
+	 * @param array{term: string, props: array<int, string>} $search The search.
+	 *
+	 * @return string|null The contactsUid.
+	 */
+	private function firstMatch(array $search): ?string {
 		try {
-			$object = $objectService->find(
-				$objectId,
-				[],
-				false,
-				$registerId,
-				$schemaId
-			);
+			$results = $this->contactsManager->search($search['term'], $search['props'], ['limit' => 1]);
 		} catch (\Exception $e) {
-			$this->logger->error('Pipelinq: Failed to fetch object for sync', ['exception' => $e->getMessage()]);
+			$this->logger->warning(
+				'Pipelinq: contact match search failed',
+				['term' => $search['term'], 'exception' => $e->getMessage()]
+			);
 			return null;
 		}
 
-		return $this->serializeResult(result: $object);
-	}//end fetchPipelinqObject()
-
-	/**
-	 * Serialize an object or array result to an array.
-	 *
-	 * @param mixed $result The result to serialize.
-	 *
-	 * @return array The serialized result.
-	 */
-	private function serializeResult(mixed $result): array {
-		if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-			return $result->jsonSerialize();
+		foreach ($results as $hit) {
+			$uid = (string)($hit['UID'] ?? '');
+			if ($uid !== '') {
+				return $uid;
+			}
 		}
 
-		if (is_array($result) === true) {
-			return $result;
-		}
-
-		return [];
-	}//end serializeResult()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
+		return null;
+	}//end firstMatch()
 }//end class

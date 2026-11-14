@@ -7,24 +7,25 @@
   - It lives in its own file because a modal must never be written inline
   - inside its parent (ADR-004); it was extracted out of CtiEventLog.vue.
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.6
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="wizard"
 		:name="t('pipelinq', 'Webhook payload')"
-		:open="true"
 		size="large"
 		@closing="$emit('close')">
 		<pre class="cti-payload-dialog__pre">{{ pretty }}</pre>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+
 
 export default {
 	name: 'CtiPayloadDialog',
-	components: { NcDialog },
+	components: { CnDialog },
 	props: {
 		/**
 		 * The `payload_json` of the event-log row being inspected.

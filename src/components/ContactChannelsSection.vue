@@ -19,11 +19,37 @@
   - declaratively. After a successful save, write-back sync is triggered
   - so the linked Nextcloud Contact vCard picks up the new channels too.
   -
-  - @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+  - @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
   -->
 <template>
 	<div class="contact-channels-section">
 		<NcLoadingIcon v-if="loading" :size="24" />
+
+		<div v-else-if="compact" class="contact-channels-section__compact" data-testid="channels-compact">
+			<dl class="contact-channels-section__compact-list">
+				<div v-for="row in compactRows" :key="row.key" class="contact-channels-section__compact-row">
+					<dt>{{ row.label }}</dt>
+					<dd>{{ row.text }}</dd>
+				</div>
+			</dl>
+			<NcActions
+				:menuName="t('pipelinq', 'Add channel')"
+				class="contact-channels-section__add--pill cn-button--tonal"
+				data-testid="channels-add">
+				<template #icon>
+					<Plus :size="16" />
+				</template>
+				<NcActionButton :closeAfterClick="true" @click="openEmailPhoneModal('email', null)">
+					{{ t('pipelinq', 'Email address') }}
+				</NcActionButton>
+				<NcActionButton :closeAfterClick="true" @click="openEmailPhoneModal('phone', null)">
+					{{ t('pipelinq', 'Phone number') }}
+				</NcActionButton>
+				<NcActionButton :closeAfterClick="true" @click="openSocialModal(null)">
+					{{ t('pipelinq', 'Social profile') }}
+				</NcActionButton>
+			</NcActions>
+		</div>
 
 		<template v-else>
 			<p
@@ -33,13 +59,16 @@
 				{{ preferencesLine }}
 			</p>
 
-			<section class="contact-channels-section__group">
+			<section
+				v-for="group in channelGroups"
+				:key="group.type"
+				class="contact-channels-section__group">
 				<div class="contact-channels-section__group-header">
-					<h4>{{ t('pipelinq', 'Emails') }}</h4>
+					<h4>{{ group.heading }}</h4>
 					<NcButton
 						variant="tertiary"
-						data-testid="add-email-button"
-						@click="openEmailPhoneModal('email', null)">
+						:data-testid="'add-' + group.type + '-button'"
+						@click="openEmailPhoneModal(group.type, null)">
 						<template #icon>
 							<Plus :size="18" />
 						</template>
@@ -47,20 +76,20 @@
 					</NcButton>
 				</div>
 				<p
-					v-if="emails.length === 0"
+					v-if="group.entries.length === 0"
 					class="contact-channels-section__empty">
-					{{ t('pipelinq', 'No email addresses yet.') }}
+					{{ group.empty }}
 				</p>
 				<ul v-else class="contact-channels-section__list">
 					<li
-						v-for="(entry, index) in emails"
-						:key="'email-' + index"
+						v-for="(entry, index) in group.entries"
+						:key="group.type + '-' + index"
 						class="contact-channels-section__row">
 						<span class="contact-channels-section__kind">{{
 							kindLabel(entry.kind)
 						}}</span>
 						<a
-							:href="'mailto:' + entry.value"
+							:href="group.scheme + entry.value"
 							class="contact-channels-section__value"
 							>{{ entry.value }}</a
 						>
@@ -73,6 +102,7 @@
 							:size="16"
 							:title="t('pipelinq', 'Verified')" />
 						<NcButton
+							v-if="group.type === 'email'"
 							variant="tertiary"
 							data-testid="write-email-button"
 							@click="writeEmailTo = entry.value">
@@ -84,7 +114,7 @@
 						<NcButton
 							variant="tertiary"
 							:aria-label="t('pipelinq', 'Edit')"
-							@click="openEmailPhoneModal('email', index)">
+							@click="openEmailPhoneModal(group.type, index)">
 							<template #icon>
 								<Pencil :size="16" />
 							</template>
@@ -92,66 +122,7 @@
 						<NcButton
 							variant="tertiary"
 							:aria-label="t('pipelinq', 'Remove')"
-							@click="removeEntry('emails', index)">
-							<template #icon>
-								<Delete :size="16" />
-							</template>
-						</NcButton>
-					</li>
-				</ul>
-			</section>
-
-			<section class="contact-channels-section__group">
-				<div class="contact-channels-section__group-header">
-					<h4>{{ t('pipelinq', 'Phones') }}</h4>
-					<NcButton
-						variant="tertiary"
-						data-testid="add-phone-button"
-						@click="openEmailPhoneModal('phone', null)">
-						<template #icon>
-							<Plus :size="18" />
-						</template>
-						{{ t('pipelinq', 'Add') }}
-					</NcButton>
-				</div>
-				<p
-					v-if="phones.length === 0"
-					class="contact-channels-section__empty">
-					{{ t('pipelinq', 'No phone numbers yet.') }}
-				</p>
-				<ul v-else class="contact-channels-section__list">
-					<li
-						v-for="(entry, index) in phones"
-						:key="'phone-' + index"
-						class="contact-channels-section__row">
-						<span class="contact-channels-section__kind">{{
-							kindLabel(entry.kind)
-						}}</span>
-						<a
-							:href="'tel:' + entry.value"
-							class="contact-channels-section__value"
-							>{{ entry.value }}</a
-						>
-						<Star
-							v-if="entry.primary"
-							:size="16"
-							:title="t('pipelinq', 'Primary')" />
-						<CheckCircle
-							v-if="entry.verified"
-							:size="16"
-							:title="t('pipelinq', 'Verified')" />
-						<NcButton
-							variant="tertiary"
-							:aria-label="t('pipelinq', 'Edit')"
-							@click="openEmailPhoneModal('phone', index)">
-							<template #icon>
-								<Pencil :size="16" />
-							</template>
-						</NcButton>
-						<NcButton
-							variant="tertiary"
-							:aria-label="t('pipelinq', 'Remove')"
-							@click="removeEntry('phones', index)">
+							@click="removeEntry(group.list, index)">
 							<template #icon>
 								<Delete :size="16" />
 							</template>
@@ -257,7 +228,7 @@
 
 <script>
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { NcActionButton, NcActions, NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import EmailEditOutline from 'vue-material-design-icons/EmailEditOutline.vue'
@@ -269,6 +240,7 @@ import ContactSocialProfileModal from '../modals/ContactSocialProfileModal.vue'
 import WriteEmailModal from '../modals/WriteEmailModal.vue'
 import { writeBack } from '../services/contactSyncApi.js'
 import { useObjectStore } from '../store/modules/object.js'
+import { sectionValues } from '../utils/sectionContext.js'
 
 const KIND_LABELS = {
 	work: () => t('pipelinq', 'Work'),
@@ -291,9 +263,23 @@ const NETWORK_LABELS = {
 	other: () => t('pipelinq', 'Other'),
 }
 
+/**
+ * The value of the primary entry, else the first, or ''.
+ *
+ * @param {Array<{value: string, primary?: boolean}>} entries The channel entries.
+ * @return {string} The value.
+ * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+ */
+function primaryValue(entries) {
+	const primary = entries.find((e) => e.primary) || entries[0]
+	return primary ? primary.value : ''
+}
+
 export default {
 	name: 'ContactChannelsSection',
 	components: {
+		NcActionButton,
+		NcActions,
 		NcButton,
 		NcLoadingIcon,
 		ContactEmailPhoneModal,
@@ -323,6 +309,16 @@ export default {
 			type: String,
 			required: true,
 			validator: (v) => ['client', 'contact'].includes(v),
+		},
+
+		/**
+		 * One list of label and line per channel, and one "Add channel" menu,
+		 * for the Overview of a contact page. The full lists with edit and
+		 * remove are the Channels tab.
+		 */
+		compact: {
+			type: Boolean,
+			default: false,
 		},
 	},
 
@@ -359,9 +355,7 @@ export default {
 			if (this.entityId) {
 				return this.entityId
 			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+			const bag = sectionValues(this.cnSectionContext)
 			return (bag && bag.objectId) || ''
 		},
 
@@ -369,7 +363,7 @@ export default {
 		 * Saved reply placeholder values for an email to this party.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
 		 */
 		emailPlaceholderValues() {
 			const name = (this.entity && this.entity.name) || ''
@@ -380,23 +374,58 @@ export default {
 
 		/**
 		 * @return {Array} The entity's typed emails, or `[]` when none.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		emails() {
 			return (this.entity && this.entity.emails) || []
 		},
 
 		/**
+		 * The channels as one list for the compact look: e-mail addresses,
+		 * phone numbers, then social profiles, each a label and a line
+		 * ("j.smit@…, work, preferred").
+		 *
+		 * @return {Array<{key: string, label: string, text: string}>} The rows.
+		 * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-is-the-board
+		 */
+		compactRows() {
+			const line = (value, kind, primary) => [value, kind ? this.kindLabel(kind).toLowerCase() : '', primary ? this.t('pipelinq', 'preferred') : ''].filter(Boolean).join(', ')
+			return [
+				...this.emails.map((entry, index) => ({ key: `email-${index}`, label: this.t('pipelinq', 'Email'), text: line(entry.value, entry.kind, entry.primary) })),
+				...this.phones.map((entry, index) => ({
+					key: `phone-${index}`,
+					label: entry.kind === 'mobile' ? this.t('pipelinq', 'Mobile') : this.t('pipelinq', 'Phone'),
+					text: line(entry.value, entry.kind === 'mobile' ? '' : entry.kind, entry.primary),
+				})),
+				...this.socialProfiles.map((profile, index) => ({ key: `social-${index}`, label: this.networkLabel(profile.network), text: profile.handle || profile.url || '' })),
+			]
+		},
+
+		/**
 		 * @return {Array} The entity's typed phones, or `[]` when none.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		phones() {
 			return (this.entity && this.entity.phones) || []
 		},
 
 		/**
+		 * The e-mail and phone groups of the full look, each with its entries,
+		 * its words, the list it removes from and the link scheme of a row.
+		 *
+		 * @return {Array<object>} The two groups, e-mail first.
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 */
+		channelGroups() {
+			return [
+				{ type: 'email', list: 'emails', scheme: 'mailto:', entries: this.emails, heading: t('pipelinq', 'Emails'), empty: t('pipelinq', 'No email addresses yet.') },
+				{ type: 'phone', list: 'phones', scheme: 'tel:', entries: this.phones, heading: t('pipelinq', 'Phones'), empty: t('pipelinq', 'No phone numbers yet.') },
+			]
+		},
+
+		/**
 		 * @return {Array} The entity's social profiles, or `[]` when none.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		socialProfiles() {
 			return (this.entity && this.entity.socialProfiles) || []
@@ -409,33 +438,17 @@ export default {
 		 * summary for context alongside the channel lists.
 		 *
 		 * @return {string} The summary, or '' when nothing is set.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
 		 */
 		preferencesLine() {
 			if (!this.entity) {
 				return ''
 			}
-			const parts = []
-			if (this.entity.preferredChannel) {
-				parts.push(
-					t('pipelinq', 'Prefers {channel}', {
-						channel: this.preferredChannelLabel(
-							this.entity.preferredChannel,
-						),
-					}),
-				)
-			}
-			if (this.entity.timezone) {
-				parts.push(this.entity.timezone)
-			}
-			// correspondenceLanguage replaced `language` in the forms
-			// (pipelinq-forms-review); an older record may only have the latter.
-			const language =
-				this.entity.correspondenceLanguage || this.entity.language
-			if (language) {
-				parts.push(language.toUpperCase())
-			}
-			return parts.join(' · ')
+			return [
+				this.preferredChannelPart(),
+				this.entity.timezone,
+				this.languagePart(),
+			].filter(Boolean).join(' · ')
 		},
 	},
 
@@ -457,7 +470,7 @@ export default {
 		 * Fetch the full client/contact object.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		async load() {
 			if (!this.resolvedId) {
@@ -478,7 +491,7 @@ export default {
 		/**
 		 * @param {string} kind One of the `kind` enum values.
 		 * @return {string} The localised label.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		kindLabel(kind) {
 			const fn = KIND_LABELS[kind]
@@ -491,8 +504,47 @@ export default {
 		 *   different vocabulary from `kind`/`network`, so it gets its own
 		 *   label lookup rather than reusing either.
 		 * @return {string} The localised or proper-noun label.
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
 		 */
+		/**
+		 * @return {string} "Prefers …" for the preferred channel, or ''.
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 */
+		preferredChannelPart() {
+			if (!this.entity.preferredChannel) {
+				return ''
+			}
+			return t('pipelinq', 'Prefers {channel}', {
+				channel: this.preferredChannelLabel(this.entity.preferredChannel),
+			})
+		},
+
+		/**
+		 * correspondenceLanguage replaced `language` in the forms
+		 * (pipelinq-forms-review); an older record may only have the latter.
+		 *
+		 * @return {string} The language code in capitals, or ''.
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
+		 */
+		languagePart() {
+			const language =
+				this.entity.correspondenceLanguage || this.entity.language
+			return language ? language.toUpperCase() : ''
+		},
+
+		/**
+		 * Say the channels were not saved, with the store's reason when it has one.
+		 *
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 */
+		reportSaveFailure() {
+			const error = this.objectStore.getError?.(this.entityType)
+			showError(
+				error?.message
+					|| t('pipelinq', 'Failed to save contact channels.'),
+			)
+		},
+
 		preferredChannelLabel(channel) {
 			if (channel === 'email') {
 				return t('pipelinq', 'Email')
@@ -509,7 +561,7 @@ export default {
 		/**
 		 * @param {string} network One of the `network` enum values.
 		 * @return {string} The label (network names are proper nouns, not translated).
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		networkLabel(network) {
 			const label = NETWORK_LABELS[network]
@@ -523,7 +575,7 @@ export default {
 		 * @param {string} channelType 'email' or 'phone'.
 		 * @param {number|null} index The entry index to edit, or null to add.
 		 * @return {void}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		openEmailPhoneModal(channelType, index) {
 			const list = channelType === 'email' ? this.emails : this.phones
@@ -538,7 +590,7 @@ export default {
 		/**
 		 * @param {number|null} index The entry index to edit, or null to add.
 		 * @return {void}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		openSocialModal(index) {
 			this.socialModal = {
@@ -551,7 +603,7 @@ export default {
 		/**
 		 * @param {object} entry The built entry from ContactEmailPhoneModal.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async onEmailPhoneSaved(entry) {
 			const { channelType, index } = this.emailPhoneModal
@@ -577,7 +629,7 @@ export default {
 		/**
 		 * @param {object} profile The built entry from ContactSocialProfileModal.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async onSocialProfileSaved(profile) {
 			const { index } = this.socialModal
@@ -597,7 +649,7 @@ export default {
 		 * @param {'emails'|'phones'|'socialProfiles'} arrayKey Which array.
 		 * @param {number} index The entry index to drop.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async removeEntry(arrayKey, index) {
 			const list = [...(this.entity[arrayKey] || [])]
@@ -620,29 +672,21 @@ export default {
 		 *
 		 * @param {object} patch The array field(s) being changed.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async persist(patch) {
 			const merged = { ...this.entity, ...patch }
 
 			if ('emails' in patch) {
-				const primary =
-					merged.emails.find((e) => e.primary) || merged.emails[0]
-				merged.email = primary ? primary.value : ''
+				merged.email = primaryValue(merged.emails)
 			}
 			if ('phones' in patch) {
-				const primary =
-					merged.phones.find((e) => e.primary) || merged.phones[0]
-				merged.phone = primary ? primary.value : ''
+				merged.phone = primaryValue(merged.phones)
 			}
 
 			const saved = await this.objectStore.saveObject(this.entityType, merged)
 			if (!saved) {
-				const error = this.objectStore.getError?.(this.entityType)
-				showError(
-					error?.message
-						|| t('pipelinq', 'Failed to save contact channels.'),
-				)
+				this.reportSaveFailure()
 				return
 			}
 
@@ -655,6 +699,42 @@ export default {
 </script>
 
 <style scoped>
+.contact-channels-section__compact {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12px;
+}
+
+.contact-channels-section__compact-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	font-size: 14px;
+}
+
+.contact-channels-section__compact-row {
+	display: grid;
+	grid-template-columns: 110px minmax(0, 1fr);
+	gap: 12px;
+}
+
+/* Nextcloud's global dt rule (130px, right-aligned, padded) would overlap the value. */
+.contact-channels-section__compact-row dt {
+	width: auto;
+	padding: 0;
+	white-space: normal;
+	text-align: start;
+	color: var(--color-text-maxcontrast);
+}
+
+.contact-channels-section__compact-row dd {
+	margin: 0;
+	padding: 0;
+}
+
 .contact-channels-section {
 	display: flex;
 	flex-direction: column;
@@ -665,6 +745,8 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px;
 }
 
 .contact-channels-section__group-header h4 {
@@ -696,6 +778,7 @@ export default {
 .contact-channels-section__row {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 8px;
 	padding: 4px 0;
 }
@@ -711,9 +794,12 @@ export default {
 }
 
 .contact-channels-section__value {
-	flex: 1;
+	/* Takes the rest of the row, and drops to its own line when a long
+	   address does not fit beside the kind pill and the actions. */
+	flex: 1 1 10rem;
+	min-width: 0;
 	color: var(--color-main-text);
-	overflow-wrap: break-word;
+	overflow-wrap: anywhere;
 }
 
 .contact-channels-section__badge {

@@ -31,16 +31,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Egress;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConnectorEgressInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -49,7 +51,7 @@ use Throwable;
 /**
  * One outbound read, through one OpenConnector source.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (EgressResult). A value
@@ -58,7 +60,8 @@ use Throwable;
  *  alternative is a constructor call whose argument order says less than
  *  the method name does.
  */
-class ConnectorEgress {
+class ConnectorEgress implements ConnectorEgressInterface {
+	use SerialisedToArray;
 
 	/**
 	 * The canonical slug of the register Integriq's sources live in.
@@ -95,7 +98,7 @@ class ConnectorEgress {
 	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -112,7 +115,7 @@ class ConnectorEgress {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function isConfigured(string $configKey): bool {
 		return ($this->sourceId(configKey: $configKey) !== '');
@@ -128,7 +131,7 @@ class ConnectorEgress {
 	 *
 	 * @return EgressResult The body, or the reason there is none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function read(string $configKey, string $endpoint, array $config = [], string $method = 'GET'): EgressResult {
 		$sourceId = $this->sourceId(configKey: $configKey);
@@ -170,14 +173,10 @@ class ConnectorEgress {
 	 *
 	 * @return EgressResult The body, or the reason there is none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function readUrl(string $configKey, string $url, array $config = [], string $sourceId = ''): EgressResult {
-		$resolvedId = trim($sourceId);
-		if ($resolvedId === '') {
-			$resolvedId = $this->sourceId(configKey: $configKey);
-		}
-
+		$resolvedId = $this->resolvedSourceId(configKey: $configKey, sourceId: $sourceId);
 		if ($resolvedId === '') {
 			return EgressResult::failed(
 				failure: EgressResult::NOT_CONFIGURED,
@@ -193,6 +192,40 @@ class ConnectorEgress {
 			);
 		}
 
+		$endpoint = $this->endpointWithinSource(source: $source, url: $url);
+		if ($endpoint instanceof EgressResult) {
+			return $endpoint;
+		}
+
+		return $this->readThrough(source: $source, sourceId: $resolvedId, endpoint: $endpoint, config: $config, method: 'GET');
+	}//end readUrl()
+
+	/**
+	 * The explicit source id, else the one configured under the key.
+	 *
+	 * @param string $configKey The app-config key naming the source.
+	 * @param string $sourceId The explicit source id, or ''.
+	 *
+	 * @return string The source id ('' when none is configured).
+	 */
+	private function resolvedSourceId(string $configKey, string $sourceId): string {
+		$resolvedId = trim($sourceId);
+		if ($resolvedId === '') {
+			$resolvedId = $this->sourceId(configKey: $configKey);
+		}
+
+		return $resolvedId;
+	}//end resolvedSourceId()
+
+	/**
+	 * The URL relative to the source location, or a refusal when it lies outside the source.
+	 *
+	 * @param mixed $source The OpenConnector source.
+	 * @param string $url The absolute URL to read.
+	 *
+	 * @return string|EgressResult The endpoint, or the refusal.
+	 */
+	private function endpointWithinSource($source, string $url): string|EgressResult {
 		$location = rtrim((string)($this->toArray(value: $source)['location'] ?? ''), '/');
 		$endpoint = trim($url);
 		if ($location !== '') {
@@ -206,8 +239,8 @@ class ConnectorEgress {
 			$endpoint = substr($endpoint, strlen($location));
 		}
 
-		return $this->readThrough(source: $source, sourceId: $resolvedId, endpoint: $endpoint, config: $config, method: 'GET');
-	}//end readUrl()
+		return $endpoint;
+	}//end endpointWithinSource()
 
 	/**
 	 * Perform the call once the source is resolved.
@@ -290,7 +323,7 @@ class ConnectorEgress {
 	 * @return string The id, or an empty string.
 	 */
 	private function sourceId(string $configKey): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, $configKey, ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, $configKey, ''));
 	}//end sourceId()
 
 	/**
@@ -365,26 +398,4 @@ class ConnectorEgress {
 
 		return $callService;
 	}//end resolveCallService()
-
-	/**
-	 * Normalise an entity or array to a plain array.
-	 *
-	 * @param mixed $value The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

@@ -20,19 +20,19 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PhysicalAddressRendererInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ArticleService;
-use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
-use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,32 +44,32 @@ use OCP\IUserSession;
 /**
  * REST controller for CampaignTemplate entities.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
  */
 class TemplateController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ComplianceService $complianceService Compliance + template repo.
-	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
+	 * @param ComplianceServiceInterface $complianceService Compliance + template repo.
+	 * @param ArticleServiceInterface $articleService Article reader and `{{articles}}` renderer.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
-	 * @param PhysicalAddressRenderer $addressRenderer Puts the template's physical address into the preview.
+	 * @param PhysicalAddressRendererInterface $addressRenderer Puts the template's physical address into the preview.
 	 * @param MailBlockRenderer $blockRenderer Renders Blocks-mode templates to the bodies that are sent.
 	 * @param Defaults|null $defaults The theming colour for buttons.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ComplianceService $complianceService,
-		private readonly ArticleService $articleService,
+		private readonly ComplianceServiceInterface $complianceService,
+		private readonly ArticleServiceInterface $articleService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
-		private readonly PhysicalAddressRenderer $addressRenderer,
+		private readonly PhysicalAddressRendererInterface $addressRenderer,
 		private readonly MailBlockRenderer $blockRenderer = new MailBlockRenderer(),
 		private readonly ?Defaults $defaults = null,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -84,15 +84,11 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Message templates carry customer-facing copy and compliance state —
 		// a CRM capability. Admins bypass via the policy.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$envelope = $this->complianceService->listTemplates(page: $page, limit: $limit);
@@ -108,9 +104,9 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$user = $this->requireUser();
-		if ($user === null) {
-			return $this->unauthorized();
+		$user = $this->crmGate()->privilegedUserId();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$payload = $this->collectTemplateBody();
@@ -129,15 +125,11 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Message templates carry customer-facing copy and compliance state —
 		// a CRM capability. Admins bypass via the policy.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$template = $this->complianceService->getTemplateById(templateId: $id);
@@ -159,15 +151,11 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
 		// Message templates carry customer-facing copy and compliance state —
 		// a CRM capability. Admins bypass via the policy.
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$patch = $this->collectTemplateBody();
@@ -188,17 +176,13 @@ class TemplateController extends Controller {
 	 *
 	 * @return JSONResponse The expanded bodies and the embedded articles, or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+	 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 	 */
 	#[NoAdminRequired]
 	public function preview(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$template = $this->complianceService->getTemplateById(templateId: $id);
@@ -220,19 +204,19 @@ class TemplateController extends Controller {
 				body: $this->articleService->expandArticlesMarker(
 					body: (string)($template['bodyHtml'] ?? ''),
 					articles: $articles,
-					format: ArticleService::FORMAT_HTML,
+					format: ArticleServiceInterface::FORMAT_HTML,
 				),
 				footerOverride: $footer,
-				format: ArticleService::FORMAT_HTML,
+				format: ArticleServiceInterface::FORMAT_HTML,
 			),
 			'bodyText' => $this->addressRenderer->render(
 				body: $this->articleService->expandArticlesMarker(
 					body: (string)($template['bodyText'] ?? ''),
 					articles: $articles,
-					format: ArticleService::FORMAT_TEXT,
+					format: ArticleServiceInterface::FORMAT_TEXT,
 				),
 				footerOverride: $footer,
-				format: ArticleService::FORMAT_TEXT,
+				format: ArticleServiceInterface::FORMAT_TEXT,
 			),
 			'articles' => array_map(
 				static fn (array $article): array => [
@@ -257,13 +241,9 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function render(): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$blocks = $this->request->getParam('blocks');
@@ -290,19 +270,19 @@ class TemplateController extends Controller {
 					body: $this->articleService->expandArticlesMarker(
 						body: $rendered['html'],
 						articles: $articles,
-						format: ArticleService::FORMAT_HTML,
+						format: ArticleServiceInterface::FORMAT_HTML,
 					),
 					footerOverride: $footer,
-					format: ArticleService::FORMAT_HTML,
+					format: ArticleServiceInterface::FORMAT_HTML,
 				),
 				'bodyText' => $this->addressRenderer->render(
 					body: $this->articleService->expandArticlesMarker(
 						body: $rendered['text'],
 						articles: $articles,
-						format: ArticleService::FORMAT_TEXT,
+						format: ArticleServiceInterface::FORMAT_TEXT,
 					),
 					footerOverride: $footer,
-					format: ArticleService::FORMAT_TEXT,
+					format: ArticleServiceInterface::FORMAT_TEXT,
 				),
 			]
 		);
@@ -324,13 +304,9 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function validate(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->unauthorized();
-		}
-
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return $this->forbidden();
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		$template = $this->complianceService->getTemplateById(templateId: $id);
@@ -343,20 +319,6 @@ class TemplateController extends Controller {
 
 		return new JSONResponse(['valid' => ($error === null), 'error' => $error]);
 	}//end validate()
-
-	/**
-	 * Authenticated user id, or null.
-	 *
-	 * @return string|null UID or null.
-	 */
-	private function requireUser(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		return $user->getUID();
-	}//end requireUser()
 
 	/**
 	 * Collect a sanitised template body from the fields the request carries.
@@ -469,24 +431,6 @@ class TemplateController extends Controller {
 	}//end renderResult()
 
 	/**
-	 * Generic 401 response.
-	 *
-	 * @return JSONResponse
-	 */
-	private function unauthorized(): JSONResponse {
-		return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-	}//end unauthorized()
-
-	/**
-	 * Deny a caller who is authenticated but not a CRM user.
-	 *
-	 * @return JSONResponse The 403 response.
-	 */
-	private function forbidden(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end forbidden()
-
-	/**
 	 * Generic 404 response.
 	 *
 	 * @return JSONResponse
@@ -494,4 +438,13 @@ class TemplateController extends Controller {
 	private function notFound(): JSONResponse {
 		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 	}//end notFound()
+
+	/**
+	 * The caller check shared by the marketing controllers.
+	 *
+	 * @return CrmCallerGate The gate.
+	 */
+	private function crmGate(): CrmCallerGate {
+		return new CrmCallerGate(userSession: $this->userSession, policy: $this->policy);
+	}//end crmGate()
 }//end class

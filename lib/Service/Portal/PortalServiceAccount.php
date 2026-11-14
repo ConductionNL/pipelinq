@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ServiceAccount;
 use OCP\AppFramework\Http;
 
@@ -105,7 +105,7 @@ class PortalServiceAccount extends ServiceAccount {
 	protected function refuse(string $userId, string $reason): never {
 		$this->logger->error(
 			'Pipelinq portal: no usable portal service account, the portal refuses every write',
-			['app' => Application::APP_ID, 'userId' => $userId, 'reason' => $reason]
+			['app' => AppIdentity::APP_ID, 'userId' => $userId, 'reason' => $reason]
 		);
 		// The reason goes to the log only: the caller is anonymous.
 		throw new PortalException(

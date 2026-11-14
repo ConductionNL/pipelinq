@@ -29,10 +29,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
-use OCA\Pipelinq\Service\DemoSeedService;
-use OCA\Pipelinq\Service\SettingsService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DemoRegisterImporterInterface;
+use OCA\Pipelinq\Kernel\Contracts\DemoSeedServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -97,21 +97,21 @@ class SetupController extends Controller {
 	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
 	 * @param IAppConfig $appConfig App-config reader/writer.
-	 * @param SettingsService $settingsService Register/schema + default-data provisioning.
-	 * @param DemoSeedService $demoSeedService Optional demo-data seeding (same write path as occ).
+	 * @param SettingsServiceInterface $settingsService Register/schema + default-data provisioning.
+	 * @param DemoSeedServiceInterface $demoSeedService Optional demo-data seeding (same write path as occ).
 	 * @param IAppManager $appManager App installed/enabled lookup for integration detection.
 	 * @param LoggerInterface $logger Logger.
-	 * @param DemoRegisterImporter $registerImporter The example records descriptor, imported with the seed.
+	 * @param DemoRegisterImporterInterface $registerImporter The example records descriptor, imported with the seed.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		private readonly IAppConfig $appConfig,
-		private readonly SettingsService $settingsService,
-		private readonly DemoSeedService $demoSeedService,
+		private readonly SettingsServiceInterface $settingsService,
+		private readonly DemoSeedServiceInterface $demoSeedService,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
-		private readonly DemoRegisterImporter $registerImporter,
+		private readonly DemoRegisterImporterInterface $registerImporter,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -153,8 +153,8 @@ class SetupController extends Controller {
 	 * @return DataResponse `{ version, completed, dismissed, steps: { <id>: { done } } }`.
 	 *
 	 * @spec openspec/changes/first-time-setup/specs/first-time-setup/spec.md
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
-	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function status(): DataResponse {
@@ -172,8 +172,12 @@ class SetupController extends Controller {
 		// Organisation step done once the operator has named the organisation.
 		$organisationDone = $this->config(key: 'receipt_company_name') !== '';
 
+		// The till and integrations steps are optional; each is done once one of its fields is set.
+		$posDone          = $this->anyConfigured(keys: ['receipt_printer_host', 'receipt_email_sender']);
+		$integrationsDone = $this->anyConfigured(keys: ['billing_handoff_manager_group']);
+
 		if ($currencyDone === true) {
-			$this->appConfig->setValueString(Application::APP_ID, 'setup_completed_version', (string)self::SETUP_VERSION);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'setup_completed_version', (string)self::SETUP_VERSION);
 		}
 
 		return new DataResponse(
@@ -186,19 +190,37 @@ class SetupController extends Controller {
 				// dataset missing from this list is a dataset nobody can pick.
 				'datasets' => $this->demoSeedService->listChoices(),
 				// Exactly the ids of `manifest.setup.steps`, asserted by
-				// SetupControllerStatusContractTest. Provisioning and the
-				// integrations are not steps any more: provisioning is an admin
-				// settings action and integrations are detected, not asked.
+				// SetupControllerStatusContractTest. Provisioning is not a step:
+				// it is an admin settings action.
 				'steps' => [
 					'welcome' => ['done' => true],
 					'demo-data' => ['done' => $demoDataDone],
 					'currency' => ['done' => $currencyDone],
 					'organisation' => ['done' => $organisationDone],
+					'pos' => ['done' => $posDone],
+					'integrations' => ['done' => $integrationsDone],
 					'done' => ['done' => true],
 				],
 			]
 		);
 	}//end status()
+
+	/**
+	 * Whether any of the given app config keys holds a value.
+	 *
+	 * @param list<string> $keys The app config keys.
+	 *
+	 * @return bool True when at least one key is set.
+	 */
+	private function anyConfigured(array $keys): bool {
+		foreach ($keys as $key) {
+			if ($this->config(key: $key) !== '') {
+				return true;
+			}
+		}
+
+		return false;
+	}//end anyConfigured()
 
 	/**
 	 * Record that the operator has dealt with the optional demo-data step.
@@ -216,8 +238,8 @@ class SetupController extends Controller {
 	private function skipDemoData(): DataResponse {
 		// Skipping IS choosing "None", so both keys are written: an older
 		// runbook may read either one.
-		$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
-		$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedServiceInterface::NONE_DATASET);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
 
 		return new DataResponse(
 			['success' => true, 'message' => 'Demo data skipped. You can seed it later with `occ pipelinq:demo:seed`.']
@@ -253,7 +275,7 @@ class SetupController extends Controller {
 				$stored = (string)$value;
 			}
 
-			$this->appConfig->setValueString(Application::APP_ID, (string)$key, $stored);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, (string)$key, $stored);
 		}
 
 		return new DataResponse(['success' => true]);
@@ -266,7 +288,7 @@ class SetupController extends Controller {
 	 *
 	 * @return DataResponse|null The refusal, or null when the value is absent or known.
 	 *
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	private function refuseUnknownDataset(mixed $dataset): ?DataResponse {
 		if ($dataset === null) {
@@ -294,7 +316,7 @@ class SetupController extends Controller {
 	 * @return DataResponse `{ success, message }`.
 	 *
 	 * @spec openspec/changes/first-time-setup/specs/first-time-setup/spec.md
-	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function runAction(string $actionId): DataResponse {
@@ -388,7 +410,7 @@ class SetupController extends Controller {
 	 * @return DataResponse `{ success, message }`.
 	 *
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	private function loadDataset(): DataResponse {
 		// The card's Load button names its dataset in the body. An older
@@ -412,9 +434,9 @@ class SetupController extends Controller {
 			return new DataResponse(['success' => false, 'message' => 'Pick a dataset first.']);
 		}
 
-		if ($picked === DemoSeedService::NONE_DATASET) {
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
+		if ($picked === DemoSeedServiceInterface::NONE_DATASET) {
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedServiceInterface::NONE_DATASET);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
 
 			return new DataResponse(['success' => true, 'message' => 'No example data was seeded.']);
 		}
@@ -443,8 +465,8 @@ class SetupController extends Controller {
 			// DEMO_DATA_DECIDED_KEY — an optional step the server can never
 			// report done covers the whole app with the setup wizard.
 			// Seeding IS choosing the set, so the pick is written too.
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::DEMO_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedServiceInterface::DEMO_DATASET);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
 
 			// The example records that used to ship inside the register descriptor.
 			$example = $this->registerImporter->import();
@@ -477,11 +499,11 @@ class SetupController extends Controller {
 	 *
 	 * @return DataResponse `{ success, dismissed }`.
 	 *
-	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	private function dismissSetup(): DataResponse {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::DISMISSED_VERSION_KEY,
 			(string)self::SETUP_VERSION
 		);
@@ -494,7 +516,7 @@ class SetupController extends Controller {
 	 *
 	 * @return int|false The stored version, or false.
 	 *
-	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	private function dismissedVersion(): int|false {
 		$stored = $this->config(key: self::DISMISSED_VERSION_KEY);
@@ -513,6 +535,6 @@ class SetupController extends Controller {
 	 * @return string The value, or '' when unset.
 	 */
 	private function config(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end config()
 }//end class

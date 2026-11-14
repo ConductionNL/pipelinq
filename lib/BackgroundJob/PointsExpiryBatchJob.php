@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-005
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-005
  */
 
 declare(strict_types=1);
@@ -28,11 +28,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
-use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\LoyaltyAccountService;
-use OCA\Pipelinq\Service\NotificationService;
-use OCA\Pipelinq\Service\PointsLedgerService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\NotificationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -50,6 +50,8 @@ use Throwable;
  *   and nothing inherited it
  */
 class PointsExpiryBatchJob extends TimedJob {
+	use PayloadToArray;
+
 	private const DEFAULT_INTERVAL = 86400;
 
 	/**
@@ -58,24 +60,24 @@ class PointsExpiryBatchJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ContainerInterface $container The DI container.
-	 * @param LoyaltyAccountService $loyaltyService The account service.
-	 * @param PointsLedgerService $ledgerService The ledger service.
-	 * @param NotificationService $notificationService The notification service.
+	 * @param LoyaltyAccountServiceInterface $loyaltyService The account service.
+	 * @param PointsLedgerServiceInterface $ledgerService The ledger service.
+	 * @param NotificationServiceInterface $notificationService The notification service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
-		private LoyaltyAccountService $loyaltyService,
-		private PointsLedgerService $ledgerService,
-		private NotificationService $notificationService,
+		private LoyaltyAccountServiceInterface $loyaltyService,
+		private PointsLedgerServiceInterface $ledgerService,
+		private NotificationServiceInterface $notificationService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'loyalty.expiry.poll_interval_seconds',
 				self::DEFAULT_INTERVAL
 			)
@@ -90,11 +92,11 @@ class PointsExpiryBatchJob extends TimedJob {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-005
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-005
 	 */
 	protected function run($argument): void {
 		$programmes = $this->getActiveProgrammes();
-		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$now = new DateTimeImmutable('now UTC');
 
 		foreach ($programmes as $programme) {
 			$programmeId = $this->extractUuid(object: $programme);
@@ -102,113 +104,161 @@ class PointsExpiryBatchJob extends TimedJob {
 				continue;
 			}
 
-			$policy = $programme['expiryPolicy'] ?? [];
-			if (is_array($policy) === false) {
+			$window = new ExpiryWindow(programme: $programme, now: $now);
+			if ($window->applies === false) {
 				continue;
 			}
 
-			$type = (string)($policy['type'] ?? 'none');
-			$months = (int)($policy['value'] ?? 0);
-			$notice = (int)($policy['advanceNoticeDays'] ?? 30);
-			if ($type !== 'inactivityMonths' || $months <= 0) {
-				continue;
-			}
-
-			$cutoff = $now->modify("-{$months} months");
-			$noticeCutoff = $now->modify('-' . max(0, $months - (int)ceil($notice / 30)) . ' months');
-
-			$accounts = $this->loyaltyService->listAccountsForProgramme(
-				programmeId: $programmeId,
-				limit: 10000
-			);
-
-			foreach ($accounts as $account) {
-				try {
-					$this->processAccount(
-						account: $account,
-						cutoff: $cutoff,
-						noticeCutoff: $noticeCutoff,
-						notice: $notice
-					);
-				} catch (Throwable $e) {
-					$this->logger->warning(
-						'Pipelinq: expiry batch failed for one account; continuing',
-						['accountId' => $this->extractUuid(object: $account), 'exception' => $e->getMessage()]
-					);
-				}
-			}
-		}//end foreach
+			$this->processProgramme(programmeId: $programmeId, window: $window);
+		}
 	}//end run()
+
+	/**
+	 * Process every account of one programme, one failing account not stopping the rest.
+	 *
+	 * @param string       $programmeId The programme id.
+	 * @param ExpiryWindow $window      The programme's cutoffs for this run.
+	 *
+	 * @return void
+	 */
+	private function processProgramme(string $programmeId, ExpiryWindow $window): void {
+		$accounts = $this->loyaltyService->listAccountsForProgramme(
+			programmeId: $programmeId,
+			limit: 10000
+		);
+
+		foreach ($accounts as $account) {
+			try {
+				$this->processAccount(account: $account, window: $window);
+			} catch (Throwable $e) {
+				$this->logger->warning(
+					'Pipelinq: expiry batch failed for one account; continuing',
+					['accountId' => $this->extractUuid(object: $account), 'exception' => $e->getMessage()]
+				);
+			}
+		}
+	}//end processProgramme()
 
 	/**
 	 * Process a single account.
 	 *
 	 * @param array<string, mixed> $account The account.
-	 * @param DateTimeImmutable $cutoff Cutoff for expiry.
-	 * @param DateTimeImmutable $noticeCutoff Cutoff for advance notice.
-	 * @param int $notice Advance notice days.
+	 * @param ExpiryWindow         $window  The programme's cutoffs for this run.
 	 *
 	 * @return void
 	 */
-	private function processAccount(
-		array $account,
-		DateTimeImmutable $cutoff,
-		DateTimeImmutable $noticeCutoff,
-		int $notice,
-	): void {
+	private function processAccount(array $account, ExpiryWindow $window): void {
 		$accountId = (string)$this->extractUuid(object: $account);
 		if ($accountId === '') {
 			return;
 		}
 
+		$expiring = $this->expiringBalance(account: $account);
+		if ($expiring === null) {
+			return;
+		}
+
+		$this->expireOrWarn(account: $account, window: $window, accountId: $accountId, expiring: $expiring);
+	}//end processAccount()
+
+	/**
+	 * An account's last activity and balance, or null when it has no balance or no activity.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 *
+	 * @return array{0: string, 1: int}|null
+	 */
+	private function expiringBalance(array $account): array|null {
 		$lastActivity = (string)($account['lastActivityDate'] ?? '');
 		$balance = (int)($account['currentBalance'] ?? 0);
 		if ($balance <= 0 || $lastActivity === '') {
+			return null;
+		}
+
+		return [$lastActivity, $balance];
+	}//end expiringBalance()
+
+	/**
+	 * Expire an account's points past the cutoff, or warn its holder past the notice cutoff.
+	 *
+	 * @param array<string, mixed>  $account   The account.
+	 * @param ExpiryWindow          $window    The programme's cutoffs for this run.
+	 * @param string                $accountId The account id.
+	 * @param array{0: string, 1: int} $expiring  The last activity and the balance.
+	 *
+	 * @return void
+	 */
+	private function expireOrWarn(array $account, ExpiryWindow $window, string $accountId, array $expiring): void {
+		[$lastActivity, $balance] = $expiring;
+		if ($lastActivity < $window->cutoff->format('c')) {
+			$this->expire(account: $account, window: $window);
 			return;
 		}
 
-		if ($lastActivity < $cutoff->format('c')) {
-			// Expire.
-			$this->ledgerService->expirePoints(
-				accountId: $accountId,
-				amount: $balance,
-				reason: 'inactivity-expiry'
+		if ($lastActivity < $window->noticeCutoff->format('c')) {
+			$this->warnOfExpiry(
+				account: $account,
+				parameters: [
+					'points' => $balance,
+					'noticeDays' => $window->notice,
+					'accountId' => $accountId,
+				]
 			);
-			$this->logger->info(
-				'Pipelinq: expired points for inactive account',
-				['accountId' => $accountId, 'points' => $balance]
-			);
+		}
+	}//end expireOrWarn()
+
+	/**
+	 * Expire the whole balance of an inactive account.
+	 *
+	 * @param array<string, mixed> $account The account, already known to have an id and a balance.
+	 * @param ExpiryWindow         $window  The programme's cutoffs for this run.
+	 *
+	 * @return void
+	 */
+	private function expire(array $account, ExpiryWindow $window): void {
+		$accountId = (string)$this->extractUuid(object: $account);
+		$balance = (int)($account['currentBalance'] ?? 0);
+		$this->ledgerService->forOperation(operationId: 'expiry:'.$window->cutoff->format('Y-m-d'))->expirePoints(
+			accountId: $accountId,
+			amount: $balance,
+			reason: 'inactivity-expiry'
+		);
+		$this->logger->info(
+			'Pipelinq: expired points for inactive account',
+			['accountId' => $accountId, 'points' => $balance]
+		);
+	}//end expire()
+
+	/**
+	 * Tell the customer their points are about to expire, best effort.
+	 *
+	 * @param array<string, mixed> $account    The account.
+	 * @param array<string, mixed> $parameters The notification parameters, accountId included.
+	 *
+	 * @return void
+	 */
+	private function warnOfExpiry(array $account, array $parameters): void {
+		$customerId = (string)($account['customerId'] ?? '');
+		if ($customerId === '') {
 			return;
 		}
 
-		if ($lastActivity < $noticeCutoff->format('c')) {
-			// Advance notice.
-			$customerId = (string)($account['customerId'] ?? '');
-			if ($customerId === '') {
-				return;
-			}
-
-			try {
-				$this->notificationService->sendNotification(
-					userId: $customerId,
-					subject: 'loyalty_points_expiring',
-					parameters: [
-						'points' => $balance,
-						'noticeDays' => $notice,
-						'accountId' => $accountId,
-					],
-					objectType: 'customerLoyaltyAccount',
-					objectId: $accountId
-				);
-			} catch (Throwable $e) {
-				// Best effort.
-				$this->logger->debug(
-					'Pipelinq: advance-expiry notification failed',
-					['accountId' => $accountId, 'exception' => $e->getMessage()]
-				);
-			}
-		}//end if
-	}//end processAccount()
+		try {
+			$this->notificationService->sendNotification(
+				userId: $customerId,
+				subject: 'loyalty_points_expiring',
+				parameters: $parameters,
+				objectType: 'customerLoyaltyAccount',
+				objectId: $parameters['accountId']
+			);
+		} catch (Throwable $e) {
+			// Best effort.
+			$this->logger->debug(
+				'Pipelinq: advance-expiry notification failed',
+				['accountId' => $parameters['accountId'], 'exception' => $e->getMessage()]
+			);
+		}
+	}//end warnOfExpiry()
 
 	/**
 	 * Get active programmes.
@@ -216,35 +266,9 @@ class PointsExpiryBatchJob extends TimedJob {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function getActiveProgrammes(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'loyaltyProgramme_schema', '');
-		if ($register === '' || $schema === '') {
-			return [];
-		}
-
-		try {
-			$rows = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-				config: [
-					'filters' => [
-						'status' => 'active',
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 500,
-				]
-			);
-		} catch (Throwable $e) {
-			return [];
-		}
-
 		$result = [];
-		$list = [];
-		if (is_array($rows) === true) {
-			$list = $rows;
-		}
-
-		foreach ($list as $row) {
-			$result[] = $this->toArray(object: $row);
+		foreach ((new ActiveLoyaltyProgrammes(appConfig: $this->appConfig, container: $this->container))->rows() as $row) {
+			$result[] = $this->toArray(value: $row);
 		}
 
 		return $result;
@@ -265,33 +289,4 @@ class PointsExpiryBatchJob extends TimedJob {
 
 		return $object['programmeId'] ?? $object['accountId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Normalise OR entity to array.
-	 *
-	 * @param mixed $object The OR entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$payload = $object->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

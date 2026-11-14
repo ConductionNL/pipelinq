@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\OpenRegister\Service\Aggregation;
 
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
+
 if (class_exists(AggregationRunner::class) === false) {
 	/**
 	 * Stub AggregationRunner — used only in standalone unit tests.

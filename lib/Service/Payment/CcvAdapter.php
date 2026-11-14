@@ -22,20 +22,19 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
-use Throwable;
 
 /**
  * CCV PIN terminal adapter.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
  */
 class CcvAdapter extends AbstractPaymentAdapter {
 	/**
@@ -57,11 +56,29 @@ class CcvAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
 	 */
 	public function getName(): string {
 		return 'ccv';
 	}//end getName()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string The display name.
+	 */
+	protected function label(): string {
+		return 'CCV';
+	}//end label()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, string> The bearer authorisation header.
+	 */
+	protected function authHeaders(): array {
+		return ['Authorization' => 'Bearer ' . $this->credential(key: 'apiKey')];
+	}//end authHeaders()
 
 	/**
 	 * Initiate a CCV PIN terminal payment.
@@ -72,7 +89,7 @@ class CcvAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, redirectUrl: string|null, status: string, error?: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 	 */
 	public function initiate(array $transactionData, float $amount, string $paymentMethod): array {
 		$apiKey = $this->credential(key: 'apiKey');
@@ -82,59 +99,54 @@ class CcvAdapter extends AbstractPaymentAdapter {
 			return $this->failedInitiate(message: 'CCV API key or terminal id not configured');
 		}
 
-		$cents = $this->toCents(amount: $amount);
-		if ($cents <= 0) {
+		$payment = new PspPayment(transactionData: $transactionData, cents: $this->toCents(amount: $amount));
+		if ($payment->cents <= 0) {
 			return $this->failedInitiate(message: 'Invalid amount');
 		}
 
-		$reference = (string)($transactionData['reference'] ?? '');
-		$label = 'transactie';
-		if ($reference !== '') {
-			$label = $reference;
+		$rawBody = (string)json_encode($this->paymentPayload(payment: $payment, terminalId: $terminalId));
+		$response = $this->send(call: new PspCall(url: $this->baseUrl() . '/payments', context: 'initiate failed'), body: $rawBody);
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedInitiate(message: $error);
 		}
 
-		$payload = [
-			'amount' => $cents,
+		return $this->pending(sessionId: $this->referenceIn(body: $response['body']), redirectUrl: null);
+	}//end initiate()
+
+	/**
+	 * The CCV terminal-payment request body.
+	 *
+	 * @param PspPayment $payment    The payment.
+	 * @param string     $terminalId The terminal that takes the card.
+	 *
+	 * @return array<string, mixed> The request body.
+	 */
+	private function paymentPayload(PspPayment $payment, string $terminalId): array {
+		return [
+			'amount' => $payment->cents,
 			'currency' => 'EUR',
 			'method' => 'card',
 			'terminalId' => $terminalId,
-			'reference' => $reference,
-			'description' => sprintf('Pipelinq POS %s', $label),
+			'reference' => $payment->reference(),
+			'description' => $payment->description(),
 			'metadata' => [
-				'transactionId' => (string)($transactionData['id'] ?? ''),
+				'transactionId' => $payment->transactionId(),
 				'app' => 'pipelinq',
 			],
 		];
+	}//end paymentPayload()
 
-		$rawBody = (string)json_encode($payload);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: $this->baseUrl() . '/payments',
-				headers: [
-					'Authorization' => 'Bearer ' . $apiKey,
-					'Content-Type' => 'application/json',
-				],
-				body: $rawBody
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'initiate failed', e: $e);
-			return $this->failedInitiate(message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedInitiate(message: 'CCV returned HTTP ' . $response['status']);
-		}
-
-		$sessionId = (string)($response['body']['reference'] ?? ($response['body']['id'] ?? ''));
-
-		return [
-			'sessionId' => $sessionId,
-			'redirectUrl' => null,
-			'status' => 'pending',
-		];
-	}//end initiate()
+	/**
+	 * The payment or refund reference in a CCV reply, falling back to its id.
+	 *
+	 * @param array<string, mixed> $body The reply body.
+	 *
+	 * @return string The reference, or ''.
+	 */
+	private function referenceIn(array $body): string {
+		return (string)($body['reference'] ?? ($body['id'] ?? ''));
+	}//end referenceIn()
 
 	/**
 	 * Capture is a status read for CCV — terminal auto-settles.
@@ -143,7 +155,7 @@ class CcvAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, status: string, error?: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
 	 */
 	public function capture(string $sessionId): array {
 		$apiKey = $this->credential(key: 'apiKey');
@@ -151,29 +163,15 @@ class CcvAdapter extends AbstractPaymentAdapter {
 			return $this->failedCapture(sessionId: $sessionId, message: 'CCV API key or session missing');
 		}
 
-		try {
-			$response = $this->transport()->request(
-				method: 'GET',
-				url: $this->baseUrl() . '/payments/' . urlencode($sessionId),
-				headers: ['Authorization' => 'Bearer ' . $apiKey],
-				body: null
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'capture failed', e: $e);
-			return $this->failedCapture(sessionId: $sessionId, message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedCapture(sessionId: $sessionId, message: 'CCV returned HTTP ' . $response['status']);
+		$call = new PspCall(url: $this->baseUrl() . '/payments/' . urlencode($sessionId), context: 'capture failed');
+		$response = $this->send(call: $call, body: null);
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedCapture(sessionId: $sessionId, message: $error);
 		}
 
 		$status = (string)($response['body']['status'] ?? 'pending');
-
-		return [
-			'sessionId' => $sessionId,
-			'status' => $this->mapStatus(providerStatus: $status),
-			'error' => null,
-		];
+		return $this->settled(sessionId: $sessionId, status: $this->mapStatus(providerStatus: $status));
 	}//end capture()
 
 	/**
@@ -184,7 +182,7 @@ class CcvAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, refundId: string, status: string, error?: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
 	 */
 	public function refund(string $sessionId, string $reason): array {
 		$apiKey = $this->credential(key: 'apiKey');
@@ -192,41 +190,15 @@ class CcvAdapter extends AbstractPaymentAdapter {
 			return $this->failedRefund(sessionId: $sessionId, message: 'CCV API key or session missing');
 		}
 
-		$refundReason = 'Refund via Pipelinq POS';
-		if ($reason !== '') {
-			$refundReason = $reason;
+		$rawBody = (string)json_encode(['reason' => $this->refundReason(reason: $reason)]);
+		$call = new PspCall(url: $this->baseUrl() . '/payments/' . urlencode($sessionId) . '/refunds', context: 'refund failed');
+		$response = $this->send(call: $call, body: $rawBody);
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedRefund(sessionId: $sessionId, message: $error);
 		}
 
-		$payload = ['reason' => $refundReason];
-		$rawBody = (string)json_encode($payload);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: $this->baseUrl() . '/payments/' . urlencode($sessionId) . '/refunds',
-				headers: [
-					'Authorization' => 'Bearer ' . $apiKey,
-					'Content-Type' => 'application/json',
-				],
-				body: $rawBody
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'refund failed', e: $e);
-			return $this->failedRefund(sessionId: $sessionId, message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedRefund(sessionId: $sessionId, message: 'CCV returned HTTP ' . $response['status']);
-		}
-
-		$refundId = (string)($response['body']['reference'] ?? ($response['body']['id'] ?? ''));
-
-		return [
-			'sessionId' => $sessionId,
-			'refundId' => $refundId,
-			'status' => 'refunded',
-			'error' => null,
-		];
+		return $this->refunded(sessionId: $sessionId, refundId: $this->referenceIn(body: $response['body']));
 	}//end refund()
 
 	/**
@@ -237,7 +209,7 @@ class CcvAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function validateWebhook(string $rawPayload, string $signature): bool {
 		if ($rawPayload === '' || $signature === '') {
@@ -263,7 +235,7 @@ class CcvAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{sessionId: string, status: string, eventId: string, error: string|null}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function parseWebhook(array $payload): array {
 		$sessionId = (string)($payload['reference'] ?? ($payload['paymentId'] ?? ''));
@@ -283,51 +255,33 @@ class CcvAdapter extends AbstractPaymentAdapter {
 	 *
 	 * @return array{status: string, message: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function testConnection(): array {
-		$apiKey = $this->credential(key: 'apiKey');
-		if ($apiKey === '') {
-			return [
-				'status' => 'error',
-				'message' => 'API key niet ingesteld',
-			];
+		if ($this->credential(key: 'apiKey') === '') {
+			return $this->notConfigured(message: 'API key niet ingesteld');
 		}
 
-		try {
-			$response = $this->transport()->request(
-				method: 'GET',
-				url: $this->baseUrl() . '/terminals',
-				headers: ['Authorization' => 'Bearer ' . $apiKey],
-				body: null
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'testConnection failed', e: $e);
-			return [
-				'status' => 'error',
-				'message' => 'Verbinding met CCV mislukt',
-			];
-		}//end try
-
-		if ($response['status'] >= 200 && $response['status'] < 300) {
-			return [
-				'status' => 'ok',
-				'message' => 'Verbinding met CCV succesvol',
-			];
-		}
-
-		if ($response['status'] === 401 || $response['status'] === 403) {
-			return [
-				'status' => 'error',
-				'message' => 'Fout: Invalid API credentials. Controleer uw API key.',
-			];
-		}
-
-		return [
-			'status' => 'error',
-			'message' => 'CCV gaf HTTP ' . $response['status'] . ' terug',
-		];
+		$response = $this->send(call: new PspCall(url: $this->baseUrl() . '/terminals', context: 'testConnection failed'), body: null);
+		return $this->connectionVerdict(response: $response);
 	}//end testConnection()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * CCV answers bad credentials with 401 or 403; those get their own message.
+	 *
+	 * @param int $status The HTTP status.
+	 *
+	 * @return string The message.
+	 */
+	protected function connectionHttpError(int $status): string {
+		if ($status === 401 || $status === 403) {
+			return 'Fout: Invalid API credentials. Controleer uw API key.';
+		}
+
+		return 'CCV gaf HTTP ' . $status . ' terug';
+	}//end connectionHttpError()
 
 	/**
 	 * Resolve the base URL based on environment.
@@ -335,11 +289,7 @@ class CcvAdapter extends AbstractPaymentAdapter {
 	 * @return string
 	 */
 	private function baseUrl(): string {
-		if ($this->isSandbox() === true) {
-			return self::SANDBOX_URL;
-		}
-
-		return self::LIVE_URL;
+		return $this->environmentUrl(sandboxUrl: self::SANDBOX_URL, liveUrl: self::LIVE_URL);
 	}//end baseUrl()
 
 	/**

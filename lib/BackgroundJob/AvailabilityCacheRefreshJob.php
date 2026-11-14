@@ -30,8 +30,10 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AvailabilityService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
+use OCA\Pipelinq\Util\AnyPayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -52,6 +54,9 @@ use Throwable;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AvailabilityCacheRefreshJob extends TimedJob {
+	use AnyPayloadToArray;
+	use RowIdOf;
+
 
 	/**
 	 * Run interval in seconds (1 hour).
@@ -80,14 +85,14 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param ContainerInterface $container The DI container (OR lookup).
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param AvailabilityService $availabilityService Member 02 — invalidation target.
+	 * @param AvailabilityServiceInterface $availabilityService Member 02 — invalidation target.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private AvailabilityService $availabilityService,
+		private AvailabilityServiceInterface $availabilityService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -107,51 +112,87 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	protected function run(mixed $argument): void {
+		$resources = $this->activeResourcesOrNull();
+		if ($resources === null || $resources === []) {
+			return;
+		}
+
+		$tally = $this->invalidateHorizon(resources: $resources);
+		$this->logger->info(
+			'Pipelinq: availability cache refresh complete',
+			[
+				'resources' => count($resources),
+				'invalidated' => $tally['invalidated'],
+				'errors' => $tally['errors'],
+				'horizon_days' => self::HORIZON_DAYS,
+			]
+		);
+	}//end run()
+
+	/**
+	 * The active resource ids, or null when they could not be loaded (logged).
+	 *
+	 * @return array<int, string>|null The ids.
+	 */
+	private function activeResourcesOrNull(): ?array {
 		try {
-			$resources = $this->loadActiveResources();
+			return $this->loadActiveResources();
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'Pipelinq: availability cache refresh failed to load resources',
 				['exception' => $e->getMessage()]
 			);
-			return;
+			return null;
 		}
+	}//end activeResourcesOrNull()
 
-		if ($resources === []) {
-			return;
-		}
-
+	/**
+	 * Invalidate every resource's cache for every horizon date.
+	 *
+	 * @param array<int, string> $resources The resource ids.
+	 *
+	 * @return array{invalidated: int, errors: int} How many invalidations succeeded and failed.
+	 */
+	private function invalidateHorizon(array $resources): array {
 		$dates = $this->horizonDates();
-		$count = 0;
-		$errors = 0;
+		$tally = ['invalidated' => 0, 'errors' => 0];
 		foreach ($resources as $resourceId) {
 			foreach ($dates as $date) {
-				try {
-					$this->availabilityService->invalidateCache(
-						resourceId: $resourceId,
-						date: $date
-					);
-					$count++;
-				} catch (Throwable $e) {
-					$errors++;
-					$this->logger->warning(
-						'Pipelinq: availability cache invalidation failed',
-						['resource' => $resourceId, 'date' => $date]
-					);
+				$outcome = 'errors';
+				if ($this->invalidated(resourceId: $resourceId, date: $date) === true) {
+					$outcome = 'invalidated';
 				}
-			}
-		}//end foreach
 
-		$this->logger->info(
-			'Pipelinq: availability cache refresh complete',
-			[
-				'resources' => count($resources),
-				'invalidated' => $count,
-				'errors' => $errors,
-				'horizon_days' => self::HORIZON_DAYS,
-			]
-		);
-	}//end run()
+				$tally[$outcome]++;
+			}
+		}
+
+		return $tally;
+	}//end invalidateHorizon()
+
+	/**
+	 * Invalidate one resource's cache for one date; a failure is logged.
+	 *
+	 * @param string $resourceId The resource.
+	 * @param string $date       The date (Y-m-d).
+	 *
+	 * @return bool Whether it was invalidated.
+	 */
+	private function invalidated(string $resourceId, string $date): bool {
+		try {
+			$this->availabilityService->invalidateCache(
+				resourceId: $resourceId,
+				date: $date
+			);
+			return true;
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: availability cache invalidation failed',
+				['resource' => $resourceId, 'date' => $date]
+			);
+			return false;
+		}
+	}//end invalidated()
 
 	/**
 	 * Resolve the active-resource id list from OpenRegister.
@@ -169,14 +210,29 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 			return [];
 		}
 
+		return $this->resourceIds(
+			rows: $this->activeResourceRows(
+				filters: [
+					'register' => $register,
+					'schema' => $schema,
+					'status' => 'active',
+				]
+			)
+		);
+	}//end loadActiveResources()
+
+	/**
+	 * The active resource rows, or [] when OpenRegister cannot answer (logged).
+	 *
+	 * @param array<string, string> $filters The register, schema and status filters.
+	 *
+	 * @return array<int, mixed> The rows.
+	 */
+	private function activeResourceRows(array $filters): array {
 		try {
 			$rows = $this->getObjectService()->findAll(
 				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'status' => 'active',
-					],
+					'filters' => $filters,
 				]
 			);
 		} catch (Throwable $e) {
@@ -191,6 +247,17 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 			return [];
 		}
 
+		return $rows;
+	}//end activeResourceRows()
+
+	/**
+	 * The ids of the rows that carry one.
+	 *
+	 * @param array<int, mixed> $rows The rows.
+	 *
+	 * @return array<int, string> The ids.
+	 */
+	private function resourceIds(array $rows): array {
 		$ids = [];
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
@@ -199,15 +266,13 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 			}
 
 			$id = $this->idOf(object: $data);
-			if ($id === '') {
-				continue;
+			if ($id !== '') {
+				$ids[] = $id;
 			}
-
-			$ids[] = $id;
 		}
 
 		return $ids;
-	}//end loadActiveResources()
+	}//end resourceIds()
 
 	/**
 	 * Build the date horizon: today + HORIZON_DAYS (UTC).
@@ -231,7 +296,7 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @return string
 	 */
 	private function registerSlug(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 	}//end registerSlug()
 
 	/**
@@ -242,93 +307,8 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @return string
 	 */
 	private function schemaSlug(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaSlug()
-
-	/**
-	 * Pull the canonical id out of a normalised OpenRegister object.
-	 *
-	 * @param array<string, mixed> $object Object data.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $object): string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			return $this->objectToArray(object: $object);
-		}
-
-		return null;
-	}//end toArray()
-
-	/**
-	 * Coerce an object to a plain array via its best-available accessor.
-	 *
-	 * @param object $object Entity to coerce.
-	 *
-	 * @return array<string, mixed> Array representation.
-	 */
-	private function objectToArray(object $object): array {
-		if (method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (method_exists($object, 'getObject') === true) {
-			$payload = $object->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		if (method_exists($object, 'toArray') === true) {
-			$arr = $object->toArray();
-			if (is_array($arr) === true) {
-				return $arr;
-			}
-		}
-
-		return (array)$object;
-	}//end objectToArray()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

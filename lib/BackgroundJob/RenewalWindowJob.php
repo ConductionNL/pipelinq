@@ -30,8 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\ContractService;
-use OCA\Pipelinq\Service\RenewalEngineService;
+use OCA\Pipelinq\Kernel\Contracts\ContractServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\RenewalEngineServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -48,14 +48,14 @@ class RenewalWindowJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param ContractService $contractService Contract lifecycle service.
-	 * @param RenewalEngineService $engine Renewal engine.
+	 * @param ContractServiceInterface $contractService Contract lifecycle service.
+	 * @param RenewalEngineServiceInterface $engine Renewal engine.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private ContractService $contractService,
-		private RenewalEngineService $engine,
+		private ContractServiceInterface $contractService,
+		private RenewalEngineServiceInterface $engine,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -85,38 +85,56 @@ class RenewalWindowJob extends TimedJob {
 
 		$today = date('Y-m-d');
 		$transitions = 0;
-
 		foreach ($contracts as $contract) {
-			try {
-				// First reconcile any expiring contract whose renewal lead resolved.
-				if ((string)($contract['status'] ?? '') === 'expiring'
-					&& ((string)($contract['renewalLeadOutcome'] ?? '')) !== ''
-				) {
-					$action = $this->engine->reconcile($contract);
-					if ($action !== 'noop') {
-						$transitions++;
-					}
-
-					continue;
-				}
-
-				$action = $this->engine->processContract($contract, $today);
-				if ($action !== 'noop') {
-					$transitions++;
-				}
-			} catch (Throwable $e) {
-				$this->logger->error(
-					'RenewalWindowJob: contract processing failed',
-					[
-						'contract' => ($contract['id'] ?? ''),
-						'error' => $e->getMessage(),
-					]
-				);
-			}//end try
-		}//end foreach
+			if ($this->transitioned(contract: $contract, today: $today) === true) {
+				$transitions++;
+			}
+		}
 
 		if ($transitions > 0) {
 			$this->logger->info('RenewalWindowJob: processed contracts', ['transitions' => $transitions]);
 		}
 	}//end run()
+
+	/**
+	 * Run one contract through the engine; a failure is logged.
+	 *
+	 * @param array<string, mixed> $contract The contract.
+	 * @param string               $today    Today (Y-m-d).
+	 *
+	 * @return bool Whether the engine moved it.
+	 */
+	private function transitioned(array $contract, string $today): bool {
+		try {
+			return $this->engineAction(contract: $contract, today: $today) !== 'noop';
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'RenewalWindowJob: contract processing failed',
+				[
+					'contract' => ($contract['id'] ?? ''),
+					'error' => $e->getMessage(),
+				]
+			);
+			return false;
+		}
+	}//end transitioned()
+
+	/**
+	 * Reconcile an expiring contract whose renewal lead resolved; process any other for today.
+	 *
+	 * @param array<string, mixed> $contract The contract.
+	 * @param string               $today    Today (Y-m-d).
+	 *
+	 * @return string The engine's action.
+	 */
+	private function engineAction(array $contract, string $today): string {
+		// First reconcile any expiring contract whose renewal lead resolved.
+		if ((string)($contract['status'] ?? '') === 'expiring'
+			&& ((string)($contract['renewalLeadOutcome'] ?? '')) !== ''
+		) {
+			return $this->engine->reconcile($contract);
+		}
+
+		return $this->engine->processContract($contract, $today);
+	}//end engineAction()
 }//end class

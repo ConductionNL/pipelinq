@@ -1,0 +1,746 @@
+{
+    "company": {
+        "result": {
+            "snapshots": [
+                {
+                    "id": 7,
+                    "owner_id": "acme",
+                    "as_of_date": "2026-03-01",
+                    "level": "company",
+                    "commit": 0.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": [
+                        {
+                            "source_id": "d1",
+                            "commit": 20.0,
+                            "override_amount": 20.0,
+                            "override_reason": "reason d1"
+                        },
+                        {
+                            "source_id": "d2",
+                            "commit": 20.0,
+                            "override_amount": null,
+                            "override_reason": "reason d2"
+                        }
+                    ]
+                },
+                {
+                    "id": "u1",
+                    "owner_id": "acme",
+                    "as_of_date": "2026-03-02",
+                    "level": "company",
+                    "commit": 100.0,
+                    "best_case": 150.5,
+                    "pipeline": 300.0,
+                    "closed_won": 20.0,
+                    "quota": 500.0,
+                    "currency": "USD",
+                    "partial": true,
+                    "exchange_rates": {
+                        "USD": {
+                            "rate": 1.1
+                        }
+                    },
+                    "calculation_audit": [
+                        {
+                            "source_id": "d1",
+                            "commit": 20.0,
+                            "override_amount": 20.0,
+                            "override_reason": "reason d1"
+                        },
+                        {
+                            "source_id": "d2",
+                            "commit": 20.0,
+                            "override_amount": null,
+                            "override_reason": "reason d2"
+                        }
+                    ]
+                }
+            ],
+            "total": 2,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "count": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "company"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "company"
+                    },
+                    "sort": {
+                        "as_of_date": "ASC"
+                    },
+                    "limit": 10,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "division"
+                    }
+                }
+            },
+            {
+                "computeRollUp": [
+                    "d1",
+                    "p1",
+                    "division"
+                ]
+            },
+            {
+                "computeRollUp": [
+                    "d2",
+                    "p1",
+                    "division"
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "division"
+                    }
+                }
+            },
+            {
+                "computeRollUp": [
+                    "d1",
+                    "p1",
+                    "division"
+                ]
+            },
+            {
+                "computeRollUp": [
+                    "d2",
+                    "p1",
+                    "division"
+                ]
+            }
+        ]
+    },
+    "division, owner": {
+        "result": {
+            "snapshots": [
+                {
+                    "id": null,
+                    "owner_id": "d1",
+                    "as_of_date": "2026-03-01",
+                    "level": "division",
+                    "commit": 50.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": [
+                        {
+                            "source_id": "t1",
+                            "commit": 20.0,
+                            "override_amount": 20.0,
+                            "override_reason": "reason t1"
+                        },
+                        {
+                            "source_id": "t2",
+                            "commit": 20.0,
+                            "override_amount": null,
+                            "override_reason": "reason t2"
+                        },
+                        {
+                            "source_id": "t3",
+                            "commit": 20.0,
+                            "override_amount": null,
+                            "override_reason": "reason t3"
+                        }
+                    ]
+                },
+                {
+                    "id": null,
+                    "owner_id": "d1",
+                    "as_of_date": "2026-03-04",
+                    "level": "division",
+                    "commit": 0.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": [
+                        {
+                            "source_id": "t1",
+                            "commit": 20.0,
+                            "override_amount": 20.0,
+                            "override_reason": "reason t1"
+                        },
+                        {
+                            "source_id": "t2",
+                            "commit": 20.0,
+                            "override_amount": null,
+                            "override_reason": "reason t2"
+                        },
+                        {
+                            "source_id": "t3",
+                            "commit": 20.0,
+                            "override_amount": null,
+                            "override_reason": "reason t3"
+                        }
+                    ]
+                }
+            ],
+            "total": 2,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "count": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "division",
+                        "owner_id": "d1"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "division",
+                        "owner_id": "d1"
+                    },
+                    "sort": {
+                        "as_of_date": "ASC"
+                    },
+                    "limit": 10,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "team"
+                    }
+                }
+            },
+            {
+                "computeRollUp": [
+                    "t1",
+                    "p1",
+                    "team"
+                ]
+            },
+            {
+                "computeRollUp": [
+                    "t2",
+                    "p1",
+                    "team"
+                ]
+            },
+            {
+                "computeRollUp": [
+                    "t3",
+                    "p1",
+                    "team"
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "team"
+                    }
+                }
+            },
+            {
+                "computeRollUp": [
+                    "t1",
+                    "p1",
+                    "team"
+                ]
+            },
+            {
+                "computeRollUp": [
+                    "t2",
+                    "p1",
+                    "team"
+                ]
+            },
+            {
+                "computeRollUp": [
+                    "t3",
+                    "p1",
+                    "team"
+                ]
+            }
+        ]
+    },
+    "team, empty owner": {
+        "result": {
+            "snapshots": [
+                {
+                    "id": null,
+                    "owner_id": "t1",
+                    "as_of_date": "2026-03-01",
+                    "level": "team",
+                    "commit": 0.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": [
+                        {
+                            "source_id": "r1",
+                            "commit": 20.0,
+                            "override_amount": 20.0,
+                            "override_reason": "reason r1"
+                        }
+                    ]
+                },
+                {
+                    "id": null,
+                    "owner_id": "t2",
+                    "as_of_date": "2026-03-02",
+                    "level": "team",
+                    "commit": 0.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": [
+                        {
+                            "source_id": "r1",
+                            "commit": 20.0,
+                            "override_amount": 20.0,
+                            "override_reason": "reason r1"
+                        }
+                    ]
+                }
+            ],
+            "total": 3,
+            "limit": 2,
+            "offset": 1
+        },
+        "calls": [
+            {
+                "count": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "team"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "team"
+                    },
+                    "sort": {
+                        "as_of_date": "ASC"
+                    },
+                    "limit": 2,
+                    "offset": 1
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "rep"
+                    }
+                }
+            },
+            {
+                "computeRollUp": [
+                    "r1",
+                    "p1",
+                    "rep"
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "rep"
+                    }
+                }
+            },
+            {
+                "computeRollUp": [
+                    "r1",
+                    "p1",
+                    "rep"
+                ]
+            }
+        ]
+    },
+    "rep": {
+        "result": {
+            "snapshots": [
+                {
+                    "id": null,
+                    "owner_id": "r1",
+                    "as_of_date": "2026-03-01",
+                    "level": "rep",
+                    "commit": 0.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": []
+                }
+            ],
+            "total": 1,
+            "limit": 50,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "count": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "rep"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "rep"
+                    },
+                    "sort": {
+                        "as_of_date": "ASC"
+                    },
+                    "limit": 50,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "other period": {
+        "result": {
+            "snapshots": [
+                {
+                    "id": null,
+                    "owner_id": "acme",
+                    "as_of_date": "2026-06-01",
+                    "level": "company",
+                    "commit": 0.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": []
+                }
+            ],
+            "total": 1,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "count": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p2",
+                        "level": "company"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p2",
+                        "level": "company"
+                    },
+                    "sort": {
+                        "as_of_date": "ASC"
+                    },
+                    "limit": 10,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p2",
+                        "level": "division"
+                    }
+                }
+            }
+        ]
+    },
+    "no register": {
+        "result": {
+            "snapshots": [],
+            "total": 0,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": []
+    },
+    "no schema": {
+        "result": {
+            "snapshots": [],
+            "total": 0,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": []
+    },
+    "findAll fails": {
+        "result": {
+            "snapshots": [],
+            "total": 2,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "count": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "company"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "company"
+                    },
+                    "sort": {
+                        "as_of_date": "ASC"
+                    },
+                    "limit": 10,
+                    "offset": 0
+                }
+            }
+        ]
+    },
+    "count fails": {
+        "result": {
+            "snapshots": [
+                {
+                    "id": null,
+                    "owner_id": "t3",
+                    "as_of_date": "2026-02-28",
+                    "level": "team",
+                    "commit": 0.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": [
+                        {
+                            "source_id": "r1",
+                            "commit": 20.0,
+                            "override_amount": 20.0,
+                            "override_reason": "reason r1"
+                        }
+                    ]
+                },
+                {
+                    "id": null,
+                    "owner_id": "t1",
+                    "as_of_date": "2026-03-01",
+                    "level": "team",
+                    "commit": 0.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": [
+                        {
+                            "source_id": "r1",
+                            "commit": 20.0,
+                            "override_amount": 20.0,
+                            "override_reason": "reason r1"
+                        }
+                    ]
+                },
+                {
+                    "id": null,
+                    "owner_id": "t2",
+                    "as_of_date": "2026-03-02",
+                    "level": "team",
+                    "commit": 0.0,
+                    "best_case": 0.0,
+                    "pipeline": 0.0,
+                    "closed_won": 0.0,
+                    "quota": null,
+                    "currency": "EUR",
+                    "partial": false,
+                    "exchange_rates": [],
+                    "calculation_audit": [
+                        {
+                            "source_id": "r1",
+                            "commit": 20.0,
+                            "override_amount": 20.0,
+                            "override_reason": "reason r1"
+                        }
+                    ]
+                }
+            ],
+            "total": 0,
+            "limit": 10,
+            "offset": 0
+        },
+        "calls": [
+            {
+                "count": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "team"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "team"
+                    },
+                    "sort": {
+                        "as_of_date": "ASC"
+                    },
+                    "limit": 10,
+                    "offset": 0
+                }
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "rep"
+                    }
+                }
+            },
+            {
+                "computeRollUp": [
+                    "r1",
+                    "p1",
+                    "rep"
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "rep"
+                    }
+                }
+            },
+            {
+                "computeRollUp": [
+                    "r1",
+                    "p1",
+                    "rep"
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "register": "pipelinq",
+                        "schema": "forecastSnapshot",
+                        "period_id": "p1",
+                        "level": "rep"
+                    }
+                }
+            },
+            {
+                "computeRollUp": [
+                    "r1",
+                    "p1",
+                    "rep"
+                ]
+            }
+        ]
+    }
+}

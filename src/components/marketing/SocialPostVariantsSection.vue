@@ -17,7 +17,7 @@
   -  That is rule 4 of the marketing architecture and the grammar has no field
   - for it.
   -
-  - @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+  - @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
   -->
 <template>
 	<div class="social-variants" data-testid="social-variants">
@@ -71,7 +71,7 @@
 				</p>
 			</template>
 
-			<section v-if="approvals.length > 0" class="social-variants__approvals">
+			<section v-if="!hideApprovals && approvals.length > 0" class="social-variants__approvals">
 				<h3 class="social-variants__approvals-title">
 					{{ t('pipelinq', 'Approvals') }}
 				</h3>
@@ -101,11 +101,11 @@
 </template>
 
 <script>
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { fetchAccounts, fetchPost } from '../../services/socialApi.js'
 import { fitsForNetworks, resolveVariant } from '../../services/socialComposer.js'
 import { networkIcon } from '../../services/socialNetworkIcons.js'
+import socialPostSectionMixin from './socialPostSectionMixin.js'
 
 export default {
 	name: 'SocialPostVariantsSection',
@@ -115,15 +115,13 @@ export default {
 		NcNoteCard,
 	},
 
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [socialPostSectionMixin],
 
 	props: {
-		/** The post id, on the post detail page (`@objectId`). */
-		postId: {
-			type: String,
-			default: '',
+		/** Leaves the approvals list under the texts out, where the page has an Approvals card of its own. */
+		hideApprovals: {
+			type: Boolean,
+			default: false,
 		},
 	},
 
@@ -139,7 +137,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<string>} The networks this post's accounts live on.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		networks() {
 			const chosen = Array.isArray(this.post?.accountIds)
@@ -157,7 +155,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The per-network fit, from the shared rule.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		fits() {
 			return fitsForNetworks(this.post || {}, this.networks)
@@ -165,50 +163,20 @@ export default {
 
 		/**
 		 * @return {Array<object>} The decisions taken on this post.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		approvals() {
 			return Array.isArray(this.post?.approvals) ? this.post.approvals : []
 		},
 	},
 
-	/**
-	 * Load the post and follow page refreshes.
-	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
-	 */
-	mounted() {
-		this.load()
-		// The approval step lives in the page header, which bumps this after
-		// a move, so the status and the approvals list re-read here.
-		subscribe('cn:page:refresh', this.load)
-	},
-
-	beforeUnmount() {
-		unsubscribe('cn:page:refresh', this.load)
-	},
-
 	methods: {
-		/**
-		 * The id this section is bound to.
-		 *
-		 * @return {string} The post id.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
-		 */
-		effectiveId() {
-			if (this.postId) {
-				return this.postId
-			}
-			const context = this.cnSectionContext || {}
-			return context.objectId || context.id || ''
-		},
-
 		/**
 		 * The resolved text one network gets.
 		 *
 		 * @param {string} network The network.
 		 * @return {string} The text.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		bodyFor(network) {
 			return resolveVariant(this.post || {}, network).body
@@ -216,7 +184,7 @@ export default {
 
 		/**
 		 * @return {Promise<void>} Resolves once the post and accounts are in.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		async load() {
 			const id = this.effectiveId()
@@ -246,7 +214,7 @@ export default {
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
@@ -257,7 +225,7 @@ export default {
 		 *
 		 * @param {string} decision The stored decision.
 		 * @return {string} Its label, or the value itself when unknown.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		decisionLabel(decision) {
 			const labels = {
@@ -273,7 +241,7 @@ export default {
 		 * @param {string} value An ISO timestamp.
 		 * @return {string} It in the reader's locale, or as stored when unreadable.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		formatDate(value) {
 			const date = new Date(value)

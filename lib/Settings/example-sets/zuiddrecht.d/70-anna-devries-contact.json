@@ -1,0 +1,37 @@
+{
+	"$comment": "pipelinq's contact person for Anna de Vries in the Zuiddrecht set. On a client page, 'Bericht versturen' sends to one of the client's contacts, so a resident needs one to be messaged (PqBerichtSturen). Her numbers and addresses are the client's own, from 68-contacts.json.",
+	"objects": [
+		{
+			"key": "contact-anna-devries",
+			"register": "pipelinq",
+			"schema": "contact",
+			"data": {
+				"name": "Anna de Vries",
+				"client": "{{object:client-anna-devries.id}}",
+				"contactsUid": "example-anna-devries-contact",
+				"email": "anna.devries@zuiddrecht.example",
+				"phone": "06 12 34 56 79",
+				"preferredChannel": "whatsapp",
+				"marketingConsent": false,
+				"doNotContact": false,
+				"timezone": "Europe/Amsterdam",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"emails": [
+					{
+						"kind": "private",
+						"value": "anna.devries@zuiddrecht.example",
+						"primary": true
+					}
+				],
+				"phones": [
+					{
+						"kind": "mobile",
+						"value": "06 12 34 56 79",
+						"primary": true
+					}
+				]
+			}
+		}
+	]
+}

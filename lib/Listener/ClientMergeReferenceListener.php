@@ -1,0 +1,257 @@
+<?php
+
+/**
+ * Pipelinq ClientMergeReferenceListener.
+ *
+ * When OpenRegister merges a client or contact into another record, every
+ * pipelinq row that referred to the merged-away record is pointed at the record
+ * that stays, and the merged-away record keeps the list of rows it moved. When
+ * the merge is reversed, exactly those rows are pointed back.
+ *
+ * Registered before MergedAwayRecordListener, so a reversal reads the list before
+ * the merged-away stamp is cleared.
+ *
+ * @category Listener
+ * @package  OCA\Pipelinq\Listener
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/clients-reversible-merge/specs/client-reversible-merge/spec.md
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Listener;
+
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Event\ObjectsMergedEvent;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MergedAwayCardInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyReferenceMoverInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyReferencesInterface;
+use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventListener;
+use OCP\IAppConfig;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * Moves client and contact references on a merge and back on its reversal.
+ *
+ * @template-implements IEventListener<Event>
+ *
+ * @spec openspec/changes/clients-reversible-merge/specs/client-reversible-merge/spec.md
+ */
+class ClientMergeReferenceListener implements IEventListener {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param ObjectServiceInterface $objects   OpenRegister's object service.
+	 * @param PartyReferenceMoverInterface    $mover     Moves the references.
+	 * @param IAppConfig             $appConfig The client and contact schema ids.
+	 * @param LoggerInterface        $logger    Logs a failed move and every skipped row.
+	 * @param MergedAwayCardInterface $card     Keeps the merged-away record's address book card.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly ObjectServiceInterface $objects,
+		private readonly PartyReferenceMoverInterface $mover,
+		private readonly IAppConfig $appConfig,
+		private readonly LoggerInterface $logger,
+		private readonly MergedAwayCardInterface $card,
+	) {
+	}//end __construct()
+
+	/**
+	 * Handle a merge or its reversal.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-reversible-merge/specs/client-reversible-merge/spec.md
+	 */
+	public function handle(Event $event): void {
+		if (($event instanceof ObjectsMergedEvent) === false) {
+			return;
+		}
+
+		foreach ($event->getMergedFromUuids() as $fromUuid) {
+			try {
+				$this->handleOne(event: $event, fromUuid: (string)$fromUuid);
+			} catch (Throwable $e) {
+				$this->logger->error(
+					'Pipelinq merge: the references of a merged record could not be moved',
+					['mergedFrom' => $fromUuid, 'survivor' => $event->getSurvivorUuid(), 'reversal' => $event->isReversal(), 'error' => $e->getMessage()]
+				);
+			}
+		}
+	}//end handle()
+
+	/**
+	 * Move the references of one merged-away record, or move them back.
+	 *
+	 * @param ObjectsMergedEvent $event    The merge.
+	 * @param string             $fromUuid The merged-away record.
+	 *
+	 * @return void
+	 */
+	private function handleOne(ObjectsMergedEvent $event, string $fromUuid): void {
+		$record = $this->objects->find(id: $fromUuid, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		$partyType = $this->partyType(record: $record);
+		if ($record === null || $partyType === '') {
+			return;
+		}
+
+		$intoUuid = $event->getSurvivorUuid();
+		if ($event->isReversal() === false) {
+			$this->moveForward(record: $record, partyType: $partyType, fromUuid: $fromUuid, intoUuid: $intoUuid);
+			return;
+		}
+
+		$this->moveBack(event: $event, record: $record, fromUuid: $fromUuid, intoUuid: $intoUuid);
+	}//end handleOne()
+
+	/**
+	 * Move the merged-away party's references onto the survivor and keep the ledger on the merged-away record.
+	 *
+	 * @param ObjectEntityInterface $record The merged-away record.
+	 * @param string $partyType The party type.
+	 * @param string $fromUuid  The merged-away record.
+	 * @param string $intoUuid  The survivor.
+	 *
+	 * @return void
+	 */
+	private function moveForward(ObjectEntityInterface $record, string $partyType, string $fromUuid, string $intoUuid): void {
+		$moved = $this->mover->move(partyType: $partyType, fromUuid: $fromUuid, intoUuid: $intoUuid);
+		$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => $moved], _rbac: false, _multitenancy: false);
+		$this->followCard(record: $record, intoUuid: $intoUuid, reversal: false);
+	}//end moveForward()
+
+	/**
+	 * Move the references in the merged-away record's ledger back, logging rows that changed since.
+	 *
+	 * @param ObjectsMergedEvent $event    The reversal.
+	 * @param ObjectEntityInterface $record The merged-away record.
+	 * @param string             $fromUuid The merged-away record.
+	 * @param string             $intoUuid The survivor.
+	 *
+	 * @return void
+	 */
+	private function moveBack(ObjectsMergedEvent $event, ObjectEntityInterface $record, string $fromUuid, string $intoUuid): void {
+		$ledger = $this->mergeLedger(record: $record);
+
+		$result = $this->mover->restore(ledger: $ledger, fromUuid: $fromUuid, intoUuid: $intoUuid);
+		foreach ($result['skipped'] as $skipped) {
+			$this->logger->warning(
+				'Pipelinq merge: a row changed since the merge was not moved back',
+				['mergedFrom' => $fromUuid, 'survivor' => $intoUuid, 'operation' => $event->getMergeOperationId()] + $skipped
+			);
+		}
+
+		$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => null], _rbac: false, _multitenancy: false);
+		$this->followCard(record: $record, intoUuid: $intoUuid, reversal: true);
+	}//end moveBack()
+
+	/**
+	 * The merge ledger stored on the merged-away record.
+	 *
+	 * @param ObjectEntityInterface $record The merged-away record.
+	 *
+	 * @return array<mixed>
+	 */
+	private function mergeLedger(ObjectEntityInterface $record): array {
+		$ledger = $record->getObject()[PartyReferencesInterface::LEDGER_FIELD] ?? [];
+		if (is_array($ledger) === false) {
+			$ledger = [];
+		}
+
+		return $ledger;
+	}//end mergeLedger()
+
+	/**
+	 * Keep the merged-away record's address book card with a note where it went, or take the note off.
+	 *
+	 * The card is never deleted during the reversal window, so a reversal links
+	 * the restored record to its own card again. A card that cannot be written
+	 * is logged; it never stops the merge.
+	 *
+	 * @param ObjectEntityInterface $record   The merged-away record.
+	 * @param string                $intoUuid The record that stays.
+	 * @param bool                  $reversal Whether the merge is being undone.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-reversible-merge/tasks.md#2.3
+	 */
+	private function followCard(ObjectEntityInterface $record, string $intoUuid, bool $reversal): void {
+		$contactsUid = trim((string)($record->getObject()['contactsUid'] ?? ''));
+		if ($contactsUid === '') {
+			return;
+		}
+
+		try {
+			if ($reversal === true) {
+				$this->card->unmark(contactsUid: $contactsUid);
+				return;
+			}
+
+			$this->card->mark(contactsUid: $contactsUid, intoUuid: $intoUuid, intoName: $this->nameOf(uuid: $intoUuid));
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq merge: the address book card of a merged record could not be updated',
+				['uid' => $contactsUid, 'survivor' => $intoUuid, 'reversal' => $reversal, 'error' => $e->getMessage()]
+			);
+		}
+	}//end followCard()
+
+	/**
+	 * The name of a record, or its uuid when it has none.
+	 *
+	 * @param string $uuid The record.
+	 *
+	 * @return string
+	 */
+	private function nameOf(string $uuid): string {
+		$record = $this->objects->find(id: $uuid, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		$name = trim((string)($record?->getObject()['name'] ?? ''));
+		if ($name === '') {
+			return $uuid;
+		}
+
+		return $name;
+	}//end nameOf()
+
+	/**
+	 * Whether a record is a client or a contact, by its schema.
+	 *
+	 * @param ObjectEntityInterface|null $record The record.
+	 *
+	 * @return string `client`, `contact`, or '' for anything else.
+	 */
+	private function partyType(?ObjectEntityInterface $record): string {
+		if ($record === null) {
+			return '';
+		}
+
+		$schema = (string)$record->getSchema();
+		foreach (['client', 'contact'] as $type) {
+			$configured = $this->appConfig->getValueString(AppIdentity::APP_ID, $type.'_schema', '');
+			if ($configured !== '' && $configured === $schema) {
+				return $type;
+			}
+		}
+
+		return '';
+	}//end partyType()
+}//end class

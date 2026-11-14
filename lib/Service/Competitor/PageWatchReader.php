@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use OCA\Pipelinq\Service\Search\HtmlTextExtractor;
 /**
  * Change detection over a CSS-selected fragment.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (WatchOutcome). A value
@@ -80,7 +80,7 @@ class PageWatchReader {
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 * @param HtmlTextExtractor $extractor The CSS-fragment selection.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -99,7 +99,7 @@ class PageWatchReader {
 	 *
 	 * @return WatchOutcome One item when the fragment changed, none when it did not.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function read(
 		string $url,
@@ -127,18 +127,25 @@ class PageWatchReader {
 			return WatchOutcome::seen(items: [], state: $state);
 		}
 
-		return WatchOutcome::seen(
-			items: [
-				[
-					'url' => $url,
-					'title' => $url,
-					'summary' => $diff['summary'],
-					'stamp' => $diff['fingerprint'],
-				],
-			],
-			state: $state
-		);
+		return WatchOutcome::seen(items: [self::changeItem(url: $url, diff: $diff)], state: $state);
 	}//end read()
+
+	/**
+	 * The one item a changed fragment reports.
+	 *
+	 * @param string               $url  The page URL.
+	 * @param array<string, mixed> $diff The diff of the fragment.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function changeItem(string $url, array $diff): array {
+		return [
+			'url' => $url,
+			'title' => $url,
+			'summary' => $diff['summary'],
+			'stamp' => $diff['fingerprint'],
+		];
+	}//end changeItem()
 
 	/**
 	 * Compare a fresh fragment against the fingerprints of the previous one.
@@ -149,7 +156,7 @@ class PageWatchReader {
 	 *
 	 * @return array{changed: bool, fingerprint: string, lineFingerprints: array<int, string>, summary: string, added: array<int, string>, removed: int}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function diff(string $fingerprint, array $lineFingerprints, string $fragment): array {
 		$lines = $this->lines(fragment: $fragment);
@@ -171,19 +178,8 @@ class PageWatchReader {
 			];
 		}
 
-		$added = [];
-		foreach ($current as $hash => $line) {
-			if (in_array((string)$hash, $lineFingerprints, true) === false) {
-				$added[] = $line;
-			}
-		}
-
-		$removed = 0;
-		foreach ($lineFingerprints as $hash) {
-			if (array_key_exists($hash, $current) === false) {
-				$removed++;
-			}
-		}
+		$added = self::addedLines(current: $current, lineFingerprints: $lineFingerprints);
+		$removed = self::removedCount(lineFingerprints: $lineFingerprints, current: $current);
 
 		return [
 			'changed' => true,
@@ -194,6 +190,44 @@ class PageWatchReader {
 			'removed' => $removed,
 		];
 	}//end diff()
+
+	/**
+	 * The lines of the fresh fragment whose fingerprint was not seen last time.
+	 *
+	 * @param array<string, string> $current          The fresh lines by fingerprint.
+	 * @param array<int, string>    $lineFingerprints The line fingerprints as last seen.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function addedLines(array $current, array $lineFingerprints): array {
+		$added = [];
+		foreach ($current as $hash => $line) {
+			if (in_array((string)$hash, $lineFingerprints, true) === false) {
+				$added[] = $line;
+			}
+		}
+
+		return $added;
+	}//end addedLines()
+
+	/**
+	 * How many lines seen last time are gone from the fresh fragment.
+	 *
+	 * @param array<int, string>    $lineFingerprints The line fingerprints as last seen.
+	 * @param array<string, string> $current          The fresh lines by fingerprint.
+	 *
+	 * @return int
+	 */
+	private static function removedCount(array $lineFingerprints, array $current): int {
+		$removed = 0;
+		foreach ($lineFingerprints as $hash) {
+			if (array_key_exists($hash, $current) === false) {
+				$removed++;
+			}
+		}
+
+		return $removed;
+	}//end removedCount()
 
 	/**
 	 * The summary a watch event carries.

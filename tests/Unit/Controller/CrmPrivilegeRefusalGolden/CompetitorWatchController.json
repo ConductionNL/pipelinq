@@ -1,0 +1,97 @@
+{
+    "index no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "index unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "index privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "configured": false,
+            "reason": "No egress source is configured for competitor watches, so nothing is read.",
+            "competitors": [],
+            "watches": [],
+            "events": []
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "ConnectorEgressInterface::isConfigured": [
+                    "competitor.egress_source"
+                ]
+            },
+            {
+                "CompetitorWatchServiceInterface::competitors": []
+            },
+            {
+                "CompetitorWatchServiceInterface::watches": []
+            },
+            {
+                "WatchEventStoreInterface::all": []
+            }
+        ]
+    },
+    "run no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "run unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "run privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "error": "No such watch"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "CompetitorWatchServiceInterface::watch": [
+                    "sample-id"
+                ]
+            }
+        ]
+    }
+}

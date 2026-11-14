@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 
 declare(strict_types=1);
@@ -82,6 +82,22 @@ class PortalScopeResolver {
 		$ownContactIds = $this->idList(value: ($account['linkedContactId'] ?? null));
 		$ownClientIds = $this->idList(value: ($account['linkedOrganisationId'] ?? null));
 
+		return [
+			'ownContactIds' => $ownContactIds,
+			'ownClientIds' => $ownClientIds,
+			'delegated' => $this->delegatedBuckets(account: $account, scope: $scope),
+		];
+	}//end resolve()
+
+	/**
+	 * The id buckets of every active grant to the account that covers the scope.
+	 *
+	 * @param array<string, mixed> $account The authenticated account record.
+	 * @param string               $scope   The delegation scope.
+	 *
+	 * @return array<int, array{from: string, contactIds: array<int, string>, clientIds: array<int, string>}>
+	 */
+	private function delegatedBuckets(array $account, string $scope): array {
 		$delegated = [];
 		$accountId = (string)$this->repository->idOf(object: $account);
 		foreach ($this->delegations->getActiveScopes(granteeAccountId: $accountId) as $grant) {
@@ -89,24 +105,34 @@ class PortalScopeResolver {
 				continue;
 			}
 
-			$grantor = $this->repository->find(self::ACCOUNT_SCHEMA, $grant['grantorAccountId']);
-			if ($grantor === null) {
-				continue;
+			$bucket = $this->grantorBucket(grant: $grant);
+			if ($bucket !== null) {
+				$delegated[] = $bucket;
 			}
+		}
 
-			$delegated[] = [
-				'from' => $grant['grantorAccountId'],
-				'contactIds' => $this->idList(value: ($grantor['linkedContactId'] ?? null)),
-				'clientIds' => $this->idList(value: ($grantor['linkedOrganisationId'] ?? null)),
-			];
+		return $delegated;
+	}//end delegatedBuckets()
+
+	/**
+	 * The grantor's contact and client ids, tagged with the grantor account id.
+	 *
+	 * @param array<string, mixed> $grant The active grant.
+	 *
+	 * @return array{from: string, contactIds: array<int, string>, clientIds: array<int, string>}|null Null when the grantor account is gone.
+	 */
+	private function grantorBucket(array $grant): ?array {
+		$grantor = $this->repository->find(self::ACCOUNT_SCHEMA, $grant['grantorAccountId']);
+		if ($grantor === null) {
+			return null;
 		}
 
 		return [
-			'ownContactIds' => $ownContactIds,
-			'ownClientIds' => $ownClientIds,
-			'delegated' => $delegated,
+			'from' => $grant['grantorAccountId'],
+			'contactIds' => $this->idList(value: ($grantor['linkedContactId'] ?? null)),
+			'clientIds' => $this->idList(value: ($grantor['linkedOrganisationId'] ?? null)),
 		];
-	}//end resolve()
+	}//end grantorBucket()
 
 	/**
 	 * Determine the `delegatedFrom` tag for an object whose owning contact /
@@ -121,26 +147,19 @@ class PortalScopeResolver {
 	 *
 	 * @return string|null|false null=own, string=delegatedFrom, false=not visible.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) The own-vs-delegated-vs-not
-	 *  decision compares the object's contact/client against each scope bucket;
-	 *  the checks are flat and load-bearing for the IDOR boundary.
-	 *
 	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
 	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
 	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
 	 *   audit are all unspecified
 	 */
 	public function classify(array $resolved, ?string $contactId, ?string $clientId): string|null|false {
-		if (($contactId !== null && in_array($contactId, $resolved['ownContactIds'], true) === true)
-			|| ($clientId !== null && in_array($clientId, $resolved['ownClientIds'], true) === true)
-		) {
+		$owner = new ScopedOwner(contactId: $contactId, clientId: $clientId);
+		if ($owner->isIn(contactIds: $resolved['ownContactIds'], clientIds: $resolved['ownClientIds']) === true) {
 			return null;
 		}
 
 		foreach ($resolved['delegated'] as $entry) {
-			if (($contactId !== null && in_array($contactId, $entry['contactIds'], true) === true)
-				|| ($clientId !== null && in_array($clientId, $entry['clientIds'], true) === true)
-			) {
+			if ($owner->isIn(contactIds: $entry['contactIds'], clientIds: $entry['clientIds']) === true) {
 				return $entry['from'];
 			}
 		}

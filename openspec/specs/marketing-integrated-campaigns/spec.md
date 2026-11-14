@@ -244,3 +244,45 @@ The step MUST be a no-op when hermiq or OpenRegister is absent, and MUST NOT be 
 @e2e exclude the CI instance installs neither hermiq nor a Talk room, so the seed correctly does nothing there. Asserted by tests/Unit/Repair/SeedWeeklyReviewAgentTemplateTest.php (testGrantsOnlyReadOnlyTools, testIsANoOpWithoutHermiq, testIsIdempotentOnASecondRun).
 - **WHEN** the repair step runs on an instance with hermiq installed
 - **THEN** the template is seeded once with a read-only tool grant, and a second run writes nothing
+
+### Requirement: A journey records when it became a flow and when it went live
+
+The first clean compile of a journey MUST record `compiledAt`; later compiles MUST keep it. A journey whose status becomes active MUST record `activatedAt`. The Flow card MUST name the day the journey was converted into a flow.
+
+#### Scenario: a journey compiled on 2 October
+
+- GIVEN journey "Welkom nieuwe inwoners" was compiled on 2 October 2026
+- WHEN its page opens
+- THEN the Flow card reads "Converted into a flow on 2 Oct. The flow runs in the automation engine."
+
+### Requirement: Each weekly review highlight says which way its figure moved
+
+The weekly review MUST store, for each highlight line, whether its figure rose, fell or held against the week before. The page MUST draw an up arrow before a line that rose and a down arrow before a line that fell.
+
+#### Scenario: clicks fell, views rose
+
+@e2e exclude Asserted in tests/Unit/Service/Marketing/WeeklyReviewServiceTest.php and tests/vitest/weeklyReviewDirection.spec.js; the pixel check against board PqWeekoverzicht covers the drawn arrows.
+
+- GIVEN last week's mailings drew 2 clicks and the week before drew 3
+- AND last week's posts were seen 120 times and the week before not at all
+- WHEN the review is composed
+- THEN the mail line is marked down and the social line up
+- AND the What moved card shows a red down arrow before the mail line and a green up arrow before the social line
+
+#### Scenario: a review stored before directions existed
+
+@e2e exclude Asserted in tests/vitest/weeklyReviewDirection.spec.js.
+
+- GIVEN a stored review with highlights and no directions
+- WHEN the user opens the weekly review
+- THEN every line shows without an arrow
+
+### Requirement: The journey runs card has a title row
+
+The journey page SHALL show what the journey did in a card titled "What this journey did", with "Every contact reached and every contact refused" under the title, drawn once.
+
+#### Scenario: Opening a journey
+
+- **GIVEN** the journey Welkom in Zuiddrecht
+- **WHEN** a marketer opens it
+- **THEN** the Overview tab shows the card "Wat deze journey deed" with its line under the title and the runs table below

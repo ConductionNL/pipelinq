@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,17 +27,17 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ScheduledTaskService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
+use OCA\Pipelinq\Lifecycle\SessionUser;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\IGroupManager;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Schedules API controller.
@@ -48,26 +48,47 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
  */
 class SchedulesController extends Controller {
+	/**
+	 * The optional fields of a new task, dropped when blank so they do not
+	 * clobber schema defaults.
+	 *
+	 * @var array<int, string>
+	 */
+	private const OPTIONAL_FIELDS = [
+		'description',
+		'assigneeUserId',
+		'assigneeGroupId',
+		'clientId',
+		'requestId',
+		'callbackPhoneNumber',
+		'preferredTimeSlot',
+	];
+
+	/**
+	 * The fields only an admin may set on an update.
+	 *
+	 * @var array<int, string>
+	 */
+	private const ADMIN_ONLY_FIELDS = ['assigneeUserId', 'assigneeGroupId', 'status', 'createdAt', 'attempts'];
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ScheduledTaskService $scheduledTaskService Schedule service.
-	 * @param IGroupManager $groupManager Group manager.
-	 * @param IUserSession $userSession User session.
+	 * @param ScheduledTaskServiceInterface $scheduledTaskService Schedule service.
+	 * @param SessionUser $sessionUser The session user and their admin membership.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ScheduledTaskService $scheduledTaskService,
-		private IGroupManager $groupManager,
-		private IUserSession $userSession,
+		private ScheduledTaskServiceInterface $scheduledTaskService,
+		private SessionUser $sessionUser,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -77,30 +98,23 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse Paginated task envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		$userId = $this->sessionUser->uid();
+		if ($userId === '') {
+			return $this->unauthenticated();
 		}
 
-		$this->scheduledTaskService->applyAcceptLanguage(
-			acceptLanguage: $this->request->getHeader('Accept-Language')
-		);
+		$this->applyAcceptLanguage();
 
 		try {
-			$userId = $user->getUID();
-			$isAdmin = $this->groupManager->isAdmin($userId);
-
-			// Default-scope to the requesting user's own tasks unless admin.
-			// Admins may pass an explicit assigneeUserId to override.
-			$requestedAssignee = (string)$this->request->getParam('assigneeUserId', '');
-			if ($isAdmin === false) {
-				// Non-admins always see only their own tasks regardless of the
-				// requested filter (prevents cross-user IDOR via query param).
-				$requestedAssignee = $userId;
+			// Non-admins always see only their own tasks regardless of the
+			// requested filter (prevents cross-user IDOR via query param).
+			$requestedAssignee = $userId;
+			if ($this->sessionUser->isAdmin($userId) === true) {
+				$requestedAssignee = (string)$this->request->getParam('assigneeUserId', '');
 			}
 
 			$params = [
@@ -113,19 +127,10 @@ class SchedulesController extends Controller {
 				'_limit' => (int)$this->request->getParam('_limit', 20),
 			];
 
-			$result = $this->scheduledTaskService->getScheduledTasks($params);
-
-			return new JSONResponse($result);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'SchedulesController::index failed',
-				['exception' => $e]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+			return new JSONResponse($this->scheduledTaskService->getScheduledTasks($params));
+		} catch (Throwable $e) {
+			return $this->failed(action: 'index', error: $e);
+		}
 	}//end index()
 
 	/**
@@ -135,123 +140,58 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse The created task (201) or an error envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		$userId = $this->sessionUser->uid();
+		if ($userId === '') {
+			return $this->unauthenticated();
 		}
 
-		$type = (string)$this->request->getParam('type', '');
-		$subject = (string)$this->request->getParam('subject', '');
-		$deadline = (string)$this->request->getParam('deadline', '');
-
-		if ($type === ''
-			|| in_array($type, ScheduledTaskService::VALID_TYPES, true) === false
-		) {
-			return new JSONResponse(
-				['message' => 'Invalid input'],
-				Http::STATUS_BAD_REQUEST
-			);
+		$required = [
+			'type' => (string)$this->request->getParam('type', ''),
+			'subject' => (string)$this->request->getParam('subject', ''),
+			'deadline' => (string)$this->request->getParam('deadline', ''),
+		];
+		if ($this->hasRequiredFields(required: $required) === false) {
+			return $this->invalidInput();
 		}
 
-		if ($subject === '' || $deadline === '') {
-			return new JSONResponse(
-				['message' => 'Invalid input'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
+		$data = $this->buildScheduledTaskData(required: $required, userId: $userId);
 
-		$userId = $user->getUID();
-		$data = $this->buildScheduledTaskData(
-			type: $type,
-			subject: $subject,
-			deadline: $deadline,
-			userId: $userId,
-			isAdmin: $this->groupManager->isAdmin($userId)
-		);
-
-		try {
-			$created = $this->scheduledTaskService->createScheduledTask($data);
-			return new JSONResponse($created, Http::STATUS_CREATED);
-		} catch (\InvalidArgumentException $e) {
-			return new JSONResponse(
-				['message' => 'Invalid input'],
-				Http::STATUS_BAD_REQUEST
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'SchedulesController::create failed',
-				['exception' => $e]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		return $this->storeScheduledTask(data: $data);
 	}//end create()
 
 	/**
-	 * Assemble the scheduled-task payload from request params.
+	 * Whether the type is valid and the subject and deadline are given.
 	 *
-	 * Scopes the assignee to self for non-admins and strips blank optional
-	 * fields so they do not clobber schema defaults.
+	 * @param array{type: string, subject: string, deadline: string} $required The required fields.
 	 *
-	 * @param string $type The validated task type.
-	 * @param string $subject The validated subject.
-	 * @param string $deadline The validated deadline.
-	 * @param string $userId The current user's UID.
-	 * @param bool $isAdmin Whether the current user is an admin.
-	 *
-	 * @return array<string, string> The task data ready for the service.
+	 * @return bool True when the request can be stored.
 	 */
-	private function buildScheduledTaskData(
-		string $type,
-		string $subject,
-		string $deadline,
-		string $userId,
-		bool $isAdmin,
-	): array {
-		$requestedAssignee = (string)$this->request->getParam('assigneeUserId', '');
-		// Non-admins may not assign tasks to other users; silently scope to self.
-		if ($isAdmin === false && $requestedAssignee !== '' && $requestedAssignee !== $userId) {
-			$requestedAssignee = $userId;
+	private function hasRequiredFields(array $required): bool {
+		return (in_array($required['type'], ScheduledTaskServiceInterface::VALID_TYPES, true) === false
+			|| $required['subject'] === ''
+			|| $required['deadline'] === '') === false;
+	}//end hasRequiredFields()
+
+	/**
+	 * Create the scheduled task and answer 201, or an invalid-input or failure response.
+	 *
+	 * @param array<string, mixed> $data The scheduled task data.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function storeScheduledTask(array $data): JSONResponse {
+		try {
+			return new JSONResponse($this->scheduledTaskService->createScheduledTask($data), Http::STATUS_CREATED);
+		} catch (\InvalidArgumentException $e) {
+			return $this->invalidInput();
+		} catch (Throwable $e) {
+			return $this->failed(action: 'create', error: $e);
 		}
-
-		$data = [
-			'type' => $type,
-			'subject' => $subject,
-			'deadline' => $deadline,
-			'description' => (string)$this->request->getParam('description', ''),
-			'priority' => (string)$this->request->getParam('priority', 'normal'),
-			'assigneeUserId' => $requestedAssignee,
-			'assigneeGroupId' => (string)$this->request->getParam('assigneeGroupId', ''),
-			'clientId' => (string)$this->request->getParam('clientId', ''),
-			'requestId' => (string)$this->request->getParam('requestId', ''),
-			'callbackPhoneNumber' => (string)$this->request->getParam('callbackPhoneNumber', ''),
-			'preferredTimeSlot' => (string)$this->request->getParam('preferredTimeSlot', ''),
-		];
-
-		// Strip blank optional fields to avoid clobbering schema defaults.
-		$optionalFields = [
-			'description',
-			'assigneeUserId',
-			'assigneeGroupId',
-			'clientId',
-			'requestId',
-			'callbackPhoneNumber',
-			'preferredTimeSlot',
-		];
-		foreach ($optionalFields as $optional) {
-			if ($data[$optional] === '') {
-				unset($data[$optional]);
-			}
-		}
-
-		return $data;
-	}//end buildScheduledTaskData()
+	}//end storeScheduledTask()
 
 	/**
 	 * List tasks due within a window.
@@ -260,27 +200,18 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse Items envelope (always 200 when not erroring).
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function pending(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		$userId = $this->sessionUser->uid();
+		if ($userId === '') {
+			return $this->unauthenticated();
 		}
 
 		try {
-			$window = (int)$this->request->getParam('window', 60);
-			if ($window > 1440) {
-				$window = 1440;
-			}
-
-			if ($window < 1) {
-				$window = 1;
-			}
-
-			$userId = $user->getUID();
-			$isAdmin = $this->groupManager->isAdmin($userId);
+			$window = max(1, min((int)$this->request->getParam('window', 60), 1440));
+			$isAdmin = $this->sessionUser->isAdmin($userId);
 			$items = $this->scheduledTaskService->getPendingTasks($window);
 
 			// Non-admins see only their own pending tasks.
@@ -288,29 +219,15 @@ class SchedulesController extends Controller {
 				$items = array_values(
 					array_filter(
 						$items,
-						static function (array $task) use ($userId): bool {
-							return ($task['assigneeUserId'] ?? '') === $userId;
-						}
+						static fn (array $task): bool => ($task['assigneeUserId'] ?? '') === $userId
 					)
 				);
 			}
 
-			return new JSONResponse(
-				[
-					'items' => $items,
-					'total' => count($items),
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'SchedulesController::pending failed',
-				['exception' => $e]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+			return new JSONResponse(['items' => $items, 'total' => count($items)]);
+		} catch (Throwable $e) {
+			return $this->failed(action: 'pending', error: $e);
+		}
 	}//end pending()
 
 	/**
@@ -322,48 +239,31 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse The task or 404.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		$userId = $this->sessionUser->uid();
+		if ($userId === '') {
+			return $this->unauthenticated();
 		}
 
-		$this->scheduledTaskService->applyAcceptLanguage(
-			acceptLanguage: $this->request->getHeader('Accept-Language')
-		);
+		$this->applyAcceptLanguage();
 
 		try {
 			$task = $this->scheduledTaskService->getScheduledTask($id);
 
 			// Non-admins may only view their own tasks.
-			$userId = $user->getUID();
-			$isAdmin = $this->groupManager->isAdmin($userId);
-			if ($isAdmin === false && ($task['assigneeUserId'] ?? '') !== $userId) {
-				return new JSONResponse(
-					['message' => 'Not found'],
-					Http::STATUS_NOT_FOUND
-				);
+			if ($this->sessionUser->isAdmin($userId) === false && ($task['assigneeUserId'] ?? '') !== $userId) {
+				return $this->notFound();
 			}
 
 			return new JSONResponse($task);
 		} catch (\RuntimeException $e) {
-			return new JSONResponse(
-				['message' => 'Not found'],
-				Http::STATUS_NOT_FOUND
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'SchedulesController::show failed',
-				['exception' => $e]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+			return $this->notFound();
+		} catch (Throwable $e) {
+			return $this->failed(action: 'show', error: $e);
+		}
 	}//end show()
 
 	/**
@@ -375,67 +275,30 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse The updated task or an error envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		try {
-			$task = $this->scheduledTaskService->getScheduledTask($id);
-		} catch (\RuntimeException $e) {
-			return new JSONResponse(
-				['message' => 'Not found'],
-				Http::STATUS_NOT_FOUND
-			);
-		}
-
-		$user = $this->userSession->getUser();
-		$userId = '';
-		if ($user !== null) {
-			$userId = $user->getUID();
-		}
-
-		try {
-			$this->scheduledTaskService->authorizeTaskMutation($task, $userId);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(
-				['message' => 'Not authorized'],
-				Http::STATUS_FORBIDDEN
-			);
+		$refusal = $this->mutationRefusal(id: $id);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$payload = $this->request->getParams();
 		unset($payload['id'], $payload['_route']);
 
 		// Strip fields that only admins may set to prevent privilege escalation.
-		$isAdmin = $this->groupManager->isAdmin($userId);
-		if ($isAdmin === false) {
-			unset(
-				$payload['assigneeUserId'],
-				$payload['assigneeGroupId'],
-				$payload['status'],
-				$payload['createdAt'],
-				$payload['attempts']
-			);
+		if ($this->sessionUser->isAdmin($this->sessionUser->uid()) === false) {
+			$payload = array_diff_key($payload, array_flip(self::ADMIN_ONLY_FIELDS));
 		}
 
 		try {
-			$updated = $this->scheduledTaskService->updateScheduledTask($id, $payload);
-			return new JSONResponse($updated);
+			return new JSONResponse($this->scheduledTaskService->updateScheduledTask($id, $payload));
 		} catch (\InvalidArgumentException $e) {
-			return new JSONResponse(
-				['message' => 'Invalid input'],
-				Http::STATUS_BAD_REQUEST
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'SchedulesController::update failed',
-				['exception' => $e]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+			return $this->invalidInput();
+		} catch (Throwable $e) {
+			return $this->failed(action: 'update', error: $e);
+		}
 	}//end update()
 
 	/**
@@ -447,46 +310,141 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse 204 on success or an error envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function destroy(string $id): JSONResponse {
-		try {
-			$task = $this->scheduledTaskService->getScheduledTask($id);
-		} catch (\RuntimeException $e) {
-			return new JSONResponse(
-				['message' => 'Not found'],
-				Http::STATUS_NOT_FOUND
-			);
-		}
-
-		$user = $this->userSession->getUser();
-		$userId = '';
-		if ($user !== null) {
-			$userId = $user->getUID();
-		}
-
-		try {
-			$this->scheduledTaskService->authorizeTaskMutation($task, $userId);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(
-				['message' => 'Not authorized'],
-				Http::STATUS_FORBIDDEN
-			);
+		$refusal = $this->mutationRefusal(id: $id);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
 			$this->scheduledTaskService->deleteScheduledTask($id);
 			return new JSONResponse([], Http::STATUS_NO_CONTENT);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'SchedulesController::destroy failed',
-				['exception' => $e]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		} catch (Throwable $e) {
+			return $this->failed(action: 'destroy', error: $e);
+		}
 	}//end destroy()
+
+	/**
+	 * Assemble the scheduled-task payload from request params.
+	 *
+	 * Assigns a non-admin's task to themselves and drops the assignee group,
+	 * and strips blank optional fields so they do not clobber schema defaults.
+	 *
+	 * @param array{type: string, subject: string, deadline: string} $required The validated type, subject and deadline.
+	 * @param string $userId The current user's UID.
+	 *
+	 * @return array<string, string> The task data ready for the service.
+	 */
+	private function buildScheduledTaskData(array $required, string $userId): array {
+		$isAdmin = $this->sessionUser->isAdmin($userId);
+		$requestedAssignee = (string)$this->request->getParam('assigneeUserId', '');
+		// Non-admins may not assign tasks to others and cannot assign a group,
+		// so their task is always their own: a task keeps at least one assignee.
+		if ($isAdmin === false) {
+			$requestedAssignee = $userId;
+		}
+
+		$requestedGroup = '';
+		if ($isAdmin === true) {
+			$requestedGroup = (string)$this->request->getParam('assigneeGroupId', '');
+		}
+
+		$data = $required + [
+			'description' => (string)$this->request->getParam('description', ''),
+			'priority' => (string)$this->request->getParam('priority', 'normal'),
+			'assigneeUserId' => $requestedAssignee,
+			'assigneeGroupId' => $requestedGroup,
+			'clientId' => (string)$this->request->getParam('clientId', ''),
+			'requestId' => (string)$this->request->getParam('requestId', ''),
+			'callbackPhoneNumber' => (string)$this->request->getParam('callbackPhoneNumber', ''),
+			'preferredTimeSlot' => (string)$this->request->getParam('preferredTimeSlot', ''),
+		];
+
+		foreach (self::OPTIONAL_FIELDS as $optional) {
+			if ($data[$optional] === '') {
+				unset($data[$optional]);
+			}
+		}
+
+		return $data;
+	}//end buildScheduledTaskData()
+
+	/**
+	 * The refusal for changing a task, or null when the session user may.
+	 *
+	 * A missing task is 404; a task the user may not change is 403.
+	 *
+	 * @param string $id The task UUID.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function mutationRefusal(string $id): ?JSONResponse {
+		try {
+			$task = $this->scheduledTaskService->getScheduledTask($id);
+		} catch (\RuntimeException $e) {
+			return $this->notFound();
+		}
+
+		try {
+			$this->scheduledTaskService->authorizeTaskMutation($task, $this->sessionUser->uid());
+		} catch (OCSForbiddenException $e) {
+			return new JSONResponse(['message' => 'Not authorized'], Http::STATUS_FORBIDDEN);
+		}
+
+		return null;
+	}//end mutationRefusal()
+
+	/**
+	 * Hand the request's Accept-Language to the task service.
+	 *
+	 * @return void
+	 */
+	private function applyAcceptLanguage(): void {
+		$this->scheduledTaskService->applyAcceptLanguage(
+			acceptLanguage: $this->request->getHeader('Accept-Language')
+		);
+	}//end applyAcceptLanguage()
+
+	/**
+	 * Log a failed action and answer 500 without its detail.
+	 *
+	 * @param string    $action The action.
+	 * @param Throwable $error  The failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function failed(string $action, Throwable $error): JSONResponse {
+		$this->logger->error('SchedulesController::'.$action.' failed', ['exception' => $error]);
+		return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+	}//end failed()
+
+	/**
+	 * The 401 answer.
+	 *
+	 * @return JSONResponse
+	 */
+	private function unauthenticated(): JSONResponse {
+		return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+	}//end unauthenticated()
+
+	/**
+	 * The 404 answer.
+	 *
+	 * @return JSONResponse
+	 */
+	private function notFound(): JSONResponse {
+		return new JSONResponse(['message' => 'Not found'], Http::STATUS_NOT_FOUND);
+	}//end notFound()
+
+	/**
+	 * The 400 answer.
+	 *
+	 * @return JSONResponse
+	 */
+	private function invalidInput(): JSONResponse {
+		return new JSONResponse(['message' => 'Invalid input'], Http::STATUS_BAD_REQUEST);
+	}//end invalidInput()
 }//end class

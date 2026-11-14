@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,9 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SmsAdapter;
-use OCA\Pipelinq\Service\WhatsAppAdapter;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
+use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -51,26 +51,27 @@ use Throwable;
  * authenticity is enforced by HMAC signature verification inside
  * the adapter.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class MessagingWebhookController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
-	 * @param WhatsAppAdapter $whatsAppAdapter WhatsApp adapter.
-	 * @param SmsAdapter $smsAdapter SMS adapter.
+	 * @param WhatsAppAdapterInterface $whatsAppAdapter WhatsApp adapter.
+	 * @param SmsAdapterInterface $smsAdapter SMS adapter.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		IRequest $request,
-		private WhatsAppAdapter $whatsAppAdapter,
-		private SmsAdapter $smsAdapter,
+		private WhatsAppAdapterInterface $whatsAppAdapter,
+		private SmsAdapterInterface $smsAdapter,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -86,7 +87,7 @@ class MessagingWebhookController extends Controller {
 	 * Inbound message + delivery-status webhooks. The rate-limit ceiling is
 	 * generous because a conversation burst is normal traffic here, not abuse.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -119,7 +120,7 @@ class MessagingWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Outcome.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

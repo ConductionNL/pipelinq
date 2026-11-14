@@ -1,0 +1,55 @@
+{
+	"$comment": "The till's loyalty points and WhatsApp for Anna de Vries in the Zuiddrecht set. PqKassaAfrekenen: the till asks for the loyalty account of the sale's customer, a contact, so Sanne's account is declared here, after contact-sanne-thuis (72-household-line.json), the parked sale's customer, and names that contact itself. PqBerichtSturen: the WhatsApp provider has one approved template, an appointment reminder with the day and the time as its two parameters, and Anna sent a WhatsApp message this morning, so the 24-hour session window is open and the message field is free text next to the template. The message is dated relative to today, so the daily refresh keeps the window open.",
+	"objects": [
+		{
+			"key": "spaarpas-account-sanne",
+			"register": "pipelinq",
+			"schema": "customerLoyaltyAccount",
+			"data": {
+				"accountId": "SP-0001-0340",
+				"customerId": "{{object:contact-sanne-thuis.id}}",
+				"programmeId": "{{object:spaarpas.id}}",
+				"currentBalance": 340,
+				"lifetimePoints": 520,
+				"currentTierId": "{{object:spaarpas-niveau-brons.id}}",
+				"status": "active",
+				"createdOn": "{{datetime:-120 10:05}}",
+				"lastActivityDate": "{{datetime:0 11:43}}",
+				"optInAccepted": true,
+				"optInTimestamp": "{{datetime:-120 10:05}}",
+				"optInTermsVersion": "2026-1"
+			}
+		},
+		{
+			"key": "whatsapp-sjabloon-herinnering-afspraak",
+			"register": "pipelinq",
+			"schema": "messageTemplate",
+			"verbatimFields": [
+				"body"
+			],
+			"data": {
+				"providerId": "{{object:kanaal-whatsapp-zuiddrecht.id}}",
+				"externalId": "herinnering_aan_afspraak",
+				"language": "nl",
+				"category": "utility",
+				"status": "approved",
+				"body": "Herinnering: u heeft een afspraak bij de gemeente Zuiddrecht op {{1}} om {{2}}. Kunt u niet komen? Laat het ons weten via dit nummer.",
+				"lastSyncedAt": "{{datetime:-1 06:00}}"
+			}
+		},
+		{
+			"key": "whatsapp-bericht-anna-vandaag",
+			"register": "pipelinq",
+			"schema": "channelMessage",
+			"data": {
+				"contactId": "{{object:contact-anna-devries.id}}",
+				"channel": "whatsapp",
+				"direction": "inbound",
+				"body": "Goedemorgen, gaat mijn marktkraamvergunning op 1 november in?",
+				"providerId": "{{object:kanaal-whatsapp-zuiddrecht.id}}",
+				"deliveryStatus": "read",
+				"sentAt": "{{datetime:0 08:05}}"
+			}
+		}
+	]
+}

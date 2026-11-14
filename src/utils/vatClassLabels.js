@@ -25,7 +25,7 @@ const CLASS_NAMES = {
  * @param {object} rates Rate per class, e.g. `{ high: 21, low: 9 }`.
  * @param {(text: string) => string} translate Translates an English source string.
  * @return {object|null} `{ high: 'High (21%)', … }`, or null without rates.
- * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 export function vatClassLabels(rates, translate = (text) => text) {
 	if (!rates || typeof rates !== 'object') {
@@ -48,7 +48,7 @@ export function vatClassLabels(rates, translate = (text) => text) {
  * @param {object} rates Rate per class from `config.vat_rates`.
  * @param {(text: string) => string} translate Translates an English source string.
  * @return {object} The same manifest.
- * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 export function seedVatClassLabels(manifest, rates, translate) {
 	const enumLabels = vatClassLabels(rates, translate)

@@ -26,15 +26,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
-use OCA\Pipelinq\Service\Egress\ConnectorEgress;
+use OCA\Pipelinq\Kernel\Contracts\CompetitorWatchServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ConnectorEgressInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -44,19 +44,19 @@ use Throwable;
 /**
  * Console entry point for a competitor watch pass.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
  */
 class CompetitorWatchRunCommand extends Command {
 
 	/**
 	 * Constructor.
 	 *
-	 * @param CompetitorWatchService $watches The watch service.
-	 * @param ConnectorEgress $egress Whether an egress source is configured.
+	 * @param CompetitorWatchServiceInterface $watches The watch service.
+	 * @param ConnectorEgressInterface $egress Whether an egress source is configured.
 	 */
 	public function __construct(
-		private CompetitorWatchService $watches,
-		private ConnectorEgress $egress,
+		private CompetitorWatchServiceInterface $watches,
+		private ConnectorEgressInterface $egress,
 	) {
 		parent::__construct();
 	}//end __construct()
@@ -66,12 +66,12 @@ class CompetitorWatchRunCommand extends Command {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	protected function configure(): void {
 		$this->setName(name: 'pipelinq:marketing:competitor-watch:run')
 			->setDescription('Run the competitor watches that are due, the same pass the scheduled flow runs.')
-			->addOption('limit', 'l', InputOption::VALUE_REQUIRED, 'How many watches to run at most', (string)CompetitorWatchService::DEFAULT_LIMIT)
+			->addOption('limit', 'l', InputOption::VALUE_REQUIRED, 'How many watches to run at most', (string)CompetitorWatchServiceInterface::DEFAULT_LIMIT)
 			->addOption('user', 'u', InputOption::VALUE_REQUIRED, 'The user id the run acts as, for the relevance scoring guard', '');
 	}//end configure()
 
@@ -83,11 +83,11 @@ class CompetitorWatchRunCommand extends Command {
 	 *
 	 * @return int The exit code.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		if ($this->egress->isConfigured(configKey: CompetitorWatchService::SOURCE_KEY) === false) {
-			$output->writeln('<error>No egress source is configured (' . CompetitorWatchService::SOURCE_KEY . ').</error>');
+		if ($this->egress->isConfigured(configKey: CompetitorWatchServiceInterface::SOURCE_KEY) === false) {
+			$output->writeln('<error>No egress source is configured (' . CompetitorWatchServiceInterface::SOURCE_KEY . ').</error>');
 			return Command::FAILURE;
 		}
 

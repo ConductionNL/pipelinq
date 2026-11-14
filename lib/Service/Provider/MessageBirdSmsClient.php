@@ -19,15 +19,12 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Provider;
-
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * MessageBirdSmsClient — MessageBird SMS via the OpenRegister dispatch leaf.
@@ -36,90 +33,38 @@ use Psr\Log\LoggerInterface;
  * static-secret HMAC scheme (the `messagebird-signature` header is
  * an HMAC-SHA256 of the body using the channelProvider.webhookSecret).
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class MessageBirdSmsClient implements SmsProviderClientInterface {
-	use MessageDispatchTrait;
-
+class MessageBirdSmsClient extends LeafSmsClient {
 	/**
 	 * MessageBird messages send path, relative to the source base URL.
 	 *
 	 * @var string
 	 */
-	private const SEND_PATH = 'messages';
+	protected const SEND_PATH = 'messages';
 
 	/**
-	 * Constructor.
+	 * The key of the message id in the dispatch answer.
 	 *
-	 * @param ContainerInterface $container DI container.
-	 * @param LoggerInterface $logger Logger.
-	 * @param array<string, mixed> $credentials Decoded credentials.
-	 * @param string $fromNumber Sender E.164.
-	 * @param string $webhookSecret Shared HMAC secret.
-	 * @param string|null $sourceId openconnector source id.
-	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @var string
 	 */
-	public function __construct(
-		private ContainerInterface $container,
-		private LoggerInterface $logger,
-		private array $credentials,
-		private string $fromNumber,
-		private string $webhookSecret,
-		private ?string $sourceId = null,
-	) {
-	}//end __construct()
+	protected const MESSAGE_ID_KEY = 'id';
 
 	/**
-	 * Send a single SMS via MessageBird.
+	 * The MessageBird send payload for one message.
 	 *
 	 * @param string $toNumber Recipient E.164.
 	 * @param string $body Plain-text body.
 	 *
-	 * @return array{externalMessageId: string, vendor: string} Provider id.
-	 *
-	 * @throws TransientSmsProviderException On 5xx / network.
-	 * @throws PermanentSmsProviderException On 4xx / config.
-	 *
-	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.2
+	 * @return array<string, mixed>
 	 */
-	public function send(string $toNumber, string $body): array {
-		$payload = [
+	protected function payloadFor(string $toNumber, string $body): array {
+		return [
 			'originator' => $this->fromNumber,
 			'recipients' => [$toNumber],
 			'body' => $body,
 		];
-
-		$result = $this->dispatchViaLeaf(
-			source: (string)($this->sourceId ?? ''),
-			body: $payload,
-			path: self::SEND_PATH,
-		);
-		$id = (string)($result['id'] ?? ($result['externalMessageId'] ?? ''));
-
-		return [
-			'externalMessageId' => $id,
-			'vendor' => $this->getVendor(),
-		];
-	}//end send()
-
-	/**
-	 * Verify the messagebird-signature header against the raw body.
-	 *
-	 * @param string $rawBody Raw body.
-	 * @param string $signature Header.
-	 *
-	 * @return bool True when authentic.
-	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
-	 */
-	public function verifySignature(string $rawBody, string $signature): bool {
-		if ($this->webhookSecret === '' || $signature === '') {
-			return false;
-		}
-
-		$expected = hash_hmac('sha256', $rawBody, $this->webhookSecret);
-		return hash_equals($expected, $signature);
-	}//end verifySignature()
+	}//end payloadFor()
 
 	/**
 	 * Vendor key.

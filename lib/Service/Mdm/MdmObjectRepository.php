@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-001
+ * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
  */
 
 declare(strict_types=1);
@@ -29,11 +29,12 @@ namespace OCA\Pipelinq\Service\Mdm;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Repository helper for MDM OpenRegister objects.
@@ -48,9 +49,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  *
- * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-001
+ * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
  */
-class MdmObjectRepository {
+class MdmObjectRepository implements MdmObjectRepositoryInterface {
 	/**
 	 * App-config key holding the Pipelinq register id.
 	 *
@@ -93,10 +94,10 @@ class MdmObjectRepository {
 	 *
 	 * @throws RuntimeException If the register is not configured.
 	 *
-	 * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-001
+	 * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
 	 */
 	public function register(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, self::REGISTER_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, self::REGISTER_KEY, '');
 		if ($register === '') {
 			throw new RuntimeException('Pipelinq register is not configured.');
 		}
@@ -115,7 +116,7 @@ class MdmObjectRepository {
 	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function schema(string $schemaSlug): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaSlug . '_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaSlug . '_schema', '');
 		if ($schema === '') {
 			throw new RuntimeException("MDM schema '{$schemaSlug}' is not configured.");
 		}

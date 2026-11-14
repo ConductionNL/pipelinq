@@ -25,14 +25,14 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-FALLBACK-004
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\BerichtenboxService;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Container\ContainerInterface;
@@ -77,27 +77,16 @@ class FallbackEmailJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 */
 	protected function run(mixed $argument): void {
-		try {
-			$service = $this->container->get(BerichtenboxService::class);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'FallbackEmailJob: BerichtenboxService unavailable.',
-				['exception' => $e->getMessage()]
-			);
-			return;
-		}
-
-		try {
-			$sent = $service->processFallbackQueue();
-			$this->logger->info(
-				'FallbackEmailJob: processed fallbacks.',
-				['sent' => $sent]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'FallbackEmailJob run failed.',
-				['exception' => $e->getMessage()]
-			);
-		}
+		$pass = new BerichtenboxJobPass(container: $this->container, logger: $this->logger);
+		$pass->run(
+			job: 'FallbackEmailJob',
+			work: function (BerichtenboxServiceInterface $service): void {
+				$sent = $service->processFallbackQueue();
+				$this->logger->info(
+					'FallbackEmailJob: processed fallbacks.',
+					['sent' => $sent]
+				);
+			}
+		);
 	}//end run()
 }//end class

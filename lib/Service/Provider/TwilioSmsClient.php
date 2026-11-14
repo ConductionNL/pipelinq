@@ -21,15 +21,12 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Provider;
-
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * TwilioSmsClient — Twilio Messaging API client (via OpenRegister dispatch leaf).
@@ -39,75 +36,22 @@ use Psr\Log\LoggerInterface;
  * shared-secret deployments behind a reverse proxy the secret is
  * the channelProvider.webhookSecret on the provider row.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class TwilioSmsClient implements SmsProviderClientInterface {
-	use MessageDispatchTrait;
-
+class TwilioSmsClient extends LeafSmsClient {
 	/**
 	 * Twilio Messages send path, relative to the source base URL.
 	 *
 	 * @var string
 	 */
-	private const SEND_PATH = 'Messages.json';
+	protected const SEND_PATH = 'Messages.json';
 
 	/**
-	 * Constructor.
+	 * The key of the message id in the dispatch answer.
 	 *
-	 * @param ContainerInterface $container DI container (for MessageDispatchProvider).
-	 * @param LoggerInterface $logger Logger.
-	 * @param array<string, mixed> $credentials Decoded credentials bag.
-	 * @param string $fromNumber Sender phone number (E.164).
-	 * @param string $webhookSecret Shared HMAC secret for signature checks.
-	 * @param string|null $sourceId openconnector source id (or null in tests).
-	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @var string
 	 */
-	public function __construct(
-		private ContainerInterface $container,
-		private LoggerInterface $logger,
-		private array $credentials,
-		private string $fromNumber,
-		private string $webhookSecret,
-		private ?string $sourceId = null,
-	) {
-	}//end __construct()
-
-	/**
-	 * Send a single SMS via Twilio.
-	 *
-	 * @param string $toNumber Recipient phone number in E.164.
-	 * @param string $body Plain-text body.
-	 *
-	 * @return array{externalMessageId: string, vendor: string} Provider id.
-	 *
-	 * @throws TransientSmsProviderException On 5xx / network failure.
-	 * @throws PermanentSmsProviderException On 4xx / config failure.
-	 *
-	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.1
-	 */
-	public function send(string $toNumber, string $body): array {
-		$payload = [
-			'From' => $this->fromNumber,
-			'To' => $toNumber,
-			'Body' => $body,
-		];
-
-		$result = $this->dispatchViaLeaf(
-			source: (string)($this->sourceId ?? ''),
-			body: $payload,
-			path: self::SEND_PATH,
-			// Twilio's Messages API takes form fields; without this the
-			// OpenRegister leaf sends the array body as JSON.
-			headers: ['Content-Type' => 'application/x-www-form-urlencoded'],
-		);
-		$sid = (string)($result['sid'] ?? ($result['externalMessageId'] ?? ''));
-
-		return [
-			'externalMessageId' => $sid,
-			'vendor' => $this->getVendor(),
-		];
-	}//end send()
+	protected const MESSAGE_ID_KEY = 'sid';
 
 	/**
 	 * Verify the X-Twilio-Signature header against the raw body.
@@ -131,9 +75,34 @@ class TwilioSmsClient implements SmsProviderClientInterface {
 			return true;
 		}
 
-		$expectedHex = hash_hmac('sha256', $rawBody, $this->webhookSecret);
-		return hash_equals($expectedHex, $signature);
+		return parent::verifySignature(rawBody: $rawBody, signature: $signature);
 	}//end verifySignature()
+
+	/**
+	 * Twilio's Messages API takes form fields; without this header the
+	 * OpenRegister leaf sends the array body as JSON.
+	 *
+	 * @return array<string, string>
+	 */
+	protected function sendHeaders(): array {
+		return ['Content-Type' => 'application/x-www-form-urlencoded'];
+	}//end sendHeaders()
+
+	/**
+	 * The Twilio send payload for one message.
+	 *
+	 * @param string $toNumber Recipient E.164.
+	 * @param string $body Plain-text body.
+	 *
+	 * @return array<string, mixed>
+	 */
+	protected function payloadFor(string $toNumber, string $body): array {
+		return [
+			'From' => $this->fromNumber,
+			'To' => $toNumber,
+			'Body' => $body,
+		];
+	}//end payloadFor()
 
 	/**
 	 * Vendor key.

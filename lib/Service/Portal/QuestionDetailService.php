@@ -28,22 +28,23 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+ * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\QuestionDetailServiceInterface;
 use OCA\Pipelinq\Service\WooRequestConversionService;
 use OCP\IL10N;
 
 /**
  * Builds the timeline and the item list of one portal question.
  *
- * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+ * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
  */
-class QuestionDetailService {
+class QuestionDetailService implements QuestionDetailServiceInterface {
 	/**
 	 * The pipelinq schema key of the ticket supertype.
 	 *
@@ -67,7 +68,7 @@ class QuestionDetailService {
 	 * @param MainRegisterReader $tickets Reads the pipelinq ticket.
 	 * @param IL10N              $l10n    Translates the lines the resident reads.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	public function __construct(
 		private readonly MainRegisterReader $tickets,
@@ -88,7 +89,7 @@ class QuestionDetailService {
 	 *
 	 * @return array<int, array{id: string, occurredAt: string, message: string}> The entries, oldest first.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	public function timeline(string $ticketId): array {
 		$ticket = $this->question(ticketId: $ticketId);
@@ -169,7 +170,7 @@ class QuestionDetailService {
 	 *
 	 * @return array<int, array{id: string, title: string, url: string, note: string}> The items.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
 	 */
 	public function dossierItems(string $ticketId): array {
 		$ticket = $this->question(ticketId: $ticketId);
@@ -177,17 +178,40 @@ class QuestionDetailService {
 			return [];
 		}
 
-		$items = [];
+		return array_merge($this->wooRequestItems(ticket: $ticket), $this->snapshotItems(ticket: $ticket));
+	}//end dossierItems()
+
+	/**
+	 * The Woo request the question became, when it was converted under a case id.
+	 *
+	 * @param array<string, mixed> $ticket The question.
+	 *
+	 * @return array<int, array{id: string, title: string, url: string, note: string}>
+	 */
+	private function wooRequestItems(array $ticket): array {
 		$case = $this->text(value: ($ticket['caseReference'] ?? ''));
-		if ($case !== '' && $this->isConverted(ticket: $ticket) === true) {
-			$items[] = [
-				'id' => $case,
-				'title' => $this->l10n->t('Your Woo request'),
-				'url' => self::WOO_REQUEST_LINK.rawurlencode($case),
-				'note' => $this->l10n->t('Your question is now this Woo request. Follow it under your cases.'),
-			];
+		if ($case === '' || $this->isConverted(ticket: $ticket) === false) {
+			return [];
 		}
 
+		return [[
+			'id' => $case,
+			'title' => $this->l10n->t('Your Woo request'),
+			'url' => self::WOO_REQUEST_LINK.rawurlencode($case),
+			'note' => $this->l10n->t('Your question is now this Woo request. Follow it under your cases.'),
+		]];
+	}//end wooRequestItems()
+
+	/**
+	 * The dossier's items as they were when the question was asked; an item
+	 * without a text title is left out.
+	 *
+	 * @param array<string, mixed> $ticket The question.
+	 *
+	 * @return array<int, array{id: string, title: string, url: string, note: string}>
+	 */
+	private function snapshotItems(array $ticket): array {
+		$items = [];
 		$reference = ($ticket['subjectReference'] ?? []);
 		foreach ($this->listOf(value: ($reference['items'] ?? null)) as $item) {
 			$title = $this->text(value: ($item['title'] ?? ''));
@@ -197,7 +221,7 @@ class QuestionDetailService {
 		}
 
 		return $items;
-	}//end dossierItems()
+	}//end snapshotItems()
 
 	/**
 	 * The ticket when it is a question a resident asked on the portal, else null.

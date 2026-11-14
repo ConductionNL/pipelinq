@@ -21,7 +21,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
  */
 
 declare(strict_types=1);
@@ -30,7 +30,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyLinkServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -38,9 +39,9 @@ use Throwable;
 /**
  * Write and end party links, under the registry's rule.
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-kind-declared-single-shall-refuse-a-second-holder-on-one-record-req-pkr-005
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-kind-declared-single-shall-refuse-a-second-holder-on-one-record-req-pkr-005
  */
-class PartyLinkService {
+class PartyLinkService implements PartyLinkServiceInterface {
 	/**
 	 * Constructor.
 	 *
@@ -67,7 +68,7 @@ class PartyLinkService {
 	 *
 	 * @return array<string, mixed> `status` plus either `partyLink` or `error`.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function link(string $recordType, string $recordId, string $party, string $kind): array {
 		$recordType = trim($recordType);
@@ -75,23 +76,50 @@ class PartyLinkService {
 		$party = trim($party);
 		$kind = trim($kind);
 
+		$refusal = $this->linkRefusal(recordType: $recordType, recordId: $recordId, party: $party, kind: $kind);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->saveLink(recordType: $recordType, recordId: $recordId, party: $party, kind: $kind);
+	}//end link()
+
+	/**
+	 * Why a link may not be written: missing input, or the registry refuses the kind. Null when it may.
+	 *
+	 * @param string $recordType The trimmed `<app>:<schema>:<type>` literal.
+	 * @param string $recordId   The trimmed record.
+	 * @param string $party      The trimmed party.
+	 * @param string $kind       The trimmed party kind code.
+	 *
+	 * @return array<string, mixed>|null `status` plus `error`, or null.
+	 */
+	private function linkRefusal(string $recordType, string $recordId, string $party, string $kind): array|null {
 		if ($recordType === '' || $recordId === '' || $party === '') {
 			return ['status' => 400, 'error' => 'A record type, a record and a party are required.'];
 		}
 
-		$answer = $this->registry->mayLink(
-			recordType: $recordType,
-			recordId: $recordId,
-			kind: $kind,
-			party: $party,
-		);
-
+		$answer = $this->registry->mayLink(recordType: $recordType, recordId: $recordId, kind: $kind, party: $party);
 		if ($answer['allowed'] === false) {
 			// 409, not 400: the write is well formed and refused on policy,
 			// and the message is meant to be shown to the handler.
 			return ['status' => 409, 'error' => $answer['reason']];
 		}
 
+		return null;
+	}//end linkRefusal()
+
+	/**
+	 * Write a party link valid from today.
+	 *
+	 * @param string $recordType The trimmed `<app>:<schema>:<type>` literal.
+	 * @param string $recordId   The trimmed record.
+	 * @param string $party      The trimmed party.
+	 * @param string $kind       The trimmed party kind code.
+	 *
+	 * @return array<string, mixed> `status` plus either `partyLink` or `error`.
+	 */
+	private function saveLink(string $recordType, string $recordId, string $party, string $kind): array {
 		$link = [
 			'party' => $party,
 			'kind' => $kind,
@@ -106,7 +134,7 @@ class PartyLinkService {
 		}
 
 		return ['status' => 201, 'partyLink' => $link];
-	}//end link()
+	}//end saveLink()
 
 	/**
 	 * End a party link, without deleting the record of it.
@@ -124,22 +152,8 @@ class PartyLinkService {
 			return ['status' => 400, 'error' => 'A party link is required.'];
 		}
 
-		try {
-			$entity = $this->objectService->find(id: $linkId);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				'PartyLinkService: the link could not be read',
-				['uuid' => $linkId, 'exception' => $e->getMessage()]
-			);
-			$entity = null;
-		}
-
-		if ($entity === null) {
-			return ['status' => 404, 'error' => 'That party link could not be read.'];
-		}
-
-		$data = $entity->jsonSerialize();
-		if (is_array($data) === false) {
+		$data = $this->readLinkData(linkId: $linkId);
+		if ($data === null) {
 			return ['status' => 404, 'error' => 'That party link could not be read.'];
 		}
 
@@ -153,6 +167,33 @@ class PartyLinkService {
 	}//end end()
 
 	/**
+	 * A party link's data, or null when it cannot be read.
+	 *
+	 * @param string $linkId The link's uuid.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function readLinkData(string $linkId): array|null {
+		try {
+			$entity = $this->objectService->find(id: $linkId);
+		} catch (Throwable $e) {
+			$this->logger->debug('PartyLinkService: the link could not be read', ['uuid' => $linkId, 'exception' => $e->getMessage()]);
+			$entity = null;
+		}
+
+		if ($entity === null) {
+			return null;
+		}
+
+		$data = $entity->jsonSerialize();
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
+	}//end readLinkData()
+
+	/**
 	 * Write every accepted row of a batch, refusing the rest by the same rule.
 	 *
 	 * @param string $recordType The `<app>:<schema>:<type>` literal.
@@ -161,7 +202,7 @@ class PartyLinkService {
 	 *
 	 * @return array<string, mixed> `status`, the rows that landed and the rows refused.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function import(string $recordType, string $recordId, array $rows): array {
 		$verdict = $this->registry->judgeBatch(
@@ -201,8 +242,8 @@ class PartyLinkService {
 	 * @return bool True when the write landed.
 	 */
 	private function write(array $object, ?string $uuid = null): bool {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'partyLink_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'partyLink_schema', '');
 		if ($register === '' || $schema === '') {
 			$this->logger->warning('PartyLinkService: the party link surface is not configured');
 

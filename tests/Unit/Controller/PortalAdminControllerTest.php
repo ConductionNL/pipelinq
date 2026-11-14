@@ -33,6 +33,7 @@ use OCP\IAppConfig;
 use OCA\Pipelinq\Tests\Unit\Service\Portal\InstalledAppConfig;
 use OCA\Pipelinq\Util\ContrastRatioCalculator;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
@@ -89,7 +90,11 @@ class PortalAdminControllerTest extends TestCase {
 		return new PortalAdminController(
 			$request,
 			new PortalTenantService($this->repository, new ContrastRatioCalculator()),
-			$this->createMock(PortalAuditService::class),
+			new PortalAuditService(
+				repository: $this->repository,
+				time: $this->createMock(originalClassName: ITimeFactory::class),
+				logger: $this->createMock(originalClassName: LoggerInterface::class)
+			),
 			$this->repository,
 			$session,
 			$groups,
@@ -213,4 +218,192 @@ class PortalAdminControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame('No account "ghost" exists.', $response->getData()['message']);
 	}//end testAnUnusableServiceAccountIsRefused()
+
+	/**
+	 * Every stored portal is listed, sorted by name; a record without a
+	 * status reads as live.
+	 *
+	 * @return void
+	 */
+	public function testTenantsListsEveryStoredPortal(): void {
+		$this->repository->seed(
+			'portalTenantConfig',
+			'cfg-b',
+			['tenantId' => 'west', 'displayName' => 'Mijn West', 'customDomain' => 'mijn.west.example', 'status' => 'draft']
+		);
+		$this->repository->seed('portalTenantConfig', 'cfg-a', ['tenantId' => 'oost', 'displayName' => 'Mijn Oost', 'enabledFeatures' => ['requests']]);
+
+		$response = $this->controller(isAdmin: true)->tenants();
+		$tenants = $response->getData()['tenants'];
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['oost', 'west'], actual: array_column($tenants, 'tenantId'));
+		$this->assertSame(expected: 'live', actual: $tenants[0]['status']);
+		$this->assertSame(expected: 'draft', actual: $tenants[1]['status']);
+		$this->assertSame(expected: 'mijn.west.example', actual: $tenants[1]['customDomain']);
+	}//end testTenantsListsEveryStoredPortal()
+
+	/**
+	 * A non-admin gets 403 and no list.
+	 *
+	 * @return void
+	 */
+	public function testTenantsRefusesANonAdmin(): void {
+		$this->repository->seed('portalTenantConfig', 'cfg-a', ['tenantId' => 'oost', 'displayName' => 'Mijn Oost']);
+
+		$response = $this->controller(isAdmin: false)->tenants();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+		$this->assertArrayNotHasKey(key: 'tenants', array: (array)$response->getData());
+	}//end testTenantsRefusesANonAdmin()
+
+	/**
+	 * With all=1 the latest events of every tenant come back newest first,
+	 * capped at the limit, with the total count.
+	 *
+	 * @return void
+	 */
+	public function testAuditEventsOfAllTenantsComeNewestFirstWithTheTotal(): void {
+		$this->repository->seed('portalAuditEvent', 'e1', ['tenantId' => 'oost', 'eventType' => 'login', 'occurredAt' => '2026-10-28T09:40:00Z']);
+		$this->repository->seed('portalAuditEvent', 'e2', ['tenantId' => 'west', 'eventType' => 'invoice-download', 'occurredAt' => '2026-10-28T09:58:00']);
+		$this->repository->seed(
+			'portalAuditEvent',
+			'e3',
+			['tenantId' => 'oost', 'eventType' => 'question-answered', 'occurredAt' => '2026-10-28T10:14:00']
+		);
+		$this->params = ['all' => '1', 'limit' => '2'];
+
+		$body = $this->controller(isAdmin: true)->auditEvents()->getData();
+
+		$this->assertSame(expected: ['question-answered', 'invoice-download'], actual: array_column($body['events'], 'eventType'));
+		$this->assertSame(expected: 3, actual: $body['total']);
+	}//end testAuditEventsOfAllTenantsComeNewestFirstWithTheTotal()
+
+	/**
+	 * Without all=1 the endpoint keeps answering one tenant.
+	 *
+	 * @return void
+	 */
+	public function testAuditEventsOfOneTenantStayScoped(): void {
+		$this->repository->seed('portalAuditEvent', 'e1', ['tenantId' => 'oost', 'eventType' => 'login', 'occurredAt' => '2026-10-28T09:40:00Z']);
+		$this->repository->seed('portalAuditEvent', 'e2', ['tenantId' => 'west', 'eventType' => 'login', 'occurredAt' => '2026-10-28T09:58:00Z']);
+		$this->params = ['tenantId' => 'west'];
+
+		$body = $this->controller(isAdmin: true)->auditEvents()->getData();
+
+		$this->assertSame(expected: ['west'], actual: array_column($body['events'], 'tenantId'));
+	}//end testAuditEventsOfOneTenantStayScoped()
+
+	/**
+	 * An admin saves a tenant config; a blank tenant id falls back to the
+	 * default tenant, and a second save updates the same record.
+	 *
+	 * @return void
+	 */
+	public function testSaveConfigStoresTheConfigForTheTenant(): void {
+		$this->params = ['tenantId' => '  ', 'config' => ['displayName' => 'Gemeente Oost']];
+
+		$first = $this->controller(isAdmin: true)->saveConfig();
+		$this->params = ['tenantId' => ' oost ', 'config' => ['displayName' => 'Oost']];
+		$other = $this->controller(isAdmin: true)->saveConfig();
+		$this->params = ['config' => ['displayName' => 'Gemeente Oost 2']];
+		$second = $this->controller(isAdmin: true)->saveConfig();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $first->getStatus());
+		$this->assertSame(expected: PortalTenantService::DEFAULT_TENANT, actual: $first->getData()['tenantId']);
+		$this->assertSame(expected: 'oost', actual: $other->getData()['tenantId']);
+		$this->assertSame(expected: $first->getData()['@self']['id'], actual: $second->getData()['@self']['id']);
+		$this->assertSame(expected: 'Gemeente Oost 2', actual: $second->getData()['displayName']);
+		$this->assertCount(expectedCount: 2, haystack: $this->repository->findAll('portalTenantConfig'));
+	}//end testSaveConfigStoresTheConfigForTheTenant()
+
+	/**
+	 * A config that is not an object is refused with 400, and a non-admin with 403; nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testSaveConfigRefusesABadConfigAndANonAdmin(): void {
+		$this->params = ['config' => 'brandPrimaryColor=#000'];
+		$bad = $this->controller(isAdmin: true)->saveConfig();
+		$this->params = ['config' => ['displayName' => 'X']];
+		$forbidden = $this->controller(isAdmin: false)->saveConfig();
+
+		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $bad->getStatus());
+		$this->assertSame(expected: ['errorCode' => 'badRequest', 'message' => 'Ongeldige configuratie.'], actual: $bad->getData());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $forbidden->getStatus());
+		$this->assertSame(expected: 'forbidden', actual: $forbidden->getData()['errorCode']);
+		$this->assertSame(expected: [], actual: $this->repository->findAll('portalTenantConfig'));
+	}//end testSaveConfigRefusesABadConfigAndANonAdmin()
+
+	/**
+	 * A config the tenant service refuses answers with that refusal.
+	 *
+	 * @return void
+	 */
+	public function testSaveConfigPassesOnAServiceRefusal(): void {
+		$this->params = ['config' => ['brandPrimaryColor' => 'not-a-colour']];
+
+		$response = $this->controller(isAdmin: true)->saveConfig();
+
+		$this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
+		$this->assertSame(expected: 'invalidColor', actual: $response->getData()['errorCode']);
+	}//end testSaveConfigPassesOnAServiceRefusal()
+
+	/**
+	 * The accounts list carries only the safe fields of the tenant's own accounts.
+	 *
+	 * @return void
+	 */
+	public function testAccountsListsOnlySafeFieldsOfTheTenant(): void {
+		$this->repository->seed(
+			'crmPortalAccount',
+			'a1',
+			['tenantId' => 'oost', 'email' => 'jan@example.nl', 'displayName' => 'Jan', 'accountType' => 'person', 'status' => 'active', 'lastLoginAt' => '2026-11-01', 'passwordHash' => 'secret', 'mfaSecret' => 'secret']
+		);
+		$this->repository->seed('crmPortalAccount', 'a2', ['tenantId' => 'west', 'email' => 'piet@example.nl']);
+		$this->params = ['tenantId' => 'oost'];
+
+		$response = $this->controller(isAdmin: true)->accounts();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(
+			expected: [
+				'accounts' => [
+					['id' => 'a1', 'email' => 'jan@example.nl', 'displayName' => 'Jan', 'accountType' => 'person', 'status' => 'active', 'lastLoginAt' => '2026-11-01'],
+				],
+			],
+			actual: $response->getData()
+		);
+	}//end testAccountsListsOnlySafeFieldsOfTheTenant()
+
+	/**
+	 * An admin reads the service account status with the group it must be in.
+	 *
+	 * @return void
+	 */
+	public function testAnAdminReadsTheServiceAccount(): void {
+		$this->serviceAccount->method('status')->willReturn(['userId' => '', 'usable' => false, 'reason' => 'No service account is set.']);
+
+		$response = $this->controller(isAdmin: true)->getServiceAccount();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(
+			expected: ['userId' => '', 'usable' => false, 'reason' => 'No service account is set.', 'group' => PortalServiceAccount::GROUP],
+			actual: $response->getData()
+		);
+	}//end testAnAdminReadsTheServiceAccount()
+
+	/**
+	 * An unexpected failure is a generic 500 without its message.
+	 *
+	 * @return void
+	 */
+	public function testAnUnexpectedFailureIsAGeneric500(): void {
+		$this->serviceAccount->method('status')->willThrowException(new \RuntimeException('config table locked'));
+
+		$response = $this->controller(isAdmin: true)->getServiceAccount();
+
+		$this->assertSame(expected: Http::STATUS_INTERNAL_SERVER_ERROR, actual: $response->getStatus());
+		$this->assertSame(expected: ['errorCode' => 'serverError', 'message' => 'Er is een fout opgetreden.'], actual: $response->getData());
+	}//end testAnUnexpectedFailureIsAGeneric500()
 }//end class

@@ -1,0 +1,410 @@
+{
+    "webhook no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "ok": true,
+            "interactionId": null
+        },
+        "trace": [
+            {
+                "CtiServiceInterface::handleWebhook": [
+                    "sample-platform",
+                    {
+                        "platform": "sample-platform",
+                        "uid": "mallory",
+                        "userId": "mallory",
+                        "user": "mallory",
+                        "createdBy": "mallory",
+                        "owner": "mallory"
+                    },
+                    ""
+                ]
+            }
+        ]
+    },
+    "webhook unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "ok": true,
+            "interactionId": null
+        },
+        "trace": [
+            {
+                "CtiServiceInterface::handleWebhook": [
+                    "sample-platform",
+                    {
+                        "platform": "sample-platform",
+                        "uid": "mallory",
+                        "userId": "mallory",
+                        "user": "mallory",
+                        "createdBy": "mallory",
+                        "owner": "mallory"
+                    },
+                    ""
+                ]
+            }
+        ]
+    },
+    "webhook privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "ok": true,
+            "interactionId": null
+        },
+        "trace": [
+            {
+                "CtiServiceInterface::handleWebhook": [
+                    "sample-platform",
+                    {
+                        "platform": "sample-platform",
+                        "uid": "mallory",
+                        "userId": "mallory",
+                        "user": "mallory",
+                        "createdBy": "mallory",
+                        "owner": "mallory"
+                    },
+                    ""
+                ]
+            }
+        ]
+    },
+    "screenPop no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "screenPop unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "screenPop privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "fromNumber is required"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            }
+        ]
+    },
+    "clickToDial no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "clickToDial unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "clickToDial privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "targetNumber and extension are required"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            }
+        ]
+    },
+    "disposition no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "disposition unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "disposition privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "subject and outcome are required"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            }
+        ]
+    },
+    "attachRecording no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "attachRecording unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "attachRecording privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "recordingUrl is required"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            }
+        ]
+    },
+    "getConfig no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Admin required"
+        },
+        "trace": []
+    },
+    "getConfig unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "IGroupManager::isAdmin": [
+                    "intern"
+                ]
+            },
+            {
+                "CtiServiceInterface::loadConfig": []
+            }
+        ]
+    },
+    "getConfig privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "IGroupManager::isAdmin": [
+                    "crm-user"
+                ]
+            },
+            {
+                "CtiServiceInterface::loadConfig": []
+            }
+        ]
+    },
+    "updateConfig no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Admin required"
+        },
+        "trace": []
+    },
+    "updateConfig unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "IGroupManager::isAdmin": [
+                    "intern"
+                ]
+            },
+            {
+                "CtiServiceInterface::saveConfig": [
+                    []
+                ]
+            },
+            {
+                "LoggerInterface::info": [
+                    "CTI config updated",
+                    {
+                        "user": "intern",
+                        "fields": []
+                    }
+                ]
+            }
+        ]
+    },
+    "updateConfig privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "IGroupManager::isAdmin": [
+                    "crm-user"
+                ]
+            },
+            {
+                "CtiServiceInterface::saveConfig": [
+                    []
+                ]
+            },
+            {
+                "LoggerInterface::info": [
+                    "CTI config updated",
+                    {
+                        "user": "crm-user",
+                        "fields": []
+                    }
+                ]
+            }
+        ]
+    },
+    "testConnection no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Admin required"
+        },
+        "trace": []
+    },
+    "testConnection unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "IGroupManager::isAdmin": [
+                    "intern"
+                ]
+            },
+            {
+                "CtiServiceInterface::testConnection": []
+            },
+            {
+                "ConnectionReportServiceInterface::reportCtiCheck": [
+                    []
+                ]
+            }
+        ]
+    },
+    "testConnection privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "IGroupManager::isAdmin": [
+                    "crm-user"
+                ]
+            },
+            {
+                "CtiServiceInterface::testConnection": []
+            },
+            {
+                "ConnectionReportServiceInterface::reportCtiCheck": [
+                    []
+                ]
+            }
+        ]
+    },
+    "eventLog no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Admin required"
+        },
+        "trace": []
+    },
+    "eventLog unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "events": [],
+            "limit": 50,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "IGroupManager::isAdmin": [
+                    "intern"
+                ]
+            },
+            {
+                "CtiServiceInterface::listEventLog": []
+            }
+        ]
+    },
+    "eventLog privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "events": [],
+            "limit": 50,
+            "offset": 0
+        },
+        "trace": [
+            {
+                "IGroupManager::isAdmin": [
+                    "crm-user"
+                ]
+            },
+            {
+                "CtiServiceInterface::listEventLog": []
+            }
+        ]
+    }
+}

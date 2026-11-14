@@ -19,14 +19,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -42,9 +44,11 @@ use Throwable;
  * - findByVendor(kind, vendor) — find the first active row matching
  *   both `kind` and `vendor` (used by SmsAdapter.providerHint).
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class ChannelProviderRepository {
+class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
+	use PayloadToArray;
+
 	/**
 	 * Default channelProvider schema slug.
 	 */
@@ -62,7 +66,7 @@ class ChannelProviderRepository {
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -78,7 +82,7 @@ class ChannelProviderRepository {
 	 *
 	 * @return array<int, array<string, mixed>> Provider rows.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function listActive(string $kind): array {
 		$objectService = $this->getObjectService();
@@ -177,6 +181,19 @@ class ChannelProviderRepository {
 			return null;
 		}
 
+		return $this->findProvider(objectService: $objectService, id: $id, scope: $scope);
+	}//end lookup()
+
+	/**
+	 * Find one provider row, logging a miss.
+	 *
+	 * @param object              $objectService OpenRegister's ObjectService.
+	 * @param string              $id            Provider UUID / slug.
+	 * @param array<string, bool> $scope         Named `_rbac` / `_multitenancy` arguments.
+	 *
+	 * @return array<string, mixed>|null Row or null.
+	 */
+	private function findProvider(object $objectService, string $id, array $scope): array|null {
 		try {
 			$entity = $objectService->find(
 				id: $id,
@@ -186,10 +203,7 @@ class ChannelProviderRepository {
 				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
-			$this->logger->info(
-				'ChannelProviderRepository.findById: not found',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
+			$this->logger->info('ChannelProviderRepository.findById: not found', ['id' => $id, 'exception' => $e->getMessage()]);
 			return null;
 		}
 
@@ -198,7 +212,7 @@ class ChannelProviderRepository {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end lookup()
+	}//end findProvider()
 
 	/**
 	 * First active row matching kind + vendor.
@@ -237,41 +251,12 @@ class ChannelProviderRepository {
 	}//end getObjectService()
 
 	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * Register slug (app-config overridable).
 	 *
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -286,7 +271,7 @@ class ChannelProviderRepository {
 	 */
 	private function getSchemaSlug(): string {
 		$slug = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'channelProvider_schema',
 			''
 		);

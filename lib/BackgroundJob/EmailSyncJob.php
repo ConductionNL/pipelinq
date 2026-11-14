@@ -17,14 +17,14 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/specs/email-calendar-sync/spec.md#requirement-sync-must-be-near-real-time-and-handle-conflicts
- * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-7
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-contact-comms/tasks.md#task-7
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\EmailSyncService;
+use OCA\Pipelinq\Kernel\Contracts\EmailSyncServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IUser;
@@ -44,13 +44,13 @@ class EmailSyncJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param EmailSyncService $emailSyncService The email sync service.
+	 * @param EmailSyncServiceInterface $emailSyncService The email sync service.
 	 * @param IUserManager $userManager The user manager.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private EmailSyncService $emailSyncService,
+		private EmailSyncServiceInterface $emailSyncService,
 		private IUserManager $userManager,
 		private LoggerInterface $logger,
 	) {

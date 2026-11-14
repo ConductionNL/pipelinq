@@ -26,12 +26,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use DateTimeImmutable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for POS product catalogue resolution.
@@ -54,7 +57,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/pos-product-catalogue/spec.md
  */
-class ProductCatalogService {
+class ProductCatalogService implements ProductCatalogServiceInterface {
+	use CastingPayloadToArray;
+
 	/**
 	 * Canonical Dutch BTW class to tax-rate mapping.
 	 *
@@ -93,7 +98,7 @@ class ProductCatalogService {
 	 * @return int|float The tax rate percentage.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
-	 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+	 * @spec openspec/specs/product-catalog/spec.md
 	 */
 	public function btwClassToRate(?string $vatClass): int|float {
 		// The rate per class is a setting (VatRates, pipelinq-forms-review);
@@ -205,57 +210,269 @@ class ProductCatalogService {
 	 * The returned figure is rounded to cents and never derived from
 	 * client-supplied price data.
 	 *
-	 * @param array<string, mixed> $product The product object.
-	 * @param float $quantity The ordered quantity (clamped to >= 0).
-	 * @param string|null $variantSku Optional variant SKU.
+	 * With a client, a price list goes first (products-price-lists D3): the
+	 * client's own list, else the highest-priority active list for its segment,
+	 * else for its country, among lists in the currency and valid today. The
+	 * answer then also carries priceListId and priceListTitle, and source is
+	 * price-list when a list priced the line. Without a client the answer is
+	 * the product's own price, as before.
+	 *
+	 * @param array<string, mixed>      $product    The product object.
+	 * @param float                     $quantity   The ordered quantity (clamped to >= 0).
+	 * @param string|null               $variantSku Optional variant SKU.
+	 * @param array<string, mixed>|null $client     The client the line is for, read with the caller's rights.
+	 * @param string|null               $currency   The quote's currency; EUR when empty.
 	 *
 	 * @return array<string, mixed> The resolution: unitPrice, source
-	 *                              (base|tier|variant), tierLabel, btwClass,
-	 *                              taxRate.
+	 *                              (base|tier|variant|price-list), tierLabel,
+	 *                              btwClass, taxRate; with a client also
+	 *                              priceListId and priceListTitle.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
 	 */
-	public function resolveEffectivePrice(array $product, float $quantity, ?string $variantSku = null): array {
+	public function resolveEffectivePrice(
+		array $product,
+		float $quantity,
+		?string $variantSku = null,
+		?array $client = null,
+		?string $currency = null
+	): array {
 		$quantity = max(0.0, $quantity);
-		$basePrice = max(0.0, (float)($product['unitPrice'] ?? 0));
-		$source = 'base';
-		$tierLabel = '';
-
-		// Variant override (validates + may replace the base price).
-		if ($variantSku !== null && $variantSku !== '') {
-			[$basePrice, $source] = $this->resolveVariantPrice(
+		if ($client !== null) {
+			return $this->resolveForClient(
 				product: $product,
-				sku: $variantSku,
-				basePrice: $basePrice
+				quantity: $quantity,
+				variantSku: $variantSku,
+				client: $client,
+				currency: $currency
 			);
 		}
 
+		return $this->resolveOwnPrice(product: $product, quantity: $quantity, variantSku: $variantSku);
+	}//end resolveEffectivePrice()
+
+	/**
+	 * The product's own price: its variant's or base price, a quantity tier
+	 * when no variant is asked for, and its VAT.
+	 *
+	 * @param array<string, mixed> $product    The product object.
+	 * @param float                $quantity   The ordered quantity, at least 0.
+	 * @param string|null          $variantSku Optional variant SKU.
+	 *
+	 * @return array<string, mixed> The resolution.
+	 *
+	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 */
+	private function resolveOwnPrice(array $product, float $quantity, ?string $variantSku): array {
+		$price = $this->variantOrBasePrice(product: $product, variantSku: $variantSku);
 		// Quantity tier override (tiers price the line, not the variant).
-		$tiers = (array)($product['priceTiers'] ?? []);
-		if (count($tiers) > 0 && $variantSku === null) {
-			$tier = $this->resolveTier(tiers: $tiers, quantity: $quantity);
-			if ($tier !== null) {
-				$basePrice = max(0.0, (float)($tier['unitPrice'] ?? $basePrice));
-				$source = 'tier';
-				$tierLabel = (string)($tier['label'] ?? '');
-			}
+		if ($variantSku === null) {
+			$price = $this->withTier(price: $price, tier: $this->tierFor(product: $product, quantity: $quantity));
 		}
 
+		return [
+			'unitPrice' => round($price['unitPrice'], 2),
+			'source' => $price['source'],
+			'tierLabel' => $price['tierLabel'],
+			'quantity' => $quantity,
+			...$this->vatOf(product: $product),
+		];
+	}//end resolveOwnPrice()
+
+	/**
+	 * The price for a client: a price list's when one prices the product,
+	 * else the product's own price, with the list it came from.
+	 *
+	 * @param array<string, mixed> $product    The product object.
+	 * @param float                $quantity   The ordered quantity, at least 0.
+	 * @param string|null          $variantSku Optional variant SKU.
+	 * @param array<string, mixed> $client     The client.
+	 * @param string|null          $currency   The quote's currency.
+	 *
+	 * @return array<string, mixed> The resolution.
+	 *
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 */
+	private function resolveForClient(array $product, float $quantity, ?string $variantSku, array $client, ?string $currency): array {
+		$match = (new PriceListResolver())->select(
+			lists: $this->fetchPriceLists(),
+			client: $client,
+			productId: (string)($product['id'] ?? ($product['@self']['id'] ?? ($product['uuid'] ?? ''))),
+			variantSku: $variantSku,
+			quantity: $quantity,
+			currency: self::currencyCode(currency: $currency),
+			day: new DateTimeImmutable('today')
+		);
+
+		if ($match === null) {
+			return [
+				...$this->resolveOwnPrice(product: $product, quantity: $quantity, variantSku: $variantSku),
+				'priceListId' => null,
+				'priceListTitle' => '',
+			];
+		}
+
+		return $this->priceListAnswer(product: $product, quantity: $quantity, variantSku: $variantSku, match: $match);
+	}//end resolveForClient()
+
+	/**
+	 * A quote's currency as compared: trimmed, upper case, EUR when empty.
+	 *
+	 * @param string|null $currency The quote's currency.
+	 *
+	 * @return string The currency code.
+	 */
+	private static function currencyCode(?string $currency): string {
+		$code = strtoupper(trim((string)$currency));
+		if ($code === '') {
+			return 'EUR';
+		}
+
+		return $code;
+	}//end currencyCode()
+
+	/**
+	 * The resolution for a line a price list prices.
+	 *
+	 * @param array<string, mixed> $product    The product object.
+	 * @param float                $quantity   The ordered quantity, at least 0.
+	 * @param string|null          $variantSku Optional variant SKU.
+	 * @param array<string, mixed> $match      The list's price, id and title.
+	 *
+	 * @return array<string, mixed> The resolution.
+	 *
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 */
+	private function priceListAnswer(array $product, float $quantity, ?string $variantSku, array $match): array {
+		if ($variantSku !== null && $variantSku !== '') {
+			// The variant must still exist and be active, as without a list.
+			$this->resolveVariantPrice(product: $product, sku: $variantSku, basePrice: 0.0);
+		}
+
+		return [
+			'unitPrice' => $match['unitPrice'],
+			'source' => 'price-list',
+			'tierLabel' => '',
+			'quantity' => $quantity,
+			...$this->vatOf(product: $product),
+			'priceListId' => $match['priceListId'],
+			'priceListTitle' => $match['priceListTitle'],
+		];
+	}//end priceListAnswer()
+
+	/**
+	 * Every price list in this app's register; none when the schema is not set up or the read fails.
+	 *
+	 * @return array<int, array<string, mixed>> The lists.
+	 *
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 */
+	private function fetchPriceLists(): array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'priceList_schema', '');
+		if ($register === '' || $schema === '') {
+			return [];
+		}
+
+		try {
+			$results = $this->getObjectService()->findAll(
+				config: [
+					'filters' => [
+						'register' => $register,
+						'schema' => $schema,
+					],
+				]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: failed to fetch price lists', ['exception' => $e->getMessage()]);
+			return [];
+		}
+
+		$lists = [];
+		foreach (($results ?? []) as $result) {
+			$lists[] = $this->toArray(object: $result);
+		}
+
+		return $lists;
+	}//end fetchPriceLists()
+
+	/**
+	 * The product's base price, or the requested variant's (validated, and
+	 * its own price when it has one).
+	 *
+	 * @param array<string, mixed> $product    The product object.
+	 * @param string|null          $variantSku Optional variant SKU.
+	 *
+	 * @return array{unitPrice: float, source: string, tierLabel: string}
+	 *
+	 * @throws OCSNotFoundException If the variant does not exist.
+	 * @throws OCSBadRequestException If the variant is inactive.
+	 */
+	private function variantOrBasePrice(array $product, ?string $variantSku): array {
+		$basePrice = max(0.0, (float)($product['unitPrice'] ?? 0));
+		$source = 'base';
+		if ($variantSku !== null && $variantSku !== '') {
+			[$basePrice, $source] = $this->resolveVariantPrice(product: $product, sku: $variantSku, basePrice: $basePrice);
+		}
+
+		return ['unitPrice' => $basePrice, 'source' => $source, 'tierLabel' => ''];
+	}//end variantOrBasePrice()
+
+	/**
+	 * The price tier that applies to the quantity; null without tiers or
+	 * when none qualifies.
+	 *
+	 * @param array<string, mixed> $product  The product object.
+	 * @param float                $quantity The ordered quantity.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function tierFor(array $product, float $quantity): ?array {
+		$tiers = (array)($product['priceTiers'] ?? []);
+		if (count($tiers) === 0) {
+			return null;
+		}
+
+		return $this->resolveTier(tiers: $tiers, quantity: $quantity);
+	}//end tierFor()
+
+	/**
+	 * The price with the tier's price and label; unchanged without a tier.
+	 *
+	 * @param array{unitPrice: float, source: string, tierLabel: string} $price The price so far.
+	 * @param array<string, mixed>|null                                  $tier  The tier.
+	 *
+	 * @return array{unitPrice: float, source: string, tierLabel: string}
+	 */
+	private function withTier(array $price, ?array $tier): array {
+		if ($tier === null) {
+			return $price;
+		}
+
+		return [
+			'unitPrice' => max(0.0, (float)($tier['unitPrice'] ?? $price['unitPrice'])),
+			'source' => 'tier',
+			'tierLabel' => (string)($tier['label'] ?? ''),
+		];
+	}//end withTier()
+
+	/**
+	 * The product's VAT class and its tax rate (an empty class reads as none).
+	 *
+	 * @param array<string, mixed> $product The product object.
+	 *
+	 * @return array{vatClass: string, taxRate: int|float}
+	 */
+	private function vatOf(array $product): array {
 		$vatClass = (string)($product['vatClass'] ?? '');
 		$vatClassOrNull = $vatClass;
 		if ($vatClass === '') {
 			$vatClassOrNull = null;
 		}
 
-		return [
-			'unitPrice' => round($basePrice, 2),
-			'source' => $source,
-			'tierLabel' => $tierLabel,
-			'quantity' => $quantity,
-			'vatClass' => $vatClass,
-			'taxRate' => $this->btwClassToRate(vatClass: $vatClassOrNull),
-		];
-	}//end resolveEffectivePrice()
+		return ['vatClass' => $vatClass, 'taxRate' => $this->btwClassToRate(vatClass: $vatClassOrNull)];
+	}//end vatOf()
 
 	/**
 	 * Resolve the base price + source for a requested variant.
@@ -530,8 +747,8 @@ class ProductCatalogService {
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'product_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'product_schema', '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Productregister of -schema is niet geconfigureerd.');
@@ -552,33 +769,4 @@ class ProductCatalogService {
 		// catch was unreachable — phpstan reports it as a dead catch.
 		return $this->objectService;
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 }//end class

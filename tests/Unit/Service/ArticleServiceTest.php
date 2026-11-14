@@ -383,6 +383,97 @@ class ArticleServiceTest extends TestCase {
 	}//end testArticleValuesAreEscapedInTheHtmlBlock()
 
 	/**
+	 * Golden: every answer of a patch, and what a successful patch stores.
+	 *
+	 * @return void
+	 */
+	public function testUpdateAnswersExactly(): void {
+		$id = $this->seedArticle(title: 'Origineel');
+		$other = $this->seedArticle(title: 'Ander');
+		$this->service->updateArticle(articleId: $other, patch: ['slug' => 'bezet']);
+
+		$this->assertSame(['error' => 'Not found'], $this->service->updateArticle(articleId: 'nope', patch: ['title' => 'X']));
+		$this->assertSame(['error' => 'A title is required'], $this->service->updateArticle(articleId: $id, patch: ['title' => '  ']));
+		$this->assertSame(['error' => 'That slug is already in use'], $this->service->updateArticle(articleId: $id, patch: ['slug' => 'bezet']));
+
+		$saved = $this->service->updateArticle(articleId: $id, patch: ['summary' => 'Kort', 'author' => 'hacker'], agent: 'agent-7')['article'];
+		$this->assertSame('Kort', $saved['summary']);
+		$this->assertSame('marieke', $saved['author']);
+		$this->assertTrue($saved['agentAuthored']);
+		$this->assertSame('agent-7', $saved['agentAuthoredBy']);
+		$this->assertNotSame('', (string)$saved['updatedAt']);
+
+		$own = $this->service->updateArticle(articleId: $other, patch: ['slug' => 'bezet'])['article'];
+		$this->assertSame('bezet', $own['slug']);
+		$this->assertFalse($own['agentAuthored']);
+		$this->assertSame('', $own['agentAuthoredBy']);
+
+		$this->store->failSaves = true;
+		$this->assertSame(['error' => 'The article could not be saved'], $this->service->updateArticle(articleId: $id, patch: ['summary' => 'Y']));
+	}//end testUpdateAnswersExactly()
+
+	/**
+	 * Golden: every answer of a transition, the status fallback and the first-publish stamp.
+	 *
+	 * @return void
+	 */
+	public function testTransitionsAnswerExactly(): void {
+		$id = $this->seedArticle(title: 'Lifecycle');
+		$this->assertSame(['error' => 'Unknown transition'], $this->service->applyTransition(articleId: $id, transition: 'delete'));
+		$this->assertSame(['error' => 'Not found'], $this->service->applyTransition(articleId: 'nope', transition: 'publish'));
+		$this->assertSame(
+			['error' => 'That change is not allowed from the current status'],
+			$this->service->applyTransition(articleId: $id, transition: 'restore')
+		);
+
+		$this->store->rows['article'][$id]['status'] = 'something-else';
+		$review = $this->service->applyTransition(articleId: $id, transition: 'submitForReview')['article'];
+		$this->assertSame('review', $review['status']);
+		$this->assertArrayNotHasKey('publishedAt', array_filter($review, static fn (mixed $v): bool => $v !== null && $v !== ''));
+
+		$archived = $this->service->applyTransition(articleId: $id, transition: 'archive')['article'];
+		$this->assertSame('archived', $archived['status']);
+		$restored = $this->service->applyTransition(articleId: $id, transition: 'restore')['article'];
+		$this->assertSame('draft', $restored['status']);
+		$published = $this->service->applyTransition(articleId: $id, transition: 'publish')['article'];
+		$this->assertSame($published['updatedAt'], $published['publishedAt']);
+
+		$this->store->failSaves = true;
+		$this->assertSame(['error' => 'The article could not be saved'], $this->service->applyTransition(articleId: $id, transition: 'archive'));
+	}//end testTransitionsAnswerExactly()
+
+	/**
+	 * Golden: the exact usage list and counts, with a template naming the article by any identity
+	 * and blasts naming the template by any of its identities.
+	 *
+	 * @return void
+	 */
+	public function testUsagesAreExact(): void {
+		$id = $this->seedArticle(title: 'Veel gebruikt');
+		$slug = (string)$this->store->rows['article'][$id]['slug'];
+		$this->store->save(schemaSlug: 'campaignTemplate', payload: ['name' => 'Op id', 'channel' => 'email', 'articleIds' => [$id]], id: 't-1');
+		$this->store->save(schemaSlug: 'campaignTemplate', payload: ['name' => 'Op slug', 'channel' => 'sms', 'slug' => 'tpl-slug', 'articleIds' => [$slug]], id: 't-2');
+		$this->store->save(schemaSlug: 'campaignTemplate', payload: ['name' => 'Ander artikel', 'articleIds' => ['other']], id: 't-3');
+		$this->store->save(schemaSlug: 'blast', payload: ['name' => 'Via id', 'status' => 'sent', 'templateId' => 't-1'], id: 'b-1');
+		$this->store->save(schemaSlug: 'blast', payload: ['name' => 'Via slug', 'status' => 'draft', 'templateId' => 'tpl-slug'], id: 'b-2');
+		$this->store->save(schemaSlug: 'blast', payload: ['name' => 'Niet', 'templateId' => 't-3'], id: 'b-3');
+
+		$this->assertSame(
+			[
+				'data' => [
+					['kind' => 'template', 'id' => 't-1', 'name' => 'Op id', 'status' => 'email'],
+					['kind' => 'template', 'id' => 't-2', 'name' => 'Op slug', 'status' => 'sms'],
+					['kind' => 'blast', 'id' => 'b-1', 'name' => 'Via id', 'status' => 'sent'],
+					['kind' => 'blast', 'id' => 'b-2', 'name' => 'Via slug', 'status' => 'draft'],
+				],
+				'counts' => ['template' => 2, 'blast' => 2],
+			],
+			$this->service->listUsages(articleId: $id)
+		);
+		$this->assertSame(['data' => [], 'counts' => ['template' => 0, 'blast' => 0]], $this->service->listUsages(articleId: 'nope'));
+	}//end testUsagesAreExact()
+
+	/**
 	 * Store an article and return its id.
 	 *
 	 * @param string $title The title.
@@ -430,6 +521,9 @@ class ArticleServiceTest extends TestCase {
 			/** @var int */
 			private int $seq = 0;
 
+			/** @var bool Whether every save fails. */
+			public bool $failSaves = false;
+
 			/**
 			 * @param string $configKey Ignored.
 			 * @param string $default The slug.
@@ -473,6 +567,10 @@ class ArticleServiceTest extends TestCase {
 			 * @return array<string, mixed>|null The saved row.
 			 */
 			public function save(string $schemaSlug, array $payload, ?string $id = null): ?array {
+				if ($this->failSaves === true) {
+					return null;
+				}
+
 				$key = $id;
 				if ($key === null || $key === '') {
 					$this->seq++;

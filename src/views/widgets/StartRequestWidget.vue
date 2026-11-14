@@ -74,6 +74,50 @@ import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
+import createWidgetMixin from './createWidgetMixin.js'
+import { createWidgetObject, optionValue, readWidgetObjects, widgetObjectsUrl } from './widgetObjects.js'
+
+/**
+ * The request ticket to post: now, with the priority (normal when none),
+ * and the client, category and channel when given.
+ *
+ * @param {object} form The widget form.
+ * @param {?object} selectedClient The picked client.
+ * @return {object} The ticket.
+ */
+function requestBody(form, selectedClient) {
+	const body = {
+		ticketType: 'request',
+		title: form.title,
+		status: 'new',
+		priority:
+			typeof form.priority === 'object'
+				? form.priority.id
+				: form.priority || 'normal',
+
+		occurredAt: new Date().toISOString(),
+	}
+
+	if (selectedClient) {
+		body.client = selectedClient.id
+	}
+	return { ...body, ...requestChoices(form) }
+}
+
+/**
+ * @param {object} form The widget form.
+ * @return {object} The category and channel of the request, each only when picked.
+ */
+function requestChoices(form) {
+	const choices = {}
+	if (form.category) {
+		choices.category = optionValue(form.category)
+	}
+	if (form.channel) {
+		choices.channel = optionValue(form.channel)
+	}
+	return choices
+}
 
 export default {
 	name: 'StartRequestWidget',
@@ -85,25 +129,10 @@ export default {
 		ClientAutocomplete,
 	},
 
-	props: {
-		/**
-		 * Widget heading, supplied by the manifest.
-		 *
-		 * Declared but not rendered here: the widget chrome draws the heading.
-		 * Declaring it is what stops Vue's attribute fallthrough painting
-		 * `title="…"` onto the component's root element, which would hover a
-		 * browser tooltip over the whole widget.
-		 */
-		// eslint-disable-next-line vue/no-unused-properties
-		title: {
-			type: String,
-			required: true,
-		},
-	},
+	mixins: [createWidgetMixin],
 
 	data() {
 		return {
-			config: null,
 			form: {
 				title: '',
 				category: null,
@@ -111,17 +140,12 @@ export default {
 				channel: null,
 			},
 
-			selectedClient: null,
-			submitted: false,
-			submitting: false,
-			success: false,
-			successLink: '',
 			recentRequests: [],
 			categoryOptions: [
-				t('pipelinq', 'General'),
-				t('pipelinq', 'Technical'),
-				t('pipelinq', 'Billing'),
-				t('pipelinq', 'Support'),
+				{ id: 'general', label: t('pipelinq', 'General') },
+				{ id: 'technical', label: t('pipelinq', 'Technical') },
+				{ id: 'billing', label: t('pipelinq', 'Billing') },
+				{ id: 'support', label: t('pipelinq', 'Support') },
 			],
 
 			priorityOptions: [
@@ -141,7 +165,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-53
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-53
 	 */
 	async mounted() {
 		try {
@@ -157,15 +181,7 @@ export default {
 		generateUrl,
 		toText,
 		/**
-		 * @param {object} client The client the user picked.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-54
-		 */
-		onClientSelected(client) {
-			this.selectedClient = client
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-55
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-55
 		 */
 		async onSubmit() {
 			this.submitted = true
@@ -181,55 +197,10 @@ export default {
 
 			this.submitting = true
 			try {
-				const typeConfig = this.config.ticket
-				const body = {
-					ticketType: 'request',
-					title: this.form.title,
-					status: 'new',
-					priority:
-						typeof this.form.priority === 'object'
-							? this.form.priority.id
-							: this.form.priority || 'normal',
-
-					occurredAt: new Date().toISOString(),
-				}
-
-				if (this.selectedClient) {
-					body.client = this.selectedClient.id
-				}
-				if (this.form.category) {
-					body.category =
-						typeof this.form.category === 'object'
-							? this.form.category.id || this.form.category.label
-							: this.form.category
-				}
-				if (this.form.channel) {
-					body.channel =
-						typeof this.form.channel === 'object'
-							? this.form.channel.id
-							: this.form.channel
-				}
-
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema,
-				)
-
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-					body: JSON.stringify(body),
+				const id = await createWidgetObject(this.config.ticket, {
+					body: requestBody(this.form, this.selectedClient),
+					failure: 'Failed to create request',
 				})
-
-				if (!response.ok) throw new Error('Failed to create request')
-				const created = await response.json()
-				const id = created.id || created.uuid
 				this.successLink = generateUrl('/apps/pipelinq/tickets/' + id)
 				this.success = true
 			} catch (err) {
@@ -240,7 +211,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-56
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-56
 		 */
 		resetForm() {
 			this.form = {
@@ -257,39 +228,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-52
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-52
 		 */
 		async fetchRecentRequests() {
 			if (!this.config?.ticket) return
 			try {
 				// Narrow the shared `ticket` supertype to request-tickets so complaints
 				// and contactmomenten don't show up as "recent requests".
-				const typeConfig = this.config.ticket
 				const params = new URLSearchParams({
 					ticketType: 'request',
 					_limit: '3',
 					_order: 'desc',
 				})
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema
-						+ '?'
-						+ params.toString(),
-				)
-
-				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-				})
-
-				if (!response.ok) return
-				const data = await response.json()
-				this.recentRequests = (data.results || data || []).slice(0, 3)
+				const requests = await readWidgetObjects(widgetObjectsUrl(this.config.ticket, '?' + params.toString()))
+				if (requests === null) return
+				this.recentRequests = requests.slice(0, 3)
 			} catch (err) {
 				console.error('Failed to fetch recent requests:', err)
 			}
@@ -298,21 +251,11 @@ export default {
 }
 </script>
 
+<style scoped src="./createWidget.css"></style>
+
 <style scoped>
 .start-request-widget {
 	padding: 12px 16px;
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
-.widget-form {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
-.widget-success {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;

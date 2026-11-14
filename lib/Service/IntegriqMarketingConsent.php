@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
+
 /**
  * Marketing consent questions and writes, through integriq.
  *
@@ -107,12 +109,12 @@ class IntegriqMarketingConsent {
 	 */
 	public function decide(string $contactId, string $channel, string $category, bool $requiresConsent, ?string $listId = null): array {
 		return $this->integriq->decideOne(
-			channel: $channel,
-			category: $category,
-			requiresConsent: $requiresConsent,
-			address: $this->addresses->addressFor(contactId: $contactId, channel: $channel),
-			contactRef: $this->contactRefOf(contactId: $contactId),
-			listRef: (string)$listId,
+			ask: new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent),
+			recipient: [
+				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
+				'contactRef' => $this->contactRefOf(contactId: $contactId),
+				'listRef' => (string)$listId,
+			],
 		);
 	}//end decide()
 
@@ -131,6 +133,23 @@ class IntegriqMarketingConsent {
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 */
 	public function decideMembers(array $members, string $channel, string $category, bool $requiresConsent): array {
+		[$recipients, $byAddress] = $this->recipientsOf(members: $members, channel: $channel);
+
+		$ask = new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent);
+		$decisions = $this->integriq->decide(question: $ask->question(), recipients: $recipients);
+
+		return $this->decisionsByContact(decisions: $decisions, byAddress: $byAddress);
+	}//end decideMembers()
+
+	/**
+	 * The recipients to ask about, and the contact ids behind each address.
+	 *
+	 * @param array<int,array<string,mixed>> $members Segment members, each with `contactId` and maybe `email`.
+	 * @param string                         $channel `email` or `sms`.
+	 *
+	 * @return array{0: array<int, array{address: string, contactRef: mixed}>, 1: array<string, array<int, string>>}
+	 */
+	private function recipientsOf(array $members, string $channel): array {
 		$recipients = [];
 		$byAddress = [];
 		foreach ($members as $member) {
@@ -139,15 +158,7 @@ class IntegriqMarketingConsent {
 				continue;
 			}
 
-			$address = '';
-			if ($channel === 'email') {
-				$address = trim((string)($member['email'] ?? ''));
-			}
-
-			if ($address === '') {
-				$address = $this->addresses->addressFor(contactId: $contactId, channel: $channel);
-			}
-
+			$address = $this->memberAddress(member: $member, contactId: $contactId, channel: $channel);
 			if ($address === '') {
 				continue;
 			}
@@ -156,8 +167,41 @@ class IntegriqMarketingConsent {
 			$byAddress[$address][] = $contactId;
 		}//end foreach
 
+		return [$recipients, $byAddress];
+	}//end recipientsOf()
+
+	/**
+	 * The member's address on the channel: its own email first, then the address book.
+	 *
+	 * @param array<string,mixed> $member    The segment member.
+	 * @param string              $contactId Its contact id.
+	 * @param string              $channel   `email` or `sms`.
+	 *
+	 * @return string
+	 */
+	private function memberAddress(array $member, string $contactId, string $channel): string {
+		$address = '';
+		if ($channel === 'email') {
+			$address = trim((string)($member['email'] ?? ''));
+		}
+
+		if ($address === '') {
+			$address = $this->addresses->addressFor(contactId: $contactId, channel: $channel);
+		}
+
+		return $address;
+	}//end memberAddress()
+
+	/**
+	 * Integriq's decisions, spread over every contact id behind each address.
+	 *
+	 * @param iterable<string, mixed>           $decisions The decisions, by address.
+	 * @param array<string, array<int, string>> $byAddress The contact ids behind each address.
+	 *
+	 * @return array<string, mixed> By contact id.
+	 */
+	private function decisionsByContact(iterable $decisions, array $byAddress): array {
 		$out = [];
-		$decisions = $this->integriq->decide(channel: $channel, category: $category, requiresConsent: $requiresConsent, recipients: $recipients);
 		foreach ($decisions as $address => $decision) {
 			foreach (($byAddress[$address] ?? []) as $contactId) {
 				$out[$contactId] = $decision;
@@ -165,7 +209,7 @@ class IntegriqMarketingConsent {
 		}
 
 		return $out;
-	}//end decideMembers()
+	}//end decisionsByContact()
 
 	/**
 	 * Hand integriq a list consent.
@@ -260,54 +304,97 @@ class IntegriqMarketingConsent {
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
 	 */
 	public function changeRequestFor(array $row, string $id): ?array {
-		$withdrawnAt = trim((string)($row['withdrawnAt'] ?? ''));
-		$reason = (string)($row['withdrawnReason'] ?? '');
-		if ($withdrawnAt !== '' && in_array($reason, self::BOUNCE_REASONS, true) === true) {
+		if ($this->isBounce(row: $row) === true) {
 			return null;
 		}
 
+		$state = $this->recordState(row: $row);
+		$request = $this->consentRequest(row: $row, state: $state);
+		// The UUID plus the state, so a later withdrawal of the same record
+		// is a new wish. Fits integriq's 64-character legacy_uuid column.
+		$request['legacyRef'] = $id.':'.self::STATE_SUFFIX[$state];
+		if ($state === 'opted-in') {
+			$request['lawfulBasis'] = (string)($row['lawfulBasis'] ?? '');
+			return $request;
+		}
+
+		$request['source'] = (string)($row['withdrawnReason'] ?? '');
+		return $request;
+	}//end changeRequestFor()
+
+	/**
+	 * Whether a consentRecord was withdrawn by a bounce, which is not migrated.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 *
+	 * @return bool True for a bounce.
+	 */
+	private function isBounce(array $row): bool {
+		$withdrawnAt = trim((string)($row['withdrawnAt'] ?? ''));
+		$reason = (string)($row['withdrawnReason'] ?? '');
+		return $withdrawnAt !== '' && in_array($reason, self::BOUNCE_REASONS, true) === true;
+	}//end isBounce()
+
+	/**
+	 * `opted-out` for a withdrawn record, `opted-in` for a live one.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 *
+	 * @return string The state.
+	 */
+	private function recordState(array $row): string {
+		if (trim((string)($row['withdrawnAt'] ?? '')) !== '') {
+			return 'opted-out';
+		}
+
+		return 'opted-in';
+	}//end recordState()
+
+	/**
+	 * The change request's address, scope, evidence and source for a record in a state.
+	 *
+	 * @param array<string,mixed> $row   The consentRecord.
+	 * @param string              $state Its state.
+	 *
+	 * @return array<string,mixed> The request.
+	 */
+	private function consentRequest(array $row, string $state): array {
 		$contactId = (string)($row['contactId'] ?? '');
 		$channel = strtolower((string)($row['channel'] ?? ''));
 		$listId = trim((string)($row['listId'] ?? ''));
-		$state = 'opted-in';
-		if ($withdrawnAt !== '') {
-			$state = 'opted-out';
-		}
-
 		$scope = 'channel';
 		if ($listId !== '') {
 			$scope = 'list';
 		}
 
-		$evidence = ($row['evidence'] ?? []);
-		if (is_array($evidence) === false) {
-			$evidence = ['text' => (string)$evidence];
-		}
-
-		$request = [
+		return [
 			'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
 			'state' => $state,
 			'scope' => $scope,
 			'channel' => $channel,
 			'ref' => $listId,
 			'contactRef' => $this->contactRefOf(contactId: $contactId),
-			'evidence' => $evidence,
+			'evidence' => $this->evidenceOf(row: $row),
 			'source' => (string)($row['consentSource'] ?? ''),
 			'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
-			// The UUID plus the state, so a later withdrawal of the same record
-			// is a new wish. Fits integriq's 64-character legacy_uuid column.
-			'legacyRef' => $id.':'.self::STATE_SUFFIX[$state],
 		];
-		if ($state === 'opted-in') {
-			$request['lawfulBasis'] = (string)($row['lawfulBasis'] ?? '');
+	}//end consentRequest()
+
+	/**
+	 * A record's evidence as a map; a plain value becomes its `text`.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 *
+	 * @return array<string,mixed> The evidence.
+	 */
+	private function evidenceOf(array $row): array {
+		$evidence = ($row['evidence'] ?? []);
+		if (is_array($evidence) === false) {
+			return ['text' => (string)$evidence];
 		}
 
-		if ($state === 'opted-out') {
-			$request['source'] = $reason;
-		}
-
-		return $request;
-	}//end changeRequestFor()
+		return $evidence;
+	}//end evidenceOf()
 
 	/**
 	 * Hand integriq one prepared change request.

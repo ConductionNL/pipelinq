@@ -1,0 +1,223 @@
+{
+    "vocabularies no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "vocabularies unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "vocabularies privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "CampaignServiceInterface::vocabularies": []
+            }
+        ]
+    },
+    "create no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "create unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "create privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": null,
+            "value": null,
+            "allowed": null
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "CampaignServiceInterface::save": [
+                    {
+                        "uid": "mallory",
+                        "userId": "mallory",
+                        "user": "mallory",
+                        "owner": "mallory"
+                    },
+                    null,
+                    "crm-user"
+                ]
+            }
+        ]
+    },
+    "update no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "update unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "update privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": null,
+            "value": null,
+            "allowed": null
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "CampaignServiceInterface::save": [
+                    {
+                        "uid": "mallory",
+                        "userId": "mallory",
+                        "user": "mallory",
+                        "owner": "mallory"
+                    },
+                    "sample-id",
+                    "crm-user"
+                ]
+            }
+        ]
+    },
+    "report no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "report unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "report privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "error": "not_found"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "CampaignReportServiceInterface::forCampaign": [
+                    "sample-id",
+                    "sample-from",
+                    "sample-to"
+                ]
+            }
+        ]
+    },
+    "createLandingPage no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "createLandingPage unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "createLandingPage privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 502,
+        "data": [],
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "LandingPageProvisioningServiceInterface::createFor": [
+                    "sample-id",
+                    "sample-portal",
+                    "sample-route"
+                ]
+            }
+        ]
+    }
+}

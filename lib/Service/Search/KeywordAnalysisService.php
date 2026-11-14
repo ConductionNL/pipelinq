@@ -34,7 +34,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ namespace OCA\Pipelinq\Service\Search;
 /**
  * Position buckets, striking distance, cannibalisation and content gaps.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Four independent
  *  derivations over one row shape, each a short predicate with its own
@@ -146,7 +146,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, array{bucket: string, queries: int, clicks: int, impressions: int}> One entry per bucket, in order.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
 	 */
 	public function positionBuckets(array $rows): array {
 		$labels = array_merge(array_keys(self::BUCKETS), [self::TAIL_BUCKET]);
@@ -176,7 +176,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return string One of {@see BUCKETS} or {@see TAIL_BUCKET}.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
 	 */
 	public function bucketOf(float $position): string {
 		foreach (self::BUCKETS as $label => $bound) {
@@ -196,36 +196,15 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, array<string, mixed>> Findings, most impressions first.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
 	 */
 	public function strikingDistance(array $rows, int $minImpressions = self::DEFAULT_MIN_IMPRESSIONS): array {
 		$out = [];
 		foreach ($this->byQuery(rows: $rows) as $entry) {
-			if ($entry['impressions'] < $minImpressions || $entry['impressions'] <= 0) {
-				continue;
+			$finding = self::strikingFinding(entry: $entry, minImpressions: $minImpressions);
+			if ($finding !== null) {
+				$out[] = $finding;
 			}
-
-			$position = $entry['position'];
-			if ($position < self::STRIKING_FROM || $position > self::STRIKING_TO) {
-				continue;
-			}
-
-			$ctr = ($entry['clicks'] / $entry['impressions']);
-			$expected = ExpectedCtrCurve::rateAt(position: $position);
-			if ($ctr >= $expected) {
-				continue;
-			}
-
-			$out[] = [
-				'query' => $entry['query'],
-				'clicks' => $entry['clicks'],
-				'impressions' => $entry['impressions'],
-				'ctr' => round($ctr, 4),
-				'position' => round($position, 1),
-				'expectedCtr' => round($expected, 4),
-				'shortfall' => round(($expected - $ctr), 4),
-				'topPage' => $entry['topPage'],
-			];
 		}
 
 		usort(
@@ -237,6 +216,53 @@ class KeywordAnalysisService {
 
 		return $out;
 	}//end strikingDistance()
+
+	/**
+	 * The striking-distance finding for one query, or null when it does not qualify.
+	 *
+	 * @param array<string, mixed> $entry          One query's aggregate.
+	 * @param int                  $minImpressions Impressions a query needs to qualify.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function strikingFinding(array $entry, int $minImpressions): ?array {
+		if (self::inStrikingRange(entry: $entry, minImpressions: $minImpressions) === false) {
+			return null;
+		}
+
+		$ctr = ($entry['clicks'] / $entry['impressions']);
+		$expected = ExpectedCtrCurve::rateAt(position: $entry['position']);
+		if ($ctr >= $expected) {
+			return null;
+		}
+
+		return [
+			'query' => $entry['query'],
+			'clicks' => $entry['clicks'],
+			'impressions' => $entry['impressions'],
+			'ctr' => round($ctr, 4),
+			'position' => round($entry['position'], 1),
+			'expectedCtr' => round($expected, 4),
+			'shortfall' => round(($expected - $ctr), 4),
+			'topPage' => $entry['topPage'],
+		];
+	}//end strikingFinding()
+
+	/**
+	 * Whether a query has enough impressions and sits between the striking positions.
+	 *
+	 * @param array<string, mixed> $entry          One query's aggregate.
+	 * @param int                  $minImpressions Impressions a query needs to qualify.
+	 *
+	 * @return bool
+	 */
+	private static function inStrikingRange(array $entry, int $minImpressions): bool {
+		if ($entry['impressions'] < $minImpressions || $entry['impressions'] <= 0) {
+			return false;
+		}
+
+		return $entry['position'] >= self::STRIKING_FROM && $entry['position'] <= self::STRIKING_TO;
+	}//end inStrikingRange()
 
 	/**
 	 * Queries where two of our pages are competing and costing each other
@@ -256,7 +282,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, array<string, mixed>> Findings, most impressions first.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-cannibalisation-names-two-pages-competing-for-one-query
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-cannibalisation-names-two-pages-competing-for-one-query
 	 */
 	public function cannibalisation(
 		array $rows,
@@ -272,36 +298,45 @@ class KeywordAnalysisService {
 			}
 
 			$contenders = $this->contenders(pages: $pages, queryImpressions: $totals['impressions'], minPageShare: $minPageShare);
-			if (count($contenders) < 2) {
-				continue;
+			$finding = $this->materialLoss(contest: new QueryContest(totals: $totals, contenders: $contenders), materiality: $materiality);
+			if ($finding !== null) {
+				$out[] = (['query' => $query] + $finding);
 			}
-
-			$combined = ($totals['clicks'] / $totals['impressions']);
-			$best = $this->bestPage(contenders: $contenders);
-			if ($combined > ($best['ctr'] * (1.0 - $materiality))) {
-				continue;
-			}
-
-			$out[] = [
-				'query' => $query,
-				'clicks' => $totals['clicks'],
-				'impressions' => $totals['impressions'],
-				'combinedCtr' => round($combined, 4),
-				'bestPage' => $best['page'],
-				'bestPageCtr' => round($best['ctr'], 4),
-				'pages' => array_values($contenders),
-			];
 		}
 
-		usort(
-			$out,
-			static function (array $a, array $b): int {
-				return [$b['impressions'], $a['query']] <=> [$a['impressions'], $b['query']];
-			}
-		);
-
-		return $out;
+		return self::mostImpressionsFirst(findings: $out);
 	}//end cannibalisation()
+
+	/**
+	 * The cannibalisation finding (without its query) when at least two pages
+	 * compete and the combined rate falls materially below the best page's.
+	 *
+	 * @param QueryContest $contest     The query's totals and contending pages.
+	 * @param float        $materiality How far below the better rate the combined rate must fall.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function materialLoss(QueryContest $contest, float $materiality): ?array {
+		if (count($contest->contenders) < 2) {
+			return null;
+		}
+
+		$totals = $contest->totals;
+		$combined = ($totals['clicks'] / $totals['impressions']);
+		$best = $this->bestPage(contenders: $contest->contenders);
+		if ($combined > ($best['ctr'] * (1.0 - $materiality))) {
+			return null;
+		}
+
+		return [
+			'clicks' => $totals['clicks'],
+			'impressions' => $totals['impressions'],
+			'combinedCtr' => round($combined, 4),
+			'bestPage' => $best['page'],
+			'bestPageCtr' => round($best['ctr'], 4),
+			'pages' => array_values($contest->contenders),
+		];
+	}//end materialLoss()
 
 	/**
 	 * Queries with demand that no page of ours answers.
@@ -317,47 +352,85 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, array<string, mixed>> Gaps, most impressions first.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
 	 */
 	public function contentGaps(array $rows, array $pages, int $minImpressions = self::DEFAULT_MIN_IMPRESSIONS): array {
 		if ($pages === []) {
 			return [];
 		}
 
-		$haystacks = [];
-		foreach ($pages as $page) {
-			$haystacks[(string)($page['url'] ?? '')] = $this->normalise(value: (string)($page['text'] ?? ''));
-		}
-
+		$haystacks = $this->haystacksOf(pages: $pages);
 		$out = [];
 		foreach ($this->byQuery(rows: $rows) as $entry) {
 			if ($entry['impressions'] < $minImpressions) {
 				continue;
 			}
 
-			$tokens = $this->significantTokens(value: $entry['query']);
-			if ($tokens === [] || $this->anyPageCarries(tokens: $tokens, haystacks: $haystacks) === true) {
-				continue;
+			$gap = $this->gapFinding(entry: $entry, haystacks: $haystacks);
+			if ($gap !== null) {
+				$out[] = $gap;
 			}
-
-			$out[] = [
-				'query' => $entry['query'],
-				'clicks' => $entry['clicks'],
-				'impressions' => $entry['impressions'],
-				'position' => round($entry['position'], 1),
-				'terms' => $tokens,
-			];
 		}
 
+		return self::mostImpressionsFirst(findings: $out);
+	}//end contentGaps()
+
+	/**
+	 * Normalised title-and-headings text per crawled page URL.
+	 *
+	 * @param array<int, array<string, mixed>> $pages Crawled pages, each with `url` and `text`.
+	 *
+	 * @return array<string, string>
+	 */
+	private function haystacksOf(array $pages): array {
+		$haystacks = [];
+		foreach ($pages as $page) {
+			$haystacks[(string)($page['url'] ?? '')] = $this->normalise(value: (string)($page['text'] ?? ''));
+		}
+
+		return $haystacks;
+	}//end haystacksOf()
+
+	/**
+	 * The gap for one query, or null when it has no significant tokens or a page carries them all.
+	 *
+	 * @param array<string, mixed>  $entry     One query's aggregate.
+	 * @param array<string, string> $haystacks Normalised page text by URL.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function gapFinding(array $entry, array $haystacks): ?array {
+		$tokens = $this->significantTokens(value: $entry['query']);
+		if ($tokens === [] || $this->anyPageCarries(tokens: $tokens, haystacks: $haystacks) === true) {
+			return null;
+		}
+
+		return [
+			'query' => $entry['query'],
+			'clicks' => $entry['clicks'],
+			'impressions' => $entry['impressions'],
+			'position' => round($entry['position'], 1),
+			'terms' => $tokens,
+		];
+	}//end gapFinding()
+
+	/**
+	 * Findings sorted most impressions first, then by query.
+	 *
+	 * @param array<int, array<string, mixed>> $findings The findings.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function mostImpressionsFirst(array $findings): array {
 		usort(
-			$out,
+			$findings,
 			static function (array $a, array $b): int {
 				return [$b['impressions'], $a['query']] <=> [$a['impressions'], $b['query']];
 			}
 		);
 
-		return $out;
-	}//end contentGaps()
+		return $findings;
+	}//end mostImpressionsFirst()
 
 	/**
 	 * The significant tokens of a phrase: normalised, short ones and stop
@@ -367,7 +440,7 @@ class KeywordAnalysisService {
 	 *
 	 * @return array<int, string> The tokens, deduplicated, in order.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-content-gap-is-a-query-no-page-of-ours-answers
 	 */
 	public function significantTokens(string $value): array {
 		$parts = preg_split('/[^a-z0-9]+/', $this->normalise(value: $value));
@@ -447,42 +520,61 @@ class KeywordAnalysisService {
 		$acc = [];
 		foreach ($rows as $row) {
 			$query = trim((string)($row['query'] ?? ''));
-			if ($query === '') {
-				continue;
+			if ($query !== '') {
+				$acc[$query] = self::addQueryRow(
+					entry: ($acc[$query] ?? ['query' => $query, 'clicks' => 0, 'impressions' => 0, 'weighted' => 0.0, 'pages' => []]),
+					row: $row
+				);
 			}
-
-			$impressions = max(0, (int)($row['impressions'] ?? 0));
-			$entry = ($acc[$query] ?? ['query' => $query, 'clicks' => 0, 'impressions' => 0, 'weighted' => 0.0, 'pages' => []]);
-			$entry['clicks'] += max(0, (int)($row['clicks'] ?? 0));
-			$entry['impressions'] += $impressions;
-			$entry['weighted'] += ((float)($row['position'] ?? 0.0) * $impressions);
-			$page = (string)($row['page'] ?? '');
-			if ($page !== '') {
-				$entry['pages'][$page] = (($entry['pages'][$page] ?? 0) + $impressions);
-			}
-
-			$acc[$query] = $entry;
 		}
 
-		$out = [];
-		foreach ($acc as $entry) {
-			$position = 0.0;
-			if ($entry['impressions'] > 0) {
-				$position = ($entry['weighted'] / $entry['impressions']);
-			}
-
-			arsort($entry['pages']);
-			$out[] = [
-				'query' => $entry['query'],
-				'clicks' => (int)$entry['clicks'],
-				'impressions' => (int)$entry['impressions'],
-				'position' => $position,
-				'topPage' => (string)(array_key_first($entry['pages']) ?? ''),
-			];
-		}
-
-		return $out;
+		return array_map(static fn (array $entry): array => self::queryAggregate(entry: $entry), array_values($acc));
 	}//end byQuery()
+
+	/**
+	 * Add one row to a query's running totals and its per-page impressions.
+	 *
+	 * @param array<string, mixed> $entry The running totals.
+	 * @param array<string, mixed> $row   The row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function addQueryRow(array $entry, array $row): array {
+		$impressions = max(0, (int)($row['impressions'] ?? 0));
+		$entry['clicks'] += max(0, (int)($row['clicks'] ?? 0));
+		$entry['impressions'] += $impressions;
+		$entry['weighted'] += ((float)($row['position'] ?? 0.0) * $impressions);
+		$page = (string)($row['page'] ?? '');
+		if ($page !== '') {
+			$entry['pages'][$page] = (($entry['pages'][$page] ?? 0) + $impressions);
+		}
+
+		return $entry;
+	}//end addQueryRow()
+
+	/**
+	 * A query's aggregate: weighted mean position and the page with the most impressions.
+	 *
+	 * @param array<string, mixed> $entry The running totals.
+	 *
+	 * @return array{query: string, clicks: int, impressions: int, position: float, topPage: string}
+	 */
+	private static function queryAggregate(array $entry): array {
+		$position = 0.0;
+		if ($entry['impressions'] > 0) {
+			$position = ($entry['weighted'] / $entry['impressions']);
+		}
+
+		arsort($entry['pages']);
+
+		return [
+			'query' => $entry['query'],
+			'clicks' => (int)$entry['clicks'],
+			'impressions' => (int)$entry['impressions'],
+			'position' => $position,
+			'topPage' => (string)(array_key_first($entry['pages']) ?? ''),
+		];
+	}//end queryAggregate()
 
 	/**
 	 * Aggregate rows per query and page.

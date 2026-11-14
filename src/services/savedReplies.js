@@ -23,7 +23,7 @@ export const PLACEHOLDERS = [
  * @param {string} channel `sms`, `whatsapp`, `email` or `portal`.
  * @param {string} [language] The party's correspondence language.
  * @return {Array<object>} The replies that fit, sorted.
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
  */
 export function repliesForChannel(replies, channel, language = '') {
 	const wanted = String(language || '').toLowerCase()
@@ -54,7 +54,7 @@ export function repliesForChannel(replies, channel, language = '') {
  * @param {string} body The reply text.
  * @param {object} values Values keyed by placeholder, e.g. `{'contact.name': 'Jan'}`.
  * @return {string} The text with every known placeholder filled.
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
  */
 export function fillPlaceholders(body, values = {}) {
 	return String(body || '').replace(
@@ -69,28 +69,32 @@ export function fillPlaceholders(body, values = {}) {
 /**
  * The Mail compose URL, or a plain `mailto:` link when Mail is not enabled.
  *
- * @param {string} address The recipient.
- * @param {string} subject The subject.
- * @param {string} body The text.
- * @param {boolean} mailEnabled Whether the Nextcloud Mail app is enabled.
- * @param {(path: string) => string} generateUrl `@nextcloud/router`'s generateUrl.
+ * @param {{address: string, subject: string, body: string}} email The recipient, the subject and the text.
+ * @param {{enabled: boolean, generateUrl: (path: string) => string}} mail Whether the Nextcloud Mail app is enabled, and `@nextcloud/router`'s generateUrl.
  * @return {string} The URL to open.
- * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+ * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
  */
-export function composeUrl(address, subject, body, mailEnabled, generateUrl) {
-	const query = []
-	if (subject) {
-		query.push('subject=' + encodeURIComponent(subject))
-	}
-	if (body) {
-		query.push('body=' + encodeURIComponent(body))
-	}
-	const mailto =
-		'mailto:'
-		+ encodeURIComponent(address || '').replace(/%40/g, '@')
-		+ (query.length ? '?' + query.join('&') : '')
-	if (!mailEnabled) {
+export function composeUrl(email, mail) {
+	const mailto = mailtoUrl(email)
+	if (!mail.enabled) {
 		return mailto
 	}
-	return generateUrl('/apps/mail/compose') + '?uri=' + encodeURIComponent(mailto)
+	return mail.generateUrl('/apps/mail/compose') + '?uri=' + encodeURIComponent(mailto)
+}
+
+/**
+ * @param {{address: string, subject: string, body: string}} email The recipient, the subject and the text.
+ * @return {string} The `mailto:` link, with the subject and the text when set.
+ */
+function mailtoUrl(email) {
+	const query = []
+	if (email.subject) {
+		query.push('subject=' + encodeURIComponent(email.subject))
+	}
+	if (email.body) {
+		query.push('body=' + encodeURIComponent(email.body))
+	}
+	return 'mailto:'
+		+ encodeURIComponent(email.address || '').replace(/%40/g, '@')
+		+ (query.length ? '?' + query.join('&') : '')
 }

@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006
  */
 
 declare(strict_types=1);
@@ -25,11 +25,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Manager-override lifecycle service.
@@ -41,6 +42,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   scenario to admin-settings, which never grew one
  */
 class ForecastOverrideService {
+	use PayloadToArray;
+
 	/**
 	 * The categories that may be overridden.
 	 *
@@ -78,7 +81,7 @@ class ForecastOverrideService {
 	 *
 	 * @return string|null An error message, or null when valid.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-01
 	 */
 	public function validatePayload(array $payload): ?string {
 		if (trim((string)($payload['period_id'] ?? '')) === '') {
@@ -120,7 +123,7 @@ class ForecastOverrideService {
 	 *
 	 * @return array<string, mixed> The created override data.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-01
 	 */
 	public function createOverride(array $payload, string $managerId): array {
 		$periodId = (string)$payload['period_id'];
@@ -177,7 +180,7 @@ class ForecastOverrideService {
 			return null;
 		}
 
-		return $this->toArray(object: $object);
+		return $this->toArray(value: $object);
 	}//end getOverride()
 
 	/**
@@ -224,7 +227,7 @@ class ForecastOverrideService {
 			uuid: null
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persist()
 
 	/**
@@ -241,8 +244,8 @@ class ForecastOverrideService {
 	 *                                     when unconfigured.
 	 */
 	private function config(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'forecastOverride_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'forecastOverride_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/forecastOverride_schema not configured; OpenRegister calls are refused, not run unscoped'
@@ -251,35 +254,6 @@ class ForecastOverrideService {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed> The object data.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

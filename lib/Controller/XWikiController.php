@@ -20,15 +20,15 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/xwiki-integration/tasks.md#1.2
+ * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\XWikiService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\XWikiServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -42,22 +42,22 @@ use Throwable;
  *
  * @psalm-suppress UnusedClass
  *
- * @spec openspec/changes/xwiki-integration/tasks.md#1.2
+ * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.2
  */
 class XWikiController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request HTTP request.
-	 * @param XWikiService $xwiki xWiki proxy service.
+	 * @param XWikiServiceInterface $xwiki xWiki proxy service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private XWikiService $xwiki,
+		private XWikiServiceInterface $xwiki,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -67,7 +67,7 @@ class XWikiController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec                 openspec/changes/xwiki-integration/tasks.md#1.2
+	 * @spec                 openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.2
 	 * @no-admin-idor-exempt read-only kennisbank proxy for all authenticated users; no caller-supplied pipelinq object ids —
 	 *                       visibility is scoped xwiki-side by the integration service account
 	 */
@@ -90,7 +90,7 @@ class XWikiController extends Controller {
 				$tags = array_values(array_filter(array_map('trim', explode(',', $tagsR)), static fn ($t) => $t !== ''));
 			}
 
-			$result = $this->xwiki->search($query, $space, $tags, $limit, $offset);
+			$result = $this->xwiki->search(query: $query, filter: ['space' => $space, 'tags' => $tags, 'limit' => $limit, 'offset' => $offset]);
 			return new JSONResponse($result);
 		} catch (Throwable $e) {
 			$this->logger->warning('xWiki search proxy failed', ['exception' => $e]);
@@ -105,7 +105,7 @@ class XWikiController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec                 openspec/changes/xwiki-integration/tasks.md#1.2
+	 * @spec                 openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.2
 	 * @no-admin-idor-exempt read-only kennisbank proxy for all authenticated users; no caller-supplied pipelinq object ids —
 	 *                       visibility is scoped xwiki-side by the integration service account
 	 */
@@ -133,7 +133,7 @@ class XWikiController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec                 openspec/changes/xwiki-integration/tasks.md#1.2
+	 * @spec                 openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.2
 	 * @no-admin-idor-exempt read-only kennisbank proxy for all authenticated users; page refs are xwiki documents (not pipelinq
 	 *                       objects) — visibility is scoped xwiki-side by the integration service account, content sanitised before return
 	 */
@@ -170,7 +170,7 @@ class XWikiController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec                 openspec/changes/xwiki-integration/tasks.md#1.2
+	 * @spec                 openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.2
 	 * @no-admin-idor-exempt availability probe consumed by every user's dashboard widget; returns integration metadata only, no object access
 	 */
 	#[NoAdminRequired]

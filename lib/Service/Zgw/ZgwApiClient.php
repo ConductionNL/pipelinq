@@ -37,15 +37,16 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ZgwApiClientInterface;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -54,14 +55,25 @@ use Throwable;
 /**
  * Base transport for all ZGW component calls.
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class ZgwApiClient {
+class ZgwApiClient implements ZgwApiClientInterface {
 	/**
 	 * Default request timeout in seconds. Tunable via the
 	 * `pipelinq.zgw.http_timeout` app config key.
 	 */
 	private const DEFAULT_TIMEOUT = 30;
+
+	/**
+	 * Headers every component call carries after the Authorization header.
+	 */
+	private const DEFAULT_HEADERS = [
+		'Accept' => 'application/json',
+		'Accept-Crs' => 'EPSG:4326',
+		'Content-Crs' => 'EPSG:4326',
+	];
 
 	/**
 	 * Constructor.
@@ -96,7 +108,7 @@ class ZgwApiClient {
 	 * @return string Compact JWT.
 	 *
 	 * @throws ZgwException When the vault reference cannot be resolved.
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
 	 */
 	public function mintJwt(array $client, int $expiresIn = 3600): string {
 		$secret = $this->resolveClientSecret(reference: (string)($client['secretVaultRef'] ?? ''));
@@ -150,7 +162,7 @@ class ZgwApiClient {
 	 * @throws ZgwResourceNotFoundException
 	 * @throws ZgwException
 	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
 	 */
 	public function callComponent(
 		string $componentUrl,
@@ -161,29 +173,43 @@ class ZgwApiClient {
 		array $extraHeaders = [],
 		array $query = [],
 	): array {
-		$expiresIn = (int)($client['tokenLifespanSeconds'] ?? 3600);
-		$jwt = $this->mintJwt(client: $client, expiresIn: $expiresIn);
+		$jwt = $this->mintJwt(client: $client, expiresIn: (int)($client['tokenLifespanSeconds'] ?? 3600));
+		$url = self::withQuery(url: rtrim($componentUrl, '/') . '/' . ltrim($path, '/'), query: $query);
+		$options = $this->requestOptions(headers: array_merge(['Authorization' => 'Bearer ' . $jwt], self::DEFAULT_HEADERS, $extraHeaders), body: $body);
 
-		$url = rtrim($componentUrl, '/') . '/' . ltrim($path, '/');
-		if ($query !== []) {
-			$separator = '?';
-			if (str_contains($url, '?') === true) {
-				$separator = '&';
-			}
+		return $this->send(method: $method, request: ['url' => $url, 'options' => $options]);
+	}//end callComponent()
 
-			$url .= $separator . http_build_query($query);
+	/**
+	 * Append query parameters to a URL that may already carry some.
+	 *
+	 * @param string                    $url   The URL.
+	 * @param array<string, string|int> $query The query parameters.
+	 *
+	 * @return string The URL with the query.
+	 */
+	private static function withQuery(string $url, array $query): string {
+		if ($query === []) {
+			return $url;
 		}
 
-		$headers = array_merge(
-			[
-				'Authorization' => 'Bearer ' . $jwt,
-				'Accept' => 'application/json',
-				'Accept-Crs' => 'EPSG:4326',
-				'Content-Crs' => 'EPSG:4326',
-			],
-			$extraHeaders
-		);
+		$separator = '?';
+		if (str_contains($url, '?') === true) {
+			$separator = '&';
+		}
 
+		return $url . $separator . http_build_query($query);
+	}//end withQuery()
+
+	/**
+	 * The HTTP client options: headers, timeout and an optional JSON body.
+	 *
+	 * @param array<string, string>     $headers The headers.
+	 * @param array<string, mixed>|null $body    The body, or null for none.
+	 *
+	 * @return array<string, mixed> The options.
+	 */
+	private function requestOptions(array $headers, ?array $body): array {
 		$options = [
 			'headers' => $headers,
 			'timeout' => $this->getTimeout(),
@@ -194,6 +220,24 @@ class ZgwApiClient {
 			$options['body'] = json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 		}
 
+		return $options;
+	}//end requestOptions()
+
+	/**
+	 * Send the request and decode the answer, translating every transport error into a domain error.
+	 *
+	 * @param string                                           $method  HTTP method.
+	 * @param array{url: string, options: array<string, mixed>} $request The URL and client options.
+	 *
+	 * @return array{status:int, body:array<string,mixed>, headers:array<string,string>}
+	 *
+	 * @throws ClockSkewException
+	 * @throws ZgwResourceNotFoundException
+	 * @throws ZgwException
+	 */
+	private function send(string $method, array $request): array {
+		$url = $request['url'];
+		$options = $request['options'];
 		$nextcloudClient = $this->clientService->newClient();
 
 		try {
@@ -211,7 +255,6 @@ class ZgwApiClient {
 			throw new ZgwException('ZGW: transport error', 0, $e);
 		}
 
-		$status = (int)$response->getStatusCode();
 		$rawBody = (string)$response->getBody();
 		$decoded = [];
 		if ($rawBody !== '') {
@@ -222,10 +265,8 @@ class ZgwApiClient {
 			$decoded = ['raw' => $rawBody];
 		}
 
-		$headerMap = self::normaliseHeaders(headers: $response->getHeaders());
-
-		return ['status' => $status, 'body' => $decoded, 'headers' => $headerMap];
-	}//end callComponent()
+		return ['status' => (int)$response->getStatusCode(), 'body' => $decoded, 'headers' => self::normaliseHeaders(headers: $response->getHeaders())];
+	}//end send()
 
 	/**
 	 * Resolve a vault reference (`vault://...`) to a raw secret string.
@@ -255,7 +296,7 @@ class ZgwApiClient {
 		$path = substr($reference, strlen('vault://'));
 		$key = 'zgw.vault.' . $path;
 
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end resolveClientSecret()
 
 	/**
@@ -281,14 +322,7 @@ class ZgwApiClient {
 			['method' => $method, 'url' => $url, 'status' => $status, 'msg' => $message]
 		);
 
-		if ($status === 401 || $status === 403) {
-			if (self::looksLikeClockSkew(text: $body) === true || self::looksLikeClockSkew(text: $message) === true) {
-				throw new ClockSkewException(
-					sprintf('ZGW: JWT clock-skew rejection from %s (status %d)', $url, $status),
-					observedTime: time()
-				);
-			}
-		}
+		$this->throwIfClockSkew(status: $status, body: $body, message: $message, url: $url);
 
 		if ($status === 404) {
 			throw new ZgwResourceNotFoundException($url);
@@ -310,6 +344,29 @@ class ZgwApiClient {
 			$error
 		);
 	}//end translateTransportError()
+
+	/**
+	 * Throw a ClockSkewException for a 401/403 whose body or message reads as a JWT clock-skew rejection.
+	 *
+	 * @param int $status The HTTP status.
+	 * @param string $body The response body.
+	 * @param string $message The transport error message.
+	 * @param string $url The request URL.
+	 *
+	 * @return void
+	 *
+	 * @throws ClockSkewException On a clock-skew rejection.
+	 */
+	private function throwIfClockSkew(int $status, string $body, string $message, string $url): void {
+		if ($status === 401 || $status === 403) {
+			if (self::looksLikeClockSkew(text: $body) === true || self::looksLikeClockSkew(text: $message) === true) {
+				throw new ClockSkewException(
+					sprintf('ZGW: JWT clock-skew rejection from %s (status %d)', $url, $status),
+					observedTime: time()
+				);
+			}
+		}
+	}//end throwIfClockSkew()
 
 	/**
 	 * Extract the HTTP status and response body from a transport exception.
@@ -487,7 +544,7 @@ class ZgwApiClient {
 	 * @return int
 	 */
 	private function getTimeout(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.http_timeout', self::DEFAULT_TIMEOUT);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'zgw.http_timeout', self::DEFAULT_TIMEOUT);
 		if ($value > 0) {
 			return $value;
 		}

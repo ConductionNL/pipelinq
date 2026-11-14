@@ -269,4 +269,66 @@ class SocialAdvocacyServiceTest extends TestCase {
 
 		$this->assertArrayHasKey('error', $result);
 	}
+	/**
+	 * Every way a share request and its bundle end: the publication is saved
+	 * waiting, with the prepared words and media frozen and the failure
+	 * cleared; the owner is notified with the handle, network, title, body
+	 * and the publication's id; an account without an owner is saved but
+	 * nobody is notified; the bundle carries exactly the frozen share;
+	 * somebody else gets the refusal.
+	 *
+	 * @return void
+	 */
+	public function testEveryWayAShareRequestEnds(): void {
+		$sent = [];
+		$notifications = $this->createMock(NotificationService::class);
+		$notifications->method('sendNotification')->willReturnCallback(
+			static function (...$args) use (&$sent): void {
+				$sent[] = $args;
+			}
+		);
+		$service = $this->service(notifications: $notifications);
+		$publication = $this->pending();
+		$publication['failureCode'] = 'old';
+		$publication['failureReason'] = 'old reason';
+
+		$saved = $service->requestShare(
+			publication: $publication,
+			account: $this->store->find(SocialAccountService::SCHEMA, 'acc-i'),
+			post: ['title' => 'Aankondiging'],
+			request: new SocialPublishRequest(network: 'instagram', body: 'Tekst', link: 'https://x.nl', media: ['m-1'], handle: '@rubenvdlinde'),
+		);
+		$publicationId = $this->publications->idOf(publication: $saved);
+		$this->assertSame(
+			[SocialPublicationStore::AWAITING_SHARE, "Tekst\n\nhttps://x.nl", ['m-1'], '', ''],
+			[$saved['status'], $saved['preparedBody'], $saved['preparedMedia'], $saved['failureCode'], $saved['failureReason']]
+		);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $saved['sharePromptedAt']);
+		$this->assertSame(
+			[['ruben', SocialAdvocacyService::SUBJECT_SHARE_REQUESTED, ['handle' => '@rubenvdlinde', 'network' => 'instagram', 'title' => 'Aankondiging', 'body' => "Tekst\n\nhttps://x.nl"], 'socialPublication', $publicationId]],
+			array_map(static fn (array $args): array => array_slice($args, 0, 5), $sent)
+		);
+
+		$this->assertSame(
+			['share' => [
+				'publicationId' => $publicationId,
+				'network' => 'instagram',
+				'handle' => '@rubenvdlinde',
+				'status' => SocialPublicationStore::AWAITING_SHARE,
+				'body' => "Tekst\n\nhttps://x.nl",
+				'media' => ['m-1'],
+				'composerUrl' => '',
+			]],
+			$service->shareBundle(publicationId: $publicationId, uid: 'ruben')
+		);
+		$this->groups->method('isAdmin')->willReturn(false);
+		$this->assertArrayHasKey('error', $service->shareBundle(publicationId: $publicationId, uid: 'piet'));
+
+		$sent = [];
+		$orphan = $this->store->find(SocialAccountService::SCHEMA, 'acc-i');
+		$orphan['ownerUserId'] = ' ';
+		$saved = $service->requestShare(publication: $this->pending(), account: $orphan, post: [], request: new SocialPublishRequest(network: 'instagram', body: 'B'));
+		$this->assertSame(SocialPublicationStore::AWAITING_SHARE, $saved['status']);
+		$this->assertSame([], $sent);
+	}//end testEveryWayAShareRequestEnds()
 }//end class

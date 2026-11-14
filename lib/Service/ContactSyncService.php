@@ -24,18 +24,19 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for searching and importing Nextcloud contacts into Pipelinq.
  *
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
-class ContactSyncService {
+class ContactSyncService implements ContactSyncServiceInterface {
 	/**
 	 * Constructor.
 	 *
@@ -45,6 +46,7 @@ class ContactSyncService {
 	 * @param ContactLinkedUidsService $linkedUidsService The linked UIDs service.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param VcardRevision $revisions Reads a card's REV.
 	 */
 	public function __construct(
 		private IContactsManager $contactsManager,
@@ -53,6 +55,7 @@ class ContactSyncService {
 		private ContactLinkedUidsService $linkedUidsService,
 		private IAppConfig $appConfig,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly VcardRevision $revisions,
 	) {
 	}//end __construct()
 
@@ -75,18 +78,9 @@ class ContactSyncService {
 	 * @throws RuntimeException When name is missing or the contact cannot be provisioned.
 	 *
 	 * @spec openspec/specs/unify-client-contact/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation + contact-provisioning guard clauses; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation + contact-provisioning guard clauses; extraction adds no clarity.
 	 */
 	public function createWithContact(string $objectType, array $form): array {
-		if (in_array($objectType, ['client', 'contact'], true) === false) {
-			throw new RuntimeException('Invalid objectType -- must be client or contact');
-		}
-
-		if (trim((string)($form['name'] ?? '')) === '') {
-			throw new RuntimeException('Name is required');
-		}
+		$this->assertCreatable(objectType: $objectType, form: $form);
 
 		$provision = $this->contactVcardService->provisionContactFromForm(
 			form: $form,
@@ -97,6 +91,45 @@ class ContactSyncService {
 			throw new RuntimeException('Could not provision the Nextcloud contact -- is the Contacts app enabled?');
 		}
 
+		$payload = $this->identityPayload(form: $form, provision: $provision);
+		$created = $this->saveCreated(objectType: $objectType, payload: $payload);
+
+		return $this->createdData(created: $created);
+	}//end createWithContact()
+
+	/**
+	 * Reject an unknown object type or a create form without a name.
+	 *
+	 * @param string $objectType The object type ('client' or 'contact').
+	 * @param array $form The raw create-form fields.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the type is invalid or the name is missing.
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function assertCreatable(string $objectType, array $form): void {
+		if (in_array($objectType, ['client', 'contact'], true) === false) {
+			throw new RuntimeException('Invalid objectType -- must be client or contact');
+		}
+
+		if (trim((string)($form['name'] ?? '')) === '') {
+			throw new RuntimeException('Name is required');
+		}
+	}//end assertCreatable()
+
+	/**
+	 * The object payload: the caller's fields plus the resolved contact identity.
+	 *
+	 * @param array $form The raw create-form fields.
+	 * @param array $provision The provisioned contact (contactsUid, name, email, phone).
+	 *
+	 * @return array
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function identityPayload(array $form, array $provision): array {
 		// Build the object payload: caller fields + the resolved identity. The
 		// denormalised name/email/phone mirror the authoritative contact.
 		$payload = $form;
@@ -111,21 +144,48 @@ class ContactSyncService {
 			$payload['phone'] = $provision['phone'];
 		}
 
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
+		return $payload;
+	}//end identityPayload()
+
+	/**
+	 * Save the new object in the schema configured for its type.
+	 *
+	 * @param string $objectType The object type ('client' or 'contact').
+	 * @param array $payload The object payload.
+	 *
+	 * @return mixed The saved object.
+	 *
+	 * @throws RuntimeException When the register or schema is not configured.
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function saveCreated(string $objectType, array $payload) {
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
 
 		if ($registerId === '' || $schemaId === '') {
 			throw new RuntimeException('Pipelinq register or schema is not configured');
 		}
 
-		$created = $this->getObjectService()->saveObject(
+		return $this->getObjectService()->saveObject(
 			$payload,
 			[],
 			$registerId,
 			$schemaId,
 			null
 		);
+	}//end saveCreated()
 
+	/**
+	 * The created object's data.
+	 *
+	 * @param mixed $created The saved object.
+	 *
+	 * @return array The serialised object, the array itself, or an empty array.
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function createdData($created): array {
 		if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
 			return $created->jsonSerialize();
 		}
@@ -135,7 +195,7 @@ class ContactSyncService {
 		}
 
 		return [];
-	}//end createWithContact()
+	}//end createdData()
 
 	/**
 	 * Get the OpenRegister ObjectService via the container.
@@ -297,6 +357,40 @@ class ContactSyncService {
 
 		return null;
 	}//end findContactByUid()
+
+	/**
+	 * Whether a record's address book card exists, which address book holds
+	 * it and when the card last changed (its vCard REV).
+	 *
+	 * @param string $uid The record's `contactsUid`.
+	 *
+	 * @return array{linked: bool, addressBook: string, updatedAt: string|null} The card's status.
+	 *
+	 * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+	 */
+	public function cardStatus(string $uid): array {
+		$status = ['linked' => false, 'addressBook' => '', 'updatedAt' => null];
+		if ($uid === '' || $this->contactsManager->isEnabled() === false) {
+			return $status;
+		}
+
+		$card = $this->findContactByUid(uid: $uid);
+		if ($card === null) {
+			return $status;
+		}
+
+		$status['linked'] = true;
+		$key = (string)($card['addressbook-key'] ?? '');
+		foreach ($this->contactsManager->getUserAddressBooks() as $book) {
+			if ((string)$book->getKey() === $key) {
+				$status['addressBook'] = $book->getDisplayName();
+				break;
+			}
+		}
+
+		$status['updatedAt'] = $this->revisions->toIso(rev: $this->extractFirstValue(value: ($card['REV'] ?? '')));
+		return $status;
+	}//end cardStatus()
 
 	/**
 	 * Extract first value from a vCard property that may be an array or string.

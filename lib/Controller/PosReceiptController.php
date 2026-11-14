@@ -25,15 +25,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ReceiptDeliveryService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -53,26 +49,26 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/specs/pos-receipt-engine/spec.md
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.1
  */
 class PosReceiptController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ReceiptDeliveryService $service The receipt delivery service.
+	 * @param ReceiptDeliveryServiceInterface $service The receipt delivery service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ReceiptDeliveryService $service,
+		private ReceiptDeliveryServiceInterface $service,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -103,6 +99,30 @@ class PosReceiptController extends Controller {
 			key: 'receipt'
 		);
 	}//end preview()
+
+	/**
+	 * What the receipt card shows: the newest print, the print count, the
+	 * newest mail and the layout.
+	 *
+	 * @param string $id The transaction UUID.
+	 *
+	 * @return JSONResponse The receipt log summary.
+	 *
+	 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
+	 */
+	#[NoAdminRequired]
+	public function log(string $id): JSONResponse {
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		return $this->run(
+			action: fn (): array => $this->service->receiptLog(transactionId: $id, userId: $uid),
+			label: 'log',
+			key: 'log'
+		);
+	}//end log()
 
 	/**
 	 * Email a receipt to the transaction's linked customer.
@@ -186,15 +206,7 @@ class PosReceiptController extends Controller {
 	 * @return string|JSONResponse The acting user UID, or a 401 response.
 	 */
 	private function requireUserId(): string|JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		return $user->getUID();
+		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
 	}//end requireUserId()
 
 	/**
@@ -207,20 +219,18 @@ class PosReceiptController extends Controller {
 	 * @return JSONResponse The response.
 	 */
 	private function run(callable $action, string $label, string $key): JSONResponse {
-		try {
-			return new JSONResponse([$key => $action()]);
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-		} catch (\Throwable $e) {
-			$this->logger->error('PosReceiptController::' . $label . ' failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		return $this->posResponses()->run(
+			respond: fn (): JSONResponse => new JSONResponse([$key => $action()]),
+			logLabel: 'PosReceiptController::' . $label
+		);
 	}//end run()
+
+	/**
+	 * The login check and error mapping shared by the POS controllers.
+	 *
+	 * @return PosResponses The shared responses.
+	 */
+	private function posResponses(): PosResponses {
+		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
+	}//end posResponses()
 }//end class

@@ -117,7 +117,7 @@ The system MUST display a product line items section in the lead detail view wit
 #### Scenario: Line items table in lead detail
 - GIVEN a lead with LeadProduct line items
 - WHEN the user views the lead detail
-- THEN a "Products" section MUST be displayed showing a table with columns: Product Name, Qty, Unit Price, Discount, Total
+- THEN a "Producten" (Products) section MUST be displayed showing a table with columns: Product Name, Qty, Unit Price, Discount, Total
 - AND below the table, a summary row MUST show the grand total of all line items
 - AND each row MUST have inline editing for quantity, unit price, and discount
 - AND each row MUST have a remove action button
@@ -132,8 +132,8 @@ The system MUST display a product line items section in the lead detail view wit
 #### Scenario: Empty line items
 - GIVEN a lead with no line items
 - WHEN the user views the lead detail
-- THEN the "Products" section MUST show an empty state: "No products added to this lead yet."
-- AND an "Add Product" button MUST be visible
+- THEN the "Producten" (Products) section MUST show an empty state: "No products added to this lead yet."
+- AND an "Product toevoegen" (Add Product) button MUST be visible
 
 #### Scenario: Notes field display
 - GIVEN a line item with a notes value (e.g., "annual license")
@@ -215,7 +215,7 @@ The system MUST support lead scoring adjustments based on product interest patte
 
 #### Scenario: Cross-sell recommendation
 - GIVEN a lead has "OpenRegister Implementatie" as a line item
-- WHEN the user views the lead's "Add Product" dialog
+- WHEN the user views the lead's "Product toevoegen" (Add Product) dialog
 - THEN the system SHOULD suggest complementary products (e.g., "Training beheerders", "Support pakket")
 - AND the recommendations SHOULD be based on products frequently purchased together across other leads
 
@@ -265,7 +265,7 @@ The system MUST validate line item data to prevent invalid entries.
 #### Scenario: Missing product validation
 - GIVEN the Add Product dialog
 - WHEN the user attempts to add a line item without selecting a product
-- THEN the "Add" button MUST remain disabled
+- THEN the "Toevoegen" (Add) button MUST remain disabled
 - AND the product field MUST be marked as required
 
 #### Scenario: Duplicate product warning
@@ -324,6 +324,56 @@ a reload.
 - WHEN the user adds a line
 - THEN the Line items count SHALL read 1
 
+### Requirement: The lead form edits the products as a table
+
+The lead form MUST show the lead's products as a table in the form, where a product is added from a product search and its quantity, unit price and discount are changed in place. The lines MUST be saved as their own lead product objects after the lead. A line's total MUST stay the server's calculation, and the table MUST show the sum of the saved line totals.
+
+#### Scenario: A product from the catalogue
+
+- GIVEN a lead in its form
+- WHEN the salesperson picks Adviesuur from the product search
+- THEN a line MUST appear with the product's name and price
+- AND after saving, the lead product MUST be stored with the lead as its lead
+
+### Requirement: A value typed by hand stays beside the calculated value
+
+When a lead line is created, changed or deleted, the system MUST write the sum of the lead's line totals as its calculated value, and MUST write it as the lead's value too unless the value was typed over the calculated one. A lead without lines MUST keep the value typed by hand. While the value differs from the calculated value, the lead page MUST show the calculated value under it and offer "Use calculated value", which MUST set the value to the calculated value.
+
+#### Scenario: A line is added
+
+- GIVEN a lead with no lines and no value
+- WHEN a line with total 3.000 is added
+- THEN the lead's value and calculated value MUST be 3.000
+
+#### Scenario: A typed value stays
+
+- GIVEN a lead with lines adding up to 3.000 and a value typed as 6.000
+- WHEN a line changes and the lines add up to 3.200
+- THEN the value MUST stay 6.000 and the calculated value MUST be 3.200
+- AND the lead page MUST show "Calculated from the lines" 3.200 and "Use calculated value"
+
+#### Scenario: Use calculated value
+
+- GIVEN that lead
+- WHEN the user chooses "Use calculated value"
+- THEN the value MUST be 3.200 and the action and the calculated line MUST no longer show
+
+### Requirement: The server keeps the lead value with its lines
+
+When a lead line is created, changed or deleted, the system MUST write the lead's value as the sum of its line totals. A lead without lines MUST keep the value typed by hand.
+
+#### Scenario: A line is added
+
+- GIVEN a lead with no lines and no value
+- WHEN a line with total 3.000 is added
+- THEN the lead's value MUST be 3.000
+
+#### Scenario: The last line is removed
+
+- GIVEN a lead whose value is 3.000 from its one line
+- WHEN that line is deleted
+- THEN the lead's value MUST stay 3.000, for the user to change by hand
+
 ## Current Implementation Status
 
 **Implemented:**
@@ -335,7 +385,7 @@ a reload.
   - Inline editing of quantity, unitPrice, and discount with live recalculation.
   - Remove line item functionality with confirmation dialog.
   - Grand total footer row.
-  - Manual override detection with "Use calculated value" button to sync lead value from products.
+  - Manual override detection with "Gebruik berekende waarde" (Use calculated value) button to sync lead value from products.
   - Currency formatting (EUR, nl-NL locale).
   - **Percentage-based discount calculation**: `calculateTotal` correctly uses `(qty * price) * (1 - discount / 100)`.
 - CRUD operations use the shared `useObjectStore` from `src/store/modules/object.js`.

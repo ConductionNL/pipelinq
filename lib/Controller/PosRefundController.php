@@ -18,22 +18,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-refund-return/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosRefundService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -50,27 +46,27 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-refund-return/tasks.md#2.2
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
+ * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.2
  */
 class PosRefundController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosRefundService $service The POS refund service.
+	 * @param PosRefundServiceInterface $service The POS refund service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosRefundService $service,
+		private PosRefundServiceInterface $service,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -80,7 +76,7 @@ class PosRefundController extends Controller {
 	 *
 	 * @return JSONResponse The updated refund.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function confirm(string $id): JSONResponse {
@@ -102,7 +98,7 @@ class PosRefundController extends Controller {
 	 *
 	 * @return JSONResponse The updated refund.
 	 *
-	 * @spec openspec/changes/pos-refund-return/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function reject(string $id): JSONResponse {
@@ -128,15 +124,7 @@ class PosRefundController extends Controller {
 	 * @return string|JSONResponse The acting user UID, or a 401 response.
 	 */
 	private function requireUserId(): string|JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		return $user->getUID();
+		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
 	}//end requireUserId()
 
 	/**
@@ -151,20 +139,18 @@ class PosRefundController extends Controller {
 	 * @return JSONResponse The response.
 	 */
 	private function run(callable $action, string $label): JSONResponse {
-		try {
-			return new JSONResponse(['refund' => $action()]);
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-		} catch (\Throwable $e) {
-			$this->logger->error('PosRefundController::' . $label . ' failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		return $this->posResponses()->run(
+			respond: fn (): JSONResponse => new JSONResponse(['refund' => $action()]),
+			logLabel: 'PosRefundController::' . $label
+		);
 	}//end run()
+
+	/**
+	 * The login check and error mapping shared by the POS controllers.
+	 *
+	 * @return PosResponses The shared responses.
+	 */
+	private function posResponses(): PosResponses {
+		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
+	}//end posResponses()
 }//end class

@@ -21,12 +21,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
+
+use DateTimeImmutable;
+use OCA\Pipelinq\Kernel\Contracts\CronExpressionHelperInterface;
 
 /**
  * Validates and describes 5-field UNIX cron expressions and @-shortcuts.
@@ -40,9 +43,9 @@ namespace OCA\Pipelinq\Service\Export;
  * @SuppressWarnings(PHPMD.ElseExpression)           The else mirrors the cron range/step
  *  parser's two symmetric branches and reads clearer than an early return here.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
-class CronExpressionHelper {
+class CronExpressionHelper implements CronExpressionHelperInterface {
 	/**
 	 * Supported @-shortcuts mapped to their 5-field equivalents.
 	 *
@@ -55,6 +58,24 @@ class CronExpressionHelper {
 		'@monthly' => '0 0 1 * *',
 		'@yearly' => '0 0 1 1 *',
 	];
+
+	/**
+	 * Preview texts per shape and locale; {time} is the HH:MM of the schedule.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private const DESCRIPTIONS = [
+		'hourly' => ['en' => 'Every hour', 'nl' => 'Elk uur'],
+		'daily' => ['en' => 'Every day at {time}', 'nl' => 'Elke dag om {time}'],
+		'weekly' => ['en' => 'Every Sunday at {time}', 'nl' => 'Elke zondag om {time}'],
+	];
+
+	/**
+	 * Day-of-week field values with a fixed-time preview (0 and 7 are Sunday).
+	 *
+	 * @var array<int|string, string>
+	 */
+	private const DAY_OF_WEEK_SHAPES = ['*' => 'daily', '0' => 'weekly', '7' => 'weekly'];
 
 	/**
 	 * Inclusive value bounds per cron field (minute, hour, dom, month, dow).
@@ -76,7 +97,7 @@ class CronExpressionHelper {
 	 *
 	 * @return bool True when valid.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	public function isValid(string $expression): bool {
 		$expression = trim($expression);
@@ -131,57 +152,48 @@ class CronExpressionHelper {
 	 *
 	 * @return string The human-readable description.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	public function describe(string $expression, string $locale = 'en'): string {
-		if ($this->isValid(expression: $expression) === false) {
+		$fields = $this->fieldsOf(expression: $expression);
+		if ($fields === null) {
 			return '';
 		}
 
-		$isDutch = ($locale === 'nl');
-		$normalized = $this->normalize(expression: $expression);
-		$fields = preg_split('/\s+/', $normalized);
-		if ($fields === false || count($fields) !== 5) {
-			return $normalized;
+		$shape = $this->shapeOf(fields: $fields);
+		if ($shape === null) {
+			return $this->normalize(expression: $expression);
 		}
 
-		[$minute, $hour, $dom, $month, $dow] = $fields;
-
-		// Every hour: "0 * * * *".
-		if ($minute === '0' && $hour === '*' && $dom === '*' && $month === '*' && $dow === '*') {
-			if ($isDutch === true) {
-				return 'Elk uur';
-			}
-
-			return 'Every hour';
-		}
-
-		// Fixed minute + hour, every day: "M H * * *".
-		if (ctype_digit($minute) === true && ctype_digit($hour) === true
-			&& $dom === '*' && $month === '*' && $dow === '*'
-		) {
-			$time = sprintf('%02d:%02d', (int)$hour, (int)$minute);
-			if ($isDutch === true) {
-				return "Elke dag om {$time}";
-			}
-
-			return "Every day at {$time}";
-		}
-
-		// Weekly on Sunday: "M H * * 0".
-		if (ctype_digit($minute) === true && ctype_digit($hour) === true
-			&& $dom === '*' && $month === '*' && ($dow === '0' || $dow === '7')
-		) {
-			$time = sprintf('%02d:%02d', (int)$hour, (int)$minute);
-			if ($isDutch === true) {
-				return "Elke zondag om {$time}";
-			}
-
-			return "Every Sunday at {$time}";
-		}
-
-		return $normalized;
+		$texts = self::DESCRIPTIONS[$shape];
+		$time = sprintf('%02d:%02d', (int)$fields[1], (int)$fields[0]);
+		return str_replace('{time}', $time, ($texts[$locale] ?? $texts['en']));
 	}//end describe()
+
+	/**
+	 * The preview shape of a 5-field expression: hourly, daily or weekly on
+	 * Sunday at a fixed time, or null for any other schedule.
+	 *
+	 * @param array<int, string> $fields Minute, hour, day of month, month, day of week.
+	 *
+	 * @return string|null A key of DESCRIPTIONS.
+	 */
+	private function shapeOf(array $fields): ?string {
+		[$minute, $hour, $dom, $month, $dow] = $fields;
+		if ($dom !== '*' || $month !== '*') {
+			return null;
+		}
+
+		if ($minute === '0' && $hour === '*' && $dow === '*') {
+			return 'hourly';
+		}
+
+		if (ctype_digit($minute) === false || ctype_digit($hour) === false) {
+			return null;
+		}
+
+		return (self::DAY_OF_WEEK_SHAPES[$dow] ?? null);
+	}//end shapeOf()
 
 	/**
 	 * Whether a cron expression matches a given minute.
@@ -195,40 +207,143 @@ class CronExpressionHelper {
 	 *
 	 * @return bool True when the schedule fires at this minute.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
 	 */
 	public function isDue(string $expression, \DateTimeInterface $when): bool {
-		if ($this->isValid(expression: $expression) === false) {
+		$fields = $this->fieldsOf(expression: $expression);
+		if ($fields === null) {
 			return false;
+		}
+
+		return ($this->dayMatches(fields: $fields, when: $when) === true
+			&& $this->fieldMatches(field: $fields[1], value: (int)$when->format('G'), bounds: self::BOUNDS[1]) === true
+			&& $this->fieldMatches(field: $fields[0], value: (int)$when->format('i'), bounds: self::BOUNDS[0]) === true);
+	}//end isDue()
+
+	/**
+	 * The first minute after a moment at which a cron expression fires.
+	 *
+	 * Parses the expression once and steps a day at a time while the day does
+	 * not match, an hour at a time while the hour does not, then by the minute.
+	 *
+	 * @param string $expression The cron expression.
+	 * @param \DateTimeInterface $from The moment after which to look.
+	 * @param int $horizonDays How far ahead to look.
+	 *
+	 * @return DateTimeImmutable|null The next firing minute, or null when the
+	 *                                  expression is invalid or never fires in the horizon.
+	 *
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 */
+	public function nextRunAfter(string $expression, \DateTimeInterface $from, int $horizonDays=400): ?DateTimeImmutable {
+		$fields = $this->fieldsOf(expression: $expression);
+		if ($fields === null) {
+			return null;
+		}
+
+		[$when, $limit] = $this->searchWindow(from: $from, horizonDays: $horizonDays);
+		while ($when <= $limit) {
+			$next = $this->nextCandidate(fields: $fields, when: $when);
+			if ($next === null) {
+				return $when;
+			}
+
+			$when = $next;
+		}
+
+		return null;
+	}//end nextRunAfter()
+
+	/**
+	 * Where the search starts (the next whole minute after the start, in its
+	 * time zone) and where it gives up.
+	 *
+	 * @param \DateTimeInterface $from        The start.
+	 * @param int                $horizonDays How many days to search.
+	 *
+	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
+	 */
+	private function searchWindow(\DateTimeInterface $from, int $horizonDays): array {
+		$start = (new DateTimeImmutable('now', $from->getTimezone()))->setTimestamp($from->getTimestamp());
+		$when  = $start->setTime((int)$start->format('G'), (int)$start->format('i'))->modify('+1 minute');
+
+		return [$when, $start->modify('+'.$horizonDays.' days')];
+	}//end searchWindow()
+
+	/**
+	 * The next moment worth trying after a candidate that does not match:
+	 * the next day at midnight when the day is wrong, the next whole hour
+	 * when the hour is wrong, the next minute otherwise; null when the
+	 * candidate matches.
+	 *
+	 * @param array<int, string> $fields The five cron fields.
+	 * @param DateTimeImmutable  $when   The candidate.
+	 *
+	 * @return DateTimeImmutable|null
+	 */
+	private function nextCandidate(array $fields, DateTimeImmutable $when): ?DateTimeImmutable {
+		if ($this->dayMatches(fields: $fields, when: $when) === false) {
+			return $when->modify('+1 day')->setTime(0, 0);
+		}
+
+		if ($this->fieldMatches(field: $fields[1], value: (int)$when->format('G'), bounds: self::BOUNDS[1]) === false) {
+			return $when->setTime((int)$when->format('G'), 0)->modify('+1 hour');
+		}
+
+		if ($this->fieldMatches(field: $fields[0], value: (int)$when->format('i'), bounds: self::BOUNDS[0]) === true) {
+			return null;
+		}
+
+		return $when->modify('+1 minute');
+	}//end nextCandidate()
+
+	/**
+	 * The five fields of a valid expression, or null.
+	 *
+	 * @param string $expression The cron expression.
+	 *
+	 * @return array<int, string>|null Minute, hour, day of month, month, day of week.
+	 */
+	private function fieldsOf(string $expression): ?array {
+		if ($this->isValid(expression: $expression) === false) {
+			return null;
 		}
 
 		$fields = preg_split('/\s+/', $this->normalize(expression: $expression));
 		if ($fields === false || count($fields) !== 5) {
+			return null;
+		}
+
+		return $fields;
+	}//end fieldsOf()
+
+	/**
+	 * Whether the month and the day fields match a date.
+	 *
+	 * Day of month and day of week use cron's OR semantics only when both are
+	 * restricted; otherwise the restricted field applies.
+	 *
+	 * @param array<int, string> $fields The five fields.
+	 * @param \DateTimeInterface $when The date.
+	 *
+	 * @return bool True when the date matches.
+	 */
+	private function dayMatches(array $fields, \DateTimeInterface $when): bool {
+		[, , $dom, $month, $dow] = $fields;
+
+		if ($this->fieldMatches(field: $month, value: (int)$when->format('n'), bounds: self::BOUNDS[3]) === false) {
 			return false;
 		}
 
-		[$minute, $hour, $dom, $month, $dow] = $fields;
+		$domOk = $this->fieldMatches(field: $dom, value: (int)$when->format('j'), bounds: self::BOUNDS[2]);
+		$dowOk = $this->dowMatches(field: $dow, value: (int)$when->format('w'));
 
-		$minuteOk = $this->fieldMatches(field: $minute, value: (int)$when->format('i'), bounds: self::BOUNDS[0]);
-		$hourOk = $this->fieldMatches(field: $hour, value: (int)$when->format('G'), bounds: self::BOUNDS[1]);
-		$monthOk = $this->fieldMatches(field: $month, value: (int)$when->format('n'), bounds: self::BOUNDS[3]);
-		if ($minuteOk === false || $hourOk === false || $monthOk === false) {
-			return false;
-		}
-
-		$domValue = (int)$when->format('j');
-		$dowValue = (int)$when->format('w');
-		$domR = ($dom !== '*');
-		$dowR = ($dow !== '*');
-		$domOk = $this->fieldMatches(field: $dom, value: $domValue, bounds: self::BOUNDS[2]);
-		$dowOk = $this->dowMatches(field: $dow, value: $dowValue);
-
-		if ($domR === true && $dowR === true) {
+		if ($dom !== '*' && $dow !== '*') {
 			return ($domOk === true || $dowOk === true);
 		}
 
 		return ($domOk === true && $dowOk === true);
-	}//end isDue()
+	}//end dayMatches()
 
 	/**
 	 * Whether a single value matches a cron field.
@@ -284,44 +399,63 @@ class CronExpressionHelper {
 	 * @return bool True when the value matches.
 	 */
 	private function partMatches(string $part, int $value, array $bounds): bool {
-		$step = 1;
-		if (str_contains($part, '/') === true) {
-			[$range, $stepText] = explode('/', $part, 2);
-			if (ctype_digit($stepText) === false || (int)$stepText < 1) {
-				return false;
-			}
-
-			$step = (int)$stepText;
-			$part = $range;
-		}
-
-		$low = $bounds[0];
-		$high = $bounds[1];
-		if ($part !== '*') {
-			if (str_contains($part, '-') === true) {
-				[$lowText, $highText] = explode('-', $part, 2);
-				if (ctype_digit($lowText) === false || ctype_digit($highText) === false) {
-					return false;
-				}
-
-				$low = (int)$lowText;
-				$high = (int)$highText;
-			} else {
-				if (ctype_digit($part) === false) {
-					return false;
-				}
-
-				$low = (int)$part;
-				$high = (int)$part;
-			}
-		}
-
-		if ($value < $low || $value > $high) {
+		$split = $this->splitStep(part: $part);
+		if ($split === null) {
 			return false;
 		}
 
-		return ((($value - $low) % $step) === 0);
+		$range = $this->rangeOf(range: $split[0], bounds: $bounds);
+		if ($range === null || $value < $range[0] || $value > $range[1]) {
+			return false;
+		}
+
+		return ((($value - $range[0]) % $split[1]) === 0);
 	}//end partMatches()
+
+	/**
+	 * Split a field part into its range and its step (1 without a step suffix).
+	 *
+	 * @param string $part The field part.
+	 *
+	 * @return array{0: string, 1: int}|null Null when the step is not a positive integer.
+	 */
+	private function splitStep(string $part): ?array {
+		if (str_contains($part, '/') === false) {
+			return [$part, 1];
+		}
+
+		[$range, $stepText] = explode('/', $part, 2);
+		if (ctype_digit($stepText) === false || (int)$stepText < 1) {
+			return null;
+		}
+
+		return [$range, (int)$stepText];
+	}//end splitStep()
+
+	/**
+	 * The inclusive low and high value of a range: a wildcard, `a-b` or one integer.
+	 *
+	 * @param string $range The range text, without a step suffix.
+	 * @param array{0: int, 1: int} $bounds The field bounds a wildcard spans.
+	 *
+	 * @return array{0: int, 1: int}|null Null when the range is not numeric.
+	 */
+	private function rangeOf(string $range, array $bounds): ?array {
+		if ($range === '*') {
+			return $bounds;
+		}
+
+		$ends = explode('-', $range, 2);
+		if (count($ends) === 1) {
+			$ends[] = $range;
+		}
+
+		if (ctype_digit($ends[0]) === false || ctype_digit($ends[1]) === false) {
+			return null;
+		}
+
+		return [(int)$ends[0], (int)$ends[1]];
+	}//end rangeOf()
 
 	/**
 	 * Validate one cron field against inclusive bounds.
@@ -357,37 +491,12 @@ class CronExpressionHelper {
 	 * @return bool True when valid.
 	 */
 	private function isFieldPartValid(string $part, array $bounds): bool {
-		$step = 1;
-		if (str_contains($part, '/') === true) {
-			[$range, $stepText] = explode('/', $part, 2);
-			if (ctype_digit($stepText) === false || (int)$stepText < 1) {
-				return false;
-			}
-
-			$step = (int)$stepText;
-			$part = $range;
-		}
-
-		if ($part === '*') {
-			return $step >= 1;
-		}
-
-		if (str_contains($part, '-') === true) {
-			[$lowText, $highText] = explode('-', $part, 2);
-			if (ctype_digit($lowText) === false || ctype_digit($highText) === false) {
-				return false;
-			}
-
-			$low = (int)$lowText;
-			$high = (int)$highText;
-			return $low >= $bounds[0] && $high <= $bounds[1] && $low <= $high;
-		}
-
-		if (ctype_digit($part) === false) {
+		$split = $this->splitStep(part: $part);
+		if ($split === null) {
 			return false;
 		}
 
-		$value = (int)$part;
-		return $value >= $bounds[0] && $value <= $bounds[1];
+		$range = $this->rangeOf(range: $split[0], bounds: $bounds);
+		return $range !== null && $range[0] >= $bounds[0] && $range[1] <= $bounds[1] && $range[0] <= $range[1];
 	}//end isFieldPartValid()
 }//end class

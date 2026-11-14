@@ -25,17 +25,19 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/tasks.md#5.1
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
+ * @spec openspec/specs/berichtenbox/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\BerichtenboxService;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
+use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -47,7 +49,7 @@ use Psr\Log\LoggerInterface;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
 class BerichtenboxZaakStatusListener implements IEventListener {
 	use EntityAccessorTrait;
@@ -69,14 +71,14 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig App config.
-	 * @param BerichtenboxService $berichtenbox Bridge service.
-	 * @param TicketService $ticketService Resolver for the unified ticket schema.
+	 * @param BerichtenboxServiceInterface $berichtenbox Bridge service.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified ticket schema.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly BerichtenboxService $berichtenbox,
-		private readonly TicketService $ticketService,
+		private readonly BerichtenboxServiceInterface $berichtenbox,
+		private readonly TicketServiceInterface $ticketService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -93,7 +95,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
 	public function handle(Event $event): void {
 		if ($this->isCaseUpdate(event: $event) === false) {
@@ -101,49 +103,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 		}
 
 		try {
-			[$oldData, $newData] = $this->extractObjectPair(event: $event);
-			if ($newData === null) {
-				return;
-			}
-
-			$newStatus = (string)($newData['status'] ?? '');
-			$oldStatus = (string)($oldData['status'] ?? '');
-			if ($newStatus === '' || $newStatus === $oldStatus) {
-				return;
-			}
-
-			if (in_array($newStatus, self::TRIGGER_STATUSES, true) === false) {
-				return;
-			}
-
-			$bsn = (string)($newData['bsn'] ?? '');
-			if ($bsn === '') {
-				// Try the linked Contactmoment.
-				$bsn = $this->resolveBsnViaContactmoment(
-					interactionId: (string)($newData['interactionId'] ?? '')
-				);
-			}
-
-			if ($bsn === '') {
-				$this->logger->info(
-					'BerichtenboxZaakStatusListener: no BSN resolved, skipping.',
-					['caseId' => (string)($newData['id'] ?? '')]
-				);
-				return;
-			}
-
-			$this->berichtenbox->queueOutboundMessage(
-				caseId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
-				interactionId: (string)($newData['interactionId'] ?? null),
-				status: $newStatus,
-				bsn: $bsn,
-				templateOverride: null,
-				extraVariables: [
-					'caseType' => (string)($newData['caseType'] ?? ''),
-					'language' => (string)($newData['language'] ?? 'nl'),
-				],
-				attachments: ($newData['attachments'] ?? [])
-			);
+			$this->queueStatusChange(event: $event);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'BerichtenboxZaakStatusListener: dispatch suppressed.',
@@ -151,6 +111,131 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			);
 		}//end try
 	}//end handle()
+
+	/**
+	 * Queue a Berichtenbox message when a case moved into a trigger status.
+	 *
+	 * @param Event $event Event.
+	 *
+	 * @return void
+	 */
+	private function queueStatusChange(Event $event): void {
+		[$oldData, $newData] = $this->extractObjectPair(event: $event);
+		if ($newData === null) {
+			return;
+		}
+
+		$newStatus = $this->triggeredStatus(newData: $newData, oldStatus: (string)($oldData['status'] ?? ''));
+		if ($newStatus === '') {
+			return;
+		}
+
+		$bsn = $this->resolveCaseBsn(newData: $newData);
+		if ($bsn === '') {
+			$this->logNoBsn(newData: $newData);
+			return;
+		}
+
+		$this->berichtenbox->queueOutboundMessage(
+			message: $this->caseStatusMessage(newData: $newData, newStatus: $newStatus, bsn: $bsn),
+			options: $this->statusMessageOptions(newData: $newData)
+		);
+	}//end queueStatusChange()
+
+	/**
+	 * The case's new status when it changed into a trigger status, else ''.
+	 *
+	 * @param array  $newData   The updated case.
+	 * @param string $oldStatus The previous status.
+	 *
+	 * @return string
+	 */
+	private function triggeredStatus(array $newData, string $oldStatus): string {
+		$newStatus = (string)($newData['status'] ?? '');
+		if ($newStatus === '' || $newStatus === $oldStatus) {
+			return '';
+		}
+
+		if (in_array($newStatus, self::TRIGGER_STATUSES, true) === false) {
+			return '';
+		}
+
+		return $newStatus;
+	}//end triggeredStatus()
+
+	/**
+	 * The case's BSN, falling back to the linked Contactmoment.
+	 *
+	 * @param array $newData The updated case.
+	 *
+	 * @return string The BSN, or '' when none resolves.
+	 */
+	private function resolveCaseBsn(array $newData): string {
+		$bsn = (string)($newData['bsn'] ?? '');
+		if ($bsn === '') {
+			// Try the linked Contactmoment.
+			$bsn = $this->resolveBsnViaContactmoment(
+				interactionId: (string)($newData['interactionId'] ?? '')
+			);
+		}
+
+		return $bsn;
+	}//end resolveCaseBsn()
+
+	/**
+	 * Log a status change skipped because no BSN resolved.
+	 *
+	 * @param array $newData The updated case.
+	 *
+	 * @return void
+	 */
+	private function logNoBsn(array $newData): void {
+		$this->logger->info(
+			'BerichtenboxZaakStatusListener: no BSN resolved, skipping.',
+			['caseId' => (string)($newData['id'] ?? '')]
+		);
+	}//end logNoBsn()
+
+	/**
+	 * Build the case status message for the updated case.
+	 *
+	 * @param array  $newData   The updated case.
+	 * @param string $newStatus The trigger status.
+	 * @param string $bsn       The burger's BSN.
+	 *
+	 * @return CaseStatusMessage
+	 */
+	private function caseStatusMessage(
+		array $newData,
+		string $newStatus,
+		#[\SensitiveParameter]
+		string $bsn,
+	): CaseStatusMessage {
+		return new CaseStatusMessage(
+			caseId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
+			interactionId: (string)($newData['interactionId'] ?? null),
+			status: $newStatus,
+			bsn: $bsn
+		);
+	}//end caseStatusMessage()
+
+	/**
+	 * Build the message options (template variables and attachments) for the updated case.
+	 *
+	 * @param array $newData The updated case.
+	 *
+	 * @return MessageOptions
+	 */
+	private function statusMessageOptions(array $newData): MessageOptions {
+		return new MessageOptions(
+			templateOverride: null,
+			extraVariables: [
+				'caseType' => (string)($newData['caseType'] ?? ''),
+				'language' => (string)($newData['language'] ?? 'nl'),
+			],
+			attachments: ($newData['attachments'] ?? [])
+		);
+	}//end statusMessageOptions()
 
 	/**
 	 * Heuristic: is this an OR ObjectUpdatedEvent on a zaak schema?
@@ -184,7 +269,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 		}
 
 		$caseSchema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'zaak_schema',
 			''
 		);
@@ -202,30 +287,35 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 * @return array{0: ?array, 1: ?array}
 	 */
 	private function extractObjectPair(Event $event): array {
-		$oldData = null;
-		$newData = null;
-		if (method_exists($event, 'getOldObject') === true) {
-			$old = $event->getOldObject();
-			if ($old !== null && method_exists($old, 'getObject') === true) {
-				$candidate = $old->getObject();
-				if (is_array($candidate) === true) {
-					$oldData = $candidate;
-				}
-			}
-		}
-
-		if (method_exists($event, 'getNewObject') === true) {
-			$new = $event->getNewObject();
-			if ($new !== null && method_exists($new, 'getObject') === true) {
-				$candidate = $new->getObject();
-				if (is_array($candidate) === true) {
-					$newData = $candidate;
-				}
-			}
-		}
+		$oldData = $this->objectDataOf(event: $event, getter: 'getOldObject');
+		$newData = $this->objectDataOf(event: $event, getter: 'getNewObject');
 
 		return [$oldData, $newData];
 	}//end extractObjectPair()
+
+	/**
+	 * The object data an event carries behind a getter, or null when absent.
+	 *
+	 * @param Event  $event  Event.
+	 * @param string $getter `getOldObject` or `getNewObject`.
+	 *
+	 * @return array|null
+	 */
+	private function objectDataOf(Event $event, string $getter): array|null {
+		if (method_exists($event, $getter) === false) {
+			return null;
+		}
+
+		$object = $event->{$getter}();
+		if ($object !== null && method_exists($object, 'getObject') === true) {
+			$candidate = $object->getObject();
+			if (is_array($candidate) === true) {
+				return $candidate;
+			}
+		}
+
+		return null;
+	}//end objectDataOf()
 
 	/**
 	 * Resolve a BSN by reading the linked Contactmoment + Burger.

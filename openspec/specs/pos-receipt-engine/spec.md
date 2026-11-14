@@ -18,7 +18,7 @@ Enable printing and emailing of receipts from POS transactions to thermal printe
 
 ## Requirements
 
-### REQ-PRE-001: Print receipt to thermal printer [MVP]
+### Requirement: REQ-PRE-001: Print receipt to thermal printer [MVP]
 
 When a user triggers "Print Receipt" on a transaction detail view and selects a template and printer, the system MUST render the receipt using the selected template, generate ESC/POS commands, connect to the configured printer, and return success or failure status.
 
@@ -58,7 +58,7 @@ When a user triggers "Print Receipt" on a transaction detail view and selects a 
 
 ---
 
-### REQ-PRE-002: Email receipt to customer [MVP]
+### Requirement: REQ-PRE-002: Email receipt to customer [MVP]
 
 When a user triggers "Email Receipt" on a transaction and provides a customer email address, the system MUST render the receipt, format it for email delivery, and submit to Pipelinq Mail queue.
 
@@ -95,7 +95,7 @@ When a user triggers "Email Receipt" on a transaction and provides a customer em
 
 ---
 
-### REQ-PRE-003: Receipt template management [MVP]
+### Requirement: REQ-PRE-003: Receipt template management [MVP]
 
 The admin MUST be able to create, read, update, and delete receipt templates with Twig syntax support and live preview.
 
@@ -147,7 +147,7 @@ The admin MUST be able to create, read, update, and delete receipt templates wit
 
 ---
 
-### REQ-PRE-004: Invoice mode for high-value transactions [MVP]
+### Requirement: REQ-PRE-004: Invoice mode for high-value transactions [MVP]
 
 When a transaction total is ≥ EUR 100, the receipt MUST automatically render in invoice mode with BTW breakdown, compliance metadata, and formal invoice styling.
 
@@ -181,7 +181,7 @@ When a transaction total is ≥ EUR 100, the receipt MUST automatically render i
 
 ---
 
-### REQ-PRE-005: Receipt print log audit trail [MVP]
+### Requirement: REQ-PRE-005: Receipt print log audit trail [MVP]
 
 Every print and email action MUST be logged to receiptPrintLog for compliance audit and reprinting.
 
@@ -215,7 +215,7 @@ Every print and email action MUST be logged to receiptPrintLog for compliance au
 
 ---
 
-### REQ-PRE-006: ESC/POS printer protocol support [MVP]
+### Requirement: REQ-PRE-006: ESC/POS printer protocol support [MVP]
 
 The system MUST support standard ESC/POS thermal printers (Star, Epson, AURA) via socket connection and MUST generate valid ESC/POS command sequences.
 
@@ -251,7 +251,7 @@ The system MUST support standard ESC/POS thermal printers (Star, Epson, AURA) vi
 
 ---
 
-### REQ-PRE-007: Admin settings for receipt configuration [MVP]
+### Requirement: REQ-PRE-007: Admin settings for receipt configuration [MVP]
 
 Administrators MUST be able to configure default printer, email sender, and default template via admin settings.
 
@@ -276,7 +276,7 @@ Administrators MUST be able to configure default printer, email sender, and defa
 
 ---
 
-### REQ-PRE-008: Transaction detail print/email buttons [MVP]
+### Requirement: REQ-PRE-008: Transaction detail print/email buttons [MVP]
 
 The transaction detail view MUST expose "Print Receipt" and "Email Receipt" action buttons with modal dialogs for selecting printer and template.
 
@@ -309,7 +309,7 @@ The transaction detail view MUST expose "Print Receipt" and "Email Receipt" acti
 
 ---
 
-### REQ-PRE-009: Twig template rendering with transaction context [MVP]
+### Requirement: REQ-PRE-009: Twig template rendering with transaction context [MVP]
 
 Receipt templates MUST support Twig template syntax with access to transaction, company, and system variables.
 
@@ -348,7 +348,7 @@ Receipt templates MUST support Twig template syntax with access to transaction, 
 
 ---
 
-### REQ-PRE-010: Receipt reprinting for same transaction [MVP]
+### Requirement: REQ-PRE-010: Receipt reprinting for same transaction [MVP]
 
 A user MUST be able to reprint a receipt for a transaction without creating a duplicate entry in the transaction's totals or inventory.
 
@@ -372,7 +372,7 @@ A user MUST be able to reprint a receipt for a transaction without creating a du
 
 ---
 
-### REQ-PRE-011: Multi-language support in templates [MVP]
+### Requirement: REQ-PRE-011: Multi-language support in templates [MVP]
 
 Receipt templates MUST support language variables for multi-language receipts without template duplication.
 
@@ -390,7 +390,7 @@ Receipt templates MUST support language variables for multi-language receipts wi
 
 ---
 
-### REQ-PRE-012: Printer device status polling [MVP]
+### Requirement: REQ-PRE-012: Printer device status polling [MVP]
 
 The system MUST be able to check the status of a configured printer without sending a receipt.
 
@@ -405,7 +405,7 @@ The system MUST be able to check the status of a configured printer without send
 
 ---
 
-### REQ-PRE-013: HTML/PDF receipt format for email [MVP]
+### Requirement: REQ-PRE-013: HTML/PDF receipt format for email [MVP]
 
 Email receipts MUST support both plain-text and HTML/PDF formats per template configuration.
 
@@ -434,7 +434,7 @@ Email receipts MUST support both plain-text and HTML/PDF formats per template co
 
 ---
 
-### REQ-PRE-014: Batch reprint from receipt log [MVP]
+### Requirement: REQ-PRE-014: Batch reprint from receipt log [MVP]
 
 Administrators MUST be able to reprint receipts from historical print logs for compliance or customer requests.
 
@@ -448,6 +448,34 @@ Administrators MUST be able to reprint receipts from historical print logs for c
   - Create a NEW receiptPrintLog entry marked "reprint" with original timestamp reference
 
 ---
+
+### Requirement: A transaction page shows its receipt history
+
+The app SHALL answer, for a transaction the caller may access, the newest successful print with its printer, the
+number of successful prints, the newest mail that was sent with its recipient, whether the sale prints as a receipt or an
+invoice, and the invoice threshold. A failed print or mail SHALL not count.
+
+#### Scenario: Printed twice, one failed mail
+
+- **GIVEN** two prints at 11:40 and 11:43 and a failed mail
+- **WHEN** the receipt card reads the log
+- **THEN** it shows the 11:43 print, two prints and no mail
+
+### Requirement: The receipt preview shows the text as typed
+
+The print and email dialogs of a sale MUST show the receipt preview as the receipt text exactly as typed, in a fixed-width font, so the columns line up as on paper. While the preview loads they MUST show a spinner. Without a text they MUST say "No preview available".
+
+#### Scenario: The columns line up
+
+- GIVEN a sale of 2 loaves at 5,90
+- WHEN the cashier opens Print receipt
+- THEN the preview MUST show the receipt lines in a fixed-width font with their spacing kept
+
+#### Scenario: No preview yet
+
+- GIVEN the preview endpoint returns no text
+- WHEN the cashier opens Email receipt
+- THEN the preview MUST read "No preview available"
 
 ## Integration Points
 

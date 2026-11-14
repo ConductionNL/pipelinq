@@ -19,14 +19,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TemplateApprovalSyncServiceInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,9 +47,11 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges provider
  * repository + provider client + notifications + OR.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class TemplateApprovalSyncService {
+class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterface {
+	use PayloadToArray;
+
 	/**
 	 * Default register slug.
 	 */
@@ -68,7 +72,7 @@ class TemplateApprovalSyncService {
 	 * @param NotificationService $notificationService Admin notifications.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -85,7 +89,7 @@ class TemplateApprovalSyncService {
 	 *
 	 * @return array{providers: int, templatesUpdated: int, statusChanges: int} Summary.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function syncAll(): array {
 		$providers = array_merge(
@@ -115,7 +119,7 @@ class TemplateApprovalSyncService {
 	 *
 	 * @return array{templatesUpdated: int, statusChanges: int} Summary.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function syncOne(array $channelProvider): array {
 		$providerId = $this->extractId(payload: $channelProvider);
@@ -123,71 +127,163 @@ class TemplateApprovalSyncService {
 			return ['templatesUpdated' => 0, 'statusChanges' => 0];
 		}
 
+		$remoteTemplates = $this->fetchRemoteTemplates(channelProvider: $channelProvider, providerId: $providerId);
+		if ($remoteTemplates === null) {
+			return ['templatesUpdated' => 0, 'statusChanges' => 0];
+		}
+
+		return $this->syncRemoteTemplates(remoteTemplates: $remoteTemplates, providerId: $providerId);
+	}//end syncOne()
+
+	/**
+	 * List a provider's remote templates, or null when the call fails.
+	 *
+	 * @param array<string, mixed> $channelProvider Provider row.
+	 * @param string $providerId The provider id.
+	 *
+	 * @return array<int, array<string, mixed>>|null The remote templates.
+	 */
+	private function fetchRemoteTemplates(array $channelProvider, string $providerId): array|null {
 		try {
-			$remoteTemplates = $this->providerClient->listTemplates(channelProvider: $channelProvider);
+			return $this->providerClient->listTemplates(channelProvider: $channelProvider);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'TemplateApprovalSyncService.syncOne: listTemplates failed',
 				['providerId' => $providerId, 'exception' => $e->getMessage()]
 			);
-			return ['templatesUpdated' => 0, 'statusChanges' => 0];
+			return null;
 		}
+	}//end fetchRemoteTemplates()
 
+	/**
+	 * Upsert every remote template against the local index and count the results.
+	 *
+	 * @param array<int, array<string, mixed>> $remoteTemplates The remote templates.
+	 * @param string $providerId The provider id.
+	 *
+	 * @return array{templatesUpdated: int, statusChanges: int} Summary.
+	 */
+	private function syncRemoteTemplates(array $remoteTemplates, string $providerId): array {
 		$localIndex = $this->buildLocalIndex(providerId: $providerId);
 		$updates = 0;
 		$changes = 0;
 
 		foreach ($remoteTemplates as $remote) {
-			$externalId = (string)($remote['name'] ?? ($remote['externalId'] ?? ''));
-			$language = (string)($remote['language'] ?? 'nl');
-			if ($externalId === '') {
+			$changed = $this->syncRemoteTemplate(remote: $remote, providerId: $providerId, localIndex: $localIndex);
+			if ($changed === null) {
 				continue;
 			}
 
-			$key = $externalId . ':' . $language;
-			$local = ($localIndex[$key] ?? null);
-			$newStatus = $this->normaliseStatus(remoteStatus: (string)($remote['status'] ?? 'pending'));
-
-			$payload = $local ?? [
-				'providerId' => $providerId,
-				'externalId' => $externalId,
-				'language' => $language,
-				'category' => (string)($remote['category'] ?? 'utility'),
-				'body' => (string)($remote['body'] ?? ''),
-				'header' => (string)($remote['header'] ?? ''),
-				'buttons' => $remote['buttons'] ?? [],
-				'status' => 'pending',
-			];
-
-			$oldStatus = (string)($payload['status'] ?? 'pending');
-			$payload['category'] = (string)($remote['category'] ?? ($payload['category'] ?? 'utility'));
-			$payload['body'] = (string)($remote['body'] ?? ($payload['body'] ?? ''));
-			$payload['header'] = (string)($remote['header'] ?? ($payload['header'] ?? ''));
-			$payload['buttons'] = $remote['buttons'] ?? ($payload['buttons'] ?? []);
-			$payload['status'] = $newStatus;
-			$payload['lastSyncedAt'] = $this->nowIso();
-
-			$id = null;
-			if ($local !== null) {
-				$id = $this->extractId(payload: $local);
-			}
-
-			$this->saveObject(payload: $payload, id: $id);
 			$updates++;
-
-			if ($oldStatus !== $newStatus) {
-				$changes++;
-				$this->notifyStatusChange(
-					providerId: $providerId,
-					externalId: $externalId,
-					oldStatus: $oldStatus,
-					newStatus: $newStatus,
-				);
-			}
-		}//end foreach
+			$changes += (int)$changed;
+		}
 
 		return ['templatesUpdated' => $updates, 'statusChanges' => $changes];
-	}//end syncOne()
+	}//end syncRemoteTemplates()
+
+	/**
+	 * Upsert one remote template and notify when its status changed.
+	 *
+	 * @param array<string, mixed> $remote The remote template.
+	 * @param string $providerId The provider id.
+	 * @param array<string, array<string, mixed>> $localIndex Local templates keyed by `externalId:language`.
+	 *
+	 * @return bool|null Whether the status changed, or null when the template has no id.
+	 */
+	private function syncRemoteTemplate(array $remote, string $providerId, array $localIndex): bool|null {
+		$externalId = (string)($remote['name'] ?? ($remote['externalId'] ?? ''));
+		$language = (string)($remote['language'] ?? 'nl');
+		if ($externalId === '') {
+			return null;
+		}
+
+		$local = ($localIndex[$externalId . ':' . $language] ?? null);
+		$payload = $local ?? $this->newTemplatePayload(remote: $remote, providerId: $providerId, externalId: $externalId, language: $language);
+		$oldStatus = (string)($payload['status'] ?? 'pending');
+		$payload = $this->applyRemoteTemplate(payload: $payload, remote: $remote);
+		$this->saveTemplate(payload: $payload, local: $local);
+
+		return $this->notifyIfStatusChanged(providerId: $providerId, externalId: $externalId, oldStatus: $oldStatus, newStatus: $payload['status']);
+	}//end syncRemoteTemplate()
+
+	/**
+	 * Notify about a status change when the status actually changed.
+	 *
+	 * @param string $providerId The provider id.
+	 * @param string $externalId The template's external id.
+	 * @param string $oldStatus The status before the sync.
+	 * @param string $newStatus The status after the sync.
+	 *
+	 * @return bool Whether the status changed.
+	 */
+	private function notifyIfStatusChanged(string $providerId, string $externalId, string $oldStatus, string $newStatus): bool {
+		if ($oldStatus === $newStatus) {
+			return false;
+		}
+
+		$this->notifyStatusChange(providerId: $providerId, externalId: $externalId, oldStatus: $oldStatus, newStatus: $newStatus);
+		return true;
+	}//end notifyIfStatusChanged()
+
+	/**
+	 * A fresh, pending local template for a remote template seen for the first time.
+	 *
+	 * @param array<string, mixed> $remote The remote template.
+	 * @param string $providerId The provider id.
+	 * @param string $externalId The template's external id.
+	 * @param string $language The template language.
+	 *
+	 * @return array<string, mixed> The new template payload.
+	 */
+	private function newTemplatePayload(array $remote, string $providerId, string $externalId, string $language): array {
+		return [
+			'providerId' => $providerId,
+			'externalId' => $externalId,
+			'language' => $language,
+			'category' => (string)($remote['category'] ?? 'utility'),
+			'body' => (string)($remote['body'] ?? ''),
+			'header' => (string)($remote['header'] ?? ''),
+			'buttons' => $remote['buttons'] ?? [],
+			'status' => 'pending',
+		];
+	}//end newTemplatePayload()
+
+	/**
+	 * Overlay the remote content and normalised status onto a template payload.
+	 *
+	 * @param array<string, mixed> $payload The local (or new) template payload.
+	 * @param array<string, mixed> $remote The remote template.
+	 *
+	 * @return array<string, mixed> The updated payload.
+	 */
+	private function applyRemoteTemplate(array $payload, array $remote): array {
+		$newStatus = $this->normaliseStatus(remoteStatus: (string)($remote['status'] ?? 'pending'));
+		$payload['category'] = (string)($remote['category'] ?? ($payload['category'] ?? 'utility'));
+		$payload['body'] = (string)($remote['body'] ?? ($payload['body'] ?? ''));
+		$payload['header'] = (string)($remote['header'] ?? ($payload['header'] ?? ''));
+		$payload['buttons'] = $remote['buttons'] ?? ($payload['buttons'] ?? []);
+		$payload['status'] = $newStatus;
+		$payload['lastSyncedAt'] = $this->nowIso();
+
+		return $payload;
+	}//end applyRemoteTemplate()
+
+	/**
+	 * Save a template, updating the local object when one exists.
+	 *
+	 * @param array<string, mixed> $payload The template payload.
+	 * @param array<string, mixed>|null $local The existing local template, if any.
+	 *
+	 * @return void
+	 */
+	private function saveTemplate(array $payload, array|null $local): void {
+		$id = null;
+		if ($local !== null) {
+			$id = $this->extractId(payload: $local);
+		}
+
+		$this->saveObject(payload: $payload, id: $id);
+	}//end saveTemplate()
 
 	/**
 	 * Map remote provider status strings to our local enum.
@@ -346,35 +442,6 @@ class TemplateApprovalSyncService {
 	}//end getObjectService()
 
 	/**
-	 * Normalise an OR entity to an array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * Extract a UUID / id / slug from a payload.
 	 *
 	 * @param array<string, mixed> $payload Payload.
@@ -406,7 +473,7 @@ class TemplateApprovalSyncService {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -421,7 +488,7 @@ class TemplateApprovalSyncService {
 	 */
 	private function getSchemaSlug(): string {
 		$slug = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'messageTemplate_schema',
 			''
 		);

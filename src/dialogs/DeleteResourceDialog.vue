@@ -3,10 +3,10 @@
 <!--
   DeleteResourceDialog — confirmation prompt for deleting a Resource.
   Extracted to its own file per ADR-004 (modal-isolation).
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<NcDialog :name="t('pipelinq', 'Delete resource')" @closing="$emit('cancel')">
+	<CnDialog width="confirm" :name="t('pipelinq', 'Delete resource')" @closing="$emit('cancel')">
 		<p>
 			{{
 				t('pipelinq', 'Are you sure you want to delete "{name}"?', { name })
@@ -20,15 +20,16 @@
 				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'DeleteResourceDialog',
-	components: { NcButton, NcDialog },
+	components: { NcButton, CnDialog },
 	props: {
 		name: { type: String, default: '' },
 	},

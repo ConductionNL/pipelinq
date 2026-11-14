@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Mdm;
 
+use OCA\Pipelinq\Kernel\Contracts\OpenRegisterSyncServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -42,7 +43,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-011-sync-golden-record-to-openregister
  */
-class OpenRegisterSyncService {
+class OpenRegisterSyncService implements OpenRegisterSyncServiceInterface {
 	/**
 	 * Map of master entityType to the Pipelinq OR schema slug it projects onto.
 	 *
@@ -103,49 +104,16 @@ class OpenRegisterSyncService {
 			return null;
 		}
 
-		$entityType = (string)($entity['entityType'] ?? '');
-		$schemaSlug = $this->schemaForEntityType(entityType: $entityType);
+		$sync = new MasterSync(masterId: $masterId, entity: $entity);
+		$schemaSlug = $this->mappedSchema(sync: $sync);
 		if ($schemaSlug === null) {
-			$this->logger->debug(
-				'Pipelinq MDM: no OR schema mapped for entity type; skipping sync',
-				['master' => $masterId, 'entityType' => $entityType]
-			);
 			return null;
 		}
 
-		$golden = ($entity['goldenRecord'] ?? []);
-		if (is_array($golden) === false) {
-			$golden = [];
-		}
+		$target = $this->canonicalObject(sync: $sync, schemaSlug: $schemaSlug);
+		$uuid = self::objectUuid(target: $target);
 
-		// Find the canonical OR object already linked to this master entity.
-		$existing = $this->repository->findAll(
-			$schemaSlug,
-			['masterEntityRef' => $masterId, 'isMasterRecord' => true]
-		);
-
-		$target = ($existing[0] ?? null);
-
-		$targetBase = [];
-		if (is_array($target) === true) {
-			$targetBase = $target;
-		}
-
-		$orObject = array_merge(
-			$targetBase,
-			$golden,
-			['masterEntityRef' => $masterId, 'isMasterRecord' => true]
-		);
-
-		$uuid = null;
-		if (is_array($target) === true) {
-			$resolvedUuid = (string)($target['id'] ?? ($target['@self']['id'] ?? ''));
-			if ($resolvedUuid !== '') {
-				$uuid = $resolvedUuid;
-			}
-		}
-
-		$saved = $this->repository->save($schemaSlug, $orObject, $uuid);
+		$saved = $this->repository->save($schemaSlug, self::syncedObject(sync: $sync, target: $target), $uuid);
 
 		$this->logger->info(
 			'Pipelinq MDM: golden record synced to OpenRegister',
@@ -154,6 +122,81 @@ class OpenRegisterSyncService {
 
 		return $saved;
 	}//end syncMasterToRegister()
+
+	/**
+	 * The OR schema the entity's type projects onto; null (logged) when unmapped.
+	 *
+	 * @param MasterSync $sync The sync.
+	 *
+	 * @return string|null
+	 */
+	private function mappedSchema(MasterSync $sync): ?string {
+		$entityType = $sync->entityType();
+		$schemaSlug = $this->schemaForEntityType(entityType: $entityType);
+		if ($schemaSlug === null) {
+			$this->logger->debug(
+				'Pipelinq MDM: no OR schema mapped for entity type; skipping sync',
+				['master' => $sync->masterId, 'entityType' => $entityType]
+			);
+		}
+
+		return $schemaSlug;
+	}//end mappedSchema()
+
+	/**
+	 * The canonical OR object already linked to this master entity, if any.
+	 *
+	 * @param MasterSync $sync       The sync.
+	 * @param string     $schemaSlug The OR schema slug.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function canonicalObject(MasterSync $sync, string $schemaSlug): ?array {
+		$existing = $this->repository->findAll($schemaSlug, $sync->markers());
+
+		$target = ($existing[0] ?? null);
+		if (is_array($target) === true) {
+			return $target;
+		}
+
+		return null;
+	}//end canonicalObject()
+
+	/**
+	 * The OR object to write: the linked object, the golden record over it, the markers last.
+	 *
+	 * @param MasterSync                $sync   The sync.
+	 * @param array<string, mixed>|null $target The linked canonical object.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function syncedObject(MasterSync $sync, ?array $target): array {
+		return array_merge(
+			($target ?? []),
+			$sync->golden(),
+			$sync->markers()
+		);
+	}//end syncedObject()
+
+	/**
+	 * The linked object's uuid (id, else @self.id); null creates a new object.
+	 *
+	 * @param array<string, mixed>|null $target The linked canonical object.
+	 *
+	 * @return string|null
+	 */
+	private static function objectUuid(?array $target): ?string {
+		if ($target === null) {
+			return null;
+		}
+
+		$resolvedUuid = (string)($target['id'] ?? ($target['@self']['id'] ?? ''));
+		if ($resolvedUuid === '') {
+			return null;
+		}
+
+		return $resolvedUuid;
+	}//end objectUuid()
 
 	/**
 	 * Mark a previously-canonical OR object as non-canonical after a merge.

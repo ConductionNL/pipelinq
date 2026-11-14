@@ -29,18 +29,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+ * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SocialPublicationStoreInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\Social\SocialPublicationStore;
-use OCA\Pipelinq\Service\SocialMetricsService;
-use OCA\Pipelinq\Service\SocialPostService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,7 +51,7 @@ use OCP\IUserSession;
 /**
  * REST controller for social posts, their publications and the ranking.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+ * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) One route per verb the
  *  composer and the approval gate need; each is three lines over the service.
@@ -61,9 +61,9 @@ class SocialPostController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SocialPostService $posts The post lifecycle and publishing.
-	 * @param SocialPublicationStore $publications The per-account result rows.
-	 * @param SocialMetricsService $metrics The ranking.
+	 * @param SocialPostServiceInterface $posts The post lifecycle and publishing.
+	 * @param SocialPublicationStoreInterface $publications The per-account result rows.
+	 * @param SocialMetricsServiceInterface $metrics The ranking.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Privileged-group policy.
 	 *
@@ -71,13 +71,13 @@ class SocialPostController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SocialPostService $posts,
-		private readonly SocialPublicationStore $publications,
-		private readonly SocialMetricsService $metrics,
+		private readonly SocialPostServiceInterface $posts,
+		private readonly SocialPublicationStoreInterface $publications,
+		private readonly SocialMetricsServiceInterface $metrics,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -87,16 +87,11 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{data[]}`.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	#[NoAdminRequired]
 	public function index(string $status = ''): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse($this->posts->listPosts(status: $status));
+		return $this->crmUserGuard()->respond(action: fn (): JSONResponse => new JSONResponse($this->posts->listPosts(status: $status)));
 	}//end index()
 
 	/**
@@ -106,21 +101,18 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 404.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
+			$post = $this->posts->getPost(postId: $id);
+			if ($post === null) {
+				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+			}
 
-		$post = $this->posts->getPost(postId: $id);
-		if ($post === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse(['post' => $post]);
+			return new JSONResponse(['post' => $post]);
+		});
 	}//end show()
 
 	/**
@@ -128,21 +120,18 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse 201 with the post, or 400.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function (string $uid): JSONResponse {
+			$result = $this->posts->createPost(payload: $this->collectBody(), uid: $uid);
+			if (isset($result['error']) === true) {
+				return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
+			}
 
-		$result = $this->posts->createPost(payload: $this->collectBody(), uid: $uid);
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result, Http::STATUS_CREATED);
+			return new JSONResponse($result, Http::STATUS_CREATED);
+		});
 	}//end create()
 
 	/**
@@ -152,16 +141,13 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 400.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->answer(result: $this->posts->updatePost(postId: $id, payload: $this->collectBody(), uid: $uid));
+		return $this->crmUserGuard()->respond(
+			action: fn (string $uid): JSONResponse => $this->answer(result: $this->posts->updatePost(postId: $id, payload: $this->collectBody(), uid: $uid))
+		);
 	}//end update()
 
 	/**
@@ -171,16 +157,13 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 400 naming the network that does not fit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	#[NoAdminRequired]
 	public function submit(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->answer(result: $this->posts->submitForApproval(postId: $id));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => $this->answer(result: $this->posts->submitForApproval(postId: $id))
+		);
 	}//end submit()
 
 	/**
@@ -190,19 +173,16 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 400.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	#[NoAdminRequired]
 	public function approve(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		// The approver is the session. No field of the body says who decided.
-		return $this->answer(
-			result: $this->posts->approve(postId: $id, uid: $uid, note: (string)$this->request->getParam('note', '')),
-		);
+		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+			// The approver is the session. No field of the body says who decided.
+			return $this->answer(
+				result: $this->posts->approve(postId: $id, uid: $uid, note: (string)$this->request->getParam('note', '')),
+			);
+		});
 	}//end approve()
 
 	/**
@@ -212,18 +192,15 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{post}`, or 400.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+	 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 	 */
 	#[NoAdminRequired]
 	public function reject(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->answer(
-			result: $this->posts->reject(postId: $id, uid: $uid, note: (string)$this->request->getParam('note', '')),
-		);
+		return $this->crmUserGuard()->respond(action: function (string $uid) use ($id): JSONResponse {
+			return $this->answer(
+				result: $this->posts->reject(postId: $id, uid: $uid, note: (string)$this->request->getParam('note', '')),
+			);
+		});
 	}//end reject()
 
 	/**
@@ -233,16 +210,13 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{data[]}`.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	#[NoAdminRequired]
 	public function publications(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse(['data' => $this->publications->forPost(postId: $id)]);
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse(['data' => $this->publications->forPost(postId: $id)])
+		);
 	}//end publications()
 
 	/**
@@ -252,18 +226,15 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{publication}`, or 400 with the reason a retry cannot fix.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	#[NoAdminRequired]
 	public function retry(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
 		// The per-object guard lives in the service, which loads the account
 		// this publication went to and refuses a caller who may not act on it.
-		return $this->answer(result: $this->posts->retryPublication(publicationId: $id, uid: $uid));
+		return $this->crmUserGuard()->respondToUser(
+			action: fn (string $uid): JSONResponse => $this->answer(result: $this->posts->retryPublication(publicationId: $id, uid: $uid))
+		);
 	}//end retry()
 
 	/**
@@ -274,17 +245,30 @@ class SocialPostController extends Controller {
 	 *
 	 * @return JSONResponse `{data[]}`.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 	 */
 	#[NoAdminRequired]
 	public function performance(string $network = '', int $limit = 50): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse(['data' => $this->metrics->ranking(network: $network, limit: $limit)]);
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse(['data' => $this->metrics->ranking(network: $network, limit: $limit)])
+		);
 	}//end performance()
+
+	/**
+	 * GET /api/social-performance/networks — the period's numbers per network.
+	 *
+	 * @param int $days The period in days, ending now.
+	 *
+	 * @return JSONResponse `{data[]}`.
+	 *
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-social-performance-is-summed-per-network-for-a-period
+	 */
+	#[NoAdminRequired]
+	public function networkPerformance(int $days = 30): JSONResponse {
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse(['data' => $this->metrics->networkTotals(days: max(1, min(365, $days)))])
+		);
+	}//end networkPerformance()
 
 	/**
 	 * Turn a service answer into a response.
@@ -302,36 +286,13 @@ class SocialPostController extends Controller {
 	}//end answer()
 
 	/**
-	 * The session's user id, or null.
+	 * The CRM-user gate over this request's session.
 	 *
-	 * @return string|null The user id, or null.
+	 * @return CrmUserGuard The gate.
 	 */
-	private function requireUser(): ?string {
-		return $this->userSession->getUser()?->getUID();
-	}//end requireUser()
-
-	/**
-	 * The session's user id when they may use the marketing section.
-	 *
-	 * @return string|null The user id, or null.
-	 */
-	private function requireCrmUser(): ?string {
-		$uid = $this->requireUser();
-		if ($uid === null || $this->policy->isPrivileged(uid: $uid) === false) {
-			return null;
-		}
-
-		return $uid;
-	}//end requireCrmUser()
-
-	/**
-	 * The single refusal.
-	 *
-	 * @return JSONResponse A 403.
-	 */
-	private function refuse(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end refuse()
+	private function crmUserGuard(): CrmUserGuard {
+		return new CrmUserGuard(userSession: $this->userSession, policy: $this->policy);
+	}//end crmUserGuard()
 
 	/**
 	 * The post fields a client may send.

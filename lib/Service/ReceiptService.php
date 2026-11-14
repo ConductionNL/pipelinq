@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IL10N;
 
@@ -419,41 +419,9 @@ class ReceiptService {
 	 * @spec openspec/specs/pos-receipt-engine/spec.md
 	 */
 	public function buildContext(array $transaction): array {
-		$vatRows = $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? [];
-		$vatLines = [];
-		if (is_array($vatRows) === true) {
-			foreach ($vatRows as $row) {
-				if (is_array($row) === false) {
-					continue;
-				}
-
-				$rate = (float)($row['rate'] ?? 0);
-				$label = (string)($row['description'] ?? '');
-				if ($label === '') {
-					$label = rtrim(rtrim((string)$rate, '0'), '.') . '% ' . $this->l10n->t('VAT');
-				}
-
-				$vatLines[] = [
-					'rate' => $rate,
-					'base' => (float)($row['base'] ?? 0),
-					'tax' => (float)($row['tax'] ?? 0),
-					'label' => $label,
-				];
-			}//end foreach
-		}//end if
-
-		$lines = [];
-		foreach (($transaction['lines'] ?? []) as $line) {
-			if (is_array($line) === false) {
-				continue;
-			}
-
-			$lines[] = [
-				'description' => (string)($line['description'] ?? ''),
-				'quantity' => (float)($line['quantity'] ?? 0),
-				'lineTotal' => (float)($line['lineTotal'] ?? 0),
-			];
-		}
+		$receiptLines = new ReceiptLines(l10n: $this->l10n);
+		$vatLines = $receiptLines->vatLines(vatRows: $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? []);
+		$lines = $receiptLines->itemLines(lines: ($transaction['lines'] ?? []));
 
 		return [
 			'reference' => (string)($transaction['reference'] ?? ($transaction['id'] ?? '')),
@@ -479,11 +447,11 @@ class ReceiptService {
 	 */
 	public function companyDetails(): array {
 		return [
-			'name' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_name', 'Conduction B.V.'),
+			'name' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_name', 'Conduction B.V.'),
 			'address' => $this->companyAddress(),
-			'phone' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_phone', ''),
-			'vatId' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_vat', ''),
-			'kvk' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_kvk', ''),
+			'phone' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_phone', ''),
+			'vatId' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_vat', ''),
+			'kvk' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_kvk', ''),
 		];
 	}//end companyDetails()
 
@@ -493,15 +461,15 @@ class ReceiptService {
 	 *
 	 * @return string The address on one line, or '' when nothing is set.
 	 *
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	public function companyAddress(): string {
-		$oneLine = $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_address', '');
+		$oneLine = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_address', '');
 		if (trim($oneLine) !== '') {
 			return $oneLine;
 		}
 
-		$read = fn (string $key): string => trim($this->appConfig->getValueString(Application::APP_ID, $key, ''));
+		$read = fn (string $key): string => trim($this->appConfig->getValueString(AppIdentity::APP_ID, $key, ''));
 		$town = trim($read('receipt_company_postcode') . ' ' . $read('receipt_company_city'));
 		$parts = array_filter(
 			[$read('receipt_company_street'), $town, $read('receipt_company_country')],

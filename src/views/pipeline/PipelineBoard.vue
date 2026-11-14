@@ -2,11 +2,22 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <template>
-	<div class="pipeline-board" data-walkthrough-id="pipeline-board">
+	<div class="pipeline-board" :class="lookClass" data-walkthrough-id="pipeline-board">
 		<CnPageHeader
 			:title="t('pipelinq', 'Pipeline')"
 			:description="headerCountLine">
 			<template #extra>
+				<NcButton
+					variant="secondary"
+					:disabled="filteredItems.length === 0"
+					data-testid="pipeline-download"
+					@click="downloadLeads">
+					<template #icon>
+						<Download :size="18" />
+					</template>
+					{{ t('pipelinq', 'Download') }}
+				</NcButton>
+				<CnBuildiqEditButton />
 				<NcButton
 					variant="primary"
 					data-testid="pipeline-new-lead"
@@ -22,13 +33,132 @@
 			v-if="showLeadCreate"
 			@close="showLeadCreate = false"
 			@created="onLeadCreated" />
+		<!-- Board look (PqPipeline): row 1 the chips, Filter and the view
+		     switch; row 2 the pipeline, the search, the pipeline's settings
+		     and the column choice; row 3 the hint and the active filters. -->
+		<CnActionsBar
+			v-if="isBoard"
+			layout="board"
+			class="pipeline-board__toolbar"
+			data-testid="pipeline-toolbar"
+			:viewMode="viewMode === 'list' ? 'table' : 'board'"
+			:availableViewModes="['table', 'board']"
+			:viewSwitch="['table', 'cards', 'board', 'map']"
+			:viewModeLinks="viewModeLinks"
+			:disabledViewModes="['map']"
+			:activeFilterChips="activeFilterChips"
+			:showAdd="false"
+			:showActionsMenu="false"
+			:showCount="false"
+			:showBuildiqButton="false"
+			:selectable="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			@viewModeChange="(mode) => (viewMode = mode === 'table' ? 'list' : 'kanban')"
+			@removeFilter="removeActiveFilter"
+			@clearFilters="clearActiveFilters">
+			<template #filters>
+				<CnQuickFilterBar
+					class="pipeline-board__chips"
+					:tabs="chipTabs"
+					:counts="chipCounts"
+					:activeIndex="chipIndex"
+					@update:activeIndex="
+						(value) => (chipIndex = value === null ? 0 : value)
+					" />
+			</template>
+			<template #filter-menu>
+				<NcActions
+					class="cn-actions-bar__filter-menu"
+					:class="{ 'cn-actions-bar__filter-menu--counted': activeFilterChips.length > 0 }"
+					:style="activeFilterChips.length > 0 ? { '--cn-filter-menu-count': `&quot;${activeFilterChips.length}&quot;` } : null"
+					:aria-label="filterMenuLabel"
+					variant="secondary"
+					:forceMenu="true"
+					:menuName="t('pipelinq', 'Filter')"
+					data-testid="pipeline-filter-menu">
+					<template #icon>
+						<Tune :size="16" />
+					</template>
+					<template v-if="hasMultipleSchemas">
+						<NcActionCaption :name="t('pipelinq', 'Type')" />
+						<NcActionButton
+							v-for="option in showFilterOptions"
+							:key="option.id"
+							type="radio"
+							:modelValue="(showFilter?.id || showFilter) === option.id"
+							@click="showFilter = option.id">
+							{{ option.label }}
+						</NcActionButton>
+					</template>
+					<NcActionCaption :name="t('pipelinq', 'Order')" />
+					<NcActionCheckbox
+						:modelValue="scoreOrder"
+						@update:modelValue="(value) => (scoreOrder = value)">
+						{{ t('pipelinq', 'Highest score first') }}
+					</NcActionCheckbox>
+				</NcActions>
+			</template>
+			<template #after-search>
+				<label class="cn-index-page__board-control" data-testid="pipeline-select">
+					<span class="cn-index-page__board-control-label">{{ t('pipelinq', 'Pipeline:') }}</span>
+					<select
+						class="cn-index-page__board-select cn-index-page__board-select--strong"
+						:value="selectedPipelineId"
+						@change="selectPipeline($event.target.value)">
+						<option
+							v-for="option in pipelineSelectOptions"
+							:key="option.value"
+							:value="option.value">
+							{{ option.label }}
+						</option>
+					</select>
+				</label>
+				<div class="cn-actions-bar__search pipeline-board__search">
+					<Magnify :size="18" class="cn-actions-bar__search-icon" />
+					<input
+						type="search"
+						class="cn-actions-bar__search-input"
+						:placeholder="t('pipelinq', 'Search the pipeline')"
+						:aria-label="t('pipelinq', 'Search the pipeline')"
+						:value="searchQuery"
+						@input="searchQuery = $event.target.value">
+				</div>
+				<button
+					type="button"
+					class="pipeline-board__settings-link"
+					data-testid="pipeline-settings-link"
+					:disabled="!selectedPipeline"
+					@click="showPipelineForm = true">
+					<Cog :size="16" />
+					{{ t('pipelinq', 'Pipeline settings') }}
+				</button>
+				<label class="cn-index-page__board-control" data-testid="pipeline-columns">
+					<span class="cn-index-page__board-control-label">{{ t('pipelinq', 'Columns:') }}</span>
+					<select class="cn-index-page__board-select cn-index-page__board-select--strong" value="stage">
+						<option value="stage">
+							{{ t('pipelinq', 'stage') }}
+						</option>
+					</select>
+				</label>
+				<span class="pipeline-board__toolbar-break" aria-hidden="true" />
+				<span v-if="viewMode === 'kanban'" class="cn-index-page__board-hint">
+					{{ t('pipelinq', 'One column per stage. Drag a lead to change its stage.') }}
+				</span>
+			</template>
+		</CnActionsBar>
 		<CnQuickFilterBar
+			v-if="!isBoard"
 			class="pipeline-board__chips"
 			:tabs="chipTabs"
 			:counts="chipCounts"
 			:activeIndex="chipIndex"
-			@update:activeIndex="(value) => (chipIndex = value === null ? 0 : value)" />
-		<div class="pipeline-board__header">
+			@update:activeIndex="
+				(value) => (chipIndex = value === null ? 0 : value)
+			" />
+		<div v-if="!isBoard" class="pipeline-board__header">
 			<div class="pipeline-board__controls">
 				<NcSelect
 					v-model="selectedPipelineId"
@@ -155,10 +285,18 @@
 					class="kanban-column__header"
 					:style="stage.color ? { borderTopColor: stage.color } : {}">
 					<div class="column-header-top">
-						<span class="column-title">{{ stage.name }}</span>
-						<span class="column-count">{{
-							getStageItems(stage.name).length
-						}}</span>
+						<span class="column-title">
+							<span
+								v-if="isBoard"
+								class="column-dot"
+								:style="stage.color ? { background: stage.color } : null"
+								aria-hidden="true" />
+							{{ stage.name }}
+						</span>
+						<span
+							class="column-count"
+							:class="{ 'column-count--full': isStageFull(stage) }"
+							data-testid="column-count">{{ stageCountLabel(stage) }}</span>
 					</div>
 					<div v-if="hasTotals" class="column-value-wrapper">
 						<button
@@ -176,6 +314,9 @@
 							{{ selectedPipeline.totalsLabel || '' }}
 							{{ getStageTotalValue(stage.name).toLocaleString() }}
 						</button>
+						<span
+							v-if="isBoard && stage.probability !== undefined && stage.probability !== null"
+							class="column-probability">· {{ stage.probability }}%</span>
 						<div
 							v-if="expandedBreakdownStage === stage.name"
 							class="stage-breakdown"
@@ -265,6 +406,7 @@
 							:entityType="item._schemaSlug"
 							:stages="sortedStages"
 							:columnProperty="getColumnProperty(item)"
+							:boardLook="isBoard"
 							@open="openItem"
 							@refresh="refreshItems" />
 					</template>
@@ -337,90 +479,23 @@
 				<thead>
 					<tr>
 						<th
+							v-for="column in listColumns"
+							:key="column.key"
 							scope="col"
 							class="sortable"
-							@click="toggleSort('title')">
-							{{ t('pipelinq', 'Title') }}
-							<span v-if="sortBy === 'title'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('schemaSlug')">
-							{{ t('pipelinq', 'Type') }}
-							<span
-								v-if="sortBy === 'schemaSlug'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('stage')">
-							{{ t('pipelinq', 'Stage') }}
-							<span v-if="sortBy === 'stage'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('assignee')">
-							{{ t('pipelinq', 'Assignee') }}
-							<span
-								v-if="sortBy === 'assignee'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('value')">
-							{{ t('pipelinq', 'Value') }}
-							<span v-if="sortBy === 'value'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('dueDate')">
-							{{ t('pipelinq', 'Due Date') }}
-							<span
-								v-if="sortBy === 'dueDate'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('priority')">
-							{{ t('pipelinq', 'Priority') }}
-							<span
-								v-if="sortBy === 'priority'"
-								class="sort-indicator"
-								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
-							>
-						</th>
-						<th
-							scope="col"
-							class="sortable"
-							@click="toggleSort('score')">
-							{{ t('pipelinq', 'Score') }}
-							<span v-if="sortBy === 'score'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
-						</th>
-						<th scope="col" class="sortable" @click="toggleSort('age')">
-							{{ t('pipelinq', 'Age') }}
-							<span v-if="sortBy === 'age'" class="sort-indicator">{{
-								sortDir === 'asc' ? '▲' : '▼'
-							}}</span>
+							:aria-sort="ariaSortOf(column.key)">
+							<button
+								type="button"
+								class="sort-button"
+								@click="toggleSort(column.key)">
+								{{ column.label }}
+								<span
+									v-if="sortBy === column.key"
+									class="sort-indicator"
+									aria-hidden="true"
+									>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
+								>
+							</button>
 						</th>
 					</tr>
 				</thead>
@@ -498,10 +573,21 @@
 </template>
 
 <script>
-import { CnPageHeader, CnQuickFilterBar, openRowTarget } from '@conduction/nextcloud-vue'
+import {
+	CnActionsBar,
+	CnBuildiqEditButton,
+	CnPageHeader,
+	CnQuickFilterBar,
+	openRowTarget,
+	useLook,
+} from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
+	NcActionButton,
+	NcActionCaption,
+	NcActionCheckbox,
+	NcActions,
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
@@ -511,16 +597,21 @@ import {
 } from '@nextcloud/vue'
 import Draggable from 'vuedraggable'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import Download from 'vue-material-design-icons/Download.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Tune from 'vue-material-design-icons/Tune.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
 import LeadCreateDialog from '../../dialogs/LeadCreateDialog.vue'
 import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import PipelineCard from './PipelineCard.vue'
+import { downloadCsv } from '../../services/csvExport.js'
 import { compareCallFirst } from '../../services/leadScore.js'
 import { formatDate } from '../../services/localeUtils.js'
 import { choosePipeline, findOrphanedLeads } from '../../services/pipelineOrphans.js'
+import { stageLimit } from '../../services/pipelinePayload.js'
 import {
 	formatAge,
 	getAgingClass,
@@ -529,9 +620,12 @@ import {
 	pipelineEntitySlugs,
 	resolveObjectType,
 } from '../../services/pipelineUtils.js'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { initializeStores } from '../../store/store.js'
+import { boardLeadIds, groupLeadProducts, productNames, productTotals } from './leadProductBreakdown.js'
+import { placeOnStage, stagePayload, validationMessage } from './stageMove.js'
 
 // What an unscoped pipeline (no propertyMappings, no legacy entityType) boards.
 const UNSCOPED_SLUGS = ['lead', 'request']
@@ -554,6 +648,15 @@ const DRAG_OPTIONS = {
 export default {
 	name: 'PipelineBoard',
 	components: {
+		CnActionsBar,
+		CnBuildiqEditButton,
+		Download,
+		Magnify,
+		NcActionButton,
+		NcActionCaption,
+		NcActionCheckbox,
+		NcActions,
+		Tune,
 		LeadCreateDialog,
 		Plus,
 		CnPageHeader,
@@ -573,6 +676,11 @@ export default {
 		Cog,
 	},
 
+	setup() {
+		const { isBoard, lookClass } = useLook()
+		return { isBoard, lookClass }
+	},
+
 	data() {
 		return {
 			selectedPipelineId: null,
@@ -584,7 +692,7 @@ export default {
 			itemsFetchSeq: 0,
 			showFilter: 'all',
 			/**
-			 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
+			 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-1.1
 			 */
 			searchQuery: '',
 			/** Index of the active chip above the board (0 is every open lead). */
@@ -623,19 +731,19 @@ export default {
 			 * Map of leadId → LeadProduct[] for the visible pipeline. Populated
 			 * after fetchPipelineItems so stage breakdowns are aggregated client-side.
 			 *
-			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+			 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
 			 */
 			leadProductsByLead: {},
 			/**
 			 * Map of productId → product name, populated alongside leadProductsByLead.
 			 *
-			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
+			 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.2
 			 */
 			productNamesById: {},
 			/**
 			 * Name of the stage whose product-breakdown popover is open, or null.
 			 *
-			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.3
+			 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.3
 			 */
 			expandedBreakdownStage: null,
 		}
@@ -643,7 +751,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-16
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-16
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -660,14 +768,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-23
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-23
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-22
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-22
 		 */
 		pipelineSelectOptions() {
 			return this.pipelines.map((p) => ({
@@ -680,14 +788,14 @@ export default {
 		 * The leads no board column shows, with the reason.
 		 *
 		 * @return {Array<{lead: object, reason: string}>}
-		 * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-names-leads-that-are-on-no-board-req-raf-020
+		 * @spec openspec/specs/pipeline/spec.md#requirement-the-board-names-leads-that-are-on-no-board-req-raf-020
 		 */
 		orphanedLeads() {
 			return findOrphanedLeads(this.allLeads, this.pipelines)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
 		 */
 		selectedPipeline() {
 			if (!this.selectedPipelineId) return null
@@ -722,7 +830,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-24
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-24
 		 */
 		propertyMappings() {
 			return this.selectedPipeline?.propertyMappings || []
@@ -737,7 +845,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-27
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-27
 		 */
 		showFilterOptions() {
 			const options = [{ id: 'all', label: t('pipelinq', 'All') }]
@@ -754,7 +862,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-29
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-29
 		 */
 		sortedStages() {
 			if (!this.selectedPipeline?.stages) return []
@@ -764,14 +872,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-21
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-21
 		 */
 		openStages() {
 			return this.sortedStages.filter((s) => !s.isClosed)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-3
 		 */
 		closedStages() {
 			return this.sortedStages.filter((s) => s.isClosed)
@@ -780,7 +888,7 @@ export default {
 		/**
 		 * Schema-filtered merged array of all pipeline items; no search applied.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-1
 		 */
 		allItems() {
 			let result = this.items
@@ -795,7 +903,7 @@ export default {
 		 * allItems filtered by searchQuery (case-insensitive title match).
 		 * Empty searchQuery passes all items through unchanged.
 		 *
-		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-1.2
 		 */
 		filteredItems() {
 			const chipped = this.allItems.filter((item) =>
@@ -813,6 +921,7 @@ export default {
 		 * open lead, my leads, leads closing this month and stale leads.
 		 *
 		 * @return {Array<{label: string}>}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		chipTabs() {
 			return [
@@ -827,80 +936,126 @@ export default {
 		 * The number on each chip, counted over the leads the pipeline holds.
 		 *
 		 * @return {number[]}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		chipCounts() {
-			return this.chipTabs.map((_, index) =>
-				this.allItems.filter((item) => this.matchesChip(item, index)).length,
+			return this.chipTabs.map(
+				(_, index) =>
+					this.allItems.filter((item) => this.matchesChip(item, index))
+						.length,
 			)
+		},
+
+		/**
+		 * Board look: what narrows the board, as the toolbar's active chips:
+		 * the pipeline, the type, the chip above the board and the search.
+		 *
+		 * @return {Array<{key: string, label: string}>}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		activeFilterChips() {
+			const chips = []
+			if (this.selectedPipeline) {
+				chips.push({ key: 'pipeline', label: this.t('pipelinq', 'Pipeline: {name}', { name: this.selectedPipeline.title }) })
+			}
+			const type = this.showFilter?.id || this.showFilter || 'all'
+			if (type !== 'all') {
+				const option = this.showFilterOptions.find((o) => o.id === type)
+				chips.push({ key: 'type', label: this.t('pipelinq', 'Type: {name}', { name: option ? option.label : type }) })
+			}
+			if (this.chipIndex > 0 && this.chipTabs[this.chipIndex]) {
+				chips.push({ key: 'chip', label: this.chipTabs[this.chipIndex].label })
+			}
+			if (this.searchQuery.trim()) {
+				chips.push({ key: 'search', label: this.t('pipelinq', 'Search: {text}', { text: this.searchQuery.trim() }) })
+			}
+			return chips
+		},
+
+		/**
+		 * The Filter button's accessible name, with the count while filters are active.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		filterMenuLabel() {
+			const count = this.activeFilterChips.length
+			return count > 0
+				? this.n('pipelinq', 'Filter, %n active', 'Filter, %n active', count)
+				: this.t('pipelinq', 'Filter')
+		},
+
+		/**
+		 * Board look: the view switch's cards segment opens the leads list.
+		 *
+		 * @return {{[mode: string]: {href: string, to: object}}}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		viewModeLinks() {
+			const to = { name: 'Leads' }
+			const href = this.$router ? this.$router.resolve(to).href : ''
+			return href ? { cards: { href, to } } : {}
 		},
 
 		/**
 		 * The line under the title: how many leads show, out of how many.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		headerCountLine() {
-			return this.t('pipelinq', '{shown} of {total} open leads · board per stage', {
-				shown: this.filteredItems.length,
-				total: this.allItems.length,
-			})
+			return this.t(
+				'pipelinq',
+				'{shown} of {total} open leads · board per stage',
+				{
+					shown: this.filteredItems.length,
+					total: this.allItems.length,
+				},
+			)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
+		 * The list view's sortable columns, in order.
+		 *
+		 * @return {Array<{key: string, label: string}>}
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 */
+		listColumns() {
+			return [
+				{ key: 'title', label: this.t('pipelinq', 'Title') },
+				{ key: 'schemaSlug', label: this.t('pipelinq', 'Type') },
+				{ key: 'stage', label: this.t('pipelinq', 'Stage') },
+				{ key: 'assignee', label: this.t('pipelinq', 'Assignee') },
+				{ key: 'value', label: this.t('pipelinq', 'Value') },
+				{ key: 'dueDate', label: this.t('pipelinq', 'Due Date') },
+				{ key: 'priority', label: this.t('pipelinq', 'Priority') },
+				{ key: 'score', label: this.t('pipelinq', 'Score') },
+				{ key: 'age', label: this.t('pipelinq', 'Age') },
+			]
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
 		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		sortedListItems() {
 			const items = [...this.filteredItems]
-			const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 }
-			items.sort((a, b) => {
-				let valA, valB
-				switch (this.sortBy) {
-					case 'title':
-						valA = (a.title || '').toLowerCase()
-						valB = (b.title || '').toLowerCase()
-						break
-					case 'schemaSlug':
-						valA = a._schemaSlug
-						valB = b._schemaSlug
-						break
-					case 'stage':
-						valA = (this.getItemColumnValue(a) || '').toLowerCase()
-						valB = (this.getItemColumnValue(b) || '').toLowerCase()
-						break
-					case 'assignee':
-						valA = (a.assignee || '').toLowerCase()
-						valB = (b.assignee || '').toLowerCase()
-						break
-					case 'value':
-						valA = Number(a.value) || 0
-						valB = Number(b.value) || 0
-						break
-					case 'dueDate':
-						valA = a.expectedCloseDate || a.occurredAt || ''
-						valB = b.expectedCloseDate || b.occurredAt || ''
-						break
-					case 'priority':
-						valA = priorityOrder[a.priority] ?? 2
-						valB = priorityOrder[b.priority] ?? 2
-						break
-					case 'age':
-						valA = getDaysAge(a)
-						valB = getDaysAge(b)
-						break
-					case 'score':
-						// Highest first on the first click; no score always last.
-						return this.sortDir === 'asc'
-							? compareCallFirst(a, b)
-							: -compareCallFirst(a, b)
-					default:
-						return 0
-				}
-				if (valA < valB) return this.sortDir === 'asc' ? -1 : 1
-				if (valA > valB) return this.sortDir === 'asc' ? 1 : -1
+			const dir = this.sortDir === 'asc' ? 1 : -1
+			if (this.sortBy === 'score') {
+				// Highest first on the first click; no score always last.
+				return items.sort((a, b) => dir * compareCallFirst(a, b))
+			}
+			const keyOf = this.listSortKey(this.sortBy)
+			if (!keyOf) {
+				return items
+			}
+			return items.sort((a, b) => {
+				const valA = keyOf(a)
+				const valB = keyOf(b)
+				if (valA < valB) return -dir
+				if (valA > valB) return dir
 				return 0
 			})
-			return items
 		},
 	},
 
@@ -928,7 +1083,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
 	 */
 	async mounted() {
 		this.loading = true
@@ -951,7 +1106,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
 	 */
 	beforeUnmount() {
 		clearTimeout(this.liveRefetchTimer)
@@ -959,6 +1114,29 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The value a list column sorts on, or null for a column that does not sort.
+		 *
+		 * @param {string} sortBy The list column key.
+		 * @return {((item: object) => (string|number))|null} Item to sort value.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
+		 */
+		listSortKey(sortBy) {
+			const lower = (value) => (value || '').toLowerCase()
+			const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 }
+			const keys = {
+				title: (item) => lower(item.title),
+				schemaSlug: (item) => item._schemaSlug,
+				stage: (item) => lower(this.getItemColumnValue(item)),
+				assignee: (item) => lower(item.assignee),
+				value: (item) => Number(item.value) || 0,
+				dueDate: (item) => item.expectedCloseDate || item.occurredAt || '',
+				priority: (item) => priorityOrder[item.priority] ?? 2,
+				age: (item) => getDaysAge(item),
+			}
+			return keys[sortBy] || null
+		},
+
 		getPriorityLabel,
 		getPriorityColor,
 
@@ -976,26 +1154,53 @@ export default {
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async syncLiveSubscriptions() {
-			const store = this.objectStore
-			if (typeof store.subscribe !== 'function') {
+			if (typeof this.objectStore.subscribe !== 'function') {
 				return
 			}
 			const types = this.liveTypes
+			if (!this.claimLiveScope(types)) {
+				return
+			}
+			const epoch = this.liveEpoch
+			const handles = await this.subscribeLiveTypes(types)
+			this.adoptLiveHandles(handles, epoch)
+		},
+
+		/**
+		 * Take the scope of the given types: release the previous scope and
+		 * mark this one pending before the subscribe awaits.
+		 *
+		 * @param {Array<string>} types The object types.
+		 * @return {boolean} Whether there is a new, non-empty scope to subscribe.
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		claimLiveScope(types) {
 			const key = types.join(',')
 			if (key === this.liveTypesKey) {
 				// Same scope already subscribed (or subscribe in flight).
-				return
+				return false
 			}
 			this.releaseLiveSubscriptions()
 			if (types.length === 0) {
-				return
+				return false
 			}
 			this.liveTypesKey = key
-			const epoch = this.liveEpoch
+			return true
+		},
+
+		/**
+		 * Subscribe to each object type in turn. A failure stops the run and
+		 * is logged; the handles gathered before it are kept.
+		 *
+		 * @param {Array<string>} types The object types.
+		 * @return {Promise<Array>} The subscription handles.
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		async subscribeLiveTypes(types) {
 			const handles = []
 			try {
-				for (const type of types) {
-					handles.push(await store.subscribe(type))
+				for (const objectType of types) {
+					handles.push(await this.objectStore.subscribe(objectType))
 				}
 			} catch (e) {
 				console.warn(
@@ -1003,10 +1208,23 @@ export default {
 					e?.message ?? e,
 				)
 			}
+			return handles
+		},
+
+		/**
+		 * Keep the new handles, unless the subscriptions were released while
+		 * they were being made.
+		 *
+		 * @param {Array} handles The subscription handles.
+		 * @param {number} epoch The live epoch the subscribe started in.
+		 * @return {void}
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		adoptLiveHandles(handles, epoch) {
 			if (this.liveEpoch !== epoch) {
 				// Released while awaiting (pipeline switch / destroy) — drop
 				// the now-stale subscriptions instead of leaking them.
-				handles.forEach((h) => store.unsubscribe(h))
+				handles.forEach((h) => this.objectStore.unsubscribe(h))
 				return
 			}
 			this.liveHandles = handles
@@ -1055,7 +1273,7 @@ export default {
 
 		/**
 		 * @param {object} pipelineData The edited pipeline payload to save
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
 		 */
 		async onPipelineSave(pipelineData) {
 			await this.objectStore.saveObject('pipeline', pipelineData)
@@ -1073,7 +1291,7 @@ export default {
 
 		/**
 		 * @param {object} item The board item
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-10
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-10
 		 */
 		getColumnProperty(item) {
 			const mapping = this.getMappingForItem(item)
@@ -1086,7 +1304,7 @@ export default {
 
 		/**
 		 * @param {object} item The board item
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-11
 		 */
 		getItemTotalsValue(item) {
 			const mapping = this.getMappingForItem(item)
@@ -1102,8 +1320,8 @@ export default {
 		 * With "Highest score first" on, the cards are ordered by score.
 		 *
 		 * @param {string} stageName The stage (column) name
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
-		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-1.2
 		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		getStageItems(stageName) {
@@ -1128,7 +1346,7 @@ export default {
 
 		/**
 		 * @param {string} stageName The stage (column) name
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-13
 		 */
 		getStageTotalValue(stageName) {
 			const stageItems = this.getStageItems(stageName)
@@ -1145,9 +1363,55 @@ export default {
 		/**
 		 * Fetches items for the selected pipeline and resets the search query.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-18
-		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-18
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-1.1
 		 */
+		/**
+		 * The board look's pipeline select chose a pipeline.
+		 *
+		 * @param {string} id The pipeline's id.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		async selectPipeline(id) {
+			if (!id || id === this.selectedPipelineId) return
+			this.selectedPipelineId = id
+			await this.onPipelineChange()
+		},
+
+		/**
+		 * An active chip's remove button: the pipeline goes back to the one
+		 * the board opens with, the others back to their default.
+		 *
+		 * @param {{key: string}} chip The chip.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		async removeActiveFilter(chip) {
+			if (chip.key === 'pipeline') {
+				await this.selectPipeline(choosePipeline(this.pipelines, this.allLeads))
+			} else if (chip.key === 'type') {
+				this.showFilter = 'all'
+			} else if (chip.key === 'chip') {
+				this.chipIndex = 0
+			} else if (chip.key === 'search') {
+				this.searchQuery = ''
+			}
+		},
+
+		/**
+		 * Clear all: every narrowing back to its default.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		async clearActiveFilters() {
+			this.showFilter = 'all'
+			this.chipIndex = 0
+			this.searchQuery = ''
+			await this.selectPipeline(choosePipeline(this.pipelines, this.allLeads))
+		},
+
 		async onPipelineChange() {
 			this.searchQuery = ''
 			await this.fetchPipelineItems()
@@ -1156,7 +1420,7 @@ export default {
 		/**
 		 * @param {object} [options] Fetch options.
 		 * @param {boolean} [options.silent] Refresh in place, without the loading state.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
 		 */
 		async fetchPipelineItems({ silent = false } = {}) {
 			if (!this.selectedPipelineId) return
@@ -1167,11 +1431,7 @@ export default {
 				this.loading = true
 			}
 
-			const pipeline = this.selectedPipeline
-			const items =
-				pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
-					? await this.fetchItemsViaMappings(pipeline)
-					: await this.fetchItemsBySlug(pipeline)
+			const items = await this.fetchSelectedPipelineItems()
 
 			if (seq === this.itemsFetchSeq) {
 				this.items = items
@@ -1180,6 +1440,20 @@ export default {
 			if (!silent && seq === this.itemsFetchSeq) {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * The items of the selected pipeline: through its property mappings
+		 * when it has any, by entity slug otherwise.
+		 *
+		 * @return {Promise<Array<object>>} The board items.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
+		 */
+		fetchSelectedPipelineItems() {
+			const pipeline = this.selectedPipeline
+			return pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
+				? this.fetchItemsViaMappings(pipeline)
+				: this.fetchItemsBySlug(pipeline)
 		},
 
 		/**
@@ -1197,19 +1471,13 @@ export default {
 		 * Batch-fetch all LeadProduct objects for leads in the visible pipeline so
 		 * the per-stage product-value breakdown can be computed client-side.
 		 *
-		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
 		 */
 		async fetchLeadProductsForStages() {
-			const leadIds = new Set(
-				this.items
-					.filter((i) => i._schemaSlug === 'lead')
-					.map((i) => i.id)
-					.filter(Boolean),
-			)
+			const leadIds = boardLeadIds(this.items)
 
 			if (leadIds.size === 0) {
-				this.leadProductsByLead = {}
-				this.productNamesById = {}
+				this.clearLeadProducts()
 				return
 			}
 
@@ -1223,37 +1491,43 @@ export default {
 						_limit: 500,
 					},
 				)
-				const byLead = {}
-				const productIds = new Set()
-				for (const lp of lpCollection || []) {
-					if (!lp.lead || !leadIds.has(lp.lead)) continue
-					if (!byLead[lp.lead]) byLead[lp.lead] = []
-					byLead[lp.lead].push(lp)
-					if (lp.product) productIds.add(lp.product)
-				}
+				const { byLead, productIds } = groupLeadProducts(lpCollection, leadIds)
 				this.leadProductsByLead = byLead
-
-				if (productIds.size > 0) {
-					const products = await this.objectStore.fetchCollection(
-						'product',
-						{
-							_limit: 500,
-						},
-					)
-					const names = {}
-					for (const p of products || []) {
-						if (productIds.has(p.id)) {
-							names[p.id] = p.name || p.id
-						}
-					}
-					this.productNamesById = names
-				} else {
-					this.productNamesById = {}
-				}
+				this.productNamesById = await this.fetchProductNames(productIds)
 			} catch {
-				this.leadProductsByLead = {}
-				this.productNamesById = {}
+				this.clearLeadProducts()
 			}
+		},
+
+		/**
+		 * The names of the given products, read from the store; none without products.
+		 *
+		 * @param {Set<string>} productIds The products to name.
+		 * @return {Promise<object>} The names by product id.
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
+		 */
+		async fetchProductNames(productIds) {
+			if (productIds.size === 0) {
+				return {}
+			}
+			const products = await this.objectStore.fetchCollection(
+				'product',
+				{
+					_limit: 500,
+				},
+			)
+			return productNames(products, productIds)
+		},
+
+		/**
+		 * Forget the line items and product names of the board leads.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
+		 */
+		clearLeadProducts() {
+			this.leadProductsByLead = {}
+			this.productNamesById = {}
 		},
 
 		/**
@@ -1262,31 +1536,16 @@ export default {
 		 *
 		 * @param {string} stageName Stage to aggregate.
 		 * @return {{items: Array<{product: string, name: string, count: number, total: number}>, remaining: number}} Top-5 entries plus remaining count.
-		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.2
 		 */
 		getStageBreakdown(stageName) {
 			const stageLeads = this.getStageItems(stageName).filter(
 				(i) => i._schemaSlug === 'lead',
 			)
-			const aggregate = new Map()
-			for (const lead of stageLeads) {
-				const lineItems = this.leadProductsByLead[lead.id] || []
-				for (const lp of lineItems) {
-					if (!lp.product) continue
-					const current = aggregate.get(lp.product) || {
-						product: lp.product,
-						name: this.productNamesById[lp.product] || lp.product,
-						count: 0,
-						total: 0,
-					}
-					current.count += 1
-					current.total += Number(lp.total) || 0
-					aggregate.set(lp.product, current)
-				}
-			}
-			const sorted = Array.from(aggregate.values()).sort(
-				(a, b) => b.total - a.total,
+			const lineItems = stageLeads.flatMap(
+				(lead) => this.leadProductsByLead[lead.id] || [],
 			)
+			const sorted = productTotals(lineItems, this.productNamesById)
 			const top = sorted.slice(0, 5)
 			const remaining = Math.max(0, sorted.length - top.length)
 			return { items: top, remaining }
@@ -1296,7 +1555,7 @@ export default {
 		 * Toggles the breakdown popover for the given stage.
 		 *
 		 * @param {string} stageName Stage whose breakdown to show or hide.
-		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.3
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.3
 		 */
 		toggleStageBreakdown(stageName) {
 			this.expandedBreakdownStage =
@@ -1306,7 +1565,7 @@ export default {
 		/**
 		 * @param {object} pipeline The pipeline whose propertyMappings drive the fetch
 		 * @return {Promise<Array<object>>} The board items
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
 		 */
 		async fetchItemsViaMappings(pipeline) {
 			const mappings = pipeline.propertyMappings || []
@@ -1328,7 +1587,7 @@ export default {
 		 *
 		 * @param {object|null} pipeline The selected pipeline
 		 * @return {Promise<Array<object>>} The board items
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
 		 */
 		async fetchItemsBySlug(pipeline) {
 			const slugs = pipelineEntitySlugs(pipeline) ?? UNSCOPED_SLUGS
@@ -1351,7 +1610,7 @@ export default {
 		 * opens on the default pipeline.
 		 *
 		 * @return {Promise<Array<object>>} The leads.
-		 * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-opens-where-the-open-leads-are-req-raf-021
+		 * @spec openspec/specs/pipeline/spec.md#requirement-the-board-opens-where-the-open-leads-are-req-raf-021
 		 */
 		async fetchAllLeads() {
 			const config = this.objectStore.objectTypeRegistry.lead
@@ -1361,11 +1620,7 @@ export default {
 					`/apps/openregister/api/objects/${config.register}/${config.schema}?_limit=500`,
 				)
 				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
+					headers: jsonRequestHeaders(),
 				})
 				if (!response.ok) return []
 				const data = await response.json()
@@ -1386,7 +1641,7 @@ export default {
 		 * `_schemaSlug` so mappings, badges, filters and routing still line up.
 		 *
 		 * @param {string} schemaSlug The logical schema slug from the pipeline's propertyMappings
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-8
 		 */
 		async fetchSchemaItems(schemaSlug) {
 			const { objectType, ticketType } = resolveObjectType(schemaSlug)
@@ -1399,11 +1654,7 @@ export default {
 					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`,
 				)
 				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
+					headers: jsonRequestHeaders(),
 				})
 				if (!response.ok) return []
 				const data = await response.json()
@@ -1425,6 +1676,24 @@ export default {
 		},
 
 		/**
+		 * The leads on the board, as the board shows them, as a CSV file.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		downloadLeads() {
+			const rows = this.filteredItems.map((item) => ({
+				title: item.title || '',
+				stage: item.stage || '',
+				value: item.value ?? '',
+				probability: item.probability ?? '',
+				assignee: item.assignee || '',
+				expectedCloseDate: item.expectedCloseDate || '',
+			}))
+			downloadCsv('pipeline.csv', rows, ['title', 'stage', 'value', 'probability', 'assignee', 'expectedCloseDate'])
+		},
+
+		/**
 		 * The drag ended, dropped or cancelled.
 		 *
 		 * @spec exclude drag bookkeeping — no business logic
@@ -1442,7 +1711,7 @@ export default {
 		 *
 		 * @param {{from: HTMLElement, to: HTMLElement, dragged: HTMLElement}} evt The Sortable move event.
 		 * @return {boolean} Whether the placeholder may move.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
 		onCardMove(evt) {
 			if (evt.to !== evt.from) {
@@ -1477,7 +1746,7 @@ export default {
 		 *
 		 * @param {{added?: {element: object}}} event The vuedraggable change event.
 		 * @param {object} targetStage The stage of the column the card landed in.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
 		onCardDropped(event, targetStage) {
 			if (event.added) {
@@ -1495,44 +1764,31 @@ export default {
 		 * @param {object} item The board item that was dropped.
 		 * @param {object} targetStage The stage it was dropped on.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
 		async moveItemToStage(item, targetStage) {
 			const columnProp = this.getColumnProperty(item)
 			if (item[columnProp] === targetStage.name) return
 
-			const previous = {
-				[columnProp]: item[columnProp],
-				stageOrder: item.stageOrder,
-			}
-			item[columnProp] = targetStage.name
-			if (columnProp === 'stage' && typeof targetStage.order === 'number') {
-				item.stageOrder = targetStage.order
-			}
+			const previous = placeOnStage({ item, columnProp, targetStage })
 
 			// A request/complaint/contactmoment is stored as a `ticket` and must
 			// keep its ticketType discriminator (unify-ticket-supertype).
 			const { objectType, ticketType } = resolveObjectType(item._schemaSlug)
 			const current = await this.objectStore.fetchObject(objectType, item.id)
-			let saved = null
-			if (current) {
-				const payload = {
-					...current,
-					id: item.id,
-					[columnProp]: item[columnProp],
-				}
-				if (item.stageOrder !== previous.stageOrder)
-					payload.stageOrder = item.stageOrder
-				if (ticketType && !payload.ticketType)
-					payload.ticketType = ticketType
-				saved = await this.objectStore.saveObject(objectType, payload)
-			}
+			const saved = current
+				? await this.objectStore.saveObject(
+					objectType,
+					stagePayload(current, { item, columnProp, previous, ticketType }),
+				)
+				: null
 			if (!saved) {
 				Object.assign(item, previous)
 				showError(
-					t('pipelinq', 'Could not move the card to {stage}.', {
-						stage: targetStage.name,
-					}),
+					validationMessage(this.objectStore.errors?.[objectType])
+						?? t('pipelinq', 'Could not move the card to {stage}.', {
+							stage: targetStage.name,
+						}),
 				)
 				return
 			}
@@ -1540,8 +1796,33 @@ export default {
 		},
 
 		/**
+		 * The column header count: the number of items, against the limit when the stage has one.
+		 *
+		 * @param {object} stage The stage.
+		 * @return {string} "3" or "3 / 8".
+		 * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-a-stage-can-carry-a-limit-req-psl-001
+		 */
+		stageCountLabel(stage) {
+			const count = this.getStageItems(stage.name).length
+			const max = stageLimit(stage)
+			return max === null ? String(count) : `${count} / ${max}`
+		},
+
+		/**
+		 * Whether a stage with a limit holds as many items as it may, or more.
+		 *
+		 * @param {object} stage The stage.
+		 * @return {boolean} True when full.
+		 * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-a-stage-can-carry-a-limit-req-psl-001
+		 */
+		isStageFull(stage) {
+			const max = stageLimit(stage)
+			return max !== null && this.getStageItems(stage.name).length >= max
+		},
+
+		/**
 		 * @param {string} stageName The closed stage to expand or collapse
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-31
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-31
 		 */
 		toggleClosedStage(stageName) {
 			this.expandedClosed =
@@ -1549,8 +1830,22 @@ export default {
 		},
 
 		/**
+		 * The list header's sort state for assistive technology.
+		 *
+		 * @param {string} column The list-view column key.
+		 * @return {string} `ascending`, `descending` or `none`.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 */
+		ariaSortOf(column) {
+			if (this.sortBy !== column) {
+				return 'none'
+			}
+			return this.sortDir === 'asc' ? 'ascending' : 'descending'
+		},
+
+		/**
 		 * @param {string} column The list-view column key to sort by
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
 		 */
 		toggleSort(column) {
 			if (this.sortBy === column) {
@@ -1563,7 +1858,7 @@ export default {
 
 		/**
 		 * @param {object} item The board item
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-14
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-14
 		 */
 		isItemOverdue(item) {
 			const dateStr = item.expectedCloseDate || item.occurredAt
@@ -1573,7 +1868,7 @@ export default {
 
 		/**
 		 * @param {string|null} dateStr The ISO date string to format
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-9
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-9
 		 */
 		formatDate(dateStr) {
 			if (!dateStr) return '—'
@@ -1586,6 +1881,7 @@ export default {
 		 * @param {object} item The lead.
 		 * @param {number} index The chip index.
 		 * @return {boolean}
+		 * @spec openspec/specs/pipeline/spec.md#requirement-pipeline-filtering-and-search-mvp-req-pipe-022
 		 */
 		matchesChip(item, index) {
 			if (index === 1) {
@@ -1593,11 +1889,15 @@ export default {
 				return Boolean(uid) && item.assignee === uid
 			}
 			if (index === 2) {
-				const close = item.expectedCloseDate ? new Date(item.expectedCloseDate) : null
+				const close = item.expectedCloseDate
+					? new Date(item.expectedCloseDate)
+					: null
 				const now = new Date()
-				return Boolean(close)
+				return (
+					Boolean(close)
 					&& close.getFullYear() === now.getFullYear()
 					&& close.getMonth() === now.getMonth()
+				)
 			}
 			if (index === 3) {
 				return this.isItemStale(item)
@@ -1631,7 +1931,7 @@ export default {
 		/**
 		 * @param {object} item The board item to open
 		 * @param {MouseEvent|KeyboardEvent} [event] The triggering event; a modified or middle click opens a new tab.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
 		 */
 		openItem(item, event) {
 			if (item._schemaSlug === 'lead') {
@@ -1665,6 +1965,111 @@ export default {
 
 .pipeline-board__chips {
 	margin-bottom: 16px;
+}
+
+.pipeline-board__toolbar {
+	margin-bottom: 20px;
+	flex-shrink: 0;
+}
+
+.pipeline-board__toolbar .pipeline-board__chips {
+	margin-bottom: 0;
+}
+
+.pipeline-board__toolbar .pipeline-board__search {
+	flex: 1 1 260px;
+	max-width: 360px;
+}
+
+.pipeline-board__settings-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-primary-element);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.pipeline-board__settings-link:disabled {
+	color: var(--color-text-maxcontrast);
+	cursor: default;
+}
+
+/* Row 3 under the pipeline and the search: the hint, then the active filters on the right. */
+.pipeline-board__toolbar-break {
+	flex: 0 0 100%;
+	height: 0;
+}
+
+/* Board look (PqPipeline): the content starts 24px down and the header 4px
+   under that, so the title sits at 96. The title and the 40px buttons share
+   the first row, 10px apart; the count line takes the row 6px under it and
+   the header ends 8px lower, 20px above the chips. The header's own text
+   is CnPageHeader's markup, which this scoped block reaches only through
+   :deep. */
+.cn-look-board.pipeline-board {
+	padding-top: 24px;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+	align-items: start;
+	row-gap: 6px;
+	column-gap: 10px;
+	padding: 4px 0 8px;
+	margin-bottom: 20px;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__text) {
+	display: contents;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__title) {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header :deep(.cn-page-header__description) {
+	grid-column: 1 / -1;
+	grid-row: 2;
+	margin: 0;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header > .button-vue {
+	grid-row: 1;
+	height: var(--cn-board-control-height, 40px) !important;
+	min-height: var(--cn-board-control-height, 40px) !important;
+	padding: 0 14px !important;
+}
+
+.cn-look-board.pipeline-board > .cn-page-header > .button-vue--primary {
+	padding: 0 16px !important;
+}
+
+/* The chips stand on the page, without the quick filter bar's band. */
+.cn-look-board .pipeline-board__toolbar .pipeline-board__chips {
+	padding: 0;
+	background: transparent;
+}
+
+/* The settings link is a bare underlined link. Nextcloud gives every
+   `button:not(.button-vue)` a margin and a ground, and a theme sets the
+   ground with `!important`, so these are `!important` too. */
+.cn-look-board .pipeline-board__toolbar button.pipeline-board__settings-link {
+	--nldesign-component-button-background-color: transparent;
+	min-height: 0;
+	margin: 0 !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	background: transparent !important;
 }
 
 .pipeline-board__header {
@@ -1760,6 +2165,12 @@ export default {
 	font-size: 13px;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+}
+
+.column-count.column-count--full {
+	background: var(--color-warning);
+	color: var(--color-warning-text, var(--color-main-text));
+	font-weight: 700;
 }
 
 .column-count {
@@ -1898,6 +2309,94 @@ export default {
 	min-height: 80px;
 }
 
+/* Board look (PqPipeline): 240px columns on the grey ground, 16px apart, no
+   border, the stage's dot before its name, the cards 12px apart. */
+.cn-look-board .pipeline-board__columns {
+	gap: 16px;
+}
+
+.cn-look-board .kanban-column {
+	width: 240px;
+	min-width: 240px;
+	max-width: 240px;
+	gap: 12px;
+	padding: 12px;
+	border: 0;
+	border-radius: 12px;
+	background: var(--color-background-dark);
+}
+
+.cn-look-board .kanban-column__header {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	line-height: normal;
+}
+
+.cn-look-board .column-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 15px;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+.cn-look-board .column-dot {
+	width: 10px;
+	height: 10px;
+	flex: none;
+	border-radius: 50%;
+	background: var(--color-primary-element);
+}
+
+.cn-look-board .column-count {
+	min-width: 0;
+	height: auto;
+	padding: 1px 8px;
+	background: var(--color-main-background);
+	color: var(--cn-board-text-soft, var(--color-main-text));
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.cn-look-board .column-value-wrapper {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+	margin-top: 0;
+	padding-inline-start: 18px;
+	font-size: 13px;
+}
+
+.cn-look-board .column-value {
+	width: auto;
+	margin-top: 0;
+	color: var(--color-main-text);
+	font-weight: 700;
+}
+
+/* The total is a button: the server's button rule gives it a 34px height and
+   a 3px margin, which stood it 11px under the stage name (board 2px). */
+.cn-look-board .column-value.column-value {
+	min-height: 0;
+	margin: 0;
+	line-height: normal;
+}
+
+.cn-look-board .column-probability {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.cn-look-board .kanban-column__body {
+	gap: 12px;
+	padding: 0;
+}
+
 .kanban-closed {
 	display: flex;
 	gap: 8px;
@@ -1999,12 +2498,24 @@ export default {
 	user-select: none;
 }
 
-.list-table th.sortable {
+.list-table .sort-button {
+	display: inline-flex;
+	align-items: center;
+	padding: 0;
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
 	cursor: pointer;
 }
 
-.list-table th.sortable:hover {
+.list-table .sort-button:hover {
 	color: var(--color-main-text);
+}
+
+.list-table .sort-button:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .sort-indicator {
@@ -2042,15 +2553,15 @@ export default {
 }
 
 .badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
-	border: 1px solid #93c5fd;
+	background: var(--color-primary-element-light, #dbeafe);
+	color: var(--color-primary-element-light-text, #1d4ed8);
+	border: 1px solid var(--color-primary-element, #93c5fd);
 }
 
 .badge--request {
-	background: #ffedd5;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--color-warning-light, #ffedd5);
+	color: var(--color-warning-text, #c2410c);
+	border: 1px solid var(--color-warning, #fdba74);
 }
 
 .overdue-date {
@@ -2068,9 +2579,9 @@ export default {
 	border-radius: 4px;
 	font-size: 10px;
 	font-weight: 700;
-	background: #fff7ed;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--color-warning-light, #fff7ed);
+	color: var(--color-warning-text, #c2410c);
+	border: 1px solid var(--color-warning, #fdba74);
 	margin-inline-start: 6px;
 	vertical-align: middle;
 }
@@ -2086,13 +2597,13 @@ export default {
 }
 
 .aging-badge.aging-warning {
-	color: #92400e;
-	background: #fef3c7;
+	color: var(--color-warning-text, #92400e);
+	background: var(--color-warning-light, #fef3c7);
 }
 
 .aging-badge.aging-alert {
-	color: #991b1b;
-	background: #fee2e2;
+	color: var(--color-error-text, #991b1b);
+	background: var(--color-error-light, #fee2e2);
 }
 
 .list-empty {

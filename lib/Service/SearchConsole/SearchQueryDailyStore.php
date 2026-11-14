@@ -20,14 +20,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\SearchConsole;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -36,7 +36,7 @@ use Throwable;
 /**
  * SearchQueryDailyStore: idempotent upsert of imported rows.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 class SearchQueryDailyStore {
 
@@ -61,7 +61,7 @@ class SearchQueryDailyStore {
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -79,7 +79,7 @@ class SearchQueryDailyStore {
 	 *
 	 * @return bool True when saved.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function upsert(string $property, array $row, string $importedAt): bool {
 		$objectService = $this->getObjectService();
@@ -87,8 +87,8 @@ class SearchQueryDailyStore {
 			return false;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', self::DEFAULT_REGISTER_SLUG);
-		$schema = $this->appConfig->getValueString(Application::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', self::DEFAULT_REGISTER_SLUG);
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
 		$identity = ['property' => $property, 'date' => $row['date'], 'query' => $row['query'], 'page' => $row['page']];
 		$existingId = $this->findExistingId(objectService: $objectService, register: $register, schema: $schema, identity: $identity);
 		$payload = ($identity + $row + ['source' => 'gsc', 'importedAt' => $importedAt]);

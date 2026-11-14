@@ -255,6 +255,23 @@
         "allowsChange": false,
         "isActive": true,
         "sortOrder": 3
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTenderType",
+          "slug": "tender-loyalty",
+          "id": "b1a0e0c0-0001-4001-a001-000000000004"
+        },
+        "name": "Spaarpunten",
+        "code": "LOYALTY",
+        "description": "Betaald met loyaliteitspunten van de klant",
+        "glAccount": "2110",
+        "requiresReference": true,
+        "requiresPin": false,
+        "allowsChange": false,
+        "isActive": true,
+        "sortOrder": 4
       }
     ]
   }

@@ -4,7 +4,11 @@
 <template>
 	<div
 		class="pipeline-card"
-		:class="{ 'pipeline-card--overdue': isOverdue }"
+		:class="{
+			'pipeline-card--overdue': isOverdue,
+			'pipeline-card--board': boardLook,
+			'pipeline-card--stale': boardLook && isStaleItem,
+		}"
 		role="button"
 		tabindex="0"
 		@click="$emit('open', item, $event)"
@@ -14,11 +18,11 @@
 		<!-- Header: what it is and what it is called, with its menu in the row
 		     so nothing can slide underneath it. -->
 		<div class="pipeline-card__header">
-			<span class="entity-badge" :class="'badge--' + entityType">
+			<span v-if="!boardLook" class="entity-badge" :class="'badge--' + entityType">
 				{{ entityType.toUpperCase().slice(0, 4) }}
 			</span>
 			<span
-				v-if="item.priority && item.priority !== 'normal'"
+				v-if="!boardLook && item.priority && item.priority !== 'normal'"
 				class="priority-indicator"
 				:class="'priority--' + item.priority"
 				role="img"
@@ -58,8 +62,31 @@
 			</div>
 		</div>
 
+		<!-- Board look (PqPipeline): the value, the chance in the stage's tint,
+		     and under a rule the days in the stage and the owner's initials. -->
+		<template v-if="boardLook">
+			<span v-if="item.value" class="pipeline-card__value">{{ formatCurrency(item.value) }}</span>
+			<span
+				v-if="chance !== null"
+				class="pipeline-card__chance"
+				:style="stageColor ? { '--pipeline-stage-color': stageColor } : null"
+				data-testid="pipeline-card-chance">
+				{{ t('pipelinq', '{percent}% chance', { percent: chance }) }}
+			</span>
+			<div class="pipeline-card__foot">
+				<span class="pipeline-card__age" :class="{ 'pipeline-card__age--stale': isStaleItem }">
+					{{ n('pipelinq', '%n day in stage', '%n days in stage', daysAge) }}
+				</span>
+				<span
+					v-if="ownerInitials"
+					class="pipeline-card__owner"
+					:title="ownerName"
+					data-testid="pipeline-card-owner">{{ ownerInitials }}</span>
+			</div>
+		</template>
+
 		<!-- Details: wraps onto more lines rather than pushing into the header. -->
-		<div v-if="hasMeta" class="pipeline-card__meta">
+		<div v-else-if="hasMeta" class="pipeline-card__meta">
 			<span v-if="item.value" class="card-meta">
 				{{ formatNumber(item.value) }}
 			</span>
@@ -125,6 +152,7 @@ import AssigneePickerDialog from '../../dialogs/AssigneePickerDialog.vue'
 import PriorityPickerDialog from '../../dialogs/PriorityPickerDialog.vue'
 import StagePickerDialog from '../../dialogs/StagePickerDialog.vue'
 import {
+	formatCurrency,
 	formatDate as formatLocaleDate,
 	formatNumber,
 } from '../../services/localeUtils.js'
@@ -140,11 +168,81 @@ import {
 	getPriorityLabel,
 	getStatusLabel,
 } from '../../services/requestStatus.js'
+import { cachedUserDisplayName, initialsOf, listAssignableUserIds } from '../../services/userDisplayName.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 
-// Module-level user cache shared across all PipelineCard instances
-let usersCache = null
+/**
+ * Whether a value is missing: null, undefined or ''.
+ *
+ * @param {unknown} value The value.
+ * @return {boolean}
+ */
+function isBlankValue(value) {
+	return value === null || value === undefined || value === ''
+}
+
+/**
+ * A value as a whole number, or null when it is not a finite number.
+ *
+ * @param {unknown} value The value.
+ * @return {number|null} The rounded number.
+ */
+function roundedFinite(value) {
+	const number = Number(value)
+	return Number.isFinite(number) ? Math.round(number) : null
+}
+
+/**
+ * Whether a lead is won, lost or in a closed stage.
+ *
+ * @param {object} lead The lead.
+ * @param {Array<object>} stages The pipeline's stages.
+ * @return {boolean}
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ */
+function isSettledLead(lead, stages) {
+	if (lead.status === 'won' || lead.status === 'lost') {
+		return true
+	}
+	// Cards in stages flagged isClosed never show overdue
+	const currentStage = stages.find((s) => s.name === lead.stage)
+	return Boolean(currentStage && currentStage.isClosed)
+}
+
+/**
+ * Whether an open lead is past its expected close date.
+ *
+ * @param {object} lead The lead.
+ * @param {Array<object>} stages The pipeline's stages.
+ * @return {boolean}
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ */
+function isLeadOverdue(lead, stages) {
+	if (!lead.expectedCloseDate || isSettledLead(lead, stages)) {
+		return false
+	}
+	return new Date(lead.expectedCloseDate) < new Date()
+}
+
+/**
+ * Whether a request is more than 30 days old.
+ *
+ * @param {object} request The request.
+ * @return {boolean}
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ */
+function isRequestOverdue(request) {
+	// `requestedAt` became `occurredAt` on the ticket supertype.
+	if (!request.occurredAt) {
+		return false
+	}
+	const daysSince = Math.floor(
+		(Date.now() - new Date(request.occurredAt).getTime())
+			/ 86400000,
+	)
+	return daysSince > 30
+}
 
 export default {
 	name: 'PipelineCard',
@@ -181,6 +279,12 @@ export default {
 			type: String,
 			default: 'stage',
 		},
+
+		/** Draw the board look's card (PqPipeline). */
+		boardLook: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	emits: ['open', 'refresh'],
@@ -194,10 +298,54 @@ export default {
 			assignMenuOpen: false,
 			priorityMenuOpen: false,
 			pickedAssignee: null,
+			/** The owner's display name, once looked up (board look). */
+			ownerName: '',
 		}
 	},
 
 	computed: {
+		/**
+		 * The card's stage, from the pipeline's stages.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		cardStage() {
+			const name = this.item[this.columnProperty] ?? this.item.stage
+			return this.stages.find((stage) => stage.name === name) || null
+		},
+
+		/**
+		 * The win chance the card shows: the lead's own, else its stage's.
+		 *
+		 * @return {number|null}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		chance() {
+			if (this.entityType !== 'lead') return null
+			const own = isBlankValue(this.item.probability) ? null : roundedFinite(this.item.probability)
+			if (own !== null) {
+				return own
+			}
+			return this.cardStage ? roundedFinite(this.cardStage.probability) : null
+		},
+
+		/**
+		 * @return {string} The stage's colour, or ''.
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		stageColor() {
+			return this.cardStage?.color || ''
+		},
+
+		/**
+		 * @return {string} The owner's initials (board look).
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		ownerInitials() {
+			return initialsOf(this.ownerName || this.item.assignee || '')
+		},
+
 		/**
 		 * Whether the details row has anything to show.
 		 *
@@ -216,7 +364,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -229,7 +377,7 @@ export default {
 		 * (unify-ticket-supertype). `entityType` stays logical so the badge, the
 		 * overdue rule and the board's routing keep working unchanged.
 		 *
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 		 */
 		resolvedType() {
 			return resolveObjectType(this.entityType)
@@ -256,56 +404,42 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
 		 */
 		currentColumnValue() {
 			return this.item[this.columnProperty] || ''
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
 		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		isOverdue() {
 			if (this.entityType === 'lead') {
-				if (!this.item.expectedCloseDate) return false
-				if (this.item.status === 'won' || this.item.status === 'lost')
-					return false
-				// Cards in stages flagged isClosed never show overdue
-				const currentStage = this.stages.find(
-					(s) => s.name === this.item.stage,
-				)
-				if (currentStage && currentStage.isClosed) return false
-				return new Date(this.item.expectedCloseDate) < new Date()
+				return isLeadOverdue(this.item, this.stages)
 			}
 			if (this.entityType === 'request') {
-				// `requestedAt` became `occurredAt` on the ticket supertype.
-				if (!this.item.occurredAt) return false
-				const daysSince = Math.floor(
-					(Date.now() - new Date(this.item.occurredAt).getTime())
-						/ 86400000,
-				)
-				return daysSince > 30
+				return isRequestOverdue(this.item)
 			}
 			return false
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
 		 */
 		daysAge() {
 			return getDaysAge(this.item)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
 		 */
 		agingClass() {
 			return getAgingClass(this.daysAge)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
 		 */
 		agingLabel() {
 			return formatAge(this.daysAge)
@@ -323,14 +457,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
 		 */
 		stageOptions() {
 			return this.stages.map((s) => s.name)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
 		 */
 		userOptions() {
 			return this.users
@@ -356,7 +490,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
 				this.selectedStage = val || null
@@ -367,20 +501,39 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
 				this.selectedAssignee = val || null
+				this.loadOwnerName(val)
 			},
+		},
+
+		boardLook() {
+			this.loadOwnerName(this.item.assignee)
 		},
 	},
 
-	async mounted() {
-		await this.loadUsers()
-	},
-
 	methods: {
+		formatCurrency,
 		formatNumber,
+
+		/**
+		 * The board look shows the owner's initials from the display name.
+		 *
+		 * @param {string} uid The assignee's uid.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/pipeline/spec.md
+		 */
+		async loadOwnerName(uid) {
+			this.ownerName = ''
+			if (!this.boardLook || !uid) return
+			const name = await cachedUserDisplayName(uid)
+			if (this.item.assignee === uid) {
+				this.ownerName = name
+			}
+		},
+
 		getPriorityLabel,
 		getPriorityColor,
 		getStatusLabel,
@@ -398,28 +551,10 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
 		 */
 		async loadUsers() {
-			if (usersCache) {
-				this.users = usersCache
-				return
-			}
-			try {
-				const response = await fetch('/ocs/v2.php/cloud/users?format=json', {
-					headers: {
-						'OCS-APIREQUEST': 'true',
-						requesttoken: OC.requestToken,
-					},
-				})
-				if (response.ok) {
-					const data = await response.json()
-					usersCache = data?.ocs?.data?.users || []
-					this.users = usersCache
-				}
-			} catch {
-				this.users = []
-			}
+			this.users = await listAssignableUserIds()
 		},
 
 		/**
@@ -428,7 +563,7 @@ export default {
 		 * subtype, so a PUT can never strip it (unify-ticket-supertype).
 		 *
 		 * @return {object} Payload for objectStore.saveObject().
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
 		buildSavePayload() {
 			const updated = { ...this.item }
@@ -442,21 +577,12 @@ export default {
 
 		/**
 		 * @param {string} newStage The stage the card was moved to.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
 		 */
 		async onStageChange(newStage) {
 			if (!newStage || newStage === this.currentColumnValue) return
 			try {
-				const updated = this.buildSavePayload()
-				updated[this.columnProperty] = newStage
-				const targetStage = this.stages.find((s) => s.name === newStage)
-				if (
-					targetStage
-					&& typeof targetStage.order === 'number'
-					&& this.columnProperty === 'stage'
-				) {
-					updated.stageOrder = targetStage.order
-				}
+				const updated = this.stageMovePayload(newStage)
 				await this.objectStore.saveObject(
 					this.resolvedType.objectType,
 					updated,
@@ -472,8 +598,30 @@ export default {
 		},
 
 		/**
+		 * The card moved to another stage, with that stage's order when the
+		 * board columns are stages and the stage has one.
+		 *
+		 * @param {string} newStage The stage moved to.
+		 * @return {object} The object to save.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 */
+		stageMovePayload(newStage) {
+			const updated = this.buildSavePayload()
+			updated[this.columnProperty] = newStage
+			const targetStage = this.stages.find((s) => s.name === newStage)
+			if (
+				targetStage
+				&& typeof targetStage.order === 'number'
+				&& this.columnProperty === 'stage'
+			) {
+				updated.stageOrder = targetStage.order
+			}
+			return updated
+		},
+
+		/**
 		 * @param {string} newAssignee Nextcloud uid of the new assignee.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
 		 */
 		async onAssignChange(newAssignee) {
 			if (newAssignee === this.item.assignee) return
@@ -509,6 +657,7 @@ export default {
 		openAssignMenu() {
 			this.pickedAssignee = this.item.assignee || null
 			this.assignMenuOpen = true
+			this.loadUsers()
 		},
 
 		/**
@@ -568,7 +717,7 @@ export default {
 
 		/**
 		 * @param {string} dateStr The stored date.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
 		 */
 		formatDate(dateStr) {
 			return formatLocaleDate(dateStr)
@@ -593,6 +742,103 @@ export default {
 
 .pipeline-card--overdue {
 	border-inline-start: 3px solid var(--color-error);
+}
+
+/* Board look (PqPipeline): a white card on the grey column, the title
+   15px bold, the value, the chance in the stage's tint, and under a rule the
+   days in the stage and the owner's 24px chip. A stale lead is outlined red. */
+.pipeline-card--board {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 14px 14px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+}
+
+.pipeline-card--board:hover {
+	background: var(--color-main-background);
+	border-color: var(--color-border-maxcontrast);
+}
+
+.pipeline-card--board.pipeline-card--overdue {
+	border-inline-start-width: 1px;
+}
+
+.pipeline-card--board.pipeline-card--stale {
+	border-color: var(--color-error);
+	border-inline-start-width: 3px;
+}
+
+.pipeline-card--board .pipeline-card__header {
+	align-self: stretch;
+	align-items: flex-start;
+}
+
+.pipeline-card--board .pipeline-card__title {
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 20px;
+	white-space: normal;
+}
+
+.pipeline-card__value {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.pipeline-card__chance {
+	--pipeline-stage-color: var(--color-primary-element);
+	padding: 2px 8px;
+	border-radius: 10px;
+	background: color-mix(in srgb, var(--pipeline-stage-color) 14%, var(--color-main-background));
+	color: color-mix(in srgb, var(--pipeline-stage-color) 70%, var(--color-main-text));
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.pipeline-card__foot {
+	display: flex;
+	align-self: stretch;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-top: 4px;
+	padding-top: 10px;
+	border-top: 1px solid var(--color-border);
+}
+
+.pipeline-card__age {
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.pipeline-card__age--stale {
+	color: var(--color-error-text, var(--color-error));
+	font-weight: 700;
+}
+
+.pipeline-card__owner {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: var(--color-background-hover);
+	color: var(--cn-board-text-soft, var(--color-main-text));
+	font-size: 11px;
+	font-weight: 700;
+}
+
+/* The board draws the owner as a 26px chip in the light primary. */
+.pipeline-card--board .pipeline-card__owner {
+	width: 26px;
+	height: 26px;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 }
 
 .pipeline-card__menu {
@@ -645,13 +891,13 @@ export default {
 }
 
 .badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
+	background: var(--color-primary-element-light, #dbeafe);
+	color: var(--color-primary-element-light-text, #1d4ed8);
 }
 
 .badge--request {
-	background: #ffedd5;
-	color: #c2410c;
+	background: var(--color-warning-light, #ffedd5);
+	color: var(--color-warning-text, #c2410c);
 }
 
 .pipeline-card__title {
@@ -708,13 +954,13 @@ export default {
 }
 
 .aging-badge.aging-warning {
-	color: #92400e;
-	background: #fef3c7;
+	color: var(--color-warning-text, #92400e);
+	background: var(--color-warning-light, #fef3c7);
 }
 
 .aging-badge.aging-alert {
-	color: #991b1b;
-	background: #fee2e2;
+	color: var(--color-error-text, #991b1b);
+	background: var(--color-error-light, #fee2e2);
 }
 
 .card-date {

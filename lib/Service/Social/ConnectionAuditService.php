@@ -33,13 +33,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Kernel\Contracts\ConnectionAuditServiceInterface;
 use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
 use OCA\Pipelinq\Service\Competitor\FediverseWatchReader;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
@@ -49,7 +50,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 /**
  * Who follows whom, and where the question cannot be answered.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the
  *  three-valued answer itself: every read has a yes, a no and a reason it
@@ -58,7 +59,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *  this class exists to prevent, because a network that will not answer
  *  would then be recorded as a no.
  */
-class ConnectionAuditService {
+class ConnectionAuditService implements ConnectionAuditServiceInterface {
 
 	/**
 	 * The `socialConnection` schema slug.
@@ -96,13 +97,23 @@ class ConnectionAuditService {
 	public const MAX_FOLLOWS = 200;
 
 	/**
+	 * The AppView method and answer key of each Bluesky list direction.
+	 *
+	 * @var array<string, array{0: string, 1: string}>
+	 */
+	private const BLUESKY_LISTS = [
+		'following' => ['app.bsky.graph.getFollows', 'follows'],
+		'followers' => ['app.bsky.graph.getFollowers', 'followers'],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ListObjectStore $store Register-scoped object access.
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 * @param ITimeFactory $time Time factory for the audit stamp.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -116,7 +127,7 @@ class ConnectionAuditService {
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
 	 */
 	public function rows(): array {
 		return $this->store->findAll(schemaSlug: $this->schemaSlug());
@@ -127,7 +138,7 @@ class ConnectionAuditService {
 	 *
 	 * @return array{pairs: int, answered: int, unknown: int}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	public function run(): array {
 		$accounts = $this->accountsByNetwork();
@@ -164,7 +175,7 @@ class ConnectionAuditService {
 	 *
 	 * @return array<string, mixed> The row.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	public function audit(array $account, array $client, array $profile): array {
 		$network = $profile['network'];
@@ -184,14 +195,27 @@ class ConnectionAuditService {
 			return $row;
 		}
 
-		$following = $this->listOf(network: $network, account: $account, direction: 'following');
-		$followers = $this->listOf(network: $network, account: $account, direction: 'followers');
+		return $this->withFollowVerdicts(row: $row, account: $account);
+	}//end audit()
+
+	/**
+	 * The row with both follow verdicts from our account's graph, and the
+	 * reason of the first list that could not be read.
+	 *
+	 * @param array<string, mixed> $row     The row so far (network and counterpart handle).
+	 * @param array<string, mixed> $account Our account.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withFollowVerdicts(array $row, array $account): array {
+		$following = $this->listOf(network: $row['network'], account: $account, direction: 'following');
+		$followers = $this->listOf(network: $row['network'], account: $account, direction: 'followers');
 		if ($following['readable'] === false && $followers['readable'] === false) {
 			$row['reason'] = $following['reason'];
 			return $row;
 		}
 
-		$handle = mb_strtolower(ltrim($profile['handle'], '@'), 'UTF-8');
+		$handle = mb_strtolower(ltrim($row['counterpartHandle'], '@'), 'UTF-8');
 		$row['reason'] = '';
 		$row['weFollowThem'] = $this->verdict(list: $following, handle: $handle);
 		$row['theyFollowUs'] = $this->verdict(list: $followers, handle: $handle);
@@ -204,7 +228,7 @@ class ConnectionAuditService {
 		}
 
 		return $row;
-	}//end audit()
+	}//end withFollowVerdicts()
 
 	/**
 	 * Yes, no or unknown, from a list that may not have been readable.
@@ -254,45 +278,49 @@ class ConnectionAuditService {
 	private function mastodonList(array $account, string $direction): array {
 		$handle = ltrim(trim((string)($account['handle'] ?? '')), '@');
 		if (str_contains($handle, '@') === false) {
-			return ['readable' => false, 'handles' => [], 'reason' => 'The connected Mastodon handle does not name an instance.'];
+			return self::unreadable(reason: 'The connected Mastodon handle does not name an instance.');
 		}
 
 		[$user, $instance] = explode('@', $handle, 2);
-		$base = ('https://' . $instance);
-		$lookup = $this->egress->readUrl(
-			configKey: CompetitorWatchService::SOURCE_KEY,
-			url: ($base . '/api/v1/accounts/lookup'),
-			config: ['query' => ['acct' => ($user . '@' . $instance)]]
-		);
-		$id = trim((string)(($lookup->json() ?? [])['id'] ?? ''));
-		if ($lookup->succeeded === false || $id === '') {
-			return ['readable' => false, 'handles' => [], 'reason' => 'The instance ' . $instance . ' did not answer the account lookup.'];
+		$id = $this->mastodonAccountId(user: $user, instance: $instance);
+		if ($id === '') {
+			return self::unreadable(reason: 'The instance ' . $instance . ' did not answer the account lookup.');
 		}
 
 		$list = $this->egress->readUrl(
 			configKey: CompetitorWatchService::SOURCE_KEY,
-			url: ($base . '/api/v1/accounts/' . rawurlencode($id) . '/' . $direction),
+			url: ('https://' . $instance . '/api/v1/accounts/' . rawurlencode($id) . '/' . $direction),
 			config: ['query' => ['limit' => (string)self::MAX_FOLLOWS]]
 		);
 		$rows = $list->json();
 		if ($list->succeeded === false || $rows === null) {
-			return ['readable' => false, 'handles' => [], 'reason' => 'The instance ' . $instance . ' does not publish this list.'];
+			return self::unreadable(reason: 'The instance ' . $instance . ' does not publish this list.');
 		}
 
-		$handles = [];
-		foreach ($rows as $row) {
-			if (is_array($row) === false) {
-				continue;
-			}
-
-			$acct = mb_strtolower(trim((string)($row['acct'] ?? '')), 'UTF-8');
-			if ($acct !== '') {
-				$handles[] = $acct;
-			}
-		}
-
-		return ['readable' => true, 'handles' => $handles, 'reason' => ''];
+		return ['readable' => true, 'handles' => self::lowerHandles(rows: $rows, field: 'acct'), 'reason' => ''];
 	}//end mastodonList()
+
+	/**
+	 * The instance's id of our Mastodon account, '' when the lookup failed.
+	 *
+	 * @param string $user     The user part of the handle.
+	 * @param string $instance The instance host.
+	 *
+	 * @return string
+	 */
+	private function mastodonAccountId(string $user, string $instance): string {
+		$lookup = $this->egress->readUrl(
+			configKey: CompetitorWatchService::SOURCE_KEY,
+			url: ('https://' . $instance . '/api/v1/accounts/lookup'),
+			config: ['query' => ['acct' => ($user . '@' . $instance)]]
+		);
+		$id = trim((string)(($lookup->json() ?? [])['id'] ?? ''));
+		if ($lookup->succeeded === false) {
+			return '';
+		}
+
+		return $id;
+	}//end mastodonAccountId()
 
 	/**
 	 * A Bluesky account's follows or followers from the public AppView.
@@ -305,16 +333,10 @@ class ConnectionAuditService {
 	private function blueskyList(array $account, string $direction): array {
 		$handle = ltrim(trim((string)($account['handle'] ?? '')), '@');
 		if ($handle === '') {
-			return ['readable' => false, 'handles' => [], 'reason' => 'The connected Bluesky account has no handle.'];
+			return self::unreadable(reason: 'The connected Bluesky account has no handle.');
 		}
 
-		$method = 'app.bsky.graph.getFollows';
-		$key = 'follows';
-		if ($direction === 'followers') {
-			$method = 'app.bsky.graph.getFollowers';
-			$key = 'followers';
-		}
-
+		[$method, $key] = (self::BLUESKY_LISTS[$direction] ?? self::BLUESKY_LISTS['following']);
 		$list = $this->egress->readUrl(
 			configKey: CompetitorWatchService::SOURCE_KEY,
 			url: (FediverseWatchReader::BLUESKY_APPVIEW . '/xrpc/' . $method),
@@ -322,23 +344,46 @@ class ConnectionAuditService {
 		);
 		$decoded = $list->json();
 		if ($list->succeeded === false || is_array($decoded[$key] ?? null) === false) {
-			return ['readable' => false, 'handles' => [], 'reason' => 'The Bluesky AppView did not answer the ' . $direction . ' list.'];
+			return self::unreadable(reason: 'The Bluesky AppView did not answer the ' . $direction . ' list.');
 		}
 
+		return ['readable' => true, 'handles' => self::lowerHandles(rows: (array)$decoded[$key], field: 'handle'), 'reason' => ''];
+	}//end blueskyList()
+
+	/**
+	 * A list that could not be read, with the reason.
+	 *
+	 * @param string $reason Why.
+	 *
+	 * @return array{readable: bool, handles: array<int, string>, reason: string}
+	 */
+	private static function unreadable(string $reason): array {
+		return ['readable' => false, 'handles' => [], 'reason' => $reason];
+	}//end unreadable()
+
+	/**
+	 * The non-empty handles of a list, lowercased; rows that are not maps are skipped.
+	 *
+	 * @param array<int|string, mixed> $rows  The list rows.
+	 * @param string                   $field The row field holding the handle.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function lowerHandles(array $rows, string $field): array {
 		$handles = [];
-		foreach ((array)$decoded[$key] as $row) {
+		foreach ($rows as $row) {
 			if (is_array($row) === false) {
 				continue;
 			}
 
-			$actor = mb_strtolower(trim((string)($row['handle'] ?? '')), 'UTF-8');
-			if ($actor !== '') {
-				$handles[] = $actor;
+			$handle = mb_strtolower(trim((string)($row[$field] ?? '')), 'UTF-8');
+			if ($handle !== '') {
+				$handles[] = $handle;
 			}
 		}
 
-		return ['readable' => true, 'handles' => $handles, 'reason' => ''];
-	}//end blueskyList()
+		return $handles;
+	}//end lowerHandles()
 
 	/**
 	 * The connected accounts, one per network. When a tenant has several on
@@ -416,7 +461,7 @@ class ConnectionAuditService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	public function schemaSlug(): string {
 		return $this->store->schemaSlug(configKey: 'socialConnection_schema', default: self::SCHEMA_SLUG);

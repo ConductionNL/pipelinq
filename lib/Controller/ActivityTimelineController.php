@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/activity-timeline/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-activity-timeline/tasks.md#task-2
  * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-entries-must-be-available-via-api
  * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
  */
@@ -28,9 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ActivityTimelineServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -53,7 +53,7 @@ class ActivityTimelineController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ActivityTimelineService $service The activity timeline service.
+	 * @param ActivityTimelineServiceInterface $service The activity timeline service.
 	 * @param IUserSession $userSession The user session.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ContainerInterface $container The DI container.
@@ -61,7 +61,7 @@ class ActivityTimelineController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private ActivityTimelineService $service,
+		private ActivityTimelineServiceInterface $service,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private ContainerInterface $container,
@@ -71,7 +71,7 @@ class ActivityTimelineController extends Controller {
 		// posture for each endpoint lives on its own method attribute; this
 		// ctor is wired by the Nextcloud app framework and never serves a
 		// request.
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -128,28 +128,7 @@ class ActivityTimelineController extends Controller {
 			// the schema has no such field mayAccess() falls through to the
 			// privileged-group check, which is the only answer available for
 			// the 23 of 27 schemas that record no owner at all.
-			// The object service is pulled from the container BY STRING, so
-			// this seam is untyped: OpenRegister's find() hands back an
-			// ObjectEntity, but nothing here can enforce that and a plain array
-			// is what several doubles (and older OR versions) return. Calling
-			// jsonSerialize() unconditionally fataled on the array shape, and
-			// the catch below turned that into a silent "deny" — a 404 that
-			// looked like an authorization decision and was really a type
-			// error.
-			$payload = $object;
-			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-				$payload = $object->jsonSerialize();
-			}
-
-			// A NEW name rather than reusing `$object`: that variable still holds
-			// the service's return value a few lines up, and re-binding it inside
-			// an IDOR guard makes the reader re-derive which shape is in scope.
-			// Written as plain assignments rather than a ternary because phpcs
-			// forbids the inline IF and phpmd forbids the else.
-			$attributes = [];
-			if (is_array($payload) === true) {
-				$attributes = $payload;
-			}
+			$attributes = $this->objectAttributes(object: $object);
 
 			return $this->policy->mayAccess(
 				uid: $userId,
@@ -164,6 +143,39 @@ class ActivityTimelineController extends Controller {
 			return false;
 		}
 	}//end objectAccessible()
+
+	/**
+	 * The attribute array of an object returned by the untyped object service.
+	 *
+	 * @param mixed $object The object service's return value.
+	 *
+	 * @return array<string, mixed> The attributes, [] when the shape is unknown.
+	 */
+	private function objectAttributes(mixed $object): array {
+		// The object service is pulled from the container BY STRING, so
+		// this seam is untyped: OpenRegister's find() hands back an
+		// ObjectEntity, but nothing here can enforce that and a plain array
+		// is what several doubles (and older OR versions) return. Calling
+		// jsonSerialize() unconditionally fataled on the array shape, and
+		// the catch below turned that into a silent "deny" — a 404 that
+		// looked like an authorization decision and was really a type
+		// error.
+		$payload = $object;
+		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+			$payload = $object->jsonSerialize();
+		}
+
+		// A NEW name rather than reusing `$object`: that variable still holds
+		// the service's return value a few lines up, and re-binding it inside
+		// an IDOR guard makes the reader re-derive which shape is in scope.
+		// Written as plain assignments rather than a ternary because phpcs
+		// forbids the inline IF and phpmd forbids the else.
+		$attributes = [];
+		if (is_array($payload) === true) {
+			$attributes = $payload;
+		}
+		return $attributes;
+	}//end objectAttributes()
 
 	/**
 	 * Return the merged activity timeline for an entity.
@@ -187,18 +199,12 @@ class ActivityTimelineController extends Controller {
 		$entityId = (string)$this->request->getParam('entityId', '');
 
 		if ($entityType === '' || $entityId === '') {
-			return new JSONResponse(
-				['message' => 'entityType and entityId are required'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return new JSONResponse(['message' => 'entityType and entityId are required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		// 404 rather than 403 on purpose: a caller who may not see the entity
-		// must not be able to tell "exists but forbidden" from "does not
-		// exist", or the endpoint becomes an existence oracle over every id in
-		// the instance.
-		if ($this->objectAccessible(entityId: $entityId, userId: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
+		$notFound = $this->entityNotFound(entityId: $entityId, userId: $user->getUID());
+		if ($notFound !== null) {
+			return $notFound;
 		}
 
 		$params = [
@@ -209,6 +215,19 @@ class ActivityTimelineController extends Controller {
 			'_limit' => $this->request->getParam('_limit'),
 		];
 
+		return $this->loadTimeline(entityType: $entityType, entityId: $entityId, params: $params);
+	}//end getTimeline()
+
+	/**
+	 * Load the merged timeline; a failure is logged and answered with a 500.
+	 *
+	 * @param string               $entityType The entity type.
+	 * @param string               $entityId   The OR object UUID.
+	 * @param array<string, mixed> $params     The timeline filters and paging.
+	 *
+	 * @return JSONResponse
+	 */
+	private function loadTimeline(string $entityType, string $entityId, array $params): JSONResponse {
 		try {
 			$result = $this->service->getTimeline(
 				entityType: $entityType,
@@ -217,19 +236,9 @@ class ActivityTimelineController extends Controller {
 			);
 			return new JSONResponse($result);
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				'ActivityTimelineController: failed to load timeline',
-				[
-					'exception' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-			return new JSONResponse(
-				['message' => 'Failed to load timeline'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
+			return $this->serviceFailure(logMessage: 'ActivityTimelineController: failed to load timeline', userMessage: 'Failed to load timeline', error: $e);
 		}
-	}//end getTimeline()
+	}//end loadTimeline()
 
 	/**
 	 * Return worklog entries (contactmomenten with channel=worklog) for an entity.
@@ -250,25 +259,29 @@ class ActivityTimelineController extends Controller {
 		$entityId = (string)$this->request->getParam('entityId', '');
 
 		if ($entityType === '' || $entityId === '') {
-			return new JSONResponse(
-				['message' => 'entityType and entityId are required'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return new JSONResponse(['message' => 'entityType and entityId are required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		// 404 rather than 403 on purpose: a caller who may not see the entity
-		// must not be able to tell "exists but forbidden" from "does not
-		// exist", or the endpoint becomes an existence oracle over every id in
-		// the instance.
-		if ($this->objectAccessible(entityId: $entityId, userId: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
+		$notFound = $this->entityNotFound(entityId: $entityId, userId: $user->getUID());
+		if ($notFound !== null) {
+			return $notFound;
 		}
 
-		$params = [
-			'_page' => $this->request->getParam('_page'),
-			'_limit' => $this->request->getParam('_limit'),
-		];
+		$params = ['_page' => $this->request->getParam('_page'), '_limit' => $this->request->getParam('_limit')];
 
+		return $this->loadWorklog(entityType: $entityType, entityId: $entityId, params: $params);
+	}//end getWorklog()
+
+	/**
+	 * Load the worklog; a failure is logged and answered with a 500.
+	 *
+	 * @param string               $entityType The entity type.
+	 * @param string               $entityId   The OR object UUID.
+	 * @param array<string, mixed> $params     The paging.
+	 *
+	 * @return JSONResponse
+	 */
+	private function loadWorklog(string $entityType, string $entityId, array $params): JSONResponse {
 		try {
 			$result = $this->service->getWorklog(
 				entityType: $entityType,
@@ -277,19 +290,9 @@ class ActivityTimelineController extends Controller {
 			);
 			return new JSONResponse($result);
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				'ActivityTimelineController: failed to load worklog',
-				[
-					'exception' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-			return new JSONResponse(
-				['message' => 'Failed to load worklog'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
+			return $this->serviceFailure(logMessage: 'ActivityTimelineController: failed to load worklog', userMessage: 'Failed to load worklog', error: $e);
 		}
-	}//end getWorklog()
+	}//end loadWorklog()
 
 	/**
 	 * Create a worklog entry for an entity.
@@ -310,19 +313,13 @@ class ActivityTimelineController extends Controller {
 		$entityId = (string)$this->request->getParam('entityId', '');
 		$duration = (string)$this->request->getParam('duration', '');
 
-		if ($entityType === '' || $entityId === '' || $duration === '') {
-			return new JSONResponse(
-				['message' => 'entityType, entityId and duration are required'],
-				Http::STATUS_BAD_REQUEST
-			);
+		if ($this->anyEmpty(values: [$entityType, $entityId, $duration]) === true) {
+			return new JSONResponse(['message' => 'entityType, entityId and duration are required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		// 404 rather than 403 on purpose: a caller who may not see the entity
-		// must not be able to tell "exists but forbidden" from "does not
-		// exist", or the endpoint becomes an existence oracle over every id in
-		// the instance.
-		if ($this->objectAccessible(entityId: $entityId, userId: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
+		$notFound = $this->entityNotFound(entityId: $entityId, userId: $user->getUID());
+		if ($notFound !== null) {
+			return $notFound;
 		}
 
 		$data = [
@@ -331,6 +328,19 @@ class ActivityTimelineController extends Controller {
 			'date' => $this->request->getParam('date'),
 		];
 
+		return $this->storeWorklog(entityType: $entityType, entityId: $entityId, data: $data);
+	}//end createWorklog()
+
+	/**
+	 * Create the worklog entry; a failure is logged and answered with a 500.
+	 *
+	 * @param string               $entityType The entity type.
+	 * @param string               $entityId   The OR object UUID.
+	 * @param array<string, mixed> $data       The worklog fields.
+	 *
+	 * @return JSONResponse
+	 */
+	private function storeWorklog(string $entityType, string $entityId, array $data): JSONResponse {
 		try {
 			$created = $this->service->createWorklog(
 				entityType: $entityType,
@@ -339,17 +349,65 @@ class ActivityTimelineController extends Controller {
 			);
 			return new JSONResponse($created, Http::STATUS_CREATED);
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				'ActivityTimelineController: failed to create worklog',
-				[
-					'exception' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-			return new JSONResponse(
-				['message' => 'Failed to create worklog'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
+			return $this->serviceFailure(
+				logMessage: 'ActivityTimelineController: failed to create worklog',
+				userMessage: 'Failed to create worklog',
+				error: $e
 			);
 		}
-	}//end createWorklog()
+	}//end storeWorklog()
+
+	/**
+	 * The 404 for an entity the caller may not see, or null when they may.
+	 *
+	 * @param string $entityId The OR object UUID.
+	 * @param string $userId   The caller's uid.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function entityNotFound(string $entityId, string $userId): JSONResponse|null {
+		// 404 rather than 403 on purpose: a caller who may not see the entity
+		// must not be able to tell "exists but forbidden" from "does not
+		// exist", or the endpoint becomes an existence oracle over every id in
+		// the instance.
+		if ($this->objectAccessible(entityId: $entityId, userId: $userId) === false) {
+			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		return null;
+	}//end entityNotFound()
+
+	/**
+	 * Log a failed service call and answer with a 500.
+	 *
+	 * @param string     $logMessage  The error logged.
+	 * @param string     $userMessage The message returned.
+	 * @param \Throwable $error       The failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function serviceFailure(string $logMessage, string $userMessage, \Throwable $error): JSONResponse {
+		$this->logger->error(
+			$logMessage,
+			[
+				'exception' => $error->getMessage(),
+				'trace' => $error->getTraceAsString(),
+			]
+		);
+		return new JSONResponse(
+			['message' => $userMessage],
+			Http::STATUS_INTERNAL_SERVER_ERROR
+		);
+	}//end serviceFailure()
+
+	/**
+	 * Whether any of the values is the empty string.
+	 *
+	 * @param array<int, string> $values The values.
+	 *
+	 * @return bool
+	 */
+	private function anyEmpty(array $values): bool {
+		return in_array('', $values, true);
+	}//end anyEmpty()
 }//end class

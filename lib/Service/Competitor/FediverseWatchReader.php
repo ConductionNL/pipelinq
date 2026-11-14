@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCA\Pipelinq\Service\Egress\EgressResult;
 /**
  * Public Mastodon and Bluesky timelines.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (WatchOutcome). A value
@@ -71,7 +71,7 @@ class FediverseWatchReader {
 	 *
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -86,7 +86,7 @@ class FediverseWatchReader {
 	 *
 	 * @return WatchOutcome The posts, or the reason there are none.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
 	 */
 	public function read(string $handle, string $sourceId = ''): WatchOutcome {
 		$trimmed = ltrim(trim($handle), '@');
@@ -110,6 +110,23 @@ class FediverseWatchReader {
 	 * @return WatchOutcome
 	 */
 	private function mastodon(string $handle, string $sourceId): WatchOutcome {
+		$account = $this->mastodonAccount(handle: $handle, sourceId: $sourceId);
+		if ($account instanceof WatchOutcome) {
+			return $account;
+		}
+
+		return $this->mastodonTimeline(account: $account, sourceId: $sourceId);
+	}//end mastodon()
+
+	/**
+	 * Look the account up on its instance.
+	 *
+	 * @param string $handle   `user@instance`.
+	 * @param string $sourceId The source to read through.
+	 *
+	 * @return MastodonAccount|WatchOutcome The account, or the failed outcome.
+	 */
+	private function mastodonAccount(string $handle, string $sourceId): MastodonAccount|WatchOutcome {
 		[$user, $instance] = explode('@', $handle, 2);
 		$base = ('https://' . $instance);
 		$lookup = $this->egress->readUrl(
@@ -131,9 +148,21 @@ class FediverseWatchReader {
 			);
 		}
 
+		return new MastodonAccount(handle: $handle, id: $accountId);
+	}//end mastodonAccount()
+
+	/**
+	 * The account's public statuses, replies left out.
+	 *
+	 * @param MastodonAccount $account  The account.
+	 * @param string          $sourceId The source to read through.
+	 *
+	 * @return WatchOutcome
+	 */
+	private function mastodonTimeline(MastodonAccount $account, string $sourceId): WatchOutcome {
 		$statuses = $this->egress->readUrl(
 			configKey: CompetitorWatchService::SOURCE_KEY,
-			url: ($base . '/api/v1/accounts/' . rawurlencode($accountId) . '/statuses'),
+			url: ($account->base() . '/api/v1/accounts/' . rawurlencode($account->id) . '/statuses'),
 			config: ['query' => ['limit' => (string)self::MAX_POSTS, 'exclude_replies' => 'true']],
 			sourceId: $sourceId
 		);
@@ -143,11 +172,11 @@ class FediverseWatchReader {
 
 		$rows = $statuses->json();
 		if ($rows === null) {
-			return WatchOutcome::failed(outcome: EgressResult::UNPARSABLE, reason: 'The timeline of ' . $handle . ' could not be read.');
+			return WatchOutcome::failed(outcome: EgressResult::UNPARSABLE, reason: 'The timeline of ' . $account->handle . ' could not be read.');
 		}
 
-		return WatchOutcome::seen(items: $this->fromMastodon(rows: $rows, handle: $handle));
-	}//end mastodon()
+		return WatchOutcome::seen(items: $this->fromMastodon(rows: $rows, handle: $account->handle));
+	}//end mastodonTimeline()
 
 	/**
 	 * A Bluesky account's public author feed.
@@ -219,37 +248,79 @@ class FediverseWatchReader {
 	private function fromBluesky(array $rows, string $handle): array {
 		$out = [];
 		foreach ($rows as $row) {
-			$post = null;
-			if (is_array($row) === true) {
-				$post = ($row['post'] ?? null);
+			$entry = $this->blueskyEntry(row: $row, handle: $handle);
+			if ($entry !== null) {
+				$out[] = $entry;
 			}
-
-			if (is_array($post) === false) {
-				continue;
-			}
-
-			$uri = trim((string)($post['uri'] ?? ''));
-			if ($uri === '') {
-				continue;
-			}
-
-			$record = ($post['record'] ?? []);
-			$text = '';
-			if (is_array($record) === true) {
-				$text = (string)($record['text'] ?? '');
-			}
-
-			$out[] = [
-				'url' => $this->blueskyPermalink(uri: $uri, handle: $handle),
-				'title' => ($handle . ' posted'),
-				'summary' => $this->shorten(value: $text),
-				'stamp' => trim((string)($post['cid'] ?? $uri)),
-				'publishedAt' => trim((string)($post['indexedAt'] ?? '')),
-			];
 		}
 
 		return $out;
 	}//end fromBluesky()
+
+	/**
+	 * One Bluesky feed entry as a watch row, or null when it carries no post uri.
+	 *
+	 * @param mixed  $row    The feed entry.
+	 * @param string $handle The handle, for the title.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function blueskyEntry(mixed $row, string $handle): array|null {
+		$post = $this->blueskyPost(row: $row);
+		if ($post === null) {
+			return null;
+		}
+
+		$uri = trim((string)($post['uri'] ?? ''));
+		if ($uri === '') {
+			return null;
+		}
+
+		return [
+			'url' => $this->blueskyPermalink(uri: $uri, handle: $handle),
+			'title' => ($handle . ' posted'),
+			'summary' => $this->shorten(value: $this->blueskyText(post: $post)),
+			'stamp' => trim((string)($post['cid'] ?? $uri)),
+			'publishedAt' => trim((string)($post['indexedAt'] ?? '')),
+		];
+	}//end blueskyEntry()
+
+	/**
+	 * The `post` of a feed entry, or null when it has none.
+	 *
+	 * @param mixed $row The feed entry.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function blueskyPost(mixed $row): array|null {
+		$post = null;
+		if (is_array($row) === true) {
+			$post = ($row['post'] ?? null);
+		}
+
+		if (is_array($post) === false) {
+			return null;
+		}
+
+		return $post;
+	}//end blueskyPost()
+
+	/**
+	 * The text of a post's record, or ''.
+	 *
+	 * @param array<string, mixed> $post The post.
+	 *
+	 * @return string
+	 */
+	private function blueskyText(array $post): string {
+		$record = ($post['record'] ?? []);
+		$text = '';
+		if (is_array($record) === true) {
+			$text = (string)($record['text'] ?? '');
+		}
+
+		return $text;
+	}//end blueskyText()
 
 	/**
 	 * A readable Bluesky permalink from an `at://` URI.

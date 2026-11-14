@@ -32,10 +32,10 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SlaEngineService;
-use OCA\Pipelinq\Service\TicketService;
-use OCP\IAppConfig;
+use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SlaSweepSourceInterface;
+use OCA\Pipelinq\Service\Sla\SlaSweepRun;
+use OCA\Pipelinq\Service\Sla\SlaSweepSurface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -60,17 +60,15 @@ class InitSlaStatus implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param SlaEngineService $engine SLA engine.
+	 * @param SlaEngineServiceInterface $engine SLA engine.
+	 * @param SlaSweepSourceInterface $source The register and the SLA-tracked surfaces.
 	 * @param ContainerInterface $container DI container.
-	 * @param IAppConfig $appConfig App config.
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private SlaEngineService $engine,
+		private SlaEngineServiceInterface $engine,
+		private SlaSweepSourceInterface $source,
 		private ContainerInterface $container,
-		private IAppConfig $appConfig,
-		private TicketService $ticketService,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -93,16 +91,10 @@ class InitSlaStatus implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Batched pagination over the tracked SLA
-	 *   surfaces with per-batch and per-object fault tolerance; the per-object logic is extracted to
-	 *   initialiseObject(), leaving only the loop/paging scaffold here.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Same rationale: the nested paging loop and its
-	 *   independent guard clauses inflate the theoretical path count.
-	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function run(IOutput $output): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->source->register();
 		if ($register === '') {
 			$output->info('InitSlaStatus: pipelinq register not configured, skipping');
 			return;
@@ -115,129 +107,103 @@ class InitSlaStatus implements IRepairStep {
 			return;
 		}
 
-		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$totalInit = 0;
-		$totalSkip = 0;
-
-		foreach ($this->resolveSurfaces() as $surface) {
-			$type = $surface['type'];
-			$schemaId = $surface['schema'];
-			$ticketType = $surface['ticketType'];
-
-			$filters = [
-				'register' => $register,
-				'schema' => $schemaId,
-			];
-			if ($ticketType !== null) {
-				$filters['ticketType'] = $ticketType;
-			}
-
-			$offset = 0;
-			do {
-				try {
-					$rows = $objectService->findAll(
-						config: [
-							'filters' => $filters,
-							'limit' => self::BATCH_SIZE,
-							'offset' => $offset,
-						]
-					);
-				} catch (Throwable $e) {
-					$this->logger->warning(
-						'InitSlaStatus: findAll failed',
-						['error' => $e->getMessage(), 'schema' => $schemaId]
-					);
-					break;
-				}
-
-				if (is_array($rows) === false) {
-					$rows = iterator_to_array($rows);
-				}
-
-				$count = count($rows);
-				if ($count === 0) {
-					break;
-				}
-
-				foreach ($rows as $row) {
-					try {
-						$written = $this->initialiseObject(
-							row: $row,
-							type: $type,
-							register: $register,
-							schemaId: $schemaId,
-							objectService: $objectService,
-							fallbackStart: $now,
-						);
-					} catch (Throwable $e) {
-						$this->logger->warning(
-							'InitSlaStatus: per-object failed',
-							['exceptionClass' => get_class($e), 'error' => $e->getMessage()]
-						);
-						$totalSkip++;
-						continue;
-					}//end try
-
-					if ($written === true) {
-						$totalInit++;
-						continue;
-					}
-
-					$totalSkip++;
-				}//end foreach
-
-				$offset += self::BATCH_SIZE;
-				if ($offset >= 10000) {
-					break;
-				}
-			} while ($count === self::BATCH_SIZE);
-		}//end foreach
-
-		$output->info(sprintf('InitSlaStatus: initialised=%d, skipped=%d', $totalInit, $totalSkip));
-		$this->logger->info(
-			'InitSlaStatus: completed',
-			['initialised' => $totalInit, 'skipped' => $totalSkip]
+		$run = new SlaSweepRun(
+			register: $register,
+			policies: [],
+			now: new DateTimeImmutable('now', new DateTimeZone('UTC')),
+			objectService: $objectService
 		);
+		$totals = ['initialised' => 0, 'skipped' => 0];
+		foreach ($this->source->surfaces(run: $run) as $surface) {
+			$counts = $this->initialiseSurface(surface: $surface);
+			$totals['initialised'] += $counts['initialised'];
+			$totals['skipped'] += $counts['skipped'];
+		}
+
+		$output->info(sprintf('InitSlaStatus: initialised=%d, skipped=%d', $totals['initialised'], $totals['skipped']));
+		$this->logger->info('InitSlaStatus: completed', $totals);
 	}//end run()
 
 	/**
-	 * The SLA-tracked surfaces to walk.
+	 * Initialise every untracked object of one surface, page by page.
 	 *
-	 * The `request` and `klacht` SLA object types are both subtypes of the unified
-	 * `ticket` schema (unify-ticket-supertype) and are read from it with a
-	 * `ticketType` filter; `callback` keeps its own schema. A surface whose schema
-	 * is unprovisioned is omitted.
+	 * Stops at the first failed read, and after 10000 rows.
 	 *
-	 * @return array<int, array{type: string, schema: string, ticketType: ?string}> The surfaces.
+	 * @param SlaSweepSurface $surface The surface.
+	 *
+	 * @return array{initialised: int, skipped: int}
 	 */
-	private function resolveSurfaces(): array {
-		$surfaces = [];
+	private function initialiseSurface(SlaSweepSurface $surface): array {
+		$counts = ['initialised' => 0, 'skipped' => 0];
+		$offset = 0;
+		do {
+			$rows = $this->readPage(surface: $surface, offset: $offset);
+			$count = count($rows);
+			foreach ($rows as $row) {
+				$outcome = $this->initialiseCounted(row: $row, surface: $surface);
+				$counts[$outcome]++;
+			}
 
-		$ticketSchemaId = $this->ticketService->getSchemaId();
-		if ($ticketSchemaId !== '') {
-			$surfaces[] = [
-				'type' => 'request',
-				'schema' => $ticketSchemaId,
-				'ticketType' => TicketService::TYPE_REQUEST,
-			];
-			$surfaces[] = [
-				'type' => 'complaint',
-				'schema' => $ticketSchemaId,
-				'ticketType' => TicketService::TYPE_COMPLAINT,
-			];
+			$offset += self::BATCH_SIZE;
+		} while ($count === self::BATCH_SIZE && $offset < 10000);
+
+		return $counts;
+	}//end initialiseSurface()
+
+	/**
+	 * One page of a surface's rows; empty when the read fails.
+	 *
+	 * @param SlaSweepSurface $surface The surface.
+	 * @param int $offset The page offset.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function readPage(SlaSweepSurface $surface, int $offset): array {
+		try {
+			$rows = $surface->run->objectService->findAll(
+				config: [
+					'filters' => $surface->filters(),
+					'limit' => self::BATCH_SIZE,
+					'offset' => $offset,
+				]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'InitSlaStatus: findAll failed',
+				['error' => $e->getMessage(), 'schema' => $surface->schemaId]
+			);
+			return [];
 		}
 
-		$callbackSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'callback_schema', '');
-		if ($callbackSchemaId !== '') {
-			$surfaces[] = [
-				'type' => 'callback',
-				'schema' => $callbackSchemaId,
-				'ticketType' => null,
-			];
+		if (is_array($rows) === false) {
+			$rows = iterator_to_array($rows);
 		}
 
-		return $surfaces;
-	}//end resolveSurfaces()
+		return $rows;
+	}//end readPage()
+
+	/**
+	 * Initialise one object, counting a failure as skipped.
+	 *
+	 * @param mixed $row OR row (entity or array).
+	 * @param SlaSweepSurface $surface The surface it was read from.
+	 *
+	 * @return string `initialised` or `skipped`.
+	 */
+	private function initialiseCounted(mixed $row, SlaSweepSurface $surface): string {
+		try {
+			if ($this->initialiseObject(row: $row, surface: $surface) === true) {
+				return 'initialised';
+			}
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'InitSlaStatus: per-object failed',
+				['exceptionClass' => get_class($e), 'error' => $e->getMessage()]
+			);
+		}
+
+		return 'skipped';
+	}//end initialiseCounted()
 
 	/**
 	 * Initialise slaStatus on a single tracked object.
@@ -246,68 +212,126 @@ class InitSlaStatus implements IRepairStep {
 	 * policy; otherwise writes the initial status and persists the object.
 	 *
 	 * @param mixed $row OR row (entity or array).
-	 * @param string $type SLA object type (request/klacht/callback).
-	 * @param string $register Register id.
-	 * @param string $schemaId Schema id.
-	 * @param object $objectService OR ObjectService.
-	 * @param DateTimeImmutable $fallbackStart Fallback start instant when the object has none.
+	 * @param SlaSweepSurface $surface The surface it was read from; its run carries
+	 *   the register, the object service and the fallback start instant.
 	 *
 	 * @return bool True when a status was written, false when the object was skipped.
 	 */
-	private function initialiseObject(
-		mixed $row,
-		string $type,
-		string $register,
-		string $schemaId,
-		object $objectService,
-		DateTimeImmutable $fallbackStart,
-	): bool {
+	private function initialiseObject(mixed $row, SlaSweepSurface $surface): bool {
+		$data = $this->rowData(row: $row);
+		$uuid = $this->rowUuid(row: $row, data: $data);
+		if ($uuid === '') {
+			return false;
+		}
+
+		if ($this->hasSlaStatus(data: $data) === true) {
+			return false;
+		}
+
+		$metadata = [
+			'tier' => $this->firstValue(data: $data, keys: ['slaTier', 'customerTier']),
+			'organisationId' => $this->firstValue(data: $data, keys: ['organisationId', 'client']),
+			'contractId' => $this->firstValue(data: $data, keys: ['contractId']),
+		];
+
+		$policy = $this->engine->resolvePolicyForObject($surface->type, $uuid, $metadata);
+		if ($policy === null) {
+			return false;
+		}
+
+		$startedAt = $this->parseStarted(data: $data) ?? $surface->run->now;
+		$data['slaStatus'] = $this->engine->initialiseStatus($policy, $startedAt);
+
+		$this->saveInitialised(data: $data, surface: $surface, uuid: $uuid);
+
+		return true;
+	}//end initialiseObject()
+
+	/**
+	 * The data of an OR row (entity or array).
+	 *
+	 * @param mixed $row OR row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function rowData(mixed $row): array {
 		$data = (array)$row;
 		if (is_object($row) === true && method_exists($row, 'getObject') === true) {
 			$data = $row->getObject();
 		}
 
+		return $data;
+	}//end rowData()
+
+	/**
+	 * The UUID of an OR row: the entity's own, else the data's uuid or id.
+	 *
+	 * @param mixed                $row  OR row.
+	 * @param array<string, mixed> $data The row's data.
+	 *
+	 * @return string
+	 */
+	private function rowUuid(mixed $row, array $data): string {
 		$uuid = (string)($data['uuid'] ?? $data['id'] ?? '');
 		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
 			$uuid = (string)$row->getUuid();
 		}
 
-		if ($uuid === '') {
-			return false;
-		}
+		return $uuid;
+	}//end rowUuid()
 
+	/**
+	 * Whether the object already carries an initialised slaStatus.
+	 *
+	 * @param array<string, mixed> $data The object data.
+	 *
+	 * @return bool
+	 */
+	private function hasSlaStatus(array $data): bool {
 		$slaStatus = $data['slaStatus'] ?? null;
-		if (is_array($slaStatus) === true && ($slaStatus['policyId'] ?? '') !== '') {
-			return false;
+		return is_array($slaStatus) === true && ($slaStatus['policyId'] ?? '') !== '';
+	}//end hasSlaStatus()
+
+	/**
+	 * The first of the keys that holds a non-null value, as a string ('' when none does).
+	 *
+	 * @param array<string, mixed> $data The object data.
+	 * @param array<int, string>   $keys The keys, in order of preference.
+	 *
+	 * @return string
+	 */
+	private function firstValue(array $data, array $keys): string {
+		foreach ($keys as $key) {
+			if (isset($data[$key]) === true) {
+				return (string)$data[$key];
+			}
 		}
 
-		$metadata = [
-			'tier' => (string)($data['slaTier'] ?? $data['customerTier'] ?? ''),
-			'organisationId' => (string)($data['organisationId'] ?? $data['client'] ?? ''),
-			'contractId' => (string)($data['contractId'] ?? ''),
-		];
+		return '';
+	}//end firstValue()
 
-		$policy = $this->engine->resolvePolicyForObject($type, $uuid, $metadata);
-		if ($policy === null) {
-			return false;
-		}
-
-		$startedAt = $this->parseStarted(data: $data) ?? $fallbackStart;
-		$data['slaStatus'] = $this->engine->initialiseStatus($policy, $startedAt);
-
+	/**
+	 * Persist an object with its initialised slaStatus as the system.
+	 *
+	 * @param array<string, mixed> $data    The object data.
+	 * @param SlaSweepSurface      $surface The surface it was read from.
+	 * @param string               $uuid    The object UUID.
+	 *
+	 * @return void
+	 */
+	private function saveInitialised(array $data, SlaSweepSurface $surface, string $uuid): void {
+		$objectService = $surface->run->objectService;
 		$this->execAsSystem(
 			objectService: $objectService,
 			operation: static fn () => $objectService->saveObject(
 				object: $data,
 				extend: [],
-				register: $register,
-				schema: $schemaId,
+				register: $surface->run->register,
+				schema: $surface->schemaId,
 				uuid: $uuid,
 			)
 		);
-
-		return true;
-	}//end initialiseObject()
+	}//end saveInitialised()
 
 	/**
 	 * Execute an OpenRegister write under the scoped system-operation context.

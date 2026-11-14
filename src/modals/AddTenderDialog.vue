@@ -9,13 +9,13 @@
   - Submits POST /api/pos-transactions/{id}/tenders and emits `added` on
   - success so the parent panel can refresh.
   -
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.3
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.4
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.3
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.4
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Add tender')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="add-tender">
@@ -94,19 +94,21 @@
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Add tender') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { posRecordId } from '../services/posRecordId.js'
 import { formatEur } from '../services/posTotals.js'
 
 export default {
 	name: 'AddTenderDialog',
-	components: { NcButton, NcDialog, NcSelect, NcTextField },
+	components: { NcButton, CnDialog, NcSelect, NcTextField },
 	props: {
 		transactionId: {
 			type: String,
@@ -178,12 +180,7 @@ export default {
 
 	methods: {
 		formatEur,
-		idOf(type) {
-			if (type?.['@self']?.id) {
-				return type['@self'].id
-			}
-			return type?.id || type?.uuid || ''
-		},
+		idOf: posRecordId,
 
 		async submit() {
 			this.saving = true

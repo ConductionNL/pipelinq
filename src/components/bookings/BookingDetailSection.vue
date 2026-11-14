@@ -33,6 +33,63 @@
 	<div class="booking-section">
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
+			<section v-if="part === 'customer'" class="booking-section__block booking-person">
+				<h2 class="booking-section__title cn-side-heading">
+					{{ customerKindLabel }}
+				</h2>
+				<div class="booking-person__head">
+					<span class="booking-person__initials" aria-hidden="true">{{ customerInitials }}</span>
+					<div>
+						<strong>{{ customerLabel }}</strong>
+						<span v-if="customer && customer.address" class="booking-person__sub">{{ customerKindLabel }} · {{ customer.address }}</span>
+					</div>
+				</div>
+				<dl class="booking-facts">
+					<template v-if="customer && customer.phone">
+						<dt>{{ t('pipelinq', 'Phone') }}</dt>
+						<dd>{{ customer.phone }}</dd>
+					</template>
+					<template v-if="customer && customer.email">
+						<dt>{{ t('pipelinq', 'Email') }}</dt>
+						<dd>{{ customer.email }}</dd>
+					</template>
+				</dl>
+				<router-link v-if="customerRoute" :to="customerRoute" class="booking-section__link">
+					{{ t('pipelinq', 'Contact details and earlier tickets') }}
+				</router-link>
+			</section>
+
+			<section v-if="part === 'when'" class="booking-section__block booking-when">
+				<h2 class="booking-section__title cn-side-heading">
+					{{ t('pipelinq', 'When and where') }}
+				</h2>
+				<p class="booking-when__slot">
+					<span>{{ whenDay }}</span>
+					<span>{{ whenTime }}</span>
+				</p>
+				<p v-if="booking.location" class="booking-when__place">
+					<MapMarkerOutline :size="18" />
+					{{ booking.location }}
+				</p>
+				<dl class="booking-facts">
+					<template v-if="booking.assignee">
+						<dt>{{ t('pipelinq', 'Handler') }}</dt>
+						<dd>{{ handlerName }}</dd>
+					</template>
+					<dt>{{ t('pipelinq', 'Reminder') }}</dt>
+					<dd>{{ booking.reminderSentAt ? formatDateTime(booking.reminderSentAt) : t('pipelinq', 'Not sent yet') }}</dd>
+				</dl>
+				<NcButton
+					v-if="canSendReminder"
+					class="cn-button--tonal"
+					variant="secondary"
+					:disabled="sending"
+					data-testid="booking-action-send-reminder"
+					@click="sendReminder">
+					{{ t('pipelinq', 'Send reminder') }}
+				</NcButton>
+			</section>
+
 			<section v-if="shows('context')" class="booking-section__block">
 				<h4 v-if="part === 'all'">{{ t('pipelinq', 'Context') }}</h4>
 				<div class="info-grid">
@@ -131,18 +188,25 @@
 </template>
 
 <script>
-import { showError } from '@nextcloud/dialogs'
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
-import { NcLoadingIcon } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { emit } from '@nextcloud/event-bus'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import CalendarRemove from 'vue-material-design-icons/CalendarRemove.vue'
 import CashCheck from 'vue-material-design-icons/CashCheck.vue'
 import CashRemove from 'vue-material-design-icons/CashRemove.vue'
 import ClockEnd from 'vue-material-design-icons/ClockEnd.vue'
 import ClockStart from 'vue-material-design-icons/ClockStart.vue'
 import EmailCheckOutline from 'vue-material-design-icons/EmailCheckOutline.vue'
+import MapMarkerOutline from 'vue-material-design-icons/MapMarkerOutline.vue'
 import ProgressCheck from 'vue-material-design-icons/ProgressCheck.vue'
 import { currencyOr } from '../../services/reportingCurrency.js'
-import { useObjectStore } from '../../store/modules/object.js'
+import { createUserDisplayNameFormatter } from '../../services/userDisplayName.js'
+import { slotLabel, timeRange } from '../../utils/bookingTime.js'
+import { BOOKING_STATUS_LABELS, bookingCurrency, bookingDateTime } from './bookingFormat.js'
+import bookingSectionMixin from './bookingSectionMixin.js'
+
+const userName = createUserDisplayNameFormatter()
 
 const TIMELINE_ICONS = {
 	start: ClockStart,
@@ -154,36 +218,35 @@ const TIMELINE_ICONS = {
 	status: ProgressCheck,
 }
 
-/** The parts this section can render on its own. */
-const PARTS = ['all', 'context', 'assignments', 'timeline']
+/**
+ * The booking's timestamp fields the timeline lists, each with its kind and its words.
+ */
+const TIMESTAMP_EVENTS = [
+	['startAt', 'start', () => t('pipelinq', 'Booking starts')],
+	['endAt', 'end', () => t('pipelinq', 'Booking ends')],
+	['confirmationSentAt', 'email', () => t('pipelinq', 'Confirmation email sent')],
+	['reminderSentAt', 'email', () => t('pipelinq', 'Reminder email sent')],
+	['depositPaidAt', 'deposit', () => t('pipelinq', 'Deposit cleared')],
+	['noShowFeeChargedAt', 'fee', () => t('pipelinq', 'No-show fee charged')],
+	['cancelledAt', 'cancel', () => t('pipelinq', 'Cancelled')],
+]
 
-const STATUS_LABELS = {
-	'pending-deposit': 'Awaiting deposit',
-	confirmed: 'Confirmed',
-	completed: 'Completed',
-	'no-show': 'No-show',
-	'cancelled-by-customer': 'Cancelled (customer)',
-	'cancelled-by-business': 'Cancelled (business)',
-	rescheduled: 'Rescheduled',
-}
+/** The parts this section can render on its own. */
+const PARTS = ['all', 'context', 'assignments', 'timeline', 'customer', 'when']
+
+const STATUS_LABELS = BOOKING_STATUS_LABELS
 
 export default {
 	name: 'BookingDetailSection',
 	components: {
+		MapMarkerOutline,
+		NcButton,
 		NcLoadingIcon,
 	},
 
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [bookingSectionMixin],
 
 	props: {
-		/** The booking id (token-resolved from `@objectId` by CnBodySections). */
-		bookingId: {
-			type: String,
-			default: '',
-		},
-
 		/**
 		 * Which part to render: `context`, `assignments`, `timeline`, or
 		 * `all` (each under its own heading).
@@ -197,34 +260,107 @@ export default {
 
 	data() {
 		return {
-			booking: {},
-			loading: false,
-			resourceLookup: {},
 			service: null,
 			customer: null,
+			customerIsContact: false,
 			loadedCustomerId: null,
+			sending: false,
 			contextLoading: false,
 		}
 	},
 
 	computed: {
-		objectStore() {
-			return useObjectStore()
-		},
-
-		/** The resolved booking id — prop wins, else the injected section context. */
-		resolvedId() {
-			if (this.bookingId) {
-				return this.bookingId
-			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
-			return (bag && bag.objectId) || ''
-		},
-
 		serviceName() {
 			return this.service?.name || this.booking.serviceId || '-'
+		},
+
+		/**
+		 * The customer's initials for the avatar of the customer card.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		customerInitials() {
+			const words = String(this.customerLabel || '').split(/\s+/).filter(Boolean)
+			if (words.length === 0) {
+				return ''
+			}
+			const first = words[0].charAt(0)
+			const last = words.length > 1 ? words[words.length - 1].charAt(0) : ''
+			return (first + last).toUpperCase()
+		},
+
+		/**
+		 * The page of the customer: the client, or the contact person.
+		 *
+		 * @return {object|null} The route, or null when the customer is unknown.
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		customerRoute() {
+			if (!this.customer || !this.booking.customerId) {
+				return null
+			}
+			return {
+				name: this.customerIsContact ? 'ContactDetail' : 'ClientDetail',
+				params: { id: this.booking.customerId },
+			}
+		},
+
+		/**
+		 * The day of the appointment ("Donderdag 22 oktober").
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		whenDay() {
+			const label = slotLabel(this.booking.startAt, this.booking.endAt)
+			return label.split(', ')[0] || ''
+		},
+
+		/**
+		 * The time of the appointment ("14:00 tot 15:00").
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		whenTime() {
+			return timeRange(this.booking.startAt, this.booking.endAt)
+		},
+
+		/**
+		 * The handler's display name.
+		 *
+		 * @return {string}
+		 */
+		handlerName() {
+			return userName(this.booking.assignee)
+		},
+
+		/**
+		 * Whether a reminder can go out: a confirmed booking more than an
+		 * hour away, the rule the reminder endpoint applies.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		canSendReminder() {
+			const start = Date.parse(this.booking.startAt || '')
+			return this.booking.status === 'confirmed'
+				&& Number.isFinite(start)
+				&& start - Date.now() > 60 * 60 * 1000
+		},
+
+		/**
+		 * What the customer is, as the side card names it: a resident or an
+		 * organisation (PqAfspraak "Inwoner").
+		 *
+		 * @return {string} The label.
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		customerKindLabel() {
+			return this.customer?.type === 'organization'
+				? t('pipelinq', 'Organisation')
+				: t('pipelinq', 'Resident')
 		},
 
 		customerLabel() {
@@ -262,56 +398,9 @@ export default {
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		timeline() {
-			const events = []
-			if (this.booking.startAt) {
-				events.push({
-					at: this.booking.startAt,
-					kind: 'start',
-					text: t('pipelinq', 'Booking starts'),
-				})
-			}
-			if (this.booking.endAt) {
-				events.push({
-					at: this.booking.endAt,
-					kind: 'end',
-					text: t('pipelinq', 'Booking ends'),
-				})
-			}
-			if (this.booking.confirmationSentAt) {
-				events.push({
-					at: this.booking.confirmationSentAt,
-					kind: 'email',
-					text: t('pipelinq', 'Confirmation email sent'),
-				})
-			}
-			if (this.booking.reminderSentAt) {
-				events.push({
-					at: this.booking.reminderSentAt,
-					kind: 'email',
-					text: t('pipelinq', 'Reminder email sent'),
-				})
-			}
-			if (this.booking.depositPaidAt) {
-				events.push({
-					at: this.booking.depositPaidAt,
-					kind: 'deposit',
-					text: t('pipelinq', 'Deposit cleared'),
-				})
-			}
-			if (this.booking.noShowFeeChargedAt) {
-				events.push({
-					at: this.booking.noShowFeeChargedAt,
-					kind: 'fee',
-					text: t('pipelinq', 'No-show fee charged'),
-				})
-			}
-			if (this.booking.cancelledAt) {
-				events.push({
-					at: this.booking.cancelledAt,
-					kind: 'cancel',
-					text: t('pipelinq', 'Cancelled'),
-				})
-			}
+			const events = TIMESTAMP_EVENTS
+				.filter(([field]) => this.booking[field])
+				.map(([field, kind, text]) => ({ at: this.booking[field], kind, text: text() }))
 			// Status changes, which the dropped audit table used to list.
 			for (const entry of this.statusHistory) {
 				events.push({
@@ -356,7 +445,7 @@ export default {
 		/**
 		 * The deposit, in the service's currency or the reporting currency.
 		 *
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		depositLabel() {
 			const amount = Number(this.booking.depositAmount || 0)
@@ -373,33 +462,6 @@ export default {
 					})
 				: t('pipelinq', '{amount} (pending)', { amount: formatted })
 		},
-	},
-
-	watch: {
-		resolvedId: {
-			immediate: true,
-			handler() {
-				this.load()
-			},
-		},
-	},
-
-	/**
-	 * Re-read the booking on `cn:page:refresh`, which a header action sends.
-	 *
-	 * @spec openspec/specs/appointment-booking/spec.md
-	 */
-	mounted() {
-		// A header action changed the booking; re-read it without the spinner.
-		this.onPageRefresh = (payload) => {
-			const done = this.load({ silent: true })
-			payload?.waitUntil?.(done)
-		}
-		subscribe('cn:page:refresh', this.onPageRefresh)
-	},
-
-	beforeUnmount() {
-		unsubscribe('cn:page:refresh', this.onPageRefresh)
 	},
 
 	methods: {
@@ -420,12 +482,7 @@ export default {
 		},
 
 		formatDateTime(iso) {
-			if (!iso) return '-'
-			try {
-				return new Date(iso).toLocaleString('nl-NL')
-			} catch {
-				return iso
-			}
+			return bookingDateTime(iso)
 		},
 
 		/**
@@ -434,19 +491,46 @@ export default {
 		 * @param {number|string} value The amount.
 		 * @param {string} [currency] The currency code.
 		 * @return {string} The formatted amount.
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		formatCurrency(value, currency) {
-			const code = currencyOr(currency)
-			const n = Number(value) || 0
+			return bookingCurrency(value, currency)
+		},
+
+		/**
+		 * Send the reminder through the booking endpoint, then refresh the page.
+		 *
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		async sendReminder() {
+			if (!this.resolvedId) {
+				return
+			}
+			this.sending = true
 			try {
-				return new Intl.NumberFormat('nl-NL', {
-					style: 'currency',
-					currency: code,
-					maximumFractionDigits: 2,
-				}).format(n)
+				const response = await fetch(
+					generateUrl(`/apps/pipelinq/api/bookings/${this.resolvedId}/send-reminder`),
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+						body: '{}',
+					},
+				)
+				const data = await response.json().catch(() => ({}))
+				if (!response.ok) {
+					showError(data.error || t('pipelinq', 'Action failed.'))
+					return
+				}
+				showSuccess(t('pipelinq', 'Reminder dispatched.'))
+				emit('cn:page:refresh', {})
 			} catch {
-				return `${code} ${n}`
+				showError(t('pipelinq', 'Action failed.'))
+			} finally {
+				this.sending = false
 			}
 		},
 
@@ -456,37 +540,14 @@ export default {
 		},
 
 		/**
-		 * Load the booking, then resolve the linked Service / Customer /
+		 * Once the booking is in, resolve the linked Service / Customer /
 		 * Resource names.
 		 *
-		 * @param {{silent?: boolean}} [opts] `silent` skips the spinner (a
-		 *  refresh, not a first load).
-		 *
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
-		async load(opts = {}) {
-			if (!this.resolvedId) {
-				return
-			}
-			const silent = opts.silent === true
-			if (!silent) {
-				this.loading = true
-			}
-			try {
-				this.booking =
-					(await this.objectStore.fetchObject(
-						'appointmentBooking',
-						this.resolvedId,
-					)) || {}
-				await this.loadContext()
-			} catch (err) {
-				showError(
-					err?.response?.data?.error
-						|| t('pipelinq', 'Could not load booking.'),
-				)
-			} finally {
-				this.loading = false
-			}
+		loadLinked() {
+			return this.loadContext()
 		},
 
 		/**
@@ -502,56 +563,82 @@ export default {
 			if (this.contextLoading) return
 			this.contextLoading = true
 			try {
-				const booking = this.booking
-				if (booking.serviceId && !this.service) {
-					this.service = await this.objectStore.fetchObject(
-						'appointmentService',
-						booking.serviceId,
-					)
-				}
-				// Resolve the customer once per id. fetchObject returns null
-				// (it does not throw) on a 404, so fall back to `client` on a
-				// null contact rather than in a catch — and record the id so a
-				// genuinely missing customer is not refetched on every run.
-				if (
-					booking.customerId
-					&& this.loadedCustomerId !== booking.customerId
-				) {
-					this.loadedCustomerId = booking.customerId
-					const contact = await this.objectStore.fetchObject(
-						'contact',
-						booking.customerId,
-					)
-					this.customer =
-						contact
-						|| (await this.objectStore.fetchObject(
-							'client',
-							booking.customerId,
-						))
-				}
-				// De-duplicate resource ids: a booking has one assignment row
-				// per step/time-slot, so the same resource recurs across rows.
-				const resourceIds = [
-					...new Set(
-						(this.assignments || [])
-							.map((a) => a?.resourceId)
-							.filter(Boolean),
-					),
-				].filter((id) => !this.resourceLookup[id])
-				for (const id of resourceIds) {
-					const resource = await this.objectStore.fetchObject(
-						'appointmentResource',
-						id,
-					)
-					if (resource?.name) {
-						this.resourceLookup = {
-							...this.resourceLookup,
-							[id]: resource.name,
-						}
-					}
-				}
+				await this.loadService()
+				await this.loadCustomer()
+				await this.loadResourceNames()
 			} finally {
 				this.contextLoading = false
+			}
+		},
+
+		/**
+		 * The booking's service, once.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadService() {
+			if (this.booking.serviceId && !this.service) {
+				this.service = await this.objectStore.fetchObject(
+					'appointmentService',
+					this.booking.serviceId,
+				)
+			}
+		},
+
+		/**
+		 * The booking's customer, once per id: a contact, else a client.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadCustomer() {
+			const customerId = this.booking.customerId
+			// Resolve the customer once per id. fetchObject returns null
+			// (it does not throw) on a 404, so fall back to `client` on a
+			// null contact rather than in a catch — and record the id so a
+			// genuinely missing customer is not refetched on every run.
+			if (!customerId || this.loadedCustomerId === customerId) {
+				return
+			}
+			this.loadedCustomerId = customerId
+			const contact = await this.objectStore.fetchObject(
+				'contact',
+				customerId,
+			)
+			this.customerIsContact = Boolean(contact)
+			this.customer =
+				contact
+				|| (await this.objectStore.fetchObject(
+					'client',
+					customerId,
+				))
+		},
+
+		/**
+		 * The names of the assigned resources not yet known, one request each.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadResourceNames() {
+			// De-duplicate resource ids: a booking has one assignment row
+			// per step/time-slot, so the same resource recurs across rows.
+			const resourceIds = [
+				...new Set(
+					(this.assignments || [])
+						.map((a) => a?.resourceId)
+						.filter(Boolean),
+				),
+			].filter((id) => !this.resourceLookup[id])
+			for (const id of resourceIds) {
+				const resource = await this.objectStore.fetchObject(
+					'appointmentResource',
+					id,
+				)
+				if (resource?.name) {
+					this.resourceLookup = {
+						...this.resourceLookup,
+						[id]: resource.name,
+					}
+				}
 			}
 		},
 	},
@@ -559,10 +646,78 @@ export default {
 </script>
 
 <style scoped>
+.booking-person__head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.booking-person__initials {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--color-background-dark);
+	font-weight: 700;
+	flex: none;
+}
+
+.booking-person__sub {
+	display: block;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.booking-facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 6px 16px;
+	margin: 0 0 12px;
+}
+
+.booking-facts dt {
+	color: var(--color-text-maxcontrast);
+}
+
+.booking-facts dd {
+	margin: 0;
+}
+
+.booking-when__slot {
+	display: flex;
+	flex-direction: column;
+	margin: 0 0 12px;
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.booking-when__place {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 12px;
+}
+
+.booking-section__link {
+	font-weight: 600;
+	text-decoration: underline;
+}
+
 .booking-section {
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+}
+
+.booking-section__title {
+	margin: 0 0 10px;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
 }
 
 .booking-section__block h4 {
@@ -586,32 +741,6 @@ export default {
 	margin-bottom: 2px;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
-}
-
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
 }
 
 .section-empty {
@@ -738,3 +867,5 @@ export default {
 	letter-spacing: 0.04em;
 }
 </style>
+
+<style scoped src="./bookingTable.css"></style>

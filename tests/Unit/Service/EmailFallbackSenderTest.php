@@ -19,7 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\Notification\UnsubscribeHeaders;
+use OCA\OpenRegister\Notifications\Service\Notification\UnsubscribeHeaders;
 use OCA\Pipelinq\Service\EmailFallbackSender;
 use OCA\Pipelinq\Service\UnsubscribeMail;
 use OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq;
@@ -29,6 +29,7 @@ use OCP\IL10N;
 use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -41,7 +42,7 @@ class EmailFallbackSenderTest extends TestCase {
 	/** @var array<int, RecordingMessage> */
 	private array $sent = [];
 
-	private function sender(): EmailFallbackSender {
+	private function sender(?LoggerInterface $logger = null): EmailFallbackSender {
 		$mailer = $this->createMock(IMailer::class);
 		$mailer->method('validateMailAddress')->willReturn(true);
 		$mailer->method('createMessage')->willReturnCallback(static fn () => new RecordingMessage());
@@ -60,7 +61,7 @@ class EmailFallbackSenderTest extends TestCase {
 		return new EmailFallbackSender(
 			$mailer,
 			$appConfig,
-			new NullLogger(),
+			($logger ?? new NullLogger()),
 			FakeIntegriq::client($appConfig, $this->integriq),
 			new UnsubscribeMail($container, $l10n, new NullLogger())
 		);
@@ -69,6 +70,23 @@ class EmailFallbackSenderTest extends TestCase {
 	protected function setUp(): void {
 		$this->integriq = new FakeIntegriq();
 	}//end setUp()
+
+	/**
+	 * A refusal is logged with the message, integriq's code and the message's own category.
+	 *
+	 * @return void
+	 */
+	public function testARefusalIsLoggedWithTheMessageCategory(): void {
+		$this->integriq->seed(['address' => 'burger@example.nl', 'state' => 'opted-out', 'scope' => 'channel', 'channel' => 'email']);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'Berichtenbox fallback email not sent: integriq refused it.',
+			['messageId' => 'bb-2', 'code' => 'opted-out', 'category' => 'reminder']
+		);
+
+		self::assertFalse($this->sender(logger: $logger)->send(['uuid' => 'bb-2', 'category' => ' reminder ', 'subject' => 'S', 'body' => 'B'], 'burger@example.nl', false));
+		self::assertSame('reminder', $this->integriq->decisionEvents[0]->getCategory());
+	}//end testARefusalIsLoggedWithTheMessageCategory()
 
 	public function testAnOptedOutBurgerGetsNoFallback(): void {
 		$this->integriq->seed(['address' => 'burger@example.nl', 'state' => 'opted-out', 'scope' => 'channel', 'channel' => 'email']);

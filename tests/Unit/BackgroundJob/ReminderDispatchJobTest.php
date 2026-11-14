@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\BackgroundJob\ReminderDispatchJob;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -218,7 +219,7 @@ class ReminderDispatchJobTest extends TestCase {
 
 		$this->container->method('get')->willReturnCallback(
 			function (string $id) use ($emailService): object {
-				if ($id === AppointmentEmailService::class) {
+				if ($id === AppointmentEmailServiceInterface::class) {
 					return $emailService;
 				}
 
@@ -268,7 +269,7 @@ class ReminderDispatchJobTest extends TestCase {
 
 		$this->container->method('get')->willReturnCallback(
 			function (string $id) use ($emailService): object {
-				if ($id === AppointmentEmailService::class) {
+				if ($id === AppointmentEmailServiceInterface::class) {
 					return $emailService;
 				}
 
@@ -361,4 +362,68 @@ class ReminderDispatchJobTest extends TestCase {
 
 		$this->runJob(job: $this->buildJob());
 	}//end testLogsWarningWhenBookingQueryFails()
+
+	/**
+	 * The cycle logs its window and its counts: a non-row, a booking that is
+	 * not due and one without an id are skipped; a refused and a failing
+	 * reminder count as failures, the failing one also with a warning.
+	 *
+	 * @return void
+	 */
+	public function testCycleLogsItsWindowAndCounts(): void {
+		$this->appConfig->method('getValueString')->willReturnMap(
+			[
+				['pipelinq', 'register', '', 'register-uuid'],
+				['pipelinq', 'booking_schema', '', 'booking-schema'],
+			]
+		);
+
+		$dueIso = (new \DateTimeImmutable('+23 hours 30 minutes', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
+		$this->objectService->method('findAll')->willReturn(
+			[
+				'not a row',
+				['id' => 'late', 'status' => 'confirmed', 'reminderSentAt' => '', 'startAt' => '2000-01-01T00:00:00+00:00'],
+				['status' => 'confirmed', 'reminderSentAt' => '', 'startAt' => $dueIso],
+				['id' => 'ok', 'status' => 'confirmed', 'reminderSentAt' => '', 'startAt' => $dueIso],
+				['id' => 'refused', 'status' => 'confirmed', 'reminderSentAt' => '', 'startAt' => $dueIso],
+				['id' => 'broken', 'status' => 'confirmed', 'reminderSentAt' => '', 'startAt' => $dueIso],
+			]
+		);
+
+		$emailService = $this->createMock(AppointmentEmailService::class);
+		$emailService->method('sendReminder')->willReturnCallback(
+			static function (string $bookingId): bool {
+				if ($bookingId === 'broken') {
+					throw new RuntimeException('smtp down');
+				}
+
+				return $bookingId === 'ok';
+			}
+		);
+		$this->container->method('get')->willReturn($emailService);
+
+		$logged = [];
+		foreach (['info', 'warning', 'debug'] as $level) {
+			$this->logger->method($level)->willReturnCallback(
+				static function (string $message, array $context = []) use (&$logged, $level): void {
+					$logged[] = [$level, $message, $context];
+				}
+			);
+		}
+
+		$this->runJob(job: $this->buildJob());
+
+		$this->assertSame('ReminderDispatchJob: starting cycle', $logged[0][1]);
+		$this->assertSame(['window_start', 'window_end'], array_keys($logged[0][2]));
+		$start = new \DateTimeImmutable($logged[0][2]['window_start']);
+		$end = new \DateTimeImmutable($logged[0][2]['window_end']);
+		$this->assertSame(3600, $end->getTimestamp() - $start->getTimestamp());
+		$this->assertSame(
+			[
+				['warning', 'ReminderDispatchJob: per-booking dispatch failed, continuing', ['booking' => 'broken', 'exception' => 'smtp down']],
+				['info', 'ReminderDispatchJob: cycle complete', ['sent' => 1, 'skipped' => 3, 'failures' => 2]],
+			],
+			array_slice($logged, -2)
+		);
+	}//end testCycleLogsItsWindowAndCounts()
 }//end class

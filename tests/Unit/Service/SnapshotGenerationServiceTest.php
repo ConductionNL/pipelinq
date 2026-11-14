@@ -115,6 +115,34 @@ class SnapshotGenerationServiceTest extends TestCase {
 	}//end testBuildSnapshotsRollUp()
 
 	/**
+	 * Every snapshot of a run with a foreign deal names the rate it used;
+	 * a run in the reporting currency only adds no rate field.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
+	 */
+	public function testSnapshotsCarryTheRatesUsed(): void {
+		$hierarchy = ['teams' => ['team-east' => ['rep.a', 'rep.b']], 'divisions' => []];
+
+		$foreign = $this->service->buildSnapshots(
+			'Q2-2026',
+			'2026-05-20',
+			$hierarchy,
+			['rep.a' => [['forecast_category' => 'commit', 'value' => 1000, 'currency' => 'USD']]]
+		);
+		foreach ($foreign as $snapshot) {
+			$this->assertSame(['USD'], array_keys($snapshot['exchange_rates']));
+			$this->assertSame('none', $snapshot['exchange_rates']['USD']['source']);
+		}
+
+		$local = $this->service->buildSnapshots('Q2-2026', '2026-05-20', $hierarchy, ['rep.a' => [['forecast_category' => 'commit', 'value' => 1000]]]);
+		foreach ($local as $snapshot) {
+			$this->assertArrayNotHasKey('exchange_rates', $snapshot);
+		}
+	}//end testSnapshotsCarryTheRatesUsed()
+
+	/**
 	 * A missing rep marks the team snapshot partial and lists the rep.
 	 *
 	 * @return void

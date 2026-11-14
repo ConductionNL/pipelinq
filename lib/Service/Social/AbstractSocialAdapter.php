@@ -26,17 +26,19 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use LogicException;
+
 /**
  * Shared behaviour for every network adapter.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  *
  * @SuppressWarnings(PHPMD.StaticAccess) `SocialGatewayResult` and
  *  `SocialPublishOutcome` are value objects with NAMED CONSTRUCTORS
@@ -60,7 +62,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return int The media limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function maxMedia(): int {
 		return 1;
@@ -71,7 +73,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return float The cost per published post, in euros.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	public function costPerPost(): float {
 		return 0.0;
@@ -82,7 +84,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return float The cost per metrics read, in euros.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	public function costPerRead(): float {
 		return 0.0;
@@ -95,7 +97,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return SocialPublishOutcome The outcome.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function publish(SocialPublishRequest $request): SocialPublishOutcome {
 		$refusal = $this->refuseWhenNotConfigured();
@@ -123,7 +125,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The base answers "this
 	 *  network reports nothing"; the parameters exist for the overrides.
@@ -140,7 +142,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return array{views: int, likes: int, comments: int, shares: int, clicks: int} The normalised numbers.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Same as above.
 	 */
@@ -155,7 +157,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Same as above.
 	 */
@@ -170,7 +172,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return int The follower count.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Same as above.
 	 */
@@ -184,7 +186,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return array{views: int, likes: int, comments: int, shares: int, clicks: int} Five zeroes.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public static function noMetrics(): array {
 		return ['views' => 0, 'likes' => 0, 'comments' => 0, 'shares' => 0, 'clicks' => 0];
@@ -195,7 +197,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return SocialPublishOutcome|null The refusal, or null when the network may be used.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	protected function refuseWhenNotConfigured(): ?SocialPublishOutcome {
 		$readiness = $this->gateway->readiness(brokerProvider: $this->brokerProvider());
@@ -217,7 +219,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return SocialGatewayResult What came back.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	protected function send(SocialAdapterCall $call, SocialPublishRequest $request): SocialGatewayResult {
 		return $this->gateway->request(
@@ -231,13 +233,76 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	}//end send()
 
 	/**
+	 * Publish in two steps: create the container (`publishCall`), then publish
+	 * it (`publishContainerCall`). The publish step is never attempted when
+	 * the first one failed or named no container.
+	 *
+	 * @param SocialPublishRequest $request           The resolved post.
+	 * @param string               $noContainerReason Why a container without an id cannot be published.
+	 *
+	 * @return SocialPublishOutcome The outcome, with the published id and no address.
+	 *
+	 * @throws LogicException For a network that does not publish through a container.
+	 *
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 */
+	protected function publishContainer(SocialPublishRequest $request, string $noContainerReason): SocialPublishOutcome {
+		$containerId = $this->createContainer(request: $request, noContainerReason: $noContainerReason);
+		if ($containerId instanceof SocialPublishOutcome) {
+			return $containerId;
+		}
+
+		if (($this instanceof PublishesThroughContainer) === false) {
+			throw new LogicException($this->network() . ' publishes in one step and has no container to publish.');
+		}
+
+		$published = $this->send(
+			call: $this->publishContainerCall(request: $request, containerId: $containerId),
+			request: $request,
+		);
+		if ($published->accepted === false) {
+			return SocialPublishOutcome::fromGatewayFailure(result: $published);
+		}
+
+		return SocialPublishOutcome::published(externalId: $this->readPublishedId(payload: $published->body));
+	}//end publishContainer()
+
+	/**
+	 * The FIRST of the two calls: create the container and answer its id.
+	 *
+	 * @param SocialPublishRequest $request           The resolved post.
+	 * @param string               $noContainerReason Why a container without an id cannot be published.
+	 *
+	 * @return SocialPublishOutcome|string The container id, or the outcome that stops the publish.
+	 */
+	private function createContainer(SocialPublishRequest $request, string $noContainerReason): SocialPublishOutcome|string {
+		$container = $this->send(call: $this->publishCall(request: $request), request: $request);
+		if ($container->accepted === false) {
+			// The publish step is deliberately NOT attempted. Publishing a
+			// container that was never created would report the second call's
+			// error and hide the one that actually happened.
+			return SocialPublishOutcome::fromGatewayFailure(result: $container);
+		}
+
+		$containerId = (string)($container->body['id'] ?? '');
+		if ($containerId === '') {
+			return SocialPublishOutcome::refused(
+				code: SocialGatewayResult::REJECTED_BY_NETWORK,
+				reason: $noContainerReason,
+			);
+		}
+
+		return $containerId;
+	}//end createContainer()
+
+	/**
 	 * The network's own id for the item it just published.
 	 *
 	 * @param array<string, mixed> $payload The response body.
 	 *
 	 * @return string The id, or an empty string when the network gave none.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedId(array $payload): string {
 		return (string)($payload['id'] ?? '');
@@ -254,7 +319,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The request is what the
 	 *  overrides use; the base reads the network's own field.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		foreach (['url', 'permalink', 'uri'] as $field) {
@@ -275,7 +340,7 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @return int The value, or 0 when any level is missing or not a number.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	protected function readInt(array $payload, array $path): int {
 		$node = $payload;

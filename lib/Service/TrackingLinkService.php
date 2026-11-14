@@ -32,14 +32,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1
+ * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TrackingLinkServiceInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
@@ -56,9 +58,11 @@ use Throwable;
  *  semantics this reuses (AttributionService::recordClick(),
  *  BlastService::updateBlastTotals()) — one cohesive tracking service.
  *
- * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1
+ * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1
  */
-class TrackingLinkService {
+class TrackingLinkService implements TrackingLinkServiceInterface {
+	use PayloadToArray;
+
 	/**
 	 * App-config key for the per-instance HMAC signing secret.
 	 *
@@ -133,7 +137,7 @@ class TrackingLinkService {
 	 * @param TrafficEventEmitter $trafficEventEmitter Portaliq traffic
 	 *                                                 dual-write.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -154,7 +158,7 @@ class TrackingLinkService {
 	 *
 	 * @return string The dotted `<payload>.<signature>` token.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.1
 	 */
 	public function signOpenToken(string $blastDeliveryId): string {
 		return $this->signPayload(payload: ['d' => $blastDeliveryId, 'u' => null]);
@@ -173,7 +177,7 @@ class TrackingLinkService {
 	 *
 	 * @return string The dotted `<payload>.<signature>` token.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.1
 	 */
 	public function signClickToken(string $blastDeliveryId, string $targetUrl): string {
 		return $this->signPayload(payload: ['d' => $blastDeliveryId, 'u' => $targetUrl]);
@@ -191,7 +195,7 @@ class TrackingLinkService {
 	 * @return array<string, mixed>|null Decoded payload (`d`, `u`, `iat`,
 	 *                                   `exp`) or null when invalid/expired.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.1
 	 */
 	public function verifyToken(string $token): ?array {
 		$parts = explode('.', $token);
@@ -238,7 +242,7 @@ class TrackingLinkService {
 	 *
 	 * @return string The rewritten HTML (unchanged on empty input).
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.2
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.2
 	 */
 	public function injectTracking(string $html, string $blastDeliveryId): string {
 		if ($html === '' || $blastDeliveryId === '') {
@@ -273,7 +277,7 @@ class TrackingLinkService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.3
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.3
 	 * @spec openspec/specs/marketing-email-tracking/spec.md#requirement-opens-and-clicks-are-reported-to-portaliq-as-email-traffic-events
 	 */
 	public function recordOpen(string $blastDeliveryId): void {
@@ -314,7 +318,7 @@ class TrackingLinkService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.3
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1.3
 	 * @spec openspec/specs/marketing-email-tracking/spec.md#requirement-opens-and-clicks-are-reported-to-portaliq-as-email-traffic-events
 	 */
 	public function recordClick(string $blastDeliveryId, string $url): void {
@@ -450,10 +454,10 @@ class TrackingLinkService {
 	 * @return string The signing key.
 	 */
 	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, '');
+		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, '');
 		if ($key === '') {
 			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
 		}
 
 		return $key;
@@ -467,7 +471,7 @@ class TrackingLinkService {
 	 */
 	private function resolveTtlSeconds(): int {
 		$raw = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::TTL_CONFIG_KEY,
 			(string)self::DEFAULT_TTL_DAYS,
 		);
@@ -609,7 +613,7 @@ class TrackingLinkService {
 	 * @return string Slug.
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -623,7 +627,7 @@ class TrackingLinkService {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -647,35 +651,6 @@ class TrackingLinkService {
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OpenRegister entity or array to a plain array.
-	 *
-	 * @param mixed $value Entity object or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Current time as an ISO-8601 string.

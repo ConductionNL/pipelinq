@@ -190,4 +190,44 @@ class DefaultPipelineServiceTest extends TestCase {
 		);
 		$service->createDefaultPipelines();
 	}//end testASignedInUserWritesAsThemself()
+
+	/**
+	 * A register that holds any pipeline (an example set's Verkoop) does not get
+	 * the defaults back, and the check looks for any pipeline, not one title.
+	 *
+	 * @return void
+	 */
+	public function testARegisterWithItsOwnPipelinesGetsNoDefaults(): void {
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			fn (string $app, string $key, string $default) => match ($key) {
+				'register' => '20',
+				'pipeline_schema' => '31',
+				default => $default,
+			}
+		);
+
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($this->createMock(originalClassName: IUser::class));
+
+		$queries       = [];
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objectService->method('findAll')->willReturnCallback(function (array $config) use (&$queries): array {
+			$queries[] = $config;
+			return [['id' => 'p-verkoop', 'title' => 'Verkoop']];
+		});
+		$objectService->expects($this->never())->method('saveObject');
+
+		$service = new DefaultPipelineService(
+			appConfig: $appConfig,
+			stageData: new PipelineStageData(),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			objectService: $objectService,
+			systemAccount: $this->systemAccount(session: $session),
+		);
+		$service->createDefaultPipelines();
+
+		$this->assertCount(expectedCount: 1, haystack: $queries);
+		$this->assertSame(expected: ['register' => '20', 'schema' => '31'], actual: $queries[0]['filters']);
+	}//end testARegisterWithItsOwnPipelinesGetsNoDefaults()
 }//end class

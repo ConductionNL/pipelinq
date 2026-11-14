@@ -153,4 +153,32 @@ class PhoneNormaliserTest extends TestCase {
 		$this->assertSame('???', $this->normaliser->normaliseInbound(' ??? '));
 		$this->assertSame('', $this->normaliser->normaliseInbound(''));
 	}//end testInboundSenderThatIsNoNumberIsKept()
+	/**
+	 * Every number shape, per configured country: a plus keeps the digits
+	 * (also a plus followed by a zero); 00 drops the 00; a leading zero takes
+	 * the country code; bare digits get it prepended; an unknown or blank
+	 * country is the Netherlands; a candidate outside 8 to 15 digits is none;
+	 * the raw input always comes back as given.
+	 *
+	 * @return void
+	 */
+	public function testEveryNumberShape(): void {
+		$cases = [
+			['NL', ' +31 6 1234 5678 ', '+31612345678'],
+			['NL', '+0612345678', '+0612345678'],
+			['BE', '0032 470 12 34 56', '+32470123456'],
+			['BE', '0470 12 34 56', '+32470123456'],
+			['de', '30 1234567', '+49301234567'],
+			['XX', '0612345678', '+31612345678'],
+			[' ', '0612345678', '+31612345678'],
+			['US', '0123', null],
+			['NL', '+3161234567890123', null],
+		];
+		foreach ($cases as [$country, $raw, $e164]) {
+			$appConfig = $this->createMock(IAppConfig::class);
+			$appConfig->method('getValueString')->willReturn($country);
+			$result = (new PhoneNormaliser($appConfig, $this->createMock(LoggerInterface::class)))->normaliseForOrg($raw);
+			$this->assertSame(['e164' => $e164, 'raw' => $raw], $result, $raw);
+		}
+	}//end testEveryNumberShape()
 }//end class

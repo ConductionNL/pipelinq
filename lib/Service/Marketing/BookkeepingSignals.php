@@ -30,14 +30,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ShillinqInvoiceReader;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -45,7 +45,7 @@ use OCP\IAppConfig;
 /**
  * BookkeepingSignals: the six shillinq-derived fields, or six nulls.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
  */
 class BookkeepingSignals {
 
@@ -92,13 +92,27 @@ class BookkeepingSignals {
 	private const WORST_FIRST = ['written-off', 'overdue', 'disputed'];
 
 	/**
+	 * Every signal unknown: no bookkeeping, no customer, or no invoices.
+	 *
+	 * @var array<string, null>
+	 */
+	private const UNKNOWN = [
+		SegmentSignalService::FIELD_REVENUE => null,
+		SegmentSignalService::FIELD_VALUE_TIER => null,
+		SegmentSignalService::FIELD_MONTHS_SINCE_INVOICE => null,
+		SegmentSignalService::FIELD_PRODUCTS => null,
+		SegmentSignalService::FIELD_SERVICES => null,
+		SegmentSignalService::FIELD_DUNNING => null,
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ShillinqInvoiceReader $invoices Read-only shillinq invoice reader.
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param ITimeFactory $time Clock.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function __construct(
 		private ShillinqInvoiceReader $invoices,
@@ -112,7 +126,7 @@ class BookkeepingSignals {
 	 *
 	 * @return bool True when it is installed.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
 	public function isAvailable(): bool {
 		return $this->invoices->isAvailable();
@@ -127,39 +141,56 @@ class BookkeepingSignals {
 	 *
 	 * @return array<string, mixed> The six fields, all null when unreadable.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function forCustomer(string $customerRef, array $catalogue): array {
-		$blank = [
-			SegmentSignalService::FIELD_REVENUE => null,
-			SegmentSignalService::FIELD_VALUE_TIER => null,
-			SegmentSignalService::FIELD_MONTHS_SINCE_INVOICE => null,
-			SegmentSignalService::FIELD_PRODUCTS => null,
-			SegmentSignalService::FIELD_SERVICES => null,
-			SegmentSignalService::FIELD_DUNNING => null,
-		];
-
 		$customerRef = trim($customerRef);
 		if ($customerRef === '' || $this->invoices->isAvailable() === false) {
-			return $blank;
+			return self::UNKNOWN;
 		}
 
 		$invoices = $this->invoices->invoicesFor(customerRef: $customerRef);
 		if ($invoices === []) {
-			return $blank;
+			return self::UNKNOWN;
 		}
 
-		$revenue = $this->revenueOf(customerRef: $customerRef);
+		return $this->standingSignals(customerRef: $customerRef, invoices: $invoices)
+			+ $this->purchasedSignals(invoices: $invoices, catalogue: $catalogue)
+			+ [SegmentSignalService::FIELD_DUNNING => $this->dunningOf(invoices: $invoices)];
+	}//end forCustomer()
 
+	/**
+	 * The customer's revenue in the window, its value tier, and the months
+	 * since the last invoice.
+	 *
+	 * @param string                           $customerRef The customer.
+	 * @param array<int, array<string, mixed>> $invoices    Its invoices.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function standingSignals(string $customerRef, array $invoices): array {
+		$revenue = $this->revenueOf(customerRef: $customerRef);
 		return [
 			SegmentSignalService::FIELD_REVENUE => $revenue,
 			SegmentSignalService::FIELD_VALUE_TIER => $this->tierOf(revenue: $revenue),
 			SegmentSignalService::FIELD_MONTHS_SINCE_INVOICE => $this->monthsSince(invoices: $invoices),
+		];
+	}//end standingSignals()
+
+	/**
+	 * The purchased products and services signals.
+	 *
+	 * @param array<int, array<string, mixed>> $invoices  The customer's invoices.
+	 * @param array<string, mixed>             $catalogue The product catalogue.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function purchasedSignals(array $invoices, array $catalogue): array {
+		return [
 			SegmentSignalService::FIELD_PRODUCTS => $this->itemsOf(invoices: $invoices, catalogue: $catalogue, wanted: 'product'),
 			SegmentSignalService::FIELD_SERVICES => $this->itemsOf(invoices: $invoices, catalogue: $catalogue, wanted: 'service'),
-			SegmentSignalService::FIELD_DUNNING => $this->dunningOf(invoices: $invoices),
 		];
-	}//end forCustomer()
+	}//end purchasedSignals()
 
 	/**
 	 * Paid revenue over the signal window.
@@ -170,7 +201,7 @@ class BookkeepingSignals {
 	 */
 	private function revenueOf(string $customerRef): float {
 		$now = $this->time->getTime();
-		$months = max(1, $this->appConfig->getValueInt(Application::APP_ID, 'marketing.signal_window_months', self::DEFAULT_WINDOW_MONTHS));
+		$months = max(1, $this->appConfig->getValueInt(AppIdentity::APP_ID, 'marketing.signal_window_months', self::DEFAULT_WINDOW_MONTHS));
 		$from = date('Y-m-d', (int)strtotime('-' . $months . ' months', $now));
 		$to = date('Y-m-d', $now);
 
@@ -305,7 +336,7 @@ class BookkeepingSignals {
 	 * @return float The threshold.
 	 */
 	private function threshold(string $key, float $default): float {
-		$raw = trim($this->appConfig->getValueString(Application::APP_ID, $key, ''));
+		$raw = trim($this->appConfig->getValueString(AppIdentity::APP_ID, $key, ''));
 		if ($raw === '' || is_numeric($raw) === false) {
 			return $default;
 		}

@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
 
 declare(strict_types=1);
@@ -160,4 +160,94 @@ class PointsRuleEngineTest extends TestCase {
 		$this->assertSame('A', $this->engine->getHighestPriorityRule($rules)['name']);
 		$this->assertNull($this->engine->getHighestPriorityRule([]));
 	}//end testGetHighestPriorityRuleReturnsFirst()
+	/**
+	 * Every points formula: an unknown type is zero; a fixed value and a
+	 * percentage of the amount; stepped brackets give the points of the last
+	 * bracket the amount reaches, in the order given; brackets that are not a
+	 * list give zero; a negative multiplier counts as zero; the result is
+	 * rounded down.
+	 *
+	 * @return void
+	 */
+	public function testEveryPointsFormula(): void {
+		$this->assertSame(0, $this->engine->calculatePoints(formula: ['type' => 'mystery', 'value' => 9], amount: 10.0));
+		$this->assertSame(7, $this->engine->calculatePoints(formula: ['type' => 'fixed', 'value' => '7.9'], amount: 0.0));
+		$this->assertSame(2, $this->engine->calculatePoints(formula: ['type' => 'percentage', 'value' => 0.05], amount: 59.9));
+		$brackets = ['type' => 'stepped', 'brackets' => [['amount' => 10, 'points' => 1], ['amount' => 50, 'points' => 5], ['amount' => 20, 'points' => 2]]];
+		$this->assertSame(2, $this->engine->calculatePoints(formula: $brackets, amount: 60.0));
+		$this->assertSame(1, $this->engine->calculatePoints(formula: $brackets, amount: 15.0));
+		$this->assertSame(0, $this->engine->calculatePoints(formula: $brackets, amount: 5.0));
+		$this->assertSame(0, $this->engine->calculatePoints(formula: ['type' => 'stepped', 'brackets' => 'none'], amount: 60.0));
+		$this->assertSame(0, $this->engine->calculatePoints(formula: ['type' => 'fixed', 'value' => 10], amount: 0.0, multiplier: -2.0));
+		$this->assertSame(15, $this->engine->calculatePoints(formula: ['type' => 'fixed', 'value' => 10], amount: 0.0, multiplier: 1.5));
+	}//end testEveryPointsFormula()
+
+	/**
+	 * Every condition: segment and channel need a context value in their
+	 * list; an excluded category only refuses a known category; the checks
+	 * all have to pass.
+	 *
+	 * @return void
+	 */
+	public function testEveryCondition(): void {
+		$this->assertFalse($this->engine->evaluateCondition(condition: ['segment' => ['gold']], context: []));
+		$this->assertFalse($this->engine->evaluateCondition(condition: ['segment' => 'gold'], context: ['segment' => 'silver']));
+		$this->assertTrue($this->engine->evaluateCondition(condition: ['segment' => 'gold'], context: ['segment' => 'gold']));
+		$this->assertFalse($this->engine->evaluateCondition(condition: ['channel' => ['pos']], context: ['channel' => '']));
+		$this->assertTrue($this->engine->evaluateCondition(condition: ['channel' => ['pos', 'web']], context: ['channel' => 'web']));
+		$this->assertTrue($this->engine->evaluateCondition(condition: ['excludeCategory' => ['food']], context: []));
+		$this->assertFalse($this->engine->evaluateCondition(condition: ['category' => ['food']], context: []));
+		$this->assertFalse($this->engine->evaluateCondition(condition: ['category' => ['food'], 'channel' => 'web'], context: ['category' => 'food', 'channel' => 'pos']));
+		$this->assertTrue($this->engine->evaluateCondition(condition: ['category' => ['food'], 'excludeCategory' => ['toys'], 'segment' => ['gold'], 'channel' => 'pos'], context: ['category' => 'food', 'segment' => 'gold', 'channel' => 'pos']));
+	}//end testEveryCondition()
+
+	/**
+	 * Every way rules load: an unconfigured schema, an empty programme or
+	 * trigger reads nothing; the read carries the programme, trigger,
+	 * register and schema; a failed read is logged at debug and reads as
+	 * none; entity rows are read as arrays; matches come back by priority.
+	 *
+	 * @return void
+	 */
+	public function testEveryWayRulesLoad(): void {
+		$calls = [];
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => ['register' => 'r', 'pointsRule_schema' => 's'][$key] ?? $default
+		);
+		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects->method('findAll')->willReturnCallback(
+			static function (array $config = []) use (&$calls): array {
+				$calls[] = $config;
+				if ($config['filters']['trigger'] === 'boom') {
+					throw new \RuntimeException('down');
+				}
+
+				return [
+					['name' => 'low', 'priority' => 1],
+					new class implements \JsonSerializable {
+						/**
+						 * The entity's row.
+						 *
+						 * @return array<string, mixed>
+						 */
+						public function jsonSerialize(): array {
+							return ['name' => 'high', 'priority' => 5];
+						}
+					},
+					['name' => 'skipped', 'condition' => ['segment' => 'gold']],
+				];
+			}
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('debug')->with('Pipelinq: rule findAll failed', ['exception' => 'down']);
+		$engine = new PointsRuleEngine(appConfig: $appConfig, logger: $logger, objectService: $objects);
+
+		$this->assertSame([], $engine->evaluateRules(programmeId: '', trigger: 'purchase', context: []));
+		$this->assertSame([], $engine->evaluateRules(programmeId: 'p', trigger: '', context: []));
+		$this->assertSame([], $calls);
+		$this->assertSame(['high', 'low'], array_column($engine->evaluateRules(programmeId: 'p', trigger: 'purchase', context: []), 'name'));
+		$this->assertSame([['filters' => ['programmeId' => 'p', 'trigger' => 'purchase', 'register' => 'r', 'schema' => 's'], 'limit' => 200]], $calls);
+		$this->assertSame([], $engine->evaluateRules(programmeId: 'p', trigger: 'boom', context: []));
+	}//end testEveryWayRulesLoad()
 }//end class

@@ -31,6 +31,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\BelastingdienstExportService;
 use OCA\Pipelinq\Service\KassakoppelingAuditService;
@@ -96,8 +98,8 @@ class FakeAuditObjectService extends ObjectService {
 		int|string $id,
 		?array $_extend = [],
 		bool $files = false,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_render = true,
@@ -153,10 +155,10 @@ class FakeAuditObjectService extends ObjectService {
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
 	public function saveObject(
-		array $object,
+		array|ObjectEntity $object,
 		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
@@ -165,6 +167,9 @@ class FakeAuditObjectService extends ObjectService {
 		?array $uploadedFiles = null,
 		?IUser $currentUser = null,
 		bool $failIfExists = false,
+		bool $_unowned = false,
+		bool $_dedupOverride = false,
+		?string $_owner = null,
 	): ObjectEntityInterface {
 		$schemaKey = (string)$schema;
 		$resolvedUuid = $uuid;
@@ -445,6 +450,72 @@ class KassakoppelingAuditServiceTest extends TestCase {
 		$this->assertSame('void', $entries[0]['action']);
 
 	}//end testListEntriesFiltersByAction()
+
+	/**
+	 * listEntries narrows to the entries whose signature check failed, or to
+	 * the ones nobody checked yet.
+	 *
+	 * @return void
+	 */
+	public function testListEntriesFiltersByVerification(): void {
+		$tampered = $this->service->createEntry(data: $this->saleInput(register: 'REG-001'));
+		$this->service->createEntry(data: $this->saleInput(register: 'REG-002'));
+		$this->objects->store['kassakoppelingAuditLog'][(string)$tampered['id']]['amount'] = 9999;
+		$this->service->verifyEntry(id: (string)$tampered['id']);
+
+		$invalid = $this->service->listEntries(filters: ['verified' => 'false']);
+		$this->assertCount(expectedCount: 1, haystack: $invalid);
+		$this->assertSame(expected: 'REG-001', actual: $invalid[0]['registerNumber']);
+
+		$pending = $this->service->listEntries(filters: ['verified' => 'pending']);
+		$this->assertCount(expectedCount: 1, haystack: $pending);
+		$this->assertSame(expected: 'REG-002', actual: $pending[0]['registerNumber']);
+		$this->assertSame(expected: 'pending', actual: $pending[0]['verification']);
+		$this->assertSame(expected: 'false', actual: $invalid[0]['verification']);
+
+	}//end testListEntriesFiltersByVerification()
+
+	/**
+	 * listEntries narrows to the entries not exported yet.
+	 *
+	 * @return void
+	 */
+	public function testListEntriesFiltersByExport(): void {
+		$this->service->createEntry(data: $this->saleInput());
+		$this->service->exportForBelastingdienst(fromDate: '2026-05-20', toDate: '2026-05-20', format: 'xml');
+		$this->service->createEntry(
+			data: array_merge($this->saleInput(), ['timestamp' => '2026-06-02T09:00:00+00:00'])
+		);
+
+		$open = $this->service->listEntries(filters: ['exported' => 'false']);
+		$this->assertCount(expectedCount: 1, haystack: $open);
+		$this->assertSame(expected: '2026-06-02T09:00:00+00:00', actual: $open[0]['timestamp']);
+		$this->assertCount(expectedCount: 1, haystack: $this->service->listEntries(filters: ['exported' => 'true']));
+
+	}//end testListEntriesFiltersByExport()
+
+	/**
+	 * listEntries searches register, operator and transaction, and lists
+	 * newest first on request.
+	 *
+	 * @return void
+	 */
+	public function testListEntriesSearchesAndOrdersNewestFirst(): void {
+		$this->service->createEntry(
+			data: array_merge($this->saleInput(register: 'REG-001'), ['timestamp' => '2026-05-20T08:00:00+00:00'])
+		);
+		$this->service->createEntry(
+			data: array_merge($this->saleInput(register: 'REG-002'), ['timestamp' => '2026-05-20T10:00:00+00:00'])
+		);
+
+		$found = $this->service->listEntries(filters: ['search' => 'reg-002']);
+		$this->assertCount(expectedCount: 1, haystack: $found);
+		$this->assertSame(expected: 'REG-002', actual: $found[0]['registerNumber']);
+
+		$newest = $this->service->listEntries(filters: ['order' => 'desc']);
+		$this->assertSame(expected: '2026-05-20T10:00:00+00:00', actual: $newest[0]['timestamp']);
+
+	}//end testListEntriesSearchesAndOrdersNewestFirst()
 
 	/**
 	 * getEntry throws OCSNotFoundException when the entry is missing.

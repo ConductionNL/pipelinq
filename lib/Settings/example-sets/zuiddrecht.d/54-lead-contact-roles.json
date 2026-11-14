@@ -1,0 +1,53 @@
+{
+	"$comment": "pipelinq's contact roles on the lead Woonportaal voor huurders, as PqLead draws them: M. Hendriks decides, Karin Vos champions, Peter Lam keeps the gate. A role is a relationship from the lead to the contact with category 'CRM Rol'.",
+	"objects": [
+		{
+			"key": "rol-woonportaal-hendriks",
+			"register": "pipelinq",
+			"schema": "relationship",
+			"data": {
+				"fromContact": "{{object:lead-woonportaal.id}}",
+				"fromType": "lead",
+				"toContact": "{{object:contact-hendriks.id}}",
+				"toType": "contact",
+				"type": "beslisser",
+				"inverseType": "beslisser",
+				"category": "CRM Rol",
+				"provenance": "declared",
+				"notes": "Tekent namens het bestuur"
+			}
+		},
+		{
+			"key": "rol-woonportaal-vos",
+			"register": "pipelinq",
+			"schema": "relationship",
+			"data": {
+				"fromContact": "{{object:lead-woonportaal.id}}",
+				"fromType": "lead",
+				"toContact": "{{object:contact-vos.id}}",
+				"toType": "contact",
+				"type": "kampioen",
+				"inverseType": "kampioen",
+				"category": "CRM Rol",
+				"provenance": "declared",
+				"notes": "Vroeg om de demo"
+			}
+		},
+		{
+			"key": "rol-woonportaal-lam",
+			"register": "pipelinq",
+			"schema": "relationship",
+			"data": {
+				"fromContact": "{{object:lead-woonportaal.id}}",
+				"fromType": "lead",
+				"toContact": "{{object:contact-lam.id}}",
+				"toType": "contact",
+				"type": "gatekeeper",
+				"inverseType": "gatekeeper",
+				"category": "CRM Rol",
+				"provenance": "declared",
+				"notes": "Inkoop, wil de offerte voor 20 okt"
+			}
+		}
+	]
+}

@@ -26,3 +26,9 @@
   - Verify: `npm run test:l10n` exit 0
 - [ ] 3.3 User doc `docs/Features/mail-block-editor.md`: build a mailing from blocks, what the footer is for, the mail clients checked (not run: the doc is written; the hand check of the rendering in Outlook, Gmail and Apple Mail needs a live send and is owed)
   - Verify: docs build exit 0
+
+## 4. The list from nextcloud-vue
+
+- [x] 4.1 `MailBlockEditor` draws its list with nextcloud-vue `CnBlockListEditor` (palette, drag, Move up and Move down, open by name) and keeps only the per-type properties and the footer; the list helpers `addBlock`, `moveBlock` and `removeBlock` are removed
+  - Verify: `mailBlockEditor.spec.js`, `mailBlocks.spec.js`
+- [x] 4.2 Bump `@conduction/nextcloud-vue` once a release contains `CnBlockListEditor` (development, merge #2088)

@@ -1,0 +1,190 @@
+{
+	"$comment": "pipelinq's search insight in the Zuiddrecht set, as PqZoekinzicht draws it: yesterday's Search Console import for the four queries in the table and 'rolstoeltaxi aanvragen' that no page answers (parkeervergunning lands on two pages: 16,0% for the best one, 13,4% together), the keyword target for 'compostbak gratis', and two competitors with what their watches last found. ctr is stored to two decimals; the clicks and impressions carry the exact figure.",
+	"objects": [
+		{
+			"key": "zoekopdracht-1",
+			"register": "pipelinq",
+			"schema": "searchQueryDaily",
+			"data": {
+				"property": "https://www.zuiddrecht.example/",
+				"date": "{{date:-1}}",
+				"query": "afvalpas kwijt",
+				"page": "https://www.zuiddrecht.example/afval/afvalpas",
+				"clicks": 412,
+				"impressions": 3120,
+				"ctr": 0.13,
+				"position": 2.1,
+				"source": "searchConsole",
+				"importedAt": "{{datetime:-1 06:10}}"
+			}
+		},
+		{
+			"key": "zoekopdracht-2",
+			"register": "pipelinq",
+			"schema": "searchQueryDaily",
+			"data": {
+				"property": "https://www.zuiddrecht.example/",
+				"date": "{{date:-1}}",
+				"query": "parkeervergunning zuiddrecht",
+				"page": "https://www.zuiddrecht.example/parkeren/parkeervergunning",
+				"clicks": 320,
+				"impressions": 2000,
+				"ctr": 0.16,
+				"position": 1.2,
+				"source": "searchConsole",
+				"importedAt": "{{datetime:-1 06:10}}"
+			}
+		},
+		{
+			"key": "zoekopdracht-3",
+			"register": "pipelinq",
+			"schema": "searchQueryDaily",
+			"data": {
+				"property": "https://www.zuiddrecht.example/",
+				"date": "{{date:-1}}",
+				"query": "parkeervergunning zuiddrecht",
+				"page": "https://www.zuiddrecht.example/parkeren/vergunning-aanvragen",
+				"clicks": 68,
+				"impressions": 904,
+				"ctr": 0.08,
+				"position": 1.8,
+				"source": "searchConsole",
+				"importedAt": "{{datetime:-1 06:10}}"
+			}
+		},
+		{
+			"key": "zoekopdracht-4",
+			"register": "pipelinq",
+			"schema": "searchQueryDaily",
+			"data": {
+				"property": "https://www.zuiddrecht.example/",
+				"date": "{{date:-1}}",
+				"query": "compostbak gratis",
+				"page": "https://mijn.zuiddrecht.example/afvalvrij",
+				"clicks": 96,
+				"impressions": 1880,
+				"ctr": 0.05,
+				"position": 7.8,
+				"source": "searchConsole",
+				"importedAt": "{{datetime:-1 06:10}}"
+			}
+		},
+		{
+			"key": "zoekopdracht-5",
+			"register": "pipelinq",
+			"schema": "searchQueryDaily",
+			"data": {
+				"property": "https://www.zuiddrecht.example/",
+				"date": "{{date:-1}}",
+				"query": "paspoort aanvragen zuiddrecht",
+				"page": "https://www.zuiddrecht.example/burgerzaken/paspoort",
+				"clicks": 74,
+				"impressions": 2210,
+				"ctr": 0.03,
+				"position": 11.2,
+				"source": "searchConsole",
+				"importedAt": "{{datetime:-1 06:10}}"
+			}
+		},
+		{
+			"key": "zoekopdracht-6",
+			"register": "pipelinq",
+			"schema": "searchQueryDaily",
+			"data": {
+				"property": "https://www.zuiddrecht.example/",
+				"date": "{{date:-1}}",
+				"query": "rolstoeltaxi aanvragen",
+				"page": "https://www.zuiddrecht.example/",
+				"clicks": 0,
+				"impressions": 640,
+				"ctr": 0.0,
+				"position": 18.6,
+				"source": "searchConsole",
+				"importedAt": "{{datetime:-1 06:10}}"
+			}
+		},
+		{
+			"key": "zoekwoord-compostbak-gratis",
+			"register": "pipelinq",
+			"schema": "keywordTarget",
+			"data": {
+				"term": "compostbak gratis",
+				"intent": "transactional",
+				"status": "use-more",
+				"proposalKind": "striking-distance",
+				"property": "https://www.zuiddrecht.example/",
+				"targetPageRef": "https://mijn.zuiddrecht.example/afvalvrij",
+				"createdBy": "{{cast:pieter.uid}}",
+				"createdAt": "{{datetime:-6 10:15}}"
+			}
+		},
+		{
+			"key": "concurrent-dordrecht",
+			"register": "pipelinq",
+			"schema": "competitor",
+			"data": {
+				"name": "Gemeente Dordrecht",
+				"website": "https://www.dordrecht.example/",
+				"feeds": [
+					"https://www.dordrecht.example/nieuws/feed.xml"
+				],
+				"active": true
+			}
+		},
+		{
+			"key": "concurrent-papendrecht",
+			"register": "pipelinq",
+			"schema": "competitor",
+			"data": {
+				"name": "Gemeente Papendrecht",
+				"website": "https://www.papendrecht.example/",
+				"sitemapUrl": "https://www.papendrecht.example/sitemap.xml",
+				"active": true
+			}
+		},
+		{
+			"key": "volg-dordrecht-nieuws",
+			"register": "pipelinq",
+			"schema": "competitorWatch",
+			"data": {
+				"competitorId": "{{object:concurrent-dordrecht.id}}",
+				"kind": "rss",
+				"target": "https://www.dordrecht.example/nieuws/feed.xml",
+				"schedule": "daily",
+				"active": true,
+				"lastRunAt": "{{datetime:0 06:00}}",
+				"lastOutcome": "ok"
+			}
+		},
+		{
+			"key": "volg-papendrecht-sitemap",
+			"register": "pipelinq",
+			"schema": "competitorWatch",
+			"data": {
+				"competitorId": "{{object:concurrent-papendrecht.id}}",
+				"kind": "sitemap",
+				"target": "https://www.papendrecht.example/sitemap.xml",
+				"schedule": "weekly",
+				"active": true,
+				"lastRunAt": "{{datetime:-5 06:00}}",
+				"lastOutcome": "unavailable",
+				"lastReason": "De sitemap gaf geen antwoord."
+			}
+		},
+		{
+			"key": "gezien-dordrecht-compostbak",
+			"register": "pipelinq",
+			"schema": "watchEvent",
+			"data": {
+				"competitorId": "{{object:concurrent-dordrecht.id}}",
+				"watchId": "{{object:volg-dordrecht-nieuws.id}}",
+				"kind": "rss",
+				"title": "Gratis compostbak voor inwoners",
+				"url": "https://www.dordrecht.example/nieuws/gratis-compostbak-voor-inwoners",
+				"seenAt": "{{datetime:0 06:00}}",
+				"relevanceScore": 82,
+				"relevanceReason": "Zelfde onderwerp als de Afvalvrije week."
+			}
+		}
+	]
+}

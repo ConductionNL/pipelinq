@@ -23,15 +23,15 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-resolver-is-published-and-no-caller-reads-the-property-directly-req-pcl-005
+ * @spec openspec/specs/parties/spec.md#requirement-the-resolver-is-published-and-no-caller-reads-the-property-directly-req-pcl-005
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\CorrespondenceLanguageService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CorrespondenceLanguageServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -40,20 +40,20 @@ use OCP\IRequest;
 /**
  * Routes for the correspondence language and its resolver.
  *
- * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
+ * @spec openspec/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
  */
 class CorrespondenceLanguageController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param CorrespondenceLanguageService $service The resolver.
+	 * @param CorrespondenceLanguageServiceInterface $service The resolver.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly CorrespondenceLanguageService $service,
+		private readonly CorrespondenceLanguageServiceInterface $service,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -61,7 +61,7 @@ class CorrespondenceLanguageController extends Controller {
 	 *
 	 * @return JSONResponse The picker's options.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
+	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	#[NoAdminRequired]
 	public function available(): JSONResponse {
@@ -81,7 +81,7 @@ class CorrespondenceLanguageController extends Controller {
 	 *
 	 * @return JSONResponse The answer, or the refusal.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
+	 * @spec openspec/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
 	 */
 	#[NoAdminRequired]
 	public function resolve(string $partyId): JSONResponse {
@@ -96,7 +96,7 @@ class CorrespondenceLanguageController extends Controller {
 	 *
 	 * @return JSONResponse The new answer, or the refusal naming the tag.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
+	 * @spec openspec/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
 	 */
 	#[NoAdminRequired]
 	public function setPreference(string $partyId, string $language = ''): JSONResponse {

@@ -31,7 +31,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContractServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -44,7 +45,7 @@ use Throwable;
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
  * @spec openspec/specs/openregister-integration/spec.md
  */
-class ContractService {
+class ContractService implements ContractServiceInterface {
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the contract status graph.
 	 *
@@ -156,16 +157,44 @@ class ContractService {
 
 		$current = (string)($contract['status'] ?? 'draft');
 
-		if (in_array($current, $this->terminalStates(), true) === true) {
-			throw new InvalidArgumentException(
-				sprintf('Contract is in terminal state "%s" and cannot transition.', $current)
-			);
-		}
+		$this->assertNotTerminal(current: $current);
 
 		if ($newStatus === 'expiring' && $byEngine === false) {
 			throw new InvalidArgumentException('Status "expiring" may only be set by the renewal engine.');
 		}
 
+		$this->assertOutcomeRequirements(contract: $contract, newStatus: $newStatus);
+		$this->assertDeclaredTransition(current: $current, newStatus: $newStatus);
+	}//end assertTransitionAllowed()
+
+	/**
+	 * Refuse any transition out of a terminal state.
+	 *
+	 * @param string $current The current status.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the contract is in a terminal state.
+	 */
+	private function assertNotTerminal(string $current): void {
+		if (in_array($current, $this->terminalStates(), true) === true) {
+			throw new InvalidArgumentException(
+				sprintf('Contract is in terminal state "%s" and cannot transition.', $current)
+			);
+		}
+	}//end assertNotTerminal()
+
+	/**
+	 * Require a won renewal lead to renew and a reason to cancel.
+	 *
+	 * @param array<string, mixed> $contract The contract.
+	 * @param string $newStatus The requested status.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the requirement is not met.
+	 */
+	private function assertOutcomeRequirements(array $contract, string $newStatus): void {
 		if ($newStatus === 'renewed' && ((string)($contract['renewalLeadOutcome'] ?? '')) !== 'won') {
 			throw new InvalidArgumentException('Status "renewed" requires a won renewal lead.');
 		}
@@ -173,15 +202,28 @@ class ContractService {
 		if ($newStatus === 'cancelled' && trim((string)($contract['cancellationReason'] ?? '')) === '') {
 			throw new InvalidArgumentException('Cancelling a contract requires a cancellationReason.');
 		}
+	}//end assertOutcomeRequirements()
 
-		// Schema-declared adjacency mirror (ADR-031). The contract schema's
-		// `x-openregister-lifecycle` is the single source of truth for the
-		// from->to graph and OpenRegister's LifecycleValidationListener enforces
-		// it on save; this PHP check rejects the same illegal edges *before* save
-		// with the contract's own message. Same-value transitions are skipped
-		// (OR skips them too). When the declaration is unreadable the graph is
-		// empty and this check is a no-op, leaving the conditional guards above as
-		// the sole gate (never regresses).
+	/**
+	 * Refuse an edge the schema's lifecycle graph does not declare.
+	 *
+	 * Schema-declared adjacency mirror (ADR-031). The contract schema's
+	 * `x-openregister-lifecycle` is the single source of truth for the
+	 * from->to graph and OpenRegister's LifecycleValidationListener enforces
+	 * it on save; this PHP check rejects the same illegal edges *before* save
+	 * with the contract's own message. Same-value transitions are skipped
+	 * (OR skips them too). When the declaration is unreadable the graph is
+	 * empty and this check is a no-op, leaving the conditional guards above as
+	 * the sole gate (never regresses).
+	 *
+	 * @param string $current The current status.
+	 * @param string $newStatus The requested status.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the edge is not declared.
+	 */
+	private function assertDeclaredTransition(string $current, string $newStatus): void {
 		$graph = $this->transitionGraph();
 		if ($graph !== [] && $current !== $newStatus && isset($graph[$current]) === true) {
 			if (in_array($newStatus, $graph[$current], true) === false) {
@@ -190,7 +232,7 @@ class ContractService {
 				);
 			}
 		}
-	}//end assertTransitionAllowed()
+	}//end assertDeclaredTransition()
 
 	/**
 	 * Generate the next unique contract number (C-{year}-{seq}).
@@ -289,8 +331,8 @@ class ContractService {
 	 * @spec exclude config-key plumbing — resolves the OR register/schema ids the lifecycle ops scope to
 	 */
 	public function getRegisterAndSchema(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contract_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/contract_schema not configured; OpenRegister calls are refused, not run unscoped'
@@ -358,19 +400,30 @@ class ContractService {
 				]
 			);
 
-			$contracts = [];
-			foreach ($results as $row) {
-				if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-					$contracts[] = $row->jsonSerialize();
-				} elseif (is_array($row) === true) {
-					$contracts[] = $row;
-				}
-			}
-
-			return $contracts;
+			return $this->contractsOf(results: $results);
 		} catch (Throwable $e) {
 			$this->logger->warning('ContractService: loadAll failed', ['error' => $e->getMessage()]);
 			return [];
 		}//end try
 	}//end loadAll()
+
+	/**
+	 * The rows as contract arrays, serialising entities and skipping anything else.
+	 *
+	 * @param iterable<mixed> $results The findAll rows.
+	 *
+	 * @return array<int, array<string, mixed>> The contracts.
+	 */
+	private function contractsOf(iterable $results): array {
+		$contracts = [];
+		foreach ($results as $row) {
+			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+				$contracts[] = $row->jsonSerialize();
+			} elseif (is_array($row) === true) {
+				$contracts[] = $row;
+			}
+		}
+
+		return $contracts;
+	}//end contractsOf()
 }//end class

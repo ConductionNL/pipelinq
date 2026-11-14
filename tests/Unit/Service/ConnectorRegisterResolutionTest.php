@@ -27,6 +27,8 @@ use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
 use OCA\Pipelinq\Service\Export\ExportUploadService;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
+use OCA\Pipelinq\Service\Marketing\Transport\MailAddressing;
+use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
@@ -527,15 +529,19 @@ class ConnectorRegisterResolutionTest extends TestCase {
 
 		return $transport->send(
 			new RenderedMail(
-				fromEmail: 'noreply@example.test',
-				fromName: 'Pipelinq',
-				replyTo: 'reply@example.test',
-				toEmail: 'user@example.test',
-				subject: 'Hi',
-				html: '<p>hi</p>',
-				text: 'hi',
+				addressing: new MailAddressing(
+					fromEmail: 'noreply@example.test',
+					fromName: 'Pipelinq',
+					replyTo: 'reply@example.test',
+					toEmail: 'user@example.test',
+				),
+				content: new MailContent(
+					subject: 'Hi',
+					html: '<p>hi</p>',
+					text: 'hi',
+				),
 				headers: [],
-				deliveryId: 'd-1'
+				deliveryId: 'd-1',
 			)
 		);
 	}//end sendOneMail()
@@ -568,7 +574,8 @@ class ConnectorRegisterResolutionTest extends TestCase {
 			articleService: $this->createMock(\OCA\Pipelinq\Service\ArticleService::class),
 			connectorRegister: FakeSlugResolver::connectorRegister($presentSlugs),
 			logger: $this->createMock(LoggerInterface::class),
-			addressRenderer: new \OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer()
+			addressRenderer: new \OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer(),
+			recipientNames: $this->createMock(\OCA\Pipelinq\Service\Marketing\RecipientNameReader::class)
 		);
 
 		return $service->resolveRateLimit(

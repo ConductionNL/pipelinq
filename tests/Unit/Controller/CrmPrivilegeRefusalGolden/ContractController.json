@@ -1,0 +1,235 @@
+{
+    "create no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "create unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "create privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "message": "title and clientRef are required"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            }
+        ]
+    },
+    "transition no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "transition unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "message": "Contract not found"
+        },
+        "trace": [
+            {
+                "ContractServiceInterface::getRegisterAndSchema": []
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            },
+            {
+                "LoggerInterface::warning": [
+                    "ContractController: loadContract failed",
+                    {
+                        "error": "Call to a member function find() on null"
+                    }
+                ]
+            }
+        ]
+    },
+    "transition privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "message": "Contract not found"
+        },
+        "trace": [
+            {
+                "ContractServiceInterface::getRegisterAndSchema": []
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            },
+            {
+                "LoggerInterface::warning": [
+                    "ContractController: loadContract failed",
+                    {
+                        "error": "Call to a member function find() on null"
+                    }
+                ]
+            }
+        ]
+    },
+    "figures no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "figures unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "message": "Contract not found"
+        },
+        "trace": [
+            {
+                "ContractServiceInterface::getRegisterAndSchema": []
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            },
+            {
+                "LoggerInterface::warning": [
+                    "ContractController: loadContract failed",
+                    {
+                        "error": "Call to a member function find() on null"
+                    }
+                ]
+            }
+        ]
+    },
+    "figures privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "message": "Contract not found"
+        },
+        "trace": [
+            {
+                "ContractServiceInterface::getRegisterAndSchema": []
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            },
+            {
+                "LoggerInterface::warning": [
+                    "ContractController: loadContract failed",
+                    {
+                        "error": "Call to a member function find() on null"
+                    }
+                ]
+            }
+        ]
+    },
+    "summary no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "summary unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "summary privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "RecurringRevenueServiceInterface::getSummary": []
+            }
+        ]
+    },
+    "renewalMetrics no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "renewalMetrics unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "renewalMetrics privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": [],
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "ContractServiceInterface::loadAll": []
+            },
+            {
+                "RecurringRevenueServiceInterface::computeRenewalMetrics": [
+                    [],
+                    "(time)",
+                    "(time)"
+                ]
+            }
+        ]
+    }
+}

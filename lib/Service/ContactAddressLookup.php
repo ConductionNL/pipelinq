@@ -28,7 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,6 +41,8 @@ use Throwable;
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
  */
 class ContactAddressLookup {
+	use SerialisedToArray;
+
 
 	/**
 	 * The phone fields, in the order the adapters read them.
@@ -152,31 +155,16 @@ class ContactAddressLookup {
 	 * @return array<string,mixed>|null The row.
 	 */
 	private function loadContact(string $contactId): ?array {
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
+		$resolved = $this->resolveObjectService();
+		if ($resolved === []) {
 			return null;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($register === '') {
-			$register = 'pipelinq';
-		}
+		$register = $this->configuredOr(key: 'register', default: 'pipelinq');
 
 		foreach (['contact_schema' => 'contact', 'client_schema' => 'client'] as $key => $default) {
-			$schema = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-			if ($schema === '') {
-				$schema = $default;
-			}
-
-			try {
-				$entity = $objectService->find(id: $contactId, register: $register, schema: $schema);
-			} catch (Throwable $e) {
-				$this->logger->debug('ContactAddressLookup: not found in '.$schema, ['contactId' => $contactId]);
-				$entity = null;
-			}
-
-			$row = $this->toArray(value: $entity);
+			$schema = $this->configuredOr(key: $key, default: $default);
+			$row = $this->rowInSchema(objectService: $resolved[0], contactId: $contactId, register: $register, schema: $schema);
 			if ($row !== []) {
 				return $row;
 			}
@@ -186,24 +174,53 @@ class ContactAddressLookup {
 	}//end loadContact()
 
 	/**
-	 * Normalise an OpenRegister entity to an array.
+	 * OpenRegister's ObjectService.
 	 *
-	 * @param mixed $value The entity.
-	 *
-	 * @return array<string,mixed> The row.
+	 * @return array<int, mixed> The service as a one-element list, or an empty list when unavailable.
 	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
+	private function resolveObjectService(): array {
+		try {
+			return [$this->container->get('OCA\\OpenRegister\\Service\\ObjectService')];
+		} catch (Throwable $e) {
+			return [];
+		}
+	}//end resolveObjectService()
+
+	/**
+	 * An app-config value, or the default when it is unset.
+	 *
+	 * @param string $key The app-config key.
+	 * @param string $default The default.
+	 *
+	 * @return string
+	 */
+	private function configuredOr(string $key, string $default): string {
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
+		if ($value === '') {
+			$value = $default;
 		}
 
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
+		return $value;
+	}//end configuredOr()
+
+	/**
+	 * The contact's row in one schema; empty when it is not found there.
+	 *
+	 * @param mixed $objectService OpenRegister's ObjectService.
+	 * @param string $contactId The UUID.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function rowInSchema($objectService, string $contactId, string $register, string $schema): array {
+		try {
+			$entity = $objectService->find(id: $contactId, register: $register, schema: $schema);
+		} catch (Throwable $e) {
+			$this->logger->debug('ContactAddressLookup: not found in '.$schema, ['contactId' => $contactId]);
+			$entity = null;
 		}
 
-		return [];
-	}//end toArray()
+		return $this->toArray(value: $entity);
+	}//end rowInSchema()
 }//end class
