@@ -27,6 +27,27 @@
 					:keepOpen="true"
 					@update:modelValue="onSchemasSelect" />
 				<NcSelect
+					:modelValue="selectedDelivery"
+					:options="deliveryOptions"
+					:inputLabel="t('pipelinq', 'Delivery')"
+					label="label"
+					:clearable="false"
+					@update:modelValue="(o) => (delivery = o ? o.id : 'destination')" />
+				<NcSelect
+					v-if="delivery === 'mail'"
+					:modelValue="selectedRecipients"
+					:options="recipientOptions"
+					:inputLabel="t('pipelinq', 'Recipients')"
+					:placeholder="t('pipelinq', 'Search users and groups…')"
+					label="label"
+					trackBy="key"
+					:multiple="true"
+					:filterable="false"
+					:loading="searchingRecipients"
+					@search="onRecipientSearch"
+					@update:modelValue="onRecipientsSelect" />
+				<NcSelect
+					v-else
 					:modelValue="selectedDestination"
 					:options="destinationOptions"
 					:inputLabel="t('pipelinq', 'Destination')"
@@ -63,6 +84,7 @@
 				<NcTextField
 					v-model="model.scheduleCron"
 					:label="t('pipelinq', 'Schedule (cron)')"
+					:helperText="scheduleSummary"
 					placeholder="0 2 * * *" />
 				<NcTextField
 					v-model="model.rowFilterExpression"
@@ -113,6 +135,9 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { collectionRows } from '../../services/collectionRows.js'
+import { exportApi } from '../../services/exportApi.js'
+import { toOptions, toRecipients } from '../../services/mailRecipients.js'
+import { searchAssignees } from '../../services/taskUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 // The pipelinq schemas the export pipeline may read. `ticket` is the unified
@@ -130,6 +155,9 @@ const EXPORTABLE_SCHEMAS = [
 ]
 const FORMATS = ['csv', 'parquet', 'jsonl']
 const MODES = ['full', 'incremental']
+const DELIVERIES = ['destination', 'mail']
+// How long the schedule field waits for typing to stop before asking for its words.
+const DESCRIBE_DELAY_MS = 300
 
 export default {
 	name: 'ExportJobForm',
@@ -165,6 +193,13 @@ export default {
 			destinations: [],
 			allowlistText: '',
 			testRunOpen: false,
+			delivery: 'destination',
+			recipients: [],
+			recipientOptions: [],
+			knownRecipients: [],
+			searchingRecipients: false,
+			scheduleWords: '',
+			describeTimer: null,
 			model: {
 				name: '',
 				description: '',
@@ -226,7 +261,7 @@ export default {
 		 * @return {Array<object>} The options.
 		 */
 		destinationOptions() {
-			return this.destinations.map((d) => ({
+			return this.destinations.filter((d) => d.type !== 'mail').map((d) => ({
 				id: d.id,
 				label:
 					d.validationStatus === 'valid'
@@ -246,6 +281,67 @@ export default {
 					(o) => o.id === this.model.destinationId,
 				) || null
 			)
+		},
+
+		/**
+		 * Delivery options: a warehouse destination, or mail to users and groups.
+		 *
+		 * @return {Array<object>} The options.
+		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 */
+		deliveryOptions() {
+			return DELIVERIES.map((id) => ({
+				id,
+				label: id === 'mail' ? this.t('pipelinq', 'Mail') : this.t('pipelinq', 'Destination'),
+			}))
+		},
+
+		/**
+		 * The selected delivery option.
+		 *
+		 * @return {object|null} The option.
+		 */
+		selectedDelivery() {
+			return this.deliveryOptions.find((o) => o.id === this.delivery) || null
+		},
+
+		/**
+		 * The picked recipients as picker options, labelled from the searches so far.
+		 *
+		 * @return {Array<object>} The options.
+		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 */
+		selectedRecipients() {
+			return toOptions(this.recipients, this.knownRecipients)
+		},
+
+		/**
+		 * The mail destination this job already sends through, if any.
+		 *
+		 * @return {object|null} The destination.
+		 */
+		mailDestination() {
+			const current = this.destinations.find((d) => d.id === this.model.destinationId)
+			return current && current.type === 'mail' ? current : null
+		},
+
+		/**
+		 * The schedule in words, and for mail who it goes to: "Every Monday at 07:00 to Team leads".
+		 *
+		 * Falls back to the expression itself while its words are not known.
+		 *
+		 * @return {string} The summary.
+		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 */
+		scheduleSummary() {
+			const schedule = this.scheduleWords || this.model.scheduleCron || ''
+			if (this.delivery !== 'mail' || this.recipients.length === 0 || schedule === '') {
+				return schedule
+			}
+			return this.t('pipelinq', '{schedule} to {recipients}', {
+				schedule,
+				recipients: this.selectedRecipients.map((o) => o.label).join(', '),
+			})
 		},
 
 		/**
@@ -291,11 +387,26 @@ export default {
 		},
 	},
 
+	watch: {
+		'model.scheduleCron': {
+			handler(expression) {
+				clearTimeout(this.describeTimer)
+				this.describeTimer = setTimeout(() => this.describeSchedule(expression), DESCRIBE_DELAY_MS)
+			},
+
+			immediate: true,
+		},
+	},
+
 	async mounted() {
 		await this.loadDestinations()
 		if (this.isEdit) {
 			await this.load()
 		}
+	},
+
+	beforeUnmount() {
+		clearTimeout(this.describeTimer)
 	},
 
 	methods: {
@@ -332,6 +443,10 @@ export default {
 					this.allowlistText = (this.model.columnAllowlist || []).join(
 						', ',
 					)
+					if (this.mailDestination) {
+						this.delivery = 'mail'
+						this.recipients = toRecipients(this.mailDestination.recipients)
+					}
 				}
 			} catch {
 				showError(this.t('pipelinq', 'Could not load the job'))
@@ -347,6 +462,81 @@ export default {
 		 */
 		onSchemasSelect(options) {
 			this.model.sourceSchemas = (options || []).map((o) => o.id)
+		},
+
+		/**
+		 * Ask the server for the schedule in words; keep the expression when it has none.
+		 *
+		 * @param {string} expression The cron expression.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 */
+		async describeSchedule(expression) {
+			if (!expression) {
+				this.scheduleWords = ''
+				return
+			}
+			try {
+				const result = await exportApi.describeSchedule(expression)
+				if (expression === this.model.scheduleCron) {
+					this.scheduleWords = result.valid ? result.description : ''
+				}
+			} catch {
+				this.scheduleWords = ''
+			}
+		},
+
+		/**
+		 * Search users and groups for the recipients picker.
+		 *
+		 * @param {string} query What the user typed.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 */
+		async onRecipientSearch(query) {
+			this.searchingRecipients = true
+			try {
+				const matches = await searchAssignees(query)
+				const found = toOptions(matches, matches)
+				this.recipientOptions = found
+				this.knownRecipients = [...this.knownRecipients, ...found]
+			} finally {
+				this.searchingRecipients = false
+			}
+		},
+
+		/**
+		 * Track the picked recipients.
+		 *
+		 * @param {Array<object>} options The picked options.
+		 */
+		onRecipientsSelect(options) {
+			this.knownRecipients = [...this.knownRecipients, ...(options || [])]
+			this.recipients = toRecipients(options)
+		},
+
+		/**
+		 * Save the mail destination that carries this job's recipients, and return its id.
+		 *
+		 * @return {Promise<string>} The destination id.
+		 * @throws {Error} When it could not be saved.
+		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 */
+		async saveMailDestination() {
+			const destination = {
+				name: this.t('pipelinq', 'Mail: {name}', { name: this.model.name }),
+				type: 'mail',
+				recipients: this.recipients,
+			}
+			if (this.mailDestination) {
+				destination.id = this.mailDestination.id
+			}
+			const saved = await this.objectStore.saveObject('exportDestination', destination)
+			const id = destination.id || saved?.id || saved?.uuid
+			if (!id) {
+				throw new Error('The mail destination was not saved')
+			}
+			return id
 		},
 
 		/**
@@ -367,11 +557,22 @@ export default {
 		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
 		 */
 		async save() {
+			if (this.delivery === 'mail' && this.recipients.length === 0) {
+				showError(this.t('pipelinq', 'Choose at least one recipient'))
+				return
+			}
 			this.busy = true
 			try {
 				const payload = {
 					...this.model,
 					columnAllowlist: this.parsedAllowlist(),
+				}
+				if (this.delivery === 'mail') {
+					payload.destinationId = await this.saveMailDestination()
+					// A mailed report has no warehouse to test first: a new one runs on its schedule.
+					if (!this.isEdit) {
+						payload.enabled = true
+					}
 				}
 				if (this.isEdit) {
 					payload.id = this.jobId

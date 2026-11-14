@@ -22,6 +22,7 @@
 					label="label"
 					:clearable="false"
 					@update:modelValue="(o) => (model.type = o ? o.id : '')" />
+				<template v-if="model.type !== 'mail'">
 				<NcTextField
 					v-model="model.connectorSourceId"
 					:label="t('pipelinq', 'OpenConnector source ID')"
@@ -53,6 +54,10 @@
 					type="switch">
 					{{ t('pipelinq', 'Encryption at rest') }}
 				</NcCheckboxRadioSwitch>
+				</template>
+				<p v-else class="export-form__hint">
+					{{ t('pipelinq', 'A mailed report goes to the recipients chosen on its export job.') }}
+				</p>
 			</div>
 
 			<template #actions>
@@ -89,7 +94,7 @@ import {
 import { exportApi } from '../../services/exportApi.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
-const TYPES = ['s3', 'azure', 'gcs', 'bigquery', 'snowflake', 'sftp', 'postgres']
+const TYPES = ['s3', 'azure', 'gcs', 'bigquery', 'snowflake', 'sftp', 'postgres', 'mail']
 const COMPRESSIONS = ['none', 'gzip', 'snappy', 'zstd']
 
 export default {
@@ -282,6 +287,10 @@ export default {
 </script>
 
 <style scoped>
+.export-form__hint {
+	color: var(--color-text-maxcontrast);
+}
+
 .export-form {
 	display: flex;
 	flex-direction: column;

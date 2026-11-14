@@ -5367,6 +5367,45 @@
                 }
             }
         },
+        "/export/schedule/describe": {
+            "get": {
+                "operationId": "export-job-describe-schedule",
+                "summary": "A cron expression in words, for the schedule dialog",
+                "description": "A cron expression in words, in the user's Dutch or English, with `valid: false` when it is not a 5-field cron expression. Needs a signed-in Nextcloud user with the export role.",
+                "tags": [
+                    "export-job"
+                ],
+                "parameters": [
+                    {
+                        "name": "expression",
+                        "in": "query",
+                        "required": true,
+                        "description": "The cron expression, such as `0 7 * * 1`.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/export/jobs": {
             "get": {
                 "operationId": "export-job-list-jobs",

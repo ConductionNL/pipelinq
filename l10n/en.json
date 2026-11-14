@@ -1,5 +1,10 @@
 {
     "translations": {
+        "{schedule} to {recipients}": "{schedule} to {recipients}",
+        "A mailed report goes to the recipients chosen on its export job.": "A mailed report goes to the recipients chosen on its export job.",
+        "Choose at least one recipient": "Choose at least one recipient",
+        "Mail: {name}": "Mail: {name}",
+        "Search users and groups…": "Search users and groups…",
         "Your data export is ready: %1$s": "Your data export is ready: %1$s",
         "Report %1$s could not be mailed to %2$s recipients": "Report %1$s could not be mailed to %2$s recipients",
         "Report {title} could not be mailed to %1$s recipients": "Report {title} could not be mailed to %1$s recipients",
@@ -9656,6 +9661,7 @@
         "for {assigneeUserId|user}": "for {assigneeUserId|user}",
         "No open matters for this client.": "No open matters for this client.",
         "No earlier contact with this client.": "No earlier contact with this client.",
+        "No earlier period to compare with": "No earlier period to compare with",
         "Edit · {reference}": "Edit · {reference}",
         "{reference} · {ticketType}": "{reference} · {ticketType}",
         "Unsaved contact moment": "Unsaved contact moment",
