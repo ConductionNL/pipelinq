@@ -140,7 +140,7 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 
 		[$register, $clientSchema, $ticketSchema] = array_values($ids);
 
-		$refOfClient = $this->refOfClients(register: $register, schema: $clientSchema, refs: $refs);
+		$refOfClient = $this->refOfClients(filters: ['register' => $register, 'schema' => $clientSchema], refs: $refs);
 
 		return [
 			'status' => 200,
@@ -263,21 +263,20 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 			return [];
 		}
 
-		return array_keys($this->refOfClients(register: $register, schema: $clientSchema, refs: [$ref]));
+		return array_keys($this->refOfClients(filters: ['register' => $register, 'schema' => $clientSchema], refs: [$ref]));
 	}//end clientIdsOf()
 
 	/**
 	 * The master entity of each client that maps to one of the references, by client id.
 	 *
-	 * @param string $register The register id.
-	 * @param string $schema The client schema id.
+	 * @param array<string, string> $filters The register and client schema ids.
 	 * @param array<int, string> $refs The master entity references.
 	 *
 	 * @return array<string, string> Master entity per client id.
 	 */
-	private function refOfClients(string $register, string $schema, array $refs): array {
+	private function refOfClients(array $filters, array $refs): array {
 		$refOfClient = [];
-		foreach ($this->read(filters: ['register' => $register, 'schema' => $schema, 'masterEntityRef' => ['in' => $refs]]) as $client) {
+		foreach ($this->read(filters: $filters + ['masterEntityRef' => ['in' => $refs]]) as $client) {
 			$id = (string)($client['id'] ?? $client['uuid'] ?? '');
 			$ref = (string)($client['masterEntityRef'] ?? '');
 			if ($id !== '' && in_array($ref, $refs, true) === true) {
