@@ -5,7 +5,8 @@
  *
  * "Take your data with you": one archive with every schema of the pipelinq
  * register, as JSON Lines and as CSV, the schema definitions as JSON Schema
- * and a manifest, stored in the administrator's Nextcloud Files. The export
+ * the files attached to objects under their object identifier and a
+ * manifest, stored in the administrator's Nextcloud Files. The export
  * jobs of the BI export page already format one schema at a time
  * (ExportDataService::format()); this service only adds the packaging, so the
  * archive and the jobs never disagree about how a row is written.
@@ -44,7 +45,9 @@ use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
 use RuntimeException;
+use Throwable;
 use ZipArchive;
 
 /**
@@ -72,6 +75,17 @@ class FullExportService implements FullExportServiceInterface {
 	private const FORMATS = ['jsonl' => 'jsonl', 'csv' => 'csv'];
 
 	/**
+	 * OpenRegister's published read of an object's attached files.
+	 *
+	 * Named as a string and looked up in the container, so an OpenRegister
+	 * that does not publish it yet still exports everything else; the
+	 * manifest then says the attached files are not included.
+	 *
+	 * @var string
+	 */
+	private const OBJECT_FILE_READER = 'OCA\\OpenRegister\\Contract\\ObjectFileReaderInterface';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ConfigFileLoaderService $configFiles   The register definition, fragments merged.
@@ -80,6 +94,7 @@ class FullExportService implements FullExportServiceInterface {
 	 * @param IAppConfig              $appConfig     The configured register and schema ids.
 	 * @param IRootFolder             $rootFolder    Nextcloud Files, where the archive is stored.
 	 * @param ITimeFactory            $timeFactory   The export time.
+	 * @param ContainerInterface|null $container     The DI container, for OpenRegister's object file reader.
 	 *
 	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
 	 */
@@ -90,6 +105,7 @@ class FullExportService implements FullExportServiceInterface {
 		private readonly IAppConfig $appConfig,
 		private readonly IRootFolder $rootFolder,
 		private readonly ITimeFactory $timeFactory,
+		private readonly ?ContainerInterface $container=null,
 	) {
 	}//end __construct()
 
@@ -155,7 +171,8 @@ class FullExportService implements FullExportServiceInterface {
 	 * Write the archive to a path.
 	 *
 	 * Per schema `data/<schema>.jsonl` and `data/<schema>.csv`, its definition
-	 * as `schemas/<schema>.schema.json`, and `manifest.json`.
+	 * as `schemas/<schema>.schema.json`, every object's attached files as
+	 * `files/<object id>/<file name>`, and `manifest.json`.
 	 *
 	 * @param string $path       The archive path.
 	 * @param string $exportedAt The export time, ISO 8601.
@@ -173,14 +190,21 @@ class FullExportService implements FullExportServiceInterface {
 		}
 
 		$definitions = ($this->configFiles->loadConfigurationFile()['components']['schemas'] ?? []);
+		$fileReader  = $this->objectFileReader();
 		$entries     = [];
 		foreach ($this->schemaSlugs() as $slug) {
-			$rows      = $this->rowsOf(slug: $slug);
+			$rows        = $this->rowsOf(slug: $slug);
+			$attachments = 0;
+			if ($fileReader !== null) {
+				$attachments = $this->addAttachedFiles(zip: $zip, reader: $fileReader, slug: $slug, rows: ($rows ?? []));
+			}
+
 			$entries[] = [
-				'schema'     => $slug,
-				'configured' => $rows !== null,
-				'objects'    => count($rows ?? []),
-				'files'      => $this->fileNames(slug: $slug),
+				'schema'        => $slug,
+				'configured'    => $rows !== null,
+				'objects'       => count($rows ?? []),
+				'attachedFiles' => $attachments,
+				'files'         => $this->fileNames(slug: $slug),
 			];
 			foreach (self::FORMATS as $extension => $format) {
 				$zip->addFromString('data/' . $slug . '.' . $extension, $this->formatter->format(rows: ($rows ?? []), format: $format));
@@ -193,6 +217,7 @@ class FullExportService implements FullExportServiceInterface {
 			'app'        => AppIdentity::APP_ID,
 			'exportedAt' => $exportedAt,
 			'formats'    => array_values(self::FORMATS),
+			'attachedFilesIncluded' => $fileReader !== null,
 			'schemas'    => $entries,
 		];
 		$zip->addFromString('manifest.json', (string) json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
@@ -274,6 +299,86 @@ class FullExportService implements FullExportServiceInterface {
 			throw new RuntimeException('The objects of schema ' . $slug . ' could not be read: ' . $e->getMessage(), 0, $e);
 		}
 	}//end pageOf()
+
+	/**
+	 * OpenRegister's object file reader, or null when this OpenRegister does not publish it.
+	 *
+	 * @return object|null The reader.
+	 */
+	private function objectFileReader(): ?object {
+		if ($this->container === null || $this->container->has(self::OBJECT_FILE_READER) === false) {
+			return null;
+		}
+
+		return $this->container->get(self::OBJECT_FILE_READER);
+	}//end objectFileReader()
+
+	/**
+	 * Copy every object's attached files into the archive under its identifier.
+	 *
+	 * @param ZipArchive                 $zip    The archive.
+	 * @param object                     $reader OpenRegister's object file reader.
+	 * @param string                     $slug   The schema slug, for the error message.
+	 * @param list<array<string, mixed>> $rows   The schema's objects.
+	 *
+	 * @return int The number of files copied.
+	 *
+	 * @throws RuntimeException When an object's files cannot be read.
+	 *
+	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
+	 */
+	private function addAttachedFiles(ZipArchive $zip, object $reader, string $slug, array $rows): int {
+		$count = 0;
+		foreach ($rows as $row) {
+			$objectId = $this->objectIdOf(row: $row);
+			if ($objectId === '') {
+				continue;
+			}
+
+			try {
+				foreach ($reader->getObjectFiles(objectUuid: $objectId) as $file) {
+					$name = basename(str_replace('\\', '/', (string) $file->getName()));
+					if ($name === '' || $name === '.' || $name === '..') {
+						continue;
+					}
+
+					$zip->addFromString('files/' . $objectId . '/' . $name, (string) $file->getContent());
+					$count++;
+				}
+			} catch (Throwable $e) {
+				throw new RuntimeException('The attached files of ' . $slug . ' object ' . $objectId . ' could not be read: ' . $e->getMessage(), 0, $e);
+			}
+		}//end foreach
+
+		return $count;
+	}//end addAttachedFiles()
+
+	/**
+	 * An object's identifier as OpenRegister serialises it, safe as a directory name.
+	 *
+	 * @param array<string, mixed> $row The object.
+	 *
+	 * @return string The identifier, or '' when it has none usable.
+	 */
+	private function objectIdOf(array $row): string {
+		$self = $row['@self'] ?? [];
+		$id   = '';
+		if (is_array($self) === true && is_scalar($self['id'] ?? null) === true) {
+			$id = (string) $self['id'];
+		}
+
+		foreach (['uuid', 'id'] as $key) {
+			if ($id === '' && is_scalar($row[$key] ?? null) === true) {
+				$id = (string) $row[$key];
+			}
+		}
+
+		if (preg_match('/^[A-Za-z0-9._-]+$/', $id) !== 1 || trim($id, '.') === '') {
+			return '';
+		}
+
+		return $id;
+	}//end objectIdOf()
 
 	/**
 	 * The archive's file names for a schema, as the manifest lists them.

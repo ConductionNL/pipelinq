@@ -17,6 +17,8 @@ Read at openregister `main` on 14 November 2026.
 
 ## What is reused
 
+- `OCA\OpenRegister\Contract\ObjectFileReaderInterface` (published) to copy each object's attached
+  files; a failed file read fails the export.
 - `OCA\OpenRegister\Contract\ObjectServiceInterface` (published) to read each schema's objects with
   `_rbac: false, _multitenancy: false`; a failed read fails the export.
 - Pipelinq's own `ExportDataService::format()` (the BI export) for the JSON Lines and CSV rows, so the
@@ -40,6 +42,8 @@ Read at openregister `main` on 14 November 2026.
 
 - The configuration export: one document per register over HTTP, not callable through a published
   contract, and not the format the spec asks for. Calling it would also bypass the archive's manifest.
-- Object files: copying them needs OpenRegister's `FileService`, which has no published contract. The
-  attached files stay out of the archive until OpenRegister publishes one (tasks 2.2 and 2.5 keep that
-  part open).
+- Object files: OpenRegister's `FileService` is not published, so it is not called directly. OpenRegister
+  now publishes `OCA\OpenRegister\Contract\ObjectFileReaderInterface` (`getObjectFiles(objectUuid)`,
+  ConductionNL/openregister#10559); pipelinq looks it up in the container and copies each object's files
+  to `files/<object id>/<file name>`. An OpenRegister without it still exports everything else, and the
+  manifest says `attachedFilesIncluded: false`.
