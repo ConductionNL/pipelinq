@@ -9666,7 +9666,12 @@ OC.L10N.register(
         "What this signal adds to the score.": "What this signal adds to the score.",
         "The schema of the records behind this signal.": "The schema of the records behind this signal.",
         "The records behind this signal.": "The records behind this signal.",
-        "When the risk was last computed.": "When the risk was last computed."
+        "When the risk was last computed.": "When the risk was last computed.",
+        "Add attendee": "Add attendee",
+        "They get a place while one is free, else a spot on the waiting list.": "They get a place while one is free, else a spot on the waiting list.",
+        "The confirmation is sent to this address.": "The confirmation is sent to this address.",
+        "The attendee could not be added.": "The attendee could not be added.",
+        "The attendee is on the registrations list.": "The attendee is on the registrations list."
     },
     "nplurals=2; plural=(n != 1);"
 )
