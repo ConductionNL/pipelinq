@@ -223,6 +223,18 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 			return 0;
 		}
 
+		return $this->releaseWhenExpired(bookingId: $bookingId, createdAt: $createdAt);
+	}//end releaseIfExpired()
+
+	/**
+	 * Release a booking's deposit when its window has passed, logging a failure.
+	 *
+	 * @param string $bookingId The booking id.
+	 * @param string $createdAt The booking's creation time, ISO-8601.
+	 *
+	 * @return int 1 when the deposit was released, 0 otherwise.
+	 */
+	private function releaseWhenExpired(string $bookingId, string $createdAt): int {
 		if ($this->depositService->isDepositExpired(createdAtIso: $createdAt) === false) {
 			return 0;
 		}
@@ -237,7 +249,7 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 			);
 			return 0;
 		}
-	}//end releaseIfExpired()
+	}//end releaseWhenExpired()
 
 	/**
 	 * Pull the creation timestamp out of an OR object.
