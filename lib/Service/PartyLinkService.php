@@ -71,35 +71,28 @@ class PartyLinkService implements PartyLinkServiceInterface {
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function link(string $recordType, string $recordId, string $party, string $kind): array {
-		$recordType = trim($recordType);
-		$recordId = trim($recordId);
-		$party = trim($party);
-		$kind = trim($kind);
-
-		$refusal = $this->linkRefusal(recordType: $recordType, recordId: $recordId, party: $party, kind: $kind);
+		$draft = ['party' => trim($party), 'kind' => trim($kind), 'recordType' => trim($recordType), 'recordId' => trim($recordId)];
+		$refusal = $this->linkRefusal(draft: $draft);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		return $this->saveLink(recordType: $recordType, recordId: $recordId, party: $party, kind: $kind);
+		return $this->saveLink(draft: $draft);
 	}//end link()
 
 	/**
 	 * Why a link may not be written: missing input, or the registry refuses the kind. Null when it may.
 	 *
-	 * @param string $recordType The trimmed `<app>:<schema>:<type>` literal.
-	 * @param string $recordId   The trimmed record.
-	 * @param string $party      The trimmed party.
-	 * @param string $kind       The trimmed party kind code.
+	 * @param array<string, string> $draft The trimmed party, kind, recordType (`<app>:<schema>:<type>`) and recordId.
 	 *
 	 * @return array<string, mixed>|null `status` plus `error`, or null.
 	 */
-	private function linkRefusal(string $recordType, string $recordId, string $party, string $kind): array|null {
-		if ($recordType === '' || $recordId === '' || $party === '') {
+	private function linkRefusal(array $draft): array|null {
+		if ($draft['recordType'] === '' || $draft['recordId'] === '' || $draft['party'] === '') {
 			return ['status' => 400, 'error' => 'A record type, a record and a party are required.'];
 		}
 
-		$answer = $this->registry->mayLink(recordType: $recordType, recordId: $recordId, kind: $kind, party: $party);
+		$answer = $this->registry->mayLink(recordType: $draft['recordType'], recordId: $draft['recordId'], kind: $draft['kind'], party: $draft['party']);
 		if ($answer['allowed'] === false) {
 			// 409, not 400: the write is well formed and refused on policy,
 			// and the message is meant to be shown to the handler.
@@ -112,21 +105,12 @@ class PartyLinkService implements PartyLinkServiceInterface {
 	/**
 	 * Write a party link valid from today.
 	 *
-	 * @param string $recordType The trimmed `<app>:<schema>:<type>` literal.
-	 * @param string $recordId   The trimmed record.
-	 * @param string $party      The trimmed party.
-	 * @param string $kind       The trimmed party kind code.
+	 * @param array<string, string> $draft The trimmed party, kind, recordType and recordId.
 	 *
 	 * @return array<string, mixed> `status` plus either `partyLink` or `error`.
 	 */
-	private function saveLink(string $recordType, string $recordId, string $party, string $kind): array {
-		$link = [
-			'party' => $party,
-			'kind' => $kind,
-			'recordType' => $recordType,
-			'recordId' => $recordId,
-			'validFrom' => (new DateTimeImmutable('today'))->format('Y-m-d'),
-		];
+	private function saveLink(array $draft): array {
+		$link = $draft + ['validFrom' => (new DateTimeImmutable('today'))->format('Y-m-d')];
 
 		$saved = $this->write(object: $link);
 		if ($saved === false) {
@@ -211,27 +195,32 @@ class PartyLinkService implements PartyLinkServiceInterface {
 			rows: $rows,
 		);
 
-		$landed = [];
-		foreach ($verdict['accepted'] as $row) {
-			$link = [
-				'party' => $row['party'],
-				'kind' => $row['kind'],
-				'recordType' => trim($recordType),
-				'recordId' => trim($recordId),
-				'validFrom' => (new DateTimeImmutable('today'))->format('Y-m-d'),
-			];
+		return [
+			'status' => 200,
+			'linked' => $this->writeAccepted(accepted: $verdict['accepted'], record: ['recordType' => trim($recordType), 'recordId' => trim($recordId)]),
+			'refused' => $verdict['refused'],
+		];
+	}//end import()
 
+	/**
+	 * Write a link valid from today for every accepted row; the links that landed.
+	 *
+	 * @param array<int, array<string, string>> $accepted The accepted rows, each with `party` and `kind`.
+	 * @param array<string, string>             $record   The trimmed recordType and recordId.
+	 *
+	 * @return list<array<string, mixed>> The links written.
+	 */
+	private function writeAccepted(array $accepted, array $record): array {
+		$landed = [];
+		foreach ($accepted as $row) {
+			$link = ['party' => $row['party'], 'kind' => $row['kind']] + $record + ['validFrom' => (new DateTimeImmutable('today'))->format('Y-m-d')];
 			if ($this->write(object: $link) === true) {
 				$landed[] = $link;
 			}
 		}
 
-		return [
-			'status' => 200,
-			'linked' => $landed,
-			'refused' => $verdict['refused'],
-		];
-	}//end import()
+		return $landed;
+	}//end writeAccepted()
 
 	/**
 	 * Save one party link.
