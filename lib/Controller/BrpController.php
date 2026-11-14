@@ -1107,44 +1107,37 @@ class BrpController extends Controller {
 		}
 
 		$this->stampContact(
-			contactId: $contactId,
-			target: ['register' => $register, 'schema' => $schema],
-			brpPersonId: $brpPersonId,
-			secrecy: $secrecy
+			target: ['id' => $contactId, 'register' => $register, 'schema' => $schema],
+			stamp: ['verifiedBSN' => true, 'brpPersonId' => $brpPersonId, 'secrecy' => $secrecy]
 		);
 	}//end stampContactWithVerifiedBsn()
 
 	/**
 	 * Mark a stored contact BSN-verified and link its BRP person.
 	 *
-	 * @param string               $contactId   Contact UUID.
-	 * @param array<string,string> $target      Keys: register, schema.
-	 * @param string               $brpPersonId The BRP person id.
-	 * @param mixed                $secrecy     The person's geheimhouding flag.
+	 * @param array<string,string> $target Keys: id (the contact UUID), register, schema.
+	 * @param array<string,mixed>  $stamp  Keys: verifiedBSN, brpPersonId and secrecy (the geheimhouding flag).
 	 *
 	 * @return void
 	 */
-	private function stampContact(string $contactId, array $target, string $brpPersonId, mixed $secrecy): void {
+	private function stampContact(array $target, array $stamp): void {
 		try {
-			$existing = $this->getObjectService()->find(id: $contactId, register: $target['register'], schema: $target['schema']);
+			$existing = $this->getObjectService()->find(id: $target['id'], register: $target['register'], schema: $target['schema']);
 			$existingArr = $this->savedOrFallback(saved: $existing, fallback: []);
 
 			if (empty($existingArr) === true) {
 				return;
 			}
 
-			$existingArr['verifiedBSN'] = true;
-			$existingArr['brpPersonId'] = $brpPersonId;
-			$existingArr['secrecy'] = $secrecy;
 			$this->getObjectService()->saveObject(
-				object: $existingArr,
+				object: array_replace($existingArr, $stamp),
 				extend: [],
 				register: $target['register'],
 				schema: $target['schema'],
-				uuid: $contactId,
+				uuid: $target['id'],
 			);
 		} catch (Throwable $e) {
-			$this->logger->error('contact stamp with verifiedBSN failed', ['contactId' => $contactId, 'error' => $e->getMessage()]);
+			$this->logger->error('contact stamp with verifiedBSN failed', ['contactId' => $target['id'], 'error' => $e->getMessage()]);
 		}//end try
 	}//end stampContact()
 
