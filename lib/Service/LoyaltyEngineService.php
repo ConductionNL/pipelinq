@@ -337,17 +337,8 @@ class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 	 * @return int
 	 */
 	private function enforceMaxPerPeriod(array $rule, string $accountId, int $rawPoints): int {
+		$already = $this->earnedUnderMax(rule: $rule, accountId: $accountId);
 		$max = $rule['maxPerCustomerPerPeriod'] ?? null;
-		$period = (string)($rule['maxPerCustomerPeriod'] ?? 'day');
-		$already = 0;
-		if ($max !== null && (int)$max > 0) {
-			$already = $this->countAlreadyEarned(
-				accountId: $accountId,
-				ruleId: (string)$this->extractUuid(object: $rule),
-				period: $period
-			);
-		}
-
 		$maxInt = null;
 		if ($max !== null) {
 			$maxInt = (int)$max;
@@ -359,6 +350,23 @@ class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 			max: $maxInt
 		);
 	}//end enforceMaxPerPeriod()
+
+	/**
+	 * The points the account already earned under a rule this period; 0 when the rule has no maximum.
+	 *
+	 * @param array<string, mixed> $rule      The matched PointsRule.
+	 * @param string               $accountId The account UUID.
+	 *
+	 * @return int
+	 */
+	private function earnedUnderMax(array $rule, string $accountId): int {
+		$max = $rule['maxPerCustomerPerPeriod'] ?? null;
+		if ($max === null || (int)$max <= 0) {
+			return 0;
+		}
+
+		return $this->countAlreadyEarned(accountId: $accountId, rule: $rule);
+	}//end earnedUnderMax()
 
 	/**
 	 * Credit the ledger, re-evaluate tier, emit the event, and build the result.
@@ -380,11 +388,7 @@ class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 		// Re-evaluate tier.
 		$tierResult = $this->tierService->updateTierIfNeeded(accountId: $run->accountId);
 
-		$this->emitCreditedEvent(
-			accountId: $run->accountId,
-			programmeId: $run->programmeId,
-			ledgerEntry: $ledgerEntry
-		);
+		$this->emitCreditedEvent(run: $run, ledgerEntry: $ledgerEntry);
 
 		return [
 			'programmeId' => $run->programmeId,
@@ -435,14 +439,14 @@ class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 	/**
 	 * Count how many credit points were already earned in the period for this account + rule.
 	 *
-	 * @param string $accountId The account UUID.
-	 * @param string $ruleId The rule UUID.
-	 * @param string $period day|week|month|year.
+	 * @param string               $accountId The account UUID.
+	 * @param array<string, mixed> $rule      The rule; its period is day|week|month|year.
 	 *
 	 * @return int Sum of |aantal| of matching ledger entries.
 	 */
-	private function countAlreadyEarned(string $accountId, string $ruleId, string $period): int {
-		$from = $this->periodStart(period: $period);
+	private function countAlreadyEarned(string $accountId, array $rule): int {
+		$ruleId = (string)$this->extractUuid(object: $rule);
+		$from = $this->periodStart(period: (string)($rule['maxPerCustomerPeriod'] ?? 'day'));
 		$history = $this->ledgerService->getLedgerHistory(accountId: $accountId, from: $from);
 		$sum = 0;
 		foreach ($history as $e) {
@@ -485,20 +489,19 @@ class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 	/**
 	 * Emit a loyalty.points.credited event.
 	 *
-	 * @param string $accountId The account UUID.
-	 * @param string $programmeId The programme UUID.
+	 * @param PointsCreditRun      $run         The account and programme credited.
 	 * @param array<string, mixed> $ledgerEntry The created PointsLedgerEntry.
 	 *
 	 * @return void
 	 */
-	private function emitCreditedEvent(string $accountId, string $programmeId, array $ledgerEntry): void {
+	private function emitCreditedEvent(PointsCreditRun $run, array $ledgerEntry): void {
 		try {
 			$event = new GenericEvent(
 				null,
 				[
 					'type' => 'loyalty.points.credited',
-					'accountId' => $accountId,
-					'programmeId' => $programmeId,
+					'accountId' => $run->accountId,
+					'programmeId' => $run->programmeId,
 					'count' => (int)($ledgerEntry['count'] ?? 0),
 					'balanceAfter' => (int)($ledgerEntry['balanceAfter'] ?? 0),
 				]
