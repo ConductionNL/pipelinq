@@ -3,7 +3,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Five marketing sections mounted: where an article is used, the subscriber's
+ * Four marketing sections mounted: the subscriber's
  * view of a mailing list, the list's sign-up form, the social post's approval
  * buttons and what a journey did. Checked for what they show and what they send.
  *
@@ -54,7 +54,6 @@ vi.mock('@nextcloud/vue', () => ({
 	NcNoteCard: stub('NcNoteCard'),
 }))
 
-const { default: ArticleUsageSection } = await import('../../src/components/marketing/ArticleUsageSection.vue')
 const { default: ListSubscriberViewSection } = await import('../../src/components/marketing/ListSubscriberViewSection.vue')
 const { default: ListSignupFormSection } = await import('../../src/components/marketing/ListSignupFormSection.vue')
 const { default: SocialPostHeaderActions } = await import('../../src/components/marketing/SocialPostHeaderActions.vue')
@@ -69,50 +68,6 @@ beforeEach(() => {
 
 afterEach(() => {
 	vi.unstubAllGlobals()
-})
-
-describe('ArticleUsageSection', () => {
-	it('asks nothing without an article id', async () => {
-		mount(ArticleUsageSection, { global })
-		await flushPromises()
-		expect(http.get).not.toHaveBeenCalled()
-	})
-
-	it('counts and groups the usages of the article', async () => {
-		http.get.mockResolvedValueOnce({ data: {
-			counts: { template: 1, blast: 2 },
-			data: [
-				{ kind: 'blast', id: 'b1', name: 'November', status: 'sent' },
-				{ kind: 'template', id: 't1', name: '' },
-				{ kind: 'blast', id: 'b2', name: 'December' },
-			],
-		} })
-		const wrapper = mount(ArticleUsageSection, { global, props: { articleId: 'a1' } })
-		await flushPromises()
-		expect(http.get).toHaveBeenCalledWith('/index.php/apps/pipelinq/api/articles/a1/usages')
-		expect(wrapper.findAll('.article-usage__count strong').map((s) => s.text())).toEqual(['1', '2'])
-		const groups = wrapper.findAll('section')
-		expect(groups.map((g) => g.find('h3').text())).toEqual(['Campaign templates', 'Blasts'])
-		expect(groups[0].findAll('li').map((li) => li.text())).toEqual(['t1—'])
-		expect(groups[1].findAll('li').map((li) => li.text())).toEqual(['Novembersent', 'December—'])
-	})
-
-	it('reads the id from the section context and says when nothing uses it', async () => {
-		http.get.mockResolvedValueOnce({ data: {} })
-		const wrapper = mount(ArticleUsageSection, { global: { ...global, provide: { cnSectionContext: { value: { objectId: 'ctx-1' } } } } })
-		await flushPromises()
-		expect(http.get).toHaveBeenCalledWith('/index.php/apps/pipelinq/api/articles/ctx-1/usages')
-		expect(wrapper.find('.article-usage__empty').text()).toBe('This article has not been used anywhere yet.')
-		expect(wrapper.findAll('.article-usage__count strong').map((s) => s.text())).toEqual(['0', '0'])
-	})
-
-	it('says the usages could not load', async () => {
-		http.get.mockRejectedValueOnce(new Error('500'))
-		const wrapper = mount(ArticleUsageSection, { global, props: { articleId: 'a1' } })
-		await flushPromises()
-		expect(wrapper.find('[data-stub="NcNoteCard"]').text()).toBe('The usages could not be loaded.')
-		expect(wrapper.vm.loading).toBe(false)
-	})
 })
 
 describe('ListSubscriberViewSection', () => {

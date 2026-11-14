@@ -7,7 +7,7 @@
  * The create and form dialogs, mounted: the lead and request saves (payload,
  * created event, navigation or toast, error text, saving state), the contact
  * create with its seed and error paths, the add-contact-role form guard, and
- * the article form's editor hand-off and error feedback, and the log-visit
+ * and the log-visit
  * form guard.
  *
  * @spec openspec/specs/fe-dialogs/spec.md
@@ -108,17 +108,13 @@ async function form(name) {
 vi.mock('../../src/views/leads/LeadForm.vue', () => form('LeadForm'))
 vi.mock('../../src/views/requests/RequestForm.vue', () => form('RequestForm'))
 vi.mock('../../src/views/contacts/ContactForm.vue', () => form('ContactForm'))
-vi.mock('../../src/modals/ArticleEditModal.vue', async () => {
-	const { defineComponent, h } = await import('vue')
-	return { default: defineComponent({ name: 'ArticleEditModal', props: { article: { type: Object, default: null } }, emits: ['close', 'saved'], setup: () => () => h('div', { class: 'editor' }) }) }
-})
 
 const dialogs = {}
 
 beforeAll(async () => {
 	globalThis.t = (app, text) => text
 	config.global.mocks.t = globalThis.t
-	for (const name of ['LeadCreateDialog', 'RequestCreateDialog', 'ContactCreateDialog', 'AddContactRoleDialog', 'ArticleDetailFormDialog', 'LogVisitDialog']) {
+	for (const name of ['LeadCreateDialog', 'RequestCreateDialog', 'ContactCreateDialog', 'AddContactRoleDialog', 'LogVisitDialog']) {
 		dialogs[name] = (await import(`../../src/dialogs/${name}.vue`)).default
 	}
 }, 60000)
@@ -308,59 +304,6 @@ describe('AddContactRoleDialog', () => {
 		wrapper.findComponent({ name: 'CnDialog' }).vm.$emit('closing')
 		expect(wrapper.emitted('searchContacts')).toEqual([['an']])
 		expect(wrapper.emitted('cancel')).toHaveLength(2)
-	})
-})
-
-describe('ArticleDetailFormDialog', () => {
-	const schema = { id: 'article' }
-
-	it('renders nothing until shown with a schema', () => {
-		expect(mount(dialogs.ArticleDetailFormDialog, { props: { show: true } }).find('.form-dialog').exists()).toBe(false)
-		expect(mount(dialogs.ArticleDetailFormDialog, { props: { schema } }).find('.form-dialog').exists()).toBe(false)
-	})
-
-	it('leaves title and body to the editor for an existing article', async () => {
-		const item = { id: 'a-1', title: 'FAQ' }
-		const wrapper = mount(dialogs.ArticleDetailFormDialog, { props: { show: true, schema, item } })
-		const formDialog = wrapper.findComponent({ name: 'CnFormDialog' })
-		expect(formDialog.props('dialogTitle')).toBe('Edit article')
-		expect(formDialog.props('excludeFields')).toEqual(['title', 'body'])
-		expect(wrapper.find('.editor').exists()).toBe(false)
-		await button(wrapper, 'Edit title and body').trigger('click')
-		const editor = wrapper.findComponent({ name: 'ArticleEditModal' })
-		expect(editor.props('article')).toEqual(item)
-		editor.vm.$emit('saved')
-		await wrapper.vm.$nextTick()
-		expect(mocks.busEmit).toHaveBeenCalledWith('cn:page:refresh', {})
-		expect(wrapper.find('.editor').exists()).toBe(false)
-	})
-
-	it('excludes no fields for a new article and closes the editor when hidden', async () => {
-		const wrapper = mount(dialogs.ArticleDetailFormDialog, { props: { show: true, schema } })
-		expect(wrapper.findComponent({ name: 'CnFormDialog' }).props('excludeFields')).toEqual([])
-		expect(wrapper.find('.article-detail-form__editor').exists()).toBe(false)
-		await wrapper.setProps({ item: { id: 'a-1' } })
-		wrapper.vm.editorOpen = true
-		await wrapper.setProps({ show: false })
-		expect(wrapper.vm.editorOpen).toBe(false)
-	})
-
-	it('passes the form data to confirm and reports its error back', async () => {
-		const confirm = vi.fn(async () => ({ error: 'Slug taken' }))
-		const close = vi.fn()
-		const wrapper = mount(dialogs.ArticleDetailFormDialog, { props: { show: true, schema, confirm, close } })
-		const formDialog = wrapper.findComponent({ name: 'CnFormDialog' })
-		formDialog.vm.$emit('confirm', { slug: 'faq' })
-		await flushPromises()
-		expect(confirm).toHaveBeenCalledWith({ slug: 'faq' })
-		expect(formDialog.vm.lastResult).toEqual({ error: 'Slug taken' })
-		confirm.mockResolvedValueOnce({ ok: true })
-		formDialog.vm.lastResult = null
-		formDialog.vm.$emit('confirm', {})
-		await flushPromises()
-		expect(formDialog.vm.lastResult).toBe(null)
-		formDialog.vm.$emit('close')
-		expect(close).toHaveBeenCalledTimes(1)
 	})
 })
 

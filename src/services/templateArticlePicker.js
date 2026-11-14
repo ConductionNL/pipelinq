@@ -4,8 +4,11 @@
 /**
  * Pure logic behind the article picker on the campaign template form.
  *
+ * The articles it picks are portaliq's (marketing-articles-move-to-portaliq):
+ * `fetchPortaliqArticles()` in `portaliqArticles.js` lists them.
+ *
  * Kept apart from `TemplateFormDialog.vue` so it can be unit-tested offline the
- * way `subscriptionState.js` and `articleStatus.js` are — this app's
+ * way `subscriptionState.js` is — this app's
  * vitest suite carries no component-mounting harness, so behaviour that
  * matters has to live in a plain function to stay testable.
  *

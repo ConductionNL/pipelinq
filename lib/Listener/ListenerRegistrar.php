@@ -73,6 +73,7 @@ class ListenerRegistrar {
 		// installed, and with portaliq absent the listener simply never fires.
 		$context->registerEventListener(event: LandingPageFormSubmittedEvent::class, listener: LandingPageFormSubmittedListener::class);
 		$this->registerMergeListeners(context: $context);
+		$this->registerArticleUsageListener(context: $context);
 		$context->registerEventListener(event: SchemaUpdatedEvent::class, listener: SchemaChangeListener::class);
 	}//end register()
 
@@ -264,4 +265,18 @@ class ListenerRegistrar {
 		$context->registerEventListener(event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class, listener: MergedAwayRecordListener::class);
 		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: MergedAwayRecordGuard::class);
 	}//end registerMergeListeners()
+
+	/**
+	 * Portaliq asks where a marketing article is used; pipelinq answers for its
+	 * templates, blasts and social posts (marketing-articles-move-to-portaliq).
+	 * Registered by name: portaliq's autoloader does not exist yet when
+	 * pipelinq registers, so the listener checks the class at dispatch.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerArticleUsageListener(IRegistrationContext $context): void {
+		$context->registerEventListener(event: ArticleUsageListener::EVENT, listener: ArticleUsageListener::class);
+	}//end registerArticleUsageListener()
 }//end class

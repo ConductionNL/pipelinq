@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Four detail sections read their object id from the prop, else from the
+ * Two detail sections read their object id from the prop, else from the
  * section context the page host provides (a ref or a plain object); the
  * contact channels section also summarises the preferences and saves a
  * channel list with its primary value mirrored.
@@ -18,11 +18,9 @@ vi.mock('@nextcloud/event-bus', () => ({ emit: vi.fn(), subscribe: vi.fn(), unsu
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => path }))
 vi.mock('@nextcloud/dialogs', () => dialogs)
 vi.mock('@nextcloud/vue', () => ({ NcActionButton: {}, NcActions: {}, NcButton: {}, NcLoadingIcon: {}, NcNoteCard: {} }))
-vi.mock('../../src/modals/ArticleEditModal.vue', () => ({ default: {} }))
 vi.mock('../../src/modals/ContactEmailPhoneModal.vue', () => ({ default: {} }))
 vi.mock('../../src/modals/ContactSocialProfileModal.vue', () => ({ default: {} }))
 vi.mock('../../src/modals/WriteEmailModal.vue', () => ({ default: {} }))
-vi.mock('../../src/services/articlesApi.js', () => ({}))
 vi.mock('../../src/services/satisfactionApi.js', () => ({ fetchClientSatisfaction: vi.fn() }))
 vi.mock('../../src/services/contactSyncApi.js', () => sync)
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
@@ -32,8 +30,6 @@ let sections
 beforeAll(async () => {
 	globalThis.t = (app, text, vars = {}) => text.replace(/\{(\w+)\}/g, (match, key) => String(vars[key] ?? match))
 	sections = {
-		content: (await import('../../src/components/marketing/ArticleContentSection.vue')).default,
-		usage: (await import('../../src/components/marketing/ArticleUsageSection.vue')).default,
 		satisfaction: (await import('../../src/components/satisfaction/ClientSatisfactionSection.vue')).default,
 		channels: (await import('../../src/components/ContactChannelsSection.vue')).default,
 	}
@@ -56,14 +52,6 @@ const hosts = [
 ]
 
 describe('the section ids', () => {
-	it('read an article id from the host', () => {
-		for (const [cnSectionContext, id] of hosts) {
-			expect(sections.content.methods.contextId.call({ cnSectionContext })).toBe(id)
-			expect(sections.usage.methods.effectiveId.call({ articleId: '', cnSectionContext })).toBe(id)
-		}
-		expect(sections.usage.methods.effectiveId.call({ articleId: 'p', cnSectionContext: { objectId: 'o' } })).toBe('p')
-	})
-
 	it('read a client or contact id from the prop, else the host', () => {
 		for (const [cnSectionContext, id] of hosts) {
 			const expected = id.startsWith('a') ? '' : id

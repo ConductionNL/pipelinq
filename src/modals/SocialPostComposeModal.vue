@@ -73,6 +73,21 @@
 				:reduce="(option) => option.value"
 				class="social-compose__accounts" />
 
+			<NcSelect
+				v-if="articlesAvailable"
+				v-model="articleId"
+				:options="articleOptions"
+				:inputLabel="t('pipelinq', 'Article')"
+				label="label"
+				:reduce="(option) => option.value"
+				:loading="articlesLoading"
+				:placeholder="t('pipelinq', 'A published PortaliQ article this post promotes')"
+				data-testid="social-compose-article"
+				class="social-compose__article" />
+			<p v-else class="social-compose__hint" data-testid="social-compose-article-unavailable">
+				{{ t('pipelinq', 'Articles are written in PortaliQ. Install PortaliQ to link a post to an article.') }}
+			</p>
+
 			<label class="social-compose__label" for="social-compose-schedule">
 				{{ t('pipelinq', 'Scheduled for') }}
 			</label>
@@ -155,6 +170,7 @@ import {
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
+import { fetchPortaliqArticles } from '../services/portaliqArticles.js'
 import {
 	createPost,
 	fetchAccounts,
@@ -162,6 +178,7 @@ import {
 	updatePost,
 } from '../services/socialApi.js'
 import { canSubmit, fitsForNetworks } from '../services/socialComposer.js'
+import { articleId } from '../services/templateArticlePicker.js'
 
 /**
  * The id of a stored post, or ''.
@@ -201,6 +218,10 @@ export default {
 			saving: false,
 			error: '',
 			accounts: [],
+			articles: [],
+			articlesAvailable: true,
+			articlesLoading: false,
+			articleId: source.articleId || null,
 			chosenAccounts: Array.isArray(source.accountIds)
 				? [...source.accountIds]
 				: [],
@@ -236,6 +257,16 @@ export default {
 				value: account.id || account.uuid || '',
 				label: `${account.displayName || account.handle} (${account.network})`,
 			}))
+		},
+
+		/**
+		 * @return {Array<object>} One option per published portaliq article.
+		 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 */
+		articleOptions() {
+			return this.articles
+				.map((article) => ({ value: articleId(article), label: article.title || articleId(article) }))
+				.filter((option) => option.value !== '')
 		},
 
 		/**
@@ -283,6 +314,7 @@ export default {
 
 	mounted() {
 		this.loadAccounts()
+		this.loadArticles()
 	},
 
 	methods: {
@@ -300,6 +332,25 @@ export default {
 				)
 			} catch {
 				this.error = t('pipelinq', 'The accounts could not be loaded.')
+			}
+		},
+
+		/**
+		 * The published portaliq articles a post may name.
+		 *
+		 * @return {Promise<void>} Resolves once the list is in.
+		 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 */
+		async loadArticles() {
+			this.articlesLoading = true
+			try {
+				const answer = await fetchPortaliqArticles()
+				this.articlesAvailable = answer.available
+				this.articles = answer.data.filter((article) => article?.status === 'published')
+			} catch {
+				this.articles = []
+			} finally {
+				this.articlesLoading = false
 			}
 		},
 
@@ -362,6 +413,10 @@ export default {
 			this.error = ''
 
 			const payload = { ...this.model, accountIds: this.chosenAccounts }
+			// Only a post that names, or named, an article carries the field.
+			if (this.articleId || this.post?.articleId) {
+				payload.articleId = this.articleId || ''
+			}
 			try {
 				let saved = await this.storePost(payload)
 				const id = postId(saved)
@@ -398,6 +453,11 @@ export default {
 .social-compose__input,
 .social-compose__textarea {
 	width: 100%;
+}
+
+.social-compose__hint {
+	color: var(--color-text-maxcontrast);
+	margin: 8px 0 0;
 }
 
 .social-compose__variant {

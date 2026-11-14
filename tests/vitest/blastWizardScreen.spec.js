@@ -54,9 +54,9 @@ vi.mock('@nextcloud/vue', () => ({
 vi.mock('@nextcloud/router', () => ({ generateUrl: (url) => url }))
 vi.mock('@nextcloud/dialogs', () => ({ showInfo: (m) => infos.push(m) }))
 vi.mock('../../src/modals/MissingConsentModal.vue', () => ({ default: { name: 'MissingConsentModal', render: () => null } }))
-vi.mock('../../src/services/articlesApi.js', () => ({ previewTemplate: vi.fn() }))
+vi.mock('../../src/services/templatePreviewApi.js', () => ({ previewTemplate: vi.fn() }))
 
-const articles = await import('../../src/services/articlesApi.js')
+const articles = await import('../../src/services/templatePreviewApi.js')
 const { default: BlastWizardDialog } = await import('../../src/dialogs/BlastWizardDialog.vue')
 
 let compliance

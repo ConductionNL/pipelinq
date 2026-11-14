@@ -24,7 +24,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
-use OCA\Pipelinq\Controller\ArticleController;
 use OCA\Pipelinq\Controller\MailingListController;
 use OCA\Pipelinq\Controller\SocialPostController;
 use OCA\Pipelinq\Controller\SubscriptionController;
@@ -50,7 +49,6 @@ final class CrmOnlyControllerGateTest extends TestCase {
 	 * @var array<int, class-string>
 	 */
 	private const CONTROLLERS = [
-		ArticleController::class,
 		MailingListController::class,
 		SocialPostController::class,
 		SubscriptionController::class,
@@ -62,14 +60,6 @@ final class CrmOnlyControllerGateTest extends TestCase {
 	 * @var array<string, array<string, string>>
 	 */
 	private const EXPECTED = [
-		'ArticleController::index' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
-		'ArticleController::show' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
-		'ArticleController::create' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
-		'ArticleController::update' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
-		'ArticleController::publish' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
-		'ArticleController::archive' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
-		'ArticleController::transition' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
-		'ArticleController::usages' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
 		'MailingListController::index' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
 		'MailingListController::show' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],
 		'MailingListController::create' => ['no session' => 'refused', 'signed in' => 'refused', 'crm user' => 'passed'],

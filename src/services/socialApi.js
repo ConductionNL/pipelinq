@@ -4,7 +4,7 @@
 /**
  * Thin client for the social publishing endpoints.
  *
- * Kept apart from the components the same way `articlesApi.js` is: the paths
+ * Kept apart from the components the same way `mailingListApi.js` is: the paths
  * live in one place and every view shares them.
  *
  * ONE OF THESE CALLS DOES NOT GO TO PIPELINQ. `startBrokerConnection()` posts

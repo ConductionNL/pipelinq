@@ -175,6 +175,7 @@ class TemplateControllerTest extends TestCase {
 		$articles = $this->createMock(ArticleService::class);
 		$articles->method('loadArticlesByIds')->willReturn([]);
 		$articles->method('expandArticlesMarker')->willReturnArgument(0);
+		$articles->method('publishedArticles')->willReturn(['available' => true, 'data' => [['uuid' => 'p1', 'title' => 'Klaar']]]);
 
 		return new TemplateController(
 			$request,
@@ -221,6 +222,27 @@ class TemplateControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		$this->assertSame([], $this->objects->saved);
 	}//end testCreateIsRefusedForAnUnprivilegedCaller()
+
+	/**
+	 * The article picker is answered with portaliq's published articles.
+	 *
+	 * @return void
+	 */
+	public function testArticlesAnswersThePublishedPortaliqArticles(): void {
+		$response = $this->controller([])->articles();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['available' => true, 'data' => [['uuid' => 'p1', 'title' => 'Klaar']]], $response->getData());
+	}//end testArticlesAnswersThePublishedPortaliqArticles()
+
+	/**
+	 * A caller without CRM rights is refused the article list.
+	 *
+	 * @return void
+	 */
+	public function testArticlesIsRefusedForAnUnprivilegedCaller(): void {
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller([], privileged: false)->articles()->getStatus());
+	}//end testArticlesIsRefusedForAnUnprivilegedCaller()
 
 	/**
 	 * Saving an existing template stores a changed reply-to.

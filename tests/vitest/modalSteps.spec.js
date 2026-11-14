@@ -3,11 +3,10 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Three modal steps: the article editor's start state, the social post
+ * Two modal steps: the social post
  * save (create or update, then submit), and the incoming call lookup with
  * the preview the address asks for.
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
  * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
  * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
  */
@@ -38,7 +37,6 @@ vi.mock('@nextcloud/vue', () => ({
 	NcTextField: {},
 }))
 vi.mock('../../src/components/LabelSelect.vue', () => ({ default: {} }))
-vi.mock('../../src/services/articlesApi.js', () => ({ createArticle: vi.fn(), updateArticle: vi.fn() }))
 vi.mock('../../src/services/socialApi.js', () => social)
 vi.mock('../../src/services/ctiApi.js', () => cti)
 vi.mock('../../src/modals/CtiDispositionModal.vue', () => ({ default: {} }))
@@ -46,13 +44,11 @@ vi.mock('../../src/modals/NewContactIntakeModal.vue', () => ({ default: {} }))
 vi.mock('../../src/modals/ScreenPopModal.vue', () => ({ default: {} }))
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
 
-let article
 let compose
 let card
 
 beforeAll(async () => {
 	globalThis.t = (app, text) => text
-	article = (await import('../../src/modals/ArticleEditModal.vue')).default
 	compose = (await import('../../src/modals/SocialPostComposeModal.vue')).default
 	card = (await import('../../src/components/IncomingCallCard.vue')).default
 }, 60000)
@@ -60,43 +56,6 @@ beforeAll(async () => {
 beforeEach(() => {
 	Object.values(social).forEach((fn) => fn.mockReset())
 	cti.screenPop.mockReset()
-})
-
-describe('ArticleEditModal.data', () => {
-	it('copies the article into the model, the tags and the links', () => {
-		const tags = ['a']
-		const link = { url: 'https://a.nl' }
-		const source = {
-			title: 'T',
-			slug: 's',
-			summary: 'S',
-			body: 'B',
-			heroImage: 'h.png',
-			language: 'en',
-			portalPageRef: 'p',
-			tags,
-			links: [link],
-		}
-		const state = article.data.call({ article: source })
-		expect(state.saving).toBe(false)
-		expect(state.error).toBe('')
-		expect(Object.keys(state.model)).toEqual(['title', 'slug', 'summary', 'body', 'heroImage', 'language', 'portalPageRef'])
-		expect(state.model).toEqual({ title: 'T', slug: 's', summary: 'S', body: 'B', heroImage: 'h.png', language: 'en', portalPageRef: 'p' })
-		expect(state.tags).toEqual(['a'])
-		expect(state.tags).not.toBe(tags)
-		expect(state.links).toEqual([{ url: 'https://a.nl' }])
-		expect(state.links[0]).not.toBe(link)
-	})
-
-	it('starts a new article empty, in Dutch', () => {
-		const state = article.data.call({ article: null })
-		expect(state.model).toEqual({ title: '', slug: '', summary: '', body: '', heroImage: '', language: 'nl', portalPageRef: '' })
-		expect(state.tags).toEqual([])
-		expect(state.links).toEqual([])
-		const odd = article.data.call({ article: { tags: 'x', links: 'y' } })
-		expect(odd.tags).toEqual([])
-		expect(odd.links).toEqual([])
-	})
 })
 
 /**

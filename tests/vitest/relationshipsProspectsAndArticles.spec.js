@@ -5,9 +5,8 @@
  *
  * Contact relationships (grouping, the search, duplicates, saving both ends
  * and removing them), the prospect list (lenses, sorting, paging, the header
- * line and adding a prospect as a client) and the article content section
- * (hero image, loading, refreshing and the lifecycle moves), each run against
- * a plain component context.
+ * line and adding a prospect as a client), each run against a plain component
+ * context.
  *
  * @spec openspec/specs/contact-relationship-mapping/spec.md
  */
@@ -45,18 +44,14 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	resolveImageUrl: (path) => `/resolved/${path}`,
 }))
 vi.mock('../../src/dialogs/RemoveRelationshipDialog.vue', () => ({ default: stub('RemoveRelationshipDialog') }))
-vi.mock('../../src/modals/ArticleEditModal.vue', () => ({ default: stub('ArticleEditModal') }))
 const objectStore = { fetchCollection: vi.fn(), fetchObject: vi.fn(), saveObject: vi.fn(), deleteObject: vi.fn() }
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => objectStore }))
 const prospectStore = { prospects: [], icp: null, error: '', cachedAt: null, fetchProspects: vi.fn(), removeProspect: vi.fn() }
 vi.mock('../../src/store/modules/prospect.js', () => ({ useProspectStore: () => prospectStore }))
 vi.mock('../../src/services/contactSyncApi.js', () => ({ createWithContact: vi.fn() }))
-const articleApi = vi.hoisted(() => ({ publishArticle: vi.fn(), archiveArticle: vi.fn(), transitionArticle: vi.fn() }))
-vi.mock('../../src/services/articlesApi.js', () => articleApi)
 
 const { default: ContactRelationships } = await import('../../src/components/ContactRelationships.vue')
 const { default: ProspectsView } = await import('../../src/views/prospects/ProspectsView.vue')
-const { default: ArticleContentSection } = await import('../../src/components/marketing/ArticleContentSection.vue')
 const { createWithContact } = await import('../../src/services/contactSyncApi.js')
 
 /**
@@ -86,7 +81,7 @@ beforeEach(() => {
 	bus.subscribed.length = 0
 	bus.unsubscribed.length = 0
 	vi.clearAllMocks()
-	for (const fn of [...Object.values(objectStore), http.get, createWithContact, ...Object.values(articleApi)]) {
+	for (const fn of [...Object.values(objectStore), http.get, createWithContact]) {
 		fn.mockReset()
 	}
 	vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -313,85 +308,3 @@ describe('ProspectsView', () => {
 	})
 })
 
-describe('ArticleContentSection', () => {
-	const section = (props = {}, extra = {}) => context(ArticleContentSection, { article: null, articleId: '', cnSectionContext: null, ...props }, extra)
-
-	it('renders the body, the status and its moves', () => {
-		const s = section({ article: { id: 'a1', body: 'Hi', status: 'draft' } })
-		expect([s.renderedBody, s.statusLabel, s.transitions.map((m) => m.id)]).toEqual(['<p>Hi</p>', 'Draft', ['submitForReview', 'publish']])
-		const none = section()
-		expect([none.renderedBody, none.statusLabel, none.transitions]).toEqual(['<p></p>', 'Unknown', []])
-		expect([s.actionLabel('restore'), s.actionLabel('odd')]).toEqual(['Restore as draft', 'odd'])
-	})
-
-	it('builds the hero image link for a web URL, an app image and a file', () => {
-		const hero = (heroImage) => section({ article: { heroImage } }).heroImageUrl
-		expect([hero(''), hero('https://x/y.png'), hero('app:pipelinq/hero.svg'), hero('/Photos/a b.jpg')]).toEqual(['', 'https://x/y.png', '/resolved/app:pipelinq/hero.svg', '/index.php/core/preview.png?file=%2FPhotos%2Fa%20b.jpg&x=1200&y=630&a=1'])
-	})
-
-	it('finds the article id from the prop, the article or the page context', () => {
-		expect(section({ articleId: 'p' }).effectiveId()).toBe('p')
-		expect(section({ article: { uuid: 'u' } }).effectiveId()).toBe('u')
-		expect(section({ cnSectionContext: { value: { articleId: 'ctx' } } }).effectiveId()).toBe('ctx')
-		expect(section().effectiveId()).toBe('')
-	})
-
-	it('loads the article itself when none is passed, and says when it cannot', async () => {
-		const s = section({ articleId: 'a 1' })
-		http.get.mockResolvedValueOnce({ data: { article: { id: 'a 1', status: 'published' } } })
-		ArticleContentSection.watch.articleId.handler.call(s)
-		await new Promise((resolve) => setTimeout(resolve, 0))
-		expect(http.get).toHaveBeenCalledWith('/index.php/apps/pipelinq/api/articles/a 1')
-		expect([s.effectiveArticle.status, s.loading]).toEqual(['published', false])
-		http.get.mockRejectedValueOnce(new Error('x'))
-		await s.load()
-		expect(s.error).toBe('This article could not be loaded.')
-		const given = section({ article: { id: 'g' } })
-		ArticleContentSection.watch.articleId.handler.call(given)
-		expect(http.get).toHaveBeenCalledTimes(2)
-	})
-
-	it('listens for page refreshes only while mounted and reloads on one from elsewhere', async () => {
-		const s = section({ articleId: 'a1' })
-		ArticleContentSection.mounted.call(s)
-		ArticleContentSection.beforeUnmount.call(s)
-		expect([bus.subscribed, bus.unsubscribed]).toEqual([['cn:page:refresh'], ['cn:page:refresh']])
-		http.get.mockResolvedValue({ data: {} })
-		s.onPageRefresh({ source: 'article-content' })
-		expect(http.get).not.toHaveBeenCalled()
-		const waitUntil = vi.fn()
-		s.onPageRefresh({ source: 'other', waitUntil })
-		expect([http.get.mock.calls.length, waitUntil.mock.calls.length]).toEqual([1, 1])
-		section({ article: { id: 'x' } }).onPageRefresh({})
-		section().onPageRefresh({})
-		expect(http.get).toHaveBeenCalledTimes(1)
-	})
-
-	it('runs each move through its own endpoint and refreshes the page', async () => {
-		const s = section({ articleId: 'a1' })
-		http.get.mockResolvedValue({ data: { article: { id: 'a1' } } })
-		await s.runTransition({ id: 'publish', endpoint: 'publish' })
-		await s.runTransition({ id: 'archive', endpoint: 'archive' })
-		await s.runTransition({ id: 'returnToDraft', endpoint: 'transition' })
-		expect([articleApi.publishArticle.mock.calls, articleApi.archiveArticle.mock.calls, articleApi.transitionArticle.mock.calls]).toEqual([[['a1']], [['a1']], [['a1', 'returnToDraft']]])
-		expect([s.$emit.mock.calls.length, bus.emitted.at(-1), s.busy]).toEqual([3, ['cn:page:refresh', { source: 'article-content' }], false])
-		articleApi.publishArticle.mockRejectedValueOnce({ response: { data: { error: 'Missing hero image' } } })
-		await s.runTransition({ endpoint: 'publish' })
-		expect(s.actionError).toBe('Missing hero image')
-		articleApi.archiveArticle.mockRejectedValueOnce({})
-		await s.runTransition({ endpoint: 'archive' })
-		expect(s.actionError).toBe('That move could not be applied.')
-		await section().runTransition({ endpoint: 'publish' })
-		expect(articleApi.publishArticle).toHaveBeenCalledTimes(2)
-	})
-
-	it('closes the editor and refreshes after a save, without reloading a passed article', async () => {
-		const s = section({ article: { id: 'a1' } })
-		s.showEdit = true
-		await s.onSaved()
-		expect([s.showEdit, http.get.mock.calls.length, s.$emit.mock.calls[0]]).toEqual([false, 0, ['refresh']])
-		s.heroFailed = true
-		ArticleContentSection.watch.heroImageUrl.call(s)
-		expect(s.heroFailed).toBe(false)
-	})
-})

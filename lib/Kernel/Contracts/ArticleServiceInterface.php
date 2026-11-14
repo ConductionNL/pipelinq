@@ -50,51 +50,6 @@ interface ArticleServiceInterface {
 	public const FORMAT_TEXT = 'text';
 
 	/**
-	 * Apply one declared transition to an article.
-	 *
-	 * A transition the lifecycle does not declare from the article's current
-	 * status is refused before anything is written, so an archived article
-	 * cannot be published straight back into a mailing.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 * @param string $transition Transition name from the declared lifecycle.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
-	 */
-	public function applyTransition(string $articleId, string $transition): array;
-
-	/**
-	 * Archive an article, leaving it readable and every reference intact.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
-	 */
-	public function archiveArticle(string $articleId): array;
-
-	/**
-	 * Create an article as a draft.
-	 *
-	 * The author is stamped from the authenticated user, the slug is derived
-	 * from the title when none was given, and `agentAuthored` /
-	 * `agentAuthoredBy` are set from the writer's own identity rather than
-	 * from the body: a mark a client can set is not a mark (ADR-088).
-	 *
-	 * @param array<string, mixed> $payload Inbound payload.
-	 * @param string $authorUid Authenticated user id.
-	 * @param string $agent Agent identity when an agent is writing, empty for a person.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
-	 */
-	public function createArticle(array $payload, string $authorUid, string $agent = ''): array;
-
-	/**
 	 * Replace the `{{articles}}` marker in a body with the rendered articles.
 	 *
 	 * A body carrying no marker is returned byte-identical, so a template
@@ -111,45 +66,6 @@ interface ArticleServiceInterface {
 	public function expandArticlesMarker(string $body, array $articles, string $format): string;
 
 	/**
-	 * Fetch one article by UUID or slug.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 *
-	 * @return array<string, mixed>|null The payload, or null when it does not exist.
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
-	 */
-	public function getArticleById(string $articleId): ?array;
-
-	/**
-	 * List articles with a pagination envelope, newest first.
-	 *
-	 * @param int $page 1-based page number (clamped to >= 1).
-	 * @param int $limit Page size (clamped 1..100).
-	 *
-	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
-	 */
-	public function listArticles(int $page, int $limit): array;
-
-	/**
-	 * Where an article has been used, derived at read time.
-	 *
-	 * Nothing is written. The answer is the campaign templates whose
-	 * `articleIds` name the article, plus the blasts built on those templates,
-	 * so removing the article from a template removes the usage on the next
-	 * read rather than on the next write to the article.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 *
-	 * @return array{data: array<int, array{kind: string, id: string, name: string, status: string}>, counts: array<string, int>}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
-	 */
-	public function listUsages(string $articleId): array;
-
-	/**
 	 * Load the articles a template names, in the order it named them.
 	 *
 	 * An id that resolves to nothing is skipped rather than rendered as a
@@ -164,26 +80,11 @@ interface ArticleServiceInterface {
 	public function loadArticlesByIds(array $articleIds): array;
 
 	/**
-	 * Publish an article, stamping `publishedAt` on the first publish only.
+	 * The published portaliq articles a template or a post may pick.
 	 *
-	 * @param string $articleId Article UUID or slug.
+	 * @return array{available: bool, data: array<int, array<string, mixed>>} `available` is false without portaliq.
 	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 	 */
-	public function publishArticle(string $articleId): array;
-
-	/**
-	 * Patch an article's editable fields.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 * @param array<string, mixed> $patch Fields to change.
-	 * @param string $agent Agent identity when an agent is writing, empty for a person.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
-	 */
-	public function updateArticle(string $articleId, array $patch, string $agent = ''): array;
+	public function publishedArticles(): array;
 }//end interface

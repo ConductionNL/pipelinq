@@ -12,7 +12,7 @@
         "slug": "article",
         "title": "Article",
         "icon": "NewspaperVariantOutline",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A piece of writing the tenant owns, written once in markdown and reused by a mailing, a social post and a public page.",
         "description": "An Article is the content hub object. Its body is markdown and never HTML, because the same text has to render into an email, a social post and a portal page without one of the three owning the markup. The declared lifecycle owns which status changes are legal; ArticleService owns the two things the grammar cannot express, namely that publishing stamps publishedAt exactly once and that archiving leaves every reference intact. Where an article has been used is NOT a property: it is derived at read time from the campaign templates that name it and the blasts built on those templates, so removing a reference removes the usage without a second write. See the marketing-articles spec and docs/Technical/marketing-architecture.md.",
         "x-schema-org": "schema:Article",
@@ -171,6 +171,12 @@
             "description": "Identity of the agent that drafted or changed the article, so the record can be followed back to the run that produced it. Empty on an article a person wrote.",
             "maxLength": 255,
             "title": "Agent Authored By"
+          },
+          "migratedTo": {
+            "type": "string",
+            "description": "The id of the portaliq article this one was copied to by the move to portaliq (marketing-articles-move-to-portaliq). Set by the repair step only; an article carrying it is read only and kept until the move reports no failures.",
+            "maxLength": 255,
+            "title": "Migrated To"
           },
           "createdAt": {
             "type": "string",

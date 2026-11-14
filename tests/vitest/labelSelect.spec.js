@@ -3,7 +3,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The label picker the hand-written lead, client and article forms use: it
+ * The label picker the hand-written lead and client forms use: it
  * offers the shared label list, refuses a typed word, and keeps a label an
  * item already carries when the list no longer has it.
  *
@@ -109,10 +109,4 @@ describe('the hand-written forms pick labels from the list', () => {
 		expect(source).toMatch(/v-model="form\.labels"/)
 	})
 
-	it('the article editor, in place of the free-text tags', () => {
-		const source = read('modals/ArticleEditModal.vue')
-		expect(source).toContain('<LabelSelect')
-		expect(source).toMatch(/v-model="tags"/)
-		expect(source).not.toContain('tagsText')
-	})
 })
