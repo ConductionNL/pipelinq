@@ -420,24 +420,25 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	}//end getExpiryForecast()
 
 	/**
-	 * Estimate the programme cost percent: cost of redemptions / sales attached to the redemption.
+	 * Estimate the programme cost percent: the cost of the redemptions as a share
+	 * of the sales they were redeemed in (REQ-LOY-008-03).
 	 *
-	 * Approximation: sum each debit entry's optionId.costBasisEur and divide by
-	 * matched POS transaction totaal (looked up via posTransaction_schema if
-	 * present). Returns 0.0 when sales data is unavailable.
+	 * The cost is each debit's redemption option costBasisEur. The sales are the
+	 * totals of the distinct POS transactions those redemptions were used in
+	 * (redemption.posTransactionId), each counted once. Returns 0.0 when there is
+	 * no cost or no associated sale to divide by.
 	 *
 	 * @param array<int, array<string, mixed>> $debits The debit ledger entries in period.
 	 *
 	 * @return float
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-03
 	 */
 	private function estimateProgrammeCostPercent(array $debits): float {
-		if ($debits === []) {
-			return 0.0;
-		}
-
 		$totalCost = 0.0;
+		$sales = [];
 		foreach ($debits as $entry) {
-			$source = $entry['sourceDocument'] ?? [];
+			$source = ($entry['sourceDocument'] ?? []);
 			if (is_array($source) === false || isset($source['optionId']) === false) {
 				continue;
 			}
@@ -448,17 +449,62 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 			}
 
 			$totalCost += (float)($option['costBasisEur'] ?? 0);
+			$sales += $this->associatedSale(redemptionId: (string)($source['redemptionId'] ?? ''));
 		}
 
-		// For now we approximate associated sales = totalCost / 0.10 (placeholder
-		// assumption: redemption-driving baskets average a 10% cost ratio when
-		// POS data is unavailable; refined by financeq integration).
-		if ($totalCost <= 0) {
+		$salesTotal = (float)array_sum($sales);
+		if ($totalCost <= 0 || $salesTotal <= 0) {
 			return 0.0;
 		}
 
-		return round(($totalCost / max(0.01, $totalCost / 0.10)) * 100, 2);
+		return round(($totalCost / $salesTotal) * 100, 2);
 	}//end estimateProgrammeCostPercent()
+
+	/**
+	 * The POS sale a redemption was used in, as [posTransactionId => total], or [] when it has none.
+	 *
+	 * @param string $redemptionId The redemption.
+	 *
+	 * @return array<string, float>
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-03
+	 */
+	private function associatedSale(string $redemptionId): array {
+		$redemption = $this->findObject(schemaKey: 'redemption_schema', id: $redemptionId);
+		$saleId = (string)($redemption['posTransactionId'] ?? '');
+		$sale = $this->findObject(schemaKey: 'posTransaction_schema', id: $saleId);
+		if ($sale === null) {
+			return [];
+		}
+
+		return [$saleId => (float)($sale['total'] ?? 0)];
+	}//end associatedSale()
+
+	/**
+	 * One object of a configured schema, or null when unconfigured, unknown or unreadable.
+	 *
+	 * @param string $schemaKey The app-config key of the schema.
+	 * @param string $id        The object id.
+	 *
+	 * @return ?array<string, mixed>
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-03
+	 */
+	private function findObject(string $schemaKey, string $id): ?array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
+		if ($register === '' || $schema === '' || $id === '') {
+			return null;
+		}
+
+		try {
+			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+		} catch (\Throwable $e) {
+			return null;
+		}
+
+		return $this->toArray(object: $object);
+	}//end findObject()
 
 	/**
 	 * Look up a RedemptionOption.

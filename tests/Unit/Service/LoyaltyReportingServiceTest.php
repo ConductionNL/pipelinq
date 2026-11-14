@@ -63,6 +63,17 @@ class LoyaltyReportingServiceTest extends TestCase {
 	private ?array $programme = ['pointValue' => 0.05];
 
 	/**
+	 * Register objects by schema config id and uuid: redemption options, redemptions and POS sales.
+	 *
+	 * @var array<string, array<string, array<string, mixed>>>
+	 */
+	private array $objects = [
+		'redemptionOption_schema-id' => ['opt-coffee' => ['costBasisEur' => 2.5], 'opt-lunch' => ['costBasisEur' => 7.5]],
+		'redemption_schema-id' => [],
+		'posTransaction_schema-id' => [],
+	];
+
+	/**
 	 * The CSV calls, as [headers, rows].
 	 *
 	 * @var list<array{0: list<string>, 1: list<list<string>>}>
@@ -95,15 +106,15 @@ class LoyaltyReportingServiceTest extends TestCase {
 			return 'csv';
 		});
 		$objects = $this->createMock(ObjectServiceInterface::class);
-		$objects->method('find')->willReturnCallback(static function (int|string $id): ?ObjectEntity {
-			$costs = ['opt-coffee' => 2.5, 'opt-lunch' => 7.5];
-			if (isset($costs[$id]) === false) {
+		$objects->method('find')->willReturnCallback(function (int|string $id, ?array $_extend=[], bool $files=false, string|int|null $register=null, string|int|null $schema=null): ?ObjectEntity {
+			$payload = ($this->objects[(string)$schema][(string)$id] ?? null);
+			if ($payload === null) {
 				return null;
 			}
 
 			$entity = new ObjectEntity();
 			$entity->setUuid((string)$id);
-			$entity->setObject(['costBasisEur' => $costs[$id]]);
+			$entity->setObject($payload);
 			return $entity;
 		});
 
@@ -149,9 +160,90 @@ class LoyaltyReportingServiceTest extends TestCase {
 		self::assertSame(21.0, $kpis['redemptionRate']);
 		self::assertSame(0.05, $kpis['pointValue']);
 		self::assertSame(20.0, $kpis['estimatedLiability']);
-		self::assertSame(10.0, $kpis['programmeCostPercent']);
+		self::assertSame(0.0, $kpis['programmeCostPercent'], 'no redemption names a sale, so there is nothing to divide by');
 		self::assertSame(['from' => '2026-10-01', 'to' => '2026-10-31'], $kpis['period']);
 	}//end testTheKpis()
+
+	/**
+	 * Programme cost is the redemptions' cost basis as a share of the sales they were used in,
+	 * each sale counted once (REQ-LOY-008-03).
+	 *
+	 * @return void
+	 */
+	public function testProgrammeCostIsCostOverAssociatedSales(): void {
+		$this->objects['redemption_schema-id'] = [
+			'red-1' => ['posTransactionId' => 'pos-1'],
+			'red-2' => ['posTransactionId' => 'pos-1'],
+			'red-3' => ['posTransactionId' => 'pos-2'],
+			'red-4' => [],
+		];
+		$this->objects['posTransaction_schema-id'] = ['pos-1' => ['total' => 40.0], 'pos-2' => ['total' => 60.0]];
+		$this->entries['debit'] = [
+			['count' => -100, 'sourceDocument' => ['optionId' => 'opt-coffee', 'redemptionId' => 'red-1']],
+			['count' => -100, 'sourceDocument' => ['optionId' => 'opt-coffee', 'redemptionId' => 'red-2']],
+			['count' => -300, 'sourceDocument' => ['optionId' => 'opt-lunch', 'redemptionId' => 'red-3']],
+			['count' => -300, 'sourceDocument' => ['optionId' => 'opt-lunch', 'redemptionId' => 'red-4']],
+		];
+
+		// Cost 2.5 + 2.5 + 7.5 + 7.5 = 20; sales pos-1 (40, once) + pos-2 (60) = 100.
+		self::assertSame(20.0, $this->service()->getKpis(programmeId: 'prog-1')['programmeCostPercent']);
+	}//end testProgrammeCostIsCostOverAssociatedSales()
+
+	/**
+	 * The spec's worked example: 100 redemptions of a 5 EUR option in 5000 EUR of sales cost 10%.
+	 *
+	 * @return void
+	 */
+	public function testTheSpecExample(): void {
+		$this->objects['redemptionOption_schema-id']['opt-five'] = ['costBasisEur' => 5];
+		$this->objects['posTransaction_schema-id'] = [];
+		$debits = [];
+		for ($n = 1; $n <= 100; $n++) {
+			$this->objects['redemption_schema-id']['red-' . $n] = ['posTransactionId' => 'pos-' . $n];
+			$this->objects['posTransaction_schema-id']['pos-' . $n] = ['total' => 50];
+			$debits[] = ['count' => -500, 'sourceDocument' => ['optionId' => 'opt-five', 'redemptionId' => 'red-' . $n]];
+		}
+
+		$this->entries['debit'] = $debits;
+
+		self::assertSame(10.0, $this->service()->getKpis(programmeId: 'prog-1')['programmeCostPercent']);
+	}//end testTheSpecExample()
+
+	/**
+	 * The cost share is not a constant: twice the cost on the same sales doubles it.
+	 *
+	 * @return void
+	 */
+	public function testTheCostShareFollowsTheCost(): void {
+		$this->objects['redemption_schema-id'] = ['red-1' => ['posTransactionId' => 'pos-1']];
+		$this->objects['posTransaction_schema-id'] = ['pos-1' => ['total' => 50.0]];
+
+		$this->entries['debit'] = [['count' => -1, 'sourceDocument' => ['optionId' => 'opt-coffee', 'redemptionId' => 'red-1']]];
+		$cheap = $this->service()->getKpis(programmeId: 'prog-1')['programmeCostPercent'];
+
+		$this->entries['debit'] = [['count' => -1, 'sourceDocument' => ['optionId' => 'opt-lunch', 'redemptionId' => 'red-1']]];
+		$dear = $this->service()->getKpis(programmeId: 'prog-1')['programmeCostPercent'];
+
+		self::assertSame(5.0, $cheap);
+		self::assertSame(15.0, $dear);
+	}//end testTheCostShareFollowsTheCost()
+
+	/**
+	 * A sale with a zero total, or options without a cost basis, give no cost share.
+	 *
+	 * @return void
+	 */
+	public function testNoCostOrNoSalesGiveZero(): void {
+		$this->objects['redemption_schema-id'] = ['red-1' => ['posTransactionId' => 'pos-1']];
+		$this->objects['posTransaction_schema-id'] = ['pos-1' => ['total' => 0]];
+		$this->entries['debit'] = [['count' => -1, 'sourceDocument' => ['optionId' => 'opt-coffee', 'redemptionId' => 'red-1']]];
+		self::assertSame(0.0, $this->service()->getKpis(programmeId: 'prog-1')['programmeCostPercent']);
+
+		$this->objects['redemptionOption_schema-id']['opt-free'] = [];
+		$this->objects['posTransaction_schema-id'] = ['pos-1' => ['total' => 10]];
+		$this->entries['debit'] = [['count' => -1, 'sourceDocument' => ['optionId' => 'opt-free', 'redemptionId' => 'red-1']]];
+		self::assertSame(0.0, $this->service()->getKpis(programmeId: 'prog-1')['programmeCostPercent']);
+	}//end testNoCostOrNoSalesGiveZero()
 
 	/**
 	 * Without points issued the rates are zero, and a missing programme values a point at one cent.
