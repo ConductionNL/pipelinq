@@ -139,6 +139,17 @@ class ListPublicController extends Controller {
 			return new JSONResponse(['error' => self::GENERIC_REFUSAL], Http::STATUS_NOT_FOUND);
 		}
 
+		return $this->subscribeAnswer(result: $result);
+	}//end subscribe()
+
+	/**
+	 * The answer to a signup: 404 for an unusable list, 400 for a malformed address, else 202.
+	 *
+	 * @param array<string, mixed> $result The subscription service's result.
+	 *
+	 * @return JSONResponse 202, 400 or 404.
+	 */
+	private function subscribeAnswer(array $result): JSONResponse {
 		if ($result['status'] === 'not-found') {
 			return new JSONResponse(['error' => self::GENERIC_REFUSAL], Http::STATUS_NOT_FOUND);
 		}
@@ -154,7 +165,7 @@ class ListPublicController extends Controller {
 			['message' => $this->l10n->t('Check your inbox. We sent you a link to confirm.')],
 			Http::STATUS_ACCEPTED
 		);
-	}//end subscribe()
+	}//end subscribeAnswer()
 
 	/**
 	 * GET /api/lists/confirm/{token} — spend a confirmation link.
@@ -274,6 +285,17 @@ class ListPublicController extends Controller {
 			$this->logger->warning('ListPublicController.unsubscribe: failed', ['exception' => $e->getMessage()]);
 		}
 
+		return $this->unsubscribeAnswer(result: $result);
+	}//end unsubscribe()
+
+	/**
+	 * The answer to a one-click unsubscribe: 200 with the count, else the token is throttled and 410.
+	 *
+	 * @param array<string, mixed> $result The subscription service's result.
+	 *
+	 * @return JSONResponse 200 on success, 410 otherwise.
+	 */
+	private function unsubscribeAnswer(array $result): JSONResponse {
 		if ($result['status'] !== 'unsubscribed') {
 			$this->registerRejectedToken();
 			return new JSONResponse(['error' => self::GENERIC_REFUSAL], Http::STATUS_GONE);
@@ -286,7 +308,7 @@ class ListPublicController extends Controller {
 			],
 			Http::STATUS_OK
 		);
-	}//end unsubscribe()
+	}//end unsubscribeAnswer()
 
 	/**
 	 * GET /api/lists/preferences/{token} — the preference centre.
@@ -418,7 +440,25 @@ class ListPublicController extends Controller {
 		string $form,
 		int $status = Http::STATUS_OK,
 	): DataDisplayResponse {
-		$html = '<!DOCTYPE html><html lang="' . $this->escape(value: $this->l10n->getLanguageCode()) . '">'
+		$html = $this->documentHead(title: $title)
+			. '<body>'
+			. '<h1>' . $this->escape(value: $heading) . '</h1>'
+			. '<p>' . $this->escape(value: $body) . '</p>'
+			. $form
+			. '</body></html>';
+
+		return self::htmlResponse(html: $html, status: $status);
+	}//end page()
+
+	/**
+	 * The document up to and including its head: language, robots meta, title and style.
+	 *
+	 * @param string $title The document title.
+	 *
+	 * @return string The markup.
+	 */
+	private function documentHead(string $title): string {
+		return '<!DOCTYPE html><html lang="' . $this->escape(value: $this->l10n->getLanguageCode()) . '">'
 			. '<head><meta charset="utf-8">'
 			. '<meta name="viewport" content="width=device-width, initial-scale=1">'
 			. '<meta name="robots" content="noindex, nofollow">'
@@ -426,12 +466,18 @@ class ListPublicController extends Controller {
 			. '<style>body{font-family:system-ui,sans-serif;margin:0;padding:3rem 1.5rem;max-width:34rem}'
 			. 'h1{font-size:1.4rem}button{font:inherit;padding:.6rem 1.2rem;margin:1rem 0}'
 			. 'label{display:block;font-size:.9rem}</style>'
-			. '</head><body>'
-			. '<h1>' . $this->escape(value: $heading) . '</h1>'
-			. '<p>' . $this->escape(value: $body) . '</p>'
-			. $form
-			. '</body></html>';
+			. '</head>';
+	}//end documentHead()
 
+	/**
+	 * A page response that is never cached or indexed.
+	 *
+	 * @param string $html   The page.
+	 * @param int    $status HTTP status.
+	 *
+	 * @return DataDisplayResponse The response.
+	 */
+	private static function htmlResponse(string $html, int $status): DataDisplayResponse {
 		return new DataDisplayResponse(
 			$html,
 			$status,
@@ -441,7 +487,7 @@ class ListPublicController extends Controller {
 				'X-Robots-Tag' => 'noindex, nofollow',
 			]
 		);
-	}//end page()
+	}//end htmlResponse()
 
 	/**
 	 * Escape a value for HTML text and attribute context.
