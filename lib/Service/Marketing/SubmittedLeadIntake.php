@@ -95,8 +95,23 @@ class SubmittedLeadIntake implements SubmittedLeadIntakeInterface {
 			return [];
 		}
 
-		$patch = [];
 		$name = trim((string)($lead['submitterName'] ?? ''));
+		$patch = $this->contactPatch(lead: $lead, email: $email, name: $name);
+		$patch = array_merge($patch, $this->clientPatch(lead: $lead));
+
+		return array_merge($patch, $this->titleFor(lead: $lead, name: $name));
+	}//end partiesFor()
+
+	/**
+	 * The contact a lead without one gets, matched or created from the submitter.
+	 *
+	 * @param array<string, mixed> $lead  The lead as it is about to be stored.
+	 * @param string               $email The submitter's email, lower-cased.
+	 * @param string               $name  The submitter's name.
+	 *
+	 * @return array<string, string> `contact`, or nothing.
+	 */
+	private function contactPatch(array $lead, string $email, string $name): array {
 		if (trim((string)($lead['contact'] ?? '')) === '') {
 			$contactId = $this->matchOrCreateContact(
 				email: $email,
@@ -105,20 +120,31 @@ class SubmittedLeadIntake implements SubmittedLeadIntakeInterface {
 				source: (string)($lead['source'] ?? '')
 			);
 			if ($contactId !== '') {
-				$patch['contact'] = $contactId;
+				return ['contact' => $contactId];
 			}
 		}
 
+		return [];
+	}//end contactPatch()
+
+	/**
+	 * The client a lead without one gets, matched or created from the submitter's organisation.
+	 *
+	 * @param array<string, mixed> $lead The lead as it is about to be stored.
+	 *
+	 * @return array<string, string> `client`, or nothing.
+	 */
+	private function clientPatch(array $lead): array {
 		$organisation = trim((string)($lead['submitterOrganisation'] ?? ''));
 		if ($organisation !== '' && trim((string)($lead['client'] ?? '')) === '') {
 			$clientId = $this->matchOrCreateClient(organisation: $organisation);
 			if ($clientId !== '') {
-				$patch['client'] = $clientId;
+				return ['client' => $clientId];
 			}
 		}
 
-		return array_merge($patch, $this->titleFor(lead: $lead, name: $name));
-	}//end partiesFor()
+		return [];
+	}//end clientPatch()
 
 	/**
 	 * The lead's title with the visitor's name, so two leads of one campaign can be told apart.
