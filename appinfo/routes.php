@@ -497,6 +497,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'exportJob#deleteDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'DELETE'],
         ['name' => 'exportJob#testDestination',   'url' => '/api/export/destinations/{id}/test', 'verb' => 'POST'],
 
+        ['name' => 'exportJob#describeSchedule', 'url' => '/api/export/schedule/describe', 'verb' => 'GET'],
         ['name' => 'exportJob#listJobs',   'url' => '/api/export/jobs',              'verb' => 'GET'],
         ['name' => 'exportJob#createJob',  'url' => '/api/export/jobs',              'verb' => 'POST'],
         ['name' => 'exportJob#showJob',    'url' => '/api/export/jobs/{id}',         'verb' => 'GET'],

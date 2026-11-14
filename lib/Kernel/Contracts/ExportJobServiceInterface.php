@@ -115,6 +115,18 @@ interface ExportJobServiceInterface {
 	public function listJobs(): array;
 
 	/**
+	 * A job's schedule in words, for the schedule dialog.
+	 *
+	 * @param string $expression The cron expression.
+	 * @param string $locale     'nl' or 'en'; any other falls back to English.
+	 *
+	 * @return string The schedule in words; the normalized expression when it has no wording; '' when it is not a valid expression.
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	public function describeSchedule(string $expression, string $locale = 'en'): string;
+
+	/**
 	 * Run a non-destructive test of a job: extract <=100 rows per schema and
 	 * format them, reporting validation and the sample.
 	 *
