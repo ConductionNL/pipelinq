@@ -37,6 +37,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Entity Notes | Internal notes and comments on all CRM entities | Implemented | TEC 5.3 | [entity-notes.md](entity-notes.md) |
 | Notifications & Activity | Nextcloud activity events and push notifications on CRM changes | Implemented | Nextcloud Activity API | [notifications-activity.md](notifications-activity.md) |
 | Activity Timeline | Chronological event timeline on entity detail views | Implemented | TEC 1.5 | [activity-timeline.md](activity-timeline.md) |
+| Call Review | Transcripts and summaries of recorded calls, scorecards and coaching points | In progress | — | [call-review.md](call-review.md) |
 | Product & Service Catalog | Product/service catalogue with pricing for linking to leads | Implemented | TEC 1.8; Schema.org Product | [product-service-catalog.md](product-service-catalog.md) |
 | Lead–Product Link | Line items linking leads to products/services with quantity and value | Implemented | TEC 1.8 | [lead-product-link.md](lead-product-link.md) |
 | Prospect Discovery | ICP-based prospect search using KVK/NHR data for lead generation | Implemented | TEC 1.3 | [prospect-discovery.md](prospect-discovery.md) |
@@ -84,6 +85,7 @@ The foundational sales and relationship management layer. These features are liv
 | Entity Notes | [entity-notes.md](entity-notes.md) |
 | Notifications & Activity | [notifications-activity.md](notifications-activity.md) |
 | Activity Timeline | [activity-timeline.md](activity-timeline.md) |
+| Call Review | [call-review.md](call-review.md) |
 | Product & Service Catalog | [product-service-catalog.md](product-service-catalog.md) |
 | Lead–Product Link | [lead-product-link.md](lead-product-link.md) |
 | Prospect Discovery | [prospect-discovery.md](prospect-discovery.md) |

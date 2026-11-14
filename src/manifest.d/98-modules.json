@@ -261,6 +261,14 @@
 						"route": "WalkInQueue"
 					},
 					{
+						"id": "CallReviews",
+						"label": "Call reviews",
+						"description": "Recorded calls scored on a scorecard, with coaching points the agent agrees.",
+						"icon": "AccountStarOutline",
+						"category": "other",
+						"route": "CallReviews"
+					},
+					{
 						"id": "Programmes",
 						"label": "Projects",
 						"description": "Delivery projects above the cases: plan, tasks, cycles and team.",

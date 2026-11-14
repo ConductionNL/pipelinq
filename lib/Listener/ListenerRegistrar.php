@@ -100,7 +100,8 @@ class ListenerRegistrar {
 	}//end registerRecordListeners()
 
 	/**
-	 * Register the listeners on what comes in: form-created leads, website form bindings, stage limits, Forms answers, task creators and deal updates.
+	 * Register the listeners on what comes in: form-created leads, website form bindings, stage limits,
+	 * Forms answers, task creators, call reviews and deal updates.
 	 *
 	 * @param IRegistrationContext $context The registration context.
 	 *
@@ -132,6 +133,11 @@ class ListenerRegistrar {
 		}
 		// A new task records who created it (round3-review-points).
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TaskCreatedByCreatingListener::class);
+		// A call review carries its weighted total and, once every coaching
+		// point is agreed, the agreed status, whoever saved it
+		// (contact-moments-call-review D3).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: CallReviewSaveListener::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: CallReviewSaveListener::class);
 		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: DealUpdatedListener::class);
 	}//end registerIntakeListeners()
 

@@ -506,6 +506,10 @@
         {
             "name": "x-wiki",
             "description": "XWiki REST proxy controller."
+        },
+        {
+            "name": "callReview",
+            "description": "The agent agrees the coaching points of a review of their call."
         }
     ],
     "paths": {
@@ -17791,6 +17795,64 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/call-reviews/{id}/coaching-points/{index}/agree": {
+            "post": {
+                "operationId": "call-review-agree",
+                "summary": "Agree one coaching point of a review of your call",
+                "description": "The agent whose call was reviewed agrees one coaching point of a review shared with them. The point keeps the date it was first agreed; when every point is agreed the review becomes agreed. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "callReview"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The review's id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "index",
+                        "in": "path",
+                        "required": true,
+                        "description": "The coaching point's position, from 0.",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
                     }
                 }
             }

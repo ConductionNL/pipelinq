@@ -41,7 +41,8 @@
 		"KeywordIntelligence",
 		"CompetitorWatches",
 		"ConnectionAudit",
-		"SearchQueries"
+		"SearchQueries",
+		"CallReviews"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -54,7 +55,8 @@
 		"Tasks": "Modules",
 		"OperationalDashboard": "Modules",
 		"SlaAttainment": "Reports",
-		"Bookings": "AppointmentsMenu"
+		"Bookings": "AppointmentsMenu",
+		"CallReviews": "Modules"
 	},
 	"settingsSection": [
 		"Pipelines",
@@ -1670,6 +1672,17 @@
 									"label": "Decisions",
 									"visibleWhen": {
 										"appInstalled": "decidiq"
+									}
+								},
+								{
+									"widgetIds": [
+										"ticket-call-summary",
+										"ticket-call-transcript"
+									],
+									"label": "Call",
+									"visibleWhen": {
+										"field": "recording_url",
+										"op": "notEmpty"
 									}
 								},
 								{

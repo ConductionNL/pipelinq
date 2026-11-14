@@ -265,6 +265,9 @@ class SettingsService implements SettingsServiceInterface {
 		// Assign new leads without an assignee in turn (pipeline-lead-rotation,
 		// LeadRotationService). Default off: a handler assigns from the suggestion.
 		'lead_rotation_enabled' => 'false',
+		// Transcribe a recorded call after the platform attaches it (contact-moments-call-review
+		// D1, CallTranscriptionService). Default off: the audio leaves for the speech-to-text app.
+		'call_transcription_enabled' => 'false',
 		// BI export + data-warehouse sink — admin settings (bi-export-and-data-warehouse-sink#14.1).
 		'export.retention_days' => '365',
 		'export.default_compression' => 'none',
