@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -43,6 +44,8 @@ use Throwable;
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
 class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface {
+	use ConfiguredRegisterSlug;
+
 	/**
 	 * Default register slug used when no `register` app config value is set.
 	 */
@@ -338,20 +341,6 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * The configured `pipelinq` register slug.
-	 *
-	 * @return string
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * The configured `mailTransport` schema slug.

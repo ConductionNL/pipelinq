@@ -46,6 +46,8 @@ namespace OCA\Pipelinq\Service;
 use Closure;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -75,6 +77,8 @@ use Throwable;
  */
 class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ConfiguredBlastDeliverySchemaSlug;
 
 	/**
 	 * Default register slug — matches the chain root schemas.
@@ -1001,34 +1005,6 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 
 		return '';
 	}//end extractId()
-
-	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve the BlastDelivery schema slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
-	}//end getBlastDeliverySchemaSlug()
 
 	/**
 	 * Lazy-resolve OpenRegister's ObjectService.

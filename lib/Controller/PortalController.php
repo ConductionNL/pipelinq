@@ -34,6 +34,7 @@ use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\App\IAppManager;
@@ -73,6 +74,7 @@ use RuntimeException;
 class PortalController extends Controller {
 	use EntityIdOf;
 	use NullablePayloadToArray;
+	use ConfiguredRegisterId;
 
 	/**
 	 * Signing-key app-config key (per-instance HMAC secret, ADR-005).
@@ -1151,27 +1153,6 @@ class PortalController extends Controller {
 
 		return $decoded;
 	}//end base64UrlDecode()
-
-	/**
-	 * The pipelinq register id from app config.
-	 *
-	 * Fails closed: '' means "unconfigured" and every caller refuses the
-	 * OpenRegister call on it. An empty register is NOT the same as none —
-	 * ObjectService skips setRegister() for an empty value, so the query
-	 * inherits whatever context an earlier call in the request left behind.
-	 *
-	 * @return string The configured register id, or '' when unconfigured.
-	 */
-	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end registerId()
 
 	/**
 	 * Resolve a schema id by app-config key.

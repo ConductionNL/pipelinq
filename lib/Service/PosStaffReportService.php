@@ -28,10 +28,9 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffReportServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
-use OCP\AppFramework\OCS\OCSNotFoundException;
+use OCA\Pipelinq\Util\PosRegisterSchemaIds;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -49,6 +48,7 @@ use RuntimeException;
  */
 class PosStaffReportService implements PosStaffReportServiceInterface {
 	use CastingPayloadToArray;
+	use PosRegisterSchemaIds;
 
 	/**
 	 * The fiscally-final statuses that count toward the report.
@@ -342,26 +342,6 @@ class PosStaffReportService implements PosStaffReportServiceInterface {
 
 		return $out;
 	}//end finalOnly()
-
-	/**
-	 * Resolve the register + schema config key into stored IDs.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] IDs.
-	 *
-	 * @throws OCSNotFoundException If the register or schema is not configured.
-	 */
-	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
-
-		if ($register === '' || $schema === '') {
-			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
-		}
-
-		return [$register, $schema];
-	}//end config()
 
 	/**
 	 * Get the OpenRegister ObjectService.

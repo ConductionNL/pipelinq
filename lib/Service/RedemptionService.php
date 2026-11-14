@@ -28,8 +28,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
+use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -46,6 +46,7 @@ use RuntimeException;
  */
 class RedemptionService implements RedemptionServiceInterface {
 	use PayloadToArray;
+	use LoggedRegisterSchemaIds;
 
 	/**
 	 * Constructor.
@@ -574,34 +575,6 @@ class RedemptionService implements RedemptionServiceInterface {
 
 		return $this->toArray(value: $saved);
 	}//end persist()
-
-	/**
-	 * Resolve register + schema id.
-	 *
-	 * Fails closed: '' on either id means "unconfigured", and every caller
-	 * refuses the OpenRegister call on it. An empty id must never be handed to
-	 * OpenRegister — ObjectService skips setRegister()/setSchema() for an empty
-	 * value, so the query silently inherits whatever context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @param string $schemaKey The schema config key.
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] ids, each ''
-	 *                                     when unconfigured.
-	 */
-	private function config(string $schemaKey): array {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
-		if ($registerId === '' || $schemaId === '') {
-			$this->logger->warning(
-				'Pipelinq: register/schema not configured; OpenRegister calls are refused, not run unscoped',
-				['schemaKey' => $schemaKey]
-			);
-		}
-
-		return [$registerId, $schemaId];
-	}//end config()
 
 	/**
 	 * Extract UUID from an OR entity array.

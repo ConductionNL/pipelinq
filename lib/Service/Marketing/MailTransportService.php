@@ -43,6 +43,8 @@ use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCA\Pipelinq\Service\Marketing\Transport\SendResult;
 use OCA\Pipelinq\Service\UnsubscribeMail;
+use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use Psr\Container\ContainerInterface;
@@ -70,6 +72,9 @@ use Throwable;
  *  at all. Re-measure by deleting this tag and running `composer phpmd`.
  */
 class MailTransportService {
+	use ConfiguredRegisterSlug;
+	use ConfiguredBlastDeliverySchemaSlug;
+
 	/**
 	 * Default register slug used when no `register` app config value is set.
 	 */
@@ -859,20 +864,6 @@ class MailTransportService {
 	}//end getObjectService()
 
 	/**
-	 * The configured `pipelinq` register slug.
-	 *
-	 * @return string
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
 	 * The configured `mailTransport` schema slug.
 	 *
 	 * @return string
@@ -885,20 +876,6 @@ class MailTransportService {
 
 		return self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG;
 	}//end getMailTransportSchemaSlug()
-
-	/**
-	 * The configured `blastDelivery` schema slug.
-	 *
-	 * @return string
-	 */
-	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
-	}//end getBlastDeliverySchemaSlug()
 
 	/**
 	 * Extract a UUID/id/slug from an OpenRegister payload.

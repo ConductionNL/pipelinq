@@ -33,6 +33,7 @@ use OCA\Pipelinq\Service\Marketing\ListQueryWhereCapability;
 use OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler;
 use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -71,6 +72,7 @@ use Throwable;
  */
 class SegmentService implements SegmentServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
 
 	/**
 	 * Default estimateSize cache TTL in seconds when the
@@ -2634,20 +2636,6 @@ class SegmentService implements SegmentServiceInterface {
 	public function getSegmentSchemaSlugPublic(): string {
 		return $this->getSegmentSchemaSlug();
 	}//end getSegmentSchemaSlugPublic()
-
-	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Register slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Extract the rule tree from a Segment payload.

@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
 use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -49,6 +50,7 @@ use Throwable;
  */
 class WebhookProcessorJob extends TimedJob {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
 
 	/**
 	 * Default register slug.
@@ -297,20 +299,6 @@ class WebhookProcessorJob extends TimedJob {
 
 		return '';
 	}//end firstScalar()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Schema slug.

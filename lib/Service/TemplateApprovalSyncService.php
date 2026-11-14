@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TemplateApprovalSyncServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -51,6 +52,7 @@ use Throwable;
  */
 class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
 
 	/**
 	 * Default register slug.
@@ -466,20 +468,6 @@ class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterfac
 
 		return '';
 	}//end extractId()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Schema slug.

@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -48,6 +49,7 @@ use Throwable;
  */
 class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
 
 	/**
 	 * Default channelProvider schema slug.
@@ -249,20 +251,6 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * Register slug (app-config overridable).
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Schema slug (app-config overridable).

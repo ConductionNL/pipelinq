@@ -38,6 +38,7 @@ use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCA\Pipelinq\Service\Provider\SmsSendFailure;
 use OCA\Pipelinq\Service\Provider\SmsSendRun;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -65,6 +66,7 @@ use Throwable;
 class SmsAdapter implements SmsAdapterInterface {
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
+	use ConfiguredRegisterSlug;
 
 	/**
 	 * Scope for the webhook's LOOKUPS only: reads without RBAC. Writes run as the messaging account.
@@ -981,20 +983,6 @@ class SmsAdapter implements SmsAdapterInterface {
 
 		return $default;
 	}//end resolveSchemaSlug()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Resolve OpenRegister ObjectService.

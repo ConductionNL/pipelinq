@@ -32,6 +32,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTransactionServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -85,6 +86,7 @@ use RuntimeException;
  */
 class PosTransactionService implements PosTransactionServiceInterface {
 	use CastingPayloadToArray;
+	use RandomUuid;
 
 	/**
 	 * CloudEvent type emitted on confirmation.
@@ -1756,17 +1758,4 @@ class PosTransactionService implements PosTransactionServiceInterface {
 	private function now(): string {
 		return (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 	}//end now()
-
-	/**
-	 * Generate a v4 UUID.
-	 *
-	 * @return string The UUID.
-	 */
-	private function uuid(): string {
-		$data = random_bytes(16);
-		$data[6] = chr((ord($data[6]) & 0x0F) | 0x40);
-		$data[8] = chr((ord($data[8]) & 0x3F) | 0x80);
-
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-	}//end uuid()
 }//end class

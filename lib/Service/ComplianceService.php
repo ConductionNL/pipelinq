@@ -38,6 +38,7 @@ use OCA\Pipelinq\Service\Consent\SegmentConsentRun;
 use OCA\Pipelinq\Service\Consent\SendPermitRequest;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -65,6 +66,7 @@ use Throwable;
  */
 class ComplianceService implements ComplianceServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
 
 	/**
 	 * Default register slug — matches SegmentService and the chain-root
@@ -1803,20 +1805,6 @@ class ComplianceService implements ComplianceServiceInterface {
 			]
 		);
 	}//end logConsentLookupFailure()
-
-	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Register slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Resolve the ConsentRecord schema slug from app config.

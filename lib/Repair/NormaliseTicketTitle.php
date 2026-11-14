@@ -40,6 +40,7 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\Migration\IOutput;
@@ -53,6 +54,8 @@ use Throwable;
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
  */
 class NormaliseTicketTitle implements IRepairStep {
+	use JsonSerializableToArray;
+
 	/**
 	 * Preferred locale order when collapsing a translation map.
 	 *
@@ -311,28 +314,6 @@ class NormaliseTicketTitle implements IRepairStep {
 			return null;
 		}//end try
 	}//end saveRow()
-
-	/**
-	 * Coerce an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row as returned by the object service.
-	 *
-	 * @return array<string, mixed>|null The row data, or null when unusable.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (($row instanceof \JsonSerializable) === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Collapse a translation map into the single string it wraps.

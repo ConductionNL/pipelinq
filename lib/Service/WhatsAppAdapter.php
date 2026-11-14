@@ -39,6 +39,7 @@ use OCA\Pipelinq\Service\Provider\WhatsAppSendFailure;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateRequest;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -81,6 +82,7 @@ use Throwable;
 class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
+	use ConfiguredRegisterSlug;
 
 	/**
 	 * OpenRegister access scope for the webhook's LOOKUPS (contact,
@@ -1695,20 +1697,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 
 		return $default;
 	}//end resolveSchemaSlug()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Resolve OpenRegister ObjectService.
