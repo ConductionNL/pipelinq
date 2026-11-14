@@ -3228,6 +3228,15 @@
         "Why the job was switched off automatically; empty while it was not.": "Waarom de taak automatisch is uitgezet; leeg zolang dat niet is gebeurd.",
         "Switched off at": "Uitgezet op",
         "When the job was switched off automatically.": "Wanneer de taak automatisch is uitgezet.",
+        "Switch off an export job after this many failed runs in a row": "Een exporttaak uitzetten na zoveel mislukte runs op rij",
+        "Enter a number from 1 to 10": "Voer een getal van 1 tot en met 10 in",
+        "A job that fails this many times in a row is switched off and the administrators are notified. From 1 to 10; default 3.": "Een taak die zo vaak op rij mislukt, wordt uitgezet en de beheerders krijgen een melding. Van 1 tot en met 10; standaard 3.",
+        "_Switched off after {count} failed run in a row_::_Switched off after {count} failed runs in a row_": [
+            "Uitgezet na {count} mislukte run op rij",
+            "Uitgezet na {count} mislukte runs op rij"
+        ],
+        "Switched off after {count} failed run in a row": "Uitgezet na {count} mislukte run op rij",
+        "Switched off after {count} failed runs in a row": "Uitgezet na {count} mislukte runs op rij",
         "Recording…": "Opnemen…",
         "Recurring revenue": "Terugkerende omzet",
         "Recurring revenue (MRR)": "Terugkerende omzet (MRR)",

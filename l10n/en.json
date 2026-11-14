@@ -3217,6 +3217,15 @@
         "Why the job was switched off automatically; empty while it was not.": "Why the job was switched off automatically; empty while it was not.",
         "Switched off at": "Switched off at",
         "When the job was switched off automatically.": "When the job was switched off automatically.",
+        "Switch off an export job after this many failed runs in a row": "Switch off an export job after this many failed runs in a row",
+        "Enter a number from 1 to 10": "Enter a number from 1 to 10",
+        "A job that fails this many times in a row is switched off and the administrators are notified. From 1 to 10; default 3.": "A job that fails this many times in a row is switched off and the administrators are notified. From 1 to 10; default 3.",
+        "_Switched off after {count} failed run in a row_::_Switched off after {count} failed runs in a row_": [
+            "Switched off after {count} failed run in a row",
+            "Switched off after {count} failed runs in a row"
+        ],
+        "Switched off after {count} failed run in a row": "Switched off after {count} failed run in a row",
+        "Switched off after {count} failed runs in a row": "Switched off after {count} failed runs in a row",
         "Queues and skills that put an incoming request in front of someone who can answer it.": "Queues and skills that put an incoming request in front of someone who can answer it.",
         "Quota": "Quota",
         "Quote the lead. In Pipelinq a signable quotation IS the contract: one record, no duplication.": "Quote the lead. In Pipelinq a signable quotation IS the contract: one record, no duplication.",
