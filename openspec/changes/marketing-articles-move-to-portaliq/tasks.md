@@ -14,7 +14,7 @@ Spec only in this PR. Build after portaliq ships `marketing-articles-from-pipeli
 
 ## 2. Contribute usages
 
-- [ ] 2.1 `ArticleUsageListener` answers portaliq's usage event for templates, blasts and social posts.
+- [x] 2.1 `ArticleUsageListener` answers portaliq's usage event for templates, blasts and social posts.
   - spec_ref: `specs/marketing-articles/spec.md#requirement-pipelinq-tells-portaliq-where-an-article-is-used`
   - files: `lib/Listener/ArticleUsageListener.php`, `lib/AppInfo/Application.php`, its test
 

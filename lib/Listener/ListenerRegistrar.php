@@ -247,6 +247,14 @@ class ListenerRegistrar {
 			listener: LandingPageFormSubmittedListener::class
 		);
 		$this->registerMergeListeners(context: $context);
+		// Portaliq asks where a marketing article is used; pipelinq answers for
+		// its templates, blasts and social posts (marketing-articles-move-to-portaliq).
+		// Registered by name: portaliq's autoloader does not exist yet when
+		// pipelinq registers, so the listener checks the class at dispatch.
+		$context->registerEventListener(
+			event: ArticleUsageListener::EVENT,
+			listener: ArticleUsageListener::class
+		);
 		$context->registerEventListener(
 			event: SchemaUpdatedEvent::class,
 			listener: SchemaChangeListener::class
