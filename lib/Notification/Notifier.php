@@ -59,6 +59,7 @@ class Notifier implements INotifier {
 		'wip_sync_failed' => 'system',
 		'billing_handoff_failed' => 'system',
 		'export_job_switched_off' => 'system',
+		'export_mail_delivery_failed' => 'system',
 		'social_share_requested' => 'social',
 		'social_relink_needed' => 'social',
 		'competitor_page_changed' => 'watch',
@@ -349,6 +350,11 @@ class Notifier implements INotifier {
 			return;
 		}
 
+		if ($subject === 'export_mail_delivery_failed') {
+			$this->applyExportMailFailedSubject(notification: $notification, context: $context);
+			return;
+		}
+
 		$batchId = (string)($params['batchId'] ?? '');
 		$notification->setParsedSubject($l->t('Billing handoff failed for %1$s', [$title]));
 		$notification->setParsedMessage(
@@ -385,6 +391,30 @@ class Notifier implements INotifier {
 			)
 		);
 	}//end applyExportSwitchOffSubject()
+
+	/**
+	 * A mailed report did not reach some of its recipients: the job, how many
+	 * and why (reports-compare-periods-and-scheduled-delivery, REQ-RPD-002).
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 */
+	private function applyExportMailFailedSubject(INotification $notification, array $context): void {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		$failed = (string)(int)($params['failed'] ?? 0);
+		$notification->setParsedSubject(
+			$l->t('Report %1$s could not be mailed to %2$s recipients', [$title, $failed])
+		);
+		$notification->setRichSubject(
+			$l->t('Report {title} could not be mailed to %1$s recipients', [$failed]),
+			$context['richParams']
+		);
+		$notification->setParsedMessage(
+			$l->t('Reason: %1$s', [(string)($params['error'] ?? '')])
+		);
+	}//end applyExportMailFailedSubject()
 
 	/**
 	 * A social post to share by hand, or an account to reconnect.
