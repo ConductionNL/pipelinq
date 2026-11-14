@@ -9578,7 +9578,15 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "Een paar zinnen over waar het gesprek over ging. Geschreven uit de transcriptie; de medewerker kan ze corrigeren.",
         "Transcript": "Transcriptie",
         "Transcript status": "Status transcriptie",
-        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname."
+        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname.",
+        "UPL product": "UPL-product",
+        "One product from the national list of government products (UPL), imported from the national source.": "Een product uit de landelijke lijst van overheidsproducten (UPL), geïmporteerd uit de landelijke bron.",
+        "The product's uniform name in the national list.": "De uniforme naam van het product in de landelijke lijst.",
+        "The product's URI in the national list.": "De URI van het product in de landelijke lijst.",
+        "Who the national list marks this product for.": "Voor wie de landelijke lijst dit product aanmerkt.",
+        "Residents": "Inwoners",
+        "Businesses": "Ondernemers",
+        "URI": "URI"
     },
     "nplurals=2; plural=(n != 1);"
 )

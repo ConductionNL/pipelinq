@@ -2369,7 +2369,10 @@ OC.L10N.register(
         "Published from": "Publicado desde",
         "Published until": "Publicado hasta",
         "UPL reference": "Referencia UPL",
-        "Catalogue": "Catálogo"
+        "Catalogue": "Catálogo",
+        "UPL product": "Producto UPL",
+        "Residents": "Residentes",
+        "Businesses": "Empresas"
     },
     "nplurals=2; plural=(n != 1);"
 )

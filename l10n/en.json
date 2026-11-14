@@ -9650,6 +9650,14 @@
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "A few sentences on what the call was about. Written from the transcript; the agent can correct it.",
         "Transcript": "Transcript",
         "Transcript status": "Transcript status",
-        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording."
+        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording.",
+        "UPL product": "UPL product",
+        "One product from the national list of government products (UPL), imported from the national source.": "One product from the national list of government products (UPL), imported from the national source.",
+        "The product's uniform name in the national list.": "The product's uniform name in the national list.",
+        "The product's URI in the national list.": "The product's URI in the national list.",
+        "Who the national list marks this product for.": "Who the national list marks this product for.",
+        "Residents": "Residents",
+        "Businesses": "Businesses",
+        "URI": "URI"
     }
 }

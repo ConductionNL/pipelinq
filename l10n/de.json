@@ -2368,7 +2368,10 @@
         "Published from": "Veröffentlicht ab",
         "Published until": "Veröffentlicht bis",
         "UPL reference": "UPL-Verweis",
-        "Catalogue": "Katalog"
+        "Catalogue": "Katalog",
+        "UPL product": "UPL-Produkt",
+        "Residents": "Einwohner",
+        "Businesses": "Unternehmen"
     },
     "plurals": null
 }
