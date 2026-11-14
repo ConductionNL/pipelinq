@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-reads-marketing-articles-from-portaliq
  */
 
 declare(strict_types=1);
@@ -22,37 +22,36 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\ArticleService;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
-use OCP\IAppConfig;
+use OCA\Pipelinq\Service\Marketing\PortaliqArticleStore;
+use OCA\Pipelinq\Tests\Unit\Support\InMemoryRegisters;
+use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Tests for the article lifecycle, its derived usages and its rendering.
+ * Tests for reading portaliq articles and rendering the `{{articles}}` block.
  *
- * The object store is a real in-memory subclass rather than a mock returning
- * canned rows. Create, publish and republish each read back what the step
- * before them WROTE, so a mock answering from a fixture would agree with the
- * caller whatever the service actually stored, and the rule under test here
- * is precisely that a second publish does NOT move a stored value.
+ * The articles come from a real PortaliqArticleStore over an in-memory
+ * ObjectService; only the app manager, the container and the logger are
+ * mocked.
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-reads-marketing-articles-from-portaliq
  */
 class ArticleServiceTest extends TestCase {
 	/**
-	 * The in-memory object store the service reads and writes.
+	 * The in-memory registers.
 	 *
-	 * @var ListObjectStore
+	 * @var InMemoryRegisters
 	 */
-	private ListObjectStore $store;
+	private InMemoryRegisters $objects;
 
 	/**
-	 * The service under test.
+	 * The logger mock.
 	 *
-	 * @var ArticleService
+	 * @var LoggerInterface&\PHPUnit\Framework\MockObject\MockObject
 	 */
-	private ArticleService $service;
+	private LoggerInterface $logger;
 
 	/**
 	 * Set up.
@@ -60,192 +59,98 @@ class ArticleServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->store = $this->makeStore();
-		$this->service = new ArticleService($this->store);
+		$this->objects = new InMemoryRegisters();
+		$this->logger  = $this->createMock(LoggerInterface::class);
 	}//end setUp()
 
 	/**
-	 * A new article starts as a draft with the author stamped from the
-	 * session and no publication moment.
+	 * A template names portaliq articles by id and by slug; both resolve, in
+	 * the order the template named them, and a missing one is skipped.
 	 *
 	 * @return void
 	 */
-	public function testCreateStartsAsADraftWithTheAuthorStamped(): void {
-		$result = $this->service->createArticle(
-			payload: ['title' => 'OpenRegister 3.0 is uit', 'body' => '## Wat er nieuw is'],
-			authorUid: 'marieke',
+	public function testArticlesAreReadFromPortaliqInTheNamedOrder(): void {
+		$first  = $this->objects->put(register: 'portaliq', schema: 'article', row: ['title' => 'Eerste', 'slug' => 'eerste', 'status' => 'published']);
+		$this->objects->put(register: 'portaliq', schema: 'article', row: ['title' => 'Tweede', 'slug' => 'tweede', 'status' => 'published']);
+		$this->objects->put(register: 'pipelinq', schema: 'article', row: ['uuid' => 'old-1', 'title' => 'Oud']);
+
+		$articles = $this->service(installed: true)->loadArticlesByIds(articleIds: ['tweede', 'old-1', $first['uuid'], '', null]);
+
+		$this->assertSame(['Tweede', 'Eerste'], array_column($articles, 'title'));
+	}//end testArticlesAreReadFromPortaliqInTheNamedOrder()
+
+	/**
+	 * A template that still names the old pipelinq id resolves through the
+	 * moved article's legacyRef.
+	 *
+	 * @return void
+	 */
+	public function testAnOldPipelinqIdResolvesThroughTheLegacyRef(): void {
+		$this->objects->put(register: 'portaliq', schema: 'article', row: ['title' => 'Verhuisd', 'legacyRef' => 'pipelinq:old-1']);
+
+		$articles = $this->service(installed: true)->loadArticlesByIds(articleIds: ['old-1']);
+
+		$this->assertSame(['Verhuisd'], array_column($articles, 'title'));
+	}//end testAnOldPipelinqIdResolvesThroughTheLegacyRef()
+
+	/**
+	 * Without portaliq nothing is read, the reason is logged, and the block
+	 * renders empty so the send goes ahead.
+	 *
+	 * @return void
+	 */
+	public function testWithoutPortaliqTheBlockRendersEmptyAndTheReasonIsLogged(): void {
+		$this->objects->put(register: 'portaliq', schema: 'article', row: ['uuid' => 'a1', 'title' => 'Eerste']);
+		$this->logger->expects($this->once())
+			->method('info')
+			->with($this->stringContains('portaliq'), ['articleIds' => 1]);
+
+		$service  = $this->service(installed: false);
+		$articles = $service->loadArticlesByIds(articleIds: ['a1']);
+
+		$this->assertSame([], $articles);
+		$this->assertSame(
+			'<p>Hallo</p><p>Groet</p>',
+			$service->expandArticlesMarker(body: '<p>Hallo</p>{{articles}}<p>Groet</p>', articles: $articles, format: ArticleService::FORMAT_HTML)
 		);
-
-		$this->assertArrayNotHasKey('error', $result);
-		$this->assertSame('draft', $result['article']['status']);
-		$this->assertSame('marieke', $result['article']['author']);
-		$this->assertSame('openregister-3-0-is-uit', $result['article']['slug']);
-		$this->assertSame('', (string)($result['article']['publishedAt'] ?? ''));
-	}//end testCreateStartsAsADraftWithTheAuthorStamped()
+	}//end testWithoutPortaliqTheBlockRendersEmptyAndTheReasonIsLogged()
 
 	/**
-	 * An article with no title is refused and nothing is stored.
+	 * A template naming no articles never asks whether portaliq is there.
 	 *
 	 * @return void
 	 */
-	public function testCreateWithoutATitleIsRefused(): void {
-		$result = $this->service->createArticle(payload: ['title' => '  '], authorUid: 'marieke');
+	public function testNamingNoArticlesReadsNothing(): void {
+		$this->logger->expects($this->never())->method('info');
 
-		$this->assertArrayHasKey('error', $result);
-		$this->assertSame(0, $this->service->listArticles(page: 1, limit: 10)['pagination']['total']);
-	}//end testCreateWithoutATitleIsRefused()
+		$this->assertSame([], $this->service(installed: false)->loadArticlesByIds(articleIds: []));
+	}//end testNamingNoArticlesReadsNothing()
 
 	/**
-	 * A second article cannot claim a slug the first already holds.
+	 * The picker is offered the published portaliq articles only.
 	 *
 	 * @return void
 	 */
-	public function testDuplicateSlugIsRefused(): void {
-		$this->service->createArticle(payload: ['title' => 'Nieuwe release'], authorUid: 'marieke');
+	public function testThePickerIsOfferedPublishedPortaliqArticles(): void {
+		$this->objects->put(register: 'portaliq', schema: 'article', row: ['uuid' => 'p1', 'title' => 'Klaar', 'status' => 'published']);
+		$this->objects->put(register: 'portaliq', schema: 'article', row: ['uuid' => 'd1', 'title' => 'Concept', 'status' => 'draft']);
 
-		$second = $this->service->createArticle(
-			payload: ['title' => 'Iets anders', 'slug' => 'nieuwe-release'],
-			authorUid: 'marieke',
-		);
+		$answer = $this->service(installed: true)->publishedArticles();
 
-		$this->assertArrayHasKey('error', $second);
-		$this->assertSame(1, $this->service->listArticles(page: 1, limit: 10)['pagination']['total']);
-	}//end testDuplicateSlugIsRefused()
+		$this->assertTrue($answer['available']);
+		$this->assertSame(['p1'], array_column($answer['data'], 'uuid'));
+	}//end testThePickerIsOfferedPublishedPortaliqArticles()
 
 	/**
-	 * A client cannot claim an article was written by a person, nor that it
-	 * was written by an agent: both mark fields come from the write path.
+	 * Without portaliq the picker is told so and offered nothing.
 	 *
 	 * @return void
 	 */
-	public function testTheAgentMarkIsNeverTakenFromTheRequest(): void {
-		$byPerson = $this->service->createArticle(
-			payload: ['title' => 'Door een mens', 'agentAuthored' => true, 'agentAuthoredBy' => 'not-an-agent'],
-			authorUid: 'marieke',
-		);
-		$byAgent = $this->service->createArticle(
-			payload: ['title' => 'Door een agent', 'agentAuthored' => false],
-			authorUid: 'marieke',
-			agent: 'hermiq:marketing-editor',
-		);
+	public function testWithoutPortaliqThePickerIsOfferedNothing(): void {
+		$this->objects->put(register: 'portaliq', schema: 'article', row: ['uuid' => 'p1', 'status' => 'published']);
 
-		$this->assertFalse($byPerson['article']['agentAuthored']);
-		$this->assertSame('', $byPerson['article']['agentAuthoredBy']);
-		$this->assertTrue($byAgent['article']['agentAuthored']);
-		$this->assertSame('hermiq:marketing-editor', $byAgent['article']['agentAuthoredBy']);
-	}//end testTheAgentMarkIsNeverTakenFromTheRequest()
-
-	/**
-	 * Publishing a reviewed article stamps the publication moment.
-	 *
-	 * @return void
-	 */
-	public function testPublishStampsThePublicationMoment(): void {
-		$id = $this->seedArticle(title: 'Te publiceren');
-		$this->service->applyTransition(articleId: $id, transition: 'submitForReview');
-
-		$published = $this->service->publishArticle(articleId: $id);
-
-		$this->assertSame('published', $published['article']['status']);
-		$this->assertNotSame('', (string)$published['article']['publishedAt']);
-	}//end testPublishStampsThePublicationMoment()
-
-	/**
-	 * Publishing twice keeps the moment a reader already saw.
-	 *
-	 * @return void
-	 */
-	public function testPublishingTwiceKeepsTheFirstMoment(): void {
-		$id = $this->seedArticle(title: 'Twee keer gepubliceerd');
-		$first = $this->service->publishArticle(articleId: $id);
-		$firstMoment = (string)$first['article']['publishedAt'];
-
-		$this->service->applyTransition(articleId: $id, transition: 'archive');
-		$this->service->applyTransition(articleId: $id, transition: 'restore');
-		$second = $this->service->publishArticle(articleId: $id);
-
-		$this->assertSame($firstMoment, (string)$second['article']['publishedAt']);
-	}//end testPublishingTwiceKeepsTheFirstMoment()
-
-	/**
-	 * An archived article cannot be published straight back into a mailing.
-	 *
-	 * @return void
-	 */
-	public function testAnArchivedArticleCannotBePublishedDirectly(): void {
-		$id = $this->seedArticle(title: 'Gearchiveerd');
-		$this->service->archiveArticle(articleId: $id);
-
-		$refused = $this->service->publishArticle(articleId: $id);
-
-		$this->assertArrayHasKey('error', $refused);
-		$this->assertSame('archived', $this->service->getArticleById(articleId: $id)['status']);
-	}//end testAnArchivedArticleCannotBePublishedDirectly()
-
-	/**
-	 * Usages name the template that embeds the article and the blast built
-	 * on that template.
-	 *
-	 * @return void
-	 */
-	public function testUsagesNameTheTemplateAndTheBlast(): void {
-		$id = $this->seedArticle(title: 'Gebruikt artikel');
-		$this->store->save(
-			schemaSlug: 'campaignTemplate',
-			payload: ['name' => 'Nieuwsbrief september', 'channel' => 'email', 'articleIds' => [$id]],
-			id: 'template-1',
-		);
-		$this->store->save(
-			schemaSlug: 'blast',
-			payload: ['name' => 'Septemberzending', 'status' => 'sent', 'templateId' => 'template-1'],
-			id: 'blast-1',
-		);
-
-		$usages = $this->service->listUsages(articleId: $id);
-
-		$this->assertSame(1, $usages['counts']['template']);
-		$this->assertSame(1, $usages['counts']['blast']);
-		$this->assertSame(['Nieuwsbrief september', 'Septemberzending'], array_column($usages['data'], 'name'));
-	}//end testUsagesNameTheTemplateAndTheBlast()
-
-	/**
-	 * Removing the reference removes the usage, and nothing was written to
-	 * the article to make that true.
-	 *
-	 * @return void
-	 */
-	public function testRemovingTheReferenceRemovesTheUsage(): void {
-		$id = $this->seedArticle(title: 'Losgekoppeld artikel');
-		$this->store->save(
-			schemaSlug: 'campaignTemplate',
-			payload: ['name' => 'Nieuwsbrief', 'channel' => 'email', 'articleIds' => [$id]],
-			id: 'template-1',
-		);
-		$before = $this->service->getArticleById(articleId: $id);
-
-		$this->store->save(
-			schemaSlug: 'campaignTemplate',
-			payload: ['name' => 'Nieuwsbrief', 'channel' => 'email', 'articleIds' => []],
-			id: 'template-1',
-		);
-
-		$this->assertSame([], $this->service->listUsages(articleId: $id)['data']);
-		$this->assertSame($before, $this->service->getArticleById(articleId: $id));
-	}//end testRemovingTheReferenceRemovesTheUsage()
-
-	/**
-	 * An article no one references reports an empty list, not an error.
-	 *
-	 * @return void
-	 */
-	public function testAnUnusedArticleReportsAnEmptyList(): void {
-		$id = $this->seedArticle(title: 'Ongebruikt artikel');
-
-		$usages = $this->service->listUsages(articleId: $id);
-
-		$this->assertSame([], $usages['data']);
-		$this->assertSame(0, $usages['counts']['template']);
-	}//end testAnUnusedArticleReportsAnEmptyList()
+		$this->assertSame(['available' => false, 'data' => []], $this->service(installed: false)->publishedArticles());
+	}//end testWithoutPortaliqThePickerIsOfferedNothing()
 
 	/**
 	 * The HTML block carries every article's title, summary and hero, in the
@@ -254,7 +159,7 @@ class ArticleServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testHtmlBlockRendersTitleSummaryAndHero(): void {
-		$body = $this->service->expandArticlesMarker(
+		$body = $this->service(installed: true)->expandArticlesMarker(
 			body: '<p>Hallo</p>{{articles}}<p>Groet</p>',
 			articles: [$this->articleFixture(title: 'Eerste'), $this->articleFixture(title: 'Tweede')],
 			format: ArticleService::FORMAT_HTML,
@@ -273,7 +178,7 @@ class ArticleServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTextBlockRendersTitleAndSummary(): void {
-		$body = $this->service->expandArticlesMarker(
+		$body = $this->service(installed: true)->expandArticlesMarker(
 			body: "Hallo\n\n{{articles}}\n\nGroet",
 			articles: [$this->articleFixture(title: 'Eerste')],
 			format: ArticleService::FORMAT_TEXT,
@@ -294,8 +199,8 @@ class ArticleServiceTest extends TestCase {
 		$linked = $this->articleFixture(title: 'Met pagina');
 		$linked['portalPageRef'] = 'https://example.org/nieuws/met-pagina';
 
-		$html = $this->service->renderArticlesBlock(articles: [$linked], format: ArticleService::FORMAT_HTML);
-		$text = $this->service->renderArticlesBlock(articles: [$linked], format: ArticleService::FORMAT_TEXT);
+		$html = $this->service(installed: true)->renderArticlesBlock(articles: [$linked], format: ArticleService::FORMAT_HTML);
+		$text = $this->service(installed: true)->renderArticlesBlock(articles: [$linked], format: ArticleService::FORMAT_TEXT);
 
 		$this->assertStringContainsString('href="https://example.org/nieuws/met-pagina"', $html);
 		$this->assertStringContainsString('Lees verder', $html);
@@ -311,8 +216,8 @@ class ArticleServiceTest extends TestCase {
 	public function testArticleWithoutPortalPageRefRendersNoLink(): void {
 		$unlinked = $this->articleFixture(title: 'Zonder pagina');
 
-		$html = $this->service->renderArticlesBlock(articles: [$unlinked], format: ArticleService::FORMAT_HTML);
-		$text = $this->service->renderArticlesBlock(articles: [$unlinked], format: ArticleService::FORMAT_TEXT);
+		$html = $this->service(installed: true)->renderArticlesBlock(articles: [$unlinked], format: ArticleService::FORMAT_HTML);
+		$text = $this->service(installed: true)->renderArticlesBlock(articles: [$unlinked], format: ArticleService::FORMAT_TEXT);
 
 		$this->assertStringNotContainsString('<a href', $html);
 		$this->assertStringNotContainsString('Lees verder', $text);
@@ -328,7 +233,7 @@ class ArticleServiceTest extends TestCase {
 		$article = $this->articleFixture(title: 'Interne afbeelding');
 		$article['heroImage'] = '/Photos/Marketing/hero.jpg';
 
-		$html = $this->service->renderArticlesBlock(articles: [$article], format: ArticleService::FORMAT_HTML);
+		$html = $this->service(installed: true)->renderArticlesBlock(articles: [$article], format: ArticleService::FORMAT_HTML);
 
 		$this->assertStringNotContainsString('<img', $html);
 		$this->assertStringContainsString('<h2>Interne afbeelding</h2>', $html);
@@ -343,7 +248,7 @@ class ArticleServiceTest extends TestCase {
 	public function testTemplateWithoutMarkerIsUnchanged(): void {
 		$original = '<p>Hallo {{email}}</p>';
 
-		$rendered = $this->service->expandArticlesMarker(
+		$rendered = $this->service(installed: true)->expandArticlesMarker(
 			body: $original,
 			articles: [$this->articleFixture(title: 'Eerste')],
 			format: ArticleService::FORMAT_HTML,
@@ -359,7 +264,7 @@ class ArticleServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTemplateNamingNoArticlesRendersAnEmptyBlock(): void {
-		$rendered = $this->service->expandArticlesMarker(
+		$rendered = $this->service(installed: true)->expandArticlesMarker(
 			body: '<p>Hallo</p>{{articles}}<p>Groet</p>',
 			articles: [],
 			format: ArticleService::FORMAT_HTML,
@@ -376,115 +281,11 @@ class ArticleServiceTest extends TestCase {
 	public function testArticleValuesAreEscapedInTheHtmlBlock(): void {
 		$article = $this->articleFixture(title: '<script>alert(1)</script>');
 
-		$html = $this->service->renderArticlesBlock(articles: [$article], format: ArticleService::FORMAT_HTML);
+		$html = $this->service(installed: true)->renderArticlesBlock(articles: [$article], format: ArticleService::FORMAT_HTML);
 
 		$this->assertStringNotContainsString('<script>', $html);
 		$this->assertStringContainsString('&lt;script&gt;', $html);
 	}//end testArticleValuesAreEscapedInTheHtmlBlock()
-
-	/**
-	 * Golden: every answer of a patch, and what a successful patch stores.
-	 *
-	 * @return void
-	 */
-	public function testUpdateAnswersExactly(): void {
-		$id = $this->seedArticle(title: 'Origineel');
-		$other = $this->seedArticle(title: 'Ander');
-		$this->service->updateArticle(articleId: $other, patch: ['slug' => 'bezet']);
-
-		$this->assertSame(['error' => 'Not found'], $this->service->updateArticle(articleId: 'nope', patch: ['title' => 'X']));
-		$this->assertSame(['error' => 'A title is required'], $this->service->updateArticle(articleId: $id, patch: ['title' => '  ']));
-		$this->assertSame(['error' => 'That slug is already in use'], $this->service->updateArticle(articleId: $id, patch: ['slug' => 'bezet']));
-
-		$saved = $this->service->updateArticle(articleId: $id, patch: ['summary' => 'Kort', 'author' => 'hacker'], agent: 'agent-7')['article'];
-		$this->assertSame('Kort', $saved['summary']);
-		$this->assertSame('marieke', $saved['author']);
-		$this->assertTrue($saved['agentAuthored']);
-		$this->assertSame('agent-7', $saved['agentAuthoredBy']);
-		$this->assertNotSame('', (string)$saved['updatedAt']);
-
-		$own = $this->service->updateArticle(articleId: $other, patch: ['slug' => 'bezet'])['article'];
-		$this->assertSame('bezet', $own['slug']);
-		$this->assertFalse($own['agentAuthored']);
-		$this->assertSame('', $own['agentAuthoredBy']);
-
-		$this->store->failSaves = true;
-		$this->assertSame(['error' => 'The article could not be saved'], $this->service->updateArticle(articleId: $id, patch: ['summary' => 'Y']));
-	}//end testUpdateAnswersExactly()
-
-	/**
-	 * Golden: every answer of a transition, the status fallback and the first-publish stamp.
-	 *
-	 * @return void
-	 */
-	public function testTransitionsAnswerExactly(): void {
-		$id = $this->seedArticle(title: 'Lifecycle');
-		$this->assertSame(['error' => 'Unknown transition'], $this->service->applyTransition(articleId: $id, transition: 'delete'));
-		$this->assertSame(['error' => 'Not found'], $this->service->applyTransition(articleId: 'nope', transition: 'publish'));
-		$this->assertSame(
-			['error' => 'That change is not allowed from the current status'],
-			$this->service->applyTransition(articleId: $id, transition: 'restore')
-		);
-
-		$this->store->rows['article'][$id]['status'] = 'something-else';
-		$review = $this->service->applyTransition(articleId: $id, transition: 'submitForReview')['article'];
-		$this->assertSame('review', $review['status']);
-		$this->assertArrayNotHasKey('publishedAt', array_filter($review, static fn (mixed $v): bool => $v !== null && $v !== ''));
-
-		$archived = $this->service->applyTransition(articleId: $id, transition: 'archive')['article'];
-		$this->assertSame('archived', $archived['status']);
-		$restored = $this->service->applyTransition(articleId: $id, transition: 'restore')['article'];
-		$this->assertSame('draft', $restored['status']);
-		$published = $this->service->applyTransition(articleId: $id, transition: 'publish')['article'];
-		$this->assertSame($published['updatedAt'], $published['publishedAt']);
-
-		$this->store->failSaves = true;
-		$this->assertSame(['error' => 'The article could not be saved'], $this->service->applyTransition(articleId: $id, transition: 'archive'));
-	}//end testTransitionsAnswerExactly()
-
-	/**
-	 * Golden: the exact usage list and counts, with a template naming the article by any identity
-	 * and blasts naming the template by any of its identities.
-	 *
-	 * @return void
-	 */
-	public function testUsagesAreExact(): void {
-		$id = $this->seedArticle(title: 'Veel gebruikt');
-		$slug = (string)$this->store->rows['article'][$id]['slug'];
-		$this->store->save(schemaSlug: 'campaignTemplate', payload: ['name' => 'Op id', 'channel' => 'email', 'articleIds' => [$id]], id: 't-1');
-		$this->store->save(schemaSlug: 'campaignTemplate', payload: ['name' => 'Op slug', 'channel' => 'sms', 'slug' => 'tpl-slug', 'articleIds' => [$slug]], id: 't-2');
-		$this->store->save(schemaSlug: 'campaignTemplate', payload: ['name' => 'Ander artikel', 'articleIds' => ['other']], id: 't-3');
-		$this->store->save(schemaSlug: 'blast', payload: ['name' => 'Via id', 'status' => 'sent', 'templateId' => 't-1'], id: 'b-1');
-		$this->store->save(schemaSlug: 'blast', payload: ['name' => 'Via slug', 'status' => 'draft', 'templateId' => 'tpl-slug'], id: 'b-2');
-		$this->store->save(schemaSlug: 'blast', payload: ['name' => 'Niet', 'templateId' => 't-3'], id: 'b-3');
-
-		$this->assertSame(
-			[
-				'data' => [
-					['kind' => 'template', 'id' => 't-1', 'name' => 'Op id', 'status' => 'email'],
-					['kind' => 'template', 'id' => 't-2', 'name' => 'Op slug', 'status' => 'sms'],
-					['kind' => 'blast', 'id' => 'b-1', 'name' => 'Via id', 'status' => 'sent'],
-					['kind' => 'blast', 'id' => 'b-2', 'name' => 'Via slug', 'status' => 'draft'],
-				],
-				'counts' => ['template' => 2, 'blast' => 2],
-			],
-			$this->service->listUsages(articleId: $id)
-		);
-		$this->assertSame(['data' => [], 'counts' => ['template' => 0, 'blast' => 0]], $this->service->listUsages(articleId: 'nope'));
-	}//end testUsagesAreExact()
-
-	/**
-	 * Store an article and return its id.
-	 *
-	 * @param string $title The title.
-	 *
-	 * @return string The stored article's id.
-	 */
-	private function seedArticle(string $title): string {
-		$created = $this->service->createArticle(payload: ['title' => $title], authorUid: 'marieke');
-
-		return $this->store->idOf(payload: $created['article']);
-	}//end seedArticle()
 
 	/**
 	 * A rendering fixture with everything but a portal page reference.
@@ -505,89 +306,22 @@ class ArticleServiceTest extends TestCase {
 	}//end articleFixture()
 
 	/**
-	 * A store backed by a plain array, so each step reads what the last wrote.
+	 * The service over the in-memory registers.
 	 *
-	 * @return ListObjectStore The in-memory store.
+	 * @param bool $installed Whether portaliq is installed.
+	 *
+	 * @return ArticleService The service.
 	 */
-	private function makeStore(): ListObjectStore {
-		return new class(
-			$this->createMock(ContainerInterface::class),
-			$this->createMock(IAppConfig::class),
-			$this->createMock(LoggerInterface::class),
-		) extends ListObjectStore {
-			/** @var array<string, array<string, array<string, mixed>>> */
-			public array $rows = [];
+	private function service(bool $installed): ArticleService {
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturnCallback(static fn (string $app): bool => $installed === true && $app === 'portaliq');
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($this->objects);
 
-			/** @var int */
-			private int $seq = 0;
+		return new ArticleService(
+			new PortaliqArticleStore($container, $apps, $this->createMock(LoggerInterface::class)),
+			$this->logger,
+		);
+	}//end service()
 
-			/** @var bool Whether every save fails. */
-			public bool $failSaves = false;
-
-			/**
-			 * @param string $configKey Ignored.
-			 * @param string $default The slug.
-			 * @return string The slug.
-			 */
-			public function schemaSlug(string $configKey, string $default): string {
-				return $default;
-			}
-
-			/**
-			 * @param string $schemaSlug The schema.
-			 * @param string $id The id.
-			 * @return array<string, mixed>|null The row.
-			 */
-			public function find(string $schemaSlug, string $id): ?array {
-				return ($this->rows[$schemaSlug][$id] ?? null);
-			}
-
-			/**
-			 * @param string $schemaSlug The schema.
-			 * @param array<string, string> $filters Field-value pairs.
-			 * @return array<int, array<string, mixed>> The rows.
-			 */
-			public function findAll(string $schemaSlug, array $filters = []): array {
-				$out = [];
-				foreach (($this->rows[$schemaSlug] ?? []) as $row) {
-					foreach ($filters as $field => $value) {
-						if ((string)($row[$field] ?? '') !== (string)$value) {
-							continue 2;
-						}
-					}
-					$out[] = $row;
-				}
-				return $out;
-			}
-
-			/**
-			 * @param string $schemaSlug The schema.
-			 * @param array<string, mixed> $payload The payload.
-			 * @param string|null $id Existing id.
-			 * @return array<string, mixed>|null The saved row.
-			 */
-			public function save(string $schemaSlug, array $payload, ?string $id = null): ?array {
-				if ($this->failSaves === true) {
-					return null;
-				}
-
-				$key = $id;
-				if ($key === null || $key === '') {
-					$this->seq++;
-					$key = $schemaSlug . '-' . $this->seq;
-				}
-				$payload['id'] = $key;
-				$this->rows[$schemaSlug][$key] = $payload;
-				return $payload;
-			}
-
-			/**
-			 * @param array<string, mixed>|null $payload The row.
-			 * @return string The id.
-			 */
-			public function idOf(?array $payload): string {
-				return (string)($payload['id'] ?? '');
-			}
-		};
-	}//end makeStore()
 }//end class

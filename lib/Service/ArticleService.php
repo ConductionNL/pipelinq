@@ -3,23 +3,14 @@
 /**
  * Pipelinq ArticleService.
  *
- * Owns the `article` object: the content hub piece a marketer writes once in
- * markdown and a mailing, a social post and a portal page each reuse.
+ * Marketing articles live in portaliq (marketing-articles-move-to-portaliq);
+ * pipelinq only names them. What stays here is reading the articles a
+ * template names and rendering the `{{articles}}` block, from one method
+ * that both the send path and the preview call, so a marketer's preview is
+ * produced by the code that will do the sending.
  *
- * Three things live here and nowhere else, because the schema grammar cannot
- * express any of them. Publishing stamps `publishedAt` exactly once, so a
- * second publish never moves the date a reader already saw. Where an article
- * has been used is derived from the objects that reference it rather than
- * stored on the article, so removing a reference removes the usage without a
- * second write. And the `{{articles}}` block is rendered from one method that
- * both the send path and the preview call, so a marketer's preview is produced
- * by the code that will do the sending.
- *
- * Register access goes through {@see ListObjectStore}, which is the marketing
- * register's plumbing rather than anything list-specific: it takes the schema
- * slug on every call and is the single place carrying the `_rbac` and
- * `_multitenancy` flags every marketing read needs. Copying it for one more
- * schema is the duplication ADR-012 exists to stop.
+ * Register access goes through {@see PortaliqArticleStore}, which checks that
+ * portaliq is installed before every read.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -32,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-reads-marketing-articles-from-portaliq
  */
 
 declare(strict_types=1);
@@ -40,25 +31,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
+use OCA\Pipelinq\Service\Marketing\PortaliqArticleStore;
+use Psr\Log\LoggerInterface;
 
 /**
- * ArticleService — the article lifecycle, its usages and its rendering.
+ * ArticleService — reads portaliq articles and renders the `{{articles}}` block.
  *
- * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods) The lifecycle, the derived
- *  usages and the shared renderer are one cohesive surface; splitting them
- *  would put the renderer somewhere the send path has to reach across for.
- * @SuppressWarnings(PHPMD.TooManyMethods) Same reason as TooManyPublicMethods
- *  above: the private slug/identity/rendering helpers back that one cohesive
- *  surface and moving them out would not reduce complexity, only relocate it
- *  behind a second constructor dependency every caller has to carry.
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The aggregate is the sum
- *  of several independently-simple concerns (CRUD + stamping, the derived
- *  usages join, and the marker renderer design.md requires both the send
- *  path and the preview to share) rather than one tangled method; each
- *  method stays individually readable.
+ * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-reads-marketing-articles-from-portaliq
  */
 class ArticleService implements ArticleServiceInterface {
 	/**
@@ -85,483 +64,66 @@ class ArticleService implements ArticleServiceInterface {
 	];
 
 	/**
-	 * Default Article schema slug, matching the register fragment.
-	 *
-	 * @var string
-	 */
-	private const DEFAULT_ARTICLE_SCHEMA_SLUG = 'article';
-
-	/**
-	 * Default CampaignTemplate schema slug.
-	 *
-	 * @var string
-	 */
-	private const DEFAULT_TEMPLATE_SCHEMA_SLUG = 'campaignTemplate';
-
-	/**
-	 * Default Blast schema slug.
-	 *
-	 * @var string
-	 */
-	private const DEFAULT_BLAST_SCHEMA_SLUG = 'blast';
-
-	/**
-	 * The statuses an article may hold, mirroring the schema enum.
-	 *
-	 * @var array<int, string>
-	 */
-	private const STATUSES = ['draft', 'review', 'published', 'archived'];
-
-	/**
-	 * The transitions the schema lifecycle declares, restated so a refusal
-	 * happens before a write rather than after one.
-	 *
-	 * OpenRegister enforces the same table; this copy exists so the service
-	 * can answer a caller without a round trip, and it is checked against the
-	 * fragment by the unit tests.
-	 *
-	 * @var array<string, array{from: array<int, string>, to: string}>
-	 */
-	private const TRANSITIONS = [
-		'submitForReview' => ['from' => ['draft'], 'to' => 'review'],
-		'returnToDraft' => ['from' => ['review'], 'to' => 'draft'],
-		'publish' => ['from' => ['draft', 'review'], 'to' => 'published'],
-		'archive' => ['from' => ['draft', 'review', 'published'], 'to' => 'archived'],
-		'restore' => ['from' => ['archived'], 'to' => 'draft'],
-	];
-
-	/**
-	 * Fields a client may set on a create or a patch. Anything else in the
-	 * request body is dropped rather than merged, so `author`, `publishedAt`
-	 * and the agent mark can only ever be set by this service.
-	 *
-	 * @var array<int, string>
-	 */
-	private const WRITABLE_FIELDS = [
-		'title',
-		'slug',
-		'summary',
-		'body',
-		'heroImage',
-		'language',
-		'portalPageRef',
-	];
-
-	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore $store Register-scoped object access.
+	 * @param PortaliqArticleStore $articles portaliq's articles.
+	 * @param LoggerInterface      $logger   The logger.
 	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-reads-marketing-articles-from-portaliq
 	 */
 	public function __construct(
-		private ListObjectStore $store,
+		private PortaliqArticleStore $articles,
+		private LoggerInterface $logger,
 	) {
 	}//end __construct()
 
 	/**
-	 * List articles with a pagination envelope, newest first.
+	 * The published portaliq articles a template or a post may pick.
 	 *
-	 * @param int $page 1-based page number (clamped to >= 1).
-	 * @param int $limit Page size (clamped 1..100).
+	 * @return array{available: bool, data: array<int, array<string, mixed>>} `available` is false without portaliq.
 	 *
-	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 	 */
-	public function listArticles(int $page, int $limit): array {
-		$page = max(1, $page);
-		$limit = min(100, max(1, $limit));
-		$all = $this->store->findAll(schemaSlug: $this->articleSchemaSlug());
-		usort(
-			$all,
-			static fn (array $left, array $right): int => strcmp(
-				(string)($right['createdAt'] ?? ''),
-				(string)($left['createdAt'] ?? ''),
-			)
-		);
-		$total = count($all);
-
-		return [
-			'data' => array_slice($all, (($page - 1) * $limit), $limit),
-			'pagination' => [
-				'page' => $page,
-				'limit' => $limit,
-				'total' => $total,
-				'pages' => (int)max(1, (int)ceil(($total / $limit))),
-			],
-		];
-	}//end listArticles()
-
-	/**
-	 * Fetch one article by UUID or slug.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 *
-	 * @return array<string, mixed>|null The payload, or null when it does not exist.
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
-	 */
-	public function getArticleById(string $articleId): ?array {
-		return $this->store->find(schemaSlug: $this->articleSchemaSlug(), id: $articleId);
-	}//end getArticleById()
-
-	/**
-	 * Create an article as a draft.
-	 *
-	 * The author is stamped from the authenticated user, the slug is derived
-	 * from the title when none was given, and `agentAuthored` /
-	 * `agentAuthoredBy` are set from the writer's own identity rather than
-	 * from the body: a mark a client can set is not a mark (ADR-088).
-	 *
-	 * @param array<string, mixed> $payload Inbound payload.
-	 * @param string $authorUid Authenticated user id.
-	 * @param string $agent Agent identity when an agent is writing, empty for a person.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
-	 */
-	public function createArticle(array $payload, string $authorUid, string $agent = ''): array {
-		$clean = $this->sanitise(payload: $payload);
-		$title = trim((string)($clean['title'] ?? ''));
-		if ($title === '') {
-			return ['error' => 'A title is required'];
+	public function publishedArticles(): array {
+		if ($this->articles->isAvailable() === false) {
+			return ['available' => false, 'data' => []];
 		}
 
-		$slug = $this->resolveSlug(candidate: (string)($clean['slug'] ?? ''), title: $title);
-		if ($this->slugTaken(slug: $slug, exceptId: '') === true) {
-			return ['error' => 'That slug is already in use'];
-		}
-
-		$now = $this->nowIso();
-		$record = array_merge(
-			$clean,
-			[
-				'title' => $title,
-				'slug' => $slug,
-				'status' => 'draft',
-				'author' => $authorUid,
-				'agentAuthored' => ($agent !== ''),
-				'agentAuthoredBy' => $agent,
-				'createdAt' => $now,
-				'updatedAt' => $now,
-			]
-		);
-
-		$saved = $this->store->save(schemaSlug: $this->articleSchemaSlug(), payload: $record);
-		if ($saved === null) {
-			return ['error' => 'The article could not be saved'];
-		}
-
-		return ['article' => $saved];
-	}//end createArticle()
-
-	/**
-	 * Patch an article's editable fields.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 * @param array<string, mixed> $patch Fields to change.
-	 * @param string $agent Agent identity when an agent is writing, empty for a person.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
-	 */
-	public function updateArticle(string $articleId, array $patch, string $agent = ''): array {
-		$existing = $this->getArticleById(articleId: $articleId);
-		if ($existing === null) {
-			return ['error' => 'Not found'];
-		}
-
-		$clean = $this->checkedPatch(existing: $existing, patch: $patch);
-		if (is_string($clean) === true) {
-			return ['error' => $clean];
-		}
-
-		$merged = array_merge($existing, $clean);
-		$merged['updatedAt'] = $this->nowIso();
-		$merged['agentAuthored'] = ($agent !== '');
-		$merged['agentAuthoredBy'] = $agent;
-		return $this->savedOver(existing: $existing, merged: $merged);
-	}//end updateArticle()
-
-	/**
-	 * The sanitised patch with its slug resolved, or why it is refused.
-	 *
-	 * @param array<string, mixed> $existing The stored article.
-	 * @param array<string, mixed> $patch    Fields to change.
-	 *
-	 * @return array<string, mixed>|string The clean patch, or the refusal.
-	 */
-	private function checkedPatch(array $existing, array $patch): array|string {
-		$clean = $this->sanitise(payload: $patch);
-		if (isset($clean['title']) === true && trim((string)$clean['title']) === '') {
-			return 'A title is required';
-		}
-
-		if (isset($clean['slug']) === true) {
-			$slug = $this->resolveSlug(
-				candidate: (string)$clean['slug'],
-				title: (string)($clean['title'] ?? ($existing['title'] ?? '')),
-			);
-			if ($this->slugTaken(slug: $slug, exceptId: $this->store->idOf(payload: $existing)) === true) {
-				return 'That slug is already in use';
-			}
-
-			$clean['slug'] = $slug;
-		}
-
-		return $clean;
-	}//end checkedPatch()
-
-	/**
-	 * Save the merged article over the stored one.
-	 *
-	 * @param array<string, mixed> $existing The stored article.
-	 * @param array<string, mixed> $merged   What to store.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string} The saved article, or the save failure.
-	 */
-	private function savedOver(array $existing, array $merged): array {
-		$saved = $this->store->save(
-			schemaSlug: $this->articleSchemaSlug(),
-			payload: $merged,
-			id: $this->store->idOf(payload: $existing),
-		);
-		if ($saved === null) {
-			return ['error' => 'The article could not be saved'];
-		}
-
-		return ['article' => $saved];
-	}//end savedOver()
-
-	/**
-	 * Publish an article, stamping `publishedAt` on the first publish only.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
-	 */
-	public function publishArticle(string $articleId): array {
-		return $this->applyTransition(articleId: $articleId, transition: 'publish');
-	}//end publishArticle()
-
-	/**
-	 * Archive an article, leaving it readable and every reference intact.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
-	 */
-	public function archiveArticle(string $articleId): array {
-		return $this->applyTransition(articleId: $articleId, transition: 'archive');
-	}//end archiveArticle()
-
-	/**
-	 * Apply one declared transition to an article.
-	 *
-	 * A transition the lifecycle does not declare from the article's current
-	 * status is refused before anything is written, so an archived article
-	 * cannot be published straight back into a mailing.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 * @param string $transition Transition name from the declared lifecycle.
-	 *
-	 * @return array{article?: array<string, mixed>, error?: string}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
-	 */
-	public function applyTransition(string $articleId, string $transition): array {
-		$rule = (self::TRANSITIONS[$transition] ?? null);
-		if ($rule === null) {
-			return ['error' => 'Unknown transition'];
-		}
-
-		$existing = $this->getArticleById(articleId: $articleId);
-		if ($existing === null) {
-			return ['error' => 'Not found'];
-		}
-
-		if (in_array($this->statusOf(article: $existing), $rule['from'], true) === false) {
-			return ['error' => 'That change is not allowed from the current status'];
-		}
-
-		return $this->savedOver(existing: $existing, merged: $this->transitioned(article: $existing, status: $rule['to']));
-	}//end applyTransition()
-
-	/**
-	 * An article's lifecycle status; an unknown one counts as a draft.
-	 *
-	 * @param array<string, mixed> $article The article.
-	 *
-	 * @return string The status.
-	 */
-	private function statusOf(array $article): string {
-		$status = (string)($article['status'] ?? 'draft');
-		if (in_array($status, self::STATUSES, true) === false) {
-			return 'draft';
-		}
-
-		return $status;
-	}//end statusOf()
-
-	/**
-	 * The article moved to a status, stamping `publishedAt` on its first publish only.
-	 *
-	 * @param array<string, mixed> $article The stored article.
-	 * @param string               $status  The status it moves to.
-	 *
-	 * @return array<string, mixed> What to store.
-	 */
-	private function transitioned(array $article, string $status): array {
-		$merged = $article;
-		$merged['status'] = $status;
-		$merged['updatedAt'] = $this->nowIso();
-		if ($status === 'published' && trim((string)($article['publishedAt'] ?? '')) === '') {
-			$merged['publishedAt'] = $merged['updatedAt'];
-		}
-
-		return $merged;
-	}//end transitioned()
-
-	/**
-	 * Where an article has been used, derived at read time.
-	 *
-	 * Nothing is written. The answer is the campaign templates whose
-	 * `articleIds` name the article, plus the blasts built on those templates,
-	 * so removing the article from a template removes the usage on the next
-	 * read rather than on the next write to the article.
-	 *
-	 * @param string $articleId Article UUID or slug.
-	 *
-	 * @return array{data: array<int, array{kind: string, id: string, name: string, status: string}>, counts: array<string, int>}
-	 *
-	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
-	 */
-	public function listUsages(string $articleId): array {
-		$article = $this->getArticleById(articleId: $articleId);
-		if ($article === null) {
-			return ['data' => [], 'counts' => ['template' => 0, 'blast' => 0]];
-		}
-
-		$templates = $this->templatesNaming(identities: $this->identitiesOf(object: $article));
-		$usages = array_merge(
-			array_map(fn (array $template): array => $this->templateUsage(template: $template), $templates),
-			$this->blastUsages(templateIds: $this->templateIdentities(templates: $templates))
-		);
-
-		return [
-			'data' => $usages,
-			'counts' => [
-				'template' => count(array_filter($usages, static fn (array $usage): bool => $usage['kind'] === 'template')),
-				'blast' => count(array_filter($usages, static fn (array $usage): bool => $usage['kind'] === 'blast')),
-			],
-		];
-	}//end listUsages()
-
-	/**
-	 * The campaign templates whose `articleIds` name the article by any of its identities.
-	 *
-	 * @param array<int, string> $identities The article's identities.
-	 *
-	 * @return array<int, array<string, mixed>> The templates.
-	 */
-	private function templatesNaming(array $identities): array {
-		$templates = [];
-		foreach ($this->store->findAll(schemaSlug: $this->templateSchemaSlug()) as $template) {
-			if ($this->namesArticle(template: $template, identities: $identities) === true) {
-				$templates[] = $template;
-			}
-		}
-
-		return $templates;
-	}//end templatesNaming()
-
-	/**
-	 * A template's usage row.
-	 *
-	 * @param array<string, mixed> $template The template.
-	 *
-	 * @return array{kind: string, id: string, name: string, status: string} The usage.
-	 */
-	private function templateUsage(array $template): array {
-		return [
-			'kind' => 'template',
-			'id' => $this->store->idOf(payload: $template),
-			'name' => (string)($template['name'] ?? ''),
-			'status' => (string)($template['channel'] ?? ''),
-		];
-	}//end templateUsage()
-
-	/**
-	 * Every identity a blast may name the templates by: each one's id and its identities.
-	 *
-	 * @param array<int, array<string, mixed>> $templates The templates.
-	 *
-	 * @return array<int, string> The identities.
-	 */
-	private function templateIdentities(array $templates): array {
-		$templateIds = [];
-		foreach ($templates as $template) {
-			$templateIds[] = $this->store->idOf(payload: $template);
-			foreach ($this->identitiesOf(object: $template) as $identity) {
-				$templateIds[] = $identity;
-			}
-		}
-
-		return $templateIds;
-	}//end templateIdentities()
-
-	/**
-	 * The usage rows of the blasts built on one of the templates.
-	 *
-	 * @param array<int, string> $templateIds The templates' identities.
-	 *
-	 * @return array<int, array{kind: string, id: string, name: string, status: string}> The usages.
-	 */
-	private function blastUsages(array $templateIds): array {
-		$usages = [];
-		foreach ($this->store->findAll(schemaSlug: $this->blastSchemaSlug()) as $blast) {
-			if (in_array((string)($blast['templateId'] ?? ''), $templateIds, true) === false) {
-				continue;
-			}
-
-			$usages[] = [
-				'kind' => 'blast',
-				'id' => $this->store->idOf(payload: $blast),
-				'name' => (string)($blast['name'] ?? ''),
-				'status' => (string)($blast['status'] ?? ''),
-			];
-		}
-
-		return $usages;
-	}//end blastUsages()
+		return ['available' => true, 'data' => $this->articles->published()];
+	}//end publishedArticles()
 
 	/**
 	 * Load the articles a template names, in the order it named them.
 	 *
 	 * An id that resolves to nothing is skipped rather than rendered as a
 	 * gap: a deleted article should shorten the newsletter, not break it.
+	 * Without portaliq nothing resolves, the reason is logged, and the send
+	 * goes ahead with an empty block.
 	 *
-	 * @param array<int, mixed> $articleIds Article UUIDs or slugs.
+	 * @param array<int, mixed> $articleIds portaliq article ids or slugs.
 	 *
 	 * @return array<int, array<string, mixed>> The resolved articles.
 	 *
 	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-reads-marketing-articles-from-portaliq
 	 */
 	public function loadArticlesByIds(array $articleIds): array {
-		$out = [];
-		foreach ($articleIds as $id) {
-			if (is_scalar($id) === false || (string)$id === '') {
-				continue;
-			}
+		$ids = array_values(array_filter($articleIds, static fn (mixed $id): bool => is_scalar($id) === true && (string)$id !== ''));
+		if ($ids === []) {
+			return [];
+		}
 
-			$article = $this->getArticleById(articleId: (string)$id);
+		if ($this->articles->isAvailable() === false) {
+			$this->logger->info(
+				'Pipelinq: an {{articles}} block renders empty because portaliq, which holds marketing articles, is not installed',
+				['articleIds' => count($ids)]
+			);
+			return [];
+		}
+
+		$out = [];
+		foreach ($ids as $id) {
+			$article = $this->articles->find(identity: (string)$id);
 			if ($article !== null) {
 				$out[] = $article;
 			}
@@ -737,207 +299,4 @@ class ArticleService implements ArticleServiceInterface {
 	private function escape(string $value): string {
 		return htmlspecialchars($value, (ENT_QUOTES | ENT_SUBSTITUTE), 'UTF-8');
 	}//end escape()
-
-	/**
-	 * Whether a template's `articleIds` name one of an article's identities.
-	 *
-	 * @param array<string, mixed> $template The campaign template.
-	 * @param array<int, string> $identities The article's ids and slugs.
-	 *
-	 * @return bool True when the template names the article.
-	 */
-	private function namesArticle(array $template, array $identities): bool {
-		$ids = ($template['articleIds'] ?? []);
-		if (is_array($ids) === false) {
-			return false;
-		}
-
-		foreach ($ids as $id) {
-			if (is_scalar($id) === true && in_array((string)$id, $identities, true) === true) {
-				return true;
-			}
-		}
-
-		return false;
-	}//end namesArticle()
-
-	/**
-	 * Every identifier an object answers to: its id, its uuid and its slug,
-	 * at the top level and under `@self`.
-	 *
-	 * A template names an article by whichever of these the marketer's client
-	 * had to hand, and the seeds name it by slug, so a match on one alone
-	 * would report an article as unused while it is embedded in a newsletter.
-	 *
-	 * @param array<string, mixed> $object The object.
-	 *
-	 * @return array<int, string> Non-empty identifiers.
-	 */
-	private function identitiesOf(array $object): array {
-		$out = [];
-		$self = ($object['@self'] ?? []);
-		if (is_array($self) === false) {
-			$self = [];
-		}
-
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			foreach ([$object, $self] as $source) {
-				$value = ($source[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					$out[] = (string)$value;
-				}
-			}
-		}
-
-		return array_values(array_unique($out));
-	}//end identitiesOf()
-
-	/**
-	 * Keep only the fields a client may set.
-	 *
-	 * @param array<string, mixed> $payload Inbound payload.
-	 *
-	 * @return array<string, mixed> The writable subset, trimmed.
-	 */
-	private function sanitise(array $payload): array {
-		$clean = [];
-		foreach (self::WRITABLE_FIELDS as $key) {
-			if (array_key_exists($key, $payload) === false) {
-				continue;
-			}
-
-			$clean[$key] = trim((string)$payload[$key]);
-		}
-
-		foreach (['links', 'tags'] as $key) {
-			if (isset($payload[$key]) === true && is_array($payload[$key]) === true) {
-				$clean[$key] = $payload[$key];
-			}
-		}
-
-		return $clean;
-	}//end sanitise()
-
-	/**
-	 * The slug to store: the candidate when it is usable, else one derived
-	 * from the title.
-	 *
-	 * @param string $candidate The client's slug, possibly empty.
-	 * @param string $title The article title.
-	 *
-	 * @return string A URL-safe slug.
-	 */
-	private function resolveSlug(string $candidate, string $title): string {
-		$slug = $this->slugify(value: $candidate);
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		$slug = $this->slugify(value: $title);
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return ('article-' . substr(sha1($title . microtime(true)), 0, 8));
-	}//end resolveSlug()
-
-	/**
-	 * Reduce a string to the schema's slug pattern.
-	 *
-	 * Written here rather than reached for across the app boundary: pulling
-	 * one eight-line helper out of OpenRegister would couple pipelinq to a
-	 * class it has no other reason to know (ADR-011 weighs reuse against the
-	 * coupling it buys, and this trade goes the other way).
-	 *
-	 * @param string $value The raw value.
-	 *
-	 * @return string A URL-safe slug, empty when nothing survives.
-	 */
-	private function slugify(string $value): string {
-		$ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $value);
-		if ($ascii === false) {
-			$ascii = $value;
-		}
-
-		$lower = strtolower($ascii);
-		$dashed = preg_replace('/[^a-z0-9]+/', '-', $lower);
-		if (is_string($dashed) === false) {
-			return '';
-		}
-
-		return trim($dashed, '-');
-	}//end slugify()
-
-	/**
-	 * Whether another article already holds a slug.
-	 *
-	 * OpenRegister does not constrain a property to be unique, so the check
-	 * runs here. Two simultaneous creates could still collide; the result is
-	 * a duplicate slug visible on the index, not a lost article.
-	 *
-	 * @param string $slug The slug to claim.
-	 * @param string $exceptId The article allowed to already hold it.
-	 *
-	 * @return bool True when the slug is taken.
-	 */
-	private function slugTaken(string $slug, string $exceptId): bool {
-		foreach ($this->store->findAll(schemaSlug: $this->articleSchemaSlug()) as $row) {
-			if ((string)($row['slug'] ?? '') !== $slug) {
-				continue;
-			}
-
-			if ($exceptId !== '' && $this->store->idOf(payload: $row) === $exceptId) {
-				continue;
-			}
-
-			return true;
-		}
-
-		return false;
-	}//end slugTaken()
-
-	/**
-	 * The Article schema slug.
-	 *
-	 * @return string Schema slug.
-	 */
-	private function articleSchemaSlug(): string {
-		return $this->store->schemaSlug(
-			configKey: 'article_schema',
-			default: self::DEFAULT_ARTICLE_SCHEMA_SLUG,
-		);
-	}//end articleSchemaSlug()
-
-	/**
-	 * The CampaignTemplate schema slug.
-	 *
-	 * @return string Schema slug.
-	 */
-	private function templateSchemaSlug(): string {
-		return $this->store->schemaSlug(
-			configKey: 'campaignTemplate_schema',
-			default: self::DEFAULT_TEMPLATE_SCHEMA_SLUG,
-		);
-	}//end templateSchemaSlug()
-
-	/**
-	 * The Blast schema slug.
-	 *
-	 * @return string Schema slug.
-	 */
-	private function blastSchemaSlug(): string {
-		return $this->store->schemaSlug(
-			configKey: 'blast_schema',
-			default: self::DEFAULT_BLAST_SCHEMA_SLUG,
-		);
-	}//end blastSchemaSlug()
-
-	/**
-	 * The current moment as an ISO-8601 UTC string.
-	 *
-	 * @return string Timestamp.
-	 */
-	private function nowIso(): string {
-		return gmdate('c');
-	}//end nowIso()
 }//end class

@@ -987,334 +987,6 @@
                 }
             }
         },
-        "/articles": {
-            "get": {
-                "operationId": "article-index",
-                "summary": "GET /api/articles — paginated list, newest first",
-                "description": "GET /api/articles — paginated list, newest first. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "required": false,
-                        "description": "1-based page number.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "required": false,
-                        "description": "Page size.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "article-create",
-                "summary": "POST /api/articles — create an article as a draft",
-                "description": "POST /api/articles — create an article as a draft. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "#/components/responses/Problem400"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}": {
-            "get": {
-                "operationId": "article-show",
-                "summary": "GET /api/articles/{id} — one article",
-                "description": "GET /api/articles/{id} — one article. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/Problem404"
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "article-update",
-                "summary": "PATCH /api/articles/{id} — change an article's editable fields",
-                "description": "PATCH /api/articles/{id} — change an article's editable fields. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}/archive": {
-            "post": {
-                "operationId": "article-archive",
-                "summary": "POST /api/articles/{id}/archive — take the article out of use",
-                "description": "POST /api/articles/{id}/archive — take the article out of use. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}/publish": {
-            "post": {
-                "operationId": "article-publish",
-                "summary": "POST /api/articles/{id}/publish — publish, stamping the moment once",
-                "description": "POST /api/articles/{id}/publish — publish, stamping the moment once. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}/transition": {
-            "post": {
-                "operationId": "article-transition",
-                "summary": "POST /api/articles/{id}/transition — apply one declared transition",
-                "description": "POST /api/articles/{id}/transition — apply one declared transition. Publish and archive have their own routes because they are what the interface offers; this one carries the rest of the declared lifecycle (submit for review, return to draft, restore) without a route each. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "transition": {
-                                        "description": "The transition."
-                                    }
-                                },
-                                "additionalProperties": false
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}/usages": {
-            "get": {
-                "operationId": "article-usages",
-                "summary": "GET /api/articles/{id}/usages — where the article has been used",
-                "description": "GET /api/articles/{id}/usages — where the article has been used. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
         "/billing/handoff/{clientId}": {
             "post": {
                 "operationId": "billing-handoff-trigger",
@@ -16577,6 +16249,50 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/templates/articles": {
+            "get": {
+                "operationId": "template-articles",
+                "summary": "GET /api/templates/articles: the articles a template may embed",
+                "description": "GET /api/templates/articles: the published marketing articles a template may embed. Marketing articles live in portaliq; without portaliq `available` is false and the list is empty. Needs a signed-in Nextcloud user with CRM rights.",
+                "tags": [
+                    "template"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "available": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 }
             }

@@ -4,7 +4,7 @@ Spec only in this PR. Build after portaliq ships `marketing-articles-from-pipeli
 
 ## 1. Read articles from portaliq
 
-- [ ] 1.1 `ArticleService::loadArticlesByIds()` reads register `portaliq`, schema `article`, guarded by `isInstalled('portaliq')`; empty result and a logged reason when portaliq is absent.
+- [x] 1.1 `ArticleService::loadArticlesByIds()` reads register `portaliq`, schema `article`, guarded by `isInstalled('portaliq')`; empty result and a logged reason when portaliq is absent.
   - spec_ref: `specs/marketing-articles/spec.md#requirement-pipelinq-reads-marketing-articles-from-portaliq`
   - files: `lib/Service/ArticleService.php`, `tests/Unit/Service/ArticleServiceTest.php`
   - test: `vendor/bin/phpunit --no-coverage --filter ArticleServiceTest`

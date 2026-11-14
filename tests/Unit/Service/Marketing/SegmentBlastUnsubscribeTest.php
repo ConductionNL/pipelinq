@@ -30,7 +30,6 @@ use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\ContactAddressLookup;
 use OCA\Pipelinq\Service\IntegriqMarketingConsent;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
@@ -52,6 +51,8 @@ use ReflectionMethod;
  * Segment blast link, end to end.
  */
 class SegmentBlastUnsubscribeTest extends TestCase {
+	use \OCA\Pipelinq\Tests\Unit\Support\PortaliqArticleFixture;
+
 
 	public function testASegmentBlastHasIntegriqsLinkInTheBodyAndTheHeaders(): void {
 		$integriq = new FakeIntegriq();
@@ -110,7 +111,7 @@ class SegmentBlastUnsubscribeTest extends TestCase {
 			$container,
 			$appConfig,
 			$mailer,
-			new ArticleService($this->createMock(ListObjectStore::class)),
+			$this->portaliqArticleService(),
 			FakeSlugResolver::connectorRegister(),
 			$logger,
 			new PhysicalAddressRenderer(),

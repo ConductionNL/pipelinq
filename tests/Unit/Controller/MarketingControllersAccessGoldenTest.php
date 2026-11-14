@@ -72,7 +72,7 @@ class MarketingControllersAccessGoldenTest extends TestCase {
 				'SegmentController::index', 'SegmentController::signals', 'SegmentController::create', 'SegmentController::show',
 				'SegmentController::members', 'SegmentController::compliance', 'SegmentController::preview', 'SegmentController::update',
 				'SegmentController::refreshSize',
-				'TemplateController::index', 'TemplateController::create', 'TemplateController::show', 'TemplateController::update',
+				'TemplateController::index', 'TemplateController::articles', 'TemplateController::create', 'TemplateController::show', 'TemplateController::update',
 				'TemplateController::preview', 'TemplateController::render', 'TemplateController::validate',
 			],
 			array_keys(self::actionProvider())

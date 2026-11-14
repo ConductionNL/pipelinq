@@ -96,6 +96,26 @@ class TemplateController extends Controller {
 	}//end index()
 
 	/**
+	 * GET /api/templates/articles — the published portaliq articles a template may embed.
+	 *
+	 * Marketing articles live in portaliq; without portaliq the answer is
+	 * `available: false` and an empty list, so the picker can say why.
+	 *
+	 * @return JSONResponse `{available, data[]}`.
+	 *
+	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+	 */
+	#[NoAdminRequired]
+	public function articles(): JSONResponse {
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		return new JSONResponse($this->articleService->publishedArticles());
+	}//end articles()
+
+	/**
 	 * POST /api/templates — create after compliance validation.
 	 *
 	 * @return JSONResponse 201 with the template or 400 generic error.

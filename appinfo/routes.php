@@ -682,25 +682,14 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
         // The Blocks editor's preview of unsaved blocks (marketing-block-editor).
         ['name' => 'template#render',  'url' => '/api/templates/render',   'verb' => 'POST'],
+        ['name' => 'template#articles', 'url' => '/api/templates/articles', 'verb' => 'GET'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
         ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
         ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
 
-        // Marketing — Articles (marketing-article-hub). Articles are the
-        // content hub for both mailings and posts. Literal-suffixed routes
-        // (publish, archive, transition, usages) precede the bare {id}
-        // routes (ADR-016), matching the Blast block below.
-        ['name' => 'article#index',      'url' => '/api/articles',                'verb' => 'GET'],
-        ['name' => 'article#create',     'url' => '/api/articles',                'verb' => 'POST'],
-        ['name' => 'article#publish',    'url' => '/api/articles/{id}/publish',   'verb' => 'POST'],
-        ['name' => 'article#archive',    'url' => '/api/articles/{id}/archive',   'verb' => 'POST'],
-        ['name' => 'article#transition', 'url' => '/api/articles/{id}/transition', 'verb' => 'POST'],
         // Shared label list: a rename also rewrites the items that carry the label.
         ['name' => 'label#rename', 'url' => '/api/labels/{id}/rename', 'verb' => 'POST'],
-        ['name' => 'article#usages',     'url' => '/api/articles/{id}/usages',    'verb' => 'GET'],
-        ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
-        ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],
 
         // Marketing — Social publishing (social-publishing, phase 3). Three
         // objects, three controllers. Literal-suffixed routes (connect,
