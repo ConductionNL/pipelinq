@@ -228,9 +228,9 @@ import ResourceVacationsEditor from '../../components/bookings/ResourceVacations
 import KpiFigure from '../../components/KpiFigure.vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
 import ResourceForm from './ResourceForm.vue'
+import { weekLoadOf } from '../../services/bookingFigures.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { vacationsError, workingHoursError } from '../../utils/resourceValidation.js'
-import { resourceWeekLoad, weekBounds } from '../../utils/resourceWeek.js'
 
 export default {
 	name: 'ResourceDetail',
@@ -285,7 +285,7 @@ export default {
 		return {
 			showEditDialog: false,
 			showDelete: false,
-			weekBookings: [],
+			weekFigures: { bookingsThisWeek: 0, bookedShare: null },
 			staffLine: { function: '', department: '' },
 		}
 	},
@@ -357,19 +357,14 @@ export default {
 		},
 
 		/**
-		 * This week's bookings and their share of the bookable time.
+		 * This week's bookings and their share of the bookable time, as the
+		 * server computed them.
 		 *
 		 * @return {{count: number, percent: (number|null)}}
-		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-a-resource-page-shows-how-much-of-its-bookable-time-is-booked-req-srg-004
 		 */
 		weekLoad() {
-			return resourceWeekLoad({
-				bookings: this.weekBookings,
-				resourceId: this.resourceId,
-				workingHours: this.workingHours,
-				vacations: this.vacations,
-				now: new Date(),
-			})
+			return weekLoadOf(this.weekFigures)
 		},
 
 		/**
@@ -544,7 +539,7 @@ export default {
 				'appointmentResource',
 				this.resourceId,
 			)
-			await Promise.all([this.fetchWeekBookings(), this.fetchStaffLine()])
+			await Promise.all([this.fetchWeekFigures(), this.fetchStaffLine()])
 		}
 	},
 
@@ -570,23 +565,19 @@ export default {
 		},
 
 		/**
-		 * Load this week's bookings for the "This week" card. A failed load
+		 * Load this week's figures for the "This week" card: one request, the
+		 * server counts the bookings and the bookable time. A failed load
 		 * leaves the card at zero rather than blanking the page.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-a-resource-page-shows-how-much-of-its-bookable-time-is-booked-req-srg-004
 		 */
-		async fetchWeekBookings() {
-			const { start, end } = weekBounds(new Date())
+		async fetchWeekFigures() {
 			try {
-				const rows = await this.objectStore.fetchCollection('appointmentBooking', {
-					'startAt[gte]': start.toISOString(),
-					'startAt[lt]': end.toISOString(),
-					_limit: 500,
-				})
-				this.weekBookings = Array.isArray(rows) ? rows : []
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/appointment-resources/{id}/figures', { id: this.resourceId }))
+				this.weekFigures = data && typeof data === 'object' ? data : { bookingsThisWeek: 0, bookedShare: null }
 			} catch {
-				this.weekBookings = []
+				this.weekFigures = { bookingsThisWeek: 0, bookedShare: null }
 			}
 		},
 
