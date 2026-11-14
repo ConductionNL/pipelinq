@@ -77,7 +77,7 @@ class ShillinqWipService {
 	 *
 	 * @return bool True when Shillinq is installed.
 	 *
-	 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
 	 */
 	public function shouldDispatch(): bool {
 		return $this->integrations->shillinq()['installed'] === true;
