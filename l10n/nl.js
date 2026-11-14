@@ -2,6 +2,9 @@ OC.L10N.register(
     "pipelinq",
     {
         "Your data export is ready: %1$s": "Uw data-export staat klaar: %1$s",
+        "Report %1$s could not be mailed to %2$s recipients": "Rapport %1$s kon niet naar %2$s ontvangers worden gemaild",
+        "Report {title} could not be mailed to %1$s recipients": "Rapport {title} kon niet naar %1$s ontvangers worden gemaild",
+        "Reason: %1$s": "Reden: %1$s",
         "The archive with all Pipelinq data is in your Files.": "Het archief met alle Pipelinq-gegevens staat in uw Bestanden.",
         "Your data export could not be built": "Uw data-export kon niet worden gemaakt",
         "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.": "Er is niets opgeslagen. Probeer het opnieuw; lukt het weer niet, vraag dan uw beheerder het logboek na te kijken.",

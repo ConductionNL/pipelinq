@@ -2,6 +2,9 @@ OC.L10N.register(
     "pipelinq",
     {
         "Your data export is ready: %1$s": "Your data export is ready: %1$s",
+        "Report %1$s could not be mailed to %2$s recipients": "Report %1$s could not be mailed to %2$s recipients",
+        "Report {title} could not be mailed to %1$s recipients": "Report {title} could not be mailed to %1$s recipients",
+        "Reason: %1$s": "Reason: %1$s",
         "The archive with all Pipelinq data is in your Files.": "The archive with all Pipelinq data is in your Files.",
         "Your data export could not be built": "Your data export could not be built",
         "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.": "Nothing was stored. Try again; if it fails again, ask your administrator to check the log.",

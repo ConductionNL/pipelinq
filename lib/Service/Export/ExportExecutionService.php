@@ -63,6 +63,7 @@ class ExportExecutionService implements ExportExecutionServiceInterface {
 	 * @param SchemaEvolutionService $evolution The schema-evolution service.
 	 * @param ICacheFactory $cacheFactory The distributed cache factory (lock).
 	 * @param LoggerInterface $logger The logger.
+	 * @param ReportMailRun|null $mailRun Delivers a run whose destination is mail.
 	 */
 	public function __construct(
 		private ExportJobService $jobs,
@@ -73,6 +74,7 @@ class ExportExecutionService implements ExportExecutionServiceInterface {
 		private SchemaEvolutionService $evolution,
 		private ICacheFactory $cacheFactory,
 		private LoggerInterface $logger,
+		private ?ReportMailRun $mailRun = null,
 	) {
 	}//end __construct()
 
@@ -141,6 +143,16 @@ class ExportExecutionService implements ExportExecutionServiceInterface {
 		$job = $this->jobs->getJob(id: $pending->jobId());
 		$this->runs->markRunning(runId: $pending->runId());
 		$destination = $this->destinationOf(job: $job);
+		if (($destination['type'] ?? '') === ExportDestinationService::TYPE_MAIL && $this->mailRun !== null) {
+			// A mailed report is read once per recipient, as that recipient,
+			// and every send is recorded on this run (REQ-RPD-002).
+			$completed = $this->runs->completeRun(
+				runId: $pending->runId(),
+				outcome: $this->mailRun->deliver(job: $job, destination: $destination)
+			);
+			return $this->recordOnJob(jobId: $pending->jobId(), run: $completed);
+		}
+
 
 		// Thread the destination compression onto the job for extraction.
 		$extraction = new ExportExtraction(
