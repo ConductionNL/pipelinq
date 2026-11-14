@@ -31,7 +31,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContractServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -44,7 +45,7 @@ use Throwable;
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
  * @spec openspec/specs/openregister-integration/spec.md
  */
-class ContractService {
+class ContractService implements ContractServiceInterface {
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the contract status graph.
 	 *
@@ -289,8 +290,8 @@ class ContractService {
 	 * @spec exclude config-key plumbing — resolves the OR register/schema ids the lifecycle ops scope to
 	 */
 	public function getRegisterAndSchema(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contract_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/contract_schema not configured; OpenRegister calls are refused, not run unscoped'

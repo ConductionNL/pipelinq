@@ -1,27 +1,28 @@
 <?php
 
 /**
- * Unit tests for CostReconciliationService::reconcile(): which channel
- * messages pending a currency conversion are converted to EUR and saved, the
- * full-scan fallback when the pending filter cannot be queried, and failures.
+ * Unit tests for CostReconciliationService.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
  *
- * @author    Conduction Development Team <info@conduction.nl>
+ * @author    Conduction <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://conduction.nl
+ * @version GIT: <git_id>
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\CostReconciliationService;
 use OCA\Pipelinq\Service\MessagingExchangeRateService;
 use OCP\IAppConfig;
@@ -32,313 +33,279 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Deferred currency reconciliation of message costs.
+ * The daily sweep that converts messages whose cost waited for an exchange
+ * rate: which rows it scans, which it converts, how it saves them and how it
+ * degrades when OpenRegister or a save fails.
  *
  * @covers \OCA\Pipelinq\Service\CostReconciliationService
- * @uses \OCA\Pipelinq\Util\EntityPayload
- * @uses \OCA\Pipelinq\Util\PayloadToArray
- * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses   \OCA\Pipelinq\Service\MessagingExchangeRateService
+ * @uses   \OCA\Pipelinq\Util\PayloadToArray
+ * @uses   \OCA\Pipelinq\Util\EntityPayload
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
+ *
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-final class CostReconciliationServiceTest extends TestCase {
+class CostReconciliationServiceTest extends TestCase {
+	/** @var ContainerInterface&MockObject */
+	private ContainerInterface $container;
+
+	/** @var IAppConfig&MockObject */
+	private IAppConfig $appConfig;
+
+	/** @var LoggerInterface&MockObject */
+	private LoggerInterface $logger;
+
+	/** @var ObjectServiceInterface&MockObject */
+	private ObjectServiceInterface $objectService;
+
+	/** @var array<string,string> */
+	private array $config = [
+		'messaging.exchange_rates_json' => '{"USD":0.5,"GBP":1.25}',
+	];
 
 	/**
-	 * Mock logger.
-	 *
-	 * @var LoggerInterface&MockObject
-	 */
-	private LoggerInterface&MockObject $logger;
-
-	/**
-	 * Mock exchange rates.
-	 *
-	 * @var MessagingExchangeRateService&MockObject
-	 */
-	private MessagingExchangeRateService&MockObject $rates;
-
-	/**
-	 * The object service double.
-	 *
-	 * @var object
-	 */
-	private object $objects;
-
-	/**
-	 * Whether OpenRegister resolves.
-	 *
-	 * @var boolean
-	 */
-	private bool $openRegister = true;
-
-	/**
-	 * App config values by key.
-	 *
-	 * @var array<string, string>
-	 */
-	private array $config = [];
-
-	/**
-	 * Set up shared doubles.
+	 * Wire the mocks; the container hands out the object service.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
-		parent::setUp();
-
-		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->rates = $this->createMock(MessagingExchangeRateService::class);
-		$this->rates->method('toEur')->willReturnCallback(
-			static fn (float $amount, string $currency): ?float => match ($currency) {
-				'USD' => $amount * 0.9,
-				'GBP' => $amount * 1.1666666666,
-				default => null,
-			}
+		$this->appConfig = $this->createMock(IAppConfig::class);
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			fn (string $app, string $key, string $default = ''): string => $this->config[$key] ?? $default
 		);
-		$this->openRegister = true;
-		$this->config = [];
-		$this->objects = new class {
-			/** @var list<mixed> */
-			public array $rows = [];
-
-			/** @var list<array<string, mixed>> */
-			public array $queries = [];
-
-			/** @var list<\Throwable|null> Failure per findAll call, in order */
-			public array $findAllFails = [];
-
-			/** @var list<array<string, mixed>> */
-			public array $saves = [];
-
-			/** @var list<string> */
-			public array $saveFailsFor = [];
-
-			/**
-			 * Find rows.
-			 *
-			 * @param array<string, mixed> $config The query
-			 *
-			 * @return list<mixed>
-			 */
-			public function findAll(array $config = []): array {
-				$this->queries[] = $config;
-				$fail = array_shift($this->findAllFails);
-				if ($fail !== null) {
-					throw $fail;
-				}
-
-				return $this->rows;
-			}
-
-			/**
-			 * Save a row.
-			 *
-			 * @param array<string, mixed> $object The payload
-			 * @param mixed $register The register
-			 * @param mixed $schema The schema
-			 * @param string|null $uuid The uuid
-			 *
-			 * @return array<string, mixed>
-			 */
-			public function saveObject(array $object, mixed $register = null, mixed $schema = null, ?string $uuid = null): array {
-				if (in_array((string)$uuid, $this->saveFailsFor, true) === true) {
-					throw new RuntimeException('locked ' . $uuid);
-				}
-
-				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
-				return $object;
-			}
-		};
-
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->container->method('get')->willReturnCallback(
+			fn (string $id) => $id === 'OCA\\OpenRegister\\Service\\ObjectService' ? $this->objectService : throw new RuntimeException('unknown ' . $id)
+		);
 	}//end setUp()
 
 	/**
-	 * Build the service.
+	 * The service under test, with the real exchange-rate service on the mocked config.
 	 *
 	 * @return CostReconciliationService
 	 */
 	private function service(): CostReconciliationService {
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(
-			function (string $id): object {
-				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService' && $this->openRegister === true) {
-					return $this->objects;
-				}
-
-				throw new RuntimeException('not registered: ' . $id);
-			}
+		return new CostReconciliationService(
+			$this->container,
+			$this->appConfig,
+			new MessagingExchangeRateService($this->appConfig, $this->logger),
+			$this->logger,
 		);
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnCallback(
-			fn (string $app, string $key, string $default = ''): string => ($this->config[$key] ?? $default)
-		);
-
-		return new CostReconciliationService($container, $appConfig, $this->rates, $this->logger);
-
 	}//end service()
 
 	/**
-	 * A pending message row.
+	 * A pending-cost message row.
 	 *
-	 * @param string $id The id
-	 * @param array<string, mixed> $metadata Metadata overrides
+	 * @param array<string,mixed> $meta  Extra metadata.
+	 * @param array<string,mixed> $extra Extra top-level fields.
 	 *
-	 * @return array<string, mixed>
+	 * @return array<string,mixed>
 	 */
-	private static function pending(string $id, array $metadata = []): array {
-		return [
-			'id' => $id,
-			'channel' => 'sms',
-			'metadata' => array_merge(['costCurrencyPending' => true, 'costCurrency' => 'USD', 'costSourceAmount' => 0.1], $metadata),
-		];
-
+	private static function pending(array $meta, array $extra = []): array {
+		return $extra + ['metadata' => $meta + ['costCurrencyPending' => true]];
 	}//end pending()
 
 	/**
-	 * Pending rows with a convertible amount get costEur and leave the pending state.
+	 * Record every saveObject call.
 	 *
-	 * @return void
+	 * @return array<int,array<string,mixed>> Filled by reference.
 	 */
-	public function testPendingRowsAreConverted(): void {
-		$this->objects->rows = [self::pending('m-1'), self::pending('m-2', ['costCurrency' => 'GBP', 'costSourceAmount' => '3'])];
-
-		$result = $this->service()->reconcile();
-
-		$this->assertSame(['scanned' => 2, 'reconciled' => 2], $result);
-		$this->assertSame(
-			[['filters' => ['metadata.costCurrencyPending' => true, 'register' => 'pipelinq', 'schema' => 'channelMessage']]],
-			$this->objects->queries
+	private function recordSaves(): array {
+		$this->saves = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntityInterface {
+				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+				return $this->createMock(ObjectEntityInterface::class);
+			}
 		);
-		$first = $this->objects->saves[0];
-		$this->assertSame('m-1', $first['uuid']);
-		$this->assertSame('pipelinq', $first['register']);
-		$this->assertSame('channelMessage', $first['schema']);
-		$this->assertSame(0.09, $first['object']['costEur']);
-		$this->assertSame('sms', $first['object']['channel']);
-		$this->assertFalse($first['object']['metadata']['costCurrencyPending']);
-		$this->assertSame('USD', $first['object']['metadata']['costCurrency']);
-		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $first['object']['metadata']['costReconciledAt']);
-		$this->assertSame(3.5, $this->objects->saves[1]['object']['costEur']);
+		return $this->saves;
+	}//end recordSaves()
 
-	}//end testPendingRowsAreConverted()
+	/** @var array<int,array<string,mixed>> */
+	private array $saves = [];
 
 	/**
-	 * Rows not pending are not scanned; pending rows without currency, amount or rate are scanned but not saved.
+	 * The sweep asks for pending rows in the default register and message schema.
 	 *
 	 * @return void
 	 */
-	public function testUnconvertibleRowsAreScannedButNotSaved(): void {
-		$this->objects->rows = [
-			['id' => 'm-0', 'metadata' => ['costCurrencyPending' => false]],
-			['id' => 'm-x'],
-			self::pending('m-1', ['costCurrency' => '']),
-			self::pending('m-2', ['costSourceAmount' => 0]),
-			self::pending('m-3', ['costSourceAmount' => -2]),
-			self::pending('m-4', ['costCurrency' => 'XYZ']),
-			self::pending('m-5'),
-		];
-
-		$result = $this->service()->reconcile();
-
-		$this->assertSame(['scanned' => 5, 'reconciled' => 1], $result);
-		$this->assertSame(['m-5'], array_column($this->objects->saves, 'uuid'));
-
-	}//end testUnconvertibleRowsAreScannedButNotSaved()
-
-	/**
-	 * The id comes from uuid, id, slug or @self; without one the row is saved as new.
-	 *
-	 * @return void
-	 */
-	public function testIdResolution(): void {
-		$row = self::pending('');
-		unset($row['id']);
-		$this->objects->rows = [
-			['uuid' => 'u-1'] + $row,
-			['slug' => 'msg-1'] + $row,
-			['@self' => ['id' => 's-1']] + $row,
-			$row,
-		];
-
-		$this->service()->reconcile();
-
-		$this->assertSame(['u-1', 'msg-1', 's-1', null], array_column($this->objects->saves, 'uuid'));
-
-	}//end testIdResolution()
-
-	/**
-	 * When the pending filter fails the whole schema is scanned and still only pending rows are converted.
-	 *
-	 * @return void
-	 */
-	public function testFailingFilterFallsBackToFullScan(): void {
-		$this->config = ['register' => 'crm', 'message_schema' => 'messages'];
-		$this->objects->findAllFails = [new RuntimeException('no metadata index')];
-		$this->objects->rows = [self::pending('m-1'), ['id' => 'm-2', 'metadata' => []]];
-		$this->logger->expects($this->once())
-			->method('warning')
-			->with(
-				'CostReconciliationService.reconcile: findAll failed — falling back to full scan',
-				['exception' => 'no metadata index']
-			);
-
-		$result = $this->service()->reconcile();
-
-		$this->assertSame(['scanned' => 1, 'reconciled' => 1], $result);
-		$this->assertSame(
+	public function testReconcileQueriesPendingRowsInTheDefaultSchema(): void {
+		$this->objectService->expects(self::once())->method('findAll')->with(
 			[
-				['filters' => ['metadata.costCurrencyPending' => true, 'register' => 'crm', 'schema' => 'messages']],
-				['filters' => ['register' => 'crm', 'schema' => 'messages']],
-			],
-			$this->objects->queries
+				'filters' => [
+					'metadata.costCurrencyPending' => true,
+					'register' => 'pipelinq',
+					'schema' => 'channelMessage',
+				],
+			]
+		)->willReturn([]);
+
+		self::assertSame(['scanned' => 0, 'reconciled' => 0], $this->service()->reconcile());
+	}//end testReconcileQueriesPendingRowsInTheDefaultSchema()
+
+	/**
+	 * A converted row gets costEur, a cleared flag and a reconciled stamp, and is
+	 * saved under its id in the configured register and schema.
+	 *
+	 * @return void
+	 */
+	public function testReconcileConvertsAndSavesUnderTheRowId(): void {
+		$this->config['register'] = 'crm';
+		$this->config['message_schema'] = 'msg';
+		$this->objectService->method('findAll')->willReturn(
+			[self::pending(['costCurrency' => 'usd', 'costSourceAmount' => '0.0123457', 'provider' => 'x'], ['uuid' => 'm-1', 'body' => 'Hi'])]
 		);
-		$this->assertSame('crm', $this->objects->saves[0]['register']);
-		$this->assertSame('messages', $this->objects->saves[0]['schema']);
+		$this->recordSaves();
 
-	}//end testFailingFilterFallsBackToFullScan()
+		$summary = $this->service()->reconcile();
+
+		self::assertSame(['scanned' => 1, 'reconciled' => 1], $summary);
+		self::assertCount(1, $this->saves);
+		$save = $this->saves[0];
+		self::assertSame('m-1', $save['uuid']);
+		self::assertSame('crm', $save['register']);
+		self::assertSame('msg', $save['schema']);
+		self::assertSame(0.006173, $save['object']['costEur']);
+		self::assertSame('Hi', $save['object']['body']);
+		self::assertFalse($save['object']['metadata']['costCurrencyPending']);
+		self::assertSame('x', $save['object']['metadata']['provider']);
+		self::assertMatchesRegularExpression('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/', $save['object']['metadata']['costReconciledAt']);
+	}//end testReconcileConvertsAndSavesUnderTheRowId()
 
 	/**
-	 * When the full scan fails too, nothing is reported.
+	 * Rows that are not pending are not scanned; pending rows without a currency,
+	 * with a zero amount or without a rate are scanned but left alone.
 	 *
 	 * @return void
 	 */
-	public function testFailingFullScanReportsNothing(): void {
-		$this->objects->findAllFails = [new RuntimeException('a'), new RuntimeException('b')];
-		$this->objects->rows = [self::pending('m-1')];
+	public function testReconcileSkipsRowsItCannotConvert(): void {
+		$this->objectService->method('findAll')->willReturn(
+			[
+				['metadata' => ['costCurrencyPending' => false, 'costCurrency' => 'USD', 'costSourceAmount' => 1]],
+				['id' => 'no-meta'],
+				self::pending(['costSourceAmount' => 1]),
+				self::pending(['costCurrency' => 'USD', 'costSourceAmount' => 0]),
+				self::pending(['costCurrency' => 'USD', 'costSourceAmount' => -2]),
+				self::pending(['costCurrency' => 'ZZZ', 'costSourceAmount' => 3]),
+			]
+		);
+		$this->objectService->expects(self::never())->method('saveObject');
 
-		$this->assertSame(['scanned' => 0, 'reconciled' => 0], $this->service()->reconcile());
-		$this->assertSame([], $this->objects->saves);
-
-	}//end testFailingFullScanReportsNothing()
+		self::assertSame(['scanned' => 4, 'reconciled' => 0], $this->service()->reconcile());
+	}//end testReconcileSkipsRowsItCannotConvert()
 
 	/**
-	 * A failed save is logged and not counted; the next row is still saved.
+	 * The id comes from uuid, id or slug, then from @self; with none the row is
+	 * saved as new (uuid null). Entities are read through jsonSerialize.
 	 *
 	 * @return void
 	 */
-	public function testFailedSaveIsLoggedAndNotCounted(): void {
-		$this->objects->rows = [self::pending('m-1'), self::pending('m-2')];
-		$this->objects->saveFailsFor = ['m-1'];
-		$this->logger->expects($this->once())
-			->method('warning')
-			->with('CostReconciliationService.reconcile: save failed', ['id' => 'm-1', 'exception' => 'locked m-1']);
+	public function testReconcileResolvesTheIdFromEveryShape(): void {
+		$entity = $this->createMock(ObjectEntityInterface::class);
+		$entity->method('jsonSerialize')->willReturn(self::pending(['costCurrency' => 'GBP', 'costSourceAmount' => 2], ['slug' => 'by-slug']));
+		$this->objectService->method('findAll')->willReturn(
+			[
+				self::pending(['costCurrency' => 'USD', 'costSourceAmount' => 2], ['id' => 42]),
+				$entity,
+				self::pending(['costCurrency' => 'USD', 'costSourceAmount' => 2], ['uuid' => '', '@self' => ['uuid' => '', 'id' => 'self-id']]),
+				self::pending(['costCurrency' => 'EUR', 'costSourceAmount' => 2], ['@self' => 'not-an-array']),
+			]
+		);
+		$this->recordSaves();
 
-		$this->assertSame(['scanned' => 2, 'reconciled' => 1], $this->service()->reconcile());
-		$this->assertSame(['m-2'], array_column($this->objects->saves, 'uuid'));
-
-	}//end testFailedSaveIsLoggedAndNotCounted()
+		self::assertSame(['scanned' => 4, 'reconciled' => 4], $this->service()->reconcile());
+		self::assertSame(['42', 'by-slug', 'self-id', null], array_column($this->saves, 'uuid'));
+		self::assertSame([1.0, 2.5, 1.0, 2.0], array_map(fn (array $s) => $s['object']['costEur'], $this->saves));
+	}//end testReconcileResolvesTheIdFromEveryShape()
 
 	/**
-	 * Without OpenRegister nothing is scanned.
+	 * A failed save is logged with the row id and not counted; the sweep goes on.
 	 *
 	 * @return void
 	 */
-	public function testNoOpenRegister(): void {
-		$this->openRegister = false;
-		$this->logger->expects($this->once())
-			->method('warning')
-			->with('CostReconciliationService.getObjectService: OpenRegister unavailable');
+	public function testReconcileLogsAFailedSaveAndContinues(): void {
+		$this->objectService->method('findAll')->willReturn(
+			[
+				self::pending(['costCurrency' => 'USD', 'costSourceAmount' => 1], ['id' => 'bad']),
+				self::pending(['costCurrency' => 'USD', 'costSourceAmount' => 1], ['id' => 'good']),
+			]
+		);
+		$this->objectService->method('saveObject')->willReturnCallback(
+			fn (array $object) => ($object['id'] === 'bad') ? throw new RuntimeException('locked') : $this->createMock(ObjectEntityInterface::class)
+		);
+		$this->logger->expects(self::once())->method('warning')->with(
+			'CostReconciliationService.reconcile: save failed',
+			['id' => 'bad', 'exception' => 'locked']
+		);
 
-		$this->assertSame(['scanned' => 0, 'reconciled' => 0], $this->service()->reconcile());
-		$this->assertSame([], $this->objects->queries);
+		self::assertSame(['scanned' => 2, 'reconciled' => 1], $this->service()->reconcile());
+	}//end testReconcileLogsAFailedSaveAndContinues()
 
-	}//end testNoOpenRegister()
+	/**
+	 * When the filtered query fails the sweep falls back to scanning the whole
+	 * schema, and still only converts the pending rows.
+	 *
+	 * @return void
+	 */
+	public function testReconcileFallsBackToAFullScan(): void {
+		$calls = [];
+		$this->objectService->method('findAll')->willReturnCallback(
+			function (array $config) use (&$calls): array {
+				$calls[] = $config['filters'];
+				if (count($calls) === 1) {
+					throw new RuntimeException('unknown filter');
+				}
+
+				return [
+					['id' => 'done', 'metadata' => ['costCurrencyPending' => false]],
+					self::pending(['costCurrency' => 'USD', 'costSourceAmount' => 4], ['id' => 'todo']),
+				];
+			}
+		);
+		$this->recordSaves();
+		$this->logger->expects(self::once())->method('warning')->with(
+			'CostReconciliationService.reconcile: findAll failed — falling back to full scan',
+			['exception' => 'unknown filter']
+		);
+
+		self::assertSame(['scanned' => 1, 'reconciled' => 1], $this->service()->reconcile());
+		self::assertSame(['register' => 'pipelinq', 'schema' => 'channelMessage'], $calls[1]);
+		self::assertSame(['todo'], array_column($this->saves, 'uuid'));
+	}//end testReconcileFallsBackToAFullScan()
+
+	/**
+	 * When the full scan fails too the sweep reports nothing done.
+	 *
+	 * @return void
+	 */
+	public function testReconcileReportsNothingWhenBothQueriesFail(): void {
+		$this->objectService->expects(self::exactly(2))->method('findAll')->willThrowException(new RuntimeException('down'));
+		$this->objectService->expects(self::never())->method('saveObject');
+
+		self::assertSame(['scanned' => 0, 'reconciled' => 0], $this->service()->reconcile());
+	}//end testReconcileReportsNothingWhenBothQueriesFail()
+
+	/**
+	 * Without OpenRegister the sweep logs it and reports nothing done.
+	 *
+	 * @return void
+	 */
+	public function testReconcileWithoutOpenRegister(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willThrowException(new RuntimeException('not installed'));
+		$this->logger->expects(self::once())->method('warning')->with(
+			'CostReconciliationService.getObjectService: OpenRegister unavailable',
+			['exception' => 'not installed']
+		);
+		$service = new CostReconciliationService(
+			$container,
+			$this->appConfig,
+			new MessagingExchangeRateService($this->appConfig, $this->logger),
+			$this->logger,
+		);
+
+		self::assertSame(['scanned' => 0, 'reconciled' => 0], $service->reconcile());
+	}//end testReconcileWithoutOpenRegister()
 }//end class

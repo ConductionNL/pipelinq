@@ -22,9 +22,10 @@
 
 ## 3. pipelinq: the engine
 
-- [ ] 3.1 `SegmentService::normaliseRules()` called by `validateRules()`, `evaluateRules()` and the read of a stored segment; the depth cap of 5
+- [x] 3.1 `SegmentService::normaliseRules()` called by `validateRules()`, `evaluateRules()` and the read of a stored segment; the depth cap of 5
   - Files: lib/Service/SegmentService.php
   - Test: tests/Unit/Service/SegmentServiceTest.php (testBareLeafRulesReadAsOneAndGroup, testLeafListRulesReadAsOneAndGroup, testTreeDeeperThanFiveGroupsIsRefused)
+  - done: `lib/Service/Marketing/SegmentRuleTree.php` (`normalise()`, `depth()`, `MAX_DEPTH` 5), used by `validateRules()`, `evaluateRules()`, `extractRules()` (the read of a stored segment) and before a save, so a save writes the normalised tree. A lone condition is still validated where it stands, so its error paths keep pointing at `$`. Tests: `SegmentServiceTest` (the three named), `SegmentRuleTreeTest`; `SegmentServiceMembersGoldenTest::testExtractRules` now expects the group form.
 - [ ] 3.2 `SegmentQueryCompiler`: the operator table of D4, signal and dotted leaves left out, the three paths
   - Files: lib/Service/Marketing/SegmentQueryCompiler.php (new), lib/Service/SegmentService.php (`countMatchingEntities()`, `getMembersForBlast()`, `previewSegmentMembers()`)
   - Test: tests/Unit/Service/SegmentQueryCompilerTest.php (testRootAndPushesCompilableChildren, testCompiledAndPhpPathsAgreeOnSeedSegments, testNotEqualsCompilesWithIsNull)
@@ -33,9 +34,10 @@
 
 ## 4. pipelinq: access
 
-- [ ] 4.1 `SegmentController::create()` calls `isPrivileged()` before the service call, like `update()`
+- [x] 4.1 `SegmentController::create()` calls `isPrivileged()` before the service call, like `update()`
   - Files: lib/Controller/SegmentController.php
   - Test: tests/Unit/Controller/SegmentControllerTest.php (testCreateRefusesNonPrivilegedUser, testUpdateAllowsAnyPrivilegedUser)
+  - done: already on development: `create()` goes through `crmGate()->privilegedUserId()`; `SegmentControllerTest::testCreateRefusesANonPrivilegedCaller` covers it.
 - [ ] 4.2 Newman: a non-privileged user gets 403 on `POST /api/segments` and nothing is stored
 
 ## 5. Board and live

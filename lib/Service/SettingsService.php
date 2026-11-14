@@ -26,8 +26,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Pipelinq\Service\Access\RegisterAccessSync;
+use OCA\Pipelinq\Service\Export\ExportJobService;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -44,7 +46,7 @@ use UnexpectedValueException;
  *  rather than a constant here so the rule and the service that depends on
  *  it cannot drift, and there is no state an injected instance could hold.
  */
-class SettingsService {
+class SettingsService implements SettingsServiceInterface {
 	private const CONFIG_KEYS = [
 		'register',
 		'currency',
@@ -260,11 +262,17 @@ class SettingsService {
 		// Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
 		// spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.
 		'lead_stale_threshold_days' => '14',
+		// Assign new leads without an assignee in turn (pipeline-lead-rotation,
+		// LeadRotationService). Default off: a handler assigns from the suggestion.
+		'lead_rotation_enabled' => 'false',
 		// BI export + data-warehouse sink — admin settings (bi-export-and-data-warehouse-sink#14.1).
 		'export.retention_days' => '365',
 		'export.default_compression' => 'none',
 		'export.failure_notification_email' => '',
 		'export.at_risk_warning_hours' => '24',
+		// Failed export runs in a row that switch a job off, 1 to 10
+		// (exports-switch-off-after-repeated-failure, ExportJobService::failureThreshold).
+		'export_failure_threshold' => '3',
 		// POS end-of-day Z-report generation + alerting (pos-end-of-day-bookkeeping-post).
 		// The journal raise itself goes to the detected shillinq app
 		// (pipelinq-bookkeeping-to-shillinq); these keys only tune the operational
@@ -425,16 +433,16 @@ class SettingsService {
 	public function getSettings(): array {
 		$config = [];
 		foreach (self::CONFIG_KEYS as $key) {
-			$config[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$config[$key] = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		}
 
 		foreach (self::TUNABLE_DEFAULTS as $key => $default) {
-			$config[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+			$config[$key] = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, $default);
 		}
 
 		foreach (self::SECRET_KEYS as $key) {
 			$config[$key . '_set'] = 'false';
-			if ($this->appConfig->getValueString(Application::APP_ID, $key, '') !== '') {
+			if ($this->appConfig->getValueString(AppIdentity::APP_ID, $key, '') !== '') {
 				$config[$key . '_set'] = 'true';
 			}
 		}
@@ -455,28 +463,29 @@ class SettingsService {
 	 */
 	public function updateSettings(array $data): array {
 		$this->refuseAMatomoToken(data: $data);
+		$this->refuseAnExportThresholdOutOfRange(data: $data);
 
 		foreach (self::CONFIG_KEYS as $key) {
 			if (isset($data[$key]) === true) {
-				$this->appConfig->setValueString(Application::APP_ID, $key, (string)$data[$key]);
+				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$data[$key]);
 			}
 		}
 
 		foreach (array_keys(array: self::TUNABLE_DEFAULTS) as $key) {
 			if (isset($data[$key]) === true) {
-				$this->appConfig->setValueString(Application::APP_ID, $key, (string)$data[$key]);
+				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$data[$key]);
 			}
 		}
 
 		foreach (self::SECRET_KEYS as $key) {
 			if ((string)($data[$key . '_clear'] ?? '') === 'true') {
-				$this->appConfig->deleteKey(Application::APP_ID, $key);
+				$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 				continue;
 			}
 
 			$value = trim((string)($data[$key] ?? ''));
 			if ($value !== '') {
-				$this->appConfig->setValueString(Application::APP_ID, $key, $value, false, true);
+				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $value, false, true);
 			}
 		}
 
@@ -517,6 +526,31 @@ class SettingsService {
 			. 'so Pipelinq never holds the secret.'
 		);
 	}//end refuseAMatomoToken()
+
+	/**
+	 * Refuse an export failure threshold that is not a whole number from 1 to 10,
+	 * so the stored threshold stays as it was.
+	 *
+	 * @param array $data The settings data being written.
+	 *
+	 * @return void
+	 *
+	 * @throws UnexpectedValueException When the threshold is out of range.
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-administrator-sets-the-threshold-req-efs-004
+	 */
+	private function refuseAnExportThresholdOutOfRange(array $data): void {
+		if (isset($data[ExportJobService::FAILURE_THRESHOLD_KEY]) === false) {
+			return;
+		}
+
+		$value = trim((string)$data[ExportJobService::FAILURE_THRESHOLD_KEY]);
+		if (ExportJobService::isValidThreshold(value: $value) === true) {
+			return;
+		}
+
+		throw new UnexpectedValueException('Enter a number from 1 to 10');
+	}//end refuseAnExportThresholdOutOfRange()
 
 	/**
 	 * Load settings by importing the register JSON via ConfigurationService.
@@ -577,7 +611,7 @@ class SettingsService {
 		foreach (self::USER_SETTING_DEFAULTS as $key => $default) {
 			$settings[$key] = $this->config->getUserValue(
 				userId: $userId,
-				appName: Application::APP_ID,
+				appName: AppIdentity::APP_ID,
 				key: $key,
 				default: $default
 			) === 'true';
@@ -605,7 +639,7 @@ class SettingsService {
 
 				$this->config->setUserValue(
 					userId: $userId,
-					appName: Application::APP_ID,
+					appName: AppIdentity::APP_ID,
 					key: $key,
 					value: $value
 				);
@@ -626,7 +660,7 @@ class SettingsService {
 	 * @spec openspec/changes/archive/retrofit-2026-05-24-admin-settings/tasks.md#task-1
 	 */
 	public function getConfigValue(string $key, string $default = ''): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, $default);
 	}//end getConfigValue()
 
 	/**
@@ -640,7 +674,7 @@ class SettingsService {
 	 * @spec openspec/changes/archive/retrofit-2026-05-24-admin-settings/tasks.md#task-1
 	 */
 	public function setConfigValue(string $key, string $value): void {
-		$this->appConfig->setValueString(Application::APP_ID, $key, $value);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $value);
 	}//end setConfigValue()
 
 	/**
@@ -659,7 +693,7 @@ class SettingsService {
 	 * @spec openspec/specs/pipelinq-or-adoption/spec.md
 	 */
 	public function getIntValue(string $key, int $default): int {
-		return $this->appConfig->getValueInt(Application::APP_ID, $key, $default);
+		return $this->appConfig->getValueInt(AppIdentity::APP_ID, $key, $default);
 	}//end getIntValue()
 
 	/**
@@ -678,6 +712,6 @@ class SettingsService {
 	 * @spec openspec/specs/pipelinq-or-adoption/spec.md
 	 */
 	public function getStringValue(string $key, string $default): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, $default);
 	}//end getStringValue()
 }//end class

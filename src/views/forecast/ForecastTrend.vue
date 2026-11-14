@@ -464,7 +464,7 @@ export default {
 }
 
 .accuracy--amber {
-	color: #f59e0b;
+	color: var(--color-warning, #f59e0b);
 	font-weight: 600;
 }
 

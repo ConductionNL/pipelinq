@@ -35,7 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\Migration\IOutput;
@@ -79,12 +79,12 @@ class MigrateContactMomentDirection implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
 	 * @param IGroupManager $groupManager Group manager, used to resolve an acting admin.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private TicketService $ticketService,
+		private TicketServiceInterface $ticketService,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 	) {
@@ -116,7 +116,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 	public function directionFor(array $data): ?string {
 		$existing = ($data['direction'] ?? null);
 		if (is_string($existing) === true
-			&& in_array($existing, TicketService::DIRECTIONS, true) === true
+			&& in_array($existing, TicketServiceInterface::DIRECTIONS, true) === true
 		) {
 			return null;
 		}
@@ -176,7 +176,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 				'filters' => [
 					'register' => $register,
 					'schema' => $schema,
-					'ticketType' => TicketService::TYPE_CONTACTMOMENT,
+					'ticketType' => TicketServiceInterface::TYPE_CONTACTMOMENT,
 				],
 				'limit' => self::BATCH_LIMIT,
 			],

@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyPaymentServiceInterface;
 use RuntimeException;
 
 /**
@@ -32,7 +33,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
  */
-class LoyaltyPaymentService {
+class LoyaltyPaymentService implements LoyaltyPaymentServiceInterface {
 	/**
 	 * Constructor.
 	 *

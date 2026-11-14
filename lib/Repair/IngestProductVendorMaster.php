@@ -47,10 +47,10 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCA\Pipelinq\Repair\Support\SourceRecordLink;
 use OCA\Pipelinq\Repair\Support\SupplierTarget;
-use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -134,14 +134,14 @@ class IngestProductVendorMaster implements IRepairStep {
 	 *
 	 * @param IAppManager $appManager The app manager.
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param ContactVcardService $contactVcardService The vCard sync service.
+	 * @param ContactVcardServiceInterface $contactVcardService The vCard sync service.
 	 * @param ContainerInterface $container The DI container (ObjectService lookup).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $appConfig,
-		private readonly ContactVcardService $contactVcardService,
+		private readonly ContactVcardServiceInterface $contactVcardService,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 	) {
@@ -177,7 +177,7 @@ class IngestProductVendorMaster implements IRepairStep {
 			return;
 		}
 
-		$exportJson = $this->appConfig->getValueString(Application::APP_ID, 'shillinq_pvm_export', '');
+		$exportJson = $this->appConfig->getValueString(AppIdentity::APP_ID, 'shillinq_pvm_export', '');
 		if ($exportJson === '') {
 			$output->info('No shillinq PVM export found in app-config — skipping ingest (no-op).');
 			return;
@@ -201,12 +201,12 @@ class IngestProductVendorMaster implements IRepairStep {
 
 			// Persist the FK maps so shillinq can pick them up.
 			$this->appConfig->setValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'shillinq_pvm_product_map',
 				json_encode($maps['products'])
 			);
 			$this->appConfig->setValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'shillinq_pvm_vendor_map',
 				json_encode($maps['vendors'])
 			);
@@ -320,8 +320,8 @@ class IngestProductVendorMaster implements IRepairStep {
 	private function ingestProduct(array $shillinqProduct): ?string {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'product_schema', '');
+			$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+			$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'product_schema', '');
 
 			if ($registerId === '' || $schemaId === '') {
 				$this->logger->warning('PVM ingest: product register/schema not configured');
@@ -434,8 +434,8 @@ class IngestProductVendorMaster implements IRepairStep {
 	private function vendorSupplierTarget(array $vendor): ?SupplierTarget {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'supplier_schema', '');
+			$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+			$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'supplier_schema', '');
 		} catch (\Throwable $e) {
 			$this->logVendorFailure(vendor: $vendor, error: $e);
 			return null;
@@ -896,7 +896,7 @@ class IngestProductVendorMaster implements IRepairStep {
 	 */
 	private function writeSourceRecord(mixed $objectService, string $registerId, SourceRecordLink $link): void {
 		$sourceRecordSchemaId = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'sourceRecord_schema',
 			''
 		);

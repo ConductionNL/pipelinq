@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\WebForm\HeldObjectDrain;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\HeldObjectDrainInterface;
 use OCP\IAppConfig;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -58,13 +58,13 @@ class EnquiryDrainCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param HeldObjectDrain $drain     The drain.
+	 * @param HeldObjectDrainInterface $drain     The drain.
 	 * @param IAppConfig      $appConfig App configuration: register and enquiry schema ids.
 	 *
 	 * @spec exclude constructor wiring only; it makes no decision a requirement can describe
 	 */
 	public function __construct(
-		private readonly HeldObjectDrain $drain,
+		private readonly HeldObjectDrainInterface $drain,
 		private readonly IAppConfig $appConfig,
 	) {
 		parent::__construct();
@@ -104,8 +104,8 @@ class EnquiryDrainCommand extends Command {
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$apply = (bool)$input->getOption('apply');
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$enquiry = $this->appConfig->getValueString(Application::APP_ID, 'enquiry_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$enquiry = $this->appConfig->getValueString(AppIdentity::APP_ID, 'enquiry_schema', '');
 		if ($register === '') {
 			$output->writeln('<error>The pipelinq register is not configured.</error>');
 			return 1;

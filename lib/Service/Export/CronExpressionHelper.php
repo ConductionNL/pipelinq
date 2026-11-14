@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use DateTimeImmutable;
+use OCA\Pipelinq\Kernel\Contracts\CronExpressionHelperInterface;
 
 /**
  * Validates and describes 5-field UNIX cron expressions and @-shortcuts.
@@ -44,7 +45,7 @@ use DateTimeImmutable;
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
-class CronExpressionHelper {
+class CronExpressionHelper implements CronExpressionHelperInterface {
 	/**
 	 * Supported @-shortcuts mapped to their 5-field equivalents.
 	 *

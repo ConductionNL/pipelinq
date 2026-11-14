@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\TouchpointServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 
 /**
@@ -40,7 +41,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
  *
  * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
  */
-class TouchpointService {
+class TouchpointService implements TouchpointServiceInterface {
 
 	/**
 	 * The schema slug the register fragment declares.
@@ -61,7 +62,7 @@ class TouchpointService {
 	 *
 	 * @var array<int, string>
 	 */
-	public const KINDS = ['click', 'visit', 'submit', 'reply'];
+	public const KINDS = ['click', 'visit', 'submit', 'reply', 'attend'];
 
 	/**
 	 * Constructor.

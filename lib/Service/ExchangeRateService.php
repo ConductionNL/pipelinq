@@ -25,8 +25,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExchangeRateServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 
@@ -45,17 +46,7 @@ use OCP\IAppConfig;
  * @spec exclude infrastructure utility with no feature requirement of its own; it is
  *   exercised through the features that call it
  */
-class ExchangeRateService {
-	/**
-	 * App-config key for the org reporting currency.
-	 *
-	 * The one the setup wizard stores and manifest dashboards format with
-	 * (`@config.currency`). The forecast used to keep a second setting for the
-	 * same thing (pipelinq#2040); that key is still read as a fallback.
-	 *
-	 * @var string
-	 */
-	public const REPORTING_CURRENCY_KEY = 'currency';
+class ExchangeRateService implements ExchangeRateServiceInterface {
 
 	/**
 	 * The forecast's former reporting-currency key, read only when the setup
@@ -71,34 +62,6 @@ class ExchangeRateService {
 	 * @var string
 	 */
 	public const REPORTING_CURRENCY_DEFAULT = 'EUR';
-
-	/**
-	 * App-config key for the JSON rate table (source currency => rate).
-	 *
-	 * @var string
-	 */
-	public const RATES_KEY = 'forecast_exchange_rates';
-
-	/**
-	 * App-config key for administrator overrides.
-	 *
-	 * @var string
-	 */
-	public const OVERRIDES_KEY = RateOverrideStore::OVERRIDES_KEY;
-
-	/**
-	 * App-config key for the typed dates of the rate table.
-	 *
-	 * @var string
-	 */
-	public const RATE_DATES_KEY = RateOverrideStore::RATE_DATES_KEY;
-
-	/**
-	 * App-config key for the age in days past which a rate is stale.
-	 *
-	 * @var string
-	 */
-	public const MAX_RATE_AGE_KEY = 'forecast_max_rate_age_days';
 
 	/**
 	 * Default stale limit in days.
@@ -152,7 +115,7 @@ class ExchangeRateService {
 	 */
 	public function getReportingCurrency(): string {
 		foreach ([self::REPORTING_CURRENCY_KEY, self::LEGACY_REPORTING_CURRENCY_KEY] as $key) {
-			$currency = strtoupper(trim($this->appConfig->getValueString(Application::APP_ID, $key, '')));
+			$currency = strtoupper(trim($this->appConfig->getValueString(AppIdentity::APP_ID, $key, '')));
 			if ($currency !== '') {
 				return $currency;
 			}
@@ -257,7 +220,7 @@ class ExchangeRateService {
 	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-a-stale-rate-is-shown-as-stale-req-dxr-002
 	 */
 	public function getMaxRateAgeDays(): int {
-		$days = $this->appConfig->getValueInt(Application::APP_ID, self::MAX_RATE_AGE_KEY, self::MAX_RATE_AGE_DEFAULT);
+		$days = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::MAX_RATE_AGE_KEY, self::MAX_RATE_AGE_DEFAULT);
 		if ($days < 1) {
 			return self::MAX_RATE_AGE_DEFAULT;
 		}
@@ -273,7 +236,7 @@ class ExchangeRateService {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-05
 	 */
 	public function getRates(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, self::RATES_KEY, '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::RATES_KEY, '');
 		$table = json_decode($raw, true);
 		if (is_array($table) === false) {
 			return [];

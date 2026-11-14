@@ -51,7 +51,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
 use OCA\Pipelinq\Service\Social\SocialGatewayResult;
@@ -84,7 +85,7 @@ use OCP\IAppConfig;
  *  short; splitting the class would separate the gate from the path it gates,
  *  which is the arrangement that lets a gate be skipped.
  */
-class SocialPostService {
+class SocialPostService implements SocialPostServiceInterface {
 	/**
 	 * The post schema slug, matching the register fragment.
 	 *
@@ -911,7 +912,7 @@ class SocialPostService {
 	 * @return string The tenant id.
 	 */
 	private function tenantId(): string {
-		$tenantId = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
+		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
 		if ($tenantId !== '') {
 			return $tenantId;
 		}

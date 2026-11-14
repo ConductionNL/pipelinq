@@ -28,11 +28,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
-use OCA\Pipelinq\Service\Portal\PortalRequestService;
-use OCA\Pipelinq\Service\Portal\PortalTenantService;
-use OCA\Pipelinq\Service\TicketService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -73,21 +73,21 @@ class ResidentViewController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                   $request  The request.
-	 * @param TicketService              $tickets  Register and schema of the ticket supertype, and OpenRegister.
-	 * @param PortalRequestService       $requests The resident portal's request presenter.
+	 * @param TicketServiceInterface              $tickets  Register and schema of the ticket supertype, and OpenRegister.
+	 * @param PortalRequestServiceInterface       $requests The resident portal's request presenter.
 	 * @param PortalContributionProvider $portal   pipelinq's contribution to portaliq.
-	 * @param PortalTenantService        $tenants  The portal tenant settings.
+	 * @param PortalTenantServiceInterface        $tenants  The portal tenant settings.
 	 * @param IAppManager                $apps     Whether portaliq is installed.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly TicketService $tickets,
-		private readonly PortalRequestService $requests,
+		private readonly TicketServiceInterface $tickets,
+		private readonly PortalRequestServiceInterface $requests,
 		private readonly PortalContributionProvider $portal,
-		private readonly PortalTenantService $tenants,
+		private readonly PortalTenantServiceInterface $tenants,
 		private readonly IAppManager $apps,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -130,7 +130,7 @@ class ResidentViewController extends Controller {
 		}
 
 		$data   = $ticket->getObject();
-		$expose = ($this->tenants->getConfig(PortalTenantService::DEFAULT_TENANT)['exposeAssigneeName'] ?? false) === true;
+		$expose = ($this->tenants->getConfig(PortalTenantServiceInterface::DEFAULT_TENANT)['exposeAssigneeName'] ?? false) === true;
 
 		$bespoke = $this->requests->previewDetail(ticket: $data, exposeAssigneeName: $expose);
 		$shown   = [];

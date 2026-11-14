@@ -27,14 +27,15 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for POS staff business operations.
@@ -54,7 +55,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#3
  */
-class PosStaffService {
+class PosStaffService implements PosStaffServiceInterface {
 	use CastingPayloadToArray;
 
 	/**
@@ -631,8 +632,8 @@ class PosStaffService {
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');

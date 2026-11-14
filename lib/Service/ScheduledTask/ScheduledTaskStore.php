@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\Service\ScheduledTask;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\LanguageService;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -73,8 +73,8 @@ class ScheduledTaskStore {
 	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function location(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped'

@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\IL10N;
 use OCP\Mail\IMailer;
@@ -56,7 +57,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-self-service-subscribe-creates-a-pending-subscription
  */
-class SubscriptionService {
+class SubscriptionService implements SubscriptionServiceInterface {
 	/**
 	 * A membership awaiting its confirmation link.
 	 *
@@ -515,15 +516,6 @@ class SubscriptionService {
 		return true;
 	}//end confirmForContact()
 
-
-
-
-
-
-
-
-
-
 	/**
 	 * Resolve the Subscription schema slug from app config.
 	 *
@@ -608,7 +600,6 @@ class SubscriptionService {
 		}
 	}//end sendConfirmationMail()
 
-
 	/**
 	 * Close one membership and record the withdrawal.
 	 *
@@ -666,7 +657,6 @@ class SubscriptionService {
 
 		return $this->loadSubscription(id: (string)($payload['s'] ?? ''));
 	}//end subscriptionForUnsubscribeToken()
-
 
 	/**
 	 * The key the consent ledger is written under for a membership.
@@ -749,8 +739,6 @@ class SubscriptionService {
 		);
 	}//end save()
 
-
-
 	/**
 	 * Current UTC timestamp in the format the schemas declare.
 	 *
@@ -759,7 +747,6 @@ class SubscriptionService {
 	private function nowIso(): string {
 		return gmdate('Y-m-d\TH:i:s\Z');
 	}//end nowIso()
-
 
 	/**
 	 * Extract the canonical id from an entity payload.

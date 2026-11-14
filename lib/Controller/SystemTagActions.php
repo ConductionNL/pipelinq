@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\SystemTagService;
+use OCA\Pipelinq\Kernel\Contracts\SystemTagServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IUser;
@@ -39,11 +39,11 @@ final class SystemTagActions {
 	/**
 	 * Constructor.
 	 *
-	 * @param SystemTagService $systemTagService The system tag service.
+	 * @param SystemTagServiceInterface $systemTagService The system tag service.
 	 * @param SystemTagKind    $kind             The tag type and its controller's log label.
 	 */
 	public function __construct(
-		private readonly SystemTagService $systemTagService,
+		private readonly SystemTagServiceInterface $systemTagService,
 		private readonly SystemTagKind $kind,
 	) {
 	}//end __construct()
