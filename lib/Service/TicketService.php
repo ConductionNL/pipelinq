@@ -259,6 +259,18 @@ class TicketService implements TicketServiceInterface {
 			$query['sort'] = $sort;
 		}
 
+		return $this->findAllLogged(query: $query, ticketType: $ticketType);
+	}//end findByType()
+
+	/**
+	 * The tickets matching the query, none (logged) when OpenRegister fails.
+	 *
+	 * @param array<string, mixed> $query      The findAll query.
+	 * @param string               $ticketType The subtype, for the log.
+	 *
+	 * @return array<int, mixed> The matching ticket rows.
+	 */
+	private function findAllLogged(array $query, string $ticketType): array {
 		try {
 			return $this->getObjectService()->findAll($query);
 		} catch (\Throwable $e) {
@@ -268,7 +280,7 @@ class TicketService implements TicketServiceInterface {
 			);
 			return [];
 		}
-	}//end findByType()
+	}//end findAllLogged()
 
 	/**
 	 * Create or update a ticket of one subtype.
