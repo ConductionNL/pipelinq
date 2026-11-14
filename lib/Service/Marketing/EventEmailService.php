@@ -174,6 +174,31 @@ class EventEmailService implements EventEmailServiceInterface {
 	}//end sendClosed()
 
 	/**
+	 * Tell someone with a place, or on the waiting list, that the event is cancelled.
+	 *
+	 * No calendar file and no cancel link: there is nothing left to attend or cancel.
+	 *
+	 * @param array<string, mixed> $event        The cancelled event.
+	 * @param array<string, mixed> $registration The registration.
+	 *
+	 * @return bool True when the mail was accepted for delivery.
+	 *
+	 * @spec openspec/changes/marketing-events/tasks.md#3.1
+	 */
+	public function sendEventCancelled(array $event, array $registration): bool {
+		$title = $this->title(event: $event);
+		return $this->dispatch(
+			registration: $registration,
+			subject: $this->l10n->t('%s is cancelled', [$title]),
+			body: $this->l10n->t(
+				'We are sorry: %1$s on %2$s is cancelled. Your registration lapses; you do not need to do anything.',
+				[$title, $this->when(event: $event)]
+			),
+			ics: null
+		);
+	}//end sendEventCancelled()
+
+	/**
 	 * Remind a registered person the day before, with the join link of an online event.
 	 *
 	 * @param array<string, mixed> $event        The event.

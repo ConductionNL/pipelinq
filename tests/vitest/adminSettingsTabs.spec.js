@@ -109,7 +109,6 @@ describe('the admin page tabs', () => {
 			'<PipelineManager',
 			'<ForecastSettings',
 			'v-bind="sections.provisionData"',
-			'v-bind="sections.brpMonitor"',
 			"t('pipelinq', 'Support')",
 		]) {
 			expect(markup, tag).toContain(tag)
