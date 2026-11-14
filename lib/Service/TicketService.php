@@ -509,33 +509,21 @@ class TicketService implements TicketServiceInterface {
 		?string $outcome = null,
 		?string $notes = null,
 	): array {
-		$client = trim($client);
-		$channel = trim($channel);
-		$title = trim($title);
-		$direction = trim($direction);
-
-		$refusal = $this->contactmomentArgumentError(client: $client, channel: $channel, title: $title, direction: $direction);
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		if ($this->isConfigured() === false) {
-			return $this->mcp->error(
-				code: 'not_configured',
-				message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
-			);
-		}
-
-		$payload = $this->contactmomentPayload(
-			client: $client,
-			channel: $channel,
-			title: $title,
-			direction: $direction,
+		$entry = new ContactmomentEntry(
+			client: trim($client),
+			channel: trim($channel),
+			title: trim($title),
+			direction: trim($direction),
 			outcome: $outcome,
 			notes: $notes
 		);
 
-		return $this->saveContactmoment(payload: $payload);
+		$refusal = $this->contactmomentRefusal(entry: $entry);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->saveContactmoment(payload: $this->contactmomentPayload(entry: $entry));
 	}//end logContactmoment()
 
 	/**
@@ -560,6 +548,25 @@ class TicketService implements TicketServiceInterface {
 	}//end saveContactmoment()
 
 	/**
+	 * The refusal for an invalid logContactmoment() argument or an unconfigured app.
+	 *
+	 * @param ContactmomentEntry $entry The trimmed arguments.
+	 *
+	 * @return array<string, mixed>|null The error envelope, or null when the contactmoment may be saved.
+	 */
+	private function contactmomentRefusal(ContactmomentEntry $entry): ?array {
+		$refusal = $this->contactmomentArgumentError(entry: $entry);
+		if ($refusal !== null || $this->isConfigured() === true) {
+			return $refusal;
+		}
+
+		return $this->mcp->error(
+			code: 'not_configured',
+			message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
+		);
+	}//end contactmomentRefusal()
+
+	/**
 	 * The refusal for the first missing or invalid logContactmoment() argument.
 	 *
 	 * Direction is required on a contactmoment (REQ-CMD-001) and is
@@ -568,21 +575,18 @@ class TicketService implements TicketServiceInterface {
 	 * optional in the SIGNATURE only, so an existing caller gets a named
 	 * refusal instead of a TypeError.
 	 *
-	 * @param string $client    The trimmed client UUID.
-	 * @param string $channel   The trimmed channel.
-	 * @param string $title     The trimmed title.
-	 * @param string $direction The trimmed direction.
+	 * @param ContactmomentEntry $entry The trimmed arguments.
 	 *
 	 * @return array<string, mixed>|null The error envelope, or null when every argument is valid.
 	 */
-	private function contactmomentArgumentError(string $client, string $channel, string $title, string $direction): ?array {
-		foreach (['client' => $client, 'channel' => $channel, 'title' => $title, 'direction' => $direction] as $name => $value) {
+	private function contactmomentArgumentError(ContactmomentEntry $entry): ?array {
+		foreach ($entry->requiredFields() as $name => $value) {
 			if ($value === '') {
 				return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument ' . $name . ' is missing.');
 			}
 		}
 
-		if (in_array($direction, self::DIRECTIONS, true) === false) {
+		if (in_array($entry->direction, self::DIRECTIONS, true) === false) {
 			return $this->mcp->error(
 				code: 'invalid_arguments',
 				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
@@ -595,37 +599,20 @@ class TicketService implements TicketServiceInterface {
 	/**
 	 * The contactmoment ticket payload; empty optional fields are left out.
 	 *
-	 * @param string      $client    The client UUID.
-	 * @param string      $channel   The channel.
-	 * @param string      $title     The title.
-	 * @param string      $direction The direction.
-	 * @param string|null $outcome   The optional outcome.
-	 * @param string|null $notes     The optional notes, stored as the description.
+	 * @param ContactmomentEntry $entry The trimmed arguments; notes are stored as the description.
 	 *
 	 * @return array<string, mixed> The payload.
 	 */
-	private function contactmomentPayload(
-		string $client,
-		string $channel,
-		string $title,
-		string $direction,
-		?string $outcome,
-		?string $notes,
-	): array {
-		$payload = [
-			'client' => $client,
-			'channel' => $channel,
-			'title' => $title,
-			'direction' => $direction,
-			'occurredAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
-		];
+	private function contactmomentPayload(ContactmomentEntry $entry): array {
+		$payload = $entry->requiredFields();
+		$payload['occurredAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
-		if ($outcome !== null && $outcome !== '') {
-			$payload['outcome'] = $outcome;
+		if ($entry->outcome !== null && $entry->outcome !== '') {
+			$payload['outcome'] = $entry->outcome;
 		}
 
-		if ($notes !== null && $notes !== '') {
-			$payload['description'] = $notes;
+		if ($entry->notes !== null && $entry->notes !== '') {
+			$payload['description'] = $entry->notes;
 		}
 
 		return $payload;

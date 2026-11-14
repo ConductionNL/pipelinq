@@ -392,24 +392,7 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 			return ['status' => $this->refusalStatus(state: $state), 'state' => $state];
 		}
 
-		$now = new DateTimeImmutable();
-		$survey = $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), schemaKey: self::SURVEY_SCHEMA_KEY);
-		$scored = $this->score(survey: $survey, answers: $answers);
-
-		$response = array_merge(
-			[
-				'surveyRef' => (string)($invitation['surveyRef'] ?? ''),
-				'invitationRef' => $this->uuidOf(row: $invitation),
-				'clientRef' => (string)($invitation['clientRef'] ?? ''),
-				'contactRef' => (string)($invitation['contactRef'] ?? ''),
-				'linkedEntityType' => (string)($invitation['linkedEntityType'] ?? ''),
-				'linkedEntityId' => (string)($invitation['linkedEntityId'] ?? ''),
-				'answers' => $answers,
-				'submittedAt' => $now->format(DateTimeInterface::ATOM),
-			],
-			$scored
-		);
-
+		$response = $this->newResponse(invitation: $invitation, answers: $answers);
 		$responseId = $this->writeResponse(response: $response);
 		if ($responseId === '') {
 			return ['status' => 500, 'error' => 'The response could not be saved.'];
@@ -419,13 +402,7 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 
 		// The invitation is closed FIRST, so a second submission arriving
 		// while the follow-up is still being raised finds the token spent.
-		$invitation['status'] = 'responded';
-		$invitation['respondedAt'] = $now->format(DateTimeInterface::ATOM);
-		$invitation['responseRef'] = $responseId;
-		$this->dispatchService->write(
-			invitation: $invitation,
-			uuid: $this->uuidOf(row: $invitation),
-		);
+		$this->closeInvitation(invitation: $invitation, response: $response);
 
 		if ($optOut === true) {
 			$this->optOut->record(contactRef: (string)($invitation['contactRef'] ?? ''));
@@ -438,6 +415,52 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 
 		return ['status' => 201, 'response' => $response];
 	}//end submit()
+
+	/**
+	 * The response to an open invitation, scored against its survey and stamped now.
+	 *
+	 * @param array<string, mixed> $invitation The open invitation.
+	 * @param array<string, mixed> $answers    The answers.
+	 *
+	 * @return array<string, mixed> The unsaved response.
+	 */
+	private function newResponse(array $invitation, array $answers): array {
+		$now = new DateTimeImmutable();
+		$survey = $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), schemaKey: self::SURVEY_SCHEMA_KEY);
+		$scored = $this->score(survey: $survey, answers: $answers);
+
+		return array_merge(
+			[
+				'surveyRef' => (string)($invitation['surveyRef'] ?? ''),
+				'invitationRef' => $this->uuidOf(row: $invitation),
+				'clientRef' => (string)($invitation['clientRef'] ?? ''),
+				'contactRef' => (string)($invitation['contactRef'] ?? ''),
+				'linkedEntityType' => (string)($invitation['linkedEntityType'] ?? ''),
+				'linkedEntityId' => (string)($invitation['linkedEntityId'] ?? ''),
+				'answers' => $answers,
+				'submittedAt' => $now->format(DateTimeInterface::ATOM),
+			],
+			$scored
+		);
+	}//end newResponse()
+
+	/**
+	 * Mark the invitation responded at the response's submission time.
+	 *
+	 * @param array<string, mixed> $invitation The invitation.
+	 * @param array<string, mixed> $response   The saved response, with its id.
+	 *
+	 * @return void
+	 */
+	private function closeInvitation(array $invitation, array $response): void {
+		$invitation['status'] = 'responded';
+		$invitation['respondedAt'] = $response['submittedAt'];
+		$invitation['responseRef'] = $response['id'];
+		$this->dispatchService->write(
+			invitation: $invitation,
+			uuid: $this->uuidOf(row: $invitation),
+		);
+	}//end closeInvitation()
 
 	/**
 	 * Read one object on the public path, only from pipelinq's register and
