@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\SearchConsole;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -87,8 +87,8 @@ class SearchQueryDailyStore {
 			return false;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', self::DEFAULT_REGISTER_SLUG);
-		$schema = $this->appConfig->getValueString(Application::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', self::DEFAULT_REGISTER_SLUG);
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
 		$identity = ['property' => $property, 'date' => $row['date'], 'query' => $row['query'], 'page' => $row['page']];
 		$existingId = $this->findExistingId(objectService: $objectService, register: $register, schema: $schema, identity: $identity);
 		$payload = ($identity + $row + ['source' => 'gsc', 'importedAt' => $importedAt]);

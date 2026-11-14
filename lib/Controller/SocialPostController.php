@@ -36,11 +36,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SocialPublicationStoreInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\Social\SocialPublicationStore;
-use OCA\Pipelinq\Service\SocialMetricsService;
-use OCA\Pipelinq\Service\SocialPostService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -61,9 +61,9 @@ class SocialPostController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SocialPostService $posts The post lifecycle and publishing.
-	 * @param SocialPublicationStore $publications The per-account result rows.
-	 * @param SocialMetricsService $metrics The ranking.
+	 * @param SocialPostServiceInterface $posts The post lifecycle and publishing.
+	 * @param SocialPublicationStoreInterface $publications The per-account result rows.
+	 * @param SocialMetricsServiceInterface $metrics The ranking.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Privileged-group policy.
 	 *
@@ -71,13 +71,13 @@ class SocialPostController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SocialPostService $posts,
-		private readonly SocialPublicationStore $publications,
-		private readonly SocialMetricsService $metrics,
+		private readonly SocialPostServiceInterface $posts,
+		private readonly SocialPublicationStoreInterface $publications,
+		private readonly SocialMetricsServiceInterface $metrics,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

@@ -25,13 +25,14 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use Exception;
+use OCA\Pipelinq\Kernel\Contracts\ContractFiguresServiceInterface;
 
 /**
  * Reads a contract's figures from the contract alone.
  *
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-a-contract-page-reads-its-figures
  */
-class ContractFiguresService {
+class ContractFiguresService implements ContractFiguresServiceInterface {
 	/**
 	 * Months per billing period.
 	 *

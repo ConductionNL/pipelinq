@@ -30,11 +30,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use Psr\Container\ContainerInterface;
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -80,8 +80,8 @@ abstract class AbstractExportService {
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 */
 	protected function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Export register of schema is niet geconfigureerd.');

@@ -44,14 +44,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Thin, register-scoped wrapper over the OpenRegister ObjectService for the
@@ -65,7 +66,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalObjectRepository {
+class PortalObjectRepository implements PortalObjectRepositoryInterface {
 	use CastingPayloadToArray;
 	use NullableRowIdOf {
 		idOf as public;
@@ -107,9 +108,9 @@ class PortalObjectRepository {
 	 *   audit are all unspecified
 	 */
 	public function registerId(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, self::PORTAL_REGISTER_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PORTAL_REGISTER_KEY, '');
 		if ($register === '') {
-			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+			$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		}
 
 		if ($register === '') {
@@ -136,7 +137,7 @@ class PortalObjectRepository {
 	 */
 	public function schemaId(string $schemaSlug): string {
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaSlug] ?? $schemaSlug . '_schema'),
 			''
 		);

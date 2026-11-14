@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -79,7 +79,7 @@ class OpenDealsController extends Controller {
 		private readonly ObjectServiceInterface $objectService,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -99,13 +99,13 @@ class OpenDealsController extends Controller {
 		}
 
 		[$field, $partyId] = $this->party();
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$leadSchema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($field === '' || $register === '' || $leadSchema === '') {
 			return new JSONResponse(['error' => 'Name one contact or client'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$partySchema = $this->appConfig->getValueString(Application::APP_ID, self::PARTIES[$field], '');
+		$partySchema = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PARTIES[$field], '');
 		if ($this->canRead(id: $partyId, register: $register, schema: $partySchema) === false) {
 			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 		}

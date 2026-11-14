@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\JourneyStepRunnerInterface;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -55,7 +56,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
  */
-class JourneyStepRunner {
+class JourneyStepRunner implements JourneyStepRunnerInterface {
 
 	/**
 	 * The channel a journey mailing uses.

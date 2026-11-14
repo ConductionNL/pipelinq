@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -311,8 +311,8 @@ class ContactVcardPropertyBuilder {
 	 */
 	private function resolveClientName(string $clientId): ?string {
 		$objectService = $this->getObjectService();
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 
 		if ($registerId === '' || $schemaId === '') {
 			return null;

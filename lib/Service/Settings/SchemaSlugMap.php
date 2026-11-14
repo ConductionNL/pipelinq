@@ -34,36 +34,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Settings;
 
+use OCA\Pipelinq\Kernel\Contracts\SchemaSlugMapInterface;
+
 /**
  * Maps a schema slug to the app-config key holding its schema id.
  *
  * @spec openspec/specs/pipelinq-store-surface/spec.md
  */
-final class SchemaSlugMap {
-	/**
-	 * Schema slug to app-config key.
-	 *
-	 * Holds the CONFIGURATION schemas only. A record schema has a config key
-	 * too, and deliberately does not appear here: this map is what the store's
-	 * allowlist is checked against, so an absent slug cannot be written by an
-	 * install even if someone widens the allowlist without thinking.
-	 *
-	 * @var array<string, string>
-	 */
-	public const SLUG_TO_CONFIG_KEY = [
-		'pipeline' => 'pipeline_schema',
-		'skill' => 'skill_schema',
-		'product' => 'product_schema',
-		'productCategory' => 'productCategory_schema',
-		'billingCategory' => 'billingCategory_schema',
-		'posRole' => 'posRole_schema',
-		'posTenderType' => 'posTenderType_schema',
-		'receiptTemplate' => 'receiptTemplate_schema',
-		'refundReason' => 'refundReason_schema',
-		'loyaltyProgramme' => 'loyaltyProgramme_schema',
-		'pointsRule' => 'pointsRule_schema',
-		'berichtenboxTemplate' => 'berichtenboxTemplate_schema',
-	];
+final class SchemaSlugMap implements SchemaSlugMapInterface {
 
 	/**
 	 * Read the app-config key for a slug, or null when the slug is unmapped.

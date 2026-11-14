@@ -34,18 +34,19 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
 use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
 use OCA\Pipelinq\Service\Payment\AdyenAdapter;
-use OCA\Pipelinq\Service\Payment\PaymentRefund;
-use OCA\Pipelinq\Service\Payment\PaymentStart;
 use OCA\Pipelinq\Service\Payment\BrokerHttpTransport;
 use OCA\Pipelinq\Service\Payment\CcvAdapter;
 use OCA\Pipelinq\Service\Payment\MollieAdapter;
 use OCA\Pipelinq\Service\Payment\PaymentProviderInterface;
+use OCA\Pipelinq\Service\Payment\PaymentRefund;
+use OCA\Pipelinq\Service\Payment\PaymentStart;
+use OCA\Pipelinq\Service\Payment\PaymentWebhook;
 use OCA\Pipelinq\Service\Payment\SettlementUpdate;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
-use OCA\Pipelinq\Service\Payment\PaymentWebhook;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -88,15 +89,8 @@ use Throwable;
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
  */
-class PosPaymentService {
+class PosPaymentService implements PosPaymentServiceInterface {
 	use NullablePayloadToArray;
-
-	/**
-	 * IAppConfig key prefix for stored credentials.
-	 *
-	 * @var string
-	 */
-	public const CONFIG_PREFIX = 'payment_provider.';
 
 	/**
 	 * CloudEvent type emitted on settlement.
@@ -120,13 +114,6 @@ class PosPaymentService {
 	private const EVENT_SOURCE = '/apps/pipelinq/pos/payment';
 
 	/**
-	 * Provider names supported by this app.
-	 *
-	 * @var array<int, string>
-	 */
-	public const PROVIDERS = ['mollie', 'ccv', 'adyen', 'stripe'];
-
-	/**
 	 * Sensitive credential field names (encrypted at rest, masked in responses).
 	 *
 	 * `apiKey` and `apiSecret` are GONE from this list. They used to be encrypted here
@@ -144,16 +131,6 @@ class PosPaymentService {
 	 * @var array<int, string>
 	 */
 	public const SENSITIVE_FIELDS = ['webhookSecret'];
-
-	/**
-	 * Credential-field names that used to be stored here and no longer may be.
-	 *
-	 * Kept only so the repair step and the update path can recognise — and refuse —
-	 * them. Nothing reads their values.
-	 *
-	 * @var array<int, string>
-	 */
-	public const RETIRED_SECRET_FIELDS = ['apiKey', 'apiSecret'];
 
 	/**
 	 * The payment methods a provider offers at the till when its config names none.
@@ -1225,7 +1202,7 @@ class PosPaymentService {
 	 */
 	private function readString(string $setting, string $default = ''): string {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			$default
 		);
@@ -1243,7 +1220,7 @@ class PosPaymentService {
 	 */
 	private function readBool(string $setting, bool $default = false): bool {
 		$raw = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			''
 		);
@@ -1264,7 +1241,7 @@ class PosPaymentService {
 	 */
 	private function readObject(string $name, string $key): array {
 		$raw = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->settingKey(name: $name, key: $key),
 			''
 		);
@@ -1290,7 +1267,7 @@ class PosPaymentService {
 	 */
 	private function writeString(string $setting, string $value): void {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			$value
 		);
@@ -1311,7 +1288,7 @@ class PosPaymentService {
 		}
 
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			$encoded
 		);
@@ -1332,7 +1309,7 @@ class PosPaymentService {
 		}
 
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			$encoded
 		);
@@ -1551,7 +1528,7 @@ class PosPaymentService {
 	 * @return string The configured register id, or '' when unconfigured.
 	 */
 	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq POS payment: app-config "register" is not configured; transaction storage is refused, not run unscoped'
@@ -1574,7 +1551,7 @@ class PosPaymentService {
 	 * @return string The configured schema id, or '' when unconfigured.
 	 */
 	private function posTransactionSchema(): string {
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransaction_schema', '');
 		if ($schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq POS payment: app-config "posTransaction_schema" is not configured; storage is refused, not run unscoped'
@@ -1597,7 +1574,7 @@ class PosPaymentService {
 		}
 
 		$managersGroup = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'pos_managers_group',
 			'pos_managers'
 		);

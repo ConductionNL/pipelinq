@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\MailingListServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 
 /**
@@ -39,7 +40,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
  */
-class MailingListService {
+class MailingListService implements MailingListServiceInterface {
 	/**
 	 * Opt-in mode requiring a confirmed link before a mailing is sent.
 	 *
@@ -468,8 +469,6 @@ class MailingListService {
 	private function nowIso(): string {
 		return gmdate('Y-m-d\TH:i:s\Z');
 	}//end nowIso()
-
-
 
 	/**
 	 * Extract the canonical id from an OpenRegister entity payload.

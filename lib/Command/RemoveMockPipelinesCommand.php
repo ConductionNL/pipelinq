@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\MockPipelineCleanupService;
+use OCA\Pipelinq\Kernel\Contracts\MockPipelineCleanupServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -40,10 +40,10 @@ class RemoveMockPipelinesCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param MockPipelineCleanupService $cleanup The cleanup service.
+	 * @param MockPipelineCleanupServiceInterface $cleanup The cleanup service.
 	 */
 	public function __construct(
-		private MockPipelineCleanupService $cleanup,
+		private MockPipelineCleanupServiceInterface $cleanup,
 	) {
 		parent::__construct();
 	}//end __construct()

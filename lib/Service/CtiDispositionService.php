@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Cti\EscalationQueues;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
@@ -249,8 +249,8 @@ class CtiDispositionService {
 		string $interactionId,
 		?string $groupId = null,
 	): ?string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$taskSchema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$taskSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		if ($register === '' || $taskSchema === '') {
 			$this->logger->warning('CTI disposition: task register/schema not configured -- skipping task creation.');
 			return null;

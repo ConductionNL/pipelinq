@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Lifecycle;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -117,7 +117,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 			return true;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->lineSchema();
 		if ($register === '' || $schema === '') {
 			return true;
@@ -146,7 +146,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	private function lineSchema(): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransactionLine_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransactionLine_schema', '');
 		// Fall back to the numeric schema id resolved from the canonical slug
 		// when the deployed app-config leaves posTransactionLine_schema blank.
 		// findAll()'s `@self.schema` filter requires a numeric id (a slug

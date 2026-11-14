@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
@@ -41,6 +41,7 @@ use OCP\IRequest;
  *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalPageController extends Controller {
 	/**
@@ -49,7 +50,7 @@ class PortalPageController extends Controller {
 	 * @param IRequest $request The request.
 	 */
 	public function __construct(IRequest $request) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -68,7 +69,7 @@ class PortalPageController extends Controller {
 	#[AnonRateLimit(limit: 240, period: 60)]
 	public function index(): TemplateResponse {
 		$response = new TemplateResponse(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'portal',
 			[],
 			TemplateResponse::RENDER_AS_PUBLIC

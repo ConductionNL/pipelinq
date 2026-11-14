@@ -46,6 +46,7 @@ use Throwable;
  * CrmPrivilegeRefusalGolden/; set GOLDEN_RECORD=1 to rewrite them, then run
  * once more without it.
  *
+ * @covers \OCA\Pipelinq\Controller\AppointmentEligibilityController
  * @covers \OCA\Pipelinq\Controller\AnalyticsController
  * @covers \OCA\Pipelinq\Controller\CampaignController
  * @covers \OCA\Pipelinq\Controller\CompetitorWatchController
@@ -113,6 +114,7 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 		'TeamLoadController' => ['index'],
 		'TicketWooRequestController' => ['availability', 'convert'],
 		'WeeklyReviewController' => ['show', 'generate'],
+		'AppointmentEligibilityController' => ['eligibleResources', 'eligibleResourceCounts'],
 	];
 
 	private const PRIVILEGED_USER = 'crm-user';

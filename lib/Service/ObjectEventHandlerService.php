@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ObjectEventHandlerServiceInterface;
+
 /**
  * Service for handling object event business logic.
  *
@@ -33,7 +35,7 @@ namespace OCA\Pipelinq\Service;
  *
  * @spec openspec/changes/archive/2026-06-14-migrate-automation-to-flow-leaf/tasks.md#task-1.1
  */
-class ObjectEventHandlerService {
+class ObjectEventHandlerService implements ObjectEventHandlerServiceInterface {
 	/**
 	 * The field that holds an object's name, per entity type. A type not
 	 * listed here keeps it in `title`.

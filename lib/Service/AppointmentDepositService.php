@@ -37,7 +37,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -63,7 +64,7 @@ use Throwable;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class AppointmentDepositService {
+class AppointmentDepositService implements AppointmentDepositServiceInterface {
 	use NullablePayloadToArray;
 
 	/**
@@ -76,16 +77,6 @@ class AppointmentDepositService {
 	 * @var string
 	 */
 	public const PAYMENT_SOURCE_KEY = 'appointment_payment_source';
-
-	/**
-	 * App-config key for the openconnector webhook shared secret.
-	 *
-	 * Used by {@see AppointmentPaymentWebhookController} to verify
-	 * inbound payment callbacks (HMAC-SHA256 over the raw body).
-	 *
-	 * @var string
-	 */
-	public const WEBHOOK_SECRET_KEY = 'appointment_payment_webhook_secret';
 
 	/**
 	 * Deposit-hold window in seconds (15 minutes per REQ-APT-010 S2).
@@ -207,7 +198,7 @@ class AppointmentDepositService {
 					'returnUrl' => $returnUrl,
 					'webhookUrl' => $callbackUrl,
 					'metadata' => [
-						'app' => Application::APP_ID,
+						'app' => AppIdentity::APP_ID,
 						'kind' => 'appointment-deposit',
 						'bookingId' => $bookingId,
 					],
@@ -429,7 +420,7 @@ class AppointmentDepositService {
 	 */
 	private function paymentSourceSlug(): string {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::PAYMENT_SOURCE_KEY,
 			''
 		);
@@ -443,13 +434,13 @@ class AppointmentDepositService {
 	private function callbackUrl(): string {
 		try {
 			return $this->urlGenerator->linkToOCSRouteAbsolute(
-				routeName: Application::APP_ID . '.appointmentPaymentWebhook.callback'
+				routeName: AppIdentity::APP_ID . '.appointmentPaymentWebhook.callback'
 			);
 		} catch (Throwable $e) {
 			// Fall back to a relative path when the URL generator cannot
 			// build an absolute URL (no request context); openconnector
 			// resolves relative against its own base.
-			return '/index.php/apps/' . Application::APP_ID . '/api/appointment-payment-webhook';
+			return '/index.php/apps/' . AppIdentity::APP_ID . '/api/appointment-payment-webhook';
 		}
 	}//end callbackUrl()
 
@@ -465,9 +456,9 @@ class AppointmentDepositService {
 	 * @return void
 	 */
 	private function markDepositPaid(string $bookingId): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			BookingService::BOOKING_SCHEMA_KEY,
 			''
 		);

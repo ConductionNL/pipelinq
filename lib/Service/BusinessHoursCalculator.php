@@ -29,7 +29,7 @@ use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -129,8 +129,8 @@ class BusinessHoursCalculator {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function getBusinessHoursWindow(): array {
-		$start = $this->appConfig->getValueString(Application::APP_ID, 'sla_business_hours_start', '09:00');
-		$end = $this->appConfig->getValueString(Application::APP_ID, 'sla_business_hours_end', '17:00');
+		$start = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_business_hours_start', '09:00');
+		$end = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_business_hours_end', '17:00');
 		if (preg_match('/^\d{2}:\d{2}$/', $start) !== 1) {
 			$start = '09:00';
 		}
