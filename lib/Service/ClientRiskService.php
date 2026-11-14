@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\LockedRecord;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -260,6 +261,12 @@ class ClientRiskService {
 
 		$uuid = (string) ($client['id'] ?? ($client['uuid'] ?? ''));
 		if ($uuid === '') {
+			return false;
+		}
+
+		// A locked client refuses every write: skip it rather than log a
+		// refusal for it on every daily run (platform-record-lock 1.3).
+		if (LockedRecord::isLocked(record: $client) === true) {
 			return false;
 		}
 

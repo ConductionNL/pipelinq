@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service\Labels;
 
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
 use OCA\Pipelinq\Kernel\Contracts\LabelRenameServiceInterface;
+use OCA\Pipelinq\Util\LockedRecord;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
@@ -263,6 +264,14 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	private function rewriteOne(array $rename, array $item): bool {
 		['schema' => $schema, 'field' => $field, 'row' => $row] = $item;
 		['from' => $from, 'to' => $to] = $rename;
+		$id = (string)($row['id'] ?? ($row['@self']['id'] ?? ''));
+		// A locked item refuses every write: it keeps the old name, and the
+		// rename goes on with the rest (platform-record-lock 1.3).
+		if (LockedRecord::isLocked(record: $row) === true) {
+			$this->logger->info('LabelRenameService: a locked item kept the old label', ['schema' => $schema, 'id' => $id]);
+			return false;
+		}
+
 		$names = [];
 		foreach ((array)($row[$field] ?? []) as $value) {
 			$value = (string)$value;
@@ -275,7 +284,6 @@ class LabelRenameService implements LabelRenameServiceInterface {
 			}
 		}
 
-		$id = (string)($row['id'] ?? ($row['@self']['id'] ?? ''));
 		$row[$field] = $names;
 		try {
 			$rename['objects']->saveObject(object: $row, register: self::REGISTER, schema: $schema, uuid: $id);

@@ -38,6 +38,7 @@ use Psr\Log\LoggerInterface;
 /**
  * @covers \OCA\Pipelinq\Service\Labels\LabelRenameService
  * @uses \OCA\Pipelinq\Service\Labels\LabelRenameException
+ * @uses \OCA\Pipelinq\Util\LockedRecord
  * @uses \OCA\Pipelinq\Util\SerialisedPayload
  * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
  * @uses \OCA\Pipelinq\Util\SerialisedToArray
@@ -218,6 +219,26 @@ class LabelRenameServiceTest extends TestCase {
 		$this->assertSame(expected: ['ondernemers centrum'], actual: $this->store['article']['a1']['tags'], message: 'an article on both names keeps one');
 		$this->assertSame(expected: ['id' => 'l3', 'name' => 'ondernemers centrum', 'rewritten' => 7, 'queued' => false], actual: $result);
 	}//end testARenamedLabelFollowsItsItems()
+
+	/**
+	 * A locked lead keeps the old name and is never written to; the rename
+	 * goes on with the other items (platform-record-lock 1.3).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/platform-record-lock/specs/record-locking/spec.md#requirement-a-user-can-lock-a-client-a-finished-lead-or-a-finished-ticket-req-prl-001
+	 */
+	public function testALockedItemKeepsTheOldLabel(): void {
+		$this->store['lead']['lead2']['@self'] = ['id' => 'lead2', 'frozen' => ['by' => 'admin', 'at' => '2026-11-01T00:00:00+00:00']];
+
+		$result = $this->service()->rename(labelId: 'l3', name: 'ondernemers centrum');
+
+		$this->assertSame(expected: ['ondernemers', 'duurzaam'], actual: $this->store['lead']['lead2']['labels']);
+		$this->assertSame(expected: ['ondernemers centrum', 'duurzaam'], actual: $this->store['lead']['lead1']['labels']);
+		$this->assertSame(expected: ['ondernemers centrum'], actual: $this->store['client']['c1']['labels']);
+		$this->assertSame(expected: [], actual: array_filter($this->writes, fn (array $w): bool => $w[1] === 'lead2'));
+		$this->assertSame(expected: 6, actual: $result['rewritten']);
+	}//end testALockedItemKeepsTheOldLabel()
 
 	/**
 	 * Somebody who is not an administrator is refused before anything is written.

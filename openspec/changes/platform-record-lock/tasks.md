@@ -6,8 +6,9 @@
   - Verify: PHPUnit `tests/Unit/Settings/RegisterAnnotationsTest.php` asserts the switch on all three schemas; after `occ openregister:import` a `POST .../freeze` on a client answers 200 instead of a refusal
 - [x] 1.2 Add a non-materialised calculation `isFinished` to `lead` (status is won or lost) and `ticket` (status is one of its five final states), built from `or` and `eq`
   - Verify: PHPUnit asserts each `isFinished` names exactly the lifecycle's `final` list; a read of a won lead returns `isFinished: true`
-- [ ] 1.3 List every `saveObject` on client, lead and ticket under `lib/` (`git grep -n saveObject lib/`), and make each background path skip a frozen record or log the refusal instead of failing the run
+- [x] 1.3 List every `saveObject` on client, lead and ticket under `lib/` (`git grep -n saveObject lib/`), and make each background path skip a frozen record or log the refusal instead of failing the run
   - Verify: PHPUnit for `SlaDeadlineSweepJob` and the contact sync with a frozen record: the run completes and the record is unchanged
+  - Audit: the background writers of client, lead and ticket are the SLA sweep (skips a locked record, `SlaEntitySweeper`), the client risk run (`ClientRiskService::store` now skips a locked client instead of logging a refusal every day), the label rename (`LabelRenameService` now leaves a locked lead or client on the old name and goes on), and the deferred SLA and deal listeners, which already catch a refused write and log it. The contact sync only creates records, and the BRP retention run writes contacts and already logs a refusal. `Util/LockedRecord` is the shared check.
 
 ## 2. Lock and unlock on the detail pages
 
@@ -23,8 +24,9 @@
 
 ## 3. The delete half
 
-- [ ] 3.1 Open the OpenRegister issue for "a frozen object refuses deletion" (guard on `ObjectDeletingEvent`), link it from this change, and record its number in the PR body
+- [x] 3.1 Open the OpenRegister issue for "a frozen object refuses deletion" (guard on `ObjectDeletingEvent`), link it from this change, and record its number in the PR body
   - Verify: the issue exists on ConductionNL/openregister and is linked here
+  - Not needed: OpenRegister already ships the guard, `lib/Listener/FrozenObjectDeleteGuardListener.php` on `ObjectDeletingEvent`, so a locked record refuses deletion today.
 - [ ] 3.2 Once OpenRegister ships it, add the delete case to `tests/e2e/record-lock.spec.ts`
   - Verify: Playwright deletes a locked client from the Clients list and sees the refusal; the client is still there
 

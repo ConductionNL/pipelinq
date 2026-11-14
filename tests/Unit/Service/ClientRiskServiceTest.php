@@ -31,6 +31,7 @@ use RuntimeException;
  * Every client carries a risk level with its reasons (REQ-CIN-001).
  *
  * @covers \OCA\Pipelinq\Service\ClientRiskService
+ * @uses \OCA\Pipelinq\Util\LockedRecord
  *
  * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-1.2
  */
@@ -364,6 +365,30 @@ class ClientRiskServiceTest extends TestCase {
 		$this->assertFalse($this->service(['client_schema' => ''])->recompute('c-1'));
 		$this->assertFalse($this->service(fails: true)->recompute('c-1'));
 	}//end testRecomputeStoresOnceThenLeavesItAlone()
+
+	/**
+	 * A locked client is left alone: no write is tried, and the daily run
+	 * counts it as unchanged instead of logging a refusal (platform-record-lock 1.3).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/platform-record-lock/specs/record-locking/spec.md#requirement-a-user-can-lock-a-client-a-finished-lead-or-a-finished-ticket-req-prl-001
+	 */
+	public function testALockedClientIsNotWritten(): void {
+		$risk    = ['level' => 'medium', 'score' => 30, 'reasons' => [], 'computedAt' => self::NOW];
+		$service = $this->service();
+		$locked  = ['id' => 'c-1', '@self' => ['id' => 'c-1', 'frozen' => ['by' => 'admin', 'at' => '2026-11-01T00:00:00+00:00']]];
+
+		$this->assertFalse($service->store($locked, $risk, 'r', 'client'));
+		$this->assertSame([], $this->saved);
+
+		$this->rows['client'] = [$locked, ['id' => 'c-2']];
+		$tally = $service->recomputeAll(new DateTimeImmutable(self::NOW));
+
+		$this->assertSame(['written' => 1, 'unchanged' => 1], $tally);
+		$this->assertCount(1, $this->saved);
+		$this->assertSame('c-2', $this->saved[0][1]);
+	}//end testALockedClientIsNotWritten()
 
 	/**
 	 * recomputeAll() walks the clients in batches and counts what it wrote.
