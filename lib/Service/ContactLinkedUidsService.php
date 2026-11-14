@@ -106,10 +106,7 @@ class ContactLinkedUidsService {
 			);
 
 			foreach ($objects as $obj) {
-				$data = $this->serializeResult(result: $obj);
-				if (empty($data['contactsUid']) === false) {
-					$uids[] = $data['contactsUid'];
-				}
+				$uids = array_merge($uids, $this->contactsUidOf(obj: $obj));
 			}
 		} catch (\Exception $e) {
 			$this->logger->debug(
@@ -120,6 +117,22 @@ class ContactLinkedUidsService {
 
 		return $uids;
 	}//end getLinkedUidsForType()
+
+	/**
+	 * The object's contactsUid as a one-item list, or an empty list when it has none.
+	 *
+	 * @param mixed $obj The found object.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function contactsUidOf(mixed $obj): array {
+		$data = $this->serializeResult(result: $obj);
+		if (empty($data['contactsUid']) === false) {
+			return [$data['contactsUid']];
+		}
+
+		return [];
+	}//end contactsUidOf()
 
 	/**
 	 * Get the OpenRegister ObjectService via the container.
