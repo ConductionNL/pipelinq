@@ -50,7 +50,7 @@
 				},
 				"actionsMenu": { "label": "More" },
 				"quickActions": ["send-reminder", "check-in"],
-				"_headerActionsNote": "PqEvenement: Herinnering versturen mails everyone with a confirmed place (POST /api/campaign-events/{id}/reminder, which stamps reminderSentAt as the caller first); Inchecken bij de deur opens the event's check-in list, where each confirmed registration is checked in with one press.",
+				"_headerActionsNote": "PqEvenement: Herinnering versturen mails everyone with a confirmed place (POST /api/campaign-events/{id}/reminder, which stamps reminderSentAt as the caller first); Inchecken bij de deur opens the event's check-in list, where each confirmed registration is checked in with one press. Add attendee (marketing-events REQ-MEV-004, in the More menu because the board draws no add button in the Registrations tab) adds someone who signed up by phone or at the desk through pipelinq's registrations endpoint, so the seat count, the waiting list, the same-address check and the confirmation mail apply as for a form sign-up.",
 				"headerActions": [
 					{
 						"id": "send-reminder",
@@ -70,6 +70,33 @@
 						"label": "Check in at the door",
 						"icon": "Check",
 						"target": "/campaign-events/@objectId/check-in"
+					},
+					{
+						"id": "add-attendee",
+						"type": "open-modal",
+						"label": "Add attendee",
+						"icon": "AccountPlusOutline",
+						"target": "CnActionDialog",
+						"props": {
+							"objectId": "@objectId",
+							"config": {
+								"title": "Add attendee",
+								"subtitle": "They get a place while one is free, else a spot on the waiting list.",
+								"fields": [
+									{ "field": "name", "type": "text", "label": "Name", "required": false },
+									{ "field": "email", "type": "text", "label": "Email address", "hint": "The confirmation is sent to this address." }
+								],
+								"confirm": {
+									"label": "Add attendee",
+									"icon": "AccountPlusOutline",
+									"request": { "method": "POST", "url": "/apps/pipelinq/api/campaign-events/@objectId/registrations" },
+									"errorText": "The attendee could not be added."
+								},
+								"doneText": "The attendee is on the registrations list.",
+								"closeOnDone": true
+							}
+						},
+						"visibleWhen": { "field": "signupStatus", "op": "in", "value": ["open", "full"] }
 					}
 				],
 				"widgets": [

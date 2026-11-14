@@ -171,6 +171,7 @@ import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import BrpClientCheckDialog from './dialogs/BrpClientCheckDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import ContactCreateDialog from './dialogs/ContactCreateDialog.vue'
 import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import ContactLogDialog from './dialogs/ContactLogDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
@@ -181,8 +182,12 @@ import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TaxAuthorityExportDialog from './dialogs/TaxAuthorityExportDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
+import BulkChangeFieldModal from './modals/BulkChangeFieldModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
+// Paste or scan (clients-contact-capture): the header action on the Clients and
+//     Contacts index pages opens ContactCaptureModal. ---
+import ContactCaptureModal from './modals/ContactCaptureModal.vue'
 import EmailReceiptModal from './modals/EmailReceiptModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import LinkSubmissionToClientModal from './modals/LinkSubmissionToClientModal.vue'
@@ -202,6 +207,7 @@ import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 //     Service / Resource / Booking list + detail views; resolved by the v2
 //     renderer from the manifest.d fragment at render time. ---
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
+import BulkChangesView from './views/bulk/BulkChanges.vue'
 import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
 //     per-widget slot components. The page itself is rendered by
@@ -1049,6 +1055,11 @@ const registry = {
 		component: ExportDestinationFormView,
 		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
 	},
+	BulkChangesView: {
+		kind: 'page',
+		component: BulkChangesView,
+		_note: 'The bulk changes this person made to clients and contacts, with Undo through the OpenRegister reversal while its window is open (clients-bulk-edit-and-undo D4).',
+	},
 	ExportRunsView: {
 		kind: 'page',
 		component: ExportRunsView,
@@ -1379,6 +1390,19 @@ const registry = {
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
 	},
 
+	ContactCreateDialog: {
+		kind: 'modal',
+		component: ContactCreateDialog,
+		propsSchema: null,
+		_note: 'New contact, contact-first via POST /api/contacts-sync/create (the same path as the Contacts index createOverride). Registered so Paste or scan can open it prefilled with `values`; then it opens the new contact after Save.',
+	},
+	ContactCaptureModal: {
+		kind: 'modal',
+		component: ContactCaptureModal,
+		propsSchema: null,
+		_note: 'Paste or scan (clients-contact-capture REQ-CCC-001/002). Target of the paste-or-scan header action on the Clients and Contacts index pages: pasted text or a card photo becomes proposed fields via POST /api/contact-capture/parse, and Use these fields opens the `createModal` (ClientCreateDialog or ContactCreateDialog) prefilled. Saves nothing itself.',
+	},
+
 	ContactImportDialog: {
 		kind: 'modal',
 		component: ContactImportDialog,
@@ -1390,6 +1414,12 @@ const registry = {
 		component: OrganisationEnrichDialog,
 		propsSchema: null,
 		_note: 'Fill in missing details from the KvK (PqOrganisatiesVerrijken). Target of the bulk action on the Clients list; receives the selection as selectedIds.',
+	},
+	BulkChangeFieldModal: {
+		kind: 'modal',
+		component: BulkChangeFieldModal,
+		propsSchema: null,
+		_note: 'Change one field on the selected clients or contacts through an OpenRegister bulk job (clients-bulk-edit-and-undo). Target of the Change a field bulk action on the Clients and Contacts lists; receives the selection as selectedIds and the register and schema slugs as props.',
 	},
 
 	// Pages' form-dialog slot (page.slots), not header-action modals: the

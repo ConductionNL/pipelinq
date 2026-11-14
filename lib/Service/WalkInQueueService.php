@@ -179,6 +179,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			'displayName' => $this->truncate(value: $displayName, max: 255),
 			'arrivedAt' => $nowIso,
 			'status' => 'waiting',
+			'queueNumber' => $this->nextQueueNumber(today: substr($nowIso, 0, 10)),
 		];
 
 		if ($customerId !== '') {
@@ -586,6 +587,57 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 
 		return $out;
 	}//end listByStatus()
+
+	/**
+	 * The next queue number of the day: one more than the highest number a
+	 * ticket that arrived today carries, so the first visitor of a day gets 1.
+	 *
+	 * @param string $today The day, `Y-m-d` (UTC, as `arrivedAt` is stored).
+	 *
+	 * @return int The number for the next ticket.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/appointment-booking/spec.md#requirement-a-walk-in-visitor-gets-a-queue-number
+	 */
+	private function nextQueueNumber(string $today): int {
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: self::TICKET_SCHEMA_KEY);
+		if ($register === '' || $schema === '') {
+			return 1;
+		}
+
+		try {
+			$rows = $this->getObjectService()->findAll(
+				config: [
+					'filters' => ['arrivedAt' => ['gte' => $today . 'T00:00:00+00:00']],
+					'register' => $register,
+					'schema' => $schema,
+					'limit' => self::QUEUE_PAGE_SIZE,
+					'order' => ['arrivedAt' => 'DESC'],
+				]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: walk-in queue number lookup failed', ['exception' => $e->getMessage()]);
+			return 1;
+		}
+
+		if (is_array($rows) === false) {
+			return 1;
+		}
+
+		$highest = 0;
+		foreach ($rows as $row) {
+			$ticket = $this->toArray(object: $row);
+			// The day is checked here too: a backend that ignores the filter
+			// must not carry yesterday's numbers into today.
+			if ($ticket === null || substr((string)($ticket['arrivedAt'] ?? ''), 0, 10) !== $today) {
+				continue;
+			}
+
+			$highest = max($highest, (int)($ticket['queueNumber'] ?? 0));
+		}
+
+		return ($highest + 1);
+	}//end nextQueueNumber()
 
 	/**
 	 * Load a WalkInTicket by id, throwing when not found.

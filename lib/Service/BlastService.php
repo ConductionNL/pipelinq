@@ -1624,7 +1624,38 @@ class BlastService implements BlastServiceInterface {
 	}//end recordSkips()
 
 	/**
-	 * Update only the `status` field on a Blast.
+	 * Keep the subject and bodies a blast is sent with on the blast itself.
+	 *
+	 * Taken once, when the blast starts sending, from the template it uses, so
+	 * changing or deleting that template later never changes what the blast
+	 * shows it sent. A blast that already holds a snapshot keeps it.
+	 *
+	 * @param array<string, mixed> $blast The blast payload.
+	 *
+	 * @return array<string, mixed> The payload with `sentSubject`, `sentHtml` and `sentText`.
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 */
+	private function withSentContent(array $blast): array {
+		if (array_key_exists('sentSubject', $blast) === true || array_key_exists('sentHtml', $blast) === true) {
+			return $blast;
+		}
+
+		$template = $this->loadTemplate(templateId: (string)($blast['templateId'] ?? ''));
+		if ($template === null) {
+			return $blast;
+		}
+
+		$blast['sentSubject'] = (string)($template['subject'] ?? '');
+		$blast['sentHtml'] = (string)($template['bodyHtml'] ?? '');
+		$blast['sentText'] = (string)($template['bodyText'] ?? '');
+
+		return $blast;
+	}//end withSentContent()
+
+	/**
+	 * Update only the `status` field on a Blast (and, on `sending`, keep the
+	 * content it is sent with).
 	 *
 	 * @param string $blastId Blast UUID or slug.
 	 * @param string $newStatus New status.
@@ -1641,6 +1672,10 @@ class BlastService implements BlastServiceInterface {
 		$payload['status'] = $newStatus;
 		if ($newStatus === 'sending' && empty($blast['sentAt']) === true) {
 			$payload['sentAt'] = $this->nowIso();
+		}
+
+		if ($newStatus === 'sending') {
+			$payload = $this->withSentContent(blast: $payload);
 		}
 
 		$this->saveObject(

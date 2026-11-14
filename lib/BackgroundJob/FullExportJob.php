@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\FullExportServiceInterface;
+use OCA\Pipelinq\Service\Export\FullExportState;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use OCP\Notification\IManager;
@@ -50,6 +51,7 @@ class FullExportJob extends QueuedJob {
 	 * @param FullExportServiceInterface $export        Builds and stores the archive.
 	 * @param IManager          $notifications Nextcloud notifications.
 	 * @param LoggerInterface   $logger        The logger.
+	 * @param FullExportState|null $state The state of the last export, for the page.
 	 *
 	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
 	 */
@@ -58,6 +60,7 @@ class FullExportJob extends QueuedJob {
 		private readonly FullExportServiceInterface $export,
 		private readonly IManager $notifications,
 		private readonly LoggerInterface $logger,
+		private readonly ?FullExportState $state = null,
 	) {
 		parent::__construct(time: $time);
 	}//end __construct()
@@ -82,10 +85,12 @@ class FullExportJob extends QueuedJob {
 			$stored = $this->export->exportFor(userId: $userId);
 		} catch (Throwable $e) {
 			$this->logger->error('FullExportJob: the archive could not be built', ['exception' => $e->getMessage()]);
+			$this->state?->failed(userId: $userId);
 			$this->notify(userId: $userId, subject: 'full_export_failed', parameters: []);
 			return;
 		}
 
+		$this->state?->ready(userId: $userId, name: (string) $stored['name'], fileId: (string) $stored['fileId']);
 		$this->notify(
 			userId: $userId,
 			subject: 'full_export_ready',
