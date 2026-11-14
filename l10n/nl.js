@@ -9531,6 +9531,8 @@ OC.L10N.register(
         "Family": "Familie",
         "Professional": "Professioneel",
         "Partner of": "Partner van",
+        "Deal room": "Dealkamer",
+        "Client room": "Klantkamer",
         "Parent of": "Ouder van",
         "Child of": "Kind van",
         "Sibling of": "Broer of zus van",

@@ -9517,6 +9517,8 @@ OC.L10N.register(
         "Family": "Family",
         "Professional": "Professional",
         "Partner of": "Partner of",
+        "Deal room": "Deal room",
+        "Client room": "Client room",
         "Parent of": "Parent of",
         "Child of": "Child of",
         "Sibling of": "Sibling of",
