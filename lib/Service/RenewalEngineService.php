@@ -34,7 +34,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RenewalEngineServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -46,7 +47,7 @@ use Throwable;
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
  */
-class RenewalEngineService {
+class RenewalEngineService implements RenewalEngineServiceInterface {
 	/**
 	 * Hard fallback renewal lead time (days) when nothing is configured.
 	 *
@@ -79,7 +80,7 @@ class RenewalEngineService {
 	 */
 	public function getDefaultLeadTimeDays(): int {
 		$configured = (int)$this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'renewal_default_lead_time_days',
 			(string)self::FALLBACK_LEAD_TIME_DAYS
 		);
@@ -303,8 +304,8 @@ class RenewalEngineService {
 	 * @return string The created lead UUID ('' on failure).
 	 */
 	private function createRenewalLead(array $contract): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$leadSchema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($registerId === '' || $leadSchema === '') {
 			return '';
 		}
@@ -338,8 +339,8 @@ class RenewalEngineService {
 	 * @return void
 	 */
 	private function createNoticeMyWorkEntry(array $contract): void {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$taskSchema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$taskSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		if ($registerId === '' || $taskSchema === '') {
 			return;
 		}

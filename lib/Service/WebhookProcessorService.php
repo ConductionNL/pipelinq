@@ -44,7 +44,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use Closure;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -70,7 +71,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  */
-class WebhookProcessorService {
+class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -623,9 +624,9 @@ class WebhookProcessorService {
 	 */
 	private function incrementSoftBounceCounter(string $contactId, string $channel): int {
 		$key = $this->softBounceKey(contactId: $contactId, channel: $channel);
-		$current = (int)$this->appConfig->getValueString(Application::APP_ID, $key, '0');
+		$current = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, $key, '0');
 		$next = ($current + 1);
-		$this->appConfig->setValueString(Application::APP_ID, $key, (string)$next);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$next);
 		return $next;
 	}//end incrementSoftBounceCounter()
 
@@ -640,7 +641,7 @@ class WebhookProcessorService {
 	private function clearSoftBounceCounter(string $contactId, string $channel): void {
 		$key = $this->softBounceKey(contactId: $contactId, channel: $channel);
 		try {
-			$this->appConfig->deleteKey(Application::APP_ID, $key);
+			$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'WebhookProcessorService.clearSoftBounceCounter: delete failed',
@@ -668,7 +669,7 @@ class WebhookProcessorService {
 	 */
 	private function resolveSoftBounceThreshold(): int {
 		$raw = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::APP_CONFIG_SOFT_BOUNCE_THRESHOLD,
 			(string)self::DEFAULT_SOFT_BOUNCE_THRESHOLD,
 		);
@@ -852,7 +853,7 @@ class WebhookProcessorService {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -866,7 +867,7 @@ class WebhookProcessorService {
 	 * @return string Slug.
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}

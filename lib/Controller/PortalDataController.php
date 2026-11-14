@@ -28,12 +28,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
 use OCA\Pipelinq\Service\Portal\AbstractPortalReadFacade;
 use OCA\Pipelinq\Service\Portal\PortalContractService;
 use OCA\Pipelinq\Service\Portal\PortalInvoiceService;
 use OCA\Pipelinq\Service\Portal\PortalOrderService;
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
-use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
@@ -50,27 +50,28 @@ use Psr\Log\LoggerInterface;
  *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalDataController extends PortalApiController {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param PortalRequestGuardInterface $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
 	 * @param PortalInvoiceService $invoices The invoice facade.
 	 * @param PortalContractService $contracts The contract facade.
 	 * @param PortalOrderService $orders The order facade.
-	 * @param PortalTenantService $tenant The tenant service.
+	 * @param PortalTenantServiceInterface $tenant The tenant service.
 	 */
 	public function __construct(
 		IRequest $request,
-		PortalRequestGuard $guard,
+		PortalRequestGuardInterface $guard,
 		LoggerInterface $logger,
 		private PortalInvoiceService $invoices,
 		private PortalContractService $contracts,
 		private PortalOrderService $orders,
-		private PortalTenantService $tenant,
+		private PortalTenantServiceInterface $tenant,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()

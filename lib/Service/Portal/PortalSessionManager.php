@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalSessionManagerInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 
@@ -39,20 +40,13 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalSessionManager {
+class PortalSessionManager implements PortalSessionManagerInterface {
 	/**
 	 * Schema slug for sessions.
 	 *
 	 * @var string
 	 */
 	private const SCHEMA = 'crmPortalSession';
-
-	/**
-	 * Default session TTL in hours.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_TTL_HOURS = 8;
 
 	/**
 	 * Constructor.

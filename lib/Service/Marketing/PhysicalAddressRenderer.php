@@ -25,12 +25,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\PhysicalAddressRendererInterface;
+
 /**
  * Renders the template's physical address into an email body.
  *
  * @spec openspec/specs/marketing-compliance/spec.md#requirement-unsubscribe-footer-enforced-on-email-templates
  */
-class PhysicalAddressRenderer {
+class PhysicalAddressRenderer implements PhysicalAddressRendererInterface {
 	/**
 	 * Tokens that mark where the physical address goes in an email body.
 	 * They hold no address themselves: render() replaces them with the

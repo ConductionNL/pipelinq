@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -49,6 +49,13 @@ class BerichtenboxAdminController extends Controller {
 	use OptionalPayloadToArray;
 
 	/**
+	 * Rows read per stats page.
+	 *
+	 * @var int
+	 */
+	private const STATS_PAGE_SIZE = 500;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
@@ -60,7 +67,7 @@ class BerichtenboxAdminController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly ObjectServiceInterface $objectService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -79,8 +86,8 @@ class BerichtenboxAdminController extends Controller {
 			$service = $this->getObjectService();
 			$message = $service->find(
 				id: $id,
-				register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', '')
+				register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+				schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', '')
 			);
 		} catch (Throwable $e) {
 			return new JSONResponse(
@@ -107,8 +114,8 @@ class BerichtenboxAdminController extends Controller {
 				->saveObject(
 					object: $data,
 					extend: [],
-					register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-					schema: $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', ''),
+					register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+					schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', ''),
 					uuid: ($data['uuid'] ?? $id)
 				);
 		} catch (Throwable $e) {
@@ -128,11 +135,11 @@ class BerichtenboxAdminController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec exclude mechanical phpmd cleanup — counter tally extracted to a helper, behaviour unchanged
+	 * @spec openspec/changes/berichtenbox-admin-stats-pagination-and-tests/specs/berichtenbox-integration/spec.md
 	 */
 	public function stats(): JSONResponse {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', '');
 		$counters = [
 			'queued' => 0,
 			'sent' => 0,
@@ -146,14 +153,7 @@ class BerichtenboxAdminController extends Controller {
 		}
 
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$result = $this->tallyPaged(register: $register, schema: $schema, counters: $counters);
 		} catch (Throwable $e) {
 			return new JSONResponse(
 				['error' => 'Stats query failed: ' . $e->getMessage()],
@@ -161,19 +161,60 @@ class BerichtenboxAdminController extends Controller {
 			);
 		}
 
-		return new JSONResponse($this->tally(rows: $rows, counters: $counters));
+		return new JSONResponse($result);
 	}//end stats()
 
 	/**
-	 * Tally delivery counters and unread total from OR rows.
+	 * Tally the messages page by page, so no more than one page of rows is
+	 * loaded at a time.
 	 *
-	 * @param iterable $rows OR result rows.
-	 * @param array $counters Zero-initialised counter map.
+	 * Each read carries an explicit limit; the walk stops at the first page
+	 * holding fewer rows than the limit.
+	 *
+	 * @param string $register Register id.
+	 * @param string $schema   Message schema id.
+	 * @param array  $counters Zero-initialised counter map.
 	 *
 	 * @return array{counters: array, unread: int}
+	 *
+	 * @spec openspec/changes/berichtenbox-admin-stats-pagination-and-tests/specs/berichtenbox-integration/spec.md
 	 */
-	private function tally(iterable $rows, array $counters): array {
-		$unread = 0;
+	private function tallyPaged(string $register, string $schema, array $counters): array {
+		$result = ['counters' => $counters, 'unread' => 0];
+		$offset = 0;
+		do {
+			$rows = $this->getObjectService()->findAll(
+				config: [
+					'filters' => [
+						'register' => $register,
+						'schema' => $schema,
+					],
+					'limit' => self::STATS_PAGE_SIZE,
+					'offset' => $offset,
+				]
+			);
+			$result = $this->tally(rows: $rows, counters: $result['counters'], unread: $result['unread']);
+			$offset += self::STATS_PAGE_SIZE;
+			$fullPage = count($rows) === self::STATS_PAGE_SIZE;
+		} while ($fullPage === true);
+
+		return $result;
+	}//end tallyPaged()
+
+	/**
+	 * Fold one page of OR rows into the delivery counters and the unread total.
+	 *
+	 * A message is unread when it was sent and carries no readAt.
+	 *
+	 * @param iterable $rows     OR result rows.
+	 * @param array    $counters Counter map so far.
+	 * @param int      $unread   Unread total so far.
+	 *
+	 * @return array{counters: array, unread: int} The totals including this page.
+	 *
+	 * @spec openspec/changes/berichtenbox-admin-stats-pagination-and-tests/specs/berichtenbox-integration/spec.md
+	 */
+	private function tally(iterable $rows, array $counters, int $unread): array {
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
 			if ($data === null) {

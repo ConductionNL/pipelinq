@@ -30,7 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConsentMigrationServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -41,7 +42,7 @@ use Throwable;
  *
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
  */
-class ConsentMigrationService {
+class ConsentMigrationService implements ConsentMigrationServiceInterface {
 
 	/**
 	 * Constructor.
@@ -132,10 +133,10 @@ class ConsentMigrationService {
 		$status = 'done';
 		if ($this->counts['refused'] === 0) {
 			if ($this->integriq->isCutover() === false) {
-				$this->appConfig->setValueString(Application::APP_ID, IntegriqConsentClient::CONFIG_CUTOVER_AT, (string)time());
+				$this->appConfig->setValueString(AppIdentity::APP_ID, IntegriqConsentClient::CONFIG_CUTOVER_AT, (string)time());
 			}
 
-			$this->appConfig->setValueString(Application::APP_ID, IntegriqConsentClient::CONFIG_STORE, IntegriqConsentClient::STORE_INTEGRIQ);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, IntegriqConsentClient::CONFIG_STORE, IntegriqConsentClient::STORE_INTEGRIQ);
 		}
 
 		if ($this->counts['refused'] > 0) {
@@ -188,8 +189,8 @@ class ConsentMigrationService {
 	 * @return array<int,array<string,mixed>> The records.
 	 */
 	private function consentRecords(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'consent_record_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'consent_record_schema', '');
 		if ($register === '') {
 			$register = 'pipelinq';
 		}

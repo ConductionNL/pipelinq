@@ -27,7 +27,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Letter;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LetterLogInterface;
 use OCA\Pipelinq\Service\TicketService;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -37,7 +38,7 @@ use Throwable;
  *
  * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
  */
-class LetterLog
+class LetterLog implements LetterLogInterface
 {
 
     /**
@@ -46,7 +47,6 @@ class LetterLog
      * @var string
      */
     public const LETTER_CHANNEL = 'brief';
-
 
     /**
      * Constructor.
@@ -60,7 +60,6 @@ class LetterLog
     ) {
 
     }//end __construct()
-
 
     /**
      * Log the letter as an outgoing contact moment on the client.
@@ -95,7 +94,7 @@ class LetterLog
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: the letter is made but its contact moment was not saved',
-                ['app' => Application::APP_ID, 'clientId' => $clientId, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'clientId' => $clientId, 'exception' => $e->getMessage()]
             );
             return null;
         }
@@ -114,7 +113,6 @@ class LetterLog
         return $id;
 
     }//end log()
-
 
     /**
      * The contact moment a letter is logged as, before `ticketType` is forced.
@@ -142,7 +140,6 @@ class LetterLog
 
     }//end contactMomentPayload()
 
-
     /**
      * The contact moment description: the template, and where the copy is filed.
      *
@@ -160,7 +157,6 @@ class LetterLog
         return $description;
 
     }//end description()
-
 
     /**
      * Add the contact person and the parent ticket, when the letter has them.
@@ -183,6 +179,5 @@ class LetterLog
         return $payload;
 
     }//end withLinks()
-
 
 }//end class

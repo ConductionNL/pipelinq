@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\ConsentMigrationService;
+use OCA\Pipelinq\Kernel\Contracts\ConsentMigrationServiceInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -44,11 +44,11 @@ class MigrateConsentToIntegriq implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param ConsentMigrationService $migration The migration.
+	 * @param ConsentMigrationServiceInterface $migration The migration.
 	 * @param LoggerInterface         $logger    Logs a failed run.
 	 */
 	public function __construct(
-		private readonly ConsentMigrationService $migration,
+		private readonly ConsentMigrationServiceInterface $migration,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

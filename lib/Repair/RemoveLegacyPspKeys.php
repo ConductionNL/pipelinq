@@ -40,8 +40,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosPaymentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -87,8 +87,8 @@ class RemoveLegacyPspKeys implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		$removed = 0;
-		foreach (PosPaymentService::PROVIDERS as $provider) {
-			foreach (PosPaymentService::RETIRED_SECRET_FIELDS as $field) {
+		foreach (PosPaymentServiceInterface::PROVIDERS as $provider) {
+			foreach (PosPaymentServiceInterface::RETIRED_SECRET_FIELDS as $field) {
 				if ($this->removedKey(output: $output, retired: new RetiredPspKey(provider: $provider, field: $field)) === true) {
 					$removed++;
 				}
@@ -116,13 +116,13 @@ class RemoveLegacyPspKeys implements IRepairStep {
 	 */
 	private function removedKey(IOutput $output, RetiredPspKey $retired): bool {
 		$key = $retired->configKey();
-		$stored = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$stored = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($stored === '') {
 			return false;
 		}
 
 		try {
-			$this->appConfig->deleteKey(Application::APP_ID, $key);
+			$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 			return true;
 		} catch (Throwable $e) {
 			// Never fatal: failing to delete leaves the row exactly as it was,

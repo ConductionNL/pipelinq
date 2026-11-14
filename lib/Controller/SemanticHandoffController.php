@@ -31,11 +31,11 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SemanticHandoffServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\SemanticHandoffService;
-use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -107,10 +107,10 @@ class SemanticHandoffController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request HTTP request.
-	 * @param SemanticHandoffService $handoffService Kind resolution + emit wrapper.
+	 * @param SemanticHandoffServiceInterface $handoffService Kind resolution + emit wrapper.
 	 * @param ContainerInterface $container DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig App config (register/schema slugs).
-	 * @param TicketService $ticketService Unified ticket resolver.
+	 * @param TicketServiceInterface $ticketService Unified ticket resolver.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param LoggerInterface $logger Logger.
@@ -118,16 +118,16 @@ class SemanticHandoffController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private SemanticHandoffService $handoffService,
+		private SemanticHandoffServiceInterface $handoffService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private TicketService $ticketService,
+		private TicketServiceInterface $ticketService,
 		private CrmPrivilegeCheck $privilege,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private LoggerInterface $logger,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -166,17 +166,17 @@ class SemanticHandoffController extends Controller {
 				'caseReference' => (string)($request['caseReference'] ?? ''),
 				'caseTypeSource' => [
 					'register' => $this->appConfig->getValueString(
-						app: Application::APP_ID,
+						app: AppIdentity::APP_ID,
 						key: 'handoff_case_type_register',
 						default: 'dossiq'
 					),
 					'schema' => $this->appConfig->getValueString(
-						app: Application::APP_ID,
+						app: AppIdentity::APP_ID,
 						key: 'handoff_case_type_schema',
 						default: 'caseType'
 					),
 				],
-				'portalName' => $this->appConfig->getValueString(app: Application::APP_ID, key: 'portal_name', default: ''),
+				'portalName' => $this->appConfig->getValueString(app: AppIdentity::APP_ID, key: 'portal_name', default: ''),
 			]
 		);
 	}//end requestAvailability()
@@ -268,7 +268,7 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'invalid-case-type'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$request['ticketType'] = TicketService::TYPE_REQUEST;
+		$request['ticketType'] = TicketServiceInterface::TYPE_REQUEST;
 		$request['requestedCaseType'] = $caseType;
 		if ($this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request) === false) {
 			return new JSONResponse(['status' => 'handoff-failed', 'reason' => 'case-type-not-saved'], Http::STATUS_BAD_GATEWAY);
@@ -290,7 +290,7 @@ class SemanticHandoffController extends Controller {
 	private function closeConvertedRequest(string $id, array $request, array $result, bool $keepOpen): JSONResponse {
 		// Keep the discriminator pinned on the round-tripped payload so the
 		// write can never silently untype the ticket.
-		$request['ticketType'] = TicketService::TYPE_REQUEST;
+		$request['ticketType'] = TicketServiceInterface::TYPE_REQUEST;
 		if ($keepOpen === false) {
 			$request['status'] = 'converted';
 		}
@@ -456,7 +456,7 @@ class SemanticHandoffController extends Controller {
 			return null;
 		}
 
-		if ((string)($ticket['ticketType'] ?? '') !== TicketService::TYPE_REQUEST) {
+		if ((string)($ticket['ticketType'] ?? '') !== TicketServiceInterface::TYPE_REQUEST) {
 			return null;
 		}
 
@@ -663,7 +663,7 @@ class SemanticHandoffController extends Controller {
 	 * @return string Slug; never empty.
 	 */
 	private function registerSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -680,7 +680,7 @@ class SemanticHandoffController extends Controller {
 	 * @return string Slug.
 	 */
 	private function schemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($slug !== '') {
 			return $slug;
 		}

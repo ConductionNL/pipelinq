@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -214,7 +214,7 @@ class AppointmentPaymentProvider {
 		}
 
 		$sourceSlug = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			AppointmentDepositService::PAYMENT_SOURCE_KEY,
 			''
 		);
@@ -241,7 +241,7 @@ class AppointmentPaymentProvider {
 					],
 					'description' => sprintf('Pipelinq %s fee — booking %s', $kind, $bookingId),
 					'metadata' => [
-						'app' => Application::APP_ID,
+						'app' => AppIdentity::APP_ID,
 						'kind' => $kind,
 						'bookingId' => $bookingId,
 					],
@@ -311,9 +311,9 @@ class AppointmentPaymentProvider {
 	 * @return array<string, mixed>|null
 	 */
 	private function loadBooking(string $bookingId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			BookingService::BOOKING_SCHEMA_KEY,
 			''
 		);
@@ -361,9 +361,9 @@ class AppointmentPaymentProvider {
 			return false;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			BookingService::CUSTOMER_SCHEMA_KEY,
 			''
 		);
@@ -406,9 +406,9 @@ class AppointmentPaymentProvider {
 	 * @return void
 	 */
 	private function stampBooking(string $bookingId, string $field, string $value): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			BookingService::BOOKING_SCHEMA_KEY,
 			''
 		);

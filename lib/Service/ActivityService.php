@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Activity\IManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -328,7 +328,7 @@ class ActivityService {
 			}
 
 			$event = $this->activityManager->generateEvent();
-			$event->setApp(Application::APP_ID)
+			$event->setApp(AppIdentity::APP_ID)
 				->setType($type)
 				->setAuthor($author)
 				->setTimestamp(time())

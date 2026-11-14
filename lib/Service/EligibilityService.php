@@ -27,12 +27,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EligibilityServiceInterface;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Resolve which Resources are eligible to perform a Service.
@@ -54,7 +55,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class EligibilityService {
+class EligibilityService implements EligibilityServiceInterface {
 	use NullablePayloadToArray;
 	use RowIdOf;
 
@@ -124,6 +125,154 @@ class EligibilityService {
 
 		return $eligible;
 	}//end getEligibleResources()
+
+	/**
+	 * Return the Resources that MATCH a Service: the skill-eligible resources
+	 * (the booking path's rule, REQ-APT-004) that are also active and bookable
+	 * and of a resource type the Service asks for.
+	 *
+	 * The skill match is exactly {@see getEligibleResources()}; this adds the
+	 * three filters REQ-SRG-002 names on top of it, so the list and the service
+	 * page count the resources that could really be booked, not every skilled
+	 * one. A Service that names no `requiredResourceTypes` accepts any type.
+	 *
+	 * @param string $serviceId Service UUID/slug. Empty returns an empty list.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-each-service-shows-the-resources-that-match-it-req-srg-002
+	 */
+	public function getMatchingResources(string $serviceId): array {
+		if ($serviceId === '') {
+			return [];
+		}
+
+		$service = $this->loadService(serviceId: $serviceId);
+		if ($service === null) {
+			return [];
+		}
+
+		$types = $this->normaliseSkillList(value: ($service['requiredResourceTypes'] ?? []));
+
+		$matching = [];
+		foreach ($this->getEligibleResources(serviceId: $serviceId) as $resource) {
+			if ($this->isActiveBookable(resource: $resource) === false) {
+				continue;
+			}
+
+			if ($types !== [] && in_array((string)($resource['type'] ?? ''), $types, true) === false) {
+				continue;
+			}
+
+			$matching[] = $resource;
+		}
+
+		return $matching;
+	}//end getMatchingResources()
+
+	/**
+	 * The number of Resources that match a Service.
+	 *
+	 * @param string $serviceId Service UUID/slug.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-each-service-shows-the-resources-that-match-it-req-srg-002
+	 */
+	public function countMatchingResources(string $serviceId): int {
+		return count($this->getMatchingResources(serviceId: $serviceId));
+	}//end countMatchingResources()
+
+	/**
+	 * The matching-resource count per Service, for the services list. An empty
+	 * `$serviceIds` counts every Service on the configured register/schema.
+	 *
+	 * @param array<int, string> $serviceIds The services to count, or [] for all.
+	 *
+	 * @return array<string, int> Service id to matching-resource count.
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-each-service-shows-the-resources-that-match-it-req-srg-002
+	 */
+	public function matchingResourceCounts(array $serviceIds = []): array {
+		$ids = $serviceIds;
+		if ($ids === []) {
+			$ids = $this->allServiceIds();
+		}
+
+		$counts = [];
+		foreach ($ids as $serviceId) {
+			$id = (string)$serviceId;
+			if ($id === '' || array_key_exists($id, $counts) === true) {
+				continue;
+			}
+
+			$counts[$id] = $this->countMatchingResources(serviceId: $id);
+		}
+
+		return $counts;
+	}//end matchingResourceCounts()
+
+	/**
+	 * Whether a Resource is active and bookable. A missing `status` is the
+	 * schema default `active`; a missing `bookable` is bookable, and only an
+	 * explicit `false` hides it (as the booking availability search reads it).
+	 *
+	 * @param array<string, mixed> $resource The resource row.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-each-service-shows-the-resources-that-match-it-req-srg-002
+	 */
+	private function isActiveBookable(array $resource): bool {
+		$status = (string)($resource['status'] ?? 'active');
+		if ($status !== 'active') {
+			return false;
+		}
+
+		return ($resource['bookable'] ?? true) !== false;
+	}//end isActiveBookable()
+
+	/**
+	 * The ids of every Service on the configured register/schema.
+	 *
+	 * @return array<int, string>
+	 */
+	private function allServiceIds(): array {
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: self::SERVICE_SCHEMA_KEY);
+		if ($register === '' || $schema === '') {
+			return [];
+		}
+
+		try {
+			$rows = $this->getObjectService()->findAll(
+				config: ['filters' => ['register' => $register, 'schema' => $schema]]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: service list failed for eligibility counts');
+			return [];
+		}
+
+		$ids = [];
+		foreach (($rows ?? []) as $row) {
+			$service = $this->toArray(object: $row);
+			if ($service === null) {
+				continue;
+			}
+
+			$self = [];
+			if (is_array($service['@self'] ?? null) === true) {
+				$self = $service['@self'];
+			}
+
+			$id = (string)($self['id'] ?? ($service['id'] ?? ''));
+			if ($id !== '') {
+				$ids[] = $id;
+			}
+		}
+
+		return $ids;
+	}//end allServiceIds()
 
 	/**
 	 * Return per-step eligibility for a multi-step Service.
@@ -433,7 +582,7 @@ class EligibilityService {
 	 * @return string The configured register id, or '' when unconfigured.
 	 */
 	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
@@ -451,7 +600,7 @@ class EligibilityService {
 	 * @return string
 	 */
 	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaId()
 
 	/**

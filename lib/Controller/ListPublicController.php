@@ -41,9 +41,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Marketing\PreferenceCentreService;
-use OCA\Pipelinq\Service\SubscriptionService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PreferenceCentreServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -66,6 +66,7 @@ use Throwable;
  *  four endpoints share all of them.
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-public-list-endpoints-are-throttled-and-fail-closed
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class ListPublicController extends Controller {
 	/**
@@ -88,21 +89,21 @@ class ListPublicController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SubscriptionService $subscriptions Membership service.
-	 * @param PreferenceCentreService $preferences The preference centre.
+	 * @param SubscriptionServiceInterface $subscriptions Membership service.
+	 * @param PreferenceCentreServiceInterface $preferences The preference centre.
 	 * @param IThrottler $throttler Brute-force throttler for rejected tokens.
 	 * @param IL10N $l10n Localisation for the rendered pages.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private SubscriptionService $subscriptions,
-		private PreferenceCentreService $preferences,
+		private SubscriptionServiceInterface $subscriptions,
+		private PreferenceCentreServiceInterface $preferences,
 		private IThrottler $throttler,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

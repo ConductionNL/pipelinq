@@ -25,7 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MockPipelineCleanupServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -39,7 +40,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
  */
-class MockPipelineCleanupService {
+class MockPipelineCleanupService implements MockPipelineCleanupServiceInterface {
 	/**
 	 * Slugs of the mock register's pipelines (lib/Settings/pipelinq_mock_register.json).
 	 */
@@ -251,7 +252,7 @@ class MockPipelineCleanupService {
 	 * @throws RuntimeException When the key is not set.
 	 */
 	private function config(string $key): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($value === '') {
 			throw new RuntimeException('Pipelinq is not configured: '.$key.' is empty');
 		}

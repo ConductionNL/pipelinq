@@ -47,15 +47,16 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
+use InvalidArgumentException;
 use OCA\OpenRegister\AppHost\Service\GenericStoreService;
 use OCA\OpenRegister\AppHost\Service\StoreDescriptor;
 use OCA\OpenRegister\AppHost\Store\StoreActionAuthorizer;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\RegisterResolverService;
-use OCA\Pipelinq\Service\Settings\SchemaSlugMap;
-use OCA\Pipelinq\Service\Store\StoreInstallLedger;
-use OCA\Pipelinq\Service\Store\StoreTemplateAssembler;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RegisterResolverServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaSlugMapInterface;
+use OCA\Pipelinq\Kernel\Contracts\StoreInstallLedgerInterface;
+use OCA\Pipelinq\Kernel\Contracts\StoreTemplateAssemblerInterface;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -66,7 +67,6 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use InvalidArgumentException;
 use Throwable;
 
 /**
@@ -109,7 +109,7 @@ class StoreController extends Controller {
 	 * Widening it is a decision about what a stranger's registry may write into
 	 * an organisation's data. Do not add a slug here to make an import work.
 	 *
-	 * Every entry is also a key of SchemaSlugMap::SLUG_TO_CONFIG_KEY, and
+	 * Every entry is also a key of SchemaSlugMapInterface::SLUG_TO_CONFIG_KEY, and
 	 * phpstan proves it: an unmapped slug turns the lookup below into a
 	 * nullable read and fails analysis.
 	 *
@@ -153,9 +153,9 @@ class StoreController extends Controller {
 	 * @param IAppConfig $appConfig App config store holding the registry connection and schema ids.
 	 * @param GenericStoreService $storeService Engine-owned store discovery client.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
-	 * @param RegisterResolverService $registerResolver Resolves pipelinq's register id.
-	 * @param StoreInstallLedger $installLedger What this instance installed, and the last registry check.
-	 * @param StoreTemplateAssembler $assembler Offers local configuration and builds a published item's components.
+	 * @param RegisterResolverServiceInterface $registerResolver Resolves pipelinq's register id.
+	 * @param StoreInstallLedgerInterface $installLedger What this instance installed, and the last registry check.
+	 * @param StoreTemplateAssemblerInterface $assembler Offers local configuration and builds a published item's components.
 	 * @param StoreActionAuthorizer $actionAuthorizer Decides who may publish (OpenRegister).
 	 *
 	 * @return void
@@ -170,12 +170,12 @@ class StoreController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly GenericStoreService $storeService,
 		private readonly ObjectServiceInterface $objectService,
-		private readonly RegisterResolverService $registerResolver,
-		private readonly StoreInstallLedger $installLedger,
-		private readonly StoreTemplateAssembler $assembler,
+		private readonly RegisterResolverServiceInterface $registerResolver,
+		private readonly StoreInstallLedgerInterface $installLedger,
+		private readonly StoreTemplateAssemblerInterface $assembler,
 		private readonly StoreActionAuthorizer $actionAuthorizer,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -187,7 +187,7 @@ class StoreController extends Controller {
 	 */
 	private function descriptor(): StoreDescriptor {
 		return new StoreDescriptor(
-			appId: Application::APP_ID,
+			appId: AppIdentity::APP_ID,
 			schema: 'commercial-template',
 			defaultRegister: 'pipelinq',
 			cardFields: [
@@ -473,8 +473,8 @@ class StoreController extends Controller {
 			// PROVES it — a slug added to the allowlist with no mapping turns
 			// this back into a nullable read and fails analysis.
 			$schemaId = $this->appConfig->getValueString(
-				Application::APP_ID,
-				SchemaSlugMap::SLUG_TO_CONFIG_KEY[$slug],
+				AppIdentity::APP_ID,
+				SchemaSlugMapInterface::SLUG_TO_CONFIG_KEY[$slug],
 				''
 			);
 
@@ -562,14 +562,14 @@ class StoreController extends Controller {
 	public function getSettings(): JSONResponse {
 		return new JSONResponse(
 			data: [
-				'registryUrl' => $this->appConfig->getValueString(Application::APP_ID, 'registry_url', ''),
+				'registryUrl' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'registry_url', ''),
 				'registryRegister' => $this->appConfig->getValueString(
-					Application::APP_ID,
+					AppIdentity::APP_ID,
 					'registry_register',
 					'pipelinq'
 				),
 				'registryTokenSet' => trim(
-					$this->appConfig->getValueString(Application::APP_ID, 'registry_token', '')
+					$this->appConfig->getValueString(AppIdentity::APP_ID, 'registry_token', '')
 				) !== '',
 			],
 			statusCode: Http::STATUS_OK
@@ -592,17 +592,17 @@ class StoreController extends Controller {
 	public function saveSettings(): JSONResponse {
 		$url = $this->request->getParam('registryUrl');
 		if (is_string($url) === true) {
-			$this->appConfig->setValueString(Application::APP_ID, 'registry_url', trim($url));
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'registry_url', trim($url));
 		}
 
 		$register = $this->request->getParam('registryRegister');
 		if (is_string($register) === true && trim($register) !== '') {
-			$this->appConfig->setValueString(Application::APP_ID, 'registry_register', trim($register));
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'registry_register', trim($register));
 		}
 
 		$token = $this->request->getParam('registryToken');
 		if (is_string($token) === true && trim($token) !== '') {
-			$this->appConfig->setValueString(Application::APP_ID, 'registry_token', trim($token));
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'registry_token', trim($token));
 		}
 
 		return $this->getSettings();

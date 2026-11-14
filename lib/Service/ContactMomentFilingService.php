@@ -42,6 +42,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -51,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
  */
-class ContactMomentFilingService {
+class ContactMomentFilingService implements ContactMomentFilingServiceInterface {
 	/**
 	 * Constructor.
 	 *

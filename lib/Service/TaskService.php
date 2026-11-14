@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTime;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -110,7 +110,7 @@ class TaskService {
 	 */
 	private function getBusinessHourStart(): int {
 		return $this->appConfig->getValueInt(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'task.business_hour_start',
 			self::DEFAULT_BUSINESS_HOUR_START
 		);
@@ -126,7 +126,7 @@ class TaskService {
 	 */
 	private function getBusinessHourEnd(): int {
 		return $this->appConfig->getValueInt(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'task.business_hour_end',
 			self::DEFAULT_BUSINESS_HOUR_END
 		);

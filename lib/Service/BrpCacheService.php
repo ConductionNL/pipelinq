@@ -27,19 +27,20 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Cache wrapper around the brpPersoon schema.
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004
  */
-class BrpCacheService {
+class BrpCacheService implements BrpCacheServiceInterface {
 	/**
 	 * Default TTL in hours (24h per design.md).
 	 */
@@ -227,7 +228,7 @@ class BrpCacheService {
 	 */
 	public function getConfiguredTtlHours(): int {
 		$value = (int)$this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'brp.cache_ttl_hours',
 			(string)self::DEFAULT_TTL_HOURS,
 		);
@@ -270,8 +271,8 @@ class BrpCacheService {
 	 * @throws RuntimeException If misconfigured.
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brpPersoon_schema', '');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('brpPersoon register/schema not configured.');
 		}

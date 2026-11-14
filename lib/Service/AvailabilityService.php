@@ -30,7 +30,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
@@ -61,7 +62,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/appointment-booking/spec.md
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class AvailabilityService {
+class AvailabilityService implements AvailabilityServiceInterface {
 	use RowIdOf;
 	use NullablePayloadToArray;
 
@@ -80,25 +81,11 @@ class AvailabilityService {
 	public const CACHE_TTL_SECONDS = 86400;
 
 	/**
-	 * App-config key for the Resource schema id/slug.
-	 *
-	 * @var string
-	 */
-	public const RESOURCE_SCHEMA_KEY = 'resource_schema';
-
-	/**
 	 * App-config key for the Booking schema id/slug.
 	 *
 	 * @var string
 	 */
 	public const BOOKING_SCHEMA_KEY = 'booking_schema';
-
-	/**
-	 * App-config key for the Service schema id/slug.
-	 *
-	 * @var string
-	 */
-	public const SERVICE_SCHEMA_KEY = 'service_schema';
 
 	/**
 	 * App-config key for the AvailabilityCache schema id/slug.
@@ -1257,7 +1244,7 @@ class AvailabilityService {
 	 * @return string The configured register id, or '' when unconfigured.
 	 */
 	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
@@ -1275,7 +1262,7 @@ class AvailabilityService {
 	 * @return string
 	 */
 	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaId()
 
 	/**

@@ -29,8 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\WorklistService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,17 +51,17 @@ class WorklistController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param WorklistService $worklistService Worklist union service.
+	 * @param WorklistServiceInterface $worklistService Worklist union service.
 	 * @param IUserSession $userSession Active user session.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private WorklistService $worklistService,
+		private WorklistServiceInterface $worklistService,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

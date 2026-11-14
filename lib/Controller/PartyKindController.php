@@ -30,9 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PartyKindRegistryService;
-use OCA\Pipelinq\Service\PartyLinkService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyLinkServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -48,15 +48,15 @@ class PartyKindController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PartyKindRegistryService $registry The vocabulary and the rule.
-	 * @param PartyLinkService $linkService The one write path for a link.
+	 * @param PartyKindRegistryServiceInterface $registry The vocabulary and the rule.
+	 * @param PartyLinkServiceInterface $linkService The one write path for a link.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PartyKindRegistryService $registry,
-		private readonly PartyLinkService $linkService,
+		private readonly PartyKindRegistryServiceInterface $registry,
+		private readonly PartyLinkServiceInterface $linkService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
