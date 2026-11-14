@@ -9564,7 +9564,20 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "A few sentences on what the call was about. Written from the transcript; the agent can correct it.",
         "Transcript": "Transcript",
         "Transcript status": "Transcript status",
-        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording."
+        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording.",
+        "Merges": "Merges",
+        "No other record was merged into this one.": "No other record was merged into this one.",
+        "Undo the merge": "Undo the merge",
+        "Undo": "Undo",
+        "{name} merged into this record on {date}": "{name} merged into this record on {date}",
+        "A record merged into this one on {date}": "A record merged into this one on {date}",
+        "Undone on {date}": "Undone on {date}",
+        "Can be undone until {date}": "Can be undone until {date}",
+        "Final since {date}": "Final since {date}",
+        "Final": "Final",
+        "The merges of this record could not be loaded.": "The merges of this record could not be loaded.",
+        "The merge was undone. Both records exist again with their own links.": "The merge was undone. Both records exist again with their own links.",
+        "The merge could not be undone. The reversal window may have passed.": "The merge could not be undone. The reversal window may have passed."
     },
     "nplurals=2; plural=(n != 1);"
 )

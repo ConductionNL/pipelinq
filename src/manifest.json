@@ -3615,6 +3615,19 @@
 						},
 						"colSpan": 6,
 						"card": true
+					},
+					{
+						"id": "merges",
+						"component": "RecordMergesSection",
+						"title": "Merges",
+						"placement": "end",
+						"_note": "clients-reversible-merge REQ-CRM-002/003: the merges this record survived, with Undo inside the thirty day reversal window (x-openregister-merge.reversalWindowDays) and the date the merge became final after it.",
+						"props": {
+							"recordId": "@objectId",
+							"reversalWindowDays": 30
+						},
+						"colSpan": 6,
+						"card": true
 					}
 				],
 				"sidebar": {
@@ -5147,6 +5160,19 @@
 							"framed": true,
 							"partyKind": "contact"
 						}
+					},
+					{
+						"id": "merges",
+						"component": "RecordMergesSection",
+						"title": "Merges",
+						"placement": "end",
+						"_note": "clients-reversible-merge REQ-CRM-002/003: the merges this record survived, with Undo inside the thirty day reversal window (x-openregister-merge.reversalWindowDays) and the date the merge became final after it.",
+						"props": {
+							"recordId": "@objectId",
+							"reversalWindowDays": 30
+						},
+						"colSpan": 6,
+						"card": true
 					}
 				],
 				"sidebar": {

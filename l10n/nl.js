@@ -9578,7 +9578,20 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "Een paar zinnen over waar het gesprek over ging. Geschreven uit de transcriptie; de medewerker kan ze corrigeren.",
         "Transcript": "Transcriptie",
         "Transcript status": "Status transcriptie",
-        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname."
+        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname.",
+        "Merges": "Samenvoegingen",
+        "No other record was merged into this one.": "Er is geen ander record met dit record samengevoegd.",
+        "Undo the merge": "Samenvoeging ongedaan maken",
+        "Undo": "Ongedaan maken",
+        "{name} merged into this record on {date}": "{name} op {date} met dit record samengevoegd",
+        "A record merged into this one on {date}": "Een record op {date} met dit record samengevoegd",
+        "Undone on {date}": "Ongedaan gemaakt op {date}",
+        "Can be undone until {date}": "Ongedaan te maken tot {date}",
+        "Final since {date}": "Definitief sinds {date}",
+        "Final": "Definitief",
+        "The merges of this record could not be loaded.": "De samenvoegingen van dit record konden niet worden geladen.",
+        "The merge was undone. Both records exist again with their own links.": "De samenvoeging is ongedaan gemaakt. Beide records bestaan weer, elk met de eigen koppelingen.",
+        "The merge could not be undone. The reversal window may have passed.": "De samenvoeging kon niet ongedaan worden gemaakt. Mogelijk is de termijn om dit terug te draaien verstreken."
     },
     "nplurals=2; plural=(n != 1);"
 )
