@@ -186,7 +186,8 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 			return [];
 		}
 
-		return $this->filterBillableEntries(rows: $rows, clientId: $clientId, periodStart: $periodStart, periodEnd: $periodEnd);
+		$period = new ClientBillingPeriod(clientId: $clientId, periodStart: $periodStart, periodEnd: $periodEnd);
+		return $this->filterBillableEntries(rows: $rows, period: $period);
 	}//end selectBatch()
 
 	/**
@@ -218,18 +219,16 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	 * Keep the approved, un-billed entries of a client dated inside the period.
 	 *
 	 * @param array<int, mixed> $rows The raw time entry rows.
-	 * @param string $clientId The client UUID.
-	 * @param string $periodStart The period start date (ISO 8601, inclusive).
-	 * @param string $periodEnd The period end date (ISO 8601, inclusive).
+	 * @param ClientBillingPeriod $period The client and period.
 	 *
 	 * @return array<int, array<string, mixed>> The selected time entries, sorted by id.
 	 */
-	private function filterBillableEntries(array $rows, string $clientId, string $periodStart, string $periodEnd): array {
+	private function filterBillableEntries(array $rows, ClientBillingPeriod $period): array {
 		$selected = [];
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
-			if ($this->isApprovedUnbilledFor(data: $data, clientId: $clientId) === true
-				&& $this->isDatedInPeriod(data: $data, periodStart: $periodStart, periodEnd: $periodEnd) === true
+			if ($this->isApprovedUnbilledFor(data: $data, clientId: $period->clientId) === true
+				&& $period->contains(date: (string)($data['date'] ?? '')) === true
 			) {
 				$selected[] = $data;
 			}
@@ -261,20 +260,6 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	}//end isApprovedUnbilledFor()
 
 	/**
-	 * Whether an entry's date lies inside the period (inclusive).
-	 *
-	 * @param array<string, mixed> $data The time entry data.
-	 * @param string $periodStart The period start date (ISO 8601, inclusive).
-	 * @param string $periodEnd The period end date (ISO 8601, inclusive).
-	 *
-	 * @return bool True when the entry is dated inside the period.
-	 */
-	private function isDatedInPeriod(array $data, string $periodStart, string $periodEnd): bool {
-		$date = (string)($data['date'] ?? '');
-		return ($date === '' || $date < $periodStart || $date > $periodEnd) === false;
-	}//end isDatedInPeriod()
-
-	/**
 	 * Send a client's approved, un-billed entries for a period to billing.
 	 *
 	 * Returns a status array (never throws to the caller):
@@ -304,9 +289,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 		}
 
 		return $this->dispatchBatch(
-			clientId: $clientId,
-			periodStart: $periodStart,
-			periodEnd: $periodEnd,
+			period: new ClientBillingPeriod(clientId: $clientId, periodStart: $periodStart, periodEnd: $periodEnd),
 			entries: $entries
 		);
 	}//end sendToBilling()
@@ -390,19 +373,18 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	/**
 	 * Build the batch payload and dispatch it to shillinq's intake.
 	 *
-	 * @param string $clientId The client UUID.
-	 * @param string $periodStart The period start date.
-	 * @param string $periodEnd The period end date.
+	 * @param ClientBillingPeriod $period The client and period.
 	 * @param array<int, array<string, mixed>> $entries The selected time entries.
 	 *
 	 * @return array<string, mixed> The outcome.
 	 */
-	private function dispatchBatch(string $clientId, string $periodStart, string $periodEnd, array $entries): array {
+	private function dispatchBatch(ClientBillingPeriod $period, array $entries): array {
+		$clientId = $period->clientId;
 		$client = $this->fetchClient(clientId: $clientId);
 		$clientName = (string)($client['name'] ?? $clientId);
 		$organisationRef = (string)($client['shillinqOrganisationRef'] ?? '');
 
-		$batchId = $this->computeBatchId(clientId: $clientId, periodStart: $periodStart, periodEnd: $periodEnd, entries: $entries);
+		$batchId = $this->computeBatchId(period: $period, entries: $entries);
 
 		// Mark pending + stamp the batchId BEFORE the call (mark-then-act,
 		// the TimeApprovalListener pattern) so a mid-call failure is never
@@ -415,13 +397,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 			return $this->failBatch(entries: $entries, clientName: $clientName, clientId: $clientId, outcome: $outcome);
 		}
 
-		$payload = $this->buildPayload(
-			batchId: $batchId,
-			organisationRef: $organisationRef,
-			periodStart: $periodStart,
-			periodEnd: $periodEnd,
-			entries: $entries
-		);
+		$payload = ['batchId' => $batchId, 'organisationRef' => $organisationRef] + $this->buildPayload(period: $period, entries: $entries);
 
 		$outcome = $this->callIntake(intakeService: $intakeService, payload: $payload, clientName: $clientName);
 		return $this->settleBatch(outcome: $outcome, entries: $entries, clientName: $clientName, clientId: $clientId);
@@ -446,7 +422,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 			return $outcome;
 		}
 
-		return $this->markSynced(entries: $entries, batchId: $outcome['batchId'], result: $outcome['result']);
+		return $this->markSynced(entries: $entries, outcome: $outcome);
 	}//end settleBatch()
 
 	/**
@@ -545,12 +521,13 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	 * Mark every entry `synced` against the invoice and return the synced outcome.
 	 *
 	 * @param array<int, array<string, mixed>> $entries The batch entries.
-	 * @param string $batchId The deterministic batch id.
-	 * @param mixed $result The intake result.
+	 * @param array<string, mixed> $outcome The intake result and the deterministic batch id.
 	 *
 	 * @return array<string, mixed> The synced outcome.
 	 */
-	private function markSynced(array $entries, string $batchId, mixed $result): array {
+	private function markSynced(array $entries, array $outcome): array {
+		$batchId = (string) $outcome['batchId'];
+		$result = $outcome['result'];
 		$invoiceId = (string)($result['invoiceId'] ?? '');
 		$invoiceNumber = (string)($result['invoiceNumber'] ?? '');
 		$duplicated = (bool)($result['duplicated'] ?? false);
@@ -584,23 +561,16 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	}//end stampSynced()
 
 	/**
-	 * Build the shillinq time-intake request body for a batch.
+	 * Build the period and entries part of the shillinq time-intake request body.
 	 *
-	 * @param string $batchId The deterministic batch id.
-	 * @param string $organisationRef The client's shillinq organisation reference.
-	 * @param string $periodStart The period start date.
-	 * @param string $periodEnd The period end date.
+	 * The caller puts the batch id and organisation reference in front of it.
+	 *
+	 * @param ClientBillingPeriod $period The client and period.
 	 * @param array<int, array<string, mixed>> $entries The selected time entries.
 	 *
-	 * @return array<string, mixed> The intake request body.
+	 * @return array<string, mixed> The intake request body without batch id and organisation reference.
 	 */
-	private function buildPayload(
-		string $batchId,
-		string $organisationRef,
-		string $periodStart,
-		string $periodEnd,
-		array $entries,
-	): array {
+	private function buildPayload(ClientBillingPeriod $period, array $entries): array {
 		$currency = $this->appConfig->getValueString(AppIdentity::APP_ID, 'currency', 'EUR');
 
 		$entryPayloads = [];
@@ -622,13 +592,11 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 		}
 
 		return [
-			'batchId' => $batchId,
-			'organisationRef' => $organisationRef,
 			'currency' => $currency,
 			'billingModel' => self::BILLING_MODEL,
 			'period' => [
-				'start' => $periodStart,
-				'end' => $periodEnd,
+				'start' => $period->periodStart,
+				'end' => $period->periodEnd,
 			],
 			// Always null in the MVP — shillinq's rate cards resolve
 			// defaults (design.md, deferred question resolved provisionally).
@@ -646,14 +614,12 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	/**
 	 * Compute the deterministic UUIDv5 batch id.
 	 *
-	 * @param string $clientId The client UUID.
-	 * @param string $periodStart The period start date.
-	 * @param string $periodEnd The period end date.
+	 * @param ClientBillingPeriod $period The client and period.
 	 * @param array<int, array<string, mixed>> $entries The selected time entries.
 	 *
 	 * @return string The deterministic batch id.
 	 */
-	private function computeBatchId(string $clientId, string $periodStart, string $periodEnd, array $entries): string {
+	private function computeBatchId(ClientBillingPeriod $period, array $entries): string {
 		$entryIds = array_map(
 			static fn (array $entry): string => (string)($entry['id'] ?? ''),
 			$entries
@@ -662,9 +628,9 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 
 		$name = sprintf(
 			'pipelinq:billing-batch:%s:%s:%s:%s',
-			$clientId,
-			$periodStart,
-			$periodEnd,
+			$period->clientId,
+			$period->periodStart,
+			$period->periodEnd,
 			implode(',', $entryIds)
 		);
 
@@ -733,21 +699,6 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 			return;
 		}
 
-		$this->saveEntry(objectService: $objectService, entry: $entry, register: $register, schema: $schema);
-	}//end persistEntry()
-
-	/**
-	 * Save a time entry, logging (not throwing) on failure.
-	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param array<string, mixed> $entry The mutated time entry data.
-	 * @param string $register The register id.
-	 * @param string $schema The time entry schema id.
-	 *
-	 * @return void
-	 */
-	private function saveEntry(object $objectService, array $entry, string $register, string $schema): void {
-		$uuid = (string)($entry['id'] ?? '');
 		try {
 			$objectService->saveObject(object: $entry, extend: [], register: $register, schema: $schema, uuid: $uuid);
 		} catch (Throwable $e) {
@@ -756,7 +707,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 				['exception' => $e->getMessage(), 'uuid' => $uuid]
 			);
 		}//end try
-	}//end saveEntry()
+	}//end persistEntry()
 
 	/**
 	 * Fetch a client's data by UUID.
