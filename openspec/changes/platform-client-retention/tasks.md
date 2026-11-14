@@ -25,7 +25,7 @@
 
 ## 4. Anonymisation profile (gated on OpenRegister)
 
-- [ ] 4.1 Once OpenRegister reads a profile beside the `archive` block, declare it on client and contact with the properties named in design D6
+- [x] 4.1 Once OpenRegister reads a profile beside the `archive` block, declare it on client and contact with the properties named in design D6 (built: `archive.anonymisation` on client and contact; OpenRegister reads it from its build/anonymising-as-an-archival-outcome branch, task 2.2a, and current main ignores the extra key. The contact stores no BSN value, only the `verifiedBSN` flag, so the profile names `brpPersonId`)
   - Verify: OpenRegister's planner accepts both profiles (a profile naming an unknown property is refused, so a green import is the check)
 
 ## 5. Text and docs

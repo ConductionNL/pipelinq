@@ -128,7 +128,7 @@ class MessagingController extends Controller {
 
 		$uid = $this->privilege->actingUserId();
 
-		if ($send['channel'] !== 'sms' && $send['channel'] !== 'whatsapp') {
+		if ($this->isMessagingChannel(channel: $send['channel']) === false) {
 			return new JSONResponse(['status' => 'invalid-channel'], Http::STATUS_BAD_REQUEST);
 		}
 
@@ -139,6 +139,19 @@ class MessagingController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
+		return $this->dispatchSend(contact: $contact, send: $send, uid: $uid);
+	}//end send()
+
+	/**
+	 * Send the message to the loaded contact and answer with the outcome.
+	 *
+	 * @param mixed $contact The loaded contact.
+	 * @param array<string, mixed> $send The typed send parameters.
+	 * @param string|null $uid The acting user id.
+	 *
+	 * @return JSONResponse The send outcome.
+	 */
+	private function dispatchSend($contact, array $send, $uid): JSONResponse {
 		$outcome = $this->messagingService->send(
 			route: new MessageRoute(contact: $contact, providerHint: $send['providerHint'], clientId: $send['clientId'], inReplyTo: $send['inReplyTo']),
 			content: new MessageContent(channel: $send['channel'], body: $send['body'], templateId: $send['templateId'], parameters: $send['parameters']),
@@ -146,7 +159,7 @@ class MessagingController extends Controller {
 		);
 
 		return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string)$outcome['status']));
-	}//end send()
+	}//end dispatchSend()
 
 	/**
 	 * Send a failed or expired outbound message again (REQ-MSR-006).
@@ -255,16 +268,9 @@ class MessagingController extends Controller {
 
 		$uid = $this->privilege->actingUserId();
 
-		if ($channel !== 'sms' && $channel !== 'whatsapp') {
-			return new JSONResponse(['status' => 'invalid-channel'], Http::STATUS_BAD_REQUEST);
-		}
-
-		if ($evidence === '' || $legalBasis === '') {
-			return new JSONResponse(['status' => 'evidence-and-legal-basis-required'], Http::STATUS_BAD_REQUEST);
-		}
-
-		if ($action !== 'opt-in' && $action !== 'opt-out') {
-			return new JSONResponse(['status' => 'invalid-action'], Http::STATUS_BAD_REQUEST);
+		$invalid = $this->consentRequestError(channel: $channel, action: $action, evidence: $evidence, legalBasis: $legalBasis);
+		if ($invalid !== null) {
+			return $invalid;
 		}
 
 		// Per-object guard (no-admin-idor).
@@ -283,13 +289,56 @@ class MessagingController extends Controller {
 			legalBasis: $legalBasis
 		);
 
-		return new JSONResponse(
-			[
-				'status' => 'recorded',
-				'state' => $this->consentService->latestState(contactId: $contactId, channel: $channel),
-			]
-		);
+		return new JSONResponse(['status' => 'recorded', 'state' => $this->consentService->latestState(contactId: $contactId, channel: $channel)]);
 	}//end consent()
+
+	/**
+	 * The 400 response for an invalid consent request, or null when it is valid.
+	 *
+	 * @param string $channel The channel.
+	 * @param string $action The consent action.
+	 * @param string $evidence The evidence.
+	 * @param string $legalBasis The legal basis.
+	 *
+	 * @return JSONResponse|null The error response, or null.
+	 */
+	private function consentRequestError(string $channel, string $action, string $evidence, string $legalBasis): JSONResponse|null {
+		if ($this->isMessagingChannel(channel: $channel) === false) {
+			return new JSONResponse(['status' => 'invalid-channel'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($evidence === '' || $legalBasis === '') {
+			return new JSONResponse(['status' => 'evidence-and-legal-basis-required'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($this->isConsentAction(action: $action) === false) {
+			return new JSONResponse(['status' => 'invalid-action'], Http::STATUS_BAD_REQUEST);
+		}
+
+		return null;
+	}//end consentRequestError()
+
+	/**
+	 * Whether the action is `opt-in` or `opt-out`.
+	 *
+	 * @param string $action The consent action.
+	 *
+	 * @return bool True for a supported action.
+	 */
+	private function isConsentAction(string $action): bool {
+		return ($action !== 'opt-in' && $action !== 'opt-out') === false;
+	}//end isConsentAction()
+
+	/**
+	 * Whether the channel is one messaging supports (`sms` or `whatsapp`).
+	 *
+	 * @param string $channel The channel.
+	 *
+	 * @return bool True for a supported channel.
+	 */
+	private function isMessagingChannel(string $channel): bool {
+		return ($channel !== 'sms' && $channel !== 'whatsapp') === false;
+	}//end isMessagingChannel()
 
 	/**
 	 * Append the consent record for a validated opt-in / opt-out action.

@@ -88,10 +88,39 @@ class LoyaltyReportingController extends Controller {
 			return $refusal;
 		}
 
+		[$from, $to] = $this->reportingWindow(from: $from, to: $to, days: $days);
+
+		return $this->kpisResponse(programmeId: $programmeId, from: $from, to: $to, format: $format);
+	}//end kpis()
+
+	/**
+	 * The requested window, or the last `days` days when no start is given.
+	 *
+	 * @param string|null $from The window start.
+	 * @param string|null $to The window end.
+	 * @param int|null $days The number of trailing days.
+	 *
+	 * @return array{0: string|null, 1: string|null} The window start and end.
+	 */
+	private function reportingWindow(string|null $from, string|null $to, int|null $days): array {
 		if (($from === null || $from === '') && $days !== null && $days > 0) {
 			['from' => $from, 'to' => $to] = $this->reportingService->lastDaysWindow(days: $days);
 		}
 
+		return [$from, $to];
+	}//end reportingWindow()
+
+	/**
+	 * The KPIs as JSON, or as a CSV download.
+	 *
+	 * @param string $programmeId The loyalty programme id.
+	 * @param string|null $from The window start.
+	 * @param string|null $to The window end.
+	 * @param string $format `json` or `csv`.
+	 *
+	 * @return JSONResponse|DataDownloadResponse The KPIs.
+	 */
+	private function kpisResponse(string $programmeId, string|null $from, string|null $to, string $format): JSONResponse|DataDownloadResponse {
 		$kpis = $this->reportingService->getKpis(programmeId: $programmeId, from: $from, to: $to);
 		if (strtolower($format) === 'csv') {
 			return new DataDownloadResponse(
@@ -102,7 +131,7 @@ class LoyaltyReportingController extends Controller {
 		}
 
 		return new JSONResponse($kpis);
-	}//end kpis()
+	}//end kpisResponse()
 
 	/**
 	 * GET liability snapshot (IFRS 15 / RJ 270).

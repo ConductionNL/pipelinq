@@ -44,6 +44,8 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 /**
  * CampaignAttributionService: first touch, last touch, linear, and the close.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
+ *
  * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
  */
 class CampaignAttributionService {
@@ -159,6 +161,25 @@ class CampaignAttributionService {
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
 	public function split(array $touchpoints, float $value, string $model): array {
+		$ids = $this->distinctIds(touchpoints: $touchpoints);
+
+		if ($ids === [] || $value === 0.0) {
+			return [];
+		}
+
+		return $this->splitByModel(ids: $ids, value: $value, model: $model);
+	}//end split()
+
+	/**
+	 * The distinct, non-empty touchpoint ids, in order.
+	 *
+	 * @param array<int, array<string, mixed>> $touchpoints The lead's touchpoints, oldest first.
+	 *
+	 * @return list<string>
+	 *
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 */
+	private function distinctIds(array $touchpoints): array {
 		$ids = [];
 		foreach ($touchpoints as $touchpoint) {
 			$id = $this->touchpoints->idOf(touchpoint: $touchpoint);
@@ -167,10 +188,21 @@ class CampaignAttributionService {
 			}
 		}
 
-		if ($ids === [] || $value === 0.0) {
-			return [];
-		}
+		return $ids;
+	}//end distinctIds()
 
+	/**
+	 * Attribute the value to the first touchpoint, the last, or evenly over all.
+	 *
+	 * @param list<string> $ids The distinct touchpoint ids, oldest first; not empty.
+	 * @param float $value The lead's closed value.
+	 * @param string $model One of `first`, `last`, `linear`.
+	 *
+	 * @return array<string, float> Touchpoint id to attributed value.
+	 *
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+	 */
+	private function splitByModel(array $ids, float $value, string $model): array {
 		if ($model === 'first') {
 			return [$ids[0] => $value];
 		}
@@ -186,7 +218,7 @@ class CampaignAttributionService {
 		}
 
 		return $split;
-	}//end split()
+	}//end splitByModel()
 
 	/**
 	 * What one lead closed on, and for how much.

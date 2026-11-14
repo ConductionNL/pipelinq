@@ -251,15 +251,11 @@ class ClientRiskService {
 	 * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-1.3
 	 */
 	public function store(array $client, array $risk, string $register, string $schema): bool {
-		$stored = ($client['churnRisk'] ?? null);
-		if (is_array($stored) === true
-			&& ($stored['level'] ?? null) === $risk['level']
-			&& ($stored['reasons'] ?? null) === $risk['reasons']
-		) {
+		if ($this->riskUnchanged(stored: ($client['churnRisk'] ?? null), risk: $risk) === true) {
 			return false;
 		}
 
-		$uuid = (string) ($client['id'] ?? ($client['uuid'] ?? ''));
+		$uuid = $this->clientUuid(client: $client);
 		if ($uuid === '') {
 			return false;
 		}
@@ -273,6 +269,48 @@ class ClientRiskService {
 		$client['churnRisk'] = $risk;
 		unset($client['@self']);
 
+		return $this->saveRisk(client: $client, register: $register, schema: $schema, uuid: $uuid);
+	}//end store()
+
+	/**
+	 * Whether the stored risk already has this level and these reasons.
+	 *
+	 * @param mixed               $stored The client's stored churnRisk.
+	 * @param array<string,mixed> $risk   The risk from assess().
+	 *
+	 * @return bool
+	 */
+	private function riskUnchanged(mixed $stored, array $risk): bool {
+		if (is_array($stored) === false) {
+			return false;
+		}
+
+		return ($stored['level'] ?? null) === $risk['level']
+			&& ($stored['reasons'] ?? null) === $risk['reasons'];
+	}//end riskUnchanged()
+
+	/**
+	 * The client's id, else its uuid ('' when it has neither).
+	 *
+	 * @param array<string,mixed> $client The client.
+	 *
+	 * @return string
+	 */
+	private function clientUuid(array $client): string {
+		return (string) ($client['id'] ?? ($client['uuid'] ?? ''));
+	}//end clientUuid()
+
+	/**
+	 * Save the client with its risk as the system; a failure is logged.
+	 *
+	 * @param array<string,mixed> $client   The client with its new risk.
+	 * @param string              $register The register id.
+	 * @param string              $schema   The client schema id.
+	 * @param string              $uuid     The client id.
+	 *
+	 * @return bool Whether the client was written.
+	 */
+	private function saveRisk(array $client, string $register, string $schema, string $uuid): bool {
 		try {
 			$this->objectService->saveObject(
 				object: $client,
@@ -288,7 +326,7 @@ class ClientRiskService {
 		}
 
 		return true;
-	}//end store()
+	}//end saveRisk()
 
 	/**
 	 * The level a score falls in.

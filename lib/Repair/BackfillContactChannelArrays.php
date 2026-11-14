@@ -110,15 +110,51 @@ class BackfillContactChannelArrays implements IRepairStep {
 			return;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$output->warning('BackfillContactChannelArrays: OpenRegister ObjectService unavailable, skipping (' . $e->getMessage() . ')');
+		$objectService = $this->objectServiceFor(output: $output);
+		if ($objectService === null) {
 			return;
 		}
 
 		$actingAdmin = $this->actingAdmin();
 
+		$totals = $this->backfillAllTypes(objectService: $objectService, register: $register, actingAdmin: $actingAdmin);
+
+		$output->info(
+			sprintf(
+				'BackfillContactChannelArrays: %d record(s) backfilled, %d already had channel data, %d failed to save',
+				$totals['fixed'],
+				$totals['skipped'],
+				$totals['stuck']
+			)
+		);
+	}//end run()
+
+	/**
+	 * The OpenRegister ObjectService, or null (warned) when it is unavailable.
+	 *
+	 * @param IOutput $output Output.
+	 *
+	 * @return object|null
+	 */
+	private function objectServiceFor(IOutput $output): object|null {
+		try {
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		} catch (Throwable $e) {
+			$output->warning('BackfillContactChannelArrays: OpenRegister ObjectService unavailable, skipping (' . $e->getMessage() . ')');
+			return null;
+		}
+	}//end objectServiceFor()
+
+	/**
+	 * Backfill every configured object type and tally the outcomes.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $register      The pipelinq register id.
+	 * @param mixed  $actingAdmin   User to save as.
+	 *
+	 * @return array{fixed: int, skipped: int, stuck: int}
+	 */
+	private function backfillAllTypes(object $objectService, string $register, mixed $actingAdmin): array {
 		$totals = ['fixed' => 0, 'skipped' => 0, 'stuck' => 0];
 		foreach (self::OBJECT_TYPES as $objectType) {
 			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
@@ -132,15 +168,8 @@ class BackfillContactChannelArrays implements IRepairStep {
 			}
 		}
 
-		$output->info(
-			sprintf(
-				'BackfillContactChannelArrays: %d record(s) backfilled, %d already had channel data, %d failed to save',
-				$totals['fixed'],
-				$totals['skipped'],
-				$totals['stuck']
-			)
-		);
-	}//end run()
+		return $totals;
+	}//end backfillAllTypes()
 
 	/**
 	 * Compute and persist the patch for one client/contact row.

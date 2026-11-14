@@ -118,9 +118,20 @@ class ProductStockController extends Controller {
 			return null;
 		}
 
+		return $this->productData(entity: $this->findProduct(id: $id));
+	}//end loadProduct()
+
+	/**
+	 * Find a product, or null when it cannot be read.
+	 *
+	 * @param string $id The product id.
+	 *
+	 * @return mixed
+	 */
+	private function findProduct(string $id) {
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$entity = $objectService->find(
+			return $objectService->find(
 				id: $id,
 				register: $this->slug(key: 'register', default: 'pipelinq'),
 				schema: $this->slug(key: 'product_schema', default: 'product')
@@ -128,7 +139,16 @@ class ProductStockController extends Controller {
 		} catch (Throwable $e) {
 			return null;
 		}
+	}//end findProduct()
 
+	/**
+	 * A found product as an array, or null when it is neither an array nor serialises to one.
+	 *
+	 * @param mixed $entity The found product.
+	 *
+	 * @return array<string, mixed>|null The product.
+	 */
+	private function productData($entity): array|null {
 		if (is_array($entity) === true) {
 			return $entity;
 		}
@@ -141,7 +161,7 @@ class ProductStockController extends Controller {
 		}
 
 		return null;
-	}//end loadProduct()
+	}//end productData()
 
 	/**
 	 * An app-config slug, never empty.

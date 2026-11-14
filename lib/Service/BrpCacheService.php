@@ -69,58 +69,13 @@ class BrpCacheService implements BrpCacheServiceInterface {
 	 *
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-01
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-02
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
 	public function get(
 		#[\SensitiveParameter]
 		string $rawBsn,
 	): ?array {
 		try {
-			[$register, $schema] = $this->config();
-			$hash = BsnValidationService::hash($rawBsn);
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'bsnHash' => $hash,
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
-
-			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-			$latest = null;
-			foreach (($results ?? []) as $object) {
-				$arr = self::toArray(object: $object);
-				$retentionTo = (string)($arr['retentionTo'] ?? '');
-				if ($retentionTo === '') {
-					continue;
-				}
-
-				try {
-					$retentionDt = new DateTimeImmutable($retentionTo, new DateTimeZone('UTC'));
-				} catch (Throwable $e) {
-					continue;
-				}
-
-				if ($retentionDt <= $now) {
-					continue;
-				}
-
-				if ($latest === null) {
-					$latest = $arr;
-					continue;
-				}
-
-				$latestFetched = (string)($latest['fetchedOn'] ?? '');
-				$currentFetched = (string)($arr['fetchedOn'] ?? '');
-				if ($currentFetched > $latestFetched) {
-					$latest = $arr;
-				}
-			}//end foreach
-
-			return $latest;
+			return $this->latestUnexpired(results: $this->cachedRows(rawBsn: $rawBsn));
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'BRP cache lookup failed',
@@ -129,6 +84,96 @@ class BrpCacheService implements BrpCacheServiceInterface {
 			return null;
 		}//end try
 	}//end get()
+
+	/**
+	 * The cached BrpPersoon rows for a raw BSN, looked up by its hash.
+	 *
+	 * @param string $rawBsn Raw BSN — hashed in-process only.
+	 *
+	 * @return mixed The findAll answer.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
+	 */
+	private function cachedRows(#[\SensitiveParameter] string $rawBsn): mixed {
+		[$register, $schema] = $this->config();
+		$hash = BsnValidationService::hash($rawBsn);
+		return $this->getObjectService()->findAll(
+			config: [
+				'filters' => [
+					'bsnHash' => $hash,
+					'register' => $register,
+					'schema' => $schema,
+				],
+			]
+		);
+	}//end cachedRows()
+
+	/**
+	 * The most recently fetched row whose retention has not passed, or null.
+	 *
+	 * @param mixed $results The cached rows.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function latestUnexpired(mixed $results): array|null {
+		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$latest = null;
+		foreach (($results ?? []) as $object) {
+			$arr = self::toArray(object: $object);
+			if ($this->isUnexpired(row: $arr, now: $now) === false) {
+				continue;
+			}
+
+			$latest = $this->laterFetched(latest: $latest, row: $arr);
+		}
+
+		return $latest;
+	}//end latestUnexpired()
+
+	/**
+	 * Whether a cached row carries a retention date still in the future.
+	 *
+	 * @param array<string,mixed> $row The cached row.
+	 * @param DateTimeImmutable   $now The current time (UTC).
+	 *
+	 * @return bool
+	 */
+	private function isUnexpired(array $row, DateTimeImmutable $now): bool {
+		$retentionTo = (string)($row['retentionTo'] ?? '');
+		if ($retentionTo === '') {
+			return false;
+		}
+
+		try {
+			$retentionDt = new DateTimeImmutable($retentionTo, new DateTimeZone('UTC'));
+		} catch (Throwable $e) {
+			return false;
+		}
+
+		return ($retentionDt > $now);
+	}//end isUnexpired()
+
+	/**
+	 * The later-fetched of the best row so far and a candidate.
+	 *
+	 * @param array<string,mixed>|null $latest The best row so far.
+	 * @param array<string,mixed>      $row    The candidate.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function laterFetched(array|null $latest, array $row): array {
+		if ($latest === null) {
+			return $row;
+		}
+
+		$latestFetched = (string)($latest['fetchedOn'] ?? '');
+		$currentFetched = (string)($row['fetchedOn'] ?? '');
+		if ($currentFetched > $latestFetched) {
+			return $row;
+		}
+
+		return $latest;
+	}//end laterFetched()
 
 	/**
 	 * Persist a BrpPersoon and stamp it with retentieTot = now + ttlHours.

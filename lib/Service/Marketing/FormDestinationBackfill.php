@@ -145,33 +145,60 @@ class FormDestinationBackfill implements FormDestinationBackfillInterface {
 		$forms = [];
 		$offset = 0;
 		do {
-			$page = $objects->findAll(
-				config: [
-					'filters' => ['register' => self::FORM_REGISTER, 'schema' => self::FORM_SCHEMA, 'sourceApp' => AppIdentity::APP_ID],
-					'limit' => self::PAGE,
-					'offset' => $offset,
-				],
-				_rbac: false,
-				_multitenancy: false
-			);
+			$page = $this->formPage(objects: $objects, offset: $offset);
 			if (is_iterable($page) === false) {
 				break;
 			}
 
-			$count = 0;
-			foreach ($page as $row) {
-				$count++;
-				$form = $this->formOf(row: $row);
-				if ($form !== null && (string)($form['data']['sourceApp'] ?? '') === AppIdentity::APP_ID) {
-					$forms[] = $form;
-				}
-			}
+			[$count, $pageForms] = $this->appFormsOf(page: $page);
+			$forms = array_merge($forms, $pageForms);
 
 			$offset += self::PAGE;
 		} while ($count === self::PAGE && $offset < self::MAX_FORMS);
 
 		return $forms;
 	}//end forms()
+
+	/**
+	 * Read one page of this app's forms, unscoped (a repair has no session).
+	 *
+	 * @param object $objects The OpenRegister ObjectService.
+	 * @param int $offset The page offset.
+	 *
+	 * @return mixed The page as findAll returns it.
+	 */
+	private function formPage(object $objects, int $offset) {
+		return $objects->findAll(
+			config: [
+				'filters' => ['register' => self::FORM_REGISTER, 'schema' => self::FORM_SCHEMA, 'sourceApp' => AppIdentity::APP_ID],
+				'limit' => self::PAGE,
+				'offset' => $offset,
+			],
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end formPage()
+
+	/**
+	 * Count a page's rows and keep the forms that belong to this app.
+	 *
+	 * @param iterable<mixed> $page The page rows.
+	 *
+	 * @return array{0: int, 1: array<int, array<string, mixed>>} The row count and this app's forms.
+	 */
+	private function appFormsOf(iterable $page): array {
+		$count = 0;
+		$forms = [];
+		foreach ($page as $row) {
+			$count++;
+			$form = $this->formOf(row: $row);
+			if ($form !== null && (string)($form['data']['sourceApp'] ?? '') === AppIdentity::APP_ID) {
+				$forms[] = $form;
+			}
+		}
+
+		return [$count, $forms];
+	}//end appFormsOf()
 
 	/**
 	 * A form's id and its own data, without metadata.
@@ -210,39 +237,76 @@ class FormDestinationBackfill implements FormDestinationBackfillInterface {
 	 * @return 'named'|'skipped'|'failed' What happened to the form.
 	 */
 	private function name(object $objects, array $form): string {
-		$current = ($form['data']['destination'] ?? null);
-		if (is_array($current) === true && trim((string)($current['register'] ?? '')) !== '' && trim((string)($current['schema'] ?? '')) !== '') {
+		if ($this->hasDestination(form: $form) === true) {
 			return 'skipped';
 		}
 
 		$campaignId = $this->campaignIdFor(form: $form);
+		$campaign = $this->campaignFor(campaignId: $campaignId);
+
+		$data = $form['data'];
+		$data['destination'] = $this->destinations->forCampaign(campaignId: $campaignId, campaign: $campaign);
+
+		return $this->saveNamedForm(objects: $objects, data: $data, formId: $form['id']);
+	}//end name()
+
+	/**
+	 * Whether the form already names a register and schema as its destination.
+	 *
+	 * @param array<string, mixed> $form The form.
+	 *
+	 * @return bool True when the destination is set.
+	 */
+	private function hasDestination(array $form): bool {
+		$current = ($form['data']['destination'] ?? null);
+		return is_array($current) === true && trim((string)($current['register'] ?? '')) !== '' && trim((string)($current['schema'] ?? '')) !== '';
+	}//end hasDestination()
+
+	/**
+	 * The campaign behind the form, or [] when it has none or it cannot be found.
+	 *
+	 * @param string $campaignId The campaign id, or ''.
+	 *
+	 * @return array<string, mixed> The campaign.
+	 */
+	private function campaignFor(string $campaignId): array {
 		$campaign = [];
 		if ($campaignId !== '') {
 			$campaign = ($this->campaigns->find(id: $campaignId) ?? []);
 		}
 
-		$data = $form['data'];
-		$data['destination'] = $this->destinations->forCampaign(campaignId: $campaignId, campaign: $campaign);
+		return $campaign;
+	}//end campaignFor()
 
+	/**
+	 * Save the form with its destination; `named`, or `failed` (logged) when the save fails.
+	 *
+	 * @param object $objects The OpenRegister ObjectService.
+	 * @param array<string, mixed> $data The form data with its destination.
+	 * @param mixed $formId The form id.
+	 *
+	 * @return string The outcome.
+	 */
+	private function saveNamedForm(object $objects, array $data, $formId): string {
 		try {
 			$objects->saveObject(
 				object: $data,
 				register: self::FORM_REGISTER,
 				schema: self::FORM_SCHEMA,
-				uuid: $form['id'],
+				uuid: $formId,
 				_rbac: false,
 				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'FormDestinationBackfill: a form could not be given its destination',
-				['form' => $form['id'], 'exception' => $e->getMessage()]
+				['form' => $formId, 'exception' => $e->getMessage()]
 			);
 			return 'failed';
 		}
 
 		return 'named';
-	}//end name()
+	}//end saveNamedForm()
 
 	/**
 	 * The campaign a form belongs to.

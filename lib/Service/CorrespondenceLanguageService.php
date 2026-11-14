@@ -112,16 +112,45 @@ class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInte
 	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	public function available(): array {
+		$tags = $this->languageTags(languages: $this->availableLanguages());
+
+		// The floor is always offered: an instance that renders nothing else
+		// still renders its source strings, and a picker with no options at
+		// all is indistinguishable from a broken one.
+		if (in_array(self::FALLBACK, $tags, true) === false) {
+			$tags[] = self::FALLBACK;
+		}
+
+		sort($tags);
+
+		return $tags;
+	}//end available()
+
+	/**
+	 * The languages Nextcloud lists for the app, or none when they cannot be read.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function availableLanguages(): array {
 		try {
-			$languages = $this->l10nFactory->findAvailableLanguages(AppIdentity::APP_ID);
+			return $this->l10nFactory->findAvailableLanguages(AppIdentity::APP_ID);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'CorrespondenceLanguageService: could not read the available languages',
 				['exception' => $e->getMessage()]
 			);
-			$languages = [];
+			return [];
 		}
+	}//end availableLanguages()
 
+	/**
+	 * The distinct well-formed language tags among the listed languages.
+	 *
+	 * @param array<int, mixed> $languages The listed languages.
+	 *
+	 * @return array<int, string>
+	 */
+	private function languageTags(array $languages): array {
 		$tags = [];
 		foreach ($languages as $language) {
 			$tag = trim((string)$language);
@@ -136,17 +165,8 @@ class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInte
 			}
 		}
 
-		// The floor is always offered: an instance that renders nothing else
-		// still renders its source strings, and a picker with no options at
-		// all is indistinguishable from a broken one.
-		if (in_array(self::FALLBACK, $tags, true) === false) {
-			$tags[] = self::FALLBACK;
-		}
-
-		sort($tags);
-
 		return $tags;
-	}//end available()
+	}//end languageTags()
 
 	/**
 	 * Whether a tag may be written, and what to say when it may not.

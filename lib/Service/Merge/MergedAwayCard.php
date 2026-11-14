@@ -140,34 +140,64 @@ class MergedAwayCard implements MergedAwayCardInterface {
 		}
 
 		foreach ($this->contactsManager->getUserAddressBooks() as $book) {
-			$card = $this->findCard(addressBook: $book, uid: $contactsUid);
-			if ($card === null) {
-				continue;
+			$rewritten = $this->rewriteNoteIn(book: $book, contactsUid: $contactsUid, rewrite: $rewrite);
+			if ($rewritten !== null) {
+				return $rewritten;
 			}
-
-			if ($this->isWritable(addressBook: $book) === false) {
-				$this->logger->warning('Pipelinq merge: the card of a merged record is in a read-only address book', ['uid' => $contactsUid]);
-				return false;
-			}
-
-			$note = self::firstValue(value: ($card['NOTE'] ?? ''));
-			$newNote = $rewrite($note);
-			if ($newNote === $note) {
-				return true;
-			}
-
-			try {
-				$book->createOrUpdate(['URI' => (string)$card['URI'], 'UID' => $contactsUid, 'NOTE' => $newNote]);
-			} catch (Throwable $e) {
-				$this->logger->warning('Pipelinq merge: the card of a merged record could not be written', ['uid' => $contactsUid, 'error' => $e->getMessage()]);
-				return false;
-			}
-
-			return true;
-		}//end foreach
+		}
 
 		return false;
 	}//end rewriteNote()
+
+	/**
+	 * Rewrite the card's note in one address book.
+	 *
+	 * @param IAddressBook $book        The address book.
+	 * @param string       $contactsUid The card's UID.
+	 * @param \Closure     $rewrite     Maps the current note to the new one.
+	 *
+	 * @return bool|null Null when the card is not in this book, otherwise whether it holds the new note.
+	 */
+	private function rewriteNoteIn(IAddressBook $book, string $contactsUid, \Closure $rewrite): bool|null {
+		$card = $this->findCard(addressBook: $book, uid: $contactsUid);
+		if ($card === null) {
+			return null;
+		}
+
+		if ($this->isWritable(addressBook: $book) === false) {
+			$this->logger->warning('Pipelinq merge: the card of a merged record is in a read-only address book', ['uid' => $contactsUid]);
+			return false;
+		}
+
+		return $this->writeNote(book: $book, card: $card, contactsUid: $contactsUid, rewrite: $rewrite);
+	}//end rewriteNoteIn()
+
+	/**
+	 * Write the rewritten note on a writable card, unless it is unchanged.
+	 *
+	 * @param IAddressBook         $book        The address book.
+	 * @param array<string, mixed> $card        The card.
+	 * @param string               $contactsUid The card's UID.
+	 * @param \Closure             $rewrite     Maps the current note to the new one.
+	 *
+	 * @return bool True when the card holds the new note.
+	 */
+	private function writeNote(IAddressBook $book, array $card, string $contactsUid, \Closure $rewrite): bool {
+		$note = self::firstValue(value: ($card['NOTE'] ?? ''));
+		$newNote = $rewrite($note);
+		if ($newNote === $note) {
+			return true;
+		}
+
+		try {
+			$book->createOrUpdate(['URI' => (string)$card['URI'], 'UID' => $contactsUid, 'NOTE' => $newNote]);
+		} catch (Throwable $e) {
+			$this->logger->warning('Pipelinq merge: the card of a merged record could not be written', ['uid' => $contactsUid, 'error' => $e->getMessage()]);
+			return false;
+		}
+
+		return true;
+	}//end writeNote()
 
 	/**
 	 * The card with exactly this UID in an address book.

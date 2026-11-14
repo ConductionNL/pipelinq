@@ -99,12 +99,46 @@ class OpenDealsController extends Controller {
 		}
 
 		[$field, $partyId] = $this->party();
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
-		if ($field === '' || $register === '' || $leadSchema === '') {
+		$target = $this->leadTarget(field: $field);
+		if ($target === null) {
 			return new JSONResponse(['error' => 'Name one contact or client'], Http::STATUS_BAD_REQUEST);
 		}
 
+		return $this->openDealsFor(field: $field, partyId: $partyId, register: $target[0], leadSchema: $target[1]);
+	}//end index()
+
+	/**
+	 * The register and lead schema, or null when no party is named or either is unset.
+	 *
+	 * @param string $field The party field ('' when no party is named).
+	 *
+	 * @return array{0: string, 1: string}|null
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function leadTarget(string $field): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
+		if ($field === '' || $register === '' || $leadSchema === '') {
+			return null;
+		}
+
+		return [$register, $leadSchema];
+	}//end leadTarget()
+
+	/**
+	 * The open-deal summary of a party the caller may read.
+	 *
+	 * @param string $field The party field.
+	 * @param string $partyId The party's id.
+	 * @param string $register The register id.
+	 * @param string $leadSchema The lead schema id.
+	 *
+	 * @return JSONResponse `{openDealCount, openDealValue}` or an error.
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function openDealsFor(string $field, string $partyId, string $register, string $leadSchema): JSONResponse {
 		$partySchema = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PARTIES[$field], '');
 		if ($this->canRead(id: $partyId, register: $register, schema: $partySchema) === false) {
 			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
@@ -112,17 +146,14 @@ class OpenDealsController extends Controller {
 
 		try {
 			$rows = $this->objectService->findAll(
-				config: [
-					'filters' => ['register' => $register, 'schema' => $leadSchema, $field => $partyId, 'status' => 'open'],
-					'limit' => self::LIMIT,
-				]
+				config: ['filters' => ['register' => $register, 'schema' => $leadSchema, $field => $partyId, 'status' => 'open'], 'limit' => self::LIMIT]
 			);
 		} catch (Throwable) {
 			return new JSONResponse(['error' => 'Deals unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
 		return new JSONResponse($this->summarise(rows: $rows, field: $field, partyId: $partyId));
-	}//end index()
+	}//end openDealsFor()
 
 	/**
 	 * Count and sum the open deals of the party.

@@ -513,22 +513,23 @@ class EntityActivityService implements EntityActivityServiceInterface {
 	): ?array {
 		try {
 			$objectService = $this->getObjectService();
-			$entity = $objectService->find(
-				id: $entityId,
-				register: $registerId,
-				schema: $schemaId
-			);
+			$entity = $objectService->find(id: $entityId, register: $registerId, schema: $schemaId);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'EntityActivityService: failed to load entity for notes',
-				[
-					'exception' => $e->getMessage(),
-					'entityId' => $entityId,
-				]
-			);
+			$this->logger->warning('EntityActivityService: failed to load entity for notes', ['exception' => $e->getMessage(), 'entityId' => $entityId]);
 			return null;
 		}
 
+		return $this->entityPayload(entity: $entity);
+	}//end findObject()
+
+	/**
+	 * The payload of a found entity: the array itself, or its `getObject()` array.
+	 *
+	 * @param mixed $entity The found entity.
+	 *
+	 * @return array<string,mixed>|null The object payload, or null.
+	 */
+	private function entityPayload(mixed $entity): array|null {
 		if ($entity === null) {
 			return null;
 		}
@@ -537,6 +538,17 @@ class EntityActivityService implements EntityActivityServiceInterface {
 			return $entity;
 		}
 
+		return $this->objectPayload(entity: $entity);
+	}//end entityPayload()
+
+	/**
+	 * The `getObject()` array of an entity object, or null.
+	 *
+	 * @param mixed $entity The found entity.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function objectPayload(mixed $entity): array|null {
 		if (is_object($entity) === true
 			&& method_exists($entity, 'getObject') === true
 		) {
@@ -547,7 +559,7 @@ class EntityActivityService implements EntityActivityServiceInterface {
 		}
 
 		return null;
-	}//end findObject()
+	}//end objectPayload()
 
 	/**
 	 * Coerce the OpenRegister `findAll` result into a list of plain arrays.
@@ -563,34 +575,58 @@ class EntityActivityService implements EntityActivityServiceInterface {
 
 		$output = [];
 		foreach ($results as $item) {
-			if (is_array($item) === true) {
-				$output[] = $item;
-				continue;
+			$normalised = $this->normaliseItem(item: $item);
+			if ($normalised !== null) {
+				$output[] = $normalised;
 			}
-
-			if (is_object($item) === false) {
-				continue;
-			}
-
-			if (method_exists($item, 'getObject') === true) {
-				$payload = $item->getObject();
-				if (is_array($payload) === true) {
-					if (isset($payload['id']) === false
-						&& method_exists($item, 'getUuid') === true
-					) {
-						$payload['id'] = $item->getUuid();
-					}
-
-					$output[] = $payload;
-					continue;
-				}
-			}
-
-			$output[] = (array)$item;
-		}//end foreach
+		}
 
 		return $output;
 	}//end normaliseResults()
+
+	/**
+	 * One findAll item as a plain array, or null to skip it.
+	 *
+	 * @param mixed $item The raw item.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function normaliseItem(mixed $item): array|null {
+		if (is_array($item) === true) {
+			return $item;
+		}
+
+		if (is_object($item) === false) {
+			return null;
+		}
+
+		if (method_exists($item, 'getObject') === true) {
+			$payload = $item->getObject();
+			if (is_array($payload) === true) {
+				return $this->withUuidAsId(payload: $payload, item: $item);
+			}
+		}
+
+		return (array)$item;
+	}//end normaliseItem()
+
+	/**
+	 * The payload with the entity's uuid as `id` when it carries none.
+	 *
+	 * @param array<string,mixed> $payload The entity's object payload.
+	 * @param object              $item    The entity.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function withUuidAsId(array $payload, object $item): array {
+		if (isset($payload['id']) === false
+			&& method_exists($item, 'getUuid') === true
+		) {
+			$payload['id'] = $item->getUuid();
+		}
+
+		return $payload;
+	}//end withUuidAsId()
 
 	/**
 	 * Slice the sorted items list into the requested page envelope.

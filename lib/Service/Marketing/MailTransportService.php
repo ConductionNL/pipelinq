@@ -716,6 +716,23 @@ class MailTransportService {
 			return null;
 		}
 
+		$source = $this->findConnectorSource(objectService: $objectService, connectorSourceId: $connectorSourceId);
+		if ($source === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $source);
+	}//end readConnectorSource()
+
+	/**
+	 * Find a connector source in the register the connector declares, or null.
+	 *
+	 * @param object $objectService     The OpenRegister ObjectService.
+	 * @param string $connectorSourceId The source id.
+	 *
+	 * @return mixed The source entity, or null.
+	 */
+	private function findConnectorSource(object $objectService, string $connectorSourceId): mixed {
 		// The register is asked for, never assumed. A null here means the sender
 		// falls back to DEFAULT_RATE_LIMIT_PER_SECOND, which is exactly what an
 		// unread source used to produce silently: reading with a slug this instance
@@ -731,7 +748,7 @@ class MailTransportService {
 		}
 
 		try {
-			$source = $objectService->find(
+			return $objectService->find(
 				id: $connectorSourceId,
 				register: $registerSlug,
 				schema: ConnectorSourceRegister::SOURCE_SCHEMA
@@ -739,13 +756,7 @@ class MailTransportService {
 		} catch (Throwable $e) {
 			return null;
 		}
-
-		if ($source === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $source);
-	}//end readConnectorSource()
+	}//end findConnectorSource()
 
 	/**
 	 * The per-second rate a source declares: its limit spread over its window.

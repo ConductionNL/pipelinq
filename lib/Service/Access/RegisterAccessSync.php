@@ -143,43 +143,113 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-a-configured-read-group-reads-the-parties-and-contact-moments-and-writes-nothing
 	 */
 	public function sync(bool $force=false): int {
+		$groups = $this->groupSettings();
+		if ($force === false && $groups['crm'] === $groups['crmApplied'] && $groups['read'] === $groups['readApplied']) {
+			return 0;
+		}
+
+		$mappers = $this->mappers();
+		if ($mappers === []) {
+			return -1;
+		}
+
+		$written = $this->syncRegisters(registers: $mappers[0], schemas: $mappers[1], groups: $groups);
+		$this->markApplied(groups: $groups);
+
+		return $written;
+	}//end sync()
+
+	/**
+	 * The configured and the last applied CRM and read groups.
+	 *
+	 * @return array{read: string, readApplied: string, crm: string, crmApplied: string}
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function groupSettings(): array {
 		$crm         = $this->setting(key: ObjectOwnerAccessPolicy::CRM_GROUP_KEY);
 		$read        = $this->setting(key: self::READ_GROUP_KEY);
 		$crmApplied  = $this->setting(key: ObjectOwnerAccessPolicy::CRM_GROUP_KEY.self::APPLIED);
 		$readApplied = $this->setting(key: self::READ_GROUP_KEY.self::APPLIED);
 
-		if ($force === false && $crm === $crmApplied && $read === $readApplied) {
-			return 0;
-		}
+		return ['read' => $read, 'readApplied' => $readApplied, 'crm' => $crm, 'crmApplied' => $crmApplied];
+	}//end groupSettings()
 
+	/**
+	 * OpenRegister's register and schema mappers.
+	 *
+	 * @return array<int, mixed> The register mapper and the schema mapper, or an empty list when OpenRegister is unavailable.
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function mappers(): array {
 		try {
-			$registers = $this->container->get(self::REGISTER_MAPPER);
-			$schemas   = $this->container->get(self::SCHEMA_MAPPER);
+			return [$this->container->get(self::REGISTER_MAPPER), $this->container->get(self::SCHEMA_MAPPER)];
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: the CRM groups could not be written into the registers, OpenRegister is unavailable',
 				['error' => $e->getMessage()]
 			);
-			return -1;
+			return [];
 		}
+	}//end mappers()
 
-		$groups  = ['read' => $read, 'readApplied' => $readApplied, 'crm' => $crm, 'crmApplied' => $crmApplied];
+	/**
+	 * Write the groups into every pipelinq register that exists.
+	 *
+	 * @param object $registers OpenRegister's register mapper.
+	 * @param object $schemas OpenRegister's schema mapper.
+	 * @param array<string, string> $groups The configured and applied groups.
+	 *
+	 * @return int The number of registers and schemas written.
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function syncRegisters(object $registers, object $schemas, array $groups): int {
 		$written = 0;
 		foreach (self::REGISTERS as $slug) {
-			try {
-				$register = $registers->find($slug, _rbac: false, _multitenancy: false);
-			} catch (Throwable $e) {
+			$found = $this->findRegister(registers: $registers, slug: $slug);
+			if ($found === []) {
 				continue;
 			}
 
-			$written += $this->syncRegister(registers: $registers, schemas: $schemas, register: $register, groups: $groups);
+			$written += $this->syncRegister(registers: $registers, schemas: $schemas, register: $found[0], groups: $groups);
 		}
 
-		$this->appConfig->setValueString(AppIdentity::APP_ID, ObjectOwnerAccessPolicy::CRM_GROUP_KEY.self::APPLIED, $crm);
-		$this->appConfig->setValueString(AppIdentity::APP_ID, self::READ_GROUP_KEY.self::APPLIED, $read);
-
 		return $written;
-	}//end sync()
+	}//end syncRegisters()
+
+	/**
+	 * Find a register by slug.
+	 *
+	 * @param object $registers OpenRegister's register mapper.
+	 * @param string $slug The register slug.
+	 *
+	 * @return array<int, mixed> The register as a one-element list, or an empty list when it does not exist.
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function findRegister(object $registers, string $slug): array {
+		try {
+			return [$registers->find($slug, _rbac: false, _multitenancy: false)];
+		} catch (Throwable $e) {
+			return [];
+		}
+	}//end findRegister()
+
+	/**
+	 * Record the groups as applied.
+	 *
+	 * @param array<string, string> $groups The configured and applied groups.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function markApplied(array $groups): void {
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ObjectOwnerAccessPolicy::CRM_GROUP_KEY.self::APPLIED, $groups['crm']);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::READ_GROUP_KEY.self::APPLIED, $groups['read']);
+	}//end markApplied()
 
 	/**
 	 * Rewrite one register and its schemas.

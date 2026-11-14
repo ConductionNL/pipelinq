@@ -116,8 +116,20 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 			return null;
 		}
 
+		return $this->transportAsArray(found: $this->findTransport(objectService: $objectService, id: $id));
+	}//end loadOne()
+
+	/**
+	 * Find the mail transport; null (logged) when the lookup throws.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $id The transport id.
+	 *
+	 * @return mixed The found object, or null.
+	 */
+	private function findTransport(object $objectService, string $id) {
 		try {
-			$found = $objectService->find(
+			return $objectService->find(
 				id: $id,
 				register: $this->getRegisterSlug(),
 				schema: $this->getMailTransportSchemaSlug(),
@@ -126,7 +138,16 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 			$this->logger->info('DeliverabilityCheckService.loadOne: not found', ['id' => $id, 'exception' => $e->getMessage()]);
 			return null;
 		}
+	}//end findTransport()
 
+	/**
+	 * The found transport as an array, or null when it is missing or not serialisable.
+	 *
+	 * @param mixed $found The found object.
+	 *
+	 * @return array<string, mixed>|null The transport.
+	 */
+	private function transportAsArray($found): array|null {
 		if ($found === null) {
 			return null;
 		}
@@ -140,7 +161,7 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 		}
 
 		return null;
-	}//end loadOne()
+	}//end transportAsArray()
 
 	/**
 	 * Return the cached verdict for a transport's `senderDomain`, refreshing

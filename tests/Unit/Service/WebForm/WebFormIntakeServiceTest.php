@@ -31,6 +31,11 @@ use OCA\Pipelinq\Service\SystemServiceAccount;
 use OCA\Pipelinq\Service\WebForm\WebFormFinder;
 use OCA\Pipelinq\Service\WebForm\WebFormIntakeService;
 use OCA\Pipelinq\Service\WebForm\WebFormSubmitException;
+use OCA\Pipelinq\Service\WebForm\SubmissionTouchRecorder;
+use OCA\Pipelinq\Service\CampaignLinkDecorator;
+use OCA\Pipelinq\Service\CampaignService;
+use OCA\Pipelinq\Service\TouchpointService;
+use OCA\Pipelinq\Tests\Unit\Support\InMemoryListObjectStore;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeContainer;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeFormSubmitService;
 use OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes\FakeObjectStore;
@@ -44,6 +49,8 @@ use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+
+require_once __DIR__ . '/../../Support/InMemoryListObjectStore.php';
 
 /**
  * A submit creates the object its form names, or is refused, and never writes an enquiry.
@@ -124,11 +131,12 @@ class WebFormIntakeServiceTest extends TestCase {
 	/**
 	 * The service over the shipped forms.
 	 *
-	 * @param \Throwable|null $throw What the submit throws, when set.
+	 * @param \Throwable|null               $throw   What the submit throws, when set.
+	 * @param SubmissionTouchRecorder|null $touches Records the submit's campaign touch, when set.
 	 *
 	 * @return WebFormIntakeService The service.
 	 */
-	private function service(?\Throwable $throw = null): WebFormIntakeService {
+	private function service(?\Throwable $throw = null, ?SubmissionTouchRecorder $touches = null): WebFormIntakeService {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => ['register' => '20', 'webForm_schema' => self::FORM_SCHEMA][$key] ?? $default
@@ -150,7 +158,8 @@ class WebFormIntakeServiceTest extends TestCase {
 			new WebFormFinder($config, $this->contractOver($this->store)),
 			$container,
 			$account,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$touches
 		);
 	}//end service()
 
@@ -451,4 +460,63 @@ class WebFormIntakeServiceTest extends TestCase {
 
 		$this->assertSame([], $this->submitter->calls);
 	}//end testListHoneypotIsRefused()
+
+	/**
+	 * A stored submit's campaign values update the matched contact's last touch.
+	 *
+	 * @return void
+	 */
+	public function testAStoredSubmitRecordsItsCampaignTouch(): void {
+		$store = new InMemoryListObjectStore(['contact' => [['uuid' => 'contact-1', 'email' => 'jane@example.com']]]);
+		$this->service(touches: $this->recorderOver(store: $store))->submitByKey(
+			key: 'website-support',
+			payload: ['message' => 'Hi', 'contactEmail' => 'jane@example.com', 'utmCampaign' => 'voorjaar', 'utmSource' => 'nieuwsbrief', 'pageUrl' => 'https://conduction.nl/contact', 'source' => 'website-support']
+		);
+
+		$this->assertSame(1, $store->countOf('touchpoint'));
+		$touch = $store->find('contact', 'contact-1')['lastTouch'];
+		$this->assertSame('voorjaar', $touch['campaign']);
+		$this->assertSame('nieuwsbrief', $touch['source']);
+		$this->assertSame('https://conduction.nl/contact', $touch['landingPage']);
+		// The form's fixed values still win: the visitor's campaign values set nothing on the ticket.
+		$this->assertSame('website', $this->submitter->calls[0]['writes'][0]['mapping']['fixed']['channel']);
+	}//end testAStoredSubmitRecordsItsCampaignTouch()
+
+	/**
+	 * A submit that did not reach its destination records no touch.
+	 *
+	 * @return void
+	 */
+	public function testARefusedSubmitRecordsNoTouch(): void {
+		$store = new InMemoryListObjectStore(['contact' => [['uuid' => 'contact-1', 'email' => 'jane@example.com']]]);
+		try {
+			$this->service(throw: new RuntimeException('down'), touches: $this->recorderOver(store: $store))->submitByKey(
+				key: 'website-support',
+				payload: ['message' => 'Hi', 'contactEmail' => 'jane@example.com', 'utmCampaign' => 'voorjaar']
+			);
+			$this->fail('A failed destination must throw');
+		} catch (WebFormSubmitException $e) {
+			$this->assertSame(503, $e->getStatus());
+		}
+
+		$this->assertSame(0, $store->countOf('touchpoint'));
+	}//end testARefusedSubmitRecordsNoTouch()
+
+	/**
+	 * A touch recorder over an in-memory store.
+	 *
+	 * @param InMemoryListObjectStore $store The store.
+	 *
+	 * @return SubmissionTouchRecorder
+	 */
+	private function recorderOver(InMemoryListObjectStore $store): SubmissionTouchRecorder {
+		$config = $this->createMock(IAppConfig::class);
+
+		return new SubmissionTouchRecorder(
+			new TouchpointService($store),
+			new CampaignService($store, $config, new CampaignLinkDecorator($config)),
+			$store,
+			$this->createMock(LoggerInterface::class)
+		);
+	}//end recorderOver()
 }//end class
