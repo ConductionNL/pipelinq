@@ -8293,6 +8293,25 @@
         "An unconfirmed sign-up never gets a blast. The person is only added after opening the confirmation link.": "An unconfirmed sign-up never gets a blast. The person is only added after opening the confirmation link.",
         "Waiting for confirmation": "Waiting for confirmation",
         "Attribution to deals": "Attribution to deals",
+        "Undo bulk change": "Undo bulk change",
+        "Undo": "Undo",
+        "Undone": "Undone",
+        "Bulk changes": "Bulk changes",
+        "Changes you made to many clients or contacts at once. You can undo a change for seven days.": "Changes you made to many clients or contacts at once. You can undo a change for seven days.",
+        "No bulk changes yet": "No bulk changes yet",
+        "Could be undone until {date}": "Could be undone until {date}",
+        "_%n record gets its old value back._::_%n records get their old value back._": [
+            "%n record gets its old value back.",
+            "%n records get their old value back."
+        ],
+        "%n record gets its old value back.": "%n record gets its old value back.",
+        "%n records get their old value back.": "%n records get their old value back.",
+        "_%n record is skipped._::_%n records are skipped._": [
+            "%n record is skipped.",
+            "%n records are skipped."
+        ],
+        "%n record is skipped.": "%n record is skipped.",
+        "%n records are skipped.": "%n records are skipped.",
         "In the queue": "In the queue",
         "Newest first · addresses are masked": "Newest first · addresses are masked",
         "Could not be delivered": "Could not be delivered",
