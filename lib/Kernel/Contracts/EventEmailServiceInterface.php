@@ -93,4 +93,16 @@ interface EventEmailServiceInterface {
 	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function verifyCancelToken(string $token): ?string;
+
+	/**
+	 * Tell someone with a place, or on the waiting list, that the event is cancelled.
+	 *
+	 * @param array<string, mixed> $event        The cancelled event.
+	 * @param array<string, mixed> $registration The registration.
+	 *
+	 * @return bool True when the mail was accepted for delivery.
+	 *
+	 * @spec openspec/changes/marketing-events/tasks.md#3.1
+	 */
+	public function sendEventCancelled(array $event, array $registration): bool;
 }//end interface

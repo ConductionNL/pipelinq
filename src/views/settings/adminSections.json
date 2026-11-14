@@ -15,6 +15,14 @@
 				"default": 14,
 				"placeholder": "14",
 				"hint": "Number of days a lead can stay untouched before it is flagged as stale. Default: 14."
+			},
+			{
+				"key": "lead_rotation_enabled",
+				"label": "Assign new leads in turn",
+				"type": "switch",
+				"trueValue": "true",
+				"falseValue": "false",
+				"hint": "A new lead without an owner goes to the colleague with the matching skills who received the fewest leads in the last 30 days. Set a cap or a pause per colleague on their agent profile."
 			}
 		]
 	},
@@ -85,6 +93,19 @@
 				"required": true,
 				"default": 24,
 				"hint": "Triggers an at-risk warning if no run has succeeded in this many hours."
+			},
+			{
+				"key": "export_failure_threshold",
+				"label": "Switch off an export job after this many failed runs in a row",
+				"type": "number",
+				"min": 1,
+				"max": 10,
+				"integer": true,
+				"required": true,
+				"default": 3,
+				"pattern": "^\\s*(10|[1-9])\\s*$",
+				"patternMessage": "Enter a number from 1 to 10",
+				"hint": "A job that fails this many times in a row is switched off and the administrators are notified. From 1 to 10; default 3."
 			}
 		]
 	},
@@ -183,64 +204,6 @@
 				"okPath": "success",
 				"successText": "Data provisioned.",
 				"failureText": "Provisioning failed."
-			}
-		]
-	},
-	"brpMonitor": {
-		"name": "BRP monitor",
-		"description": "Lookups in the persons registry over the last 24 hours, and the mTLS client certificate.",
-		"url": "/apps/pipelinq/api/brp/monitor",
-		"fields": [
-			{
-				"key": "lookups",
-				"type": "status",
-				"text": "Last 24 hours: {report.totalLookups} lookups, {report.cacheHits} from the cache, {report.errorCount} errors, {report.avgResponseMs} ms average response time.",
-				"visibleWhen": {
-					"key": "report",
-					"empty": false
-				}
-			},
-			{
-				"key": "period",
-				"type": "status",
-				"text": "Reporting period {report.windowStart} to {report.windowEnd}, generated on {report.generatedAt}.",
-				"visibleWhen": {
-					"key": "report",
-					"empty": false
-				}
-			},
-			{
-				"key": "noLookups",
-				"type": "status",
-				"text": "No BRP lookups have been reported yet.",
-				"visibleWhen": {
-					"key": "report",
-					"empty": true
-				}
-			},
-			{
-				"key": "cert.status",
-				"type": "status",
-				"textMap": {
-					"ok": "The mTLS certificate is valid until {cert.expiry}, {cert.daysLeft} days from now.",
-					"warning": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.",
-					"critical": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.",
-					"*": ""
-				},
-				"toneMap": {
-					"ok": "success",
-					"warning": "warning",
-					"critical": "error"
-				}
-			},
-			{
-				"key": "noCertificate",
-				"type": "status",
-				"text": "No mTLS certificate is configured.",
-				"visibleWhen": {
-					"key": "cert",
-					"empty": true
-				}
 			}
 		]
 	}
