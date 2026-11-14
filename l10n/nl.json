@@ -9587,6 +9587,24 @@
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "De som van de productregels. Wordt bijgewerkt als een regel verandert; je kunt hem niet met de hand wijzigen.",
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
-        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw."
+        "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
+        "%n resource matches": [
+            "%n resource past",
+            "%n resources passen"
+        ],
+        "%n resources match": "%n resources passen",
+        "No resource matches": "Geen resource past",
+        "a room": "een ruimte",
+        "a staff member": "een medewerker",
+        "equipment": "apparatuur",
+        "Skill {skill}": "Vaardigheid {skill}",
+        "Skills {skills}": "Vaardigheden {skills}",
+        "Matching resources": "Passende resources",
+        "Appointments for this service": "Afspraken voor deze dienst",
+        "No upcoming appointments": "Geen komende afspraken",
+        "this week, no-shows this month: {noShowsThisMonth}": "deze week, niet verschenen deze maand: {noShowsThisMonth}",
+        "{type} · max {maxConcurrent} at a time": "{type} · max. {maxConcurrent} tegelijk",
+        "{type} · {skills|values}": "{type} · {skills|values}",
+        "{startAt|weekday} {startAt|time}": "{startAt|weekday} {startAt|time}"
     }
 }

@@ -138,19 +138,19 @@ describe('loading', () => {
 		expect(axios.get).toHaveBeenCalledTimes(2)
 	})
 
-	it('reads the bookings of this week, none when the read fails', async () => {
+	it('reads this week\'s figures from the server in one request, none when the read fails', async () => {
 		const { ctx, store } = page({ id: 'r1' })
-		store.fetchCollection.mockResolvedValueOnce([{ id: 'b' }])
-		await ctx.fetchWeekBookings()
-		const [type, params] = store.fetchCollection.mock.calls[0]
-		expect([type, params._limit, typeof params['startAt[gte]'], typeof params['startAt[lt]']]).toEqual(['appointmentBooking', 500, 'string', 'string'])
-		expect(ctx.weekBookings).toEqual([{ id: 'b' }])
-		store.fetchCollection.mockResolvedValueOnce('x')
-		await ctx.fetchWeekBookings()
-		expect(ctx.weekBookings).toEqual([])
-		store.fetchCollection.mockRejectedValueOnce(new Error('x'))
-		await ctx.fetchWeekBookings()
-		expect(ctx.weekBookings).toEqual([])
+		axios.get.mockResolvedValueOnce({ data: { bookingsThisWeek: 22, bookedShare: 74 } })
+		await ctx.fetchWeekFigures()
+		expect(axios.get.mock.calls[0][0]).toContain('/apps/pipelinq/api/appointment-resources/r1/figures')
+		expect(store.fetchCollection).not.toHaveBeenCalled()
+		expect(ctx.weekLoad).toEqual({ count: 22, percent: 74 })
+		axios.get.mockResolvedValueOnce({ data: 'x' })
+		await ctx.fetchWeekFigures()
+		expect(ctx.weekLoad).toEqual({ count: 0, percent: null })
+		axios.get.mockRejectedValueOnce(new Error('x'))
+		await ctx.fetchWeekFigures()
+		expect(ctx.weekLoad).toEqual({ count: 0, percent: null })
 	})
 })
 

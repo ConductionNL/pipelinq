@@ -9472,7 +9472,22 @@ OC.L10N.register(
         "The sum of the product lines. Written when a line changes; you cannot change it by hand.": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
-        "The sale could not be priced. Try again.": "The sale could not be priced. Try again."
+        "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
+        "%n resource matches": ["%n resource matches","%n resources match"],
+        "%n resources match": "%n resources match",
+        "No resource matches": "No resource matches",
+        "a room": "a room",
+        "a staff member": "a staff member",
+        "equipment": "equipment",
+        "Skill {skill}": "Skill {skill}",
+        "Skills {skills}": "Skills {skills}",
+        "Matching resources": "Matching resources",
+        "Appointments for this service": "Appointments for this service",
+        "No upcoming appointments": "No upcoming appointments",
+        "this week, no-shows this month: {noShowsThisMonth}": "this week, no-shows this month: {noShowsThisMonth}",
+        "{type} · max {maxConcurrent} at a time": "{type} · max {maxConcurrent} at a time",
+        "{type} · {skills|values}": "{type} · {skills|values}",
+        "{startAt|weekday} {startAt|time}": "{startAt|weekday} {startAt|time}"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -318,7 +318,14 @@ const SERVICE_BOARD_HEADER = Object.freeze({
 	headerMeta: '{durationMinutes} minutes · {price|currency}',
 })
 
-/** The side cards the PqService board draws. */
+/**
+ * The side cards the PqService board draws: how busy the service is, its
+ * upcoming appointments and the resources that can do it. The figures and
+ * the matching resources come from the server, so the page uses the booking
+ * path's own matching rule rather than a copy of it.
+ *
+ * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-a-service-page-shows-how-busy-the-service-is-req-srg-003
+ */
 const SERVICE_SIDE_COLUMN = Object.freeze([
 	{
 		id: 'service-bookings',
@@ -326,14 +333,40 @@ const SERVICE_SIDE_COLUMN = Object.freeze([
 		title: 'Bookings',
 		content: {
 			label: 'Bookings',
-			caption: 'this week',
-			source: {
-				register: 'pipelinq',
-				schema: 'appointmentBooking',
-				metric: 'count',
-				filter: { serviceId: '@objectId', 'startAt[gte]': '@today-7d' },
+			caption: 'this week, no-shows this month: {noShowsThisMonth}',
+			endpointSource: {
+				url: '/apps/pipelinq/api/appointment-services/@objectId/figures',
 			},
+			valueField: 'bookingsThisWeek',
 			clickRoute: 'Bookings',
+		},
+	},
+	{
+		id: 'service-appointments',
+		type: 'record-list',
+		title: 'Appointments for this service',
+		content: {
+			register: 'pipelinq',
+			schema: 'appointmentBooking',
+			filter: { serviceId: '@objectId', 'startAt[gte]': '@now' },
+			sort: { startAt: 'asc' },
+			limit: 5,
+			presentation: 'rows',
+			title: '{startAt|weekday} {startAt|time}',
+			meta: '{status}',
+			valueLabels: {
+				status: {
+					'pending-deposit': 'Awaiting deposit',
+					confirmed: 'Confirmed',
+					completed: 'Finished',
+					'no-show': 'No-show',
+					'cancelled-by-customer': 'Cancelled by the customer',
+					'cancelled-by-business': 'Cancelled by us',
+					rescheduled: 'Rescheduled',
+				},
+			},
+			rowRoute: 'BookingDetail',
+			emptyText: 'No upcoming appointments',
 		},
 	},
 	{
@@ -341,15 +374,16 @@ const SERVICE_SIDE_COLUMN = Object.freeze([
 		type: 'record-list',
 		title: 'Resources that can do this',
 		content: {
-			register: 'pipelinq',
-			schema: 'appointmentResource',
-			filter: { type: '@object.requiredResourceTypes', status: 'active' },
-			limit: 3,
+			endpointSource: {
+				url: '/apps/pipelinq/api/appointment-services/@objectId/eligible-resources',
+				responsePath: 'resources',
+			},
 			presentation: 'rows',
 			title: '{name}',
-			meta: '{type}',
+			meta: ['{type} · max {maxConcurrent} at a time', '{type} · {skills|values}', '{type}'],
+			valueLabels: { type: { staff: 'Staff', room: 'Room', equipment: 'Equipment' } },
 			rowRoute: 'ResourceDetail',
-			emptyText: 'No resource can carry this service yet',
+			emptyText: 'No resource matches',
 		},
 	},
 ])
