@@ -9149,6 +9149,8 @@ OC.L10N.register(
         "Card in the address book {book}, updated {when}.": "Card in the address book {book}, updated {when}.",
         "today {time}": "today {time}",
         "Social profile": "Social profile",
+        "{answeredToday} today": "{answeredToday} today",
+        "of the answered tickets with a deadline": "of the answered tickets with a deadline",
         "preferred": "preferred",
         "%n day late": ["%n day late","%n days late"],
         "closes {date}": "closes {date}",

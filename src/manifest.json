@@ -9963,7 +9963,7 @@
 			"route": "/my-work",
 			"type": "dashboard",
 			"title": "My work",
-			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. Not here, each named in the pull request: the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
+			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. The \"Your week so far\" tiles read GET /api/my-work/week-stats (REQ-MW-090). Not here: the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
 			"config": {
 				"showRefresh": true,
 				"showWidgetActions": false,
@@ -10194,40 +10194,36 @@
 						"type": "stats-block",
 						"title": "Your week so far",
 						"showTitle": true,
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
+						"_note": "REQ-MW-090: the four figures of the user's own tickets this calendar week, computed server side (GET /api/my-work/week-stats). No visibleWhen: a lens describes the list, not the week, so the tiles stay when the list narrows. A figure without data reads as a dash, never 0. The team figure under Within the deadline comes with the team scope (REQ-MW-180).",
 						"content": {
 							"layout": "grid",
 							"columns": 2,
 							"stats": [
 								{
 									"label": "Answered",
-									"caption": "this week",
+									"caption": "{answeredToday} today",
 									"format": {
 										"style": "number",
 										"decimals": 0
 									},
-									"source": {
-										"register": "pipelinq",
-										"schema": "ticket",
-										"metric": "count",
-										"filter": {
-											"assignee": "@me",
-											"status": {
-												"in": [
-													"resolved",
-													"completed"
-												]
-											},
-											"resolvedAt[gte]": "@today-7d"
-										}
-									}
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "answered"
+								},
+								{
+									"label": "Within the deadline",
+									"caption": "of the answered tickets with a deadline",
+									"format": {
+										"style": "number",
+										"decimals": 0,
+										"suffix": "%"
+									},
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "withinDeadline",
+									"emptyText": "–"
 								},
 								{
 									"label": "Average answer time",
@@ -10237,42 +10233,23 @@
 										"decimals": 1,
 										"suffix": " days"
 									},
-									"source": {
-										"kind": "elapsed",
-										"register": "pipelinq",
-										"schema": "ticket",
-										"from": "occurredAt",
-										"to": "resolvedAt",
-										"unit": "days",
-										"filter": {
-											"assignee": "@me",
-											"status": {
-												"in": [
-													"resolved",
-													"completed"
-												]
-											},
-											"resolvedAt[gte]": "@today-30d"
-										}
-									}
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "averageAnswerDays",
+									"emptyText": "–"
 								},
 								{
-									"label": "Turned into a case",
-									"caption": "converted in 7 days",
+									"label": "Converted to a case",
+									"caption": "this week",
 									"format": {
 										"style": "number",
 										"decimals": 0
 									},
-									"source": {
-										"register": "pipelinq",
-										"schema": "ticket",
-										"metric": "count",
-										"filter": {
-											"assignee": "@me",
-											"status": "converted",
-											"resolvedAt[gte]": "@today-7d"
-										}
-									}
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "converted"
 								}
 							]
 						}

@@ -9166,6 +9166,8 @@ OC.L10N.register(
         "Card in the address book {book}, updated {when}.": "Kaart in het adresboek {book}, {when} bijgewerkt.",
         "today {time}": "vandaag {time}",
         "Social profile": "Sociaal profiel",
+        "{answeredToday} today": "{answeredToday} vandaag",
+        "of the answered tickets with a deadline": "van de beantwoorde tickets met een termijn",
         "preferred": "voorkeur",
         "%n day late": ["%n dag te laat","%n dagen te laat"],
         "closes {date}": "afsluiting {date}",
