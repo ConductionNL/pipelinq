@@ -199,11 +199,11 @@ class AvailabilityService implements AvailabilityServiceInterface {
 				continue;
 			}
 
-			if ($this->overlapsAny(startMin: $slotStartMin, endMin: $slotEndMin, blocks: $blocked) === true) {
+			if ($this->overlapsAny(slot: ['startMin' => $slotStartMin, 'endMin' => $slotEndMin], blocks: $blocked) === true) {
 				continue;
 			}
 
-			$free[] = $this->slotRow(startMin: $slotStartMin, endMin: $slotEndMin, duration: $duration);
+			$free[] = $this->slotRow(startMin: $slotStartMin, endMin: $slotEndMin);
 		}
 
 		return $free;
@@ -213,16 +213,15 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	 * One free slot as the API answers it.
 	 *
 	 * @param int $startMin Slot start in minutes from midnight.
-	 * @param int $endMin   Slot end in minutes from midnight.
-	 * @param int $duration Service duration in minutes.
+	 * @param int $endMin   Slot end in minutes from midnight; the service duration after the start.
 	 *
 	 * @return array{startTime: string, endTime: string, durationMinutes: int}
 	 */
-	private function slotRow(int $startMin, int $endMin, int $duration): array {
+	private function slotRow(int $startMin, int $endMin): array {
 		return [
 			'startTime' => $this->minutesToHHMM(minutes: $startMin),
 			'endTime' => $this->minutesToHHMM(minutes: $endMin),
-			'durationMinutes' => $duration,
+			'durationMinutes' => ($endMin - $startMin),
 		];
 	}//end slotRow()
 
@@ -514,20 +513,21 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		$rows = $this->findRows(schema: $schema, filters: ['resourceId' => $resourceId]);
-		return $this->deleteCacheRows(rows: $rows, register: $register, schema: $schema, resourceId: $resourceId);
+		return $this->deleteCacheRows(
+			rows: $rows,
+			scope: new AvailabilityCacheScope(register: $register, schema: $schema, resourceId: $resourceId)
+		);
 	}//end invalidateResource()
 
 	/**
 	 * Delete cache rows, counting the ones that went.
 	 *
-	 * @param array<int, array<string, mixed>> $rows       The cache rows.
-	 * @param string                           $register   The register id.
-	 * @param string                           $schema     The availability-cache schema id.
-	 * @param string                           $resourceId Resource UUID.
+	 * @param array<int, array<string, mixed>> $rows  The cache rows.
+	 * @param AvailabilityCacheScope           $scope The register, cache schema and resource.
 	 *
 	 * @return int How many rows were deleted.
 	 */
-	private function deleteCacheRows(array $rows, string $register, string $schema, string $resourceId): int {
+	private function deleteCacheRows(array $rows, AvailabilityCacheScope $scope): int {
 		$deleted = 0;
 		foreach ($rows as $row) {
 			$uuid = $this->idOf(object: $row);
@@ -535,7 +535,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 				continue;
 			}
 
-			$deleted += $this->deleteCacheRow(uuid: $uuid, register: $register, schema: $schema, resourceId: $resourceId);
+			$deleted += $this->deleteCacheRow(uuid: $uuid, scope: $scope);
 		}
 
 		return $deleted;
@@ -544,21 +544,19 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	/**
 	 * Delete one cache row, logging a failed delete.
 	 *
-	 * @param string $uuid       The row's uuid.
-	 * @param string $register   The register id.
-	 * @param string $schema     The availability-cache schema id.
-	 * @param string $resourceId Resource UUID.
+	 * @param string                 $uuid  The row's uuid.
+	 * @param AvailabilityCacheScope $scope The register, cache schema and resource.
 	 *
 	 * @return int 1 when the row was deleted, otherwise 0.
 	 */
-	private function deleteCacheRow(string $uuid, string $register, string $schema, string $resourceId): int {
+	private function deleteCacheRow(string $uuid, AvailabilityCacheScope $scope): int {
 		try {
-			$this->getObjectService()->deleteObject(uuid: $uuid, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(uuid: $uuid, register: $scope->register, schema: $scope->schema);
 			return 1;
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: availability cache row could not be deleted',
-				['resource' => $resourceId, 'row' => $uuid, 'exception' => $e->getMessage()]
+				['resource' => $scope->resourceId, 'row' => $uuid, 'exception' => $e->getMessage()]
 			);
 			return 0;
 		}
@@ -609,23 +607,22 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			return [];
 		}
 
-		$rows = $this->findAllRows(register: $register, schema: $schema, filters: $filters);
+		$rows = $this->findAllRows(filters: array_merge(['register' => $register, 'schema' => $schema], $filters), schema: $schema);
 		return $this->rowArrays(rows: $rows);
 	}//end findRows()
 
 	/**
 	 * Run the findAll for one schema, logging a failed read.
 	 *
-	 * @param string                $register The register id.
-	 * @param string                $schema   The schema id.
-	 * @param array<string, string> $filters  Equality filters.
+	 * @param array<string, string> $filters The register and schema ids, then equality filters.
+	 * @param string                $schema  The schema id, for the log.
 	 *
 	 * @return mixed The rows, or an empty array when the read failed.
 	 */
-	private function findAllRows(string $register, string $schema, array $filters): mixed {
+	private function findAllRows(array $filters, string $schema): mixed {
 		try {
 			return $this->getObjectService()->findAll(
-				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
+				config: ['filters' => $filters]
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -1174,13 +1171,14 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	/**
 	 * True when [startMin, endMin) overlaps any block.
 	 *
-	 * @param int $startMin Slot start (minutes from midnight).
-	 * @param int $endMin Slot end (minutes from midnight).
+	 * @param array{startMin: int, endMin: int} $slot Slot start and end (minutes from midnight).
 	 * @param array<int, array{startMin: int, endMin: int}> $blocks Blocked ranges.
 	 *
 	 * @return bool
 	 */
-	private function overlapsAny(int $startMin, int $endMin, array $blocks): bool {
+	private function overlapsAny(array $slot, array $blocks): bool {
+		$startMin = $slot['startMin'];
+		$endMin = $slot['endMin'];
 		foreach ($blocks as $block) {
 			$blockStart = $block['startMin'];
 			$blockEnd = $block['endMin'];
