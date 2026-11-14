@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
+use OCA\Pipelinq\Kernel\Contracts\ZgwRegisterAccessInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -49,16 +50,13 @@ use Throwable;
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
-class ZgwRegisterAccess {
+class ZgwRegisterAccess implements ZgwRegisterAccessInterface {
 	/**
 	 * The pipelinq register slug shared by all four ZGW schemas.
 	 */
 	public const REGISTER = 'pipelinq';
 
-	public const SCHEMA_ENDPOINT = 'zgwEndpoint';
 	public const SCHEMA_CLIENT = 'zgwClient';
-	public const SCHEMA_ABONN = 'nrcAbonnement';
-	public const SCHEMA_MAPPING = 'zgwResourceMapping';
 
 	/**
 	 * Cached ObjectService instance (or null when OR is unavailable).

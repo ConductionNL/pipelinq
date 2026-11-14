@@ -41,9 +41,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
-use OCA\Pipelinq\Service\CampaignService;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
-use OCA\Pipelinq\Service\TouchpointService;
+use OCA\Pipelinq\Kernel\Contracts\CampaignServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
+use OCA\Pipelinq\Kernel\Contracts\TouchpointServiceInterface;
+use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -89,18 +92,22 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore $store Register-scoped object access.
-	 * @param CampaignService $campaigns Resolves the campaign the form belongs to.
-	 * @param TouchpointService $touchpoints The touchpoint log and its nonce guard.
+	 * @param ListObjectStoreInterface $store Register-scoped object access.
+	 * @param CampaignServiceInterface $campaigns Resolves the campaign the form belongs to.
+	 * @param TouchpointServiceInterface $touchpoints The touchpoint log and its nonce guard.
 	 * @param LoggerInterface $logger Logger.
+	 * @param EventRegistrationServiceInterface|null $eventRegistrations Registers the sign-up for the campaign's event.
+	 * @param EventEmailServiceInterface|null $eventMails Confirms the registration by mail.
 	 *
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-landing-page-submission-becomes-a-contact-a-lead-and-a-touchpoint
 	 */
 	public function __construct(
-		private ListObjectStore $store,
-		private CampaignService $campaigns,
-		private TouchpointService $touchpoints,
+		private ListObjectStoreInterface $store,
+		private CampaignServiceInterface $campaigns,
+		private TouchpointServiceInterface $touchpoints,
 		private LoggerInterface $logger,
+		private ?EventRegistrationServiceInterface $eventRegistrations = null,
+		private ?EventEmailServiceInterface $eventMails = null,
 	) {
 	}//end __construct()
 
@@ -160,7 +167,84 @@ class LandingPageFormSubmittedListener implements IEventListener {
 		}
 
 		$event->setHandled(true);
+
+		$this->registerForEvent(submission: $submission, records: $records);
 	}//end ingest()
+
+	/**
+	 * Register the sign-up for the campaign's event and mail the person what happened.
+	 *
+	 * Runs after the submission is acknowledged, and a failure here is logged
+	 * on its own: the contact, lead and touchpoint stand whatever happens to
+	 * the registration. The event's contract with portaliq is unchanged.
+	 *
+	 * @param LandingSubmission $submission The submission and its campaign.
+	 * @param SubmissionRecords $records    The contact and lead written for it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 */
+	private function registerForEvent(LandingSubmission $submission, SubmissionRecords $records): void {
+		$values = $submission->event->getValues();
+		$email = strtolower(trim((string)($values['email'] ?? '')));
+		if ($this->eventRegistrations === null || $email === '') {
+			return;
+		}
+
+		try {
+			$campaignEvent = $this->eventRegistrations->eventForCampaign(campaignId: $submission->campaign->id);
+			if ($campaignEvent === null) {
+				return;
+			}
+
+			$person = [
+				'name' => trim((string)($values['name'] ?? '')),
+				'email' => $email,
+				'contact' => $records->contactId,
+				'lead' => $records->leadId,
+				'source' => 'web-form',
+			];
+			$outcome = $this->eventRegistrations->register(event: $campaignEvent, person: $person);
+			$this->mailOutcome(campaignEvent: $campaignEvent, person: $person, outcome: $outcome);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: landing page sign-up could not be registered for the event',
+				['form' => $submission->event->getFormId(), 'reason' => $e->getMessage()]
+			);
+		}
+	}//end registerForEvent()
+
+	/**
+	 * Mail the person the outcome of their registration.
+	 *
+	 * @param array<string, mixed>     $campaignEvent The event.
+	 * @param array<string, mixed>     $person        The person who signed up.
+	 * @param EventRegistrationOutcome $outcome       What the registration did.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 */
+	private function mailOutcome(array $campaignEvent, array $person, EventRegistrationOutcome $outcome): void {
+		if ($this->eventMails === null) {
+			return;
+		}
+
+		if ($outcome->status === EventRegistrationOutcome::CLOSED) {
+			$this->eventMails->sendClosed(event: $campaignEvent, person: $person);
+			return;
+		}
+
+		$isNew = in_array($outcome->status, [EventRegistrationOutcome::REGISTERED, EventRegistrationOutcome::WAITLISTED], true);
+		if ($isNew === false || $outcome->registration === null) {
+			return;
+		}
+
+		if ($this->eventMails->sendConfirmation(event: $campaignEvent, registration: $outcome->registration) === true) {
+			$this->eventRegistrations?->stamp(registration: $outcome->registration, field: 'confirmationSentAt');
+		}
+	}//end mailOutcome()
 
 	/**
 	 * Acknowledge a redelivered submission whose nonce already has a touchpoint.

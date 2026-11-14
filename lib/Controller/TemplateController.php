@@ -27,12 +27,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PhysicalAddressRendererInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ArticleService;
-use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
-use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,25 +51,25 @@ class TemplateController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ComplianceService $complianceService Compliance + template repo.
-	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
+	 * @param ComplianceServiceInterface $complianceService Compliance + template repo.
+	 * @param ArticleServiceInterface $articleService Article reader and `{{articles}}` renderer.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
-	 * @param PhysicalAddressRenderer $addressRenderer Puts the template's physical address into the preview.
+	 * @param PhysicalAddressRendererInterface $addressRenderer Puts the template's physical address into the preview.
 	 * @param MailBlockRenderer $blockRenderer Renders Blocks-mode templates to the bodies that are sent.
 	 * @param Defaults|null $defaults The theming colour for buttons.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ComplianceService $complianceService,
-		private readonly ArticleService $articleService,
+		private readonly ComplianceServiceInterface $complianceService,
+		private readonly ArticleServiceInterface $articleService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
-		private readonly PhysicalAddressRenderer $addressRenderer,
+		private readonly PhysicalAddressRendererInterface $addressRenderer,
 		private readonly MailBlockRenderer $blockRenderer = new MailBlockRenderer(),
 		private readonly ?Defaults $defaults = null,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -204,19 +204,19 @@ class TemplateController extends Controller {
 				body: $this->articleService->expandArticlesMarker(
 					body: (string)($template['bodyHtml'] ?? ''),
 					articles: $articles,
-					format: ArticleService::FORMAT_HTML,
+					format: ArticleServiceInterface::FORMAT_HTML,
 				),
 				footerOverride: $footer,
-				format: ArticleService::FORMAT_HTML,
+				format: ArticleServiceInterface::FORMAT_HTML,
 			),
 			'bodyText' => $this->addressRenderer->render(
 				body: $this->articleService->expandArticlesMarker(
 					body: (string)($template['bodyText'] ?? ''),
 					articles: $articles,
-					format: ArticleService::FORMAT_TEXT,
+					format: ArticleServiceInterface::FORMAT_TEXT,
 				),
 				footerOverride: $footer,
-				format: ArticleService::FORMAT_TEXT,
+				format: ArticleServiceInterface::FORMAT_TEXT,
 			),
 			'articles' => array_map(
 				static fn (array $article): array => [
@@ -270,19 +270,19 @@ class TemplateController extends Controller {
 					body: $this->articleService->expandArticlesMarker(
 						body: $rendered['html'],
 						articles: $articles,
-						format: ArticleService::FORMAT_HTML,
+						format: ArticleServiceInterface::FORMAT_HTML,
 					),
 					footerOverride: $footer,
-					format: ArticleService::FORMAT_HTML,
+					format: ArticleServiceInterface::FORMAT_HTML,
 				),
 				'bodyText' => $this->addressRenderer->render(
 					body: $this->articleService->expandArticlesMarker(
 						body: $rendered['text'],
 						articles: $articles,
-						format: ArticleService::FORMAT_TEXT,
+						format: ArticleServiceInterface::FORMAT_TEXT,
 					),
 					footerOverride: $footer,
-					format: ArticleService::FORMAT_TEXT,
+					format: ArticleServiceInterface::FORMAT_TEXT,
 				),
 			]
 		);

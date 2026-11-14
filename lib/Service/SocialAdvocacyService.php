@@ -44,6 +44,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\SocialAdvocacyServiceInterface;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 use OCA\Pipelinq\Service\Social\SocialPublishRequest;
@@ -53,7 +54,7 @@ use OCA\Pipelinq\Service\Social\SocialPublishRequest;
  *
  * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
-class SocialAdvocacyService {
+class SocialAdvocacyService implements SocialAdvocacyServiceInterface {
 	/**
 	 * The notification subject sent to an account's owner.
 	 *

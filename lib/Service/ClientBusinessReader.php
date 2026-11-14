@@ -28,9 +28,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\OpenRegister\Exception\NotAuthorizedException;
-use OCA\Pipelinq\AppInfo\Application;
 use DateTime;
+use OCA\OpenRegister\Exception\NotAuthorizedException;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -43,7 +44,7 @@ use Throwable;
  *
  * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
  */
-class ClientBusinessReader {
+class ClientBusinessReader implements ClientBusinessReaderInterface {
 
 	private const OBJECT_SERVICE = 'OCA\OpenRegister\Service\ObjectService';
 
@@ -84,7 +85,7 @@ class ClientBusinessReader {
 			return $client;
 		}
 
-		$register  = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register  = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$person    = (($client['type'] ?? '') === 'person');
 		$leads     = $this->rows(
 			register: $register,
@@ -264,7 +265,7 @@ class ClientBusinessReader {
 	 * @return string The schema.
 	 */
 	private function schema(string $key, string $default): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($schema === '') {
 			return $default;
 		}
@@ -306,8 +307,8 @@ class ClientBusinessReader {
 	 * @return array<string, mixed> The client, or `status` and `message`.
 	 */
 	private function client(string $clientId): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($clientId === '' || $register === '' || $schema === '') {
 			return ['status' => 400, 'message' => 'Missing client'];
 		}

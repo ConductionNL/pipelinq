@@ -21,10 +21,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\CallbackService;
-use OCA\Pipelinq\Service\NotificationService;
-use OCA\Pipelinq\Service\ScheduledTaskService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallbackServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\NotificationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,9 +51,9 @@ class CallbackController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param CallbackService $callbackService The callback service.
-	 * @param NotificationService $notificationService The notification service.
-	 * @param ScheduledTaskService $scheduledTaskService The scheduled task service.
+	 * @param CallbackServiceInterface $callbackService The callback service.
+	 * @param NotificationServiceInterface $notificationService The notification service.
+	 * @param ScheduledTaskServiceInterface $scheduledTaskService The scheduled task service.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
@@ -61,15 +61,15 @@ class CallbackController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private CallbackService $callbackService,
-		private NotificationService $notificationService,
-		private ScheduledTaskService $scheduledTaskService,
+		private CallbackServiceInterface $callbackService,
+		private NotificationServiceInterface $notificationService,
+		private ScheduledTaskServiceInterface $scheduledTaskService,
 		private IGroupManager $groupManager,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

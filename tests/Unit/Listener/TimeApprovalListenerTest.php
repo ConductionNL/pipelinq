@@ -42,7 +42,7 @@ use RuntimeException;
  * Tests for TimeApprovalListener.
  *
  * @covers \OCA\Pipelinq\Listener\TimeApprovalListener
- * @uses   \OCA\Pipelinq\Event\TimeEntryApprovedEvent
+ * @covers \OCA\Pipelinq\Event\TimeEntryApprovedEvent
  */
 class TimeApprovalListenerTest extends TestCase {
 

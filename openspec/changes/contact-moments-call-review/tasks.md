@@ -2,13 +2,13 @@
 
 ## 1. Transcript and summary
 
-- [ ] 1.1 `ticket` gains `transcript` (read only), `callSummary`, `transcriptStatus`
+- [x] 1.1 `ticket` gains `transcript` (read only), `callSummary`, `transcriptStatus`
   - Verify: register import logs no `PARTIAL IMPORT`; `npm run check:schema-l10n` exit 0
-- [ ] 1.2 Queue `CallTranscriptionJob` from `attachRecording()` behind `call_transcription_enabled`
+- [x] 1.2 Queue `CallTranscriptionJob` from `attachRecording()` behind `call_transcription_enabled`
   - Verify: PHPUnit on `CtiService::attachRecording()` with the switch off and on
-- [ ] 1.3 `CallTranscriptionJob` + `CallTranscriptionService`: download, `core:audio2text`, write transcript, delete the temporary file in `finally`, statuses for expired recording and missing provider
+- [x] 1.3 `CallTranscriptionJob` + `CallTranscriptionService`: download, `core:audio2text`, write transcript, delete the temporary file in `finally`, statuses for expired recording and missing provider
   - Verify: PHPUnit with a mocked task manager for done, failed and unavailable; assert the temp file is gone in every case
-- [ ] 1.4 Summary through hermiq's lazy resolve; empty without hermiq
+- [x] 1.4 Summary through hermiq's lazy resolve; empty without hermiq
   - Verify: PHPUnit with and without a hermiq stub
 - [ ] 1.5 TicketDetail summary card (editable) and transcript panel
   - Verify: Playwright `tests/e2e/call-transcript.spec.ts` with a seeded transcribed contact moment

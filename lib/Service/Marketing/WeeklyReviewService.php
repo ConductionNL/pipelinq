@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\WeeklyReviewServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -45,7 +46,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
-class WeeklyReviewService {
+class WeeklyReviewService implements WeeklyReviewServiceInterface {
 
 	/**
 	 * The review schema slug.

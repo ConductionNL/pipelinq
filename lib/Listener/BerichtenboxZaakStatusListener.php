@@ -33,11 +33,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
 use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
-use OCA\Pipelinq\Service\BerichtenboxService;
-use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -71,14 +71,14 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig App config.
-	 * @param BerichtenboxService $berichtenbox Bridge service.
-	 * @param TicketService $ticketService Resolver for the unified ticket schema.
+	 * @param BerichtenboxServiceInterface $berichtenbox Bridge service.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified ticket schema.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly BerichtenboxService $berichtenbox,
-		private readonly TicketService $ticketService,
+		private readonly BerichtenboxServiceInterface $berichtenbox,
+		private readonly TicketServiceInterface $ticketService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -190,7 +190,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 		}
 
 		$caseSchema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'zaak_schema',
 			''
 		);

@@ -30,8 +30,8 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
-use OCA\Pipelinq\Service\WebForm\WebFormBindingCheck;
-use OCA\Pipelinq\Service\WebForm\WebFormFinder;
+use OCA\Pipelinq\Kernel\Contracts\WebFormBindingCheckInterface;
+use OCA\Pipelinq\Kernel\Contracts\WebFormFinderInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -49,15 +49,15 @@ class WebFormBindingListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param WebFormFinder       $finder Knows the webForm schema id.
-	 * @param WebFormBindingCheck $check  Judges the form against its destination.
+	 * @param WebFormFinderInterface       $finder Knows the webForm schema id.
+	 * @param WebFormBindingCheckInterface $check  Judges the form against its destination.
 	 * @param LoggerInterface     $logger Logger.
 	 *
 	 * @spec exclude constructor wiring only; it makes no decision a requirement can describe
 	 */
 	public function __construct(
-		private readonly WebFormFinder $finder,
-		private readonly WebFormBindingCheck $check,
+		private readonly WebFormFinderInterface $finder,
+		private readonly WebFormBindingCheckInterface $check,
 		private readonly LoggerInterface $logger,
 	) {
 

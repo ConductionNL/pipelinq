@@ -29,12 +29,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\Pipelinq\Kernel\Contracts\SchemaEvolutionServiceInterface;
+
 /**
  * Column-drift detection for the export schema snapshots.
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
  */
-class SchemaEvolutionService {
+class SchemaEvolutionService implements SchemaEvolutionServiceInterface {
 	/**
 	 * Compare a current column definition map to the previous snapshot's.
 	 *

@@ -26,10 +26,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastExportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ForecastOverrideDeskInterface;
 use OCA\Pipelinq\Lifecycle\ForecastAccess;
-use OCA\Pipelinq\Service\ForecastExportService;
-use OCA\Pipelinq\Service\ForecastOverrideDesk;
 use OCA\Pipelinq\Service\ForecastSnapshotQuery;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
@@ -59,16 +59,16 @@ class ForecastController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ForecastAccess $access The acting user and their forecast scope.
-	 * @param ForecastExportService $exportService The snapshot export service.
-	 * @param ForecastOverrideDesk $overrides The override requests.
+	 * @param ForecastExportServiceInterface $exportService The snapshot export service.
+	 * @param ForecastOverrideDeskInterface $overrides The override requests.
 	 */
 	public function __construct(
 		IRequest $request,
 		private ForecastAccess $access,
-		private ForecastExportService $exportService,
-		private ForecastOverrideDesk $overrides,
+		private ForecastExportServiceInterface $exportService,
+		private ForecastOverrideDeskInterface $overrides,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

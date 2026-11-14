@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\TaskNameBackfillService;
+use OCA\Pipelinq\Kernel\Contracts\TaskNameBackfillServiceInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 
@@ -42,10 +42,10 @@ class BackfillTaskNames implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param TaskNameBackfillService $service Does the work.
+	 * @param TaskNameBackfillServiceInterface $service Does the work.
 	 */
 	public function __construct(
-		private readonly TaskNameBackfillService $service,
+		private readonly TaskNameBackfillServiceInterface $service,
 	) {
 	}//end __construct()
 

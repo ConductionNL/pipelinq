@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateInterval;
 use DateTimeImmutable;
+use OCA\Pipelinq\Kernel\Contracts\ReportingServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -47,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
  */
-class ReportingService {
+class ReportingService implements ReportingServiceInterface {
 	/**
 	 * Default SLA targets.
 	 *

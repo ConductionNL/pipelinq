@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Competitor;
 
+use OCA\Pipelinq\Kernel\Contracts\CompetitorWatchServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
@@ -48,15 +49,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
  */
-class CompetitorWatchService {
-
-	/**
-	 * App-config key naming the OpenConnector source competitor reads leave
-	 * through.
-	 *
-	 * @var string
-	 */
-	public const SOURCE_KEY = 'competitor.egress_source';
+class CompetitorWatchService implements CompetitorWatchServiceInterface {
 
 	/**
 	 * The `competitorWatch` schema slug.
@@ -82,13 +75,6 @@ class CompetitorWatchService {
 		'daily' => 86400,
 		'weekly' => 604800,
 	];
-
-	/**
-	 * Watches run in one pass, at most.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_LIMIT = 25;
 
 	/**
 	 * Constructor.

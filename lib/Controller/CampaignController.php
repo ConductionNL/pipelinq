@@ -30,10 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Kernel\Contracts\CampaignReportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\CampaignServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LandingPageProvisioningServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\CampaignReportService;
-use OCA\Pipelinq\Service\CampaignService;
-use OCA\Pipelinq\Service\LandingPageProvisioningService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -88,9 +88,9 @@ class CampaignController extends Controller {
 	 *
 	 * @param string $appName App name.
 	 * @param IRequest $request Request.
-	 * @param CampaignReportService $report The aggregate report.
-	 * @param CampaignService $campaigns Mints the campaign value and checks the vocabulary.
-	 * @param LandingPageProvisioningService $landingPages The Portaliq hand-off.
+	 * @param CampaignReportServiceInterface $report The aggregate report.
+	 * @param CampaignServiceInterface $campaigns Mints the campaign value and checks the vocabulary.
+	 * @param LandingPageProvisioningServiceInterface $landingPages The Portaliq hand-off.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
@@ -98,9 +98,9 @@ class CampaignController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly CampaignReportService $report,
-		private readonly CampaignService $campaigns,
-		private readonly LandingPageProvisioningService $landingPages,
+		private readonly CampaignReportServiceInterface $report,
+		private readonly CampaignServiceInterface $campaigns,
+		private readonly LandingPageProvisioningServiceInterface $landingPages,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);

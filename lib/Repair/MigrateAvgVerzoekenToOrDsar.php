@@ -42,7 +42,7 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -277,8 +277,8 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-017-migration-of-existing-avgverzoek-data-to-or
 	 */
 	public function run(IOutput $output): void {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$requestSchema = $this->appConfig->getValueString(Application::APP_ID, 'avgVerzoek_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$requestSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'avgVerzoek_schema', '');
 		if ($registerId === '' || $requestSchema === '') {
 			$output->info('Pipelinq AVG→DSAR migration: no avgVerzoek schema provisioned, nothing to migrate.');
 			return;
@@ -601,34 +601,11 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		$requestId = (string)($request['id'] ?? ($request['uuid'] ?? ''));
 		$article = (string)($request['artikel'] ?? '');
 
-		$subjectId = (string)($request['verzoekerContact'] ?? '');
-		if ($subjectId === '') {
-			$subjectId = (string)($request['verzoekerBsn'] ?? ($request['verzoekerNaam'] ?? 'unknown'));
-		}
-
 		$evidence = (array)(($satellites['bewijs'][$requestId] ?? []));
 		$weigering = (array)(($satellites['weigering'][$requestId] ?? []));
-
-		// Redactions reach the verzoek only through its bewijsItems — they are
-		// indexed by `bewijsItemId`, the field they actually carry.
-		$redactie = [];
-		foreach ($evidence as $item) {
-			$evidenceId = (string)(($item['id'] ?? ($item['uuid'] ?? '')));
-			if ($evidenceId === '') {
-				continue;
-			}
-
-			foreach ((array)($satellites['redactie'][$evidenceId] ?? []) as $action) {
-				$redactie[] = $action;
-			}
-		}
+		$redactie = $this->redactionsOf(evidence: $evidence, satellites: $satellites);
 
 		$dueAt = (string)($request['wettelijkeTermijnVerloopt'] ?? '');
-
-		$subjectType = 'natural-person';
-		if (($request['verzoekerContact'] ?? '') !== '') {
-			$subjectType = 'contact';
-		}
 
 		// Guaranteed present: migrateOne() refuses an unmappable article before
 		// we get here, rather than defaulting it to 'access' and filing an
@@ -636,8 +613,8 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		$type = self::ARTICLE_TYPE[$article];
 
 		$case = [
-			'subjectId' => $subjectId,
-			'subjectType' => $subjectType,
+			'subjectId' => $this->subjectIdOf(request: $request),
+			'subjectType' => $this->subjectTypeOf(request: $request),
 			'jurisdiction' => 'NL',
 			'type' => $type,
 			'status' => $this->mapStatus(request: $request),
@@ -653,19 +630,89 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 
 		$this->applyExtension(case: $case, request: $request, dueAt: $dueAt);
 
-		// Optional 1:1 string fields, copied only when present.
-		foreach (['afgerondOp' => 'closedAt', 'outcome' => 'outcome', 'retentionTo' => 'retainUntil'] as $src => $dst) {
-			if (($request[$src] ?? '') !== '') {
-				$case[$dst] = (string)$request[$src];
-			}
-		}
-
+		$case = $this->copyOptionalFields(case: $case, request: $request);
 		$case = $this->applyGround(case: $case, weigering: $weigering);
 		$case = $this->applyCollection(case: $case, key: 'evidence', records: $this->mapEvidence(items: $evidence));
 		$case = $this->applyCollection(case: $case, key: 'redactions', records: $this->mapRedactions(redactie: $redactie));
 
 		return $case;
 	}//end mapVerzoek()
+
+	/**
+	 * The data subject of a verzoek: its contact, else its BSN, else its name.
+	 *
+	 * @param array<string, mixed> $request The source object.
+	 *
+	 * @return string The subject id, `unknown` when the verzoek names none.
+	 */
+	private function subjectIdOf(array $request): string {
+		$subjectId = (string)($request['verzoekerContact'] ?? '');
+		if ($subjectId === '') {
+			$subjectId = (string)($request['verzoekerBsn'] ?? ($request['verzoekerNaam'] ?? 'unknown'));
+		}
+
+		return $subjectId;
+	}//end subjectIdOf()
+
+	/**
+	 * Whether the subject is a CRM contact or a natural person.
+	 *
+	 * @param array<string, mixed> $request The source object.
+	 *
+	 * @return string `contact` or `natural-person`.
+	 */
+	private function subjectTypeOf(array $request): string {
+		if (($request['verzoekerContact'] ?? '') !== '') {
+			return 'contact';
+		}
+
+		return 'natural-person';
+	}//end subjectTypeOf()
+
+	/**
+	 * The redaction actions of a verzoek's evidence, in evidence order.
+	 *
+	 * Redactions reach the verzoek only through its bewijsItems — they are
+	 * indexed by `bewijsItemId`, the field they actually carry.
+	 *
+	 * @param array<int, mixed> $evidence The verzoek's bewijsItems.
+	 * @param array<string, mixed> $satellites Satellites indexed by schema then id.
+	 *
+	 * @return array<int, mixed> The redaction actions.
+	 */
+	private function redactionsOf(array $evidence, array $satellites): array {
+		$redactie = [];
+		foreach ($evidence as $item) {
+			$evidenceId = (string)(($item['id'] ?? ($item['uuid'] ?? '')));
+			if ($evidenceId === '') {
+				continue;
+			}
+
+			foreach ((array)($satellites['redactie'][$evidenceId] ?? []) as $action) {
+				$redactie[] = $action;
+			}
+		}
+
+		return $redactie;
+	}//end redactionsOf()
+
+	/**
+	 * Copy the optional 1:1 string fields, only when present.
+	 *
+	 * @param array<string, mixed> $case The case payload.
+	 * @param array<string, mixed> $request The source object.
+	 *
+	 * @return array<string, mixed> The case payload.
+	 */
+	private function copyOptionalFields(array $case, array $request): array {
+		foreach (['afgerondOp' => 'closedAt', 'outcome' => 'outcome', 'retentionTo' => 'retainUntil'] as $src => $dst) {
+			if (($request[$src] ?? '') !== '') {
+				$case[$dst] = (string)$request[$src];
+			}
+		}
+
+		return $case;
+	}//end copyOptionalFields()
 
 	/**
 	 * Attach the denial ground to the case when a weigering satellite exists.
@@ -939,7 +986,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 * @return array<int, mixed> The rows (empty when the schema is unprovisioned/unreadable).
 	 */
 	private function readSchema(DsarMigrationSource $source, string $schemaKey): array {
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($schemaId === '') {
 			return [];
 		}

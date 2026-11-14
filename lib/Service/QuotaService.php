@@ -25,7 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\QuotaServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -39,36 +40,8 @@ use Psr\Log\LoggerInterface;
  * @spec exclude infrastructure utility with no feature requirement of its own; it is
  *   exercised through the features that call it
  */
-class QuotaService {
+class QuotaService implements QuotaServiceInterface {
 	use PayloadToArray;
-
-	/**
-	 * App-config key for the at-risk quota-attainment threshold (percent).
-	 *
-	 * @var string
-	 */
-	public const AT_RISK_PERCENT_KEY = 'forecast_at_risk_percent';
-
-	/**
-	 * App-config key for the at-risk days-remaining threshold.
-	 *
-	 * @var string
-	 */
-	public const AT_RISK_DAYS_KEY = 'forecast_at_risk_days';
-
-	/**
-	 * Default at-risk attainment threshold (90%).
-	 *
-	 * @var int
-	 */
-	public const AT_RISK_PERCENT_DEFAULT = 90;
-
-	/**
-	 * Default at-risk days-remaining threshold (30 days).
-	 *
-	 * @var int
-	 */
-	public const AT_RISK_DAYS_DEFAULT = 30;
 
 	/**
 	 * Best-case weighting used in the projected-attainment formula.
@@ -228,7 +201,7 @@ class QuotaService {
 	 *   exercised through the features that call it
 	 */
 	public function getAtRiskPercent(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, self::AT_RISK_PERCENT_KEY, self::AT_RISK_PERCENT_DEFAULT);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::AT_RISK_PERCENT_KEY, self::AT_RISK_PERCENT_DEFAULT);
 		if ($value > 0) {
 			return $value;
 		}
@@ -244,7 +217,7 @@ class QuotaService {
 	 *   exercised through the features that call it
 	 */
 	public function getAtRiskDays(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, self::AT_RISK_DAYS_KEY, self::AT_RISK_DAYS_DEFAULT);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::AT_RISK_DAYS_KEY, self::AT_RISK_DAYS_DEFAULT);
 		if ($value > 0) {
 			return $value;
 		}
@@ -261,8 +234,8 @@ class QuotaService {
 	 * @return array<int, array<string, mixed>> The matching objects as arrays.
 	 */
 	private function findObjects(string $schemaKey, array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}

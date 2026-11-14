@@ -23,12 +23,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\IcpConfigServiceInterface;
+
 /**
  * Service for reading/writing ICP settings via IAppConfig.
  *
  * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
-class IcpConfigService {
+class IcpConfigService implements IcpConfigServiceInterface {
 	/**
 	 * ICP config keys for hash calculation.
 	 *

@@ -30,8 +30,8 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AvailabilityService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
 use OCA\Pipelinq\Util\AnyPayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -85,14 +85,14 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param ContainerInterface $container The DI container (OR lookup).
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param AvailabilityService $availabilityService Member 02 — invalidation target.
+	 * @param AvailabilityServiceInterface $availabilityService Member 02 — invalidation target.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private AvailabilityService $availabilityService,
+		private AvailabilityServiceInterface $availabilityService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -296,7 +296,7 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @return string
 	 */
 	private function registerSlug(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 	}//end registerSlug()
 
 	/**
@@ -307,7 +307,7 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * @return string
 	 */
 	private function schemaSlug(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaSlug()
 
 	/**
