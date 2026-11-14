@@ -255,21 +255,16 @@ class ClientRiskService {
 			return false;
 		}
 
-		$uuid = $this->clientUuid(client: $client);
-		if ($uuid === '') {
-			return false;
-		}
-
 		// A locked client refuses every write: skip it rather than log a
 		// refusal for it on every daily run (platform-record-lock 1.3).
-		if (LockedRecord::isLocked(record: $client) === true) {
+		if ($this->clientUuid(client: $client) === '' || LockedRecord::isLocked(record: $client) === true) {
 			return false;
 		}
 
 		$client['churnRisk'] = $risk;
 		unset($client['@self']);
 
-		return $this->saveRisk(client: $client, register: $register, schema: $schema, uuid: $uuid);
+		return $this->saveRisk(client: $client, location: new RegisterSchema(register: $register, schema: $schema));
 	}//end store()
 
 	/**
@@ -303,19 +298,18 @@ class ClientRiskService {
 	/**
 	 * Save the client with its risk as the system; a failure is logged.
 	 *
-	 * @param array<string,mixed> $client   The client with its new risk.
-	 * @param string              $register The register id.
-	 * @param string              $schema   The client schema id.
-	 * @param string              $uuid     The client id.
+	 * @param array<string,mixed> $client   The client with its new risk, carrying its id.
+	 * @param RegisterSchema      $location The register and client schema ids.
 	 *
 	 * @return bool Whether the client was written.
 	 */
-	private function saveRisk(array $client, string $register, string $schema, string $uuid): bool {
+	private function saveRisk(array $client, RegisterSchema $location): bool {
+		$uuid = $this->clientUuid(client: $client);
 		try {
 			$this->objectService->saveObject(
 				object: $client,
-				register: $register,
-				schema: $schema,
+				register: $location->register,
+				schema: $location->schema,
 				uuid: $uuid,
 				_rbac: false,
 				_multitenancy: false,
