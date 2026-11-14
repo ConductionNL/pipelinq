@@ -2349,37 +2349,6 @@
                 }
             }
         },
-        "/brp/monitor": {
-            "get": {
-                "operationId": "brp-monitor",
-                "summary": "GET /api/brp/monitor — return the latest BrpMonitorJob report + cert health",
-                "description": "GET /api/brp/monitor — return the latest BrpMonitorJob report + cert health. Admin-only: regular users would learn sensitive operational metrics. Needs an administrator, or a user the matching admin setting is delegated to.",
-                "tags": [
-                    "brp"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/Problem403"
-                    }
-                }
-            }
-        },
         "/brp/mutations": {
             "post": {
                 "operationId": "brp-mutation-webhook",
