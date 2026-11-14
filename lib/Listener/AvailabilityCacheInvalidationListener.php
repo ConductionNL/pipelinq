@@ -97,13 +97,28 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 			return;
 		}
 
+		$entry = $this->deferredEntry(kind: $kind, uuid: $uuid, entity: $entity, previous: $previous);
+		$this->deferral->defer(jobClass: DeferredObjectListenerJob::class, entry: $entry, dedupeKey: self::HANDLER_KEY . '|' . $uuid);
+	}//end handle()
+
+	/**
+	 * The deferred entry; a service change also names the resource types it affects.
+	 *
+	 * @param string      $kind     `resource` or `service`.
+	 * @param string      $uuid     The changed object's uuid.
+	 * @param object      $entity   The object as it is now.
+	 * @param object|null $previous The object as it was, or null.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function deferredEntry(string $kind, string $uuid, object $entity, object|null $previous): array {
 		$entry = ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'kind' => $kind];
 		if ($kind === 'service') {
 			$entry = $this->withAffectedTypes(entry: $entry, entity: $entity, previous: $previous);
 		}
 
-		$this->deferral->defer(jobClass: DeferredObjectListenerJob::class, entry: $entry, dedupeKey: self::HANDLER_KEY . '|' . $uuid);
-	}//end handle()
+		return $entry;
+	}//end deferredEntry()
 
 	/**
 	 * The entry with the resource types a service change affects, before and after.

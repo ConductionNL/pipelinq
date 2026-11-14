@@ -156,10 +156,7 @@ class Customer360SummaryService implements Customer360SummaryServiceInterface {
 		$slaAtRisk = 0;
 
 		foreach (TicketService::TYPES as $ticketType) {
-			$tickets = $this->ticketService->findByType(
-				$ticketType,
-				['client' => $clientId, 'status' => self::OPEN_TICKET_STATUSES]
-			);
+			$tickets = $this->ticketService->findByType($ticketType, ['client' => $clientId, 'status' => self::OPEN_TICKET_STATUSES]);
 			$openTicketsByType[$ticketType] = count($tickets);
 
 			[$breached, $atRisk] = $this->slaCounts(tickets: $tickets, now: $now, atRiskThreshold: $atRiskThreshold);

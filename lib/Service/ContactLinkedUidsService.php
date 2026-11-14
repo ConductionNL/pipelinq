@@ -101,18 +101,13 @@ class ContactLinkedUidsService {
 		$uids = [];
 
 		try {
-			$objects = $objectService->findAll(
-				['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]
-			);
+			$objects = $objectService->findAll(['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]);
 
 			foreach ($objects as $obj) {
 				$uids = array_merge($uids, $this->contactsUidOf(obj: $obj));
 			}
 		} catch (\Exception $e) {
-			$this->logger->debug(
-				'Pipelinq: Failed to fetch linked UIDs for ' . $type,
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->debug('Pipelinq: Failed to fetch linked UIDs for ' . $type, ['exception' => $e->getMessage()]);
 		}
 
 		return $uids;
