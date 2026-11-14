@@ -9255,6 +9255,8 @@
         "Card in the address book {book}, updated {when}.": "Kaart in het adresboek {book}, {when} bijgewerkt.",
         "today {time}": "vandaag {time}",
         "Social profile": "Sociaal profiel",
+        "{answeredToday} today": "{answeredToday} vandaag",
+        "of the answered tickets with a deadline": "van de beantwoorde tickets met een termijn",
         "preferred": "voorkeur",
         "%n day late": [
             "%n dag te laat",
@@ -9670,8 +9672,6 @@
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
         "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
-        "{answeredToday} today": "{answeredToday} vandaag",
-        "of the answered tickets with a deadline": "van de beantwoorde tickets met een termijn",
         "Earlier contacts could not be loaded.": "Eerdere contacten konden niet worden geladen.",
         "Earlier contacts from this number": "Eerdere contacten van dit nummer",
         "Looking up earlier contacts…": "Eerdere contacten opzoeken…",
