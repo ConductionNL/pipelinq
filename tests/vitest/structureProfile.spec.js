@@ -151,7 +151,7 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 51 entries: 41 main, 3 footer, 7 settings, 0 integrations', () => {
+	it('still counts 52 entries: 41 main, 3 footer, 8 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
@@ -159,11 +159,12 @@ describe('the full profile', () => {
 		// The sixth settings entry is the Integrations caption above Connections
 		// and BI export, which settingsSection moves there. nextcloud-vue before
 		// 2.84.0 dropped it in the relocation step's clean-up; 2.84.0 keeps a
-		// caption that has entries under it (nextcloud-vue #1608).
-		expect(flat(menu)).toHaveLength(51)
+		// caption that has entries under it (nextcloud-vue #1608). Municipalities
+		// (requests-municipality-per-contact) is the eighth settings entry.
+		expect(flat(menu)).toHaveLength(52)
 		expect(count('main')).toBe(41)
 		expect(count('footer')).toBe(3)
-		expect(count('settings')).toBe(7)
+		expect(count('settings')).toBe(8)
 		expect(count('integrations')).toBe(0)
 	})
 
@@ -486,11 +487,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 105 pages as the full profile, so every route stays', () => {
+	it('builds the same 106 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(105)
+		expect(built.pages).toHaveLength(106)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)
