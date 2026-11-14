@@ -33,6 +33,7 @@ use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentSubject;
 use OCA\Pipelinq\Service\Consent\ConsentWish;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -67,6 +68,7 @@ class ConsentService implements ConsentServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
 	use SavedPayloadId;
+	use ContainerObjectService;
 
 	/**
 	 * Default messagingConsentRecord schema slug.
@@ -858,23 +860,6 @@ class ConsentService implements ConsentServiceInterface {
 
 		return $this->toArray(value: $saved);
 	}//end saveObject()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConsentService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Schema slug (app-config overridable).

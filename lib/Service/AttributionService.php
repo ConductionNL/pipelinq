@@ -31,6 +31,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -50,6 +51,7 @@ class AttributionService implements AttributionServiceInterface {
 	use ConfiguredRegisterSlug;
 	use SavedPayloadId;
 	use ConfiguredBlastDeliverySchemaSlug;
+	use ContainerObjectService;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -623,23 +625,6 @@ class AttributionService implements AttributionServiceInterface {
 
 		return self::DEFAULT_LEAD_SCHEMA_SLUG;
 	}//end getLeadSchemaSlug()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'AttributionService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Current time as an ISO-8601 string.

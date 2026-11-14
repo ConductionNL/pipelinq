@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
 use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
@@ -38,7 +37,9 @@ use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCA\Pipelinq\Service\Provider\SmsSendFailure;
 use OCA\Pipelinq\Service\Provider\SmsSendRun;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
+use OCA\Pipelinq\Util\ChannelAdapterLookups;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -67,6 +68,8 @@ class SmsAdapter implements SmsAdapterInterface {
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
 	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use ChannelAdapterLookups;
 
 	/**
 	 * Scope for the webhook's LOOKUPS only: reads without RBAC. Writes run as the messaging account.
@@ -362,25 +365,6 @@ class SmsAdapter implements SmsAdapterInterface {
 
 		return $messageId;
 	}//end auditOutbound()
-
-	/**
-	 * The contact moment service, resolved lazily; null when it is absent.
-	 *
-	 * @return ContactmomentService|null The service or null.
-	 */
-	private function contactmoments(): ?ContactmomentService {
-		try {
-			$service = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (($service instanceof ContactmomentService) === false) {
-			return null;
-		}
-
-		return $service;
-	}//end contactmoments()
 
 	/**
 	 * Handle an inbound SMS webhook.
@@ -832,33 +816,6 @@ class SmsAdapter implements SmsAdapterInterface {
 	}//end persistMessage()
 
 	/**
-	 * Look up the open conversation for (contact, provider, channel)
-	 * or open a new one.
-	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID.
-	 * @param string $channel Channel.
-	 * @param array<string, bool> $scope OpenRegister access scope for the lookup (LOOKUP_SCOPE from the webhook); the open runs as the caller.
-	 *
-	 * @return string Conversation UUID.
-	 */
-	private function findOrOpenConversation(string $contactId, string $providerId, string $channel, array $scope = []): string {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return '';
-		}
-
-		$schema = $this->resolveSchemaSlug(key: 'conversation_schema', default: self::DEFAULT_CONVERSATION_SCHEMA_SLUG);
-		$conversation = ['contactId' => $contactId, 'providerId' => $providerId, 'channel' => $channel, 'status' => 'open'];
-		$existingId = $this->findOpenConversation(objectService: $objectService, conversation: $conversation, schema: $schema, scope: $scope);
-		if ($existingId !== null) {
-			return $existingId;
-		}
-
-		return $this->openConversation(objectService: $objectService, conversation: $conversation, schema: $schema);
-	}//end findOrOpenConversation()
-
-	/**
 	 * The id of the first open conversation matching the identity, or null when there is none.
 	 *
 	 * @param object $objectService The OpenRegister ObjectService.
@@ -934,72 +891,6 @@ class SmsAdapter implements SmsAdapterInterface {
 		parse_str($trimmed, $parsed);
 		return $parsed;
 	}//end decodeBody()
-
-	/**
-	 * Extract the most relevant phone number from a contact row.
-	 *
-	 * @param array<string, mixed> $contact Contact row.
-	 *
-	 * @return string Phone number (E.164) or empty.
-	 */
-	private function extractPhone(array $contact): string {
-		foreach (['phoneNumber', 'mobile', 'telephone', 'phone'] as $key) {
-			$value = ($contact[$key] ?? null);
-			if (is_string($value) === true && $value !== '') {
-				return $value;
-			}
-		}
-
-		return '';
-	}//end extractPhone()
-
-	/**
-	 * Tenant id — defaults to the NC instance id when none is set.
-	 *
-	 * @return string Tenant id.
-	 */
-	private function getTenantId(): string {
-		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end getTenantId()
-
-	/**
-	 * Resolve a schema slug app-config override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end resolveSchemaSlug()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Extract a UUID / id / slug from a payload.

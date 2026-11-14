@@ -45,6 +45,7 @@ use OCA\Pipelinq\Service\Marketing\ObjectQuery;
 use OCA\Pipelinq\Service\Marketing\ObjectSelection;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -83,6 +84,7 @@ class BlastService implements BlastServiceInterface {
 	use ConfiguredRegisterSlug;
 	use SavedPayloadId;
 	use ConfiguredBlastDeliverySchemaSlug;
+	use ContainerObjectService;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -2004,23 +2006,6 @@ class BlastService implements BlastServiceInterface {
 
 		return self::DEFAULT_CAMPAIGN_TEMPLATE_SCHEMA_SLUG;
 	}//end getCampaignTemplateSchemaSlug()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Current time as an ISO-8601 string.

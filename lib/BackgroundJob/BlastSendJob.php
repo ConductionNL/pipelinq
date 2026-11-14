@@ -35,6 +35,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BlastSendJobInterface;
 use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -54,6 +55,7 @@ use Throwable;
  */
 class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	use PayloadToArray;
+	use ContainerObjectService;
 
 	/**
 	 * Interval in seconds (5 minutes).
@@ -388,21 +390,4 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 
 		return '';
 	}//end firstIdentity()
-
-	/**
-	 * Lazy-resolve OpenRegister's ObjectService.
-	 *
-	 * @return object|null ObjectService or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastSendJob.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 }//end class

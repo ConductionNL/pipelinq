@@ -48,6 +48,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -79,6 +80,7 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
 	use ConfiguredBlastDeliverySchemaSlug;
+	use ContainerObjectService;
 
 	/**
 	 * Default register slug — matches the chain root schemas.
@@ -1005,21 +1007,4 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 
 		return '';
 	}//end extractId()
-
-	/**
-	 * Lazy-resolve OpenRegister's ObjectService.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WebhookProcessorService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 }//end class

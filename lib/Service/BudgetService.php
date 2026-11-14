@@ -32,6 +32,7 @@ use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BudgetServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -60,6 +61,7 @@ class BudgetService implements BudgetServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
 	use SavedPayloadId;
+	use ContainerObjectService;
 
 	/**
 	 * Default messageSendBudget schema slug.
@@ -437,23 +439,6 @@ class BudgetService implements BudgetServiceInterface {
 			return gmdate('Y-m-d\TH:i:s\Z', (time() + (30 * 86400)));
 		}
 	}//end advancePeriod()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BudgetService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Schema slug (app-config overridable).

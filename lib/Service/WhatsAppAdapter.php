@@ -39,7 +39,9 @@ use OCA\Pipelinq\Service\Provider\WhatsAppSendFailure;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateRequest;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
+use OCA\Pipelinq\Util\ChannelAdapterLookups;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -83,6 +85,8 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
 	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use ChannelAdapterLookups;
 
 	/**
 	 * OpenRegister access scope for the webhook's LOOKUPS (contact,
@@ -809,25 +813,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	}//end auditOutbound()
 
 	/**
-	 * The contact moment service, resolved lazily; null when it is absent.
-	 *
-	 * @return ContactmomentService|null The service or null.
-	 */
-	private function contactmoments(): ?ContactmomentService {
-		try {
-			$service = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (($service instanceof ContactmomentService) === false) {
-			return null;
-		}
-
-		return $service;
-	}//end contactmoments()
-
-	/**
 	 * Outbound templateId: the resolved template's id, or empty for free-form.
 	 *
 	 * @param array<string, mixed>|null $template Resolved template row, or null for free-form.
@@ -1413,33 +1398,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	}//end extractMetaMessage()
 
 	/**
-	 * Find or open a conversation row for (contact, provider, channel).
-	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID.
-	 * @param string $channel Channel.
-	 * @param array<string, bool> $scope OpenRegister access scope for the lookup (LOOKUP_SCOPE from the webhook); the open runs as the caller.
-	 *
-	 * @return string Conversation UUID.
-	 */
-	private function findOrOpenConversation(string $contactId, string $providerId, string $channel, array $scope = []): string {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return '';
-		}
-
-		$schema = $this->resolveSchemaSlug(key: 'conversation_schema', default: self::DEFAULT_CONVERSATION_SCHEMA_SLUG);
-		$conversation = ['contactId' => $contactId, 'providerId' => $providerId, 'channel' => $channel, 'status' => 'open'];
-
-		$existingId = $this->findOpenConversation(objectService: $objectService, conversation: $conversation, schema: $schema, scope: $scope);
-		if ($existingId !== null) {
-			return $existingId;
-		}
-
-		return $this->openConversation(objectService: $objectService, conversation: $conversation, schema: $schema);
-	}//end findOrOpenConversation()
-
-	/**
 	 * The id of the first open conversation matching the identity, or null when there is none.
 	 *
 	 * @param object $objectService The OpenRegister ObjectService.
@@ -1648,72 +1606,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 
 		return $this->toArray(value: $entity);
 	}//end loadTemplate()
-
-	/**
-	 * Extract a phone number from a contact row.
-	 *
-	 * @param array<string, mixed> $contact Contact row.
-	 *
-	 * @return string Phone number or empty.
-	 */
-	private function extractPhone(array $contact): string {
-		foreach (['phoneNumber', 'mobile', 'telephone', 'phone'] as $key) {
-			$value = ($contact[$key] ?? null);
-			if (is_string($value) === true && $value !== '') {
-				return $value;
-			}
-		}
-
-		return '';
-	}//end extractPhone()
-
-	/**
-	 * Tenant id (app-config; defaults to `default`).
-	 *
-	 * @return string Tenant id.
-	 */
-	private function getTenantId(): string {
-		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end getTenantId()
-
-	/**
-	 * App-config schema slug override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end resolveSchemaSlug()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Extract a UUID / id / slug from a payload.

@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TemplateApprovalSyncServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -53,6 +54,7 @@ use Throwable;
 class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
 
 	/**
 	 * Default register slug.
@@ -425,23 +427,6 @@ class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterfac
 
 		return $this->toArray(value: $saved);
 	}//end saveObject()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'TemplateApprovalSyncService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Extract a UUID / id / slug from a payload.

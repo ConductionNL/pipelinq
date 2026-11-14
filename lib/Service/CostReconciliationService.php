@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CostReconciliationServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -52,6 +53,7 @@ class CostReconciliationService implements CostReconciliationServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
 	use SavedPayloadId;
+	use ContainerObjectService;
 
 	/**
 	 * Default register slug.
@@ -264,23 +266,6 @@ class CostReconciliationService implements CostReconciliationServiceInterface {
 			return false;
 		}
 	}//end saveReconciled()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'CostReconciliationService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Schema slug.

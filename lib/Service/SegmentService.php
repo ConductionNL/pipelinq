@@ -34,6 +34,7 @@ use OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler;
 use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -73,6 +74,7 @@ use Throwable;
 class SegmentService implements SegmentServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
 
 	/**
 	 * Default estimateSize cache TTL in seconds when the
@@ -2740,24 +2742,6 @@ class SegmentService implements SegmentServiceInterface {
 			return null;
 		}
 	}//end getEstimateCache()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return object|null ObjectService, or null when OpenRegister is
-	 *                     not loaded.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SegmentService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Resolve the OpenRegister SchemaMapper lazily.

@@ -39,6 +39,7 @@ use OCA\Pipelinq\Service\Consent\SendPermitRequest;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -67,6 +68,7 @@ use Throwable;
 class ComplianceService implements ComplianceServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
 
 	/**
 	 * Default register slug — matches SegmentService and the chain-root
@@ -1833,24 +1835,6 @@ class ComplianceService implements ComplianceServiceInterface {
 
 		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
 	}//end getBlastDeliverySchemaSlug()
-
-	/**
-	 * Resolve OpenRegister's ObjectService lazily.
-	 *
-	 * @return object|null ObjectService, or null when OpenRegister is
-	 *                     not loaded.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ComplianceService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Extract the canonical id from an OpenRegister entity payload.

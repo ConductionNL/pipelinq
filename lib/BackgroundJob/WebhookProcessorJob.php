@@ -32,6 +32,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
 use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -51,6 +52,7 @@ use Throwable;
 class WebhookProcessorJob extends TimedJob {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
 
 	/**
 	 * Default register slug.
@@ -242,23 +244,6 @@ class WebhookProcessorJob extends TimedJob {
 
 		return ['status' => 'unknownChannel'];
 	}//end dispatchChannel()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WebhookProcessorJob.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Extract a UUID / id / slug from a payload.

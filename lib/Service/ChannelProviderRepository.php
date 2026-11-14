@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -50,6 +51,7 @@ use Throwable;
 class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
 
 	/**
 	 * Default channelProvider schema slug.
@@ -234,23 +236,6 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 
 		return null;
 	}//end findByVendor()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ChannelProviderRepository.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Schema slug (app-config overridable).

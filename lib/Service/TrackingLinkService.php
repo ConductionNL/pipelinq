@@ -43,6 +43,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TrackingLinkServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -68,6 +69,7 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 	use ConfiguredRegisterSlug;
 	use SavedPayloadId;
 	use ConfiguredBlastDeliverySchemaSlug;
+	use ContainerObjectService;
 
 	/**
 	 * App-config key for the per-instance HMAC signing secret.
@@ -585,23 +587,6 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 			);
 		}
 	}//end saveDelivery()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'TrackingLinkService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Current time as an ISO-8601 string.
