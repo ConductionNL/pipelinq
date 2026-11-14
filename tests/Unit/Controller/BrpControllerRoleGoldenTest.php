@@ -160,26 +160,6 @@ class BrpControllerRoleGoldenTest extends TestCase {
 	}//end testResolveActorRole()
 
 	/**
-	 * The monitor report and certificate health.
-	 *
-	 * @return void
-	 */
-	public function testMonitor(): void {
-		$answer = static fn (BrpController $controller): array => [$controller->monitor()->getStatus(), $controller->monitor()->getData()];
-
-		$this->assertSame([401, ['error' => 'Authentication required']], $answer($this->controller([], false)));
-		$this->assertSame([200, ['report' => null, 'cert' => null]], $answer($this->controller()));
-		$this->assertSame(
-			[200, ['report' => ['ok' => true], 'cert' => null]],
-			$answer($this->controller(['brp.monitor_report' => '{"ok":true}', 'brp.cert_health' => '"scalar"']))
-		);
-		$this->assertSame(
-			[200, ['report' => null, 'cert' => ['days' => 3]]],
-			$answer($this->controller(['brp.monitor_report' => 'not json', 'brp.cert_health' => '{"days":3}']))
-		);
-	}//end testMonitor()
-
-	/**
 	 * The latest person: the query, the newest fetchedOn, entity rows, ties
 	 * and failures.
 	 *

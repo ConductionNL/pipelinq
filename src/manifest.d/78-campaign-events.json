@@ -181,7 +181,35 @@
 								"address",
 								"source",
 								"registeredAt",
-								{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } }
+								{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "waitlist": "warning", "cancelled": "default" } } },
+								{ "key": "attendance", "label": "Attendance", "widget": "badge", "widgetProps": { "colorMap": { "attended": "success", "no-show": "default" } } }
+							],
+							"_actionsNote": "marketing-events REQ-MEV-004: a team member marks each person with a place attended or no-show. Through pipelinq's attendance endpoint, not a plain patch, so marking attended also adds the campaign's attend touchpoint.",
+							"actions": [
+								{
+									"id": "mark-attended",
+									"type": "api-call",
+									"label": "Mark attended",
+									"icon": "Check",
+									"method": "POST",
+									"url": "/apps/pipelinq/api/event-registrations/@objectId/attendance",
+									"payload": { "attended": true },
+									"successMessage": "Marked attended.",
+									"errorMessage": "The attendance could not be saved.",
+									"visibleWhen": { "field": "status", "op": "eq", "value": "confirmed" }
+								},
+								{
+									"id": "mark-no-show",
+									"type": "api-call",
+									"label": "Mark no-show",
+									"icon": "Close",
+									"method": "POST",
+									"url": "/apps/pipelinq/api/event-registrations/@objectId/attendance",
+									"payload": { "attended": false },
+									"successMessage": "Marked no-show.",
+									"errorMessage": "The attendance could not be saved.",
+									"visibleWhen": { "field": "status", "op": "eq", "value": "confirmed" }
+								}
 							],
 							"emptyText": "No registrations yet.",
 							"countValues": { "allRegistrations": { "metric": "count", "unfiltered": true } },
