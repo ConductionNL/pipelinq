@@ -439,19 +439,30 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 			return ['status' => 409, 'error' => $answer['reason']];
 		}
 
-		$workItem = [
-			'programme' => trim($programmeId),
-			'domainObjectType' => trim($domainObjectType),
-			'domainObjectRef' => trim($domainObjectRef),
-			'title' => trim($title),
-		];
+		return $this->savedWorkItem(
+			workItem: [
+				'programme' => trim($programmeId),
+				'domainObjectType' => trim($domainObjectType),
+				'domainObjectRef' => trim($domainObjectRef),
+				'title' => trim($title),
+			]
+		);
+	}//end linkWork()
 
+	/**
+	 * Write a work item: 201 with the item, or 500 when it could not be saved.
+	 *
+	 * @param array<string, string> $workItem The trimmed work item.
+	 *
+	 * @return array{status: int, error?: string, workItem?: array<string, mixed>}
+	 */
+	private function savedWorkItem(array $workItem): array {
 		if ($this->write(schemaKey: 'programmeWorkItem_schema', object: $workItem) === false) {
 			return ['status' => 500, 'error' => 'The work item could not be saved.'];
 		}
 
 		return ['status' => 201, 'workItem' => $workItem];
-	}//end linkWork()
+	}//end savedWorkItem()
 
 	/**
 	 * Read rows of one schema as plain arrays.

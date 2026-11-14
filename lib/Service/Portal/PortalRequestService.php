@@ -170,6 +170,24 @@ class PortalRequestService implements PortalRequestServiceInterface {
 		$page = max(1, $page);
 		$perPage = min(100, max(1, $perPage));
 
+		$rows = $this->visibleSummaries(account: $account);
+		$total = count($rows);
+		return [
+			'total' => $total,
+			'page' => $page,
+			'perPage' => $perPage,
+			'items' => array_slice($rows, (($page - 1) * $perPage), $perPage),
+		];
+	}//end getForAccount()
+
+	/**
+	 * The summaries of the requests the account may see, newest first.
+	 *
+	 * @param array<string, mixed> $account The authenticated account.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function visibleSummaries(array $account): array {
 		$resolved = $this->scope->resolve($account, 'submit-requests');
 		$rows = [];
 		foreach ($this->reader->findAll(self::SCHEMA, ['ticketType' => self::TICKET_TYPE]) as $request) {
@@ -185,14 +203,8 @@ class PortalRequestService implements PortalRequestServiceInterface {
 			static fn (array $left, array $right): int => strcmp((string)$right['date'], (string)$left['date'])
 		);
 
-		$total = count($rows);
-		return [
-			'total' => $total,
-			'page' => $page,
-			'perPage' => $perPage,
-			'items' => array_slice($rows, (($page - 1) * $perPage), $perPage),
-		];
-	}//end getForAccount()
+		return $rows;
+	}//end visibleSummaries()
 
 	/**
 	 * Read one request's customer-safe detail (internal notes stripped), or
@@ -401,7 +413,10 @@ class PortalRequestService implements PortalRequestServiceInterface {
 		$request = $this->withReply(request: $request, message: $message);
 
 		$saved = $this->reader->save(self::SCHEMA, $request, $requestId);
-		$this->auditReply(account: $account, tenantId: $tenantId, requestId: $requestId);
+		$this->auditReply(
+			actor: new PortalActor(accountId: (string)$this->idOf(object: $account), tenantId: $tenantId),
+			requestId: $requestId
+		);
 
 		return $this->presentDetail(request: $saved, exposeAssigneeName: false);
 	}//end addReply()
@@ -474,16 +489,15 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	/**
 	 * Audit a successful customer reply.
 	 *
-	 * @param array<string, mixed> $account The authenticated account.
-	 * @param string $tenantId The tenant id.
-	 * @param string $requestId The request id.
+	 * @param PortalActor $actor     The replying account and its tenant.
+	 * @param string      $requestId The request id.
 	 *
 	 * @return void
 	 */
-	private function auditReply(array $account, string $tenantId, string $requestId): void {
+	private function auditReply(PortalActor $actor, string $requestId): void {
 		$this->audit->log(
-			(string)$this->idOf(object: $account),
-			$tenantId,
+			$actor->accountId,
+			$actor->tenantId,
 			'request-reply',
 			'success',
 			[
