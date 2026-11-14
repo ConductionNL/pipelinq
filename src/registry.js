@@ -34,6 +34,8 @@ import BookingDetailSection from './components/bookings/BookingDetailSection.vue
 import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
+import ClientHistorySummarySection from './components/clients/ClientHistorySummarySection.vue'
+import ClientRiskSection from './components/clients/ClientRiskSection.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
@@ -928,6 +930,16 @@ const registry = {
 		component: SurveyResponseRateWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Satisfaction survey response rate for the Operational dashboard (customer-satisfaction-closed-loop): answered out of delivered, suppressed and failed counted beside the rate, one line per channel, from GET /api/satisfaction/response-rate.',
+	},
+	ClientRiskSection: {
+		kind: 'section',
+		component: ClientRiskSection,
+		_note: 'The client\'s churn risk (clients-history-summary-and-risk, D4): the level as a badge with every reason behind it, its points and links to the records it names. Reads `churnRisk` off the client (`@object.churnRisk`); ClientRiskService writes it.',
+	},
+	ClientHistorySummarySection: {
+		kind: 'section',
+		component: ClientHistorySummarySection,
+		_note: 'History summary card (clients-history-summary-and-risk, REQ-CIN-002): Summarise asks GET /api/clients/{id}/history-summary for a few generated sentences about the last 90 days the viewer may read, with the records read and the time. Without hermiq the card says summarising is not available and has no button. Nothing is stored.',
 	},
 	ClientBillingHandoffSection: {
 		kind: 'section',

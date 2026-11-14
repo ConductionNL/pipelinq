@@ -16,31 +16,35 @@
                             "level": {
                                 "type": "string",
                                 "title": "Risk level",
+                                "description": "Low, medium or high.",
                                 "enum": ["low", "medium", "high"],
                                 "facetable": true
                             },
                             "score": {
                                 "type": "integer",
                                 "title": "Risk score",
+                                "description": "The points of all signals added up.",
                                 "minimum": 0
                             },
                             "reasons": {
                                 "type": "array",
                                 "title": "Reasons",
+                                "description": "The signals behind the level, each with its points and records.",
                                 "items": {
                                     "type": "object",
                                     "properties": {
-                                        "signal": {"type": "string", "enum": ["contract-expiring", "contract-churned", "detractor", "open-complaints", "sla-breached", "no-recent-contact"]},
-                                        "points": {"type": "integer"},
-                                        "schema": {"type": "string"},
-                                        "records": {"type": "array", "items": {"type": "string"}}
+                                        "signal": {"type": "string", "title": "Signal", "description": "What raised the risk.", "enum": ["contract-expiring", "contract-churned", "detractor", "open-complaints", "sla-breached", "no-recent-contact"]},
+                                        "points": {"type": "integer", "title": "Points", "description": "What this signal adds to the score."},
+                                        "schema": {"type": "string", "title": "Schema", "description": "The schema of the records behind this signal."},
+                                        "records": {"type": "array", "title": "Records", "description": "The records behind this signal.", "items": {"type": "string"}}
                                     }
                                 }
                             },
                             "computedAt": {
                                 "type": "string",
                                 "format": "date-time",
-                                "title": "Computed at"
+                                "title": "Computed at",
+                                "description": "When the risk was last computed."
                             }
                         }
                     }

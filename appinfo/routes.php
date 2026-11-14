@@ -134,6 +134,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // The client's cases from dossiq's case leaf, by the client's master entity (PqKlant / PqOrganisatie Zaken).
         ['name' => 'clientCase#index', 'url' => '/api/clients/{id}/cases', 'verb' => 'GET'],
         ['name' => 'clientBusiness#index', 'url' => '/api/clients/{id}/business', 'verb' => 'GET'],
+        ['name' => 'clientHistorySummary#show', 'url' => '/api/clients/{id}/history-summary', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
         // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
         ['name' => 'eventReminder#send', 'url' => '/api/campaign-events/{id}/reminder', 'verb' => 'POST'],
