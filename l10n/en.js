@@ -9564,6 +9564,7 @@ OC.L10N.register(
         "Earlier contacts could not be loaded.": "Earlier contacts could not be loaded.",
         "Earlier contacts from this number": "Earlier contacts from this number",
         "Looking up earlier contacts…": "Looking up earlier contacts…",
+        "Type a company name or KVK number": "Type a company name or KVK number",
         "possible match": "possible match",
         "There are no earlier contacts from this number.": "There are no earlier contacts from this number.",
         "Call summary": "Call summary",

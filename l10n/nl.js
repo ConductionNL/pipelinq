@@ -9578,6 +9578,7 @@ OC.L10N.register(
         "Earlier contacts could not be loaded.": "Eerdere contacten konden niet worden geladen.",
         "Earlier contacts from this number": "Eerdere contacten van dit nummer",
         "Looking up earlier contacts…": "Eerdere contacten opzoeken…",
+        "Type a company name or KVK number": "Typ een bedrijfsnaam of KVK-nummer",
         "possible match": "mogelijke match",
         "There are no earlier contacts from this number.": "Er zijn geen eerdere contacten van dit nummer.",
         "Call summary": "Samenvatting van het gesprek",

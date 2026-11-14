@@ -212,6 +212,10 @@
             "description": "Keyword proposals, and the confirmation that turns one into a target."
         },
         {
+            "name": "kvk-search",
+            "description": "The KVK search behind the new request dialog's lookup."
+        },
+        {
             "name": "label",
             "description": "POST /api/labels/{id}/rename."
         },
@@ -6549,6 +6553,61 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/kvk/search": {
+            "get": {
+                "operationId": "kvk-search",
+                "summary": "Search the KVK Handelsregister by name or KVK number",
+                "description": "Search the KVK Handelsregister by name or KVK number. A query of exactly eight digits is looked up as a KVK number; anything else is a name search. Needs a signed-in Nextcloud user who can read the CRM.",
+                "tags": [
+                    "kvk-search"
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "description": "A company name or an eight-digit KVK number.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "results": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 }
             }
