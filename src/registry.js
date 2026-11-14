@@ -284,6 +284,7 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
+import RetentionReviewView from './views/settings/RetentionReview.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 import SocialPostFormView from './views/social/SocialPostFormView.vue'
@@ -1008,6 +1009,12 @@ const registry = {
 		kind: 'page',
 		component: ExportJobsView,
 		_note: 'Export-job list with per-row Test-run + Enable/Disable actions calling the export controller; declarative index cannot trigger the test/enable endpoints.',
+	},
+	// --- Client retention review (platform-client-retention). ---
+	RetentionReviewView: {
+		kind: 'page',
+		component: RetentionReviewView,
+		_note: 'Destruction lists holding clients or contact persons, read from OpenRegister\'s archival API, with Approve and Reject on each list; the lists live in OpenRegister, not in a pipelinq schema, so no index page can render them.',
 	},
 	ExportJobFormView: {
 		kind: 'page',
