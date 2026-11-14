@@ -170,6 +170,7 @@ import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import BrpClientCheckDialog from './dialogs/BrpClientCheckDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import ContactCreateDialog from './dialogs/ContactCreateDialog.vue'
 import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import ContactLogDialog from './dialogs/ContactLogDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
@@ -183,6 +184,9 @@ import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 import BulkChangeFieldModal from './modals/BulkChangeFieldModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
+// Paste or scan (clients-contact-capture): the header action on the Clients and
+//     Contacts index pages opens ContactCaptureModal. ---
+import ContactCaptureModal from './modals/ContactCaptureModal.vue'
 import EmailReceiptModal from './modals/EmailReceiptModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import LinkSubmissionToClientModal from './modals/LinkSubmissionToClientModal.vue'
@@ -1372,6 +1376,19 @@ const registry = {
 		component: ClientCreateDialog,
 		propsSchema: null,
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
+	},
+
+	ContactCreateDialog: {
+		kind: 'modal',
+		component: ContactCreateDialog,
+		propsSchema: null,
+		_note: 'New contact, contact-first via POST /api/contacts-sync/create (the same path as the Contacts index createOverride). Registered so Paste or scan can open it prefilled with `values`; then it opens the new contact after Save.',
+	},
+	ContactCaptureModal: {
+		kind: 'modal',
+		component: ContactCaptureModal,
+		propsSchema: null,
+		_note: 'Paste or scan (clients-contact-capture REQ-CCC-001/002). Target of the paste-or-scan header action on the Clients and Contacts index pages: pasted text or a card photo becomes proposed fields via POST /api/contact-capture/parse, and Use these fields opens the `createModal` (ClientCreateDialog or ContactCreateDialog) prefilled. Saves nothing itself.',
 	},
 
 	ContactImportDialog: {

@@ -56,8 +56,10 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
         ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],
-        // Paste a signature, get proposed contact fields; reads and stores nothing (clients-contact-capture REQ-CCC-001).
+        // Paste a signature or send a card photo, get proposed contact fields; reads and stores nothing
+        // (clients-contact-capture REQ-CCC-001, REQ-CCC-002). Status says whether photos can be read here.
         ['name' => 'contactCapture#parse', 'url' => '/api/contact-capture/parse', 'verb' => 'POST'],
+        ['name' => 'contactCapture#status', 'url' => '/api/contact-capture/status', 'verb' => 'GET'],
         // A mail client's side pane (contact-moments-mail-add-in): sender lookup,
         // add as contact, log this mail. Called with an app password.
         ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
