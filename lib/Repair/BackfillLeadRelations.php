@@ -316,7 +316,14 @@ class BackfillLeadRelations implements IRepairStep {
 		$counts = ['fixed' => 0, 'skipped' => 0, 'stuck' => 0];
 
 		foreach ($leads as $lead) {
-			$outcome = $this->backfillOne(lead: $lead, pipeline: $pipeline, context: $context, actingAdmin: $actingAdmin, output: $output, pipelines: $pipelines);
+			$outcome = $this->backfillOne(
+				lead: $lead,
+				pipeline: $pipeline,
+				context: $context,
+				actingAdmin: $actingAdmin,
+				output: $output,
+				pipelines: $pipelines
+			);
 			$counts[$outcome]++;
 		}
 
