@@ -290,6 +290,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 integriq confirms every part. A no-op without integriq or settings.
             -->
             <step>OCA\Pipelinq\Repair\MoveBrpConnectionToIntegriq</step>
+            <!--
+                marketing-articles-move-to-portaliq: copies every pipelinq article into
+                portaliq and rewrites the template and social post references. A no-op
+                without portaliq or its article schema; idempotent by legacyRef.
+            -->
+            <step>OCA\Pipelinq\Repair\MoveMarketingArticlesToPortaliq</step>
             <!-- The group the portal schemas grant; never picks an account. -->
             <step>OCA\Pipelinq\Repair\CreatePortalServiceGroup</step>
             <!-- The group the SMS and WhatsApp webhooks write with; never picks an account. -->

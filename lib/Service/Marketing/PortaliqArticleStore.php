@@ -258,6 +258,33 @@ class PortaliqArticleStore {
 	}//end create()
 
 	/**
+	 * An article's id: its uuid or id, at the top level or under `@self`.
+	 *
+	 * @param array<string, mixed>|null $payload The article.
+	 *
+	 * @return string The id, or ''.
+	 *
+	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-existing-pipelinq-articles-move-to-portaliq-once
+	 */
+	public function idOf(?array $payload): string {
+		$self = ($payload['@self'] ?? []);
+		if (is_array($self) === false) {
+			$self = [];
+		}
+
+		foreach ([($payload ?? []), $self] as $source) {
+			foreach (['uuid', 'id'] as $key) {
+				$value = ($source[$key] ?? null);
+				if (is_scalar($value) === true && (string)$value !== '') {
+					return (string)$value;
+				}
+			}
+		}
+
+		return '';
+	}//end idOf()
+
+	/**
 	 * OpenRegister's ObjectService when portaliq is installed, else null.
 	 *
 	 * @return object|null The service.

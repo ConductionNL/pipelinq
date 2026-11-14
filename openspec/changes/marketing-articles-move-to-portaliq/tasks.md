@@ -20,7 +20,7 @@ Spec only in this PR. Build after portaliq ships `marketing-articles-from-pipeli
 
 ## 3. Move the data
 
-- [ ] 3.1 Repair step `MoveMarketingArticlesToPortaliq` as in design section 4: idempotent by `legacyRef`, rewrites references, reports counts.
+- [x] 3.1 Repair step `MoveMarketingArticlesToPortaliq` as in design section 4: idempotent by `legacyRef`, rewrites references, reports counts.
   - spec_ref: `specs/marketing-articles/spec.md#requirement-existing-pipelinq-articles-move-to-portaliq-once`
   - files: `lib/Repair/MoveMarketingArticlesToPortaliq.php`, `appinfo/info.xml`, its test
   - test: run twice on a seeded instance, second run reports `alreadyMoved` for all three demo articles
