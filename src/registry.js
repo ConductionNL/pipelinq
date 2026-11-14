@@ -86,6 +86,7 @@ import SocialPublicationsSection from './components/marketing/SocialPublications
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
+import RecordMergesSection from './components/merge/RecordMergesSection.vue'
 import PartyContactStrip from './components/PartyContactStrip.vue'
 import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
@@ -926,6 +927,11 @@ const registry = {
 		kind: 'section',
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
+	},
+	RecordMergesSection: {
+		kind: 'section',
+		component: RecordMergesSection,
+		_note: 'Merges section on a client or contact (clients-reversible-merge REQ-CRM-002/003): the OpenRegister mergeOperation rows this record survived, with Undo through merge#reverse while the reversal window is open and the date the merge became final after it. Kept custom because no declarative widget offers a per-row action that posts to an endpoint and the open/final state is computed from mergedAt plus the window. Self-fetches by recordId (@objectId).',
 	},
 	ClientSatisfactionSection: {
 		kind: 'section',
