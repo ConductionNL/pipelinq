@@ -47,6 +47,7 @@ vi.mock('../../src/views/settings/PosTenderTypeManager.vue', () => stub('R'))
 vi.mock('../../src/views/settings/ProductCategoryManager.vue', () => stub('S'))
 vi.mock('../../src/views/settings/ProspectSettings.vue', () => stub('T'))
 vi.mock('../../src/views/settings/TagManager.vue', () => stub('U'))
+vi.mock('../../src/views/settings/ScorecardManager.vue', () => stub('Sc'))
 vi.mock('../../src/views/settings/VatRatesSettings.vue', () => stub('V'))
 
 const { default: Settings } = await import('../../src/views/settings/Settings.vue')

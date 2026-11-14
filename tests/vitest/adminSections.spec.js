@@ -89,6 +89,7 @@ describe('the declared admin sections', () => {
 
 	it('mounts every section on the admin page behind its guard', () => {
 		const guards = {
+			callReview: 'isAdmin',
 			leadManagement: 'isAdmin',
 			provisionData: 'isAdmin',
 			exportConfiguration: 'isAdmin',

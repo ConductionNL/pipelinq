@@ -26,6 +26,22 @@
 			}
 		]
 	},
+	"callReview": {
+		"name": "Call transcription",
+		"description": "Transcribe a recorded call and summarise it on its contact moment. The audio is sent to the app that provides speech to text and is not kept.",
+		"saveLabel": "Save transcription settings",
+		"valuesPath": "config",
+		"fields": [
+			{
+				"key": "call_transcription_enabled",
+				"label": "Transcribe recorded calls",
+				"type": "switch",
+				"trueValue": "true",
+				"falseValue": "false",
+				"hint": "Needs a Nextcloud app that provides speech to text. Without one, a contact moment shows the transcript status unavailable."
+			}
+		]
+	},
 	"shillinq": {
 		"name": "Shillinq integration",
 		"description": "Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.",

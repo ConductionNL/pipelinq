@@ -50,10 +50,12 @@ describe('the ticket page declares a Decisions tab', () => {
 
 	it('has a tab strip with Overview first and Decisions beside it', () => {
 		expect(panels.type).toBe('tabs')
-		// History (ticket-handover-history) follows the Decisions tab.
+		// History (ticket-handover-history) follows the Decisions tab, after the
+		// Call tab of a recorded call (contact-moments-call-review).
 		expect(panels.content.tabs.map((tab) => tab.label)).toEqual([
 			'Overview',
 			'Decisions',
+			'Call',
 			'History',
 		])
 		expect(panels.content.tabs[0].widgetId).toBe('ticket-data')
@@ -121,7 +123,8 @@ describe('the ticket page declares a Decisions tab', () => {
 
 	it('shows the decisions in one place: no cell of their own on the overview', () => {
 		const placed = page.config.layout.map((cell) => cell.widgetId)
-		expect(placed).toEqual(['ticket-panels', 'ticket-related'])
+		// The locked line (platform-record-lock) is a banner above the strip, not a decisions cell.
+		expect(placed).toEqual(['ticket-locked', 'ticket-panels', 'ticket-related'])
 		// The strip renders its children; a cell would render them twice.
 		const children = panels.content.tabs.flatMap(
 			(tab) => tab.widgetIds || [tab.widgetId],
