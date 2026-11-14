@@ -191,4 +191,59 @@ class TemplateRendererTest extends TestCase {
 		$this->assertSame('<p>Beste Johanna de Wit,</p>', $blank['body']);
 		$this->assertSame('<p>Beste ,</p>', $unknown['body']);
 	}//end testPreferredNameFallsBackToTheFullName()
+
+	/**
+	 * A personalised greeting uses the preferred name (REQ-MMT-002 "Personalised greeting").
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	public function testPersonalisedGreetingUsesThePreferredName(): void {
+		$rendered = $this->buildRenderer()->render(
+			['subject' => 'Hello {{preferredName}}', 'body' => '<p>Dear {{preferredName}},</p>'],
+			['preferredName' => 'Anna', 'fullName' => 'Anna de Vries']
+		);
+
+		$this->assertSame('Hello Anna', $rendered['subject']);
+		$this->assertSame('<p>Dear Anna,</p>', $rendered['body']);
+	}//end testPersonalisedGreetingUsesThePreferredName()
+
+	/**
+	 * A value with markup renders as text in `{{variable}}` and as markup in
+	 * `{{{variable}}}` (REQ-MMT-002 "A value with markup").
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	public function testMarkupInAValueIsEscapedUnlessTripleBraced(): void {
+		$renderer = $this->buildRenderer();
+		$variables = ['organisation' => '<b>Acme</b>'];
+
+		$escaped = $renderer->render(['subject' => 's', 'body' => '<p>{{organisation}}</p>'], $variables);
+		$raw = $renderer->render(['subject' => 's', 'body' => '<p>{{{organisation}}}</p>'], $variables);
+		$spaced = $renderer->render(['subject' => 's', 'body' => '<p>{{ organisation }}</p>'], $variables);
+
+		$this->assertSame('<p>&lt;b&gt;Acme&lt;/b&gt;</p>', $escaped['body']);
+		$this->assertSame('<p><b>Acme</b></p>', $raw['body']);
+		$this->assertSame($escaped['body'], $spaced['body']);
+	}//end testMarkupInAValueIsEscapedUnlessTripleBraced()
+
+	/**
+	 * A used variable without a value renders empty, in both brace forms.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	public function testAVariableWithoutAValueRendersEmpty(): void {
+		$rendered = $this->buildRenderer()->render(
+			['subject' => 'News for {{city}}', 'body' => '<p>[{{city}}][{{{city}}}]</p>'],
+			['name' => 'Anna']
+		);
+
+		$this->assertSame('News for ', $rendered['subject']);
+		$this->assertSame('<p>[][]</p>', $rendered['body']);
+	}//end testAVariableWithoutAValueRendersEmpty()
 }//end class

@@ -1951,10 +1951,22 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"selectable": true,
 				"pagination": { "limit": 8 },
 				"sortKey": "name",
 				"sortOrder": "asc",
 				"createModal": "ClientCreateDialog",
+				"_headerActionsNote": "Paste or scan (clients-contact-capture REQ-CCC-001/002): pasted text or a business card photo becomes proposed fields, and Use these fields opens ClientCreateDialog prefilled. Nothing is saved before Save.",
+				"headerActions": [
+					{
+						"id": "paste-or-scan",
+						"label": "Paste or scan",
+						"icon": "CardAccountDetailsOutline",
+						"type": "open-modal",
+						"target": "ContactCaptureModal",
+						"props": { "schema": "client", "createModal": "ClientCreateDialog" }
+					}
+				],
 				"fieldOverrides": {
 					"industry": {
 						"widget": "multiselect",
@@ -2055,6 +2067,14 @@
 						"icon": "DatabaseSearchOutline",
 						"handler": "open-modal",
 						"target": "OrganisationEnrichDialog"
+					},
+					{
+						"id": "change-field",
+						"label": "Change a field",
+						"icon": "PencilOutline",
+						"handler": "open-modal",
+						"target": "BulkChangeFieldModal",
+						"props": { "register": "pipelinq", "schema": "client" }
 					}
 				]
 			}
@@ -4625,8 +4645,30 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"selectable": true,
+				"bulkActions": [
+					{
+						"id": "change-field",
+						"label": "Change a field",
+						"icon": "PencilOutline",
+						"handler": "open-modal",
+						"target": "BulkChangeFieldModal",
+						"props": { "register": "pipelinq", "schema": "contact" }
+					}
+				],
 				"pagination": { "limit": 5 },
 				"createOverride": "createContactContactAware",
+				"_headerActionsNote": "Paste or scan (clients-contact-capture REQ-CCC-001/002): pasted text or a business card photo becomes proposed fields, and Use these fields opens ContactCreateDialog prefilled; it saves through the same contact-first create as Add. Nothing is saved before Save.",
+				"headerActions": [
+					{
+						"id": "paste-or-scan",
+						"label": "Paste or scan",
+						"icon": "CardAccountDetailsOutline",
+						"type": "open-modal",
+						"target": "ContactCaptureModal",
+						"props": { "schema": "contact", "createModal": "ContactCreateDialog" }
+					}
+				],
 				"fieldOverrides": {
 					"name": {
 						"readOnly": false

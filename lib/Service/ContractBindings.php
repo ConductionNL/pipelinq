@@ -55,6 +55,7 @@ use OCA\Pipelinq\Kernel\Contracts\ConnectorEgressInterface;
 use OCA\Pipelinq\Kernel\Contracts\ConsentMigrationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactCaptureServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactPhotoReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactmomentServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
@@ -396,6 +397,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(ConsentMigrationServiceInterface::class, ConsentMigrationService::class);
 		$context->registerServiceAlias(ConsentServiceInterface::class, ConsentService::class);
 		$context->registerServiceAlias(ContactCaptureServiceInterface::class, ContactCaptureService::class);
+		$context->registerServiceAlias(ContactPhotoReaderInterface::class, ContactPhotoReader::class);
 		$context->registerServiceAlias(ContactMomentFilingServiceInterface::class, ContactMomentFilingService::class);
 		$context->registerServiceAlias(ContactSyncServiceInterface::class, ContactSyncService::class);
 		$context->registerServiceAlias(ContactSyncSettingsServiceInterface::class, ContactSyncSettingsService::class);
