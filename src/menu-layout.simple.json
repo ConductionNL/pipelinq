@@ -63,7 +63,8 @@
 		"ExportJobs",
 		"Services",
 		"Resources",
-		"SavedReplies"
+		"SavedReplies",
+		"BulkChanges"
 	],
 	"nav": {
 		"brand": {

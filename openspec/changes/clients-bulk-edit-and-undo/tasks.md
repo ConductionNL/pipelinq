@@ -22,7 +22,7 @@
   - Verify: Playwright opens Bulk changes after 2.2 and sees the job with its property and count
 - [ ] 3.2 Undo: `POST .../bulk-jobs/{id}/reverse`, show the reversal preview (members to write and to skip), commit on confirm
   - Verify: Playwright undoes the job from 2.2 and reads the old industry values back
-- [ ] 3.3 Past `reversibleUntil`, show the date and no Undo action
+- [x] 3.3 Past `reversibleUntil`, show the date and no Undo action
   - Verify: Vitest with a job whose window has passed
 
 ## 4. Text and docs
