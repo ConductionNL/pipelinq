@@ -142,35 +142,46 @@ class SlaPolicyController extends Controller {
 			);
 		}
 
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_policy_schema', '');
-		if ($register === '' || $schema === '') {
+		$target = $this->policyTarget();
+		if ($target === null) {
 			return new JSONResponse(['error' => 'slaRegisterNotConfigured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
+		return $this->savePolicy(id: $id, payload: $payload, justification: $justification, target: $target);
+	}//end update()
+
+	/**
+	 * The configured SLA register and policy schema, or null when either is missing.
+	 *
+	 * @return array{0: string, 1: string}|null The register and schema.
+	 */
+	private function policyTarget(): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_policy_schema', '');
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		return [$register, $schema];
+	}//end policyTarget()
+
+	/**
+	 * Save the policy under its id, audit the change and answer with the saved policy.
+	 *
+	 * @param string $id The policy id.
+	 * @param array<string, mixed> $payload The policy payload.
+	 * @param string $justification The change justification.
+	 * @param array{0: string, 1: string} $target The register and schema.
+	 *
+	 * @return JSONResponse The saved policy, or a saveFailed error.
+	 */
+	private function savePolicy(string $id, array $payload, string $justification, array $target): JSONResponse {
+		[$register, $schema] = $target;
 		try {
 			$objectService = $this->container->get(ObjectService::class);
-			$existing = null;
-			try {
-				$existing = $objectService->find(
-					id: $id,
-					register: $register,
-					schema: $schema,
-				);
-			} catch (Throwable $e) {
-				$this->logger->debug(
-					'SlaPolicyController: existing policy not found, treating as create',
-					['id' => $id]
-				);
-			}
+			$existing = $this->findExistingPolicy(objectService: $objectService, id: $id, register: $register, schema: $schema);
 
-			$saved = $objectService->saveObject(
-				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id,
-			);
+			$saved = $objectService->saveObject(object: $payload, extend: [], register: $register, schema: $schema, uuid: $id);
 			$this->auditLog(action: 'update', existing: $existing, payload: $payload, justification: $justification);
 			return new JSONResponse($this->serialise(saved: $saved));
 		} catch (Throwable $e) {
@@ -180,7 +191,35 @@ class SlaPolicyController extends Controller {
 			);
 			return new JSONResponse(['error' => 'saveFailed'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
-	}//end update()
+	}//end savePolicy()
+
+	/**
+	 * The existing policy, or null (logged at debug) when it does not exist yet.
+	 *
+	 * @param ObjectService $objectService The OpenRegister ObjectService.
+	 * @param string $id The policy id.
+	 * @param string $register The SLA register.
+	 * @param string $schema The SLA policy schema.
+	 *
+	 * @return mixed The existing policy, or null.
+	 */
+	private function findExistingPolicy(ObjectService $objectService, string $id, string $register, string $schema) {
+		$existing = null;
+		try {
+			$existing = $objectService->find(
+				id: $id,
+				register: $register,
+				schema: $schema,
+			);
+		} catch (Throwable $e) {
+			$this->logger->debug(
+				'SlaPolicyController: existing policy not found, treating as create',
+				['id' => $id]
+			);
+		}
+
+		return $existing;
+	}//end findExistingPolicy()
 
 	/**
 	 * Record a policy change with actor + timestamp + diff.
