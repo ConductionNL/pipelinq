@@ -106,6 +106,8 @@ describe('lead detail', () => {
 		])
 		expect(lead.config.sideColumn).toEqual([
 			'side-client',
+			// Shown only when lead rotation wrote a reason (pipeline-lead-rotation).
+			'side-assignment',
 			'side-suggested',
 			'side-win-chance',
 			'side-next-step',
