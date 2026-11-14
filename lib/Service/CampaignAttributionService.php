@@ -167,7 +167,15 @@ class CampaignAttributionService {
 			return [];
 		}
 
-		return $this->splitByModel(ids: $ids, value: $value, model: $model);
+		if ($model === 'first') {
+			return [$ids[0] => $value];
+		}
+
+		if ($model === 'last') {
+			return [$ids[(count($ids) - 1)] => $value];
+		}
+
+		return self::evenSplit(ids: $ids, value: $value);
 	}//end split()
 
 	/**
@@ -192,25 +200,16 @@ class CampaignAttributionService {
 	}//end distinctIds()
 
 	/**
-	 * Attribute the value to the first touchpoint, the last, or evenly over all.
+	 * Attribute the value evenly over all touchpoints.
 	 *
-	 * @param list<string> $ids The distinct touchpoint ids, oldest first; not empty.
-	 * @param float $value The lead's closed value.
-	 * @param string $model One of `first`, `last`, `linear`.
+	 * @param list<string> $ids   The distinct touchpoint ids, oldest first; not empty.
+	 * @param float        $value The lead's closed value.
 	 *
 	 * @return array<string, float> Touchpoint id to attributed value.
 	 *
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 	 */
-	private function splitByModel(array $ids, float $value, string $model): array {
-		if ($model === 'first') {
-			return [$ids[0] => $value];
-		}
-
-		if ($model === 'last') {
-			return [$ids[(count($ids) - 1)] => $value];
-		}
-
+	private static function evenSplit(array $ids, float $value): array {
 		$share = ($value / count($ids));
 		$split = [];
 		foreach ($ids as $id) {
@@ -218,7 +217,7 @@ class CampaignAttributionService {
 		}
 
 		return $split;
-	}//end splitByModel()
+	}//end evenSplit()
 
 	/**
 	 * What one lead closed on, and for how much.
@@ -243,6 +242,17 @@ class CampaignAttributionService {
 			}
 		}
 
+		return $this->leadClose(lead: $lead);
+	}//end closeFor()
+
+	/**
+	 * The close of a lead without an unclaimed paid invoice: its value when won, else open.
+	 *
+	 * @param array<string, mixed> $lead The lead row.
+	 *
+	 * @return array{basis: string, value: float, currency: string, invoiceIds: array<int, string>}
+	 */
+	private function leadClose(array $lead): array {
 		if ($this->isWon(lead: $lead) === true) {
 			return [
 				'basis' => self::BASIS_WON_LEAD,
@@ -253,7 +263,7 @@ class CampaignAttributionService {
 		}
 
 		return ['basis' => self::BASIS_OPEN, 'value' => 0.0, 'currency' => 'EUR', 'invoiceIds' => []];
-	}//end closeFor()
+	}//end leadClose()
 
 	/**
 	 * The paid-invoice close over the invoices no other lead counted yet, or null when none is left.
@@ -363,20 +373,31 @@ class CampaignAttributionService {
 				$claimed[$invoiceId] = $leadId;
 			}
 
-			$closes[$leadId] = [
-				'leadId' => $leadId,
-				'title' => (string)($lead['title'] ?? ''),
-				'contactId' => (string)($lead['contact'] ?? ''),
-				'clientId' => (string)($lead['client'] ?? ''),
-				'basis' => $close['basis'],
-				'value' => $close['value'],
-				'currency' => $close['currency'],
-				'invoiceIds' => $close['invoiceIds'],
-			];
+			$closes[$leadId] = ['leadId' => $leadId] + self::closedRecord(lead: $lead, close: $close);
 		}
 
 		return $closes;
 	}//end closeAll()
+
+	/**
+	 * A lead's closed record after its id: title, contact, client and the close.
+	 *
+	 * @param array<string, mixed> $lead  The lead row.
+	 * @param array<string, mixed> $close The lead's close.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function closedRecord(array $lead, array $close): array {
+		return [
+			'title' => (string)($lead['title'] ?? ''),
+			'contactId' => (string)($lead['contact'] ?? ''),
+			'clientId' => (string)($lead['client'] ?? ''),
+			'basis' => $close['basis'],
+			'value' => $close['value'],
+			'currency' => $close['currency'],
+			'invoiceIds' => $close['invoiceIds'],
+		];
+	}//end closedRecord()
 
 	/**
 	 * The totals per closing basis.
