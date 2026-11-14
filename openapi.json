@@ -264,6 +264,10 @@
             "description": "Reads and picks the messaging service account."
         },
         {
+            "name": "my-work",
+            "description": "Figures for the My Work page."
+        },
+        {
             "name": "navi",
             "description": "Controller for the Navi AI conversational analytics endpoint."
         },
@@ -8948,6 +8952,57 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/my-work/week-stats": {
+            "get": {
+                "operationId": "my-work-week-stats",
+                "summary": "This week's figures for the signed-in user's work",
+                "description": "This week's figures for the signed-in user's work, for the My Work page. Only the `mine` scope exists; any other scope is refused. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "my-work"
+                ],
+                "parameters": [
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": false,
+                        "description": "The scope of the figures; only `mine`.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "mine"
+                            ],
+                            "default": "mine"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
                     }
                 }
             }
