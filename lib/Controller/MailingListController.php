@@ -30,10 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MailingListServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\MailingListService;
-use OCA\Pipelinq\Service\Marketing\SubscriptionQueryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,19 +51,19 @@ class MailingListController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param MailingListService $lists Mailing list service.
-	 * @param SubscriptionQueryService $queries Membership reads.
+	 * @param MailingListServiceInterface $lists Mailing list service.
+	 * @param SubscriptionQueryServiceInterface $queries Membership reads.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly MailingListService $lists,
-		private readonly SubscriptionQueryService $queries,
+		private readonly MailingListServiceInterface $lists,
+		private readonly SubscriptionQueryServiceInterface $queries,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

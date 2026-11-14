@@ -46,60 +46,21 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Resolver + read/write facade for the unified ticket schema.
  *
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
  */
-class TicketService {
-	/**
-	 * Ticket subtype: an inbound request / demand (formerly the `request` schema).
-	 *
-	 * @var string
-	 */
-	public const TYPE_REQUEST = 'request';
-
-	/**
-	 * Ticket subtype: a complaint / klacht (formerly the `complaint` schema).
-	 *
-	 * @var string
-	 */
-	public const TYPE_COMPLAINT = 'complaint';
-
-	/**
-	 * Ticket subtype: a report about the public space (melding), such as loose
-	 * paving or a broken street light.
-	 *
-	 * @var string
-	 */
-	public const TYPE_MELDING = 'melding';
-
-	/**
-	 * Ticket subtype: a logged interaction (formerly the `contactmoment` schema).
-	 *
-	 * @var string
-	 */
-	public const TYPE_CONTACTMOMENT = 'interaction';
-
-	/**
-	 * Every ticket subtype, in discriminator order.
-	 *
-	 * @var array<int, string>
-	 */
-	public const TYPES = [
-		self::TYPE_REQUEST,
-		self::TYPE_COMPLAINT,
-		self::TYPE_MELDING,
-		self::TYPE_CONTACTMOMENT,
-	];
+class TicketService implements TicketServiceInterface {
 
 	/**
 	 * Every `format: date-time` property on the ticket schema.
@@ -113,20 +74,6 @@ class TicketService {
 		'occurredAt',
 		'slaDeadline',
 		'resolvedAt',
-	];
-
-	/**
-	 * The directions a contact moment can run in.
-	 *
-	 * Kept in step with `direction` in
-	 * lib/Settings/register.d/98-contactmoment-direction.json.
-	 *
-	 * @var array<int, string>
-	 */
-	public const DIRECTIONS = [
-		'inbound',
-		'outbound',
-		'internal',
 	];
 
 	/**
@@ -206,7 +153,7 @@ class TicketService {
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getRegisterId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; ticket reads/writes are refused, not run unscoped'
@@ -232,7 +179,7 @@ class TicketService {
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getSchemaId(): string {
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'ticket_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
 		if ($schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "ticket_schema" is not configured; ticket reads/writes are refused, not run unscoped'

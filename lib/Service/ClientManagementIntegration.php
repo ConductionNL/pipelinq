@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ClientManagementIntegrationInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class ClientManagementIntegration {
+class ClientManagementIntegration implements ClientManagementIntegrationInterface {
 	/**
 	 * Constructor.
 	 *

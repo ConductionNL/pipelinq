@@ -28,7 +28,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\HaalCentraalClientInterface;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
@@ -46,7 +47,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) OR-first + legacy OAuth2/mTLS paths plus HAL normalisation live in one cohesive client.
  */
-class HaalCentraalClient {
+class HaalCentraalClient implements HaalCentraalClientInterface {
 	/**
 	 * Default base URL for the HaalCentraal Personen API.
 	 */
@@ -236,7 +237,7 @@ class HaalCentraalClient {
 			'Authorization' => 'Bearer ' . $token,
 			'Accept' => 'application/hal+json',
 			'Content-Type' => 'application/json',
-			'User-Agent' => 'Pipelinq/' . Application::APP_ID . ' (Nextcloud)',
+			'User-Agent' => 'Pipelinq/' . AppIdentity::APP_ID . ' (Nextcloud)',
 		];
 	}//end lookupHeaders()
 
@@ -485,7 +486,7 @@ class HaalCentraalClient {
 	 * @SuppressWarnings(PHPMD.ErrorControlOperator) The @ mutes fs/OpenSSL warnings on unreadable certs; failures handled via false checks.
 	 */
 	public function getCertificateExpiry(): ?DateTimeImmutable {
-		$certPath = $this->appConfig->getValueString(Application::APP_ID, 'brp.cert_path', '');
+		$certPath = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.cert_path', '');
 		if ($certPath === '' || file_exists($certPath) === false) {
 			return null;
 		}
@@ -515,10 +516,10 @@ class HaalCentraalClient {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
 	 */
 	public function isConfigured(): bool {
-		return $this->appConfig->getValueString(Application::APP_ID, 'brp.client_id', '') !== ''
-			&& $this->appConfig->getValueString(Application::APP_ID, 'brp.client_secret_encrypted', '') !== ''
-			&& $this->appConfig->getValueString(Application::APP_ID, 'brp.cert_path', '') !== ''
-			&& $this->appConfig->getValueString(Application::APP_ID, 'brp.key_path', '') !== '';
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.client_id', '') !== ''
+			&& $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.client_secret_encrypted', '') !== ''
+			&& $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.cert_path', '') !== ''
+			&& $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.key_path', '') !== '';
 	}//end isConfigured()
 
 	/**
@@ -534,9 +535,9 @@ class HaalCentraalClient {
 			return $this->tokenCache['token'];
 		}
 
-		$clientId = $this->appConfig->getValueString(Application::APP_ID, 'brp.client_id', '');
-		$clientSecretEnc = $this->appConfig->getValueString(Application::APP_ID, 'brp.client_secret_encrypted', '');
-		$oauthEndpoint = $this->appConfig->getValueString(Application::APP_ID, 'brp.oauth_endpoint', self::DEFAULT_OAUTH_ENDPOINT);
+		$clientId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.client_id', '');
+		$clientSecretEnc = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.client_secret_encrypted', '');
+		$oauthEndpoint = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.oauth_endpoint', self::DEFAULT_OAUTH_ENDPOINT);
 
 		self::assertOauthConfigured(clientId: $clientId, clientSecretEnc: $clientSecretEnc);
 		$body = (new BrpOauthMessages())->requestBody(clientId: $clientId, clientSecret: $this->decryptSecret(clientSecretEnc: $clientSecretEnc));
@@ -635,9 +636,9 @@ class HaalCentraalClient {
 		// Tests / unit coverage may stub this client; runtime mTLS is enforced through
 		// Nextcloud's `proxyuserpwd` + sslcert hooks below.
 		if ($forToken === false) {
-			$certPath = $this->appConfig->getValueString(Application::APP_ID, 'brp.cert_path', '');
-			$keyPath = $this->appConfig->getValueString(Application::APP_ID, 'brp.key_path', '');
-			$caBundle = $this->appConfig->getValueString(Application::APP_ID, 'brp.ca_bundle', '');
+			$certPath = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.cert_path', '');
+			$keyPath = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.key_path', '');
+			$caBundle = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.ca_bundle', '');
 			if ($certPath !== '' && $keyPath !== '') {
 				// The NC client wrapper supports setDefaultOptions on newer cores; older
 				// cores fall back to TLS-without-cert which the RvIG endpoint will reject.
@@ -668,7 +669,7 @@ class HaalCentraalClient {
 	 */
 	private function getBaseUrl(): string {
 		return rtrim(
-			$this->appConfig->getValueString(Application::APP_ID, 'brp.base_url', self::DEFAULT_BASE_URL),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.base_url', self::DEFAULT_BASE_URL),
 			'/'
 		);
 	}//end getBaseUrl()

@@ -53,6 +53,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
     <version>0.5.7-unstable.20261014170000</version>
+    <!-- @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-001, #REQ-PLAT-002 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -109,6 +110,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\ScheduledTaskJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SyncRegisterAccessJob</job>
         <job>OCA\Pipelinq\BackgroundJob\CallbackOverdueJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\FollowUpReminderJob</job>
         <job>OCA\Pipelinq\BackgroundJob\PortalCleanupJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportSchedulerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ExportWorkerJob</job>
@@ -118,6 +120,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\CtiEventLogCleanupJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BlastSendJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ReminderDispatchJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\EventReminderJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SurveyInvitationDispatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvailabilityCacheRefreshJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob</job>
@@ -202,6 +205,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\RelinkOrphanedLeads</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
+            <!-- After InitializeSettings, which imports the ticket phoneE164 property it fills (contact-moments-phone-lookup). -->
+            <step>OCA\Pipelinq\Repair\BackfillTicketPhoneE164</step>
             <!--
                 After InitializeSettings, which imports 97-task-name.json: the
                 name comes from crmTask's objectNameField, so a save before the
@@ -216,6 +221,15 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 client's municipality, silently; a ticket that has one keeps it.
             -->
             <step>OCA\Pipelinq\Repair\BackfillTicketMunicipality</step>
+            <!--
+                After InitializeSettings, which imports the client and contact
+                `archive` blocks: OpenRegister writes retention metadata on
+                create only, so clients and contact persons made before then
+                get it here, once. Idempotent: a record with a nomination is
+                not written. Without OpenRegister's retention service it
+                writes nothing.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillClientRetention</step>
             <!--
                 After InitializeSettings: a campaign form made before forms named
                 their destination gets `lead` as its destination, once. A form
@@ -274,6 +288,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 without integriq; idempotent by legacyRef.
             -->
             <step>OCA\Pipelinq\Repair\MigrateConsentToIntegriq</step>
+            <!--
+                brp-monitor-moves-to-integriq: hands the BRP connection settings
+                and secrets to integriq and clears pipelinq's keys only after
+                integriq confirms every part. A no-op without integriq or settings.
+            -->
+            <step>OCA\Pipelinq\Repair\MoveBrpConnectionToIntegriq</step>
             <!-- The group the portal schemas grant; never picks an account. -->
             <step>OCA\Pipelinq\Repair\CreatePortalServiceGroup</step>
             <!-- The group the SMS and WhatsApp webhooks write with; never picks an account. -->

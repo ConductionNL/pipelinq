@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -83,7 +83,7 @@ class ContactObjectReader {
 		}
 
 		$registerId = $this->registerResolver->resolve('contact');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
 
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning('Pipelinq: Cannot sync -- register or schema not configured');

@@ -29,8 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\KccWerkplekService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KccWerkplekServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -50,7 +50,7 @@ class KccWerkplekController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param KccWerkplekService $werkplekService Workspace state service.
+	 * @param KccWerkplekServiceInterface $werkplekService Workspace state service.
 	 * @param IUserSession $userSession Active user session.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N|null $l10n Words the header line in the user's language.
@@ -59,12 +59,12 @@ class KccWerkplekController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private KccWerkplekService $werkplekService,
+		private KccWerkplekServiceInterface $werkplekService,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private ?IL10N $l10n = null,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

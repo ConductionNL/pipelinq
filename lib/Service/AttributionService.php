@@ -27,7 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -41,7 +42,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Attribution joins many payload shapes; complexity is inherent to the roll-up.
  */
-class AttributionService {
+class AttributionService implements AttributionServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -343,7 +344,7 @@ class AttributionService {
 	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	private function reportingCurrency(): string {
-		$code = strtoupper(trim($this->appConfig->getValueString(Application::APP_ID, 'currency', 'EUR')));
+		$code = strtoupper(trim($this->appConfig->getValueString(AppIdentity::APP_ID, 'currency', 'EUR')));
 		if (preg_match('/^[A-Z]{3}$/', $code) === 1) {
 			return $code;
 		}
@@ -581,7 +582,7 @@ class AttributionService {
 	 * @return string Slug.
 	 */
 	private function getAttributionLinkSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'attributionLink_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'attributionLink_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -595,7 +596,7 @@ class AttributionService {
 	 * @return string Slug.
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -609,7 +610,7 @@ class AttributionService {
 	 * @return string Slug.
 	 */
 	private function getLeadSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -623,7 +624,7 @@ class AttributionService {
 	 * @return string Slug.
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}

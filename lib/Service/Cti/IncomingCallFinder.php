@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Cti;
 
+use OCA\Pipelinq\Kernel\Contracts\IncomingCallFinderInterface;
 use OCA\Pipelinq\Service\CtiService;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Util\SerialisedToArray;
@@ -38,7 +39,7 @@ use OCA\Pipelinq\Util\SerialisedToArray;
  *
  * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
  */
-class IncomingCallFinder {
+class IncomingCallFinder implements IncomingCallFinderInterface {
 	use SerialisedToArray;
 
 	/**

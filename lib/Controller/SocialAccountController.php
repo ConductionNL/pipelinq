@@ -40,10 +40,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SocialAccountServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ConnectionReportService;
-use OCA\Pipelinq\Service\SocialAccountService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -61,21 +61,21 @@ class SocialAccountController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SocialAccountService $accounts The account lifecycle.
+	 * @param SocialAccountServiceInterface $accounts The account lifecycle.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Privileged-group policy, for the list routes.
-	 * @param ConnectionReportService $connectionReports Reports each network's readiness to integriq's connection registry.
+	 * @param ConnectionReportServiceInterface $connectionReports Reports each network's readiness to integriq's connection registry.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SocialAccountService $accounts,
+		private readonly SocialAccountServiceInterface $accounts,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
-		private readonly ConnectionReportService $connectionReports,
+		private readonly ConnectionReportServiceInterface $connectionReports,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -280,7 +280,7 @@ class SocialAccountController extends Controller {
 	 * @return string The return path.
 	 */
 	private function returnUrl(string $accountId): string {
-		return '/apps/' . Application::APP_ID . '/social-accounts/' . rawurlencode($accountId);
+		return '/apps/' . AppIdentity::APP_ID . '/social-accounts/' . rawurlencode($accountId);
 	}//end returnUrl()
 
 	/**
@@ -327,7 +327,7 @@ class SocialAccountController extends Controller {
 	 */
 	private function collectBody(): array {
 		$body = [];
-		foreach (SocialAccountService::CLIENT_WRITABLE as $key) {
+		foreach (SocialAccountServiceInterface::CLIENT_WRITABLE as $key) {
 			$value = $this->request->getParam($key);
 			if ($value !== null) {
 				$body[$key] = (string)$value;

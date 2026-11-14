@@ -44,6 +44,7 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\Pipelinq\Kernel\Contracts\ZrcClientInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -57,7 +58,7 @@ use Throwable;
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
-class ZrcClient {
+class ZrcClient implements ZrcClientInterface {
 	public const SCOPE_LEZEN = 'zaken.lezen';
 
 	/**

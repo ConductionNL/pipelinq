@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\Event\PortalRequestSubmittedEvent;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
 use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -53,7 +54,7 @@ use Psr\Log\LoggerInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalRequestService {
+class PortalRequestService implements PortalRequestServiceInterface {
 	use NullableRowIdOf;
 
 	/**

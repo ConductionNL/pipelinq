@@ -32,9 +32,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AppointmentDepositService;
-use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -84,14 +84,14 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param ContainerInterface $container DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param AppointmentDepositService $depositService The deposit service.
+	 * @param AppointmentDepositServiceInterface $depositService The deposit service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private AppointmentDepositService $depositService,
+		private AppointmentDepositServiceInterface $depositService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -137,10 +137,10 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 	 * @return array<int, mixed>
 	 */
 	private function loadPendingDeposits(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
-			BookingService::BOOKING_SCHEMA_KEY,
+			AppIdentity::APP_ID,
+			BookingServiceInterface::BOOKING_SCHEMA_KEY,
 			''
 		);
 		if ($register === '' || $schema === '') {

@@ -27,8 +27,8 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -60,7 +60,7 @@ class StageLimitGuard implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param SchemaMapService $schemaMap Resolves a schema id to its object type.
+	 * @param SchemaMapServiceInterface $schemaMap Resolves a schema id to its object type.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param IL10N $l10n Words the refusal in the user's language.
 	 * @param LoggerInterface $logger The logger.
@@ -69,7 +69,7 @@ class StageLimitGuard implements IEventListener {
 	 */
 	public function __construct(
 		private ObjectServiceInterface $objectService,
-		private SchemaMapService $schemaMap,
+		private SchemaMapServiceInterface $schemaMap,
 		private IAppConfig $appConfig,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
@@ -174,8 +174,8 @@ class StageLimitGuard implements IEventListener {
 	 * @return array<string, mixed> The pipeline, or empty when it cannot be read.
 	 */
 	private function pipeline(string $pipelineId): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'pipeline_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pipeline_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -272,7 +272,7 @@ class StageLimitGuard implements IEventListener {
 	 * @return int The count.
 	 */
 	private function countInStage(array $pipeline, string $pipelineId, string $stageName): int {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$count = 0;
 		foreach ($this->mappings(pipeline: $pipeline) as $mapping) {
 			$filters = $this->filtersFor(slug: $mapping['schemaSlug']);
@@ -306,7 +306,7 @@ class StageLimitGuard implements IEventListener {
 			$filters['ticketType'] = $slug;
 		}
 
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $type.'_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $type.'_schema', '');
 		if ($schema === '') {
 			return null;
 		}

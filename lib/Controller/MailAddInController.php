@@ -27,9 +27,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\OpenMailServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\MailAddIn\OpenMailService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -53,18 +53,18 @@ class MailAddInController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param IUserSession $userSession Who is calling.
-	 * @param OpenMailService $openMail Sender lookup, add as contact and mail logging.
+	 * @param OpenMailServiceInterface $openMail Sender lookup, add as contact and mail logging.
 	 * @param ObjectOwnerAccessPolicy $policy Who may create contacts.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly IUserSession $userSession,
-		private readonly OpenMailService $openMail,
+		private readonly OpenMailServiceInterface $openMail,
 		private readonly ObjectOwnerAccessPolicy $policy,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

@@ -28,9 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LeadRelatedSummaryInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\Lead\LeadRelatedSummary;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -53,7 +53,7 @@ class LeadRelatedSummaryController extends Controller {
 	 * @param ObjectOwnerAccessPolicy $policy        Who may read the lead.
 	 * @param IAppConfig              $appConfig     App config (register, schema).
 	 * @param ObjectServiceInterface  $objectService OpenRegister objects.
-	 * @param LeadRelatedSummary      $summary       The summary.
+	 * @param LeadRelatedSummaryInterface      $summary       The summary.
 	 *
 	 * @return void
 	 */
@@ -63,9 +63,9 @@ class LeadRelatedSummaryController extends Controller {
 		private ObjectOwnerAccessPolicy $policy,
 		private IAppConfig $appConfig,
 		private ObjectServiceInterface $objectService,
-		private LeadRelatedSummary $summary,
+		private LeadRelatedSummaryInterface $summary,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -84,8 +84,8 @@ class LeadRelatedSummaryController extends Controller {
 			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		try {
 			$found = $this->objectService->find(id: $id, register: $register, schema: $schema);
 		} catch (\Throwable $e) {

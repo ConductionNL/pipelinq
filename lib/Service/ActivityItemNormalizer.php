@@ -223,6 +223,7 @@ class ActivityItemNormalizer {
 			'message' => $this->normalizeMessage(message: $object, entityType: $entityType, entityId: $entityId),
 			'booking' => $this->normalizeBooking(booking: $object, entityType: $entityType, entityId: $entityId),
 			'linkedEmail' => $this->normalizeLinkedEmail(object: $object, entityType: $entityType, entityId: $entityId),
+			'leafEvent' => $this->normalizeLeafEvent(event: $object, entityType: $entityType, entityId: $entityId),
 			default => null,
 		};
 	}//end normalizeBySource()
@@ -344,9 +345,55 @@ class ActivityItemNormalizer {
 			'metadata' => [
 				'endDate' => $this->stringOrNull(value: ($object['endDate'] ?? null)),
 				'location' => $this->stringOrNull(value: ($object['location'] ?? null)),
+				'uid' => $this->stringOrNull(value: ($object['eventUid'] ?? $object['uid'] ?? null)),
 			],
 		];
 	}//end normalizeCalendarLink()
+
+	/**
+	 * Normalise an event read through the calendar leaf into an appointment item.
+	 *
+	 * A past event is completed activity, a future one scheduled. The item
+	 * carries the event UID, which the timeline dedupes on.
+	 *
+	 * @param array<string,mixed> $event The leaf's event row.
+	 * @param string $entityType The originating entityType.
+	 * @param string $entityId The originating entityId.
+	 *
+	 * @return array<string,mixed>|null The activity item, or null for an event without a UID.
+	 *
+	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+	 */
+	private function normalizeLeafEvent(array $event, string $entityType, string $entityId): ?array {
+		$uid = $this->stringOrNull(value: ($event['uid'] ?? null));
+		if ($uid === null) {
+			return null;
+		}
+
+		$start = $this->stringOrNull(value: ($event['dtstart'] ?? null));
+		$status = 'scheduled';
+		if ($start !== null && strtotime($start) !== false && strtotime($start) < time()) {
+			$status = 'completed';
+		}
+
+		return [
+			'type' => 'calendar',
+			'id' => $uid,
+			'title' => (string)($event['summary'] ?? ''),
+			'description' => (string)($event['description'] ?? ''),
+			'date' => $start,
+			'user' => null,
+			'entityType' => $entityType,
+			'entityId' => $entityId,
+			'metadata' => [
+				'uid' => $uid,
+				'source' => 'calendar-leaf',
+				'status' => $status,
+				'endDate' => $this->stringOrNull(value: ($event['dtend'] ?? null)),
+				'location' => $this->stringOrNull(value: ($event['location'] ?? null)),
+			],
+		];
+	}//end normalizeLeafEvent()
 
 	/**
 	 * Normalise an email linked through OpenRegister's reader into an activity item.

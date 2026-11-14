@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\SemanticHandoffServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -45,7 +46,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges to two OR services
  *  behind a container; the surface is deliberately tiny.
  */
-class SemanticHandoffService {
+class SemanticHandoffService implements SemanticHandoffServiceInterface {
 	/**
 	 * FQCN of the OpenRegister semantic-type resolver (autowired in OR).
 	 *

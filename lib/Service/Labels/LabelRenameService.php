@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Labels;
 
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
+use OCA\Pipelinq\Kernel\Contracts\LabelRenameServiceInterface;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
@@ -45,9 +46,8 @@ use Throwable;
  *
  * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
  */
-class LabelRenameService {
+class LabelRenameService implements LabelRenameServiceInterface {
 	use SerialisedToArray;
-
 
 	/**
 	 * The register the label fragment declares the schema in.

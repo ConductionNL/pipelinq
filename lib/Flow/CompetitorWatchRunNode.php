@@ -44,7 +44,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Flow;
 
 use OCA\OpenRegister\Service\Flow\IFlowNode;
-use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
+use OCA\Pipelinq\Kernel\Contracts\CompetitorWatchServiceInterface;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\WorkflowEngine\IManager;
@@ -80,14 +80,14 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 *
 	 * @param IL10N $l10n Palette strings.
 	 * @param IURLGenerator $urls Palette icon.
-	 * @param CompetitorWatchService $watches The service that does the work.
+	 * @param CompetitorWatchServiceInterface $watches The service that does the work.
 	 *
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function __construct(
 		private readonly IL10N $l10n,
 		private readonly IURLGenerator $urls,
-		private readonly CompetitorWatchService $watches,
+		private readonly CompetitorWatchServiceInterface $watches,
 	) {
 	}//end __construct()
 
@@ -193,7 +193,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 */
 	public function execute(array $items, array $config, array $context): array {
 		$this->validateConfig(config: $config);
-		$limit = CompetitorWatchService::DEFAULT_LIMIT;
+		$limit = CompetitorWatchServiceInterface::DEFAULT_LIMIT;
 		if (array_key_exists('limit', $config) === true) {
 			$limit = (int)$config['limit'];
 		}

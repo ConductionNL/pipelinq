@@ -32,7 +32,7 @@
                 ]
             },
             {
-                "LoyaltyPaymentService::payWithPoints": [
+                "LoyaltyPaymentServiceInterface::payWithPoints": [
                     "sample-accountId",
                     0,
                     ""
