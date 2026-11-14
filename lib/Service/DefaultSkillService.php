@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -89,7 +89,7 @@ class DefaultSkillService {
 	 */
 	public function createDefaultSkills(): void {
 		$registerId = $this->registerResolver->resolve('skill');
-		$skillSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
+		$skillSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'skill_schema', '');
 
 		if ($registerId === '' || $skillSchemaId === '') {
 			$this->logger->warning(

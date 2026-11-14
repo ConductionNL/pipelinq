@@ -33,8 +33,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PartyKindRegistryService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -104,13 +104,13 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param PartyKindRegistryService $registry Reads the kinds already declared.
+	 * @param PartyKindRegistryServiceInterface $registry Reads the kinds already declared.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private ObjectServiceInterface $objectService,
-		private PartyKindRegistryService $registry,
+		private PartyKindRegistryServiceInterface $registry,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -156,8 +156,8 @@ class SeedPartyKinds implements IRepairStep {
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function run(IOutput $output): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'partyKind_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'partyKind_schema', '');
 		if ($register === '' || $schema === '') {
 			$output->info('Party kind registry not configured — skipping the seed.');
 			return;

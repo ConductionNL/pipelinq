@@ -25,9 +25,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
-use OCA\Pipelinq\Service\ProductCatalogService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -59,7 +59,7 @@ class ProductCatalogController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ProductCatalogService $service The product catalogue service.
+	 * @param ProductCatalogServiceInterface $service The product catalogue service.
 	 * @param IUserSession $userSession The user session.
 	 * @param PosAccessPolicy $policy The shared POS access policy.
 	 * @param IL10N $l10n The localization service.
@@ -67,13 +67,13 @@ class ProductCatalogController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private ProductCatalogService $service,
+		private ProductCatalogServiceInterface $service,
 		private IUserSession $userSession,
 		private PosAccessPolicy $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

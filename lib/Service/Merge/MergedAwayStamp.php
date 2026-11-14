@@ -31,7 +31,8 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MergedAwayStampInterface;
 use OCP\IAppConfig;
 
 /**
@@ -40,13 +41,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-013-mdm-steward-ui-deep-linked-to-openregister
  */
-class MergedAwayStamp {
-	/**
-	 * The fields of the stamp.
-	 *
-	 * @var array<int, string>
-	 */
-	public const FIELDS = ['mergedInto', 'mergedIntoLabel', 'mergedAt'];
+class MergedAwayStamp implements MergedAwayStampInterface {
 
 	/**
 	 * Constructor.
@@ -97,8 +92,8 @@ class MergedAwayStamp {
 		}
 
 		$schemas = [
-			$this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
-			$this->appConfig->getValueString(Application::APP_ID, 'contact_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', ''),
 		];
 		return in_array((string)$record->getSchema(), array_filter($schemas), true);
 	}//end isParty()

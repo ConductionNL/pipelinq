@@ -35,7 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 
 /**
@@ -94,7 +94,7 @@ class CampaignLinkDecorator {
 	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
 	 */
 	public function isEnabled(): bool {
-		$raw = strtolower(trim($this->appConfig->getValueString(Application::APP_ID, self::AUTO_CONFIG_KEY, 'true')));
+		$raw = strtolower(trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::AUTO_CONFIG_KEY, 'true')));
 		return in_array($raw, ['false', '0', 'no', 'off'], true) === false;
 	}//end isEnabled()
 

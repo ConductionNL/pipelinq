@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\NoteEventServiceInterface;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -34,7 +35,7 @@ use Throwable;
  *
  * @spec openspec/specs/entity-notes/spec.md#requirement-notes-crud-on-all-entity-types-mvp
  */
-class NoteEventService {
+class NoteEventService implements NoteEventServiceInterface {
 	use OptionalPayloadToArray;
 
 	private const TYPE_MAP = [

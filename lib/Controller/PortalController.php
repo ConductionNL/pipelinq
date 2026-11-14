@@ -31,9 +31,9 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AppointmentDepositService;
-use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\App\IAppManager;
@@ -68,6 +68,7 @@ use RuntimeException;
  *  their input-validation / link-signing helpers belong together.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalController extends Controller {
 	use EntityIdOf;
@@ -101,8 +102,8 @@ class PortalController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param BookingService $bookingService Booking lifecycle service (member 04).
-	 * @param AppointmentDepositService $depositService Deposit payment orchestrator (member 08).
+	 * @param BookingServiceInterface $bookingService Booking lifecycle service (member 04).
+	 * @param AppointmentDepositServiceInterface $depositService Deposit payment orchestrator (member 08).
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppManager $appManager The app manager (OR-availability guard).
@@ -113,8 +114,8 @@ class PortalController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private BookingService $bookingService,
-		private AppointmentDepositService $depositService,
+		private BookingServiceInterface $bookingService,
+		private AppointmentDepositServiceInterface $depositService,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
 		private IAppManager $appManager,
@@ -123,7 +124,7 @@ class PortalController extends Controller {
 		private ISecureRandom $secureRandom,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -1011,10 +1012,10 @@ class PortalController extends Controller {
 	 * @return string The signing key.
 	 */
 	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(Application::APP_ID, self::SIGNING_KEY_CONFIG, '');
+		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SIGNING_KEY_CONFIG, '');
 		if ($key === '') {
 			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(Application::APP_ID, self::SIGNING_KEY_CONFIG, $key, false, true);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SIGNING_KEY_CONFIG, $key, false, true);
 		}
 
 		return $key;
@@ -1058,7 +1059,7 @@ class PortalController extends Controller {
 	 * @return string The configured register id, or '' when unconfigured.
 	 */
 	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
@@ -1076,7 +1077,7 @@ class PortalController extends Controller {
 	 * @return string
 	 */
 	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaId()
 
 	/**

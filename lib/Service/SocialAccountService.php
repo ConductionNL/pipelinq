@@ -48,6 +48,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\SocialAccountServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Social\BrokerCredentialReader;
@@ -68,7 +69,7 @@ use OCP\IGroupManager;
  *  is several independently-simple steps, each of which is a short method, and
  *  the complexity is the sum rather than any one tangle.
  */
-class SocialAccountService {
+class SocialAccountService implements SocialAccountServiceInterface {
 	/**
 	 * The account schema slug, matching the register fragment.
 	 *
@@ -131,24 +132,6 @@ class SocialAccountService {
 	 * @var string
 	 */
 	public const SUBJECT_RELINK_NEEDED = 'social_relink_needed';
-
-	/**
-	 * Fields a client may set when creating or updating an account. Everything
-	 * else, and `credentialRef` above all, is written by this service.
-	 *
-	 * @var array<int, string>
-	 */
-	public const CLIENT_WRITABLE = [
-		'network',
-		'kind',
-		'handle',
-		'displayName',
-		'profileUrl',
-		'externalAccountId',
-		'instanceBaseUrl',
-		'clientId',
-		'publishMode',
-	];
 
 	/**
 	 * Constructor.

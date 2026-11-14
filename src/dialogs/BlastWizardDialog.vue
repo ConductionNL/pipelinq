@@ -1546,7 +1546,7 @@ export default {
 	height: 260px;
 	border: 1px solid var(--color-border-dark);
 	border-radius: var(--border-radius-large);
-	background: #fff;
+	background: var(--color-main-background, #fff);
 }
 
 .blast-wizard__preview-articles {

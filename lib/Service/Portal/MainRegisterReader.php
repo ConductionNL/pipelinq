@@ -28,13 +28,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MainRegisterReaderInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Reads objects from the main pipelinq register.
@@ -47,7 +48,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class MainRegisterReader {
+class MainRegisterReader implements MainRegisterReaderInterface {
 	use CastingPayloadToArray;
 
 	/**
@@ -76,7 +77,7 @@ class MainRegisterReader {
 	 *   audit are all unspecified
 	 */
 	public function hasSchema(string $schemaKey): bool {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		return $register !== '' && $schema !== '';
 	}//end hasSchema()
@@ -246,7 +247,7 @@ class MainRegisterReader {
 	 * @throws RuntimeException When unconfigured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException("Main register schema '{$schemaKey}' is not configured.");
@@ -265,7 +266,7 @@ class MainRegisterReader {
 	 */
 	private function schemaIdFor(string $schemaKey): string {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaKey] ?? $schemaKey . '_schema'),
 			''
 		);

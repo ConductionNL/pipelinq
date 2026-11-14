@@ -49,7 +49,10 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\WebhookService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -59,8 +62,6 @@ use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for the POS end-of-day pipeline + registry-mediated journal raise.
@@ -98,7 +99,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
-class PosBookkeepingService {
+class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	use CastingPayloadToArray;
 
 	/**
@@ -703,7 +704,7 @@ class PosBookkeepingService {
 	 * @return void
 	 */
 	private function sendAlertEmail(string $subject, string $body): void {
-		$to = trim($this->appConfig->getValueString(Application::APP_ID, 'pos_eod.alert_email', ''));
+		$to = trim($this->appConfig->getValueString(AppIdentity::APP_ID, 'pos_eod.alert_email', ''));
 		if ($to === '') {
 			return;
 		}
@@ -870,8 +871,8 @@ class PosBookkeepingService {
 	 * @throws OCSNotFoundException When the register or schema is not configured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Bookkeeping-register of -schema is niet geconfigureerd.');
@@ -890,7 +891,7 @@ class PosBookkeepingService {
 	public function maxAttempts(): int {
 		$raw = trim(
 			$this->appConfig->getValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'pos_eod.max_retry_attempts',
 				(string)self::DEFAULT_MAX_ATTEMPTS
 			)

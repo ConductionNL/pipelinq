@@ -37,7 +37,7 @@
                 ]
             },
             {
-                "SearchQueryReportService::topQueries": [
+                "SearchQueryReportServiceInterface::topQueries": [
                     "sample-from",
                     "sample-to",
                     7,
@@ -45,16 +45,16 @@
                 ]
             },
             {
-                "SearchConsoleImportService::hasKey": []
+                "SearchConsoleImportServiceInterface::hasKey": []
             },
             {
-                "SearchConsoleImportService::properties": []
+                "SearchConsoleImportServiceInterface::properties": []
             },
             {
-                "SearchConsoleImportService::serviceAccountEmail": []
+                "SearchConsoleImportServiceInterface::serviceAccountEmail": []
             },
             {
-                "SearchConsoleImportService::lastImportAt": []
+                "SearchConsoleImportServiceInterface::lastImportAt": []
             }
         ]
     }

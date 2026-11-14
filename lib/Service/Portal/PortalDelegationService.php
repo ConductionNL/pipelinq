@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalDelegationServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 
@@ -39,7 +40,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalDelegationService {
+class PortalDelegationService implements PortalDelegationServiceInterface {
 	/**
 	 * Schema slug for delegations.
 	 *

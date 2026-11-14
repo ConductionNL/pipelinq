@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Activity;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Activity\IFilter;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -51,7 +51,7 @@ class Filter implements IFilter {
 	 * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
 	 */
 	public function getIdentifier(): string {
-		return Application::APP_ID;
+		return AppIdentity::APP_ID;
 	}//end getIdentifier()
 
 	/**
@@ -82,7 +82,7 @@ class Filter implements IFilter {
 	 */
 	public function getIcon(): string {
 		return $this->urlGenerator->getAbsoluteURL(
-			$this->urlGenerator->imagePath(appName: Application::APP_ID, file: 'app.svg')
+			$this->urlGenerator->imagePath(appName: AppIdentity::APP_ID, file: 'app.svg')
 		);
 	}//end getIcon()
 
@@ -107,6 +107,6 @@ class Filter implements IFilter {
 	 * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
 	 */
 	public function allowedApps(): array {
-		return [Application::APP_ID];
+		return [AppIdentity::APP_ID];
 	}//end allowedApps()
 }//end class

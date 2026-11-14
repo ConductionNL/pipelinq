@@ -29,11 +29,11 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
-use OCA\Pipelinq\Service\SchemaMapService;
-use OCA\Pipelinq\Service\SlaEngineService;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -87,23 +87,23 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @var array<string, string>
 	 */
 	private const TICKET_TYPE_LABELS = [
-		TicketService::TYPE_REQUEST => 'request',
-		TicketService::TYPE_COMPLAINT => 'complaint',
+		TicketServiceInterface::TYPE_REQUEST => 'request',
+		TicketServiceInterface::TYPE_COMPLAINT => 'complaint',
 	];
 
 	/**
 	 * Constructor.
 	 *
-	 * @param SlaEngineService $engine SLA engine.
-	 * @param SchemaMapService $schemaMapService Schema → entity-type map.
+	 * @param SlaEngineServiceInterface $engine SLA engine.
+	 * @param SchemaMapServiceInterface $schemaMapService Schema → entity-type map.
 	 * @param ContainerInterface $container DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig App config.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private SlaEngineService $engine,
-		private SchemaMapService $schemaMapService,
+		private SlaEngineServiceInterface $engine,
+		private SchemaMapServiceInterface $schemaMapService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
@@ -270,7 +270,7 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, mixed>|null Object data, or null when it is gone.
 	 */
 	private function fetch(string $uuid, string $schemaId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			return null;
 		}
@@ -305,7 +305,7 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 */
 	private function persist(string $uuid, string $schemaId, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '' || $schemaId === '' || $uuid === '') {
 			return;
 		}

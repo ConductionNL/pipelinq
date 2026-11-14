@@ -120,4 +120,39 @@ class PartyKindControllerTest extends TestCase {
 		$this->assertFalse($response->getData()['declared']);
 		$this->assertSame('aanvrager', $response->getData()['kinds'][0]['code']);
 	}//end testTheIndexSaysWhetherAcceptanceWasDeclared()
+	/**
+	 * A link passes every field through and answers at the service status.
+	 *
+	 * @return void
+	 */
+	public function testLinkPassesTheFieldsAndCarriesTheStatus(): void {
+		$controller = $this->controller();
+		$this->links->expects($this->once())->method('link')
+			->with('pipelinq:ticket', 't-1', 'party-9', 'aanvrager')
+			->willReturn(['status' => 201, 'link' => ['id' => 'link-7']]);
+
+		$response = $controller->link(recordType: 'pipelinq:ticket', recordId: 't-1', party: 'party-9', kind: 'aanvrager');
+
+		$this->assertSame(201, $response->getStatus());
+		$this->assertSame(['link' => ['id' => 'link-7']], $response->getData());
+	}//end testLinkPassesTheFieldsAndCarriesTheStatus()
+
+	/**
+	 * An import passes the rows through and keeps a refusal status.
+	 *
+	 * @return void
+	 */
+	public function testImportPassesTheRowsAndKeepsARefusal(): void {
+		$controller = $this->controller();
+		$rows = [['party' => 'p-1', 'kind' => 'aanvrager']];
+		$this->links->expects($this->once())->method('import')
+			->with('pipelinq:ticket', 't-1', $rows)
+			->willReturn(['status' => 422, 'error' => 'Kind not accepted.']);
+
+		$response = $controller->import(recordType: 'pipelinq:ticket', recordId: 't-1', rows: $rows);
+
+		$this->assertSame(422, $response->getStatus());
+		$this->assertSame(['error' => 'Kind not accepted.'], $response->getData());
+	}//end testImportPassesTheRowsAndKeepsARefusal()
+
 }//end class

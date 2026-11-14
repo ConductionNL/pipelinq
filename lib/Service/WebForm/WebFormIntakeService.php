@@ -49,6 +49,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\WebForm;
 
+use OCA\Pipelinq\Kernel\Contracts\WebFormIntakeServiceInterface;
 use OCA\Pipelinq\Service\SystemServiceAccount;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -59,7 +60,7 @@ use Throwable;
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-a-website-form-submits-into-the-destination-it-names
  */
-class WebFormIntakeService {
+class WebFormIntakeService implements WebFormIntakeServiceInterface {
 
 	/**
 	 * The one message every refusal of the visitor's submit carries.
@@ -67,13 +68,6 @@ class WebFormIntakeService {
 	 * @var string
 	 */
 	public const REFUSED = 'This submission could not be accepted.';
-
-	/**
-	 * What a visitor reads when the destination cannot take the submit now.
-	 *
-	 * @var string
-	 */
-	public const TRY_LATER = 'The form could not be sent right now. Please try again later.';
 
 	/**
 	 * Honeypot fields: hidden from people, so any value means a robot filled every input.
