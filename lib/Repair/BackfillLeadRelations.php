@@ -266,19 +266,73 @@ class BackfillLeadRelations implements IRepairStep {
 			return;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$output->warning('BackfillLeadRelations: OpenRegister ObjectService unavailable, skipping (' . $e->getMessage() . ')');
+		$objectService = $this->objectServiceFor(output: $output);
+		if ($objectService === null) {
 			return;
 		}
 
-		$leads = $this->readAll(objectService: $objectService, register: $register, schema: $leadSchema);
+		$context = ['register' => $register, 'schema' => $leadSchema];
+		$this->backfillAll(objectService: $objectService, output: $output, context: $context, pipelineSchema: $pipelineSchema);
+	}//end run()
+
+	/**
+	 * The OpenRegister ObjectService, or null (warned) when it is unavailable.
+	 *
+	 * @param IOutput $output Output.
+	 *
+	 * @return object|null
+	 */
+	private function objectServiceFor(IOutput $output): object|null {
+		try {
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		} catch (Throwable $e) {
+			$output->warning('BackfillLeadRelations: OpenRegister ObjectService unavailable, skipping (' . $e->getMessage() . ')');
+			return null;
+		}
+	}//end objectServiceFor()
+
+	/**
+	 * Backfill every stored lead and report the tallies.
+	 *
+	 * @param object               $objectService  The OpenRegister ObjectService.
+	 * @param IOutput              $output         Output.
+	 * @param array<string,string> $context        Register and lead schema ids.
+	 * @param string               $pipelineSchema The pipeline schema id, '' when unset.
+	 *
+	 * @return void
+	 */
+	private function backfillAll(object $objectService, IOutput $output, array $context, string $pipelineSchema): void {
+		$leads = $this->readAll(objectService: $objectService, register: $context['register'], schema: $context['schema']);
 		if ($leads === []) {
 			$output->info('BackfillLeadRelations: no leads to inspect');
 			return;
 		}
 
+		$pipelines = $this->readPipelines(objectService: $objectService, register: $context['register'], pipelineSchema: $pipelineSchema);
+
+		$pipeline = $this->pickPipeline(pipelines: $pipelines);
+		$actingAdmin = $this->actingAdmin();
+
+		$counts = ['fixed' => 0, 'skipped' => 0, 'stuck' => 0];
+
+		foreach ($leads as $lead) {
+			$outcome = $this->backfillOne(lead: $lead, pipeline: $pipeline, context: $context, actingAdmin: $actingAdmin, output: $output, pipelines: $pipelines);
+			$counts[$outcome]++;
+		}
+
+		$this->report(counts: $counts, output: $output);
+	}//end backfillAll()
+
+	/**
+	 * Read the stored pipelines ([] when no pipeline schema is configured).
+	 *
+	 * @param object $objectService  The OpenRegister ObjectService.
+	 * @param string $register       The register id.
+	 * @param string $pipelineSchema The pipeline schema id.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function readPipelines(object $objectService, string $register, string $pipelineSchema): array {
 		$pipelines = [];
 		if ($pipelineSchema !== '') {
 			$pipelines = $this->readAll(
@@ -288,33 +342,8 @@ class BackfillLeadRelations implements IRepairStep {
 			);
 		}
 
-		$pipeline = $this->pickPipeline(pipelines: $pipelines);
-		$actingAdmin = $this->actingAdmin();
-
-		$context = [
-			'register' => $register,
-			'schema' => $leadSchema,
-		];
-		$counts = [
-			'fixed' => 0,
-			'skipped' => 0,
-			'stuck' => 0,
-		];
-
-		foreach ($leads as $lead) {
-			$outcome = $this->backfillOne(
-				lead: $lead,
-				pipeline: $pipeline,
-				context: $context,
-				actingAdmin: $actingAdmin,
-				output: $output,
-				pipelines: $pipelines
-			);
-			$counts[$outcome]++;
-		}
-
-		$this->report(counts: $counts, output: $output);
-	}//end run()
+		return $pipelines;
+	}//end readPipelines()
 
 	/**
 	 * Backfill one lead.
@@ -345,12 +374,7 @@ class BackfillLeadRelations implements IRepairStep {
 
 		$patch = $this->missingFor(lead: $lead, pipeline: $pipeline, pipelines: $pipelines);
 		if ($patch === null) {
-			$output->warning(
-				sprintf(
-					'BackfillLeadRelations: could not resolve a pipeline for lead "%s"',
-					(string)($lead['title'] ?? $uuid)
-				)
-			);
+			$this->warnUnresolvedPipeline(lead: $lead, uuid: $uuid, output: $output);
 
 			return 'stuck';
 		}
@@ -359,9 +383,41 @@ class BackfillLeadRelations implements IRepairStep {
 			return 'skipped';
 		}
 
+		return $this->saveBackfilledLead(lead: array_merge($lead, $patch), uuid: $uuid, context: $context, actingAdmin: $actingAdmin);
+	}//end backfillOne()
+
+	/**
+	 * Warn that no pipeline resolves for a lead.
+	 *
+	 * @param array<string,mixed> $lead   The lead row.
+	 * @param string              $uuid   The lead uuid.
+	 * @param IOutput             $output Output.
+	 *
+	 * @return void
+	 */
+	private function warnUnresolvedPipeline(array $lead, string $uuid, IOutput $output): void {
+		$output->warning(
+			sprintf(
+				'BackfillLeadRelations: could not resolve a pipeline for lead "%s"',
+				(string)($lead['title'] ?? $uuid)
+			)
+		);
+	}//end warnUnresolvedPipeline()
+
+	/**
+	 * Save a backfilled lead as the acting admin.
+	 *
+	 * @param array<string,mixed>  $lead        The lead with its patch applied.
+	 * @param string               $uuid        The lead uuid.
+	 * @param array<string,string> $context     Register and schema ids.
+	 * @param mixed                $actingAdmin User to save as.
+	 *
+	 * @return string 'fixed', or 'stuck' when the save fails.
+	 */
+	private function saveBackfilledLead(array $lead, string $uuid, array $context, mixed $actingAdmin): string {
 		try {
 			$this->container->get('OCA\\OpenRegister\\Service\\ObjectService')->saveObject(
-				object: array_merge($lead, $patch),
+				object: $lead,
 				extend: [],
 				register: $context['register'],
 				schema: $context['schema'],
@@ -373,17 +429,11 @@ class BackfillLeadRelations implements IRepairStep {
 
 			return 'fixed';
 		} catch (Throwable $e) {
-			$this->logger->error(
-				'BackfillLeadRelations: failed to save lead',
-				[
-					'uuid' => $uuid,
-					'error' => $e->getMessage(),
-				]
-			);
+			$this->logger->error('BackfillLeadRelations: failed to save lead', ['uuid' => $uuid, 'error' => $e->getMessage()]);
 
 			return 'stuck';
 		}//end try
-	}//end backfillOne()
+	}//end saveBackfilledLead()
 
 	/**
 	 * Report the outcome.
