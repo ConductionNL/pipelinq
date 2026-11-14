@@ -114,10 +114,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public function directionFor(array $data): ?string {
-		$existing = ($data['direction'] ?? null);
-		if (is_string($existing) === true
-			&& in_array($existing, TicketServiceInterface::DIRECTIONS, true) === true
-		) {
+		if ($this->hasKnownDirection(data: $data) === true) {
 			return null;
 		}
 
@@ -130,6 +127,30 @@ class MigrateContactMomentDirection implements IRepairStep {
 			return 'internal';
 		}
 
+		return $this->directionFromMetadata(metadata: $metadata);
+	}//end directionFor()
+
+	/**
+	 * Whether the row already carries one of the known directions.
+	 *
+	 * @param array<string, mixed> $data The contact moment data.
+	 *
+	 * @return bool True when the direction is already set to a known value.
+	 */
+	private function hasKnownDirection(array $data): bool {
+		$existing = ($data['direction'] ?? null);
+		return is_string($existing) === true
+			&& in_array($existing, TicketServiceInterface::DIRECTIONS, true) === true;
+	}//end hasKnownDirection()
+
+	/**
+	 * Map the first recognised `direction`/`richting` metadata value, else `internal`.
+	 *
+	 * @param array<string, mixed> $metadata The channel metadata.
+	 *
+	 * @return string The mapped direction.
+	 */
+	private function directionFromMetadata(array $metadata): string {
 		foreach (['direction', 'richting'] as $key) {
 			$value = ($metadata[$key] ?? null);
 			if (is_string($value) === false) {
@@ -143,7 +164,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 		}
 
 		return 'internal';
-	}//end directionFor()
+	}//end directionFromMetadata()
 
 	/**
 	 * Run the repair.
