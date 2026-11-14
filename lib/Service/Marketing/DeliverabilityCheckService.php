@@ -30,9 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredMailTransportSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,6 +46,8 @@ use Throwable;
  */
 class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface {
 	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ConfiguredMailTransportSchemaSlug;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -341,48 +344,6 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * The configured `mailTransport` schema slug.
-	 *
-	 * @return string
-	 */
-	private function getMailTransportSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'mailTransport_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG;
-	}//end getMailTransportSchemaSlug()
-
-	/**
-	 * Extract a UUID/id/slug from an OpenRegister payload.
-	 *
-	 * @param array<string, mixed> $payload The payload.
-	 *
-	 * @return string The id, or '' when none is present.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($payload[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		$self = ($payload['@self'] ?? null);
-		if (is_array($self) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($self[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
 
 	/**
 	 * Current UTC instant, ISO 8601.

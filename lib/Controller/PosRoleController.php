@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
+use OCA\Pipelinq\Util\AdminOnlyResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,6 +52,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4
  */
 class PosRoleController extends Controller {
+	use AdminOnlyResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -214,30 +217,6 @@ class PosRoleController extends Controller {
 	private function requireUserId(): string|JSONResponse {
 		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
 	}//end requireUserId()
-
-	/**
-	 * Require an authenticated admin user.
-	 *
-	 * @return null|JSONResponse Null when the caller is an admin; 401/403 otherwise.
-	 */
-	private function requireAdmin(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		if ($this->groupManager->isAdmin($user->getUID()) === false) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Admin privileges required')],
-				Http::STATUS_FORBIDDEN
-			);
-		}
-
-		return null;
-	}//end requireAdmin()
 
 	/**
 	 * Run an action with shared error handling.

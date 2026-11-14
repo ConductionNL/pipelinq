@@ -34,6 +34,7 @@ use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
+use OCA\Pipelinq\Util\Base64UrlDecode;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -75,6 +76,7 @@ class PortalController extends Controller {
 	use EntityIdOf;
 	use NullablePayloadToArray;
 	use ConfiguredRegisterId;
+	use Base64UrlDecode;
 
 	/**
 	 * Signing-key app-config key (per-instance HMAC secret, ADR-005).
@@ -1137,22 +1139,6 @@ class PortalController extends Controller {
 	private function base64UrlEncode(string $data): string {
 		return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 	}//end base64UrlEncode()
-
-	/**
-	 * Base64url-decode.
-	 *
-	 * @param string $data The encoded string.
-	 *
-	 * @return string The decoded data (empty on failure).
-	 */
-	private function base64UrlDecode(string $data): string {
-		$decoded = base64_decode(strtr($data, '-_', '+/'), true);
-		if ($decoded === false) {
-			return '';
-		}
-
-		return $decoded;
-	}//end base64UrlDecode()
 
 	/**
 	 * Resolve a schema id by app-config key.

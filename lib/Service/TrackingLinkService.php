@@ -41,6 +41,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TrackingLinkServiceInterface;
+use OCA\Pipelinq\Util\Base64UrlDecode;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -70,6 +71,7 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 	use SavedPayloadId;
 	use ConfiguredBlastDeliverySchemaSlug;
 	use ContainerObjectService;
+	use Base64UrlDecode;
 
 	/**
 	 * App-config key for the per-instance HMAC signing secret.
@@ -505,22 +507,6 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 	private function base64UrlEncode(string $data): string {
 		return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 	}//end base64UrlEncode()
-
-	/**
-	 * Base64url-decode.
-	 *
-	 * @param string $data The encoded string.
-	 *
-	 * @return string The decoded data (empty on failure).
-	 */
-	private function base64UrlDecode(string $data): string {
-		$decoded = base64_decode(strtr($data, '-_', '+/'), true);
-		if ($decoded === false) {
-			return '';
-		}
-
-		return $decoded;
-	}//end base64UrlDecode()
 
 	/**
 	 * Load one BlastDelivery row by id.

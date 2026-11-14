@@ -34,6 +34,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Kernel\Contracts\ExportDestinationServiceInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
+use OCA\Pipelinq\Util\ExportSourceCredentials;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -48,6 +49,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-001
  */
 class ExportDestinationService extends AbstractExportService implements ExportDestinationServiceInterface {
+	use ExportSourceCredentials;
+
 	/**
 	 * The exportDestination schema config key.
 	 *
@@ -503,31 +506,4 @@ class ExportDestinationService extends AbstractExportService implements ExportDe
 
 		return $this->extractSourceCredentials(source: $this->toArray(object: $source));
 	}//end resolveCredentials()
-
-	/**
-	 * Extract the legacy write-only credential fields (and any non-secret
-	 * broker authentication config) from a raw OpenConnector Source.
-	 *
-	 * @param array<string, mixed> $source The raw (unrendered) Source object.
-	 *
-	 * @return array<string, mixed> The extracted credentials.
-	 *
-	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
-	 */
-	private function extractSourceCredentials(array $source): array {
-		$credentials = [];
-		foreach (self::OPENCONNECTOR_LEGACY_SECRET_FIELDS as $field) {
-			$value = $source[$field] ?? null;
-			if (is_string($value) === true && $value !== '') {
-				$credentials[$field] = $value;
-			}
-		}
-
-		$authentication = $source['configuration']['authentication'] ?? null;
-		if (is_array($authentication) === true && $authentication !== []) {
-			$credentials['authentication'] = $authentication;
-		}
-
-		return $credentials;
-	}//end extractSourceCredentials()
 }//end class

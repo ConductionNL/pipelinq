@@ -44,7 +44,9 @@ use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCA\Pipelinq\Service\Marketing\Transport\SendResult;
 use OCA\Pipelinq\Service\UnsubscribeMail;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredMailTransportSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use Psr\Container\ContainerInterface;
@@ -74,6 +76,8 @@ use Throwable;
 class MailTransportService {
 	use ConfiguredRegisterSlug;
 	use ConfiguredBlastDeliverySchemaSlug;
+	use SavedPayloadId;
+	use ConfiguredMailTransportSchemaSlug;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -862,48 +866,6 @@ class MailTransportService {
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * The configured `mailTransport` schema slug.
-	 *
-	 * @return string
-	 */
-	private function getMailTransportSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'mailTransport_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG;
-	}//end getMailTransportSchemaSlug()
-
-	/**
-	 * Extract a UUID/id/slug from an OpenRegister payload.
-	 *
-	 * @param array<string, mixed> $payload The payload.
-	 *
-	 * @return string The id, or '' when none is present.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($payload[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		$self = ($payload['@self'] ?? null);
-		if (is_array($self) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($self[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
 
 	/**
 	 * Normalise an OpenRegister entity (or array) into a plain array.

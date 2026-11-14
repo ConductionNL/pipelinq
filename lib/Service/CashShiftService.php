@@ -45,6 +45,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\PosObjectReadWrite;
 use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -81,6 +82,7 @@ use Psr\Log\LoggerInterface;
 class CashShiftService implements CashShiftServiceInterface {
 	use CastingPayloadToArray;
 	use RandomUuid;
+	use PosObjectReadWrite;
 
 	/**
 	 * CloudEvent type emitted when a cash variance is approved.
@@ -704,33 +706,6 @@ class CashShiftService implements CashShiftServiceInterface {
 	}//end fetchDiff()
 
 	/**
-	 * Fetch a single object by UUID for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID.
-	 * @param string $label The not-found error message.
-	 *
-	 * @return array<string, mixed> The object.
-	 *
-	 * @throws OCSNotFoundException If the object is not found.
-	 */
-	private function fetchOne(string $schemaKey, string $id, string $label): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException($label);
-		}
-
-		return $this->toArray(object: $object);
-	}//end fetchOne()
-
-	/**
 	 * Fetch all objects of a schema linked to a shift.
 	 *
 	 * @param string $schemaKey The app-config schema key.
@@ -809,31 +784,6 @@ class CashShiftService implements CashShiftServiceInterface {
 	private function saveShift(string $id, array $shift): array {
 		return $this->saveObjectFor(schemaKey: 'cashShift_schema', id: $id, object: $shift);
 	}//end saveShift()
-
-	/**
-	 * Persist an object via the OR ObjectService for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID (empty to create).
-	 * @param array<string, mixed> $object The object data.
-	 *
-	 * @return array<string, mixed> The saved object.
-	 */
-	private function saveObjectFor(string $schemaKey, string $id, array $object): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		unset($object['@self']);
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
-
-		return $this->toArray(object: $saved);
-	}//end saveObjectFor()
 
 	/**
 	 * Resolve the register + a schema config key into their stored IDs.

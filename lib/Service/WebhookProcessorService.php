@@ -50,6 +50,7 @@ use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -81,6 +82,7 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	use ConfiguredRegisterSlug;
 	use ConfiguredBlastDeliverySchemaSlug;
 	use ContainerObjectService;
+	use SavedPayloadId;
 
 	/**
 	 * Default register slug — matches the chain root schemas.
@@ -981,30 +983,4 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 			}
 		}
 	}//end refreshBlastTotals()
-
-	/**
-	 * Extract the object id from a saved payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id (uuid / id / slug) or empty.
-	 */
-	private function extractId(array $payload): string {
-		$searchSpaces = [$payload];
-		$self = ($payload['@self'] ?? null);
-		if (is_array($self) === true) {
-			$searchSpaces[] = $self;
-		}
-
-		foreach ($searchSpaces as $space) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($space[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
 }//end class

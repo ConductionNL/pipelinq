@@ -41,6 +41,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\Base64UrlDecode;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -52,6 +53,8 @@ use OCP\Security\ISecureRandom;
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-confirmation-token-is-verified-before-a-subscription-is-confirmed
  */
 class ListTokenService {
+	use Base64UrlDecode;
+
 	/**
 	 * Purpose of a confirmation link.
 	 *
@@ -437,20 +440,4 @@ class ListTokenService {
 	private function base64UrlEncode(string $data): string {
 		return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 	}//end base64UrlEncode()
-
-	/**
-	 * Base64url-decode.
-	 *
-	 * @param string $data The encoded string.
-	 *
-	 * @return string The decoded data, empty on failure.
-	 */
-	private function base64UrlDecode(string $data): string {
-		$decoded = base64_decode(strtr($data, '-_', '+/'), true);
-		if ($decoded === false) {
-			return '';
-		}
-
-		return $decoded;
-	}//end base64UrlDecode()
 }//end class
