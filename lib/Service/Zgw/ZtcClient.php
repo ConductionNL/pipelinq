@@ -36,7 +36,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ZtcClientInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -46,12 +47,7 @@ use Throwable;
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
-class ZtcClient {
-	public const RESOURCE_ZAAKTYPE = 'zaaktypen';
-	public const RESOURCE_STATUSTYPE = 'statustypen';
-	public const RESOURCE_ROLTYPE = 'roltypen';
-	public const RESOURCE_RESULTAATTYPE = 'resultaattypen';
-	public const RESOURCE_BESLUITTYPE = 'besluittypen';
+class ZtcClient implements ZtcClientInterface {
 
 	private const DEFAULT_TTL_S = 3600;
 
@@ -391,7 +387,7 @@ class ZtcClient {
 	 * @return int
 	 */
 	private function ttl(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.ztc_cache_ttl', self::DEFAULT_TTL_S);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'zgw.ztc_cache_ttl', self::DEFAULT_TTL_S);
 		if ($value > 0) {
 			return $value;
 		}

@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\Contracts\SystemTagServiceInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -31,7 +32,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md
  */
-class SystemTagService {
+class SystemTagService implements SystemTagServiceInterface {
 	/**
 	 * Constructor.
 	 *

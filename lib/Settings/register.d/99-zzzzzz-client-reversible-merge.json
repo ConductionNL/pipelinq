@@ -1,0 +1,138 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "clients-reversible-merge D1: client and contact take part in OpenRegister's reversible merge (merge#preview, merge#execute, merge#reverse) with a thirty-day reversal window. accountStatus gains merged; contact gets a recordStatus for the same purpose. mergeMovedRows is the ledger ClientMergeReferenceListener keeps on the merged-away record (D2). The client lifecycle gains a merge transition into merged, and a reversal leaves merged through the ordinary transitions, which stamp or clear relationshipEndedAt as any other move to that status does."
+  },
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "version": "1.7.0",
+        "x-openregister-merge": {
+          "entityType": "client",
+          "statusField": "accountStatus",
+          "survivorStatus": "active",
+          "mergedStatus": "merged",
+          "reversalWindowDays": 30
+        },
+        "x-openregister-lifecycle": {
+          "transitions": {
+            "mergeAway": {
+              "from": [
+                "active",
+                "inactive",
+                "blocked"
+              ],
+              "to": "merged",
+              "description": "OpenRegister merges this client into another one (x-openregister-merge). Nothing is stamped: the relationship did not end, the record was folded into its survivor."
+            },
+            "endRelationship": {
+              "from": [
+                "active",
+                "blocked",
+                "merged"
+              ]
+            },
+            "reactivate": {
+              "from": [
+                "inactive",
+                "blocked",
+                "merged"
+              ]
+            },
+            "block": {
+              "from": [
+                "active",
+                "inactive",
+                "merged"
+              ]
+            }
+          }
+        },
+        "properties": {
+          "accountStatus": {
+            "type": "string",
+            "title": "Account status",
+            "description": "Lifecycle status of the CRM relationship/account record (distinct from the contact identity). merged: OpenRegister merged this client into another one.",
+            "enum": [
+              "active",
+              "inactive",
+              "blocked",
+              "merged"
+            ],
+            "x-enum-labels": {
+              "merged": "Merged"
+            },
+            "default": "active",
+            "facetable": true
+          },
+          "mergeMovedRows": {
+            "type": "array",
+            "title": "References moved by the merge",
+            "description": "The rows whose reference to this record were moved onto the record it was merged into, as schema, row uuid and property, so a reversal moves exactly those back. Empty while the record stands on its own.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "uuid": {
+                  "type": "string"
+                },
+                "property": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "version": "1.2.0",
+        "x-openregister-merge": {
+          "entityType": "contact",
+          "statusField": "recordStatus",
+          "survivorStatus": "active",
+          "mergedStatus": "merged",
+          "reversalWindowDays": 30
+        },
+        "properties": {
+          "recordStatus": {
+            "type": "string",
+            "enum": [
+              "active",
+              "merged"
+            ],
+            "default": "active",
+            "title": "Record status",
+            "description": "Whether the contact stands on its own or was merged into another contact record.",
+            "visible": false
+          },
+          "mergeMovedRows": {
+            "type": "array",
+            "title": "References moved by the merge",
+            "description": "The rows whose reference to this record were moved onto the record it was merged into, as schema, row uuid and property, so a reversal moves exactly those back. Empty while the record stands on its own.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "uuid": {
+                  "type": "string"
+                },
+                "property": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\Access\RegisterAccessSync;
+use OCA\Pipelinq\Kernel\Contracts\RegisterAccessSyncInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 
@@ -49,11 +49,11 @@ class SyncRegisterAccessJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory       $time   The time factory.
-	 * @param RegisterAccessSync $access The sync.
+	 * @param RegisterAccessSyncInterface $access The sync.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly RegisterAccessSync $access,
+		private readonly RegisterAccessSyncInterface $access,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(seconds: self::INTERVAL);

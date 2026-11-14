@@ -22,15 +22,9 @@ namespace OCA\Pipelinq\BackgroundJob;
 use OCA\OpenRegister\BackgroundJob\ActorForwardedJob;
 use OCA\OpenRegister\Service\Deferral\DeferredListenerContext;
 use OCA\OpenRegister\Service\OrganisationService;
-use OCA\Pipelinq\Listener\AvailabilityCacheInvalidationListener;
-use OCA\Pipelinq\Listener\DealCreatedListener;
-use OCA\Pipelinq\Listener\DealUpdatedListener;
+use OCA\Pipelinq\Listener\DeferredHandlers;
 use OCA\Pipelinq\Listener\DeferredObjectWork;
 use OCA\Pipelinq\Listener\DeferredWorkGuard;
-use OCA\Pipelinq\Listener\ExpenseApprovalListener;
-use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
-use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
-use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -75,15 +69,7 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 	 *
 	 * @var array<string, class-string<DeferredObjectWork>>
 	 */
-	private const HANDLERS = [
-		AvailabilityCacheInvalidationListener::HANDLER_KEY => AvailabilityCacheInvalidationListener::class,
-		DealCreatedListener::HANDLER_KEY => DealCreatedListener::class,
-		DealUpdatedListener::HANDLER_KEY => DealUpdatedListener::class,
-		ExpenseApprovalListener::HANDLER_KEY => ExpenseApprovalListener::class,
-		SlaObjectCreatedListener::HANDLER_KEY => SlaObjectCreatedListener::class,
-		SlaObjectUpdatedListener::HANDLER_KEY => SlaObjectUpdatedListener::class,
-		SurveyDispatchListener::HANDLER_KEY => SurveyDispatchListener::class,
-	];
+	private const HANDLERS = DeferredHandlers::MAP;
 
 	/**
 	 * Constructor.

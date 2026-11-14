@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\TemplateApprovalSyncService;
+use OCA\Pipelinq\Kernel\Contracts\TemplateApprovalSyncServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -42,14 +42,14 @@ class TemplateApprovalSyncJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param TemplateApprovalSyncService $syncService Sync orchestrator.
+	 * @param TemplateApprovalSyncServiceInterface $syncService Sync orchestrator.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private TemplateApprovalSyncService $syncService,
+		private TemplateApprovalSyncServiceInterface $syncService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

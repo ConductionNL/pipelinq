@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PasswordResetServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\IL10N;
 use OCP\Security\IHasher;
@@ -42,7 +43,7 @@ use OCP\Security\IHasher;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PasswordResetService {
+class PasswordResetService implements PasswordResetServiceInterface {
 	/**
 	 * Schema slug for accounts.
 	 *

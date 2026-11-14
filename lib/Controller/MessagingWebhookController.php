@@ -30,9 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SmsAdapter;
-use OCA\Pipelinq\Service\WhatsAppAdapter;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
+use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -52,25 +52,26 @@ use Throwable;
  * the adapter.
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class MessagingWebhookController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
-	 * @param WhatsAppAdapter $whatsAppAdapter WhatsApp adapter.
-	 * @param SmsAdapter $smsAdapter SMS adapter.
+	 * @param WhatsAppAdapterInterface $whatsAppAdapter WhatsApp adapter.
+	 * @param SmsAdapterInterface $smsAdapter SMS adapter.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		IRequest $request,
-		private WhatsAppAdapter $whatsAppAdapter,
-		private SmsAdapter $smsAdapter,
+		private WhatsAppAdapterInterface $whatsAppAdapter,
+		private SmsAdapterInterface $smsAdapter,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

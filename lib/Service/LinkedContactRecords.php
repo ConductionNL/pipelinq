@@ -27,8 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -71,7 +71,7 @@ class LinkedContactRecords {
 	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function all(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			return [];
 		}
@@ -94,7 +94,7 @@ class LinkedContactRecords {
 	 * @return array<int, array{type: string, id: string, name: string}>
 	 */
 	private function linkedOfType(string $registerId, string $type): array {
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $type . '_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $type . '_schema', '');
 		if ($schemaId === '') {
 			return [];
 		}

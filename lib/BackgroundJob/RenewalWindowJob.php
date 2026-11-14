@@ -30,8 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\ContractService;
-use OCA\Pipelinq\Service\RenewalEngineService;
+use OCA\Pipelinq\Kernel\Contracts\ContractServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\RenewalEngineServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -48,14 +48,14 @@ class RenewalWindowJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param ContractService $contractService Contract lifecycle service.
-	 * @param RenewalEngineService $engine Renewal engine.
+	 * @param ContractServiceInterface $contractService Contract lifecycle service.
+	 * @param RenewalEngineServiceInterface $engine Renewal engine.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private ContractService $contractService,
-		private RenewalEngineService $engine,
+		private ContractServiceInterface $contractService,
+		private RenewalEngineServiceInterface $engine,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

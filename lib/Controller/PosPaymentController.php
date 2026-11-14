@@ -32,8 +32,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosPaymentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -67,25 +67,26 @@ use Throwable;
  *  request + logger); splitting them would add indirection.
  *
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PosPaymentController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosPaymentService $service The payment service.
+	 * @param PosPaymentServiceInterface $service The payment service.
 	 * @param IUserSession $session The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosPaymentService $service,
+		private PosPaymentServiceInterface $service,
 		private IUserSession $session,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	// ---------------------------------------------------------------------

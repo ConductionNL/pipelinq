@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\PosPaymentService;
+use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
 
 /**
  * A payment provider and one of its retired secret fields, and the app-config
@@ -53,6 +53,6 @@ final class RetiredPspKey {
 	 * @spec openspec/changes/pos-psp-keys-via-broker/tasks.md#task-4-delete-the-legacy-keys
 	 */
 	public function configKey(): string {
-		return PosPaymentService::CONFIG_PREFIX . $this->provider . '.' . $this->field;
+		return PosPaymentServiceInterface::CONFIG_PREFIX . $this->provider . '.' . $this->field;
 	}//end configKey()
 }//end class

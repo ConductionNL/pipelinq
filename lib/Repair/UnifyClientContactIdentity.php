@@ -50,9 +50,9 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ContactVcardService;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -87,17 +87,17 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 *
 	 * @param IAppManager $appManager The app manager.
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param ContactVcardService $contactVcardService The existing vCard sync service (reused, no new engine).
+	 * @param ContactVcardServiceInterface $contactVcardService The existing vCard sync service (reused, no new engine).
 	 * @param ContainerInterface $container The DI container (OR ObjectService + Contacts IManager).
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $appConfig,
-		private readonly ContactVcardService $contactVcardService,
+		private readonly ContactVcardServiceInterface $contactVcardService,
 		private readonly ContainerInterface $container,
-		private readonly TicketService $ticketService,
+		private readonly TicketServiceInterface $ticketService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -133,7 +133,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 			return;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$output->warning('Pipelinq register not configured — skipping client/contact identity unification.');
 			return;
@@ -177,8 +177,8 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 */
 	public function migrate(object $objectService, string $register): array {
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
+		$contactSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 
 		// Contactmomenten live in the unified `ticket` schema and are narrowed by
 		// the `ticketType` discriminator (unify-ticket-supertype).
@@ -549,7 +549,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 			objectService: $objectService,
 			register: $register,
 			schema: $schema,
-			ticketType: TicketService::TYPE_CONTACTMOMENT
+			ticketType: TicketServiceInterface::TYPE_CONTACTMOMENT
 		);
 
 		$rekeyed = 0;
@@ -617,7 +617,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 		string $currentMasterEntity,
 		array $object,
 	): void {
-		$sourceRecordSchema = $this->appConfig->getValueString(Application::APP_ID, 'sourceRecord_schema', '');
+		$sourceRecordSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sourceRecord_schema', '');
 		if ($sourceRecordSchema === '') {
 			// MDM source-record schema not configured; provenance is best-effort.
 			return;

@@ -23,7 +23,7 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\Service\ObjectEventHandlerService;
+use OCA\Pipelinq\Kernel\Contracts\ObjectEventHandlerServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 
@@ -38,10 +38,10 @@ class ObjectEventListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ObjectEventHandlerService $handlerService The event handler service.
+	 * @param ObjectEventHandlerServiceInterface $handlerService The event handler service.
 	 */
 	public function __construct(
-		private ObjectEventHandlerService $handlerService,
+		private ObjectEventHandlerServiceInterface $handlerService,
 	) {
 	}//end __construct()
 

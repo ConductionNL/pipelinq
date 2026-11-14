@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 /**
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The contact import dialog's flow: a search waits for two characters and a
- * pause, the picked contacts are imported one by one with the import type and
- * client, and a failed search or import leaves the dialog usable.
+ * ContactImportDialog's search and import, mounted with fetch doubled: the
+ * debounced search and its two-character floor, a failing or refused search,
+ * the empty state, and importing the marked cards for a client or as clients.
  *
- * Only HTTP (fetch) and the Nextcloud globals are replaced.
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -16,163 +16,191 @@ import { h } from 'vue'
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnDialog: {
 		name: 'CnDialog',
+		emits: ['closing'],
 		render() {
-			return h('div', [this.$slots.default?.(), this.$slots.actions?.()])
+			return h('div', { class: 'cn-dialog' }, [this.$slots.default?.(), this.$slots.actions?.()])
 		},
 	},
 }))
-vi.mock('@nextcloud/router', async (importOriginal) => ({
-	...(await importOriginal()),
-	generateUrl: (path) => '/index.php' + path,
-}))
+vi.mock('@nextcloud/router', () => ({ generateUrl: (url) => url }))
+vi.mock('@nextcloud/vue', () => {
+	const tag = (name, cls) => ({ props: ['disabled', 'variant', 'modelValue', 'label'], emits: ['click', 'update:modelValue', 'trailingButtonClick'], render() { return h(name, { class: cls, disabled: this.disabled ? '' : undefined, onClick: () => this.$emit('click') }, [this.$slots.icon?.(), this.$slots.default?.()]) } })
+	return { NcButton: tag('button', 'nc-button'), NcLoadingIcon: tag('span', 'nc-loading'), NcTextField: tag('div', 'nc-text-field') }
+})
 
 const { default: ContactImportDialog } = await import('../../src/dialogs/ContactImportDialog.vue')
 
+const CARDS = [
+	{ uid: 'a', name: 'Anouk Verhoef', email: 'a@example.nl', phone: '0612', addressBookKey: 'ab-1', alreadyLinked: false },
+	{ uid: 'b', name: 'Anna de Vries', addressBookKey: 'ab-1', alreadyLinked: false },
+	{ uid: 'c', name: '', addressBookKey: 'ab-2', alreadyLinked: true },
+]
+
 /**
- * A fetch answering per URL fragment.
+ * A fetch Response double.
  *
- * @param {Record<string, Function>} routes URL fragment to handler(url, init).
- * @return {Function} The fetch mock.
+ * @param {boolean} ok Whether the response is ok.
+ * @param {object} body The JSON body.
+ * @return {object} The response.
  */
-function fetchRoutes(routes) {
-	return vi.fn(async (url, init) => {
-		for (const [fragment, handler] of Object.entries(routes)) {
-			if (url.includes(fragment)) {
-				return handler(url, init)
-			}
-		}
-		throw new Error('unexpected ' + url)
-	})
+const response = (ok, body = {}) => ({ ok, json: async () => body })
+
+let fetchMock
+
+beforeEach(() => {
+	vi.useFakeTimers()
+	fetchMock = vi.fn(async (url) => (url.includes('/search') ? response(true, { results: CARDS.map((card) => ({ ...card })) }) : response(true, { object: { id: 'new' } })))
+	vi.stubGlobal('fetch', fetchMock)
+	vi.stubGlobal('OC', { requestToken: 'token-1' })
+})
+
+afterEach(() => {
+	vi.useRealTimers()
+	vi.unstubAllGlobals()
+})
+
+/**
+ * Type into the search box and let the debounce and the fetch settle.
+ *
+ * @param {object} wrapper The dialog.
+ * @param {string} value What is typed.
+ * @return {Promise<void>}
+ */
+async function search(wrapper, value) {
+	await wrapper.findComponent('.nc-text-field').vm.$emit('update:modelValue', value)
+	vi.advanceTimersByTime(300)
+	await flushPromises()
 }
 
-const ok = (data) => ({ ok: true, json: async () => data })
+/**
+ * The action button whose text starts with the given label.
+ *
+ * @param {object} wrapper The dialog.
+ * @param {string} label The label.
+ * @return {object} The button.
+ */
+const actionButton = (wrapper, label) => wrapper.findAll('button.nc-button').find((b) => b.text().startsWith(label))
 
-describe('the contact import dialog flow', () => {
-	beforeEach(() => {
-		vi.stubGlobal('OC', { requestToken: 'token-1' })
-	})
+describe('ContactImportDialog search', () => {
+	it('searches 300 ms after typing, encoded, and lists the cards with their meta line', async () => {
+		const wrapper = mount(ContactImportDialog)
 
-	afterEach(() => {
-		vi.unstubAllGlobals()
-		vi.useRealTimers()
-	})
-
-	it('searches 300 ms after the last keystroke, and not below two characters', async () => {
-		vi.useFakeTimers()
-		const fetchMock = fetchRoutes({
-			'/contacts-sync/search': () => ok({ results: [{ uid: 'a', name: 'Anouk' }] }),
-		})
-		vi.stubGlobal('fetch', fetchMock)
-		const w = mount(ContactImportDialog)
-
-		w.vm.onSearch('a')
-		await vi.advanceTimersByTimeAsync(400)
+		await wrapper.findComponent('.nc-text-field').vm.$emit('update:modelValue', 'an co/1')
+		vi.advanceTimersByTime(299)
 		expect(fetchMock).not.toHaveBeenCalled()
-		expect(w.vm.results).toEqual([])
-
-		w.vm.onSearch('an')
-		w.vm.onSearch('ano k')
-		await vi.advanceTimersByTimeAsync(299)
-		expect(fetchMock).not.toHaveBeenCalled()
-		await vi.advanceTimersByTimeAsync(1)
+		vi.advanceTimersByTime(1)
 		await flushPromises()
 
-		expect(fetchMock).toHaveBeenCalledTimes(1)
-		const [url, init] = fetchMock.mock.calls[0]
-		expect(url).toBe('/index.php/apps/pipelinq/api/contacts-sync/search?q=ano%20k')
-		expect(init.headers).toEqual({
-			'Content-Type': 'application/json',
-			requesttoken: 'token-1',
-			'OCS-APIREQUEST': 'true',
-		})
-		expect(w.vm.results).toEqual([{ uid: 'a', name: 'Anouk' }])
-		expect(w.vm.searching).toBe(false)
-
-		w.vm.onClearSearch()
-		expect(w.vm.query).toBe('')
-		expect(w.vm.results).toEqual([])
+		expect(fetchMock.mock.calls[0]).toEqual(['/apps/pipelinq/api/contacts-sync/search?q=an%20co%2F1', { headers: { 'Content-Type': 'application/json', requesttoken: 'token-1', 'OCS-APIREQUEST': 'true' } }])
+		expect(wrapper.find('.import-dialog__count').text()).toBe('3 cards in your Nextcloud address books match "an co/1"')
+		expect(wrapper.findAll('.import-result__name').map((el) => el.text())).toEqual(['Anouk Verhoef', 'Anna de Vries', 'Unknown'])
+		expect(wrapper.findAll('.import-result__meta').map((el) => el.text())).toEqual(['a@example.nl · 0612', 'Unknown', 'Unknown'])
+		expect(wrapper.findAll('[data-testid="import-result-toggle"]')).toHaveLength(2)
+		expect(wrapper.find('.import-result__linked').text()).toBe('Already linked')
 	})
 
-	it('keeps the results on a refused search and empties them on a failed one', async () => {
-		vi.stubGlobal('fetch', fetchRoutes({ '/contacts-sync/search': () => ({ ok: false }) }))
-		const w = mount(ContactImportDialog)
-		await w.setData({ query: 'an', results: [{ uid: 'old' }] })
+	it('only the last of several quick keystrokes searches', async () => {
+		const wrapper = mount(ContactImportDialog)
+		const field = wrapper.findComponent('.nc-text-field')
 
-		await w.vm.doSearch()
-		expect(w.vm.results).toEqual([{ uid: 'old' }])
+		await field.vm.$emit('update:modelValue', 'an')
+		vi.advanceTimersByTime(200)
+		await field.vm.$emit('update:modelValue', 'ann')
+		vi.advanceTimersByTime(300)
+		await flushPromises()
 
-		vi.stubGlobal('fetch', fetchRoutes({ '/contacts-sync/search': () => { throw new Error('offline') } }))
-		await w.vm.doSearch()
-		expect(w.vm.results).toEqual([])
-		expect(w.vm.searching).toBe(false)
-
-		vi.stubGlobal('fetch', fetchRoutes({ '/contacts-sync/search': () => ok({}) }))
-		await w.vm.doSearch()
-		expect(w.vm.results).toEqual([])
+		expect(fetchMock.mock.calls.map((call) => call[0])).toEqual(['/apps/pipelinq/api/contacts-sync/search?q=ann'])
 	})
 
-	it('imports only the picked contacts, with the type and client, then closes', async () => {
-		const bodies = []
-		vi.stubGlobal('fetch', fetchRoutes({
-			'/contacts-sync/import': (url, init) => {
-				const body = JSON.parse(init.body)
-				bodies.push(body)
-				expect(init.method).toBe('POST')
-				if (body.uid === 'c') {
-					return { ok: false }
-				}
-				return ok({ object: { id: 'obj-' + body.uid } })
-			},
-		}))
-		const w = mount(ContactImportDialog, { props: { importType: 'contact', clientId: 'client-7' } })
-		await w.setData({
-			results: [
-				{ uid: 'a', addressBookKey: 'ab-1' },
-				{ uid: 'b', addressBookKey: 'ab-1' },
-				{ uid: 'c', addressBookKey: 'ab-2' },
-			],
-		})
-		w.vm.toggle(w.vm.results[0])
-		w.vm.toggle(w.vm.results[2])
+	it('under two characters clears the results without searching', async () => {
+		const wrapper = mount(ContactImportDialog)
+		await search(wrapper, 'an')
+		fetchMock.mockClear()
 
-		await w.vm.importSelected()
+		await search(wrapper, 'a')
 
-		expect(bodies).toEqual([
-			{ uid: 'a', addressBookKey: 'ab-1', type: 'contact', clientId: 'client-7' },
-			{ uid: 'c', addressBookKey: 'ab-2', type: 'contact', clientId: 'client-7' },
+		expect(fetchMock).not.toHaveBeenCalled()
+		expect(wrapper.findAll('.import-result')).toHaveLength(0)
+		expect(wrapper.text()).not.toContain('No contacts found')
+	})
+
+	it('clearing the box empties the query and the results', async () => {
+		const wrapper = mount(ContactImportDialog)
+		await search(wrapper, 'an')
+
+		await wrapper.findComponent('.nc-text-field').vm.$emit('trailingButtonClick')
+
+		expect(wrapper.findAll('.import-result')).toHaveLength(0)
+		expect(wrapper.vm.query).toBe('')
+	})
+
+	it('a refused search keeps the old results; a failing one shows none found', async () => {
+		const wrapper = mount(ContactImportDialog)
+		await search(wrapper, 'an')
+
+		fetchMock.mockResolvedValueOnce(response(false))
+		await search(wrapper, 'anna')
+		expect(wrapper.findAll('.import-result')).toHaveLength(3)
+
+		fetchMock.mockRejectedValueOnce(new Error('offline'))
+		await search(wrapper, 'anne')
+		expect(wrapper.findAll('.import-result')).toHaveLength(0)
+		expect(wrapper.find('.import-dialog__count').text()).toBe('No contacts found')
+		expect(wrapper.find('.nc-loading').exists()).toBe(false)
+	})
+})
+
+describe('ContactImportDialog import', () => {
+	it('imports the marked cards as clients, links them and closes', async () => {
+		const wrapper = mount(ContactImportDialog)
+		await search(wrapper, 'an')
+		const importAll = () => actionButton(wrapper, 'Import ')
+		expect(importAll().attributes('disabled')).toBe('')
+
+		const toggles = wrapper.findAll('[data-testid="import-result-toggle"]')
+		await toggles[0].trigger('click')
+		await toggles[1].trigger('click')
+		expect(importAll().text()).toBe('Import 2 contacts')
+		await importAll().trigger('click')
+		await flushPromises()
+
+		const posts = fetchMock.mock.calls.filter((call) => call[0] === '/apps/pipelinq/api/contacts-sync/import')
+		expect(posts.map((call) => [call[1].method, JSON.parse(call[1].body)])).toEqual([
+			['POST', { uid: 'a', addressBookKey: 'ab-1', type: 'client' }],
+			['POST', { uid: 'b', addressBookKey: 'ab-1', type: 'client' }],
 		])
-		expect(w.emitted('imported')).toEqual([[{ id: 'obj-a' }]])
-		expect(w.vm.results[0].alreadyLinked).toBe(true)
-		expect(w.vm.results[2].alreadyLinked).toBeUndefined()
-		expect(w.vm.selected).toEqual([])
-		expect(w.vm.importing).toBe(false)
-		expect(w.emitted('close')).toHaveLength(1)
+		expect(wrapper.emitted('imported')).toEqual([[{ id: 'new' }], [{ id: 'new' }]])
+		expect(wrapper.emitted('close')).toHaveLength(1)
+		expect(wrapper.findAll('.import-result__linked')).toHaveLength(3)
+		expect(wrapper.vm.selected).toEqual([])
 	})
 
-	it('imports a client without a client id, and survives a failed request', async () => {
-		const bodies = []
-		vi.stubGlobal('fetch', fetchRoutes({
-			'/contacts-sync/import': (url, init) => {
-				bodies.push(JSON.parse(init.body))
-				throw new Error('offline')
-			},
-		}))
-		const w = mount(ContactImportDialog)
-		await w.setData({ results: [{ uid: 'a', addressBookKey: 'ab-1' }] })
-		w.vm.toggle(w.vm.results[0])
+	it('imports as contacts of a client, and a failed card stays unlinked', async () => {
+		const wrapper = mount(ContactImportDialog, { props: { importType: 'contact', clientId: 'client-9' } })
+		await search(wrapper, 'an')
+		fetchMock.mockImplementation(async (url, init) => (JSON.parse(init.body).uid === 'a' ? response(false) : Promise.reject(new Error('offline'))))
 
-		await w.vm.importSelected()
+		const toggles = wrapper.findAll('[data-testid="import-result-toggle"]')
+		await toggles[0].trigger('click')
+		await toggles[1].trigger('click')
+		await actionButton(wrapper, 'Import ').trigger('click')
+		await flushPromises()
 
-		expect(bodies).toEqual([{ uid: 'a', addressBookKey: 'ab-1', type: 'client' }])
-		expect(w.emitted('imported')).toBeUndefined()
-		expect(w.emitted('close')).toHaveLength(1)
+		expect(fetchMock.mock.calls.filter((call) => call[1].body).map((call) => JSON.parse(call[1].body))).toEqual([
+			{ uid: 'a', addressBookKey: 'ab-1', type: 'contact', clientId: 'client-9' },
+			{ uid: 'b', addressBookKey: 'ab-1', type: 'contact', clientId: 'client-9' },
+		])
+		expect(wrapper.emitted('imported')).toBeUndefined()
+		expect(wrapper.emitted('close')).toHaveLength(1)
+		expect(wrapper.findAll('.import-result__linked')).toHaveLength(1)
 	})
 
-	it('describes a contact by email and phone, or as unknown', () => {
-		const w = mount(ContactImportDialog)
+	it('cancel and closing the dialog both ask to close', async () => {
+		const wrapper = mount(ContactImportDialog)
 
-		expect(w.vm.metaLine({ email: 'a@example.nl', phone: '06 1' })).toBe('a@example.nl · 06 1')
-		expect(w.vm.metaLine({ phone: '06 1' })).toBe('06 1')
-		expect(w.vm.metaLine({})).toBe('Unknown')
+		await actionButton(wrapper, 'Cancel').trigger('click')
+		await wrapper.findComponent({ name: 'CnDialog' }).vm.$emit('closing')
+
+		expect(wrapper.emitted('close')).toHaveLength(2)
 	})
 })

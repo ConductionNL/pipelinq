@@ -29,7 +29,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Service\EmailMessageRef;
 use OCA\OpenRegister\Service\LinkTarget;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EmailMatchServiceInterface;
 use OCA\Pipelinq\Util\AnyPayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
@@ -57,10 +58,9 @@ use Throwable;
  *
  * @spec openspec/specs/email-calendar-sync/spec.md
  */
-class EmailMatchService {
+class EmailMatchService implements EmailMatchServiceInterface {
 	use AnyPayloadToArray;
 	use RowIdOf;
-
 
 	/**
 	 * Public email-provider domains that should never trigger a
@@ -495,7 +495,7 @@ class EmailMatchService {
 	 */
 	public function getSettings(string $userId): array {
 		$json = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->settingsKeyFor(userId: $userId),
 			''
 		);
@@ -606,7 +606,7 @@ class EmailMatchService {
 		];
 
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->settingsKeyFor(userId: $userId),
 			json_encode($payload, JSON_UNESCAPED_UNICODE)
 		);
@@ -624,7 +624,7 @@ class EmailMatchService {
 	 */
 	public function getStatus(string $userId): array {
 		$json = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->statusKeyFor(userId: $userId),
 			''
 		);
@@ -678,7 +678,7 @@ class EmailMatchService {
 		];
 
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->statusKeyFor(userId: $userId),
 			json_encode($payload, JSON_UNESCAPED_UNICODE)
 		);
@@ -876,7 +876,7 @@ class EmailMatchService {
 	 * @return string The configured register slug, or '' when unconfigured.
 	 */
 	private function registerSlug(): string {
-		$registerSlug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerSlug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerSlug === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
@@ -894,7 +894,7 @@ class EmailMatchService {
 	 * @return string
 	 */
 	private function schemaSlug(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaSlug()
 
 	/**

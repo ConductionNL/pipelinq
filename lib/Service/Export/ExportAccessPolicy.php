@@ -28,7 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportAccessPolicyInterface;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -43,7 +44,7 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
-class ExportAccessPolicy {
+class ExportAccessPolicy implements ExportAccessPolicyInterface {
 	/**
 	 * App-config key for the export-analyst group.
 	 *
@@ -85,7 +86,7 @@ class ExportAccessPolicy {
 			return true;
 		}
 
-		$group = $this->appConfig->getValueString(Application::APP_ID, self::ANALYST_GROUP_KEY, '');
+		$group = $this->appConfig->getValueString(AppIdentity::APP_ID, self::ANALYST_GROUP_KEY, '');
 		if ($group === '') {
 			return false;
 		}

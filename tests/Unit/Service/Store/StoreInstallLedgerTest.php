@@ -161,4 +161,26 @@ class StoreInstallLedgerTest extends TestCase {
 		$this->assertSame('2026-10-28T06:00:00+01:00', $ledger->checkedAt());
 
 	}//end testTheLastCheckIsKept()
+	/**
+	 * Without a version on either side there is no update: an unversioned
+	 * install never reads as outdated, and an unversioned card never offers one.
+	 *
+	 * @return void
+	 */
+	public function testAMissingVersionIsNeverAnUpdate(): void {
+		$ledger = $this->ledger();
+		$ledger->record(slug: 'unversioned', version: '');
+		$ledger->record(slug: 'versioned', version: '1.0.0');
+
+		$cards = $ledger->annotate(
+			cards: [
+				['slug' => 'unversioned', 'version' => '9.9.9', 'kind' => 'pipeline'],
+				['slug' => 'versioned', 'kind' => 'pipeline'],
+			]
+		);
+
+		$this->assertSame([true, '', false], [$cards[0]['installed'], $cards[0]['installedVersion'], $cards[0]['updateAvailable']]);
+		$this->assertSame([true, '1.0.0', false], [$cards[1]['installed'], $cards[1]['installedVersion'], $cards[1]['updateAvailable']]);
+
+	}//end testAMissingVersionIsNeverAnUpdate()
 }//end class

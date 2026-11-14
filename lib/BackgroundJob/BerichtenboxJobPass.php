@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\BerichtenboxService;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -57,7 +57,7 @@ final class BerichtenboxJobPass {
 	 * warning and a failing $work an error, both logged under the job's name.
 	 *
 	 * @param string                               $job  The job name the log lines start with.
-	 * @param callable(BerichtenboxService): void $work The job's work, including its own success log.
+	 * @param callable(BerichtenboxServiceInterface): void $work The job's work, including its own success log.
 	 *
 	 * @return void
 	 *
@@ -65,7 +65,7 @@ final class BerichtenboxJobPass {
 	 */
 	public function run(string $job, callable $work): void {
 		try {
-			$service = $this->container->get(BerichtenboxService::class);
+			$service = $this->container->get(BerichtenboxServiceInterface::class);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				$job.': BerichtenboxService unavailable.',

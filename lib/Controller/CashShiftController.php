@@ -30,9 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\CashShiftService;
-use OCA\Pipelinq\Service\CashShiftSummaryService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\CashShiftSummaryServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -67,21 +67,21 @@ class CashShiftController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param CashShiftService $service The cash-shift service.
-	 * @param CashShiftSummaryService $summaries The cash-shift summary reader.
+	 * @param CashShiftServiceInterface $service The cash-shift service.
+	 * @param CashShiftSummaryServiceInterface $summaries The cash-shift summary reader.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private CashShiftService $service,
-		private CashShiftSummaryService $summaries,
+		private CashShiftServiceInterface $service,
+		private CashShiftSummaryServiceInterface $summaries,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

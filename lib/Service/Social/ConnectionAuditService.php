@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Kernel\Contracts\ConnectionAuditServiceInterface;
 use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
 use OCA\Pipelinq\Service\Competitor\FediverseWatchReader;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
@@ -58,7 +59,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *  this class exists to prevent, because a network that will not answer
  *  would then be recorded as a no.
  */
-class ConnectionAuditService {
+class ConnectionAuditService implements ConnectionAuditServiceInterface {
 
 	/**
 	 * The `socialConnection` schema slug.

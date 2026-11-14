@@ -23,10 +23,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ConnectionReportService;
-use OCA\Pipelinq\Service\CtiService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -56,27 +56,28 @@ use Psr\Log\LoggerInterface;
  *  CtiService surface to HTTP — coupling is unavoidable on a CRUD facade.
  *
  * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class CtiController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param CtiService $ctiService The CTI service.
+	 * @param CtiServiceInterface $ctiService The CTI service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ConnectionReportService $connectionReports Reports the CTI check to integriq's connection registry.
+	 * @param ConnectionReportServiceInterface $connectionReports Reports the CTI check to integriq's connection registry.
 	 */
 	public function __construct(
 		IRequest $request,
-		private CtiService $ctiService,
+		private CtiServiceInterface $ctiService,
 		private CrmPrivilegeCheck $privilege,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
-		private ConnectionReportService $connectionReports,
+		private ConnectionReportServiceInterface $connectionReports,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

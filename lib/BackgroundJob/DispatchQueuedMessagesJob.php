@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\BerichtenboxService;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Container\ContainerInterface;
@@ -86,7 +86,7 @@ class DispatchQueuedMessagesJob extends TimedJob {
 		$pass = new BerichtenboxJobPass(container: $this->container, logger: $this->logger);
 		$pass->run(
 			job: 'DispatchQueuedMessagesJob',
-			work: function (BerichtenboxService $service): void {
+			work: function (BerichtenboxServiceInterface $service): void {
 				$count = $service->dispatchQueuedMessages(self::BATCH_LIMIT);
 				$this->logger->info(
 					'DispatchQueuedMessagesJob processed messages.',
