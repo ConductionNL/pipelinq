@@ -275,12 +275,7 @@ class SocialPostService implements SocialPostServiceInterface {
 		$post['agentAuthored'] = ($agent !== '');
 		$post['agentAuthoredBy'] = $agent;
 
-		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post);
-		if ($saved === null) {
-			return ['error' => 'The post could not be saved.'];
-		}
-
-		return ['post' => $saved];
+		return $this->savedAnswer(post: $post);
 	}//end createPost()
 
 	/**
@@ -313,13 +308,25 @@ class SocialPostService implements SocialPostServiceInterface {
 			$update['createdBy'] = $uid;
 		}
 
-		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $update, id: $postId);
+		return $this->savedAnswer(post: $update, id: $postId);
+	}//end updatePost()
+
+	/**
+	 * Save a post and answer with it, or with an error when the save failed.
+	 *
+	 * @param array<string, mixed> $post The post.
+	 * @param string|null          $id   The post id, null for a new post.
+	 *
+	 * @return array{error?: string, post?: array<string, mixed>} The post, or an error.
+	 */
+	private function savedAnswer(array $post, ?string $id = null): array {
+		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $id);
 		if ($saved === null) {
 			return ['error' => 'The post could not be saved.'];
 		}
 
 		return ['post' => $saved];
-	}//end updatePost()
+	}//end savedAnswer()
 
 	/**
 	 * The body, link and media one network gets: the post's own values with
@@ -419,12 +426,7 @@ class SocialPostService implements SocialPostServiceInterface {
 		}
 
 		$post['status'] = self::STATUS_APPROVAL;
-		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $postId);
-		if ($saved === null) {
-			return ['error' => 'The post could not be saved.'];
-		}
-
-		return ['post' => $saved];
+		return $this->savedAnswer(post: $post, id: $postId);
 	}//end submitForApproval()
 
 	/**
@@ -722,20 +724,11 @@ class SocialPostService implements SocialPostServiceInterface {
 	 * @spec openspec/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
 	 */
 	private function decoratedLink(array $post, string $network, string $link): string {
-		$campaignId = trim((string)($post['campaignId'] ?? ''));
-		if ($link === '' || $campaignId === '' || $this->links->isEnabled() === false) {
-			return $link;
+		$campaign = '';
+		if ($link !== '') {
+			$campaign = $this->utmCampaignOf(post: $post);
 		}
 
-		// The campaign OWNS its utm value: CampaignService mints it once and
-		// freezes it across a rename, so two mailings and three posts of one
-		// campaign roll up together. Slugifying the id here instead would put a
-		// UUID in the query string and split the campaign into as many rows as
-		// it has channels. A campaignId naming no campaign row still works,
-		// because a marketer can fill the field in before a campaign exists.
-		$campaign = CampaignLinkDecorator::slugify(
-			value: (string)($this->campaigns->find(id: $campaignId)['utmCampaign'] ?? $campaignId),
-		);
 		if ($campaign === '') {
 			return $link;
 		}
@@ -752,6 +745,30 @@ class SocialPostService implements SocialPostServiceInterface {
 
 		return ($decorated ?? $link);
 	}//end decoratedLink()
+
+	/**
+	 * The utm_campaign value of a post's campaign; '' when it names none or link decoration is off.
+	 *
+	 * @param array<string, mixed> $post The post.
+	 *
+	 * @return string The slugified campaign value, or ''.
+	 */
+	private function utmCampaignOf(array $post): string {
+		$campaignId = trim((string)($post['campaignId'] ?? ''));
+		if ($campaignId === '' || $this->links->isEnabled() === false) {
+			return '';
+		}
+
+		// The campaign OWNS its utm value: CampaignService mints it once and
+		// freezes it across a rename, so two mailings and three posts of one
+		// campaign roll up together. Slugifying the id here instead would put a
+		// UUID in the query string and split the campaign into as many rows as
+		// it has channels. A campaignId naming no campaign row still works,
+		// because a marketer can fill the field in before a campaign exists.
+		return CampaignLinkDecorator::slugify(
+			value: (string)($this->campaigns->find(id: $campaignId)['utmCampaign'] ?? $campaignId),
+		);
+	}//end utmCampaignOf()
 
 	/**
 	 * The spend refusal for a network that charges, or null when it may go.
