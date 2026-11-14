@@ -452,7 +452,7 @@ class EmailMatchService implements EmailMatchServiceInterface {
 		$lastId = (int)$settings['cursor'];
 
 		$messages = (new MailMessageReader(db: $this->db, logger: $this->logger))->listInbound(accountId: $settings['account'], sinceId: $lastId);
-		$run = $this->scanMessages(messages: $messages, accountId: $settings['account'], userId: $userId, lastId: $lastId);
+		$run = $this->scanMessages(messages: $messages, scan: ['accountId' => $settings['account'], 'userId' => $userId, 'lastId' => $lastId]);
 		$scanned = $run['scanned'];
 		$linked = $run['linked'];
 		$maxId = $run['maxId'];
@@ -485,17 +485,17 @@ class EmailMatchService implements EmailMatchServiceInterface {
 	/**
 	 * Match and link each inbound message; a per-message failure does not abort the scan.
 	 *
-	 * @param iterable<array<string, mixed>> $messages  The inbound messages since the cursor.
-	 * @param int                            $accountId The Mail account id.
-	 * @param string                         $userId    The user id.
-	 * @param int                            $lastId    The cursor the scan starts after.
+	 * @param iterable<array<string, mixed>>                      $messages The inbound messages since the cursor.
+	 * @param array{accountId: int, userId: string, lastId: int} $scan     The Mail account id, the user id and the cursor the scan starts after.
 	 *
 	 * @return array{linked: int, scanned: int, maxId: int}
 	 */
-	private function scanMessages(iterable $messages, int $accountId, string $userId, int $lastId): array {
+	private function scanMessages(iterable $messages, array $scan): array {
+		$accountId = $scan['accountId'];
+		$userId = $scan['userId'];
 		$scanned = 0;
 		$linked = 0;
-		$maxId = $lastId;
+		$maxId = $scan['lastId'];
 
 		foreach ($messages as $msg) {
 			$scanned++;
