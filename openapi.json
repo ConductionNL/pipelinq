@@ -5054,6 +5054,11 @@
                 "responses": {
                     "200": {
                         "description": "The state of the last export.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
