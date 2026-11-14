@@ -81,6 +81,9 @@ class DemoSeedServiceTest extends TestCase {
 		'product_schema' => '27',
 		'task_schema' => '28',
 		'contract_schema' => '29',
+		'service_schema' => '30',
+		'resource_schema' => '31',
+		'booking_schema' => '32',
 	];
 
 	/**
@@ -102,6 +105,9 @@ class DemoSeedServiceTest extends TestCase {
 		'contactmomenten' => [self::TICKET_SCHEMA_ID, 'subject', 'title', 'interaction'],
 		'tasks' => ['28', 'subject', 'subject', null],
 		'contracts' => ['29', 'title', 'title', null],
+		'appointmentServices' => ['30', 'name', 'name', null],
+		'appointmentResources' => ['31', 'name', 'name', null],
+		'appointmentBookings' => ['32', 'subject', 'subject', null],
 	];
 
 	/**
@@ -493,6 +499,9 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertSame(12, $result['created']['contactmomenten']);
 		self::assertSame(3, $result['created']['tasks']);
 		self::assertSame(2, $result['created']['contracts']);
+		self::assertSame(7, $result['created']['appointmentServices']);
+		self::assertSame(7, $result['created']['appointmentResources']);
+		self::assertSame(24, $result['created']['appointmentBookings']);
 		self::assertSame(0, array_sum($result['skipped']));
 
 		// Every seeded object carries the demo marker on its lookup field.
@@ -537,6 +546,27 @@ class DemoSeedServiceTest extends TestCase {
 			array_filter($savedPayloads, static fn (array $p): bool => $p['schema'] === '29')
 		);
 		self::assertCount(2, $contracts);
+
+		// Every booking points at a seeded client, service and resource, with
+		// the seed-file keys gone, and falls in the week the seed runs.
+		$uuidsOf = static fn (string $schema): array => array_column(
+			array_filter($savedPayloads, static fn (array $p): bool => $p['schema'] === $schema),
+			'uuid'
+		);
+		$monday = (new \DateTimeImmutable('monday this week'))->setTime(0, 0);
+		$bookings = array_filter($savedPayloads, static fn (array $p): bool => $p['schema'] === '32');
+		self::assertCount(24, $bookings);
+		foreach ($bookings as $booking) {
+			self::assertContains($booking['data']['customerId'], $clientUuids);
+			self::assertContains($booking['data']['serviceId'], $uuidsOf('30'));
+			$start = new \DateTimeImmutable($booking['data']['startAt']);
+			self::assertGreaterThanOrEqual($monday, $start);
+			self::assertLessThan($monday->modify('+7 days'), $start);
+			foreach ($booking['data']['resourceAssignments'] as $assignment) {
+				self::assertContains($assignment['resourceId'], $uuidsOf('31'));
+				self::assertArrayNotHasKey('resourceKey', $assignment);
+			}
+		}
 		foreach ($contracts as $contract) {
 			self::assertArrayHasKey('clientRef', $contract['data']);
 			self::assertArrayNotHasKey('client', $contract['data']);
@@ -616,7 +646,8 @@ class DemoSeedServiceTest extends TestCase {
 
 		self::assertTrue($result['success']);
 		self::assertSame(0, array_sum($result['created']));
-		self::assertSame(48, array_sum($result['skipped']));
+		// 48 CRM objects + 7 services, 7 resources and 24 bookings.
+		self::assertSame(86, array_sum($result['skipped']));
 	}//end testSeedIsIdempotentOnRerun()
 
 	/**
@@ -704,8 +735,8 @@ class DemoSeedServiceTest extends TestCase {
 		$result = $this->service->remove();
 
 		self::assertTrue($result['success']);
-		self::assertSame(48, array_sum($result['removed']));
-		self::assertCount(48, $deleted);
+		self::assertSame(86, array_sum($result['removed']));
+		self::assertCount(86, $deleted);
 
 		// The non-demo decoy rows are never deleted.
 		foreach ($deleted as $uuid) {
@@ -761,8 +792,9 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertSame(3, $result['retained']['complaints']);
 		self::assertSame(0, $result['removed']['complaints']);
 		// Clients (5) + contacts (4) + pipelines (2) + products (3) + leads (6)
-		// + tasks (3) + contracts (2) are on their own schemas and still delete.
-		self::assertSame(25, array_sum($result['removed']));
+		// + tasks (3) + contracts (2) + services (7) + resources (7) + bookings (24)
+		// are on their own schemas and still delete.
+		self::assertSame(63, array_sum($result['removed']));
 	}//end testRemoveRetainsArchivalSchemaRows()
 
 	/**

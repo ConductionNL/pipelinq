@@ -20,4 +20,5 @@
   - Verify: vitest for the new cells and cards; one Playwright test on the example services and Fatma Yildiz
 
 ## 4. Example data
-- [ ] 4.1 `lib/Settings/pipelinq_example_register.json`: the board's seven services and the resources they match, with bookings in the current week
+- [x] 4.1 `lib/Settings/pipelinq_example_register.json`: the board's seven services and the resources they match, with bookings in the current week
+  - Built in `lib/Settings/demo_seed_data.json` (DemoSeedService) instead: the example register is imported as written, so it cannot hold bookings in the current week; the demo seed resolves the new `@week:D[THH:MM]` placeholder and links each booking to the services, resources and clients it saved

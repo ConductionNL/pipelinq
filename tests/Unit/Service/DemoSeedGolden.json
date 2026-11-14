@@ -5,6 +5,9 @@
                 "success": true,
                 "removed": {
                     "journeys": 5,
+                    "appointmentBookings": 24,
+                    "appointmentResources": 7,
+                    "appointmentServices": 7,
                     "contracts": 2,
                     "tasks": 3,
                     "contactmomenten": 0,
@@ -17,6 +20,9 @@
                     "clients": 5
                 },
                 "retained": {
+                    "appointmentBookings": 0,
+                    "appointmentResources": 0,
+                    "appointmentServices": 0,
                     "contracts": 0,
                     "tasks": 0,
                     "contactmomenten": 0,
@@ -47,6 +53,10 @@
                         "contactmomenten",
                         "contracts",
                         "tasks",
+                        "_appointmentsNote",
+                        "appointmentServices",
+                        "appointmentResources",
+                        "appointmentBookings",
                         "_journeysNote",
                         "journeys",
                         "_socialNote",
@@ -54,6 +64,346 @@
                         "_searchNote",
                         "search"
                     ]
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "booking_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-0",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-1",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-2",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-3",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-4",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-5",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-6",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-7",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-8",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-9",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-10",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-11",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-12",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-13",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-14",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-15",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-16",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-17",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-18",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-19",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-20",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-21",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-22",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-23",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "resource_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-0",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-1",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-2",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-3",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-4",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-5",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-6",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "service_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-0",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-1",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-2",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-3",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-4",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-5",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-6",
+                    "register": "reg",
+                    "schema": "service_schema-id"
                 }
             },
             {
@@ -488,6 +838,10 @@
                         "contactmomenten",
                         "contracts",
                         "tasks",
+                        "_appointmentsNote",
+                        "appointmentServices",
+                        "appointmentResources",
+                        "appointmentBookings",
                         "_journeysNote",
                         "journeys",
                         "_socialNote",
@@ -495,6 +849,346 @@
                         "_searchNote",
                         "search"
                     ]
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "booking_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-0",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-1",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-2",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-3",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-4",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-5",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-6",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-7",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-8",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-9",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-10",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-11",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-12",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-13",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-14",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-15",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-16",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-17",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-18",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-19",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-20",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-21",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-22",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-23",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "resource_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-0",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-1",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-2",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-3",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-4",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-5",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-6",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "service_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-0",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-1",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-2",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-3",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-4",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-5",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-6",
+                    "register": "reg",
+                    "schema": "service_schema-id"
                 }
             },
             {
@@ -525,6 +1219,9 @@
                 "success": true,
                 "removed": {
                     "journeys": 5,
+                    "appointmentBookings": 26,
+                    "appointmentResources": 9,
+                    "appointmentServices": 9,
                     "contracts": 4,
                     "tasks": 5,
                     "contactmomenten": 0,
@@ -537,6 +1234,9 @@
                     "clients": 7
                 },
                 "retained": {
+                    "appointmentBookings": 0,
+                    "appointmentResources": 0,
+                    "appointmentServices": 0,
                     "contracts": 0,
                     "tasks": 0,
                     "contactmomenten": 0,
@@ -567,6 +1267,10 @@
                         "contactmomenten",
                         "contracts",
                         "tasks",
+                        "_appointmentsNote",
+                        "appointmentServices",
+                        "appointmentResources",
+                        "appointmentBookings",
                         "_journeysNote",
                         "journeys",
                         "_socialNote",
@@ -574,6 +1278,394 @@
                         "_searchNote",
                         "search"
                     ]
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "booking_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-0",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-0-duplicate",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-0-by-uuid",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-1",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-2",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-3",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-4",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-5",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-6",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-7",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-8",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-9",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-10",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-11",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-12",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-13",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-14",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-15",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-16",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-17",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-18",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-19",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-20",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-21",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-22",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentBookings-23",
+                    "register": "reg",
+                    "schema": "booking_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "resource_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-0",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-0-duplicate",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-0-by-uuid",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-1",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-2",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-3",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-4",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-5",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentResources-6",
+                    "register": "reg",
+                    "schema": "resource_schema-id"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "service_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-0",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-0-duplicate",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-0-by-uuid",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-1",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-2",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-3",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-4",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-5",
+                    "register": "reg",
+                    "schema": "service_schema-id"
+                }
+            },
+            {
+                "call": "deleteObject",
+                "args": {
+                    "uuid": "appointmentServices-6",
+                    "register": "reg",
+                    "schema": "service_schema-id"
                 }
             },
             {
@@ -1140,6 +2232,9 @@
                     "contactmomenten": 12,
                     "tasks": 3,
                     "contracts": 2,
+                    "appointmentServices": 7,
+                    "appointmentResources": 7,
+                    "appointmentBookings": 24,
                     "journeys": 5
                 },
                 "skipped": {
@@ -1153,6 +2248,9 @@
                     "contactmomenten": 0,
                     "tasks": 0,
                     "contracts": 0,
+                    "appointmentServices": 0,
+                    "appointmentResources": 0,
+                    "appointmentBookings": 0,
                     "journeys": 0
                 },
                 "relinked": {
@@ -1165,7 +2263,10 @@
                     "complaints": 0,
                     "contactmomenten": 0,
                     "tasks": 0,
-                    "contracts": 0
+                    "contracts": 0,
+                    "appointmentServices": 0,
+                    "appointmentResources": 0,
+                    "appointmentBookings": 0
                 }
             }
         },
@@ -2483,6 +3584,1182 @@
                 }
             },
             {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "service_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Paspoort of ID-kaart aanvragen",
+                        "description": "Aanvraag van een paspoort of identiteitskaart aan de balie, met pasfoto en vingerafdrukken.",
+                        "durationMinutes": 20,
+                        "bufferBeforeMinutes": 0,
+                        "bufferAfterMinutes": 5,
+                        "requiredSkills": [
+                            "burgerzaken"
+                        ],
+                        "requiredResourceTypes": [
+                            "room"
+                        ],
+                        "multiStep": [],
+                        "bookableOnline": true,
+                        "requiresDeposit": false,
+                        "cancellationPolicy": "free",
+                        "cancellationHoursBefore": 24,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "service_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Rijbewijs aanvragen of verlengen",
+                        "description": "Aanvraag of verlenging van een rijbewijs aan de balie.",
+                        "durationMinutes": 15,
+                        "bufferBeforeMinutes": 0,
+                        "bufferAfterMinutes": 5,
+                        "requiredSkills": [
+                            "burgerzaken"
+                        ],
+                        "requiredResourceTypes": [
+                            "room"
+                        ],
+                        "multiStep": [],
+                        "bookableOnline": true,
+                        "requiresDeposit": false,
+                        "cancellationPolicy": "free",
+                        "cancellationHoursBefore": 24,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "service_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Verhuizing doorgeven",
+                        "description": "Hulp bij het doorgeven van een verhuizing naar of binnen de gemeente.",
+                        "durationMinutes": 15,
+                        "bufferBeforeMinutes": 0,
+                        "bufferAfterMinutes": 0,
+                        "requiredSkills": [
+                            "burgerzaken"
+                        ],
+                        "requiredResourceTypes": [
+                            "staff"
+                        ],
+                        "multiStep": [],
+                        "bookableOnline": true,
+                        "requiresDeposit": false,
+                        "cancellationPolicy": "free",
+                        "cancellationHoursBefore": 24,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "service_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Uittreksel BRP ophalen",
+                        "description": "Een uittreksel uit de Basisregistratie Personen, direct mee naar huis.",
+                        "durationMinutes": 10,
+                        "bufferBeforeMinutes": 0,
+                        "bufferAfterMinutes": 0,
+                        "requiredSkills": [
+                            "burgerzaken"
+                        ],
+                        "requiredResourceTypes": [
+                            "staff"
+                        ],
+                        "multiStep": [],
+                        "bookableOnline": true,
+                        "requiresDeposit": false,
+                        "cancellationPolicy": "free",
+                        "cancellationHoursBefore": 24,
+                        "status": "active",
+                        "price": 14.4,
+                        "currency": "EUR"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "service_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Keukentafelgesprek Wmo",
+                        "description": "Gesprek met een Wmo-consulent over ondersteuning thuis.",
+                        "durationMinutes": 60,
+                        "bufferBeforeMinutes": 0,
+                        "bufferAfterMinutes": 15,
+                        "requiredSkills": [
+                            "wmo"
+                        ],
+                        "requiredResourceTypes": [
+                            "staff"
+                        ],
+                        "multiStep": [],
+                        "bookableOnline": true,
+                        "requiresDeposit": false,
+                        "cancellationPolicy": "free",
+                        "cancellationHoursBefore": 24,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "service_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Huwelijk of partnerschap plannen",
+                        "description": "Gesprek met de trouwambtenaar om de ceremonie te plannen. Nog in voorbereiding.",
+                        "durationMinutes": 45,
+                        "bufferBeforeMinutes": 0,
+                        "bufferAfterMinutes": 15,
+                        "requiredSkills": [
+                            "trouwambtenaar"
+                        ],
+                        "requiredResourceTypes": [
+                            "staff"
+                        ],
+                        "multiStep": [],
+                        "bookableOnline": false,
+                        "requiresDeposit": false,
+                        "cancellationPolicy": "free",
+                        "cancellationHoursBefore": 24,
+                        "status": "draft"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "service_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Gevonden voorwerp ophalen",
+                        "description": "Een gevonden voorwerp ophalen bij de balie; alleen op afspraak via de telefoon.",
+                        "durationMinutes": 10,
+                        "bufferBeforeMinutes": 0,
+                        "bufferAfterMinutes": 0,
+                        "requiredSkills": [],
+                        "requiredResourceTypes": [
+                            "staff"
+                        ],
+                        "multiStep": [],
+                        "bookableOnline": false,
+                        "requiresDeposit": false,
+                        "cancellationPolicy": "free",
+                        "cancellationHoursBefore": 24,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "service_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "resource_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Balie 1, stadskantoor",
+                        "type": "room",
+                        "skills": [
+                            "burgerzaken"
+                        ],
+                        "workingHours": [
+                            {
+                                "day": "monday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "tuesday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "wednesday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "thursday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "friday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            }
+                        ],
+                        "vacations": [],
+                        "bookable": true,
+                        "maxConcurrent": 1,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "resource_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Balie 2, stadskantoor",
+                        "type": "room",
+                        "skills": [
+                            "burgerzaken"
+                        ],
+                        "workingHours": [
+                            {
+                                "day": "monday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "tuesday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "wednesday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "thursday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "friday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            }
+                        ],
+                        "vacations": [],
+                        "bookable": true,
+                        "maxConcurrent": 1,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "resource_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Balie 3, stadskantoor",
+                        "type": "room",
+                        "skills": [
+                            "burgerzaken"
+                        ],
+                        "workingHours": [
+                            {
+                                "day": "monday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "tuesday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "wednesday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "thursday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "friday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            }
+                        ],
+                        "vacations": [],
+                        "bookable": true,
+                        "maxConcurrent": 1,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "resource_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Balie 4, stadskantoor",
+                        "type": "room",
+                        "skills": [
+                            "burgerzaken"
+                        ],
+                        "workingHours": [
+                            {
+                                "day": "monday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "tuesday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "wednesday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "thursday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "friday",
+                                "openTime": "08:30",
+                                "closeTime": "17:00"
+                            }
+                        ],
+                        "vacations": [],
+                        "bookable": true,
+                        "maxConcurrent": 1,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "resource_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Fatma Yildiz",
+                        "type": "staff",
+                        "skills": [
+                            "burgerzaken"
+                        ],
+                        "workingHours": [
+                            {
+                                "day": "monday",
+                                "openTime": "08:30",
+                                "closeTime": "16:45"
+                            },
+                            {
+                                "day": "tuesday",
+                                "openTime": "08:30",
+                                "closeTime": "16:45"
+                            },
+                            {
+                                "day": "wednesday",
+                                "openTime": "08:30",
+                                "closeTime": "16:45"
+                            },
+                            {
+                                "day": "thursday",
+                                "openTime": "08:30",
+                                "closeTime": "16:45"
+                            }
+                        ],
+                        "vacations": [],
+                        "bookable": true,
+                        "maxConcurrent": 1,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "resource_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Pieter de Wit",
+                        "type": "staff",
+                        "skills": [
+                            "wmo"
+                        ],
+                        "workingHours": [
+                            {
+                                "day": "monday",
+                                "openTime": "09:00",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "wednesday",
+                                "openTime": "09:00",
+                                "closeTime": "17:00"
+                            },
+                            {
+                                "day": "friday",
+                                "openTime": "09:00",
+                                "closeTime": "17:00"
+                            }
+                        ],
+                        "vacations": [],
+                        "bookable": true,
+                        "maxConcurrent": 1,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "resource_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "name": "[Demo] Anouk Smit",
+                        "type": "staff",
+                        "skills": [
+                            "burgerzaken"
+                        ],
+                        "workingHours": [
+                            {
+                                "day": "monday",
+                                "openTime": "09:00",
+                                "closeTime": "13:00"
+                            },
+                            {
+                                "day": "tuesday",
+                                "openTime": "09:00",
+                                "closeTime": "13:00"
+                            },
+                            {
+                                "day": "wednesday",
+                                "openTime": "09:00",
+                                "closeTime": "13:00"
+                            },
+                            {
+                                "day": "thursday",
+                                "openTime": "09:00",
+                                "closeTime": "13:00"
+                            },
+                            {
+                                "day": "friday",
+                                "openTime": "09:00",
+                                "closeTime": "13:00"
+                            }
+                        ],
+                        "vacations": [
+                            {
+                                "startDate": "@week:0",
+                                "endDate": "@week:6",
+                                "label": "Vakantie"
+                            }
+                        ],
+                        "bookable": true,
+                        "maxConcurrent": 1,
+                        "status": "active"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "resource_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "booking_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Verhuizing doorgeven, Anna Jansen (ma 09:00)",
+                        "startAt": "@week:0T09:00",
+                        "endAt": "@week:0T09:15",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:0T09:00",
+                                "endAt": "@week:0T09:15",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-7",
+                        "serviceId": "saved-71"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Uittreksel BRP ophalen, Pieter de Vries (ma 10:30)",
+                        "startAt": "@week:0T10:30",
+                        "endAt": "@week:0T10:40",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:0T10:30",
+                                "endAt": "@week:0T10:40",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-9",
+                        "serviceId": "saved-72"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Verhuizing doorgeven, Samira El Harrak (ma 14:00)",
+                        "startAt": "@week:0T14:00",
+                        "endAt": "@week:0T14:15",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:0T14:00",
+                                "endAt": "@week:0T14:15",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-11",
+                        "serviceId": "saved-71"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Uittreksel BRP ophalen, Anna Jansen (di 09:15)",
+                        "startAt": "@week:1T09:15",
+                        "endAt": "@week:1T09:25",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:1T09:15",
+                                "endAt": "@week:1T09:25",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-7",
+                        "serviceId": "saved-72"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Verhuizing doorgeven, Pieter de Vries (di 11:00)",
+                        "startAt": "@week:1T11:00",
+                        "endAt": "@week:1T11:15",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:1T11:00",
+                                "endAt": "@week:1T11:15",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-9",
+                        "serviceId": "saved-71"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Uittreksel BRP ophalen, Samira El Harrak (di 15:30)",
+                        "startAt": "@week:1T15:30",
+                        "endAt": "@week:1T15:40",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:1T15:30",
+                                "endAt": "@week:1T15:40",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-11",
+                        "serviceId": "saved-72"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Verhuizing doorgeven, Anna Jansen (wo 08:45)",
+                        "startAt": "@week:2T08:45",
+                        "endAt": "@week:2T09:00",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:2T08:45",
+                                "endAt": "@week:2T09:00",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-7",
+                        "serviceId": "saved-71"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Uittreksel BRP ophalen, Pieter de Vries (wo 10:00)",
+                        "startAt": "@week:2T10:00",
+                        "endAt": "@week:2T10:10",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:2T10:00",
+                                "endAt": "@week:2T10:10",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-9",
+                        "serviceId": "saved-72"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Verhuizing doorgeven, Samira El Harrak (wo 13:30)",
+                        "startAt": "@week:2T13:30",
+                        "endAt": "@week:2T13:45",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:2T13:30",
+                                "endAt": "@week:2T13:45",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-11",
+                        "serviceId": "saved-71"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Uittreksel BRP ophalen, Anna Jansen (do 09:00)",
+                        "startAt": "@week:3T09:00",
+                        "endAt": "@week:3T09:10",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:3T09:00",
+                                "endAt": "@week:3T09:10",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-7",
+                        "serviceId": "saved-72"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Verhuizing doorgeven, Pieter de Vries (do 11:15)",
+                        "startAt": "@week:3T11:15",
+                        "endAt": "@week:3T11:30",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:3T11:15",
+                                "endAt": "@week:3T11:30",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-9",
+                        "serviceId": "saved-71"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Uittreksel BRP ophalen, Samira El Harrak (do 14:45)",
+                        "startAt": "@week:3T14:45",
+                        "endAt": "@week:3T14:55",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:3T14:45",
+                                "endAt": "@week:3T14:55",
+                                "resourceId": "saved-81"
+                            }
+                        ],
+                        "customerId": "saved-11",
+                        "serviceId": "saved-72"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Paspoort of ID-kaart aanvragen, Pieter de Vries (ma 09:00)",
+                        "startAt": "@week:0T09:00",
+                        "endAt": "@week:0T09:20",
+                        "status": "no-show",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:0T09:00",
+                                "endAt": "@week:0T09:20",
+                                "resourceId": "saved-77"
+                            }
+                        ],
+                        "customerId": "saved-9",
+                        "serviceId": "saved-69"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Paspoort of ID-kaart aanvragen, Samira El Harrak (ma 09:30)",
+                        "startAt": "@week:0T09:30",
+                        "endAt": "@week:0T09:50",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:0T09:30",
+                                "endAt": "@week:0T09:50",
+                                "resourceId": "saved-78"
+                            }
+                        ],
+                        "customerId": "saved-11",
+                        "serviceId": "saved-69"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Paspoort of ID-kaart aanvragen, Anna Jansen (di 10:00)",
+                        "startAt": "@week:1T10:00",
+                        "endAt": "@week:1T10:20",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:1T10:00",
+                                "endAt": "@week:1T10:20",
+                                "resourceId": "saved-77"
+                            }
+                        ],
+                        "customerId": "saved-7",
+                        "serviceId": "saved-69"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Paspoort of ID-kaart aanvragen, Pieter de Vries (di 10:00)",
+                        "startAt": "@week:1T10:00",
+                        "endAt": "@week:1T10:20",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:1T10:00",
+                                "endAt": "@week:1T10:20",
+                                "resourceId": "saved-79"
+                            }
+                        ],
+                        "customerId": "saved-9",
+                        "serviceId": "saved-69"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Paspoort of ID-kaart aanvragen, Samira El Harrak (wo 11:00)",
+                        "startAt": "@week:2T11:00",
+                        "endAt": "@week:2T11:20",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:2T11:00",
+                                "endAt": "@week:2T11:20",
+                                "resourceId": "saved-78"
+                            }
+                        ],
+                        "customerId": "saved-11",
+                        "serviceId": "saved-69"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Paspoort of ID-kaart aanvragen, Anna Jansen (do 09:00)",
+                        "startAt": "@week:3T09:00",
+                        "endAt": "@week:3T09:20",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:3T09:00",
+                                "endAt": "@week:3T09:20",
+                                "resourceId": "saved-80"
+                            }
+                        ],
+                        "customerId": "saved-7",
+                        "serviceId": "saved-69"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Paspoort of ID-kaart aanvragen, Pieter de Vries (do 13:00)",
+                        "startAt": "@week:3T13:00",
+                        "endAt": "@week:3T13:20",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:3T13:00",
+                                "endAt": "@week:3T13:20",
+                                "resourceId": "saved-77"
+                            }
+                        ],
+                        "customerId": "saved-9",
+                        "serviceId": "saved-69"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Paspoort of ID-kaart aanvragen, Samira El Harrak (vr 10:30)",
+                        "startAt": "@week:4T10:30",
+                        "endAt": "@week:4T10:50",
+                        "status": "confirmed",
+                        "source": "portal",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:4T10:30",
+                                "endAt": "@week:4T10:50",
+                                "resourceId": "saved-78"
+                            }
+                        ],
+                        "customerId": "saved-11",
+                        "serviceId": "saved-69"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Rijbewijs aanvragen of verlengen, Anna Jansen (di 14:00)",
+                        "startAt": "@week:1T14:00",
+                        "endAt": "@week:1T14:15",
+                        "status": "confirmed",
+                        "source": "phone",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:1T14:00",
+                                "endAt": "@week:1T14:15",
+                                "resourceId": "saved-80"
+                            }
+                        ],
+                        "customerId": "saved-7",
+                        "serviceId": "saved-70"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Rijbewijs aanvragen of verlengen, Pieter de Vries (vr 09:00)",
+                        "startAt": "@week:4T09:00",
+                        "endAt": "@week:4T09:15",
+                        "status": "confirmed",
+                        "source": "phone",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:4T09:00",
+                                "endAt": "@week:4T09:15",
+                                "resourceId": "saved-79"
+                            }
+                        ],
+                        "customerId": "saved-9",
+                        "serviceId": "saved-70"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Keukentafelgesprek Wmo, Samira El Harrak (ma 10:00)",
+                        "startAt": "@week:0T10:00",
+                        "endAt": "@week:0T11:00",
+                        "status": "confirmed",
+                        "source": "phone",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:0T10:00",
+                                "endAt": "@week:0T11:00",
+                                "resourceId": "saved-82"
+                            }
+                        ],
+                        "customerId": "saved-11",
+                        "serviceId": "saved-73"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
+                "call": "saveObject",
+                "args": {
+                    "object": {
+                        "subject": "[Demo] Keukentafelgesprek Wmo, Anna Jansen (wo 14:00)",
+                        "startAt": "@week:2T14:00",
+                        "endAt": "@week:2T15:00",
+                        "status": "confirmed",
+                        "source": "phone",
+                        "resourceAssignments": [
+                            {
+                                "stepIndex": 0,
+                                "startAt": "@week:2T14:00",
+                                "endAt": "@week:2T15:00",
+                                "resourceId": "saved-82"
+                            }
+                        ],
+                        "customerId": "saved-7",
+                        "serviceId": "saved-73"
+                    },
+                    "extend": [],
+                    "register": "reg",
+                    "schema": "booking_schema-id",
+                    "uuid": null
+                }
+            },
+            {
                 "call": "marketing.seed",
                 "args": {
                     "uuids": {
@@ -2533,7 +4810,45 @@
                         "tasks:task-opvolg": "saved-63",
                         "tasks:task-info": "saved-64",
                         "contracts:contract-support": "saved-66",
-                        "contracts:contract-hosting": "saved-67"
+                        "contracts:contract-hosting": "saved-67",
+                        "appointmentServices:svc-paspoort": "saved-69",
+                        "appointmentServices:svc-rijbewijs": "saved-70",
+                        "appointmentServices:svc-verhuizing": "saved-71",
+                        "appointmentServices:svc-uittreksel": "saved-72",
+                        "appointmentServices:svc-wmo": "saved-73",
+                        "appointmentServices:svc-huwelijk": "saved-74",
+                        "appointmentServices:svc-gevonden": "saved-75",
+                        "appointmentResources:res-balie-1": "saved-77",
+                        "appointmentResources:res-balie-2": "saved-78",
+                        "appointmentResources:res-balie-3": "saved-79",
+                        "appointmentResources:res-balie-4": "saved-80",
+                        "appointmentResources:res-fatma": "saved-81",
+                        "appointmentResources:res-pieter": "saved-82",
+                        "appointmentResources:res-anouk": "saved-83",
+                        "appointmentBookings:bk-01": "saved-85",
+                        "appointmentBookings:bk-02": "saved-86",
+                        "appointmentBookings:bk-03": "saved-87",
+                        "appointmentBookings:bk-04": "saved-88",
+                        "appointmentBookings:bk-05": "saved-89",
+                        "appointmentBookings:bk-06": "saved-90",
+                        "appointmentBookings:bk-07": "saved-91",
+                        "appointmentBookings:bk-08": "saved-92",
+                        "appointmentBookings:bk-09": "saved-93",
+                        "appointmentBookings:bk-10": "saved-94",
+                        "appointmentBookings:bk-11": "saved-95",
+                        "appointmentBookings:bk-12": "saved-96",
+                        "appointmentBookings:bk-13": "saved-97",
+                        "appointmentBookings:bk-14": "saved-98",
+                        "appointmentBookings:bk-15": "saved-99",
+                        "appointmentBookings:bk-16": "saved-100",
+                        "appointmentBookings:bk-17": "saved-101",
+                        "appointmentBookings:bk-18": "saved-102",
+                        "appointmentBookings:bk-19": "saved-103",
+                        "appointmentBookings:bk-20": "saved-104",
+                        "appointmentBookings:bk-21": "saved-105",
+                        "appointmentBookings:bk-22": "saved-106",
+                        "appointmentBookings:bk-23": "saved-107",
+                        "appointmentBookings:bk-24": "saved-108"
                     }
                 }
             }
@@ -2554,6 +4869,9 @@
                     "contactmomenten": 12,
                     "tasks": 0,
                     "contracts": 0,
+                    "appointmentServices": 0,
+                    "appointmentResources": 0,
+                    "appointmentBookings": 0,
                     "journeys": 5
                 },
                 "skipped": {
@@ -2567,6 +4885,9 @@
                     "contactmomenten": 0,
                     "tasks": 3,
                     "contracts": 2,
+                    "appointmentServices": 7,
+                    "appointmentResources": 7,
+                    "appointmentBookings": 24,
                     "journeys": 0
                 },
                 "relinked": {
@@ -2579,7 +4900,10 @@
                     "complaints": 0,
                     "contactmomenten": 0,
                     "tasks": 0,
-                    "contracts": 0
+                    "contracts": 0,
+                    "appointmentServices": 0,
+                    "appointmentResources": 0,
+                    "appointmentBookings": 0
                 }
             }
         },
@@ -3094,6 +5418,42 @@
                 }
             },
             {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "service_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "resource_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "booking_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
                 "call": "marketing.seed",
                 "args": {
                     "uuids": {
@@ -3144,7 +5504,45 @@
                         "tasks:task-opvolg": "tasks-1",
                         "tasks:task-info": "tasks-2",
                         "contracts:contract-support": "contracts-0",
-                        "contracts:contract-hosting": "contracts-1"
+                        "contracts:contract-hosting": "contracts-1",
+                        "appointmentServices:svc-paspoort": "appointmentServices-0",
+                        "appointmentServices:svc-rijbewijs": "appointmentServices-1",
+                        "appointmentServices:svc-verhuizing": "appointmentServices-2",
+                        "appointmentServices:svc-uittreksel": "appointmentServices-3",
+                        "appointmentServices:svc-wmo": "appointmentServices-4",
+                        "appointmentServices:svc-huwelijk": "appointmentServices-5",
+                        "appointmentServices:svc-gevonden": "appointmentServices-6",
+                        "appointmentResources:res-balie-1": "appointmentResources-0",
+                        "appointmentResources:res-balie-2": "appointmentResources-1",
+                        "appointmentResources:res-balie-3": "appointmentResources-2",
+                        "appointmentResources:res-balie-4": "appointmentResources-3",
+                        "appointmentResources:res-fatma": "appointmentResources-4",
+                        "appointmentResources:res-pieter": "appointmentResources-5",
+                        "appointmentResources:res-anouk": "appointmentResources-6",
+                        "appointmentBookings:bk-01": "appointmentBookings-0",
+                        "appointmentBookings:bk-02": "appointmentBookings-1",
+                        "appointmentBookings:bk-03": "appointmentBookings-2",
+                        "appointmentBookings:bk-04": "appointmentBookings-3",
+                        "appointmentBookings:bk-05": "appointmentBookings-4",
+                        "appointmentBookings:bk-06": "appointmentBookings-5",
+                        "appointmentBookings:bk-07": "appointmentBookings-6",
+                        "appointmentBookings:bk-08": "appointmentBookings-7",
+                        "appointmentBookings:bk-09": "appointmentBookings-8",
+                        "appointmentBookings:bk-10": "appointmentBookings-9",
+                        "appointmentBookings:bk-11": "appointmentBookings-10",
+                        "appointmentBookings:bk-12": "appointmentBookings-11",
+                        "appointmentBookings:bk-13": "appointmentBookings-12",
+                        "appointmentBookings:bk-14": "appointmentBookings-13",
+                        "appointmentBookings:bk-15": "appointmentBookings-14",
+                        "appointmentBookings:bk-16": "appointmentBookings-15",
+                        "appointmentBookings:bk-17": "appointmentBookings-16",
+                        "appointmentBookings:bk-18": "appointmentBookings-17",
+                        "appointmentBookings:bk-19": "appointmentBookings-18",
+                        "appointmentBookings:bk-20": "appointmentBookings-19",
+                        "appointmentBookings:bk-21": "appointmentBookings-20",
+                        "appointmentBookings:bk-22": "appointmentBookings-21",
+                        "appointmentBookings:bk-23": "appointmentBookings-22",
+                        "appointmentBookings:bk-24": "appointmentBookings-23"
                     }
                 }
             }
@@ -3165,6 +5563,9 @@
                     "contactmomenten": 12,
                     "tasks": 0,
                     "contracts": 0,
+                    "appointmentServices": 0,
+                    "appointmentResources": 0,
+                    "appointmentBookings": 0,
                     "journeys": 5
                 },
                 "skipped": {
@@ -3178,6 +5579,9 @@
                     "contactmomenten": 0,
                     "tasks": 3,
                     "contracts": 2,
+                    "appointmentServices": 7,
+                    "appointmentResources": 7,
+                    "appointmentBookings": 24,
                     "journeys": 0
                 },
                 "relinked": {
@@ -3190,7 +5594,10 @@
                     "complaints": 0,
                     "contactmomenten": 0,
                     "tasks": 0,
-                    "contracts": 0
+                    "contracts": 0,
+                    "appointmentServices": 0,
+                    "appointmentResources": 0,
+                    "appointmentBookings": 0
                 }
             }
         },
@@ -3705,6 +6112,42 @@
                 }
             },
             {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "service_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "resource_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "reg",
+                            "schema": "booking_schema-id"
+                        },
+                        "limit": 2000
+                    }
+                }
+            },
+            {
                 "call": "marketing.seed",
                 "args": {
                     "uuids": {
@@ -3755,7 +6198,45 @@
                         "tasks:task-opvolg": "tasks-1",
                         "tasks:task-info": "tasks-2",
                         "contracts:contract-support": "contracts-0",
-                        "contracts:contract-hosting": "contracts-1"
+                        "contracts:contract-hosting": "contracts-1",
+                        "appointmentServices:svc-paspoort": "appointmentServices-0",
+                        "appointmentServices:svc-rijbewijs": "appointmentServices-1",
+                        "appointmentServices:svc-verhuizing": "appointmentServices-2",
+                        "appointmentServices:svc-uittreksel": "appointmentServices-3",
+                        "appointmentServices:svc-wmo": "appointmentServices-4",
+                        "appointmentServices:svc-huwelijk": "appointmentServices-5",
+                        "appointmentServices:svc-gevonden": "appointmentServices-6",
+                        "appointmentResources:res-balie-1": "appointmentResources-0",
+                        "appointmentResources:res-balie-2": "appointmentResources-1",
+                        "appointmentResources:res-balie-3": "appointmentResources-2",
+                        "appointmentResources:res-balie-4": "appointmentResources-3",
+                        "appointmentResources:res-fatma": "appointmentResources-4",
+                        "appointmentResources:res-pieter": "appointmentResources-5",
+                        "appointmentResources:res-anouk": "appointmentResources-6",
+                        "appointmentBookings:bk-01": "appointmentBookings-0",
+                        "appointmentBookings:bk-02": "appointmentBookings-1",
+                        "appointmentBookings:bk-03": "appointmentBookings-2",
+                        "appointmentBookings:bk-04": "appointmentBookings-3",
+                        "appointmentBookings:bk-05": "appointmentBookings-4",
+                        "appointmentBookings:bk-06": "appointmentBookings-5",
+                        "appointmentBookings:bk-07": "appointmentBookings-6",
+                        "appointmentBookings:bk-08": "appointmentBookings-7",
+                        "appointmentBookings:bk-09": "appointmentBookings-8",
+                        "appointmentBookings:bk-10": "appointmentBookings-9",
+                        "appointmentBookings:bk-11": "appointmentBookings-10",
+                        "appointmentBookings:bk-12": "appointmentBookings-11",
+                        "appointmentBookings:bk-13": "appointmentBookings-12",
+                        "appointmentBookings:bk-14": "appointmentBookings-13",
+                        "appointmentBookings:bk-15": "appointmentBookings-14",
+                        "appointmentBookings:bk-16": "appointmentBookings-15",
+                        "appointmentBookings:bk-17": "appointmentBookings-16",
+                        "appointmentBookings:bk-18": "appointmentBookings-17",
+                        "appointmentBookings:bk-19": "appointmentBookings-18",
+                        "appointmentBookings:bk-20": "appointmentBookings-19",
+                        "appointmentBookings:bk-21": "appointmentBookings-20",
+                        "appointmentBookings:bk-22": "appointmentBookings-21",
+                        "appointmentBookings:bk-23": "appointmentBookings-22",
+                        "appointmentBookings:bk-24": "appointmentBookings-23"
                     }
                 }
             }
