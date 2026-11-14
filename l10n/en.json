@@ -9659,6 +9659,21 @@
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "A few sentences on what the call was about. Written from the transcript; the agent can correct it.",
         "Transcript": "Transcript",
         "Transcript status": "Transcript status",
-        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording."
+        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording.",
+        "How they found us": "How they found us",
+        "Web form submissions": "Web form submissions",
+        "No web form submissions yet.": "No web form submissions yet.",
+        "First campaign": "First campaign",
+        "First source": "First source",
+        "First medium": "First medium",
+        "First landing page": "First landing page",
+        "First submitted on": "First submitted on",
+        "Latest campaign": "Latest campaign",
+        "Latest source": "Latest source",
+        "Latest medium": "Latest medium",
+        "Latest landing page": "Latest landing page",
+        "Latest submitted on": "Latest submitted on",
+        "Submitted on": "Submitted on",
+        "Campaign medium": "Campaign medium"
     }
 }

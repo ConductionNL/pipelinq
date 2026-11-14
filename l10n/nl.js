@@ -9587,7 +9587,22 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "Een paar zinnen over waar het gesprek over ging. Geschreven uit de transcriptie; de medewerker kan ze corrigeren.",
         "Transcript": "Transcriptie",
         "Transcript status": "Status transcriptie",
-        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname."
+        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname.",
+        "How they found us": "Hoe ze ons vonden",
+        "Web form submissions": "Webformulierinzendingen",
+        "No web form submissions yet.": "Nog geen webformulierinzendingen.",
+        "First campaign": "Eerste campagne",
+        "First source": "Eerste bron",
+        "First medium": "Eerste medium",
+        "First landing page": "Eerste landingspagina",
+        "First submitted on": "Eerste inzending op",
+        "Latest campaign": "Laatste campagne",
+        "Latest source": "Laatste bron",
+        "Latest medium": "Laatste medium",
+        "Latest landing page": "Laatste landingspagina",
+        "Latest submitted on": "Laatste inzending op",
+        "Submitted on": "Ingezonden op",
+        "Campaign medium": "Campagnemedium"
     },
     "nplurals=2; plural=(n != 1);"
 )

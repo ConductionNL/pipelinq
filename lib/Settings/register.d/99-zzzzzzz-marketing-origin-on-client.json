@@ -2,13 +2,17 @@
   "_meta": {
     "spdx-license": "EUPL-1.2",
     "spdx-copyright": "2026 Conduction B.V.",
-    "description": "marketing-campaign-on-client D1: a touchpoint names the client and the landing page; contact and client carry the first and last touch of their form submissions, written by TouchpointService::recordSubmission()."
+    "description": "marketing-campaign-on-client D1: a touchpoint names the client and the landing page; contact and client carry the first and last touch of their form submissions, written by TouchpointService::recordSubmission(). A website form submit is a touchpoint whether or not its campaign value names a pipelinq campaign, so campaignId is no longer required."
   },
   "components": {
     "schemas": {
       "touchpoint": {
         "slug": "touchpoint",
         "version": "1.1.0",
+        "required": [
+          "kind",
+          "occurredAt"
+        ],
         "properties": {
           "clientId": {
             "type": "string",
