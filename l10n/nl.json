@@ -9884,6 +9884,11 @@
         "What this signal adds to the score.": "Wat dit signaal aan de score toevoegt.",
         "The schema of the records behind this signal.": "Het schema van de records achter dit signaal.",
         "The records behind this signal.": "De records achter dit signaal.",
-        "When the risk was last computed.": "Wanneer het risico voor het laatst is berekend."
+        "When the risk was last computed.": "Wanneer het risico voor het laatst is berekend.",
+        "Add attendee": "Deelnemer toevoegen",
+        "They get a place while one is free, else a spot on the waiting list.": "Is er een plaats vrij, dan krijgt de deelnemer die, anders een plek op de wachtlijst.",
+        "The confirmation is sent to this address.": "De bevestiging wordt naar dit adres gestuurd.",
+        "The attendee could not be added.": "De deelnemer kon niet worden toegevoegd.",
+        "The attendee is on the registrations list.": "De deelnemer staat op de lijst met aanmeldingen."
     }
 }
