@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\BackgroundJob\FullExportJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Service\Export\FullExportState;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -54,6 +55,7 @@ class FullExportController extends Controller {
 	 * @param IUserSession  $userSession The caller.
 	 * @param IGroupManager $groups      Whether the caller is an administrator.
 	 * @param IJobList      $jobs        The background job queue.
+	 * @param FullExportState|null $state The state of the last export, for the page.
 	 *
 	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
 	 */
@@ -62,9 +64,32 @@ class FullExportController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groups,
 		private readonly IJobList $jobs,
+		private readonly ?FullExportState $state = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
+
+	/**
+	 * The state of the last export: none, queued, ready (with the archive's
+	 * name and file id) or failed. Administrators only, as starting one.
+	 *
+	 * @return JSONResponse 200 with the state, 401 without a caller, 403 for anyone but an administrator.
+	 *
+	 * @spec openspec/changes/data-portability-full-export/tasks.md#3.1
+	 */
+	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
+	public function status(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => 'Sign in to export data.'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->groups->isAdmin($user->getUID()) === false) {
+			return new JSONResponse(['error' => 'Only an administrator can export all data.'], Http::STATUS_FORBIDDEN);
+		}
+
+		return new JSONResponse(($this->state?->read() ?? ['state' => 'none']));
+	}//end status()
 
 	/**
 	 * Queue the export for the calling administrator.
@@ -88,6 +113,7 @@ class FullExportController extends Controller {
 		}
 
 		$this->jobs->add(FullExportJob::class, ['userId' => $user->getUID()]);
+		$this->state?->queued(userId: $user->getUID());
 
 		return new JSONResponse(
 			['status' => 'queued', 'message' => 'The archive is being prepared. You get a notification when it is in your Files.'],

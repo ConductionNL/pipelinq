@@ -11,6 +11,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 vi.mock('@conduction/nextcloud-vue', () => ({ CnIndexPage: {}, openRowTarget: vi.fn() }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 vi.mock('../../src/modals/ExportTestRunModal.vue', () => ({ default: {} }))
+vi.mock('../../src/components/FullExportSection.vue', () => ({ default: {} }))
 vi.mock('../../src/services/exportApi.js', () => ({ exportApi: {} }))
 
 let jobs
