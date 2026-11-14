@@ -629,6 +629,24 @@ class ComplianceService implements ComplianceServiceInterface {
 		}
 
 		$lawfulBasis = strtolower(trim((string)($record['lawfulBasis'] ?? '')));
+		if ($this->lawfulBasisPermitsSend(lawfulBasis: $lawfulBasis, record: $record, contactId: $contactId, channel: $channel) === false) {
+			return false;
+		}
+
+		return $this->isWithdrawnRecord(record: $record) === false;
+	}//end recordPermitsSend()
+
+	/**
+	 * Whether the record's lawful basis authorises a marketing send (blocks are logged).
+	 *
+	 * @param string $lawfulBasis The normalised lawful basis.
+	 * @param array<string, mixed> $record The consent record.
+	 * @param string $contactId The contact id.
+	 * @param string $channel The channel.
+	 *
+	 * @return bool True when the basis permits the send.
+	 */
+	private function lawfulBasisPermitsSend(string $lawfulBasis, array $record, string $contactId, string $channel): bool {
 		if ($lawfulBasis === '') {
 			return false;
 		}
@@ -649,6 +667,20 @@ class ComplianceService implements ComplianceServiceInterface {
 			return false;
 		}
 
+		return $this->softOptInSatisfied(lawfulBasis: $lawfulBasis, record: $record, contactId: $contactId, channel: $channel);
+	}//end lawfulBasisPermitsSend()
+
+	/**
+	 * Whether a soft opt-in has the objection recorded (always true for other bases; a block is logged).
+	 *
+	 * @param string $lawfulBasis The normalised lawful basis.
+	 * @param array<string, mixed> $record The consent record.
+	 * @param string $contactId The contact id.
+	 * @param string $channel The channel.
+	 *
+	 * @return bool True unless a soft opt-in lacks the recorded objection.
+	 */
+	private function softOptInSatisfied(string $lawfulBasis, array $record, string $contactId, string $channel): bool {
 		if ($lawfulBasis === self::LAWFUL_BASIS_SOFT_OPT_IN && $this->objectionWasOffered(record: $record) === false) {
 			// A soft opt-in stands on the objection having been offered.
 			// Without that recorded there is nothing to show a regulator,
@@ -660,13 +692,8 @@ class ComplianceService implements ComplianceServiceInterface {
 			return false;
 		}
 
-		$withdrawnAt = ($record['withdrawnAt'] ?? null);
-		if (is_string($withdrawnAt) === true && trim($withdrawnAt) !== '') {
-			return false;
-		}
-
 		return true;
-	}//end recordPermitsSend()
+	}//end softOptInSatisfied()
 
 	/**
 	 * Whether a record's evidence states that an objection was offered.
@@ -718,26 +745,54 @@ class ComplianceService implements ComplianceServiceInterface {
 			return;
 		}
 
-		if ($this->integriq->isActive() === true
-			&& $this->integriq->recordListConsent(
-				contactId: $contactId,
-				listId: $listId,
-				channel: $channel,
-				lawfulBasis: $lawfulBasis,
-				source: $consentSource,
-				evidence: $evidence
-			) === true
-		) {
+		$key = new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId);
+		if ($this->integriqRecordedListConsent(key: $key, lawfulBasis: $lawfulBasis, consentSource: $consentSource, evidence: $evidence) === true) {
 			// Integriq holds it now; pipelinq writes no consentRecord.
 			return;
 		}
 
+		$this->storeListConsent(key: $key, lawfulBasis: $lawfulBasis, consentSource: $consentSource, evidence: $evidence);
+	}//end recordListConsent()
+
+	/**
+	 * Hand the list consent to integriq when it is active; true when integriq took it.
+	 *
+	 * @param ConsentRecordKey $key The contact, channel and list.
+	 * @param string $lawfulBasis The lawful basis.
+	 * @param string $consentSource The consent source.
+	 * @param array<string, mixed> $evidence The consent evidence.
+	 *
+	 * @return bool True when integriq recorded the consent.
+	 */
+	private function integriqRecordedListConsent(ConsentRecordKey $key, string $lawfulBasis, string $consentSource, array $evidence): bool {
+		return $this->integriq->isActive() === true
+			&& $this->integriq->recordListConsent(
+				contactId: $key->contactId,
+				listId: (string)$key->listId,
+				channel: $key->channel,
+				lawfulBasis: $lawfulBasis,
+				source: $consentSource,
+				evidence: $evidence
+			) === true;
+	}//end integriqRecordedListConsent()
+
+	/**
+	 * Create or reopen the pipelinq consentRecord for a list.
+	 *
+	 * @param ConsentRecordKey $key The contact, channel and list.
+	 * @param string $lawfulBasis The lawful basis.
+	 * @param string $consentSource The consent source.
+	 * @param array<string, mixed> $evidence The consent evidence.
+	 *
+	 * @return void
+	 */
+	private function storeListConsent(ConsentRecordKey $key, string $lawfulBasis, string $consentSource, array $evidence): void {
 		$now = gmdate('Y-m-d\TH:i:s\Z');
-		$record = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId));
+		$record = $this->findConsentRecord(key: $key);
 		$payload = ($record ?? ['softBounceCount' => 0]);
-		$payload['contactId'] = $contactId;
-		$payload['channel'] = $channel;
-		$payload['listId'] = $listId;
+		$payload['contactId'] = $key->contactId;
+		$payload['channel'] = $key->channel;
+		$payload['listId'] = $key->listId;
 		$payload['lawfulBasis'] = $lawfulBasis;
 		$payload['consentSource'] = $consentSource;
 		$payload['consentedAt'] = $now;
@@ -749,13 +804,25 @@ class ComplianceService implements ComplianceServiceInterface {
 		// and the write is lost.
 		unset($payload['withdrawnAt'], $payload['withdrawnReason']);
 
+		$this->persistReopenedConsent(payload: $payload, record: $record);
+	}//end storeListConsent()
+
+	/**
+	 * Persist a list consent, updating the existing record when there is one.
+	 *
+	 * @param array<string, mixed> $payload The consent payload.
+	 * @param array<string, mixed>|null $record The existing record, if any.
+	 *
+	 * @return void
+	 */
+	private function persistReopenedConsent(array $payload, array|null $record): void {
 		if ($record === null) {
 			$this->persistConsentObject(payload: $payload, id: null);
 			return;
 		}
 
 		$this->persistConsentObject(payload: $payload, id: $this->extractObjectId(payload: $record));
-	}//end recordListConsent()
+	}//end persistReopenedConsent()
 
 	/**
 	 * Validate a CampaignTemplate payload against the channel's rules.
@@ -872,6 +939,20 @@ class ComplianceService implements ComplianceServiceInterface {
 			return null;
 		}
 
+		$store = $this->templateStore();
+		if ($store === null) {
+			return null;
+		}
+
+		return $this->findTemplate(templateId: $templateId, store: $store);
+	}//end getTemplateById()
+
+	/**
+	 * The ObjectService, register slug and campaign template schema slug, or null when any is missing.
+	 *
+	 * @return array{0: object, 1: string, 2: string}|null The template store.
+	 */
+	private function templateStore(): array|null {
 		$register = $this->getRegisterSlug();
 		$schema = $this->getCampaignTemplateSchemaSlug();
 		$objectService = $this->getObjectService();
@@ -879,6 +960,19 @@ class ComplianceService implements ComplianceServiceInterface {
 			return null;
 		}
 
+		return [$objectService, $register, $schema];
+	}//end templateStore()
+
+	/**
+	 * Find one campaign template as an array; null (logged) when it is not found.
+	 *
+	 * @param string $templateId The template id.
+	 * @param array{0: object, 1: string, 2: string} $store The ObjectService, register and schema.
+	 *
+	 * @return array<string, mixed>|null The template.
+	 */
+	private function findTemplate(string $templateId, array $store): array|null {
+		[$objectService, $register, $schema] = $store;
 		try {
 			$entity = $objectService->find(id: $templateId, register: $register, schema: $schema);
 		} catch (Throwable $e) {
@@ -894,7 +988,7 @@ class ComplianceService implements ComplianceServiceInterface {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end getTemplateById()
+	}//end findTemplate()
 
 	/**
 	 * Create a CampaignTemplate after compliance validation.
@@ -978,19 +1072,7 @@ class ComplianceService implements ComplianceServiceInterface {
 			return ['error' => 'Template not found'];
 		}
 
-		$editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'replyTo', 'footerOverride'];
-		$payload = $existing;
-		foreach ($editable as $field) {
-			if (array_key_exists($field, $patch) === true && is_string($patch[$field]) === true) {
-				$payload[$field] = $patch[$field];
-			}
-		}
-
-		if (array_key_exists('articleIds', $patch) === true) {
-			$payload['articleIds'] = $this->normaliseArticleIds(value: $patch['articleIds']);
-		}
-
-		$payload = array_merge($payload, (new MailBlockRenderer())->storedFields(input: $patch));
+		$payload = $this->applyTemplatePatch(payload: $existing, patch: $patch);
 
 		$channel = strtolower((string)($existing['channel'] ?? 'email'));
 		$error = $this->validateTemplate(templateData: $payload, channel: $channel);
@@ -1006,6 +1088,29 @@ class ComplianceService implements ComplianceServiceInterface {
 
 		return ['template' => $saved];
 	}//end patchTemplate()
+
+	/**
+	 * Overlay the editable string fields, article ids and stored block fields of a patch.
+	 *
+	 * @param array<string, mixed> $payload The existing template.
+	 * @param array<string, mixed> $patch The patch.
+	 *
+	 * @return array<string, mixed> The patched template.
+	 */
+	private function applyTemplatePatch(array $payload, array $patch): array {
+		$editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'replyTo', 'footerOverride'];
+		foreach ($editable as $field) {
+			if (array_key_exists($field, $patch) === true && is_string($patch[$field]) === true) {
+				$payload[$field] = $patch[$field];
+			}
+		}
+
+		if (array_key_exists('articleIds', $patch) === true) {
+			$payload['articleIds'] = $this->normaliseArticleIds(value: $patch['articleIds']);
+		}
+
+		return array_merge($payload, (new MailBlockRenderer())->storedFields(input: $patch));
+	}//end applyTemplatePatch()
 
 	/**
 	 * Normalise the embedded-article list to plain, non-empty strings.
@@ -1046,26 +1151,37 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return array<int, array<string, mixed>> Plain payloads.
 	 */
 	private function loadTemplatesRaw(): array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getCampaignTemplateSchemaSlug();
-		$objectService = $this->getObjectService();
-		if ($register === '' || $schema === '' || $objectService === null) {
+		$store = $this->templateStore();
+		if ($store === null) {
 			return [];
 		}
 
+		$rows = $this->findTemplateRows(objectService: $store[0], register: $store[1], schema: $store[2]);
+
+		$out = [];
+		foreach ($rows as $row) {
+			$out[] = $this->toArray(value: $row);
+		}
+
+		return $out;
+	}//end loadTemplatesRaw()
+
+	/**
+	 * Read the campaign template rows; none (logged) when the read fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $register The register slug.
+	 * @param string $schema The campaign template schema slug.
+	 *
+	 * @return iterable<mixed> The rows.
+	 */
+	private function findTemplateRows(object $objectService, string $register, string $schema): iterable {
 		try {
 			// OpenRegister's ObjectService::findAll() takes a single $config array;
 			// register/schema travel INSIDE $config['filters'] (see prepareFindAllConfig()).
 			// The old findAll(register:, schema:, filters:) named-argument form no longer
 			// exists and threw "Unknown named parameter $register" at runtime.
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$rows = $objectService->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ComplianceService.loadTemplatesRaw: findAll failed',
@@ -1074,13 +1190,8 @@ class ComplianceService implements ComplianceServiceInterface {
 			return [];
 		}
 
-		$out = [];
-		foreach (($rows ?? []) as $row) {
-			$out[] = $this->toArray(value: $row);
-		}
-
-		return $out;
-	}//end loadTemplatesRaw()
+		return ($rows ?? []);
+	}//end findTemplateRows()
 
 	/**
 	 * Persist a CampaignTemplate via ObjectService.
@@ -1385,42 +1496,42 @@ class ComplianceService implements ComplianceServiceInterface {
 			return;
 		}
 
+		$this->writeConsentObject(payload: $payload, id: $id, register: $register, schema: $schema);
+	}//end persistConsentObject()
+
+	/**
+	 * Update (with an id) or create the consent object, logging a failed write.
+	 *
+	 * Update and create stay two different calls, as they were before
+	 * mailing lists existed. `saveObject(uuid:)` would serve both, but
+	 * swapping the update path onto it changes which OpenRegister code
+	 * path a withdrawal takes, and a consent withdrawal is not the place
+	 * to find out what else that changed.
+	 *
+	 * @param array<string, mixed> $payload The consent payload.
+	 * @param string|null $id The existing object id, or null to create.
+	 * @param string $register The register slug.
+	 * @param string $schema The consentRecord schema slug.
+	 *
+	 * @return void
+	 */
+	private function writeConsentObject(array $payload, string|null $id, string $register, string $schema): void {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return;
 		}
 
-		// Update and create stay two different calls, as they were before
-		// mailing lists existed. `saveObject(uuid:)` would serve both, but
-		// swapping the update path onto it changes which OpenRegister code
-		// path a withdrawal takes, and a consent withdrawal is not the place
-		// to find out what else that changed.
 		try {
 			if ($id !== null && $id !== '') {
-				$objectService->updateObject(
-					id: $id,
-					object: $payload,
-					register: $register,
-					schema: $schema,
-				);
+				$objectService->updateObject(id: $id, object: $payload, register: $register, schema: $schema);
 				return;
 			}
 
-			$objectService->saveObject(
-				object: $payload,
-				register: $register,
-				schema: $schema,
-			);
+			$objectService->saveObject(object: $payload, register: $register, schema: $schema);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ComplianceService.persistConsentObject: write failed',
-				[
-					'id' => $id,
-					'exception' => $e->getMessage(),
-				]
-			);
+			$this->logger->warning('ComplianceService.persistConsentObject: write failed', ['id' => $id, 'exception' => $e->getMessage()]);
 		}//end try
-	}//end persistConsentObject()
+	}//end writeConsentObject()
 
 	/**
 	 * Write a synthetic ConsentRecord at withdrawal time when none existed.
