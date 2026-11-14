@@ -1,5 +1,10 @@
 {
     "translations": {
+        "{schedule} to {recipients}": "{schedule} to {recipients}",
+        "A mailed report goes to the recipients chosen on its export job.": "A mailed report goes to the recipients chosen on its export job.",
+        "Choose at least one recipient": "Choose at least one recipient",
+        "Mail: {name}": "Mail: {name}",
+        "Search users and groups…": "Search users and groups…",
         "Your data export is ready: %1$s": "Your data export is ready: %1$s",
         "Report %1$s could not be mailed to %2$s recipients": "Report %1$s could not be mailed to %2$s recipients",
         "Report {title} could not be mailed to %1$s recipients": "Report {title} could not be mailed to %1$s recipients",

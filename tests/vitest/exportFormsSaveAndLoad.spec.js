@@ -117,6 +117,7 @@ describe('ExportDestinationForm', () => {
 			'snowflake',
 			'sftp',
 			'postgres',
+			'mail',
 		])
 		expect(wrapper.vm.compressionOptions.map((o) => o.id)).toEqual([
 			'none',

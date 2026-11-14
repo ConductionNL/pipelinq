@@ -1,6 +1,11 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "{schedule} to {recipients}": "{schedule} aan {recipients}",
+        "A mailed report goes to the recipients chosen on its export job.": "Een gemaild rapport gaat naar de ontvangers die bij de exporttaak zijn gekozen.",
+        "Choose at least one recipient": "Kies ten minste één ontvanger",
+        "Mail: {name}": "Per mail: {name}",
+        "Search users and groups…": "Gebruikers en groepen zoeken…",
         "Your data export is ready: %1$s": "Uw data-export staat klaar: %1$s",
         "Report %1$s could not be mailed to %2$s recipients": "Rapport %1$s kon niet naar %2$s ontvangers worden gemaild",
         "Report {title} could not be mailed to %1$s recipients": "Rapport {title} kon niet naar %1$s ontvangers worden gemaild",

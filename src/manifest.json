@@ -1461,8 +1461,6 @@
 								}
 							},
 							"valueField": "leadConversionRate",
-							"previousField": "previousPeriod.leadConversionRate",
-							"goodDirection": "up",
 							"layout": "stacked",
 							"caption": "was {previousPeriod.leadConversionRate|tile} in the period before"
 						}
@@ -1484,8 +1482,6 @@
 								}
 							},
 							"valueField": "avgRequestResolutionTime",
-							"previousField": "previousPeriod.avgRequestResolutionTime",
-							"goodDirection": "down",
 							"layout": "stacked",
 							"caption": "was {previousPeriod.avgRequestResolutionTime|tile}"
 						}
@@ -1507,8 +1503,6 @@
 								}
 							},
 							"valueField": "contactMomentVolume",
-							"previousField": "previousPeriod.contactMomentVolume",
-							"goodDirection": "up",
 							"layout": "stacked",
 							"caption": "contact moments, was {previousPeriod.contactMomentVolume|tile}"
 						}
