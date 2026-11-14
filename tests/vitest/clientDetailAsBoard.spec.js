@@ -41,7 +41,7 @@ describe('ClientDetail as the boards draw it', () => {
 
 	it('orders the tabs as the boards do, contact persons for an organisation and sales for a resident', () => {
 		const tabs = widget('client-panels').content.tabs
-		expect(tabs.map((tab) => nl[tab.label])).toEqual(['Overzicht', 'Zaken', 'Tickets', 'Contactpersonen', 'Contactmomenten', 'Verkoop', 'Documenten', 'Geschiedenis'])
+		expect(tabs.map((tab) => nl[tab.label])).toEqual(['Overzicht', 'Zaken', 'Tickets', 'Contactpersonen', 'Contactmomenten', 'Verkoop', 'Documenten', 'Klantkamer', 'Geschiedenis'])
 		expect(tabs[3].visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
 		expect(tabs[5].visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
 	})
