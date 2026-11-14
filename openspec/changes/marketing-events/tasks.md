@@ -69,3 +69,14 @@
   `CampaignEventDetail`), but the board keeps the Marketing menu to campaigns and
   newsletters (the note on `CampaignEvents`), so a menu entry needs a decision first.
 - 5.2: the docs build was not run here.
+- 4.2 (third build): Add attendee is the `add-attendee` action in the event
+  page's More menu. It opens the library's `CnActionDialog` with a name
+  (optional) and an email address, and posts them to
+  `POST /api/campaign-events/{id}/registrations`, so a hand-added attendee gets
+  the seat count, the waiting list and the confirmation like a form sign-up.
+  It is shown only while registration is open or full. Vitest
+  `tests/vitest/eventAddAttendee.spec.js` mounts the dialog and checks the post.
+  4.2 stays unchecked only for its Playwright run, which needs a live instance.
+- 4.1 is still open for the same reason as before: the pages exist, and adding
+  a menu entry would go against the board, which keeps the Marketing menu to
+  campaigns and newsletters.

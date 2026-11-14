@@ -253,6 +253,12 @@ class CompetitorWatchRunGoldenTest extends TestCase {
 				throw new RuntimeException('untyped parameter ' . $parameter->getName());
 			}
 
+			// An optional collaborator without a double keeps its default, so
+			// the recorded calls stay those of the service itself.
+			if (isset($doubles[$type->getName()]) === false && $parameter->isDefaultValueAvailable() === true) {
+				continue;
+			}
+
 			$args[$parameter->getName()] = ($doubles[$type->getName()] ?? $this->build(class: $type->getName(), doubles: $doubles));
 		}
 

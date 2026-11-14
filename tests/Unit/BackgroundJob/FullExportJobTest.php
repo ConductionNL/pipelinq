@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use DateTime;
 use OCA\Pipelinq\BackgroundJob\FullExportJob;
+use OCA\Pipelinq\Service\Export\FullExportState;
 use OCA\Pipelinq\Service\Export\FullExportService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Notification\IManager;
@@ -39,6 +40,14 @@ use RuntimeException;
  * @covers \OCA\Pipelinq\BackgroundJob\FullExportJob
  */
 class FullExportJobTest extends TestCase {
+
+	/**
+	 * The state record the job writes to, when a test watches it.
+	 *
+	 * @var FullExportState|null
+	 */
+	private ?FullExportState $state = null;
+
 
 	/**
 	 * What the notification was given.
@@ -85,7 +94,7 @@ class FullExportJobTest extends TestCase {
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new DateTime('2026-11-13T11:00:00+00:00'));
 
-		$job = new FullExportJob(time: $time, export: $export, notifications: $manager, logger: $this->createMock(LoggerInterface::class));
+		$job = new FullExportJob(time: $time, export: $export, notifications: $manager, logger: $this->createMock(LoggerInterface::class), state: $this->state);
 		(new ReflectionMethod($job, 'run'))->invoke($job, $argument);
 	}//end run()
 
@@ -95,6 +104,9 @@ class FullExportJobTest extends TestCase {
 	 * @return void
 	 */
 	public function testAReadyArchiveIsAnnounced(): void {
+		$this->state = $this->createMock(FullExportState::class);
+		$this->state->expects($this->once())->method('ready')->with('admin', 'pipelinq-export.zip', '42');
+		$this->state->expects($this->never())->method('failed');
 		$export = $this->createMock(FullExportService::class);
 		$export->expects($this->once())->method('exportFor')->with('admin')
 			->willReturn(['name' => 'pipelinq-export.zip', 'path' => '/admin/files/pipelinq-export.zip', 'fileId' => 42, 'manifest' => []]);
@@ -113,6 +125,9 @@ class FullExportJobTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFailedExportIsAnnouncedAsFailed(): void {
+		$this->state = $this->createMock(FullExportState::class);
+		$this->state->expects($this->once())->method('failed')->with('admin');
+		$this->state->expects($this->never())->method('ready');
 		$export = $this->createMock(FullExportService::class);
 		$export->method('exportFor')->willThrowException(new RuntimeException('disk full'));
 

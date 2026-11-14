@@ -85,6 +85,7 @@ class CompetitorWatchService implements CompetitorWatchServiceInterface {
 	 * @param WatchEventStore $events The idempotent event writer.
 	 * @param ITimeFactory $time Time factory for the due calculation.
 	 * @param LoggerInterface $logger Logger.
+	 * @param WatchChangeNotifier|null $changeNotifier Tells a page watch's owner that the page changed.
 	 *
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
@@ -95,6 +96,7 @@ class CompetitorWatchService implements CompetitorWatchServiceInterface {
 		private WatchEventStore $events,
 		private ITimeFactory $time,
 		private LoggerInterface $logger,
+		private ?WatchChangeNotifier $changeNotifier = null,
 	) {
 	}//end __construct()
 
@@ -263,6 +265,7 @@ class CompetitorWatchService implements CompetitorWatchServiceInterface {
 		}
 
 		$this->recordRun(watch: $watch, outcome: $outcome);
+		$this->changeNotifier?->notifyChange(watch: $watch, created: $created);
 
 		return ['outcome' => $outcome->outcome, 'reason' => $outcome->reason, 'events' => $created];
 	}//end runOne()
